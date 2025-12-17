@@ -4,6 +4,7 @@ import math
 import random
 from ship import Ship, LayerType
 from ai import AIController
+from spatial import SpatialGrid
 from designs import create_brick, create_interceptor
 from components import load_components, Bridge, Weapon, Engine, Thruster, Armor, Tank
 from ui import Button
@@ -21,6 +22,12 @@ LAYER_COLORS = {
     LayerType.INNER: (50, 50, 200),
     LayerType.CORE: (220, 220, 220)
 }
+
+pygame.font.init()
+font_small = pygame.font.SysFont("arial", 12)
+font_med = pygame.font.SysFont("arial", 20)
+font_large = pygame.font.SysFont("arial", 32)
+
 
 class Camera:
     def __init__(self, width, height):
@@ -315,122 +322,154 @@ class Game:
         
         # Camera
         self.camera = Camera(WIDTH, HEIGHT)
+        
+        # Spatial Grid
+        self.grid = SpatialGrid(cell_size=2000)
+        self.ships = []
+        self.ai_controllers = []
 
     def start_quick_battle(self):
-        self.start_battle(create_brick(20000, 50000), create_interceptor(80000, 50000))
+        # 5v5 Battle
+        team1_ships = []
+        for i in range(5):
+            # Line formation
+            s = create_brick(20000, 40000 + i * 5000) 
+            s.team_id = 0
+            team1_ships.append(s)
+            
+        team2_ships = []
+        for i in range(5):
+             # Cluster formation
+            s = create_interceptor(80000, 40000 + i * 5000)
+            s.team_id = 1
+            s.angle = 180 # Face left
+            team2_ships.append(s)
+            
+        self.start_battle(team1_ships, team2_ships)
 
     def start_builder(self):
         self.state = BUILDER
         self.builder_scene = BuilderScene(WIDTH, HEIGHT, self.on_builder_finish)
 
     def on_builder_finish(self, custom_ship):
-        # We need to position the custom ship and create an enemy
-        custom_ship.position = pygame.math.Vector2(20000, 50000)
-        # Recalculate stats one last time to be sure
-        custom_ship.recalculate_stats()
-        
-        enemy = create_brick(80000, 50000)
-        
-        self.start_battle(custom_ship, enemy)
+        # Position custom ship in team 1
+        team1 = [custom_ship]
+        # create 4 friends
+        for i in range(4):
+            team1.append(create_brick(0,0))
+            
+        # Place them
+        for i, s in enumerate(team1):
+            s.position = pygame.math.Vector2(20000, 40000 + i * 5000)
+            s.recalculate_stats() # Just in case
 
-    def start_battle(self, s1, s2):
-        self.ship1 = s1
-        self.ship2 = s2
-        self.ai1 = AIController(self.ship1, self.ship2)
-        self.ai2 = AIController(self.ship2, self.ship1)
+        team2 = []
+        for i in range(5):
+            s = create_interceptor(80000, 40000 + i * 5000)
+            s.angle = 180
+            team2.append(s)
+        
+        self.start_battle(team1, team2)
+
+    def start_battle(self, team1_list, team2_list):
+        self.ships = []
+        self.ai_controllers = []
+        
+        # Handle single ship args if passed
+        if not isinstance(team1_list, list): team1_list = [team1_list]
+        if not isinstance(team2_list, list): team2_list = [team2_list]
+        
+        # Setup Team 1
+        for s in team1_list:
+            s.team_id = 0
+            self.ships.append(s)
+            self.ai_controllers.append(AIController(s, self.grid, 1))
+            
+        # Setup Team 2
+        for s in team2_list:
+            s.team_id = 1
+            self.ships.append(s)
+            self.ai_controllers.append(AIController(s, self.grid, 0))
+
         self.projectiles = []
         self.beams = []
         self.state = BATTLE
-        self.camera.fit_objects([self.ship1, self.ship2])
+        self.camera.fit_objects(self.ships)
 
     def update_battle(self, dt, events):
         self.camera.update_input(dt, events)
         
-        self.ai1.update(dt)
-        self.ai2.update(dt)
-        self.ship1.update(dt)
-        self.ship2.update(dt)
+        # 1. Update Grid
+        self.grid.clear()
+        alive_ships = [s for s in self.ships if s.is_alive]
+        for s in alive_ships:
+            self.grid.insert(s)
+            
+        # 2. Update AI & Ships
+        for ai in self.ai_controllers:
+            ai.update(dt)
+            
+        for s in self.ships:
+            s.update(dt)
         
-        # Collect Attacks (Projectiles and Beams)
+        # 3. Process Attacks
         new_attacks = []
-        if hasattr(self.ship1, 'just_fired_projectiles'):
-            new_attacks.extend(self.ship1.just_fired_projectiles)
-        if hasattr(self.ship2, 'just_fired_projectiles'):
-            new_attacks.extend(self.ship2.just_fired_projectiles)
+        for s in alive_ships:
+            attacks = s.fire_weapons()
+            if attacks:
+                new_attacks.extend(attacks)
             
         for attack in new_attacks:
             if attack['type'] == 'projectile':
                 self.projectiles.append(attack)
             elif attack['type'] == 'beam':
-                # Immediate Raycast Hit Logic
-                
+                # Beam Logic
                 start_pos = attack['origin']
                 direction = attack['direction']
                 max_range = attack['range']
+                target = attack.get('target')
+                
                 end_pos = start_pos + direction * max_range
                 
-                # Check for hits against enemies
-                # Ideally we raycast against all enemies. Here we just have ship1/ship2
-                target = self.ship2 if attack['owner'] == self.ship1 else self.ship1
-                
-                if target.is_alive:
-                    # Simple Ray-Circle intersection
-                    # Vector from start to circle center
+                if target and target.is_alive:
+                     # Raycast against this specific target
                     f = start_pos - target.position
-                    
-                    # Quadratic Equation coefficients for ray-circle
-                    # ray = P + td
-                    # |P + td - C|^2 = r^2
-                    # let P-C = f
-                    # |f + td|^2 = r^2
-                    # (f.x + t*d.x)^2 + (f.y + t*d.y)^2 = r^2
-                    # ... a*t^2 + b*t + c = 0
                     
                     a = direction.dot(direction)
                     b = 2 * f.dot(direction)
-                    c = f.dot(f) - 40**2 # 40 is collision radius
+                    c = f.dot(f) - 40**2 
                     
                     discriminant = b*b - 4*a*c
+                    hit_dist = 0
+                    hit = False
                     
-                    hit_dist = -1
                     if discriminant >= 0:
-                        # Hit!
                         t1 = (-b - math.sqrt(discriminant)) / (2*a)
                         t2 = (-b + math.sqrt(discriminant)) / (2*a)
                         
-                        # We want the smallest positive t
-                        if t1 >= 0 and t1 <= max_range:
-                            hit_dist = t1
-                        elif t2 >= 0 and t2 <= max_range:
-                            hit_dist = t2
+                        valid_t = []
+                        if 0 <= t1 <= max_range: valid_t.append(t1)
+                        if 0 <= t2 <= max_range: valid_t.append(t2)
+                        
+                        if valid_t:
+                            hit_dist = min(valid_t)
+                            hit = True
                             
-                    if hit_dist >= 0:
-                        # Confirm Hit Chance
-                        # Calculate modifiers
+                    if hit:
                         beam_comp = attack['component']
                         chance = beam_comp.calculate_hit_chance(hit_dist)
-                        
-                        # Modify by target size (optional, stick to requested logic)
-                        # User said: "size modifier is the target size / standard size"
-                        # Standard size not defined, let's assume radius 40 is standard
-                        size_mod = 40.0 / 40.0 
-                        
-                        final_chance = chance * size_mod
+                        # Fixed size mod
+                        final_chance = chance
                         
                         if random.random() < final_chance:
-                            # HIT
                             target.take_damage(attack['damage'])
-                            end_pos = start_pos + direction * hit_dist # Visual beam stops at target
-                            print(f"Beam HIT! Chance: {final_chance:.2f}")
-                        else:
-                            # MISS
-                            print(f"Beam MISS! Chance: {final_chance:.2f}")
+                            end_pos = start_pos + direction * hit_dist
+                            # print(f"Beam HIT!")
 
-                # Create visual beam
                 self.beams.append({
                     'start': start_pos,
                     'end': end_pos,
-                    'timer': 0.2, # Stick around for 0.2s
+                    'timer': 0.2, 
                     'color': (100, 255, 255)
                 })
 
@@ -439,18 +478,18 @@ class Game:
             p['pos'] += p['vel'] * dt
             p['distance_traveled'] += p['vel'].length() * dt
             
-            # Collisions
+            # Optimization: Only check target
+            target = p.get('target')
+            
             hit = False
-            for target in [self.ship1, self.ship2]:
-                if target == p['owner']: continue
-                if not target.is_alive: continue
-                if p['pos'].distance_to(target.position) < 40:
+            if target and target.is_alive:
+                 if p['pos'].distance_to(target.position) < 40:
                     target.take_damage(p['damage'])
                     hit = True
-                    break
             
             if hit or p['distance_traveled'] > p['range']:
-                self.projectiles.remove(p)
+                if p in self.projectiles:
+                    self.projectiles.remove(p)
         
         # Update Beams (Visuals)
         for b in self.beams[:]:
@@ -484,8 +523,13 @@ class Game:
             p2 = self.camera.world_to_screen(pygame.math.Vector2(end_x, y))
             pygame.draw.line(self.screen, grid_color, p1, p2, 1)
 
-        draw_ship(self.screen, self.ship1, self.camera)
-        draw_ship(self.screen, self.ship2, self.camera)
+        for s in self.ships:
+            draw_ship(self.screen, s, self.camera)
+            # Draw Health Bar above ship
+            if s.is_alive:
+                pos = self.camera.world_to_screen(s.position)
+                if s.max_hp > 0:
+                    draw_bar(self.screen, pos.x - 20, pos.y - 60, 40, 5, s.hp / s.max_hp, (0, 255, 0))
         
         for p in self.projectiles:
             start = self.camera.world_to_screen(p['pos'])
@@ -503,8 +547,12 @@ class Game:
             
             pygame.draw.line(self.screen, color, start, end, max(1, int(3 * self.camera.zoom)))
             
-        draw_hud(self.screen, self.ship1, 10, 10)
-        draw_hud(self.screen, self.ship2, WIDTH - 250, 10)
+        # Draw HUD - Maybe text overlay for "Ships Left"?
+        s1_live = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
+        s2_live = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
+        
+        self.screen.blit(font_med.render(f"Team 1: {s1_live}", True, (100, 200, 255)), (10, 10))
+        self.screen.blit(font_med.render(f"Team 2: {s2_live}", True, (255, 100, 100)), (WIDTH - 150, 10))
 
     def run(self):
         while self.running:

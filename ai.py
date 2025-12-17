@@ -3,25 +3,53 @@ import pygame
 from components import LayerType
 
 class AIController:
-    def __init__(self, ship, enemy_ship):
+    def __init__(self, ship, grid, enemy_team_id):
         self.ship = ship
-        self.enemy = enemy_ship
+        self.grid = grid
+        self.enemy_team_id = enemy_team_id
+        
+    def find_target(self):
+        # Efficiently find nearest enemy using grid?
+        # For now, simplistic: query large radius or just iterate all known if passed?
+        # The prompt implies using the grid for targeting.
+        # Let's query a large radius (e.g., 50000) around the ship to find candidates.
+        candidates = self.grid.query_radius(self.ship.position, 50000)
+        
+        nearest = None
+        min_dist = float('inf')
+        
+        for obj in candidates:
+            if not obj.is_alive: continue
+            if not hasattr(obj, 'team_id'): continue # Ignore non-ships
+            if obj.team_id != self.enemy_team_id: continue
+            
+            d = self.ship.position.distance_to(obj.position)
+            if d < min_dist:
+                min_dist = d
+                nearest = obj
+                
+        return nearest
 
     def update(self, dt):
-        if not self.ship.is_alive or not self.enemy.is_alive:
-            # Just drift if fight over
+        if not self.ship.is_alive: return
+
+        # Target Acquisition
+        target = self.ship.current_target
+        if not target or not target.is_alive:
+            target = self.find_target()
+            self.ship.current_target = target
+            
+        if not target:
+            # Idle / Drift
+            self.ship.comp_trigger_pulled = False
             return
 
-        if self.ship.current_fuel <= 0:
-            # Drift behavior (do nothing, physics continues)
-            return
-
-        distance = self.ship.position.distance_to(self.enemy.position)
+        distance = self.ship.position.distance_to(target.position)
         
         # 1. Navigation
         # Calculate angle to enemy
-        dx = self.enemy.position.x - self.ship.position.x
-        dy = self.enemy.position.y - self.ship.position.y
+        dx = target.position.x - self.ship.position.x
+        dy = target.position.y - self.ship.position.y
         
         target_angle = math.degrees(math.atan2(dy, dx)) % 360
         current_angle = self.ship.angle % 360
@@ -31,21 +59,15 @@ class AIController:
         
         # Rotate
         if abs(angle_diff) > 5:
-            # Determine direction
             direction = 1 if angle_diff > 0 else -1
             self.ship.rotate(dt, direction)
         
         # Thrust
-        # If angle < 5 degrees and distance > 300px, fire Engines.
-        if abs(angle_diff) < 20 and distance > 300: # 20 degree cone for thrusting feels better, but prompt said 5?
-            # Prompt: "If angle < 5 degrees and distance > 300px, fire Engines."
-            # Sticking to prompt strictly for logic.
+        if abs(angle_diff) < 20 and distance > 300: 
             if abs(angle_diff) < 5:
                 self.ship.thrust_forward(dt)
 
         # 2. Combat
-        # "If distance < Railgun Range and generic "in sights", fire Railguns."
-        # Generic in sights can be angle < 10 degrees?
         in_sights = abs(angle_diff) < 10
         
         if in_sights:

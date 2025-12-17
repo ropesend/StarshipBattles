@@ -5,10 +5,12 @@ from physics import PhysicsBody
 from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon
 
 class Ship(PhysicsBody):
-    def __init__(self, name, x, y, color):
+    def __init__(self, name, x, y, color, team_id=0):
         super().__init__(x, y)
         self.name = name
         self.color = color
+        self.team_id = team_id
+        self.current_target = None
         
         # Layers
         self.layers = {
@@ -116,6 +118,19 @@ class Ship(PhysicsBody):
             self.max_speed = self.acceleration_rate / self.drag
         else:
             self.max_speed = 1000
+
+        if self.drag > 0:
+            self.max_speed = self.acceleration_rate / self.drag
+        else:
+            self.max_speed = 1000
+
+    @property
+    def hp(self):
+        return sum(c.current_hp for layer in self.layers.values() for c in layer['components'])
+
+    @property
+    def max_hp(self):
+        return sum(c.max_hp for layer in self.layers.values() for c in layer['components'])
 
     def update(self, dt):
         if not self.is_alive: return
@@ -272,6 +287,7 @@ class Ship(PhysicsBody):
                                 attacks.append({
                                     'type': 'beam',
                                     'owner': self,
+                                    'target': self.current_target,
                                     'damage': comp.damage,
                                     'range': comp.range,
                                     'origin': pygame.math.Vector2(self.position),
@@ -291,7 +307,8 @@ class Ship(PhysicsBody):
                                     'damage': comp.damage,
                                     'range': comp.range,
                                     'distance_traveled': 0,
-                                    'owner': self
+                                    'owner': self,
+                                    'target': self.current_target
                                 })
         return attacks
 
@@ -300,6 +317,7 @@ class Ship(PhysicsBody):
         data = {
             "name": self.name,
             "color": self.color,
+            "team_id": self.team_id,
             "layers": {}
         }
         
@@ -313,7 +331,7 @@ class Ship(PhysicsBody):
     def from_dict(data):
         """Create new Ship instance from dictionary."""
         # Using a dummy position, caller should update it
-        ship = Ship(data["name"], 0, 0, tuple(data["color"]))
+        ship = Ship(data["name"], 0, 0, tuple(data["color"]), data.get("team_id", 0))
         
         from components import create_component, LayerType
         
