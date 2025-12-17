@@ -2,7 +2,7 @@ import pygame
 import random
 import math
 from physics import PhysicsBody
-from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon
+from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon
 
 class Ship(PhysicsBody):
     def __init__(self, name, x, y, color):
@@ -26,6 +26,9 @@ class Ship(PhysicsBody):
         self.current_fuel = 0
         self.max_ammo = 0
         self.current_ammo = 0
+        self.max_energy = 0
+        self.current_energy = 0
+        self.energy_gen_rate = 0
         
         # Stats
         self.total_thrust = 0
@@ -69,6 +72,8 @@ class Ship(PhysicsBody):
         self.turn_speed = 0
         self.max_fuel = 0
         self.max_ammo = 0
+        self.max_energy = 0
+        self.energy_gen_rate = 0
         
         self.drag = 0.5 # Default drag/friction
         self.layers[LayerType.ARMOR]['max_hp_pool'] = 0
@@ -79,17 +84,22 @@ class Ship(PhysicsBody):
                     self.total_thrust += comp.thrust_force
                 elif isinstance(comp, Thruster):
                     self.turn_speed += comp.turn_speed
+                elif isinstance(comp, Generator):
+                    self.energy_gen_rate += comp.energy_generation_rate
                 elif isinstance(comp, Tank):
                     if comp.resource_type == 'fuel':
                         self.max_fuel += comp.capacity
                     elif comp.resource_type == 'ammo':
                         self.max_ammo += comp.capacity
+                    elif comp.resource_type == 'energy':
+                        self.max_energy += comp.capacity
                 elif isinstance(comp, Armor) and layer_type == LayerType.ARMOR:
                     self.layers[LayerType.ARMOR]['max_hp_pool'] += comp.max_hp
                     
         # Reset current resources if initializing (simplified)
         if self.current_fuel == 0: self.current_fuel = self.max_fuel
         if self.current_ammo == 0: self.current_ammo = self.max_ammo
+        if self.current_energy == 0: self.current_energy = self.max_energy
         
         # Armor HP initialization
         if self.layers[LayerType.ARMOR]['hp_pool'] == 0:
@@ -109,6 +119,12 @@ class Ship(PhysicsBody):
 
     def update(self, dt):
         if not self.is_alive: return
+
+        # Regenerate Energy
+        if self.current_energy < self.max_energy:
+            self.current_energy += self.energy_gen_rate * dt
+            if self.current_energy > self.max_energy:
+                self.current_energy = self.max_energy
         
         # Arcade Movement Logic
         # 1. Rotation and cooldowns are handled
@@ -229,35 +245,55 @@ class Ship(PhysicsBody):
     def fire_weapons(self):
         """
         Attempts to fire all ready weapons.
-        Returns a list of dicts: {'pos': (x,y), 'vel': (vx, vy), 'damage': d, 'color': c}
+        Returns a list of dicts representing attacks (Projectiles or Beams).
         """
-        projectiles = []
-        if self.current_ammo <= 0: return projectiles
+        attacks = []
 
         for layer in self.layers.values():
             for comp in layer['components']:
                 if isinstance(comp, Weapon) and comp.is_active:
-                    if self.current_ammo >= comp.ammo_cost and comp.can_fire():
+                    # Determine cost and resource type
+                    cost = 0
+                    has_resource = False
+                    
+                    if isinstance(comp, BeamWeapon):
+                        cost = comp.energy_cost
+                        has_resource = (self.current_energy >= cost)
+                    else:
+                        cost = comp.ammo_cost
+                        has_resource = (self.current_ammo >= cost)
+                    
+                    if has_resource and comp.can_fire():
                         if comp.fire():
-                            self.current_ammo -= comp.ammo_cost
-                            
-                            # Calculate projectile spawn info
-                            # Spawns at ship position (or offset?)
-                            # Muzzle velocity? "fast-moving yellow lines"
-                            # Let's say 400 pixels/sec + ship velocity
-                            muzzle_speed = 500
-                            forward = self.forward_vector()
-                            vel = self.velocity + forward * muzzle_speed
-                            
-                            projectiles.append({
-                                'pos': pygame.math.Vector2(self.position),
-                                'vel': vel,
-                                'damage': comp.damage,
-                                'range': comp.range,
-                                'distance_traveled': 0,
-                                'owner': self
-                            })
-        return projectiles
+                            # Deduct Resource
+                            if isinstance(comp, BeamWeapon):
+                                self.current_energy -= cost
+                                # Beam Event
+                                attacks.append({
+                                    'type': 'beam',
+                                    'owner': self,
+                                    'damage': comp.damage,
+                                    'range': comp.range,
+                                    'origin': pygame.math.Vector2(self.position),
+                                    'direction': self.forward_vector(),
+                                    'component': comp
+                                })
+                            else:
+                                self.current_ammo -= cost
+                                # Projectile Event
+                                muzzle_speed = 500
+                                forward = self.forward_vector()
+                                vel = self.velocity + forward * muzzle_speed
+                                attacks.append({
+                                    'type': 'projectile',
+                                    'pos': pygame.math.Vector2(self.position),
+                                    'vel': vel,
+                                    'damage': comp.damage,
+                                    'range': comp.range,
+                                    'distance_traveled': 0,
+                                    'owner': self
+                                })
+        return attacks
 
     def to_dict(self):
         """Serialize ship to dictionary."""

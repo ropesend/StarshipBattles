@@ -106,6 +106,30 @@ class Armor(Component):
         return Armor(self.data)
 
 # Registry
+class Generator(Component):
+    def __init__(self, data):
+        super().__init__(data)
+        self.energy_generation_rate = data.get('energy_generation', 0)
+
+    def clone(self):
+        return Generator(self.data)
+
+class BeamWeapon(Weapon):
+    def __init__(self, data):
+        super().__init__(data)
+        self.energy_cost = data.get('energy_cost', 0)
+        self.base_accuracy = data.get('base_accuracy', 1.0)
+        self.accuracy_falloff = data.get('accuracy_falloff', 0.001)
+
+    def clone(self):
+        return BeamWeapon(self.data)
+    
+    def calculate_hit_chance(self, distance):
+        # Linear falloff
+        chance = self.base_accuracy - (distance * self.accuracy_falloff)
+        return max(0.0, min(1.0, chance))
+
+
 COMPONENT_REGISTRY = {}
 
 def load_components(filepath="components.json"):
@@ -147,6 +171,10 @@ def load_components(filepath="components.json"):
                     obj = Tank(comp_def)
                 elif c_type == "Armor":
                     obj = Armor(comp_def)
+                elif c_type == "Generator":
+                    obj = Generator(comp_def)
+                elif c_type == "BeamWeapon":
+                    obj = BeamWeapon(comp_def)
                 else:
                     obj = Component(comp_def)
                 

@@ -1,6 +1,7 @@
 import pygame
 import time
 import math
+import random
 from ship import Ship, LayerType
 from ai import AIController
 from designs import create_brick, create_interceptor
@@ -114,6 +115,10 @@ def draw_hud(surface, ship, x, y):
     # Ammo
     draw_bar(surface, x, y, 100, 8, ship.current_ammo / ship.max_ammo if ship.max_ammo > 0 else 0, (255, 50, 50))
     surface.blit(font_small.render("Ammo", True, (200, 200, 200)), (x + 105, y - 2))
+    y += 12
+    # Energy
+    draw_bar(surface, x, y, 100, 8, ship.current_energy / ship.max_energy if ship.max_energy > 0 else 0, (50, 100, 255))
+    surface.blit(font_small.render("Energy", True, (200, 200, 200)), (x + 105, y - 2))
     y += 20
     
     # 4. Component List
@@ -195,6 +200,7 @@ class Game:
         self.ai1 = None
         self.ai2 = None
         self.projectiles = []
+        self.beams = []
         
         # Menu UI
         self.menu_buttons = [
@@ -228,6 +234,7 @@ class Game:
         self.ai1 = AIController(self.ship1, self.ship2)
         self.ai2 = AIController(self.ship2, self.ship1)
         self.projectiles = []
+        self.beams = []
         self.state = BATTLE
 
     def update_battle(self, dt):
@@ -236,12 +243,89 @@ class Game:
         self.ship1.update(dt)
         self.ship2.update(dt)
         
-        # Collect Projectiles
+        # Collect Attacks (Projectiles and Beams)
+        new_attacks = []
         if hasattr(self.ship1, 'just_fired_projectiles'):
-            self.projectiles.extend(self.ship1.just_fired_projectiles)
+            new_attacks.extend(self.ship1.just_fired_projectiles)
         if hasattr(self.ship2, 'just_fired_projectiles'):
-            self.projectiles.extend(self.ship2.just_fired_projectiles)
+            new_attacks.extend(self.ship2.just_fired_projectiles)
             
+        for attack in new_attacks:
+            if attack['type'] == 'projectile':
+                self.projectiles.append(attack)
+            elif attack['type'] == 'beam':
+                # Immediate Raycast Hit Logic
+                
+                start_pos = attack['origin']
+                direction = attack['direction']
+                max_range = attack['range']
+                end_pos = start_pos + direction * max_range
+                
+                # Check for hits against enemies
+                # Ideally we raycast against all enemies. Here we just have ship1/ship2
+                target = self.ship2 if attack['owner'] == self.ship1 else self.ship1
+                
+                if target.is_alive:
+                    # Simple Ray-Circle intersection
+                    # Vector from start to circle center
+                    f = start_pos - target.position
+                    
+                    # Quadratic Equation coefficients for ray-circle
+                    # ray = P + td
+                    # |P + td - C|^2 = r^2
+                    # let P-C = f
+                    # |f + td|^2 = r^2
+                    # (f.x + t*d.x)^2 + (f.y + t*d.y)^2 = r^2
+                    # ... a*t^2 + b*t + c = 0
+                    
+                    a = direction.dot(direction)
+                    b = 2 * f.dot(direction)
+                    c = f.dot(f) - 40**2 # 40 is collision radius
+                    
+                    discriminant = b*b - 4*a*c
+                    
+                    hit_dist = -1
+                    if discriminant >= 0:
+                        # Hit!
+                        t1 = (-b - math.sqrt(discriminant)) / (2*a)
+                        t2 = (-b + math.sqrt(discriminant)) / (2*a)
+                        
+                        # We want the smallest positive t
+                        if t1 >= 0 and t1 <= max_range:
+                            hit_dist = t1
+                        elif t2 >= 0 and t2 <= max_range:
+                            hit_dist = t2
+                            
+                    if hit_dist >= 0:
+                        # Confirm Hit Chance
+                        # Calculate modifiers
+                        beam_comp = attack['component']
+                        chance = beam_comp.calculate_hit_chance(hit_dist)
+                        
+                        # Modify by target size (optional, stick to requested logic)
+                        # User said: "size modifier is the target size / standard size"
+                        # Standard size not defined, let's assume radius 40 is standard
+                        size_mod = 40.0 / 40.0 
+                        
+                        final_chance = chance * size_mod
+                        
+                        if random.random() < final_chance:
+                            # HIT
+                            target.take_damage(attack['damage'])
+                            end_pos = start_pos + direction * hit_dist # Visual beam stops at target
+                            print(f"Beam HIT! Chance: {final_chance:.2f}")
+                        else:
+                            # MISS
+                            print(f"Beam MISS! Chance: {final_chance:.2f}")
+
+                # Create visual beam
+                self.beams.append({
+                    'start': start_pos,
+                    'end': end_pos,
+                    'timer': 0.2, # Stick around for 0.2s
+                    'color': (100, 255, 255)
+                })
+
         # Update Projectiles
         for p in self.projectiles[:]:
             p['pos'] += p['vel'] * dt
@@ -259,6 +343,12 @@ class Game:
             
             if hit or p['distance_traveled'] > p['range']:
                 self.projectiles.remove(p)
+        
+        # Update Beams (Visuals)
+        for b in self.beams[:]:
+            b['timer'] -= dt
+            if b['timer'] <= 0:
+                self.beams.remove(b)
 
     def draw_battle(self):
         self.screen.fill(BG_COLOR)
@@ -269,6 +359,14 @@ class Game:
             start = p['pos']
             end = p['pos'] - p['vel'].normalize() * 10
             pygame.draw.line(self.screen, (255, 255, 0), start, end, 2)
+            
+        for b in self.beams:
+            # Fade out
+            alpha = int(255 * (b['timer'] / 0.2))
+            color = b['color'] # RGB
+            # Pygame draw.line doesn't support alpha directly on main screen usually unless surface with alpha
+            # For simplicity, we just draw solid or thin
+            pygame.draw.line(self.screen, color, b['start'], b['end'], 3)
             
         draw_hud(self.screen, self.ship1, 10, 10)
         draw_hud(self.screen, self.ship2, WIDTH - 250, 10)

@@ -98,6 +98,51 @@
             "capacity": 500,
             "resource_type": "ammo",
             "sprite_index": 34
+        },
+        {
+            "id": "battery",
+            "name": "Battery",
+            "type": "Tank",
+            "mass": 30,
+            "hp": 50,
+            "allowed_layers": [
+                "CORE",
+                "INNER",
+                "OUTER"
+            ],
+            "capacity": 200,
+            "resource_type": "energy",
+            "sprite_index": 26
+        },
+        {
+            "id": "generator",
+            "name": "Generator",
+            "type": "Generator",
+            "mass": 50,
+            "hp": 80,
+            "allowed_layers": [
+                "CORE",
+                "INNER"
+            ],
+            "energy_generation": 25,
+            "sprite_index": 9
+        },
+        {
+            "id": "laser_beam",
+            "name": "Laser Beam",
+            "type": "BeamWeapon",
+            "mass": 20,
+            "hp": 40,
+            "allowed_layers": [
+                "OUTER"
+            ],
+            "damage": 15,
+            "range": 500,
+            "reload": 0.2,
+            "energy_cost": 5,
+            "base_accuracy": 1.0,
+            "accuracy_falloff": 0.002,
+            "sprite_index": 18
         }
     ]
 }
