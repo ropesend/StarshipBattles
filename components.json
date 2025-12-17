@@ -24,7 +24,7 @@
                 "OUTER"
             ],
             "damage": 40,
-            "range": 600,
+            "range": 2400,
             "reload": 2.0,
             "ammo_cost": 1,
             "sprite_index": 18
@@ -137,11 +137,11 @@
                 "OUTER"
             ],
             "damage": 15,
-            "range": 500,
+            "range": 2000,
             "reload": 0.2,
             "energy_cost": 5,
             "base_accuracy": 1.0,
-            "accuracy_falloff": 0.002,
+            "accuracy_falloff": 0.0001,
             "sprite_index": 22
         }
     ]

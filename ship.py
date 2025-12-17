@@ -42,6 +42,9 @@ class Ship(PhysicsBody):
         self.current_speed = 0
         self.acceleration_rate = 0
         self.max_speed = 0
+        
+        # Collision
+        self.radius = 40
 
     def add_component(self, component: Component, layer_type: LayerType):
         if layer_type not in component.allowed_layers:
@@ -131,6 +134,16 @@ class Ship(PhysicsBody):
     @property
     def max_hp(self):
         return sum(c.max_hp for layer in self.layers.values() for c in layer['components'])
+
+    @property
+    def max_weapon_range(self):
+        max_rng = 0
+        for layer in self.layers.values():
+            for comp in layer['components']:
+                if isinstance(comp, Weapon) and comp.is_active:
+                    if comp.range > max_rng:
+                        max_rng = comp.range
+        return max_rng
 
     def update(self, dt):
         if not self.is_alive: return

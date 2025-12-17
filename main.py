@@ -340,6 +340,9 @@ class Game:
         self.grid = SpatialGrid(cell_size=2000)
         self.ships = []
         self.ai_controllers = []
+        
+        # Debug Overlay
+        self.show_overlay = False
 
     def start_quick_battle(self):
         # 5v5 Battle
@@ -486,6 +489,40 @@ class Game:
                     'color': (100, 255, 255)
                 })
 
+        # Ship-to-Ship Collisions
+        # Re-fetch alive ships strictly for this check
+        current_alive = [s for s in self.ships if s.is_alive]
+        collision_radius = 40 # Approx ship radius
+        
+        for i in range(len(current_alive)):
+            for j in range(i + 1, len(current_alive)):
+                s1 = current_alive[i]
+                s2 = current_alive[j]
+                
+                if not s1.is_alive or not s2.is_alive: continue
+                
+                if s1.position.distance_to(s2.position) < (collision_radius * 2):
+                    # Collision!
+                    hp1 = s1.hp
+                    hp2 = s2.hp
+                    
+                    if hp1 < hp2:
+                        # s1 is weaker -> destroyed
+                        # s2 takes damage equal to s1's HP
+                        s1.take_damage(hp1 + 9999)
+                        s2.take_damage(hp1)
+                        print(f"Ramming: {s1.name} destroyed by {s2.name}!")
+                    elif hp2 < hp1:
+                         # s2 is weaker -> destroyed
+                        s2.take_damage(hp2 + 9999)
+                        s1.take_damage(hp2)
+                        print(f"Ramming: {s2.name} destroyed by {s1.name}!")
+                    else:
+                        # Both die
+                        s1.take_damage(hp1 + 9999)
+                        s2.take_damage(hp2 + 9999)
+                        print(f"Ramming: Mutual destruction between {s1.name} and {s2.name}!")
+
         # Update Projectiles
         for p in self.projectiles[:]:
             p['pos'] += p['vel'] * dt
@@ -509,6 +546,33 @@ class Game:
             b['timer'] -= dt
             if b['timer'] <= 0:
                 self.beams.remove(b)
+
+    def draw_debug_overlay(self):
+        for s in self.ships:
+            if not s.is_alive: continue
+            
+            # 1. Target Line
+            if s.current_target and s.current_target.is_alive:
+                start = self.camera.world_to_screen(s.position)
+                end = self.camera.world_to_screen(s.current_target.position)
+                pygame.draw.line(self.screen, (0, 0, 255), start, end, 1)
+                
+            # 2. Weapon Range
+            # Find max weapon range
+            max_range = 0
+            for layer in s.layers.values():
+                for comp in layer['components']:
+                    if isinstance(comp, Weapon) and comp.is_active:
+                        if comp.range > max_range:
+                            max_range = comp.range
+            
+            if max_range > 0:
+                # Convert radius to screen space
+                # Radius in pixels = range * zoom
+                r_screen = int(max_range * self.camera.zoom)
+                if r_screen > 0:
+                    center = self.camera.world_to_screen(s.position)
+                    pygame.draw.circle(self.screen, (100, 100, 100), (int(center.x), int(center.y)), r_screen, 1)
 
     def draw_battle(self):
         self.screen.fill(BG_COLOR)
@@ -558,6 +622,9 @@ class Game:
             pygame.draw.line(self.screen, color, start, end, max(1, int(3 * self.camera.zoom)))
             
         # Draw HUD
+        if self.show_overlay:
+            self.draw_debug_overlay()
+            
         s1_live = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
         s2_live = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
         
@@ -579,6 +646,10 @@ class Game:
                     if self.state == MENU:
                          self.menu_buttons[0].rect.center = (event.w//2, event.h//2 - 50)
                          self.menu_buttons[1].rect.center = (event.w//2, event.h//2 + 20)
+                elif event.type == pygame.KEYDOWN:
+                    if self.state == BATTLE:
+                        if event.key == pygame.K_o:
+                            self.show_overlay = not self.show_overlay
                 
                 if self.state == MENU:
                     for btn in self.menu_buttons:
