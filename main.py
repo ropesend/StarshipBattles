@@ -51,6 +51,19 @@ class Camera:
         if move.length() > 0:
             self.position += move.normalize() * speed * dt
 
+        # Middle Mouse Panning
+        if pygame.mouse.get_pressed()[1]:
+            rel = pygame.mouse.get_rel()
+            # Invert relations because if we drag mouse left, camera moves left (position decreases)
+            # Actually, if we drag mouse left (negative x), we want to see what is on the right?
+            # Standard pan: drag world. Move mouse left -> World moves left -> Camera moves right.
+            # let's try: Camera moves opposite to mouse delta.
+            # mouse_rel is in screen pixels. correct by zoom.
+            delta = pygame.math.Vector2(rel) / self.zoom
+            self.position -= delta
+        else:
+            pygame.mouse.get_rel() # clear relative movement
+
         for event in events:
             if event.type == pygame.MOUSEWHEEL:
                 old_zoom = self.zoom
@@ -283,7 +296,7 @@ BATTLE = 2
 class Game:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
         pygame.display.set_caption("Starship Battles")
         self.clock = pygame.time.Clock()
         self.running = True
@@ -500,11 +513,12 @@ class Game:
     def draw_battle(self):
         self.screen.fill(BG_COLOR)
         
-        # Draw Grid
+        # Grid
         grid_spacing = 5000
-        # Determine visible range
+        sw, sh = self.screen.get_size()
+        
         tl = self.camera.screen_to_world((0, 0))
-        br = self.camera.screen_to_world((WIDTH, HEIGHT))
+        br = self.camera.screen_to_world((sw, sh))
         
         start_x = int(tl.x // grid_spacing) * grid_spacing
         end_x = int(br.x // grid_spacing + 1) * grid_spacing
@@ -525,7 +539,6 @@ class Game:
 
         for s in self.ships:
             draw_ship(self.screen, s, self.camera)
-            # Draw Health Bar above ship
             if s.is_alive:
                 pos = self.camera.world_to_screen(s.position)
                 if s.max_hp > 0:
@@ -538,21 +551,18 @@ class Game:
             pygame.draw.line(self.screen, (255, 255, 0), start, end, 2)
             
         for b in self.beams:
-            # Fade out
             alpha = int(255 * (b['timer'] / 0.2))
-            color = b['color'] # RGB
-            
+            color = b['color'] 
             start = self.camera.world_to_screen(b['start'])
             end = self.camera.world_to_screen(b['end'])
-            
             pygame.draw.line(self.screen, color, start, end, max(1, int(3 * self.camera.zoom)))
             
-        # Draw HUD - Maybe text overlay for "Ships Left"?
+        # Draw HUD
         s1_live = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
         s2_live = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
         
         self.screen.blit(font_med.render(f"Team 1: {s1_live}", True, (100, 200, 255)), (10, 10))
-        self.screen.blit(font_med.render(f"Team 2: {s2_live}", True, (255, 100, 100)), (WIDTH - 150, 10))
+        self.screen.blit(font_med.render(f"Team 2: {s2_live}", True, (255, 100, 100)), (sw - 150, 10))
 
     def run(self):
         while self.running:
@@ -562,6 +572,13 @@ class Game:
             for event in events:
                 if event.type == pygame.QUIT:
                     self.running = False
+                elif event.type == pygame.VIDEORESIZE:
+                    self.camera.width = event.w
+                    self.camera.height = event.h
+                    # Update menu buttons position?
+                    if self.state == MENU:
+                         self.menu_buttons[0].rect.center = (event.w//2, event.h//2 - 50)
+                         self.menu_buttons[1].rect.center = (event.w//2, event.h//2 + 20)
                 
                 if self.state == MENU:
                     for btn in self.menu_buttons:
