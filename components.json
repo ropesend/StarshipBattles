@@ -39,7 +39,7 @@
                 "INNER",
                 "OUTER"
             ],
-            "thrust_force": 15000,
+            "thrust_force": 150000,
             "fuel_cost": 0.5,
             "sprite_index": 9
         },

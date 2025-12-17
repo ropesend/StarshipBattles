@@ -12,8 +12,8 @@ class AIController:
         # Efficiently find nearest enemy using grid?
         # For now, simplistic: query large radius or just iterate all known if passed?
         # The prompt implies using the grid for targeting.
-        # Let's query a large radius (e.g., 50000) around the ship to find candidates.
-        candidates = self.grid.query_radius(self.ship.position, 50000)
+        # Let's query a large radius (e.g., 200000) around the ship to find candidates.
+        candidates = self.grid.query_radius(self.ship.position, 200000)
         
         nearest = None
         min_dist = float('inf')
