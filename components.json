@@ -80,7 +80,7 @@
                 "INNER",
                 "OUTER"
             ],
-            "capacity": 500,
+            "capacity": 50000,
             "resource_type": "fuel",
             "sprite_index": 26
         },
@@ -95,7 +95,7 @@
                 "INNER",
                 "OUTER"
             ],
-            "capacity": 500,
+            "capacity": 5000,
             "resource_type": "ammo",
             "sprite_index": 34
         },
@@ -110,7 +110,7 @@
                 "INNER",
                 "OUTER"
             ],
-            "capacity": 200,
+            "capacity": 2000,
             "resource_type": "energy",
             "sprite_index": 182
         },
