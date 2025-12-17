@@ -86,6 +86,3 @@ class Slider:
         # Track
         pygame.draw.rect(surface, (100, 100, 100), self.rect)
         # Handle
-        handle = self.get_handle_rect()
-        pygame.draw.rect(surface, (200, 200, 200), handle)
-        pygame.draw.rect(surface, (255, 255, 255), handle, 1)

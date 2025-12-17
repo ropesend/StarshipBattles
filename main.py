@@ -27,6 +27,124 @@ LAYER_COLORS = {
     LayerType.CORE: (220, 220, 220)
 }
 
+import tkinter as tk
+
+class InspectorTk:
+    def __init__(self, ship, root):
+        self.ship = ship
+        self.is_open = True
+        
+        # Create Toplevel window
+        self.window = tk.Toplevel(root)
+        self.window.title(f"Inspector: {ship.name}")
+        self.window.geometry("300x500")
+        self.window.configure(bg="#202020")
+        
+        # Handle close
+        self.window.protocol("WM_DELETE_WINDOW", self.on_close)
+        
+        # UI Elements
+        self.labels = {}
+        self.comp_frame = None
+        
+        # Setup UI
+        self.setup_ui()
+        
+    def on_close(self):
+        self.is_open = False
+        self.window.destroy()
+        
+    def setup_ui(self):
+        # Header
+        header = tk.Label(self.window, text=self.ship.name, font=("Arial", 16, "bold"), fg="white", bg="#202020")
+        header.pack(pady=10)
+        
+        # Stats Frame
+        stats_frame = tk.Frame(self.window, bg="#202020")
+        stats_frame.pack(fill="x", padx=10)
+        
+        self.labels['mass'] = tk.Label(stats_frame, text="", fg="#cccccc", bg="#202020", font=("Arial", 10))
+        self.labels['mass'].pack(anchor="w")
+        self.labels['hp'] = tk.Label(stats_frame, text="", fg="#cccccc", bg="#202020", font=("Arial", 10))
+        self.labels['hp'].pack(anchor="w")
+        
+        # Components Scrollable? For now just simple pack
+        tk.Label(self.window, text="Components", fg="yellow", bg="#202020", font=("Arial", 12)).pack(pady=10)
+        
+        # We'll use a canvas or just rebuild frames for components on update?
+        # Rebuilding widgets every frame is bad.
+        # But components might not change often.
+        # Let's use a Frame and update labels inside.
+        
+        self.comp_frame = tk.Frame(self.window, bg="#202020")
+        self.comp_frame.pack(fill="both", expand=True, padx=5)
+        
+        # Initial populate
+        self.rebuild_components()
+
+    def rebuild_components(self):
+        for widget in self.comp_frame.winfo_children():
+            widget.destroy()
+            
+        self.comp_widgets = []
+        
+        for ltype in [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]:
+            comps = self.ship.layers[ltype]['components']
+            if not comps: continue
+            
+            # Header
+            tk.Label(self.comp_frame, text=f"--- {ltype.name} ---", fg="#888", bg="#202020").pack(anchor="w")
+            
+            for c in comps:
+                row = tk.Frame(self.comp_frame, bg="#202020")
+                row.pack(fill="x", pady=1)
+                
+                name_lbl = tk.Label(row, text=c.name, fg="white", bg="#202020", width=15, anchor="w")
+                name_lbl.pack(side="left")
+                
+                # HP Bar Canvas
+                canvas = tk.Canvas(row, width=100, height=8, bg="#333", highlightthickness=0)
+                canvas.pack(side="left", padx=5)
+                
+                self.comp_widgets.append({
+                    'comp': c,
+                    'name_lbl': name_lbl,
+                    'canvas': canvas
+                })
+
+    def update(self):
+        if not self.is_open: return
+        
+        s = self.ship
+        
+        # Update Stats
+        self.labels['mass'].config(text=f"Mass: {s.mass:.0f}")
+        self.labels['hp'].config(text=f"HP: {s.hp:.0f} / {s.max_hp:.0f}")
+        
+        # Update Components
+        if not hasattr(self, 'comp_widgets'): return
+        
+        for item in self.comp_widgets:
+            c = item['comp']
+            canvas = item['canvas']
+            
+            # Update Active Color
+            color = "white" if c.is_active else "#663333"
+            item['name_lbl'].config(fg=color)
+            
+            # Update Bar
+            canvas.delete("all")
+            if c.max_hp > 0:
+                pct = c.current_hp / c.max_hp
+                bar_w = 100 * pct
+                fill = "#00ff00"
+                if pct < 0.5: fill = "#cccc00"
+                if pct < 0.2: fill = "#cc0000"
+                if not c.is_active: fill = "#333333"
+                
+                canvas.create_rectangle(0, 0, bar_w, 8, fill=fill, width=0)
+
+
 pygame.font.init()
 font_small = pygame.font.SysFont("arial", 12)
 font_med = pygame.font.SysFont("arial", 20)
@@ -350,8 +468,10 @@ class Game:
         # Debug Overlay
         self.show_overlay = False
         
-        # Inspector
-        self.selected_ship = None
+        # Inspector Active Windows
+        self.tk_root = tk.Tk()
+        self.tk_root.withdraw() # Hide main root
+        self.active_inspectors = [] # List of InspectorTk
 
     def start_quick_battle(self):
         # 5v5 Battle
@@ -424,6 +544,18 @@ class Game:
     def update_battle(self, dt, events):
         self.camera.update_input(dt, events)
         
+        # Update Tkinter
+        try:
+            self.tk_root.update()
+        except:
+            pass # App closing
+            
+        for win in self.active_inspectors:
+            win.update()
+        
+        # Clean up closed windows
+        self.active_inspectors = [w for w in self.active_inspectors if w.is_open]
+
         # Input for Selection
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -440,7 +572,10 @@ class Game:
                         found = s
                         break
                 
-                self.selected_ship = found
+                if found:
+                    # Create New Window
+                    new_win = InspectorTk(found, self.tk_root)
+                    self.active_inspectors.append(new_win)
         
         # 1. Update Grid
         self.grid.clear()
@@ -601,86 +736,7 @@ class Game:
                     center = self.camera.world_to_screen(s.position)
                     pygame.draw.circle(self.screen, (100, 100, 100), (int(center.x), int(center.y)), r_screen, 1)
 
-    def draw_inspector(self):
-        if not self.selected_ship: return
-        
-        s = self.selected_ship
-        
-        # Panel Rect
-        panel_w = 300
-        panel_h = HEIGHT - 40
-        x = WIDTH - panel_w - 20
-        y = 20
-        
-        # Transparent BG
-        s_surf = pygame.Surface((panel_w, panel_h))
-        s_surf.set_alpha(200)
-        s_surf.fill((20, 20, 30))
-        self.screen.blit(s_surf, (x, y))
-        
-        # Border
-        pygame.draw.rect(self.screen, (100, 100, 150), (x, y, panel_w, panel_h), 2)
-        
-        # Content
-        px = x + 10
-        py = y + 10
-        
-        # Header
-        name_txt = font_large.render(s.name, True, (255, 255, 255))
-        self.screen.blit(name_txt, (px, py))
-        py += 40
-        
-        # Basic Stats
-        lines = [
-            f"Mass: {s.mass:.0f}",
-            f"Thrust: {s.total_thrust:.0f}",
-            f"HP: {s.hp:.0f} / {s.max_hp:.0f}",
-            f"Team: {s.team_id}"
-        ]
-        
-        for line in lines:
-            txt = font_med.render(line, True, (200, 200, 200))
-            self.screen.blit(txt, (px, py))
-            py += 25
-            
-        py += 10
-        pygame.draw.line(self.screen, (100, 100, 100), (px, py), (px + panel_w - 20, py), 1)
-        py += 10
-        
-        # Components
-        title = font_med.render("Components", True, (255, 255, 100))
-        self.screen.blit(title, (px, py))
-        py += 30
-        
-        # Iterate layers
-        for ltype in [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]:
-            comps = s.layers[ltype]['components']
-            if not comps: continue
-            
-            # Layer Header
-            l_txt = font_small.render(f"--- {ltype.name} ---", True, (150, 150, 150))
-            self.screen.blit(l_txt, (px, py))
-            py += 20
-            
-            for c in comps:
-                # Name
-                c_color = (255, 255, 255) if c.is_active else (100, 50, 50)
-                name_surf = font_small.render(c.name, True, c_color)
-                self.screen.blit(name_surf, (px, py))
-                
-                # HP Bar
-                bar_w = 100
-                bar_h = 8
-                pct = c.current_hp / c.max_hp if c.max_hp > 0 else 0
-                draw_bar(self.screen, px + 120, py + 2, bar_w, bar_h, pct, (0, 255, 0))
-                
-                # Modifiers indicators
-                if c.modifiers:
-                    mod_txt = " ".join([m.definition.name[0] for m in c.modifiers]) # First letter
-                    mod_surf = font_small.render(f"[{mod_txt}]", True, (255, 200, 100))
-                    self.screen.blit(mod_surf, (px + 120 + bar_w + 5, py))
-                
-                py += 18
+    # Old Draw Inspector Removed
 
     def draw_battle(self):
         self.screen.fill(BG_COLOR)
@@ -735,9 +791,6 @@ class Game:
         if self.show_overlay:
             self.draw_debug_overlay()
             
-        # Draw Inspector
-        if self.selected_ship:
-            self.draw_inspector()
             
         pygame.display.flip()
 
