@@ -1,0 +1,39 @@
+{
+    "modifiers": [
+        {
+            "id": "hardened",
+            "name": "Hardened",
+            "type": "boolean",
+            "description": "+100% HP, +25% Mass",
+            "effects": {
+                "hp_mult": 1.0,
+                "mass_mult": 0.25
+            },
+            "restrictions": {
+                "deny_types": [
+                    "Armor"
+                ]
+            }
+        },
+        {
+            "id": "turret_mount",
+            "name": "Turret Mount",
+            "type": "linear",
+            "description": "Adds firing arc. Mass increases with arc.",
+            "param_name": "arc",
+            "min_val": 0,
+            "max_val": 180,
+            "default_val": 45,
+            "effects": {
+                "mass_add_per_unit": 0.5,
+                "arc_set": true
+            },
+            "restrictions": {
+                "allow_types": [
+                    "Weapon",
+                    "BeamWeapon"
+                ]
+            }
+        }
+    ]
+}

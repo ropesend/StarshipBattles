@@ -2,9 +2,10 @@ import json
 import tkinter
 import pygame
 from tkinter import filedialog
-from ui import Button, Label
+from tkinter import filedialog
+from ui import Button, Label, Slider
 from ship import Ship, LayerType
-from components import get_all_components, Bridge, Weapon, Engine, Thruster, Armor, Tank
+from components import get_all_components, MODIFIER_REGISTRY, Bridge, Weapon, Engine, Thruster, Armor, Tank
 from sprites import SpriteManager
 
 # Initialize Tkinter root and hide it
@@ -34,6 +35,14 @@ class BuilderScene:
         
         self.buttons = []
         self.labels = []
+        
+        # Inspector UI State
+        self.selected_component = None # (layer, index, component)
+        self.inspector_buttons = []
+        self.inspector_sliders = []
+        self.inspector_labels = []
+        
+        # Create Buttons (Start, Save, Load)
         
         # Create Buttons (Start, Save, Load)
         btn_width = 220
@@ -116,6 +125,12 @@ class BuilderScene:
         for btn in self.buttons:
             btn.handle_event(event)
             
+        # Inspector controls
+        for btn in self.inspector_buttons:
+             btn.handle_event(event)
+        for s in self.inspector_sliders:
+             s.handle_event(event)
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 # Check Palette click
@@ -132,9 +147,19 @@ class BuilderScene:
                     # Check if clicking on an existing component on the ship
                     found = self.get_component_at_pos(event.pos)
                     if found:
-                        layer, index, comp = found
-                        self.ship.remove_component(layer, index)
-                        self.dragged_item = comp
+                        if self.selected_component and self.selected_component == found:
+                            # Already selected, pick it up
+                            layer, index, comp = found
+                            self.ship.remove_component(layer, index)
+                            self.dragged_item = comp
+                            self.selected_component = None 
+                            self.rebuild_inspector()
+                        else:
+                            # Select it
+                            self.select_component(found)
+                    else:
+                         self.selected_component = None
+                         self.rebuild_inspector()
             elif event.button == 3: # Right click to remove
                 # Check ship layers
                 pass # TODO: Implement removal logic
@@ -332,6 +357,92 @@ class BuilderScene:
                txt = font.render(self.dragged_item.name, True, (255, 255, 0))
                screen.blit(txt, (mx + 15, my + 15))
 
+        if self.selected_component:
+             pygame.draw.rect(screen, (40, 40, 50), (self.width - self.info_width, 200, self.info_width, 400))
+             
+             for lbl in self.inspector_labels:
+                 lbl.draw(screen)
+             for btn in self.inspector_buttons:
+                 btn.draw(screen)
+             for slid in self.inspector_sliders:
+                 slid.draw(screen)
+
         # Draw UI
         for btn in self.buttons:
             btn.draw(screen)
+
+    def select_component(self, selection):
+        self.selected_component = selection
+        self.rebuild_inspector()
+        
+    def rebuild_inspector(self):
+        self.inspector_buttons = []
+        self.inspector_sliders = []
+        self.inspector_labels = []
+        
+        if not self.selected_component: return
+        
+        layer, index, comp = self.selected_component
+        
+        # Header
+        x = self.width - self.info_width + 10
+        y = 210
+        self.inspector_labels.append(Label(x, y, f"Editing: {comp.name}", 16, (100, 255, 100)))
+        y += 30
+        
+        # Stats
+        self.inspector_labels.append(Label(x, y, f"Mass: {comp.mass:.1f}", 14))
+        y += 20
+        self.inspector_labels.append(Label(x, y, f"HP: {comp.max_hp:.1f}", 14))
+        y += 30
+        
+        # Modifiers
+        self.inspector_labels.append(Label(x, y, "Modifiers:", 16, (200, 200, 100)))
+        y += 25
+        
+        for mod_id, mod_def in MODIFIER_REGISTRY.items():
+            # Check compatibility
+            allowed = True
+            if 'deny_types' in mod_def.restrictions and comp.type_str in mod_def.restrictions['deny_types']:
+                allowed = False
+            if 'allow_types' in mod_def.restrictions and comp.type_str not in mod_def.restrictions['allow_types']:
+                allowed = False
+                
+            if not allowed: continue
+            
+            # Check if applied
+            applied_mod = comp.get_modifier(mod_id)
+            is_active = (applied_mod is not None)
+            
+            # Toggle Button
+            color = (50, 150, 50) if is_active else (80, 80, 80)
+            btn_txt = f"[x] {mod_def.name}" if is_active else f"[ ] {mod_def.name}"
+            
+            def toggle_cb(m_id=mod_id, c=comp):
+                if c.get_modifier(m_id):
+                    c.remove_modifier(m_id)
+                else:
+                    c.add_modifier(m_id)
+                self.ship.recalculate_stats()
+                self.rebuild_inspector()
+                
+            self.inspector_buttons.append(Button(x, y, 200, 30, btn_txt, toggle_cb, color))
+            y += 40
+            
+            # If active and parametric, show slider
+            if is_active and mod_def.type_str == 'linear':
+                # Slider
+                val_lbl = Label(x + 10, y, f"{mod_def.param_name}: {applied_mod.value:.0f}", 12)
+                self.inspector_labels.append(val_lbl)
+                y += 20
+                
+                def slide_cb(val, m=applied_mod, l=val_lbl, pname=mod_def.param_name, c=comp):
+                    m.value = val
+                    l.update_text(f"{pname}: {val:.0f}")
+                    c.recalculate_stats()
+                    self.ship.recalculate_stats()
+                    # We should technically refresh labels but this works for slider label
+                    
+                slider = Slider(x, y, 200, 20, mod_def.min_val, mod_def.max_val, applied_mod.value, slide_cb)
+                self.inspector_sliders.append(slider)
+                y += 30

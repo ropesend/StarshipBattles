@@ -11,3 +11,4 @@ venv/
 *.json
 !components.json
 !ShipOne.json
+!modifiers.json

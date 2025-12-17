@@ -6,7 +6,11 @@ from ship import Ship, LayerType
 from ai import AIController
 from spatial import SpatialGrid
 from designs import create_brick, create_interceptor
-from components import load_components, Bridge, Weapon, Engine, Thruster, Armor, Tank
+from ship import Ship, LayerType
+from ai import AIController
+from spatial import SpatialGrid
+from designs import create_brick, create_interceptor
+from components import load_components, load_modifiers, Bridge, Weapon, Engine, Thruster, Armor, Tank
 from ui import Button
 from builder import BuilderScene
 from sprites import SpriteManager
@@ -310,6 +314,8 @@ class Game:
         # Initialize Game Data
         comp_path = os.path.join(base_path, "components.json")
         load_components(comp_path)
+        mod_path = os.path.join(base_path, "modifiers.json")
+        load_modifiers(mod_path)
         
         # Initialize Sprites
         sprite_mgr = SpriteManager.get_instance()

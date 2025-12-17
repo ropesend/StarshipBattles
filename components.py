@@ -11,19 +11,46 @@ class LayerType(Enum):
     def from_string(s):
         return getattr(LayerType, s.upper())
 
+class Modifier:
+    def __init__(self, data):
+        self.id = data['id']
+        self.name = data['name']
+        self.type_str = data['type'] # 'boolean' or 'linear'
+        self.description = data.get('description', '')
+        self.effects = data.get('effects', {})
+        self.restrictions = data.get('restrictions', {})
+        self.param_name = data.get('param_name', 'value')
+        self.min_val = data.get('min_val', 0)
+        self.max_val = data.get('max_val', 100)
+        self.default_val = data.get('default_val', 0)
+
+MODIFIER_REGISTRY = {}
+
+class ApplicationModifier:
+    """Instance of a modifier applied to a component"""
+    def __init__(self, mod_def, value=None):
+        self.definition = mod_def
+        self.value = value if value is not None else mod_def.default_val
+
 class Component:
     def __init__(self, data):
         self.data = data # Store raw data for reference/cloning
         self.id = data['id']
         self.name = data['name']
-        self.mass = data['mass']
-        self.max_hp = data['hp']
+        self.name = data['name']
+        self.base_mass = data['mass']
+        self.mass = self.base_mass
+        self.base_max_hp = data['hp']
+        self.max_hp = self.base_max_hp
         self.current_hp = self.max_hp
         self.allowed_layers = [LayerType.from_string(l) for l in data['allowed_layers']]
         self.is_active = True
         self.layer_assigned = None
         self.type_str = data['type']
         self.sprite_index = data.get('sprite_index', 0)
+        
+        self.modifiers = [] # list of ApplicationModifier
+        # If cloning, data might have modifiers? Not yet supported in save/load but structure ready
 
     def take_damage(self, amount):
         self.current_hp -= amount
@@ -36,6 +63,62 @@ class Component:
     def reset_hp(self):
         self.current_hp = self.max_hp
         self.is_active = True
+
+    def add_modifier(self, mod_id, value=None):
+        if mod_id not in MODIFIER_REGISTRY: return False
+        
+        # Check restrictions
+        mod_def = MODIFIER_REGISTRY[mod_id]
+        if 'deny_types' in mod_def.restrictions:
+            if self.type_str in mod_def.restrictions['deny_types']:
+                return False
+        if 'allow_types' in mod_def.restrictions:
+            if self.type_str not in mod_def.restrictions['allow_types']:
+                return False
+                
+        # Remove existing if any (replace)
+        self.remove_modifier(mod_id)
+            
+        app_mod = ApplicationModifier(mod_def, value)
+        self.modifiers.append(app_mod)
+        self.recalculate_stats()
+        return True
+
+    def remove_modifier(self, mod_id):
+        self.modifiers = [m for m in self.modifiers if m.definition.id != mod_id]
+        self.recalculate_stats()
+
+    def get_modifier(self, mod_id):
+        for m in self.modifiers:
+            if m.definition.id == mod_id:
+                return m
+        return None
+
+    def recalculate_stats(self):
+        # Reset to base
+        self.mass = self.base_mass
+        self.max_hp = self.base_max_hp
+        
+        # Apply Modifiers
+        for m in self.modifiers:
+            eff = m.definition.effects
+            val = m.value
+            
+            # Simple effect logic
+            if 'mass_mult' in eff:
+                self.mass += self.base_mass * eff['mass_mult']
+            if 'hp_mult' in eff:
+                self.max_hp += self.base_max_hp * eff['hp_mult']
+                
+            if 'mass_add_per_unit' in eff:
+                # Linear input
+                self.mass += val * eff['mass_add_per_unit']
+                
+            # Special effects handled by component subclasses or checking specific flags
+            if 'arc_set' in eff:
+                setattr(self, 'firing_arc', val)
+
+        self.current_hp = min(self.current_hp, self.max_hp) # Clamp if HP reduced? Or not?
 
     def clone(self):
         # Create a new instance with the same data
@@ -186,6 +269,25 @@ def load_components(filepath="components.json"):
         
     except Exception as e:
         print(f"ERROR loading/parsing components json: {e}")
+
+def load_modifiers(filepath="modifiers.json"):
+    global MODIFIER_REGISTRY
+    import os
+    if not os.path.exists(filepath):
+         base_dir = os.path.dirname(os.path.abspath(__file__))
+         filepath = os.path.join(base_dir, filepath)
+    
+    try:
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+            
+        for mod_def in data['modifiers']:
+            mod = Modifier(mod_def)
+            MODIFIER_REGISTRY[mod.id] = mod
+            
+        print(f"DEBUG: Loaded {len(MODIFIER_REGISTRY)} modifiers.")
+    except Exception as e:
+        print(f"ERROR loading modifiers: {e}")
 
 def create_component(component_id):
     if component_id in COMPONENT_REGISTRY:
