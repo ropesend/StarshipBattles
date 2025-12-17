@@ -112,7 +112,7 @@
             ],
             "capacity": 200,
             "resource_type": "energy",
-            "sprite_index": 26
+            "sprite_index": 182
         },
         {
             "id": "generator",
@@ -125,7 +125,7 @@
                 "INNER"
             ],
             "energy_generation": 25,
-            "sprite_index": 9
+            "sprite_index": 217
         },
         {
             "id": "laser_beam",
@@ -142,7 +142,7 @@
             "energy_cost": 5,
             "base_accuracy": 1.0,
             "accuracy_falloff": 0.002,
-            "sprite_index": 18
+            "sprite_index": 22
         }
     ]
 }

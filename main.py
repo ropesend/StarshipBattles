@@ -22,56 +22,158 @@ LAYER_COLORS = {
     LayerType.CORE: (220, 220, 220)
 }
 
-def draw_ship(surface, ship):
+class Camera:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.position = pygame.math.Vector2(0, 0)
+        self.zoom = 1.0
+        self.min_zoom = 0.01
+        self.max_zoom = 5.0
+        
+    def update_input(self, dt, events):
+        keys = pygame.key.get_pressed()
+        speed = 1000 / self.zoom # Pan faster when zoomed out
+        
+        move = pygame.math.Vector2(0, 0)
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]: move.x = -1
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]: move.x = 1
+        if keys[pygame.K_UP] or keys[pygame.K_w]: move.y = -1
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]: move.y = 1
+        
+        if move.length() > 0:
+            self.position += move.normalize() * speed * dt
+
+        for event in events:
+            if event.type == pygame.MOUSEWHEEL:
+                old_zoom = self.zoom
+                # Zoom centered on mouse? For now, just center zoom is easier, or simple zoom in/out
+                zoom_speed = 0.1
+                if event.y > 0:
+                    self.zoom *= 1.1
+                else:
+                    self.zoom /= 1.1
+                
+                self.zoom = max(self.min_zoom, min(self.max_zoom, self.zoom))
+
+    def world_to_screen(self, world_pos):
+        # Screen Center = Camera Position
+        # Offset = (WorldPos - CameraPos) * Zoom
+        # ScreenPos = ScreenCenter + Offset
+        screen_center = pygame.math.Vector2(self.width / 2, self.height / 2)
+        offset = (world_pos - self.position) * self.zoom
+        return screen_center + offset
+
+    def screen_to_world(self, screen_pos):
+        screen_center = pygame.math.Vector2(self.width / 2, self.height / 2)
+        offset = pygame.math.Vector2(screen_pos) - screen_center
+        return self.position + (offset / self.zoom)
+
+    def fit_objects(self, objects):
+        if not objects: return
+        
+        min_x = min(o.position.x for o in objects)
+        max_x = max(o.position.x for o in objects)
+        min_y = min(o.position.y for o in objects)
+        max_y = max(o.position.y for o in objects)
+        
+        center_x = (min_x + max_x) / 2
+        center_y = (min_y + max_y) / 2
+        self.position = pygame.math.Vector2(center_x, center_y)
+        
+        # Calculate fit zoom
+        width = max_x - min_x + 500 # Margin
+        height = max_y - min_y + 500
+        
+        zoom_x = self.width / width
+        zoom_y = self.height / height
+        self.zoom = min(zoom_x, zoom_y)
+        self.zoom = max(self.min_zoom, min(self.max_zoom, self.zoom))
+
+def draw_ship(surface, ship, camera):
     if not ship.is_alive: return
     
-    cx, cy = int(ship.position.x), int(ship.position.y)
+    # Transform Position
+    screen_pos = camera.world_to_screen(ship.position)
+    cx, cy = int(screen_pos.x), int(screen_pos.y)
     
+    # Culling
+    radius_screen = 50 * camera.zoom # approx max radius
+    if (cx + radius_screen < 0 or cx - radius_screen > camera.width or 
+        cy + radius_screen < 0 or cy - radius_screen > camera.height):
+        return
+
+    # Helper for scaling based on zoom
+    def scale(val):
+        return int(val * camera.zoom)
+    
+    # Layers
+    base_radius = 40
+    scaled_radius = scale(base_radius)
+    
+    if scaled_radius < 3:
+        # Draw simple dot icon for low zoom
+        color = ship.color # Use ship identity color
+        pygame.draw.circle(surface, color, (cx, cy), 3) # Fixed 3px dot
+        # Direction
+        dir_vec = ship.forward_vector()
+        end_pos = camera.world_to_screen(ship.position + dir_vec * 100)
+        pygame.draw.line(surface, (255, 255, 0), (cx, cy), (int(end_pos.x), int(end_pos.y)), 1)
+        return
+
     # Draw Layers (from large to small)
-    base_radius = 40 
     
     # Armor (100%)
-    pygame.draw.circle(surface, LAYER_COLORS[LayerType.ARMOR], (cx, cy), base_radius)
+    pygame.draw.circle(surface, LAYER_COLORS[LayerType.ARMOR], (cx, cy), scale(base_radius))
     # Outer (80%)
-    pygame.draw.circle(surface, LAYER_COLORS[LayerType.OUTER], (cx, cy), int(base_radius * 0.8))
+    pygame.draw.circle(surface, LAYER_COLORS[LayerType.OUTER], (cx, cy), scale(base_radius * 0.8))
     # Inner (50%)
-    pygame.draw.circle(surface, LAYER_COLORS[LayerType.INNER], (cx, cy), int(base_radius * 0.5))
+    pygame.draw.circle(surface, LAYER_COLORS[LayerType.INNER], (cx, cy), scale(base_radius * 0.5))
     # Core (20%)
-    pygame.draw.circle(surface, LAYER_COLORS[LayerType.CORE], (cx, cy), int(base_radius * 0.2))
+    pygame.draw.circle(surface, LAYER_COLORS[LayerType.CORE], (cx, cy), scale(base_radius * 0.2))
     
     # Draw Direction indicator
-    end_pos = ship.position + ship.forward_vector() * (base_radius + 10)
-    pygame.draw.line(surface, (255, 255, 0), (cx, cy), (int(end_pos.x), int(end_pos.y)), 2)
+    # Need to rotate vector, but length scales is enough
+    dir_vec = ship.forward_vector()
+    end_pos_screen = camera.world_to_screen(ship.position + dir_vec * (base_radius + 10))
+    pygame.draw.line(surface, (255, 255, 0), (cx, cy), (int(end_pos_screen.x), int(end_pos_screen.y)), max(1, scale(2)))
 
     # Draw Components (Simplified visualization for Battle)
     # We use small colored dots because full sprites are too big for this zoom level
-    for ltype, data in ship.layers.items():
-        radius = 0
-        if ltype == LayerType.CORE: radius = base_radius * 0.1
-        elif ltype == LayerType.INNER: radius = base_radius * 0.35
-        elif ltype == LayerType.OUTER: radius = base_radius * 0.65
-        elif ltype == LayerType.ARMOR: radius = base_radius * 0.9
-        
-        comps = data['components']
-        if not comps: continue
-        
-        angle_step = 360 / len(comps)
-        current_angle = ship.angle # Rotate with ship
-        
-        for comp in comps:
-            if not comp.is_active: continue
-            rad = math.radians(current_angle)
-            px = cx + math.cos(rad) * radius
-            py = cy + math.sin(rad) * radius
+    # Only draw details if zoom is high enough
+    if camera.zoom > 0.3:
+        for ltype, data in ship.layers.items():
+            radius = 0
+            if ltype == LayerType.CORE: radius = base_radius * 0.1
+            elif ltype == LayerType.INNER: radius = base_radius * 0.35
+            elif ltype == LayerType.OUTER: radius = base_radius * 0.65
+            elif ltype == LayerType.ARMOR: radius = base_radius * 0.9
             
-            # Tiny dot
-            color = (200, 200, 200)
-            if isinstance(comp, Weapon): color = (255, 50, 50)
-            elif isinstance(comp, Engine): color = (50, 255, 100)
-            elif isinstance(comp, Armor): color = (100, 100, 100)
+            comps = data['components']
+            if not comps: continue
             
-            pygame.draw.circle(surface, color, (int(px), int(py)), 3)
-            current_angle += angle_step
+            angle_step = 360 / len(comps)
+            current_angle = ship.angle # Rotate with ship
+            
+            for comp in comps:
+                if not comp.is_active: continue
+                rad = math.radians(current_angle)
+                # World offset
+                off_x = math.cos(rad) * radius
+                off_y = math.sin(rad) * radius
+                
+                # We can just transform the final world pos
+                comp_world_pos = ship.position + pygame.math.Vector2(off_x, off_y)
+                comp_screen = camera.world_to_screen(comp_world_pos)
+                
+                # Tiny dot
+                color = (200, 200, 200)
+                if isinstance(comp, Weapon): color = (255, 50, 50)
+                elif isinstance(comp, Engine): color = (50, 255, 100)
+                elif isinstance(comp, Armor): color = (100, 100, 100)
+                
+                pygame.draw.circle(surface, color, (int(comp_screen.x), int(comp_screen.y)), max(1, scale(3)))
+                current_angle += angle_step
 
 def draw_bar(surface, x, y, w, h, pct, color):
     pct = max(0, min(1, pct))
@@ -210,9 +312,12 @@ class Game:
         
         # Builder
         self.builder_scene = BuilderScene(WIDTH, HEIGHT, self.on_builder_finish)
+        
+        # Camera
+        self.camera = Camera(WIDTH, HEIGHT)
 
     def start_quick_battle(self):
-        self.start_battle(create_brick(200, HEIGHT // 2), create_interceptor(WIDTH - 200, HEIGHT // 2))
+        self.start_battle(create_brick(20000, 50000), create_interceptor(80000, 50000))
 
     def start_builder(self):
         self.state = BUILDER
@@ -220,11 +325,11 @@ class Game:
 
     def on_builder_finish(self, custom_ship):
         # We need to position the custom ship and create an enemy
-        custom_ship.position = pygame.math.Vector2(200, HEIGHT // 2)
+        custom_ship.position = pygame.math.Vector2(20000, 50000)
         # Recalculate stats one last time to be sure
         custom_ship.recalculate_stats()
         
-        enemy = create_brick(WIDTH - 200, HEIGHT // 2)
+        enemy = create_brick(80000, 50000)
         
         self.start_battle(custom_ship, enemy)
 
@@ -236,8 +341,11 @@ class Game:
         self.projectiles = []
         self.beams = []
         self.state = BATTLE
+        self.camera.fit_objects([self.ship1, self.ship2])
 
-    def update_battle(self, dt):
+    def update_battle(self, dt, events):
+        self.camera.update_input(dt, events)
+        
         self.ai1.update(dt)
         self.ai2.update(dt)
         self.ship1.update(dt)
@@ -352,21 +460,48 @@ class Game:
 
     def draw_battle(self):
         self.screen.fill(BG_COLOR)
-        draw_ship(self.screen, self.ship1)
-        draw_ship(self.screen, self.ship2)
+        
+        # Draw Grid
+        grid_spacing = 5000
+        # Determine visible range
+        tl = self.camera.screen_to_world((0, 0))
+        br = self.camera.screen_to_world((WIDTH, HEIGHT))
+        
+        start_x = int(tl.x // grid_spacing) * grid_spacing
+        end_x = int(br.x // grid_spacing + 1) * grid_spacing
+        start_y = int(tl.y // grid_spacing) * grid_spacing
+        end_y = int(br.y // grid_spacing + 1) * grid_spacing
+        
+        grid_color = (30, 30, 50)
+        
+        for x in range(start_x, end_x + grid_spacing, grid_spacing):
+            p1 = self.camera.world_to_screen(pygame.math.Vector2(x, start_y))
+            p2 = self.camera.world_to_screen(pygame.math.Vector2(x, end_y))
+            pygame.draw.line(self.screen, grid_color, p1, p2, 1)
+            
+        for y in range(start_y, end_y + grid_spacing, grid_spacing):
+            p1 = self.camera.world_to_screen(pygame.math.Vector2(start_x, y))
+            p2 = self.camera.world_to_screen(pygame.math.Vector2(end_x, y))
+            pygame.draw.line(self.screen, grid_color, p1, p2, 1)
+
+        draw_ship(self.screen, self.ship1, self.camera)
+        draw_ship(self.screen, self.ship2, self.camera)
         
         for p in self.projectiles:
-            start = p['pos']
-            end = p['pos'] - p['vel'].normalize() * 10
+            start = self.camera.world_to_screen(p['pos'])
+            vel_norm = p['vel'].normalize() if p['vel'].length() > 0 else pygame.math.Vector2(1,0)
+            end = self.camera.world_to_screen(p['pos'] - vel_norm * 10)
             pygame.draw.line(self.screen, (255, 255, 0), start, end, 2)
             
         for b in self.beams:
             # Fade out
             alpha = int(255 * (b['timer'] / 0.2))
             color = b['color'] # RGB
-            # Pygame draw.line doesn't support alpha directly on main screen usually unless surface with alpha
-            # For simplicity, we just draw solid or thin
-            pygame.draw.line(self.screen, color, b['start'], b['end'], 3)
+            
+            start = self.camera.world_to_screen(b['start'])
+            end = self.camera.world_to_screen(b['end'])
+            
+            pygame.draw.line(self.screen, color, start, end, max(1, int(3 * self.camera.zoom)))
             
         draw_hud(self.screen, self.ship1, 10, 10)
         draw_hud(self.screen, self.ship2, WIDTH - 250, 10)
@@ -395,7 +530,7 @@ class Game:
                 self.builder_scene.update(dt)
                 self.builder_scene.draw(self.screen)
             elif self.state == BATTLE:
-                self.update_battle(dt)
+                self.update_battle(dt, events)
                 self.draw_battle()
                 
             pygame.display.flip()
