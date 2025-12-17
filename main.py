@@ -349,6 +349,9 @@ class Game:
         
         # Debug Overlay
         self.show_overlay = False
+        
+        # Inspector
+        self.selected_ship = None
 
     def start_quick_battle(self):
         # 5v5 Battle
@@ -420,6 +423,24 @@ class Game:
 
     def update_battle(self, dt, events):
         self.camera.update_input(dt, events)
+        
+        # Input for Selection
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # Hit test
+                mx, my = pygame.mouse.get_pos()
+                world_pos = self.camera.screen_to_world((mx, my))
+                
+                # Simple circle check
+                found = None
+                for s in self.ships:
+                    if not s.is_alive: continue
+                    # Rough hit radius
+                    if s.position.distance_to(world_pos) < 60: # generous click radius
+                        found = s
+                        break
+                
+                self.selected_ship = found
         
         # 1. Update Grid
         self.grid.clear()
@@ -580,6 +601,87 @@ class Game:
                     center = self.camera.world_to_screen(s.position)
                     pygame.draw.circle(self.screen, (100, 100, 100), (int(center.x), int(center.y)), r_screen, 1)
 
+    def draw_inspector(self):
+        if not self.selected_ship: return
+        
+        s = self.selected_ship
+        
+        # Panel Rect
+        panel_w = 300
+        panel_h = HEIGHT - 40
+        x = WIDTH - panel_w - 20
+        y = 20
+        
+        # Transparent BG
+        s_surf = pygame.Surface((panel_w, panel_h))
+        s_surf.set_alpha(200)
+        s_surf.fill((20, 20, 30))
+        self.screen.blit(s_surf, (x, y))
+        
+        # Border
+        pygame.draw.rect(self.screen, (100, 100, 150), (x, y, panel_w, panel_h), 2)
+        
+        # Content
+        px = x + 10
+        py = y + 10
+        
+        # Header
+        name_txt = font_large.render(s.name, True, (255, 255, 255))
+        self.screen.blit(name_txt, (px, py))
+        py += 40
+        
+        # Basic Stats
+        lines = [
+            f"Mass: {s.mass:.0f}",
+            f"Thrust: {s.total_thrust:.0f}",
+            f"HP: {s.hp:.0f} / {s.max_hp:.0f}",
+            f"Team: {s.team_id}"
+        ]
+        
+        for line in lines:
+            txt = font_med.render(line, True, (200, 200, 200))
+            self.screen.blit(txt, (px, py))
+            py += 25
+            
+        py += 10
+        pygame.draw.line(self.screen, (100, 100, 100), (px, py), (px + panel_w - 20, py), 1)
+        py += 10
+        
+        # Components
+        title = font_med.render("Components", True, (255, 255, 100))
+        self.screen.blit(title, (px, py))
+        py += 30
+        
+        # Iterate layers
+        for ltype in [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]:
+            comps = s.layers[ltype]['components']
+            if not comps: continue
+            
+            # Layer Header
+            l_txt = font_small.render(f"--- {ltype.name} ---", True, (150, 150, 150))
+            self.screen.blit(l_txt, (px, py))
+            py += 20
+            
+            for c in comps:
+                # Name
+                c_color = (255, 255, 255) if c.is_active else (100, 50, 50)
+                name_surf = font_small.render(c.name, True, c_color)
+                self.screen.blit(name_surf, (px, py))
+                
+                # HP Bar
+                bar_w = 100
+                bar_h = 8
+                pct = c.current_hp / c.max_hp if c.max_hp > 0 else 0
+                draw_bar(self.screen, px + 120, py + 2, bar_w, bar_h, pct, (0, 255, 0))
+                
+                # Modifiers indicators
+                if c.modifiers:
+                    mod_txt = " ".join([m.definition.name[0] for m in c.modifiers]) # First letter
+                    mod_surf = font_small.render(f"[{mod_txt}]", True, (255, 200, 100))
+                    self.screen.blit(mod_surf, (px + 120 + bar_w + 5, py))
+                
+                py += 18
+
     def draw_battle(self):
         self.screen.fill(BG_COLOR)
         
@@ -597,6 +699,7 @@ class Game:
         
         grid_color = (30, 30, 50)
         
+        
         for x in range(start_x, end_x + grid_spacing, grid_spacing):
             p1 = self.camera.world_to_screen(pygame.math.Vector2(x, start_y))
             p2 = self.camera.world_to_screen(pygame.math.Vector2(x, end_y))
@@ -606,6 +709,37 @@ class Game:
             p1 = self.camera.world_to_screen(pygame.math.Vector2(start_x, y))
             p2 = self.camera.world_to_screen(pygame.math.Vector2(end_x, y))
             pygame.draw.line(self.screen, grid_color, p1, p2, 1)
+        
+        # Draw Objects
+        for p in self.projectiles:
+             # simple line
+             start = self.camera.world_to_screen(p['pos'] - p['vel'].normalize() * 10)
+             end = self.camera.world_to_screen(p['pos'])
+             pygame.draw.line(self.screen, (255, 255, 0), start, end, 2)
+             
+        for s in self.ships:
+            draw_ship(self.screen, s, self.camera)
+            
+        # Beams
+        for b in self.beams:
+            start = self.camera.world_to_screen(b['start'])
+            end = self.camera.world_to_screen(b['end'])
+            pygame.draw.line(self.screen, b['color'], start, end, 3)
+
+        # Draw HUD (for player ship only? Or selected?)
+        # Let's keep HUD for first ship of Team 0 as "Player"
+        player_ship = next((s for s in self.ships if s.team_id == 0), None)
+        if player_ship:
+             draw_hud(self.screen, player_ship, 10, 10)
+             
+        if self.show_overlay:
+            self.draw_debug_overlay()
+            
+        # Draw Inspector
+        if self.selected_ship:
+            self.draw_inspector()
+            
+        pygame.display.flip()
 
         for s in self.ships:
             draw_ship(self.screen, s, self.camera)
