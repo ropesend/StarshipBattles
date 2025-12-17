@@ -1,0 +1,36 @@
+{
+    "name": "Custom Ship",
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "layers": {
+        "CORE": [
+            "bridge",
+            "fuel_tank",
+            "fuel_tank",
+            "ordnance_tank",
+            "ordnance_tank"
+        ],
+        "INNER": [
+            "standard_engine",
+            "standard_engine",
+            "standard_engine",
+            "standard_engine",
+            "thruster",
+            "thruster"
+        ],
+        "OUTER": [
+            "railgun",
+            "railgun",
+            "railgun"
+        ],
+        "ARMOR": [
+            "armor_plate",
+            "armor_plate",
+            "armor_plate",
+            "armor_plate"
+        ]
+    }
+}

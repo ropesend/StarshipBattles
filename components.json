@@ -1,0 +1,103 @@
+{
+    "components": [
+        {
+            "id": "bridge",
+            "name": "Bridge",
+            "type": "Bridge",
+            "mass": 50,
+            "hp": 200,
+            "allowed_layers": [
+                "CORE",
+                "INNER",
+                "OUTER",
+                "ARMOR"
+            ],
+            "sprite_index": 0
+        },
+        {
+            "id": "railgun",
+            "name": "Railgun",
+            "type": "Weapon",
+            "mass": 100,
+            "hp": 150,
+            "allowed_layers": [
+                "OUTER"
+            ],
+            "damage": 40,
+            "range": 600,
+            "reload": 2.0,
+            "ammo_cost": 1,
+            "sprite_index": 18
+        },
+        {
+            "id": "standard_engine",
+            "name": "Engine",
+            "type": "Engine",
+            "mass": 80,
+            "hp": 100,
+            "allowed_layers": [
+                "INNER",
+                "OUTER"
+            ],
+            "thrust_force": 15000,
+            "fuel_cost": 0.5,
+            "sprite_index": 9
+        },
+        {
+            "id": "thruster",
+            "name": "Thruster",
+            "type": "Thruster",
+            "mass": 20,
+            "hp": 40,
+            "allowed_layers": [
+                "CORE",
+                "INNER",
+                "OUTER",
+                "ARMOR"
+            ],
+            "turn_speed": 30,
+            "sprite_index": 3
+        },
+        {
+            "id": "armor_plate",
+            "name": "Armor Plate",
+            "type": "Armor",
+            "mass": 30,
+            "hp": 250,
+            "allowed_layers": [
+                "ARMOR"
+            ],
+            "sprite_index": 27
+        },
+        {
+            "id": "fuel_tank",
+            "name": "Fuel Tank",
+            "type": "Tank",
+            "mass": 40,
+            "hp": 80,
+            "allowed_layers": [
+                "CORE",
+                "INNER",
+                "OUTER"
+            ],
+            "capacity": 500,
+            "resource_type": "fuel",
+            "sprite_index": 26
+        },
+        {
+            "id": "ordnance_tank",
+            "name": "Ordnance Tank",
+            "type": "Tank",
+            "mass": 40,
+            "hp": 80,
+            "allowed_layers": [
+                "CORE",
+                "INNER",
+                "OUTER"
+            ],
+            "capacity": 500,
+            "resource_type": "ammo",
+            "sprite_index": 34
+        }
+    ]
+}
