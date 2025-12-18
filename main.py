@@ -16,7 +16,7 @@ from builder import BuilderScene
 from sprites import SpriteManager
 
 # Constants
-WIDTH, HEIGHT = 1200, 900
+WIDTH, HEIGHT = 3840, 2160
 FPS = 60
 BG_COLOR = (10, 10, 20)
 

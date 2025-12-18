@@ -27,8 +27,8 @@ class BuilderScene:
         self.ship = Ship("Custom Ship", screen_width // 2, screen_height // 2, (100, 100, 255))
         
         # UI Layout
-        self.palette_width = 250
-        self.info_width = 250
+        self.palette_width = 350
+        self.info_width = 350
         
         # Component Palette Items
         self.available_components = get_all_components()
@@ -38,6 +38,12 @@ class BuilderScene:
         
         # Inspector UI State
         self.selected_component = None # (layer, index, component)
+        
+        # Template Modifiers (Global Brush)
+        # Store as dictionary: {mod_id: value}
+        # Only stores active modifiers.
+        self.template_modifiers = {}
+        
         self.inspector_buttons = []
         self.inspector_sliders = []
         self.inspector_labels = []
@@ -72,6 +78,9 @@ class BuilderScene:
         self.info_rect = pygame.Rect(screen_width - self.info_width, 0, self.info_width, screen_height)
         
         self.sprite_mgr = SpriteManager.get_instance()
+        
+        # Initial inspector build (Template Mode)
+        self.rebuild_inspector()
 
     def try_start(self):
         # Validation
@@ -183,14 +192,51 @@ class BuilderScene:
                     for comp in self.available_components:
                         rect = pygame.Rect(10, y_offset, 220, 40)
                         if rect.collidepoint(event.pos):
-                            self.dragged_item = comp.clone() # Clone for dragging
+                            # Create new item from template
+                            self.dragged_item = comp.clone() 
+                            
+                            # Apply Template Modifiers
+                            for m_id, val in self.template_modifiers.items():
+                                # Check logic? Just force add for now? 
+                                # Better: Check restrictions
+                                if m_id in MODIFIER_REGISTRY:
+                                    mod_def = MODIFIER_REGISTRY[m_id]
+                                    allow = True
+                                    if mod_def.restrictions:
+                                        if 'allow_types' in mod_def.restrictions and comp.type_str not in mod_def.restrictions['allow_types']: allow = False
+                                        if 'deny_types' in mod_def.restrictions and comp.type_str in mod_def.restrictions['deny_types']: allow = False
+                                    
+                                    if allow:
+                                        self.dragged_item.add_modifier(m_id)
+                                        m = self.dragged_item.get_modifier(m_id)
+                                        if m: m.value = val
+                            
+                            self.dragged_item.recalculate_stats()
                             break
                         y_offset += 50
                 else:
                     # Check if clicking on an existing component on the ship
                     found = self.get_component_at_pos(event.pos)
                     if found:
-                        if self.selected_component and self.selected_component == found:
+                        # Alt+Click to Clone
+                        keys = pygame.key.get_pressed()
+                        if keys[pygame.K_LALT] or keys[pygame.K_RALT]:
+                             # Clone it!
+                             original_comp = found[2]
+                             self.dragged_item = original_comp.clone()
+                             # Modifiers are already cloned by clone() usually?
+                             # Let's verify clone() logic in component is deep enough or manually copy mods
+                             # Assuming clone() does copy (we wrote it to be basic copy)
+                             # If clone() doesn't copy modifiers, we need to do it here.
+                             # Let's check comp.clone() implementation later or just ensure it here.
+                             # Re-copy modifiers just in case
+                             self.dragged_item.modifiers = []
+                             for m in original_comp.modifiers:
+                                 new_m = m.definition.create_modifier(m.value)
+                                 self.dragged_item.modifiers.append(new_m)
+                             self.dragged_item.recalculate_stats()
+                             
+                        elif self.selected_component and self.selected_component == found:
                             # Already selected, pick it up
                             layer, index, comp = found
                             self.ship.remove_component(layer, index)
@@ -386,7 +432,7 @@ class BuilderScene:
         lines = [
             (f"Mass: {self.ship.mass:.0f} / {self.ship.max_mass_budget}", mass_col),
             (f"Thrust: {self.ship.total_thrust:.0f}", (255, 255, 255)),
-            (f"Accel: {self.ship.acceleration_rate:.1f}", (255, 255, 255)),
+            (f"Max Speed: {self.ship.max_speed:.0f}", (200, 255, 255)),
             (f"Turn: {self.ship.turn_speed:.0f}", (255, 255, 255)),
             (f"Max HP: {self.ship.max_hp:.0f}", (255, 255, 255)),
             (f"Energy Gen: {self.ship.energy_gen_rate:.1f}/s", (100, 200, 255)),
@@ -482,15 +528,19 @@ class BuilderScene:
                txt = font.render(self.dragged_item.name, True, (255, 255, 0))
                screen.blit(txt, (mx + 15, my + 15))
 
-        if self.selected_component:
-             pygame.draw.rect(screen, (40, 40, 50), (self.width - self.info_width, 200, self.info_width, 400))
-             
-             for lbl in self.inspector_labels:
-                 lbl.draw(screen)
-             for btn in self.inspector_buttons:
-                 btn.draw(screen)
-             for slid in self.inspector_sliders:
-                 slid.draw(screen)
+        # Draw Inspector Background
+        # Just to the right of palette
+        inspector_x = self.palette_width
+        pygame.draw.rect(screen, (40, 40, 50), (inspector_x, 0, self.info_width, 600)) # Make it explicit area? Or just backing
+        # User said "just to the right of the list of components"
+        # Let's outline it?
+        
+        for lbl in self.inspector_labels:
+            lbl.draw(screen)
+        for btn in self.inspector_buttons:
+            btn.draw(screen)
+        for slid in self.inspector_sliders:
+            slid.draw(screen)
 
         # Draw UI
         for btn in self.buttons:
@@ -505,50 +555,57 @@ class BuilderScene:
         self.inspector_sliders = []
         self.inspector_labels = []
         
-        if not self.selected_component: return
+        # Position
+        # Move to right of palette
+        x = self.palette_width + 20
+        y = 50 # Start near top
         
-        layer, index, comp = self.selected_component
+        # Determine Target (Component or Template)
+        target_name = "New Component Settings"
+        target_modifiers = self.template_modifiers # Dict {id: val}
+        is_template = True
+        comp = None
         
-        # Header
-        x = self.width - self.info_width + 10
-        y = 210
-        self.inspector_labels.append(Label(x, y, f"Editing: {comp.name}", 16, (100, 255, 100)))
-        y += 30
-        
-        # Stats
-        self.inspector_labels.append(Label(x, y, f"Mass: {comp.mass:.1f}", 14))
-        y += 20
-        self.inspector_labels.append(Label(x, y, f"HP: {comp.max_hp:.1f}", 14))
-        y += 30
-        
-        # Modifiers
-        self.inspector_labels.append(Label(x, y, "Modifiers:", 16, (200, 200, 100)))
-        y += 25
-        
-        for mod_id, mod_def in MODIFIER_REGISTRY.items():
-            # Check compatibility
-            allowed = True
-            if 'deny_types' in mod_def.restrictions and comp.type_str in mod_def.restrictions['deny_types']:
-                allowed = False
-            if 'allow_types' in mod_def.restrictions and comp.type_str not in mod_def.restrictions['allow_types']:
-                allowed = False
-                
-            if not allowed: continue
+        if self.selected_component:
+            layer, index, c = self.selected_component
+            target_name = f"Edit: {c.name}" # Use f-string
+            target_modifiers = {m.definition.id: m.value for m in c.modifiers} # Reconstruct dict for check
+            is_template = False
+            comp = c
             
-            # Check if applied
-            applied_mod = comp.get_modifier(mod_id)
-            is_active = (applied_mod is not None)
+        # Draw Title
+        self.inspector_labels.append(Label(x, y, target_name, 20, (255, 255, 100)))
+        y += 30
+        
+        # List all available modifiers
+        for mod_id, mod_def in MODIFIER_REGISTRY.items():
+            # Check if relevant (if component selected)
+            if comp:
+                if mod_def.restrictions and 'allow_types' in mod_def.restrictions:
+                    if comp.type_str not in mod_def.restrictions['allow_types']:
+                        continue
+            
+            is_active = (mod_id in target_modifiers)
+            current_val = target_modifiers.get(mod_id, mod_def.min_val)
             
             # Toggle Button
             color = (50, 150, 50) if is_active else (80, 80, 80)
             btn_txt = f"[x] {mod_def.name}" if is_active else f"[ ] {mod_def.name}"
             
-            def toggle_cb(m_id=mod_id, c=comp):
-                if c.get_modifier(m_id):
-                    c.remove_modifier(m_id)
+            def toggle_cb(m_id=mod_id, is_temp=is_template, c=comp):
+                if is_temp:
+                    if m_id in self.template_modifiers:
+                        del self.template_modifiers[m_id]
+                    else:
+                        self.template_modifiers[m_id] = MODIFIER_REGISTRY[m_id].min_val
                 else:
-                    c.add_modifier(m_id)
-                self.ship.recalculate_stats()
+                    if c.get_modifier(m_id):
+                        c.remove_modifier(m_id)
+                    else:
+                        c.add_modifier(m_id) # Uses default min_val
+                    c.recalculate_stats()
+                    self.ship.recalculate_stats()
+                    
                 self.rebuild_inspector()
                 
             self.inspector_buttons.append(Button(x, y, 200, 30, btn_txt, toggle_cb, color))
@@ -557,17 +614,22 @@ class BuilderScene:
             # If active and parametric, show slider
             if is_active and mod_def.type_str == 'linear':
                 # Slider
-                val_lbl = Label(x + 10, y, f"{mod_def.param_name}: {applied_mod.value:.0f}", 12)
+                val_lbl = Label(x + 10, y, f"{mod_def.param_name}: {current_val:.0f}", 12)
                 self.inspector_labels.append(val_lbl)
                 y += 20
                 
-                def slide_cb(val, m=applied_mod, l=val_lbl, pname=mod_def.param_name, c=comp):
-                    m.value = val
+                def slide_cb(val, m_id=mod_id, l=val_lbl, pname=mod_def.param_name, is_temp=is_template, c=comp):
                     l.update_text(f"{pname}: {val:.0f}")
-                    c.recalculate_stats()
-                    self.ship.recalculate_stats()
-                    # We should technically refresh labels but this works for slider label
                     
-                slider = Slider(x, y, 200, 20, mod_def.min_val, mod_def.max_val, applied_mod.value, slide_cb)
+                    if is_temp:
+                         self.template_modifiers[m_id] = val
+                    else:
+                        m = c.get_modifier(m_id)
+                        if m:
+                            m.value = val
+                            c.recalculate_stats()
+                            self.ship.recalculate_stats()
+                    
+                slider = Slider(x, y, 200, 20, mod_def.min_val, mod_def.max_val, current_val, slide_cb)
                 self.inspector_sliders.append(slider)
                 y += 30

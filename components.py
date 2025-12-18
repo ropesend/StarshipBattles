@@ -24,6 +24,9 @@ class Modifier:
         self.max_val = data.get('max_val', 100)
         self.default_val = data.get('default_val', 0)
 
+    def create_modifier(self, value=None):
+        return ApplicationModifier(self, value)
+
 MODIFIER_REGISTRY = {}
 
 class ApplicationModifier:
@@ -116,10 +119,6 @@ class Component:
                 self.mass += val * eff['mass_add_per_unit']
                 
             # Special effects handled by component subclasses or checking specific flags
-            if 'arc_set' in eff:
-                # Update base arc if weapon
-                if hasattr(self, 'firing_arc'):
-                    self.firing_arc = val
             if 'arc_add' in eff:
                 # Add to base arc
                 if hasattr(self, 'firing_arc'):
@@ -130,6 +129,34 @@ class Component:
                     # but we can look at data['firing_arc'] or default 3.
                     base = self.data.get('firing_arc', 3)
                     self.firing_arc = base + val
+                    
+            if 'arc_set' in eff:
+                # Update base arc if weapon
+                if hasattr(self, 'firing_arc'):
+                    self.firing_arc = val
+                    
+            # SPECIAL EFFECTS
+            if 'special' in eff:
+                if eff['special'] == 'simple_size':
+                    # Multiplies almost everything by Value (1x-128x)
+                    scale = val
+                    self.mass = self.base_mass * scale
+                    if hasattr(self, 'max_hp'): self.max_hp = self.base_max_hp * scale
+                    if hasattr(self, 'current_hp'): self.current_hp = self.max_hp
+                    if hasattr(self, 'damage'): self.damage = self.data.get('damage', 0) * scale # Using self.data to be safe
+                    # Cost scaling? Let's scale cost (Mass/HP/etc usually imply cost)
+                    if hasattr(self, 'cost'): self.cost = self.data.get('cost', 0) * scale 
+                    if hasattr(self, 'thrust_force'): self.thrust_force = self.data.get('thrust_force', 0) * scale
+                    if hasattr(self, 'turn_speed'): self.turn_speed = self.data.get('turn_speed', 0) * scale
+                    if hasattr(self, 'energy_generation_rate'): self.energy_generation_rate = self.data.get('energy_generation_rate', 0) * scale
+                    if hasattr(self, 'capacity'): self.capacity = self.data.get('capacity', 0) * scale
+                    
+                elif eff['special'] == 'range_mount':
+                    # Range * (1.5 * Value), Mass * (2.0 * Value)
+                    level = val
+                    if hasattr(self, 'range'):
+                        self.range = self.data.get('range', 0) * (1.5 * level)
+                    self.mass = self.base_mass * (2.0 * level)
 
         self.current_hp = min(self.current_hp, self.max_hp) # Clamp if HP reduced? Or not?
 

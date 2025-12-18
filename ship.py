@@ -42,8 +42,7 @@ class Ship(PhysicsBody):
         self.max_speed = 0
         self.turn_speed = 0
         self.drag = 0.5 # New Arcade Drag
-        self.max_hp = 100
-        self.hp = 100
+        self.drag = 0.5 # New Arcade Drag
         
         # Budget
         self.max_mass_budget = SHIP_CLASSES.get(self.ship_class, 1000)
@@ -64,7 +63,7 @@ class Ship(PhysicsBody):
         self.layer_status = {}
         
         # Old init values, now calculated or managed differently
-        # self.current_mass = 0 # Replaced by self.mass and self.base_mass
+        self.current_mass = 0 # Replaced by self.mass and self.base_mass
         # self.max_fuel = 0 # Now initialized to 1000
         # self.current_fuel = 0 # Now initialized to 1000
         # self.max_ammo = 0 # Now initialized to 100
@@ -113,8 +112,21 @@ class Ship(PhysicsBody):
         return None
 
     def recalculate_stats(self):
-        # Base Stats
+        # 1. Recalculate Total Mass from scratch first
+        self.current_mass = 0
+        self.layer_status = {}
+        self.mass_limits_ok = True
+        self.drag = 0.5 
+        
+        # Initial pass for mass to ensure self.mass is correct for physics calc later
+        for layer_type, layer_data in self.layers.items():
+            l_mass = sum(c.mass for c in layer_data['components'])
+            layer_data['mass'] = l_mass
+            self.current_mass += l_mass
+            
         self.mass = self.current_mass + self.base_mass
+
+        # Base Stats Reset
         self.total_thrust = 0
         self.turn_speed = 0
         self.max_fuel = 0
@@ -125,21 +137,16 @@ class Ship(PhysicsBody):
         # Budget & Scaling
         self.max_mass_budget = SHIP_CLASSES.get(self.ship_class, 1000)
         
-        # Radius Scaling: Cube root of mass ratio
-        # Reference: Escort (1000t) = 40 radius
+        # Radius Scaling
         base_radius = 40
         ref_mass = 1000
-        # If budget is 0 or weird, default to ref
         budget = max(self.max_mass_budget, 1000)
         ratio = budget / ref_mass
         self.radius = base_radius * (ratio ** (1/3.0))
 
-        self.mass_limits_ok = True
-        self.layer_status = {}
-        
-        self.drag = 0.5 
         self.layers[LayerType.ARMOR]['max_hp_pool'] = 0
         
+        # Component Stats Aggregation
         for layer_type, layer_data in self.layers.items():
             for comp in layer_data['components']:
                 if isinstance(comp, Engine):
@@ -167,12 +174,44 @@ class Ship(PhysicsBody):
         if self.layers[LayerType.ARMOR]['hp_pool'] == 0:
             self.layers[LayerType.ARMOR]['hp_pool'] = self.layers[LayerType.ARMOR]['max_hp_pool']
             
-        # Physics Stats
-        self.acceleration_rate = self.total_thrust / self.mass if self.mass > 0 else 0
-        if self.drag > 0:
-            self.max_speed = self.acceleration_rate / self.drag
+        # Physics Stats - INVERSE MASS SCALING
+        # Max Speed proportional to 1/Mass
+        # Accel proportional to 1/Mass^2
+        # Turn proportional to 1/Mass^2
+        
+        # Tuning Constants to make it feel right
+        K_THRUST = 50000 
+        K_TURN = 500000 
+        
+        if self.mass > 0:
+            self.acceleration_rate = (self.total_thrust * K_THRUST) / (self.mass * self.mass)
+            self.turn_speed = (self.turn_speed * K_TURN) / (self.mass * self.mass)
+            
+            # Max Speed = Thrust / Mass logic (Linear)
+            # Or maintain drag model?
+            # User said "top speed proportional to 1/ mass".
+            # With Accel ~ 1/m^2 and Drag constant, Max Speed would be 1/m^2. 
+            # So we must adjust Drag or Max Speed calculation explicitly.
+            
+            # Let's enforce Max Speed explicitly
+            K_SPEED = 200000
+            self.max_speed = (self.total_thrust * K_SPEED) / self.mass if self.total_thrust > 0 else 0
+            
+            # Adjust Drag so that Accel / Drag ~= Max Speed?
+            # Accel = T*K_T/m^2.  MaxSpeed = T*K_S/m.
+            # Drag = Accel / MaxSpeed = (T*K_T/m^2) / (T*K_S/m) = (K_T/K_S) * (1/m)
+            # So Drag must be proportional to 1/m.
+            
+            if self.max_speed > 0:
+                self.drag = self.acceleration_rate / self.max_speed
+            else:
+                self.drag = 0.5
         else:
-            self.max_speed = 500 # Fallback
+            self.acceleration_rate = 0
+            self.max_speed = 0
+            
+        # Ensure minimums
+        if self.max_speed < 10: self.max_speed = 10
             
         # Validate Limits
         self.mass_limits_ok = True
@@ -184,14 +223,6 @@ class Ship(PhysicsBody):
         }
         self.layer_status = {}
         
-        # Recalculate Total Mass from scratch to avoid drift
-        self.current_mass = 0
-        for layer_type, layer_data in self.layers.items():
-            l_mass = sum(c.mass for c in layer_data['components'])
-            layer_data['mass'] = l_mass
-            self.current_mass += l_mass
-            
-        self.mass = self.current_mass if self.current_mass > 0 else 1
 
         for layer_type, layer_data in self.layers.items():
             # Ratio is now based on MAX BUDGET, not current mass
@@ -448,6 +479,8 @@ class Ship(PhysicsBody):
                                     'target': self.current_target,
                                     'damage': comp.damage,
                                     'range': comp.range,
+                                    'origin': self.position,
+                                    'direction': aim_vec.normalize() if aim_vec.length() > 0 else pygame.math.Vector2(1, 0),
                                     'hit': True # Revisit hit chance?
                                 })
                             else:

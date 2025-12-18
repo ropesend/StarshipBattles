@@ -35,6 +35,36 @@
                     "BeamWeapon"
                 ]
             }
+        },
+        {
+            "id": "simple_size_mount",
+            "name": "Size Mount",
+            "description": "Multiplies Size/Stats (1x-128x)",
+            "type": "linear",
+            "min_val": 1,
+            "max_val": 128,
+            "param_name": "Scale",
+            "effects": {
+                "special": "simple_size"
+            }
+        },
+        {
+            "id": "range_mount",
+            "name": "Range Mount",
+            "description": "Boosts Range (1.5x) and Mass (2x) per level",
+            "type": "linear",
+            "min_val": 1,
+            "max_val": 10,
+            "param_name": "Level",
+            "effects": {
+                "special": "range_mount"
+            },
+            "restrictions": {
+                "allow_types": [
+                    "ProjectileWeapon",
+                    "BeamWeapon"
+                ]
+            }
         }
     ]
 }
