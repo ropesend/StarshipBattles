@@ -180,8 +180,9 @@ class Ship(PhysicsBody):
         # Turn proportional to 1/Mass^2
         
         # Tuning Constants to make it feel right
-        K_THRUST = 50000 
-        K_TURN = 500000 
+        # Tuning Constants to make it feel right
+        K_THRUST = 150000 
+        K_TURN = 3000000 
         
         if self.mass > 0:
             self.acceleration_rate = (self.total_thrust * K_THRUST) / (self.mass * self.mass)
@@ -194,7 +195,7 @@ class Ship(PhysicsBody):
             # So we must adjust Drag or Max Speed calculation explicitly.
             
             # Let's enforce Max Speed explicitly
-            K_SPEED = 200000
+            K_SPEED = 1500
             self.max_speed = (self.total_thrust * K_SPEED) / self.mass if self.total_thrust > 0 else 0
             
             # Adjust Drag so that Accel / Drag ~= Max Speed?
@@ -210,8 +211,8 @@ class Ship(PhysicsBody):
             self.acceleration_rate = 0
             self.max_speed = 0
             
-        # Ensure minimums
-        if self.max_speed < 10: self.max_speed = 10
+        # Ensure minimums only if we have engines
+        if self.total_thrust > 0 and self.max_speed < 10: self.max_speed = 10
             
         # Validate Limits
         self.mass_limits_ok = True
