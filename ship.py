@@ -1,8 +1,10 @@
 import pygame
 import random
 import math
+import json
 from physics import PhysicsBody
 from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon, ProjectileWeapon
+from logger import log_debug
 
 class Ship(PhysicsBody):
     def __init__(self, name, x, y, color, team_id=0):
@@ -380,6 +382,12 @@ class Ship(PhysicsBody):
                                 
                                 if abs(diff) <= comp.firing_arc:
                                     valid_target = True
+                                else:
+                                    # ARC FAIL
+                                    # Only log occasionally or if specific flag? 
+                                    # For now, let's log.
+                                    pass
+                                    # log_debug(f"{self.name} weapon {comp.name} out of arc: {diff:.1f} vs {comp.firing_arc}")
 
                         if valid_target and comp.fire():
                             # Deduct Resource

@@ -834,12 +834,41 @@ class Game:
                         deg_end = -(ship_angle + facing - arc)
                         
                         try:
-                            pygame.draw.arc(self.screen, arc_col, rect, math.radians(deg_start), math.radians(deg_end), 1)
+                            # Pygame arc angles are in degrees, 0 is right, CCW
+                            # start_angle (radians) is clockwise from right?
+                            # pygame.draw.arc: start_angle, stop_angle in radians.
+                            # Standard cartesian: 0 right, PI/2 up (in pygame Y is down, so PI/2 is down?)
+                            # Actually in pygame:
+                            # 0 is right (positive X)
+                            # PI/2 is bottom (positive Y)
+                            # PI is left
+                            # 3*PI/2 is top
+                            
+                            # Our angle system: 0 is right (1,0). Y is down. Same.
+                            # ship.angle is degrees.
+                            
+                            r_start = math.radians(ship_angle + facing - arc)
+                            r_end = math.radians(ship_angle + facing + arc)
+                            
+                            # Pygame requires start < stop? No, just radians.
+                            # But it draws counter-clockwise from start to stop.
+                            # If we want -arc to +arc (clockwise? no, angle increases clockwise in screen coords?)
+                            # Wait, in standard math, angle increases CCW. In screen (Y down), angle increases CW?
+                            # math.cos(0.1) -> x>0, y>0? 
+                            # If y is down, y>0 is down. So 0.1 rad is down-right.
+                            # So angles increase Clockwise.
+                            
+                            # We want to draw from (angle - arc) to (angle + arc).
+                            # If we draw from (angle - arc) to (angle + arc), we get the wedge.
+                            
+                            pygame.draw.arc(self.screen, arc_col, rect, -r_end, -r_start, 1) 
+                            # Note: pygame.draw.arc uses standard cartesian (Y up) for angles? 
+                            # Or just normal radians but Y is flipped?
+                            # Usually simple line drawing is safer.
+                            
                         except:
                             pass
-
-    # Old Draw Inspector Removed
-
+                        
     def draw_battle(self):
         self.screen.fill(BG_COLOR)
         
