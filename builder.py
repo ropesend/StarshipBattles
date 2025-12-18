@@ -61,6 +61,7 @@ class BuilderScene:
         
         self.error_message = ""
         self.error_timer = 0
+        self.hovered_component = None
         
         # Areas
         self.palette_rect = pygame.Rect(0, 0, self.palette_width, screen_height)
@@ -70,12 +71,11 @@ class BuilderScene:
 
     def try_start(self):
         # Validation
-        if self.ship.current_mass > self.ship.max_mass_budget:
-            self.show_error("Mass Limit Exceeded!")
+        if not self.ship.check_validity():
+            self.show_error("Ship Invalid (Check Stats)")
             return
             
-        has_bridge = any(isinstance(c, Bridge) for c in self.ship.layers[LayerType.CORE]['components'])
-        has_bridge = has_bridge or any(isinstance(c, Bridge) for l in self.ship.layers.values() for c in l['components'])
+        has_bridge = any(isinstance(c, Bridge) for l in self.ship.layers.values() for c in l['components'])
         
         if not has_bridge:
             self.show_error("Ship needs a Bridge!")
@@ -120,16 +120,34 @@ class BuilderScene:
     def update(self, dt):
         if self.error_timer > 0:
             self.error_timer -= dt
+            
+        # Update Hover Detection
+        mx, my = pygame.mouse.get_pos()
+        self.hovered_component = None
+        
+        # Check Palette
+        if self.palette_rect.collidepoint((mx, my)):
+            y_offset = 50
+            for comp in self.available_components:
+                 r = pygame.Rect(10, y_offset, self.palette_width - 20, 40)
+                 if r.collidepoint((mx, my)):
+                     self.hovered_component = comp
+                     break
+                 y_offset += 50
+        elif mx < self.width - self.info_width: # Check Ship Area
+             found = self.get_component_at_pos((mx, my))
+             if found:
+                 self.hovered_component = found[2]
 
     def handle_event(self, event):
         for btn in self.buttons:
-            btn.handle_event(event)
+            if btn.handle_event(event): return
             
         # Inspector controls
         for btn in self.inspector_buttons:
-             btn.handle_event(event)
+             if btn.handle_event(event): return
         for s in self.inspector_sliders:
-             s.handle_event(event)
+             if s.handle_event(event): return
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
@@ -158,8 +176,12 @@ class BuilderScene:
                             # Select it
                             self.select_component(found)
                     else:
-                         self.selected_component = None
-                         self.rebuild_inspector()
+                         # Only deselect if NOT clicking in the info text area
+                         # Info area width is self.info_width
+                         # X start is self.width - self.info_width
+                         if event.pos[0] < self.width - self.info_width:
+                             self.selected_component = None
+                             self.rebuild_inspector()
             elif event.button == 3: # Right click to remove
                 # Check ship layers
                 pass # TODO: Implement removal logic
@@ -330,22 +352,100 @@ class BuilderScene:
         sx = self.width - self.info_width + 10
         sy = 50
         
+        # Comprehensive Stats
+        font_sm = pygame.font.SysFont("Arial", 14)
+        
+        # Color code validity
+        mass_col = (100, 255, 100) if self.ship.mass_limits_ok else (255, 100, 100)
+        
         lines = [
-            f"Mass: {self.ship.current_mass} / {self.ship.max_mass_budget}",
-            f"Thrust: {self.ship.total_thrust}",
-            f"Turn: {self.ship.turn_speed}",
-            f"HP (Armor): {self.ship.layers[LayerType.ARMOR].get('hp_pool', 0)}"
+            (f"Mass: {self.ship.mass:.0f} / {self.ship.max_mass_budget}", mass_col),
+            (f"Thrust: {self.ship.total_thrust:.0f}", (255, 255, 255)),
+            (f"Accel: {self.ship.acceleration_rate:.1f}", (255, 255, 255)),
+            (f"Turn: {self.ship.turn_speed:.0f}", (255, 255, 255)),
+            (f"Max HP: {self.ship.max_hp:.0f}", (255, 255, 255)),
+            (f"Energy Gen: {self.ship.energy_gen_rate:.1f}/s", (100, 200, 255)),
+            (f"Max Fuel: {self.ship.max_fuel}", (255, 150, 50)),
+            (f"Max Ammo: {self.ship.max_ammo}", (255, 255, 50)),
+            (f"Max Energy: {self.ship.max_energy}", (100, 200, 255)),
+            ("", (0,0,0)),
+            ("Layer Mass Limits:", (200, 200, 200))
         ]
         
-        for line in lines:
-            txt = font.render(line, True, (255, 255, 255))
+        for text, col in lines:
+            txt = font_sm.render(text, True, col)
             screen.blit(txt, (sx, sy))
-            sy += 30
+            sy += 18
+            
+        # Layer details
+        for ltype, status in self.ship.layer_status.items():
+            l_name = ltype.name.capitalize()
+            ratio_pct = status['ratio'] * 100
+            limit_pct = status['limit'] * 100
+            col = (100, 255, 100) if status['ok'] else (255, 100, 100)
+            txt = font_sm.render(f"{l_name}: {status['mass']:.0f} ({ratio_pct:.1f}% / {limit_pct:.0f}%)", True, col)
+            screen.blit(txt, (sx, sy))
+            sy += 18
 
         # Draw Error
         if self.error_timer > 0:
             err_surf = font.render(self.error_message, True, (255, 100, 100))
             screen.blit(err_surf, (self.width // 2 - err_surf.get_width() // 2, 50))
+            
+        # Hover Info
+        if self.hovered_component and not self.dragged_item:
+            c = self.hovered_component
+            mx, my = pygame.mouse.get_pos()
+            
+            # Box
+            box_w, box_h = 220, 150
+            box_x = mx + 15
+            box_y = my + 15
+            
+            # Keep on screen
+            if box_x + box_w > self.width: box_x = mx - box_w - 15
+            if box_y + box_h > self.height: box_y = my - box_h - 15
+            
+            pygame.draw.rect(screen, (20, 20, 30), (box_x, box_y, box_w, box_h))
+            pygame.draw.rect(screen, (100, 100, 150), (box_x, box_y, box_w, box_h), 1)
+            
+            hx = box_x + 10
+            hy = box_y + 10
+            
+            # Title
+            t = font.render(c.name, True, (255, 255, 100))
+            screen.blit(t, (hx, hy))
+            hy += 25
+            
+            # Info
+            infos = [
+                f"Type: {c.type_str}",
+                f"Mass: {c.mass:.1f}",
+                f"HP: {c.max_hp:.0f}",
+                f"Cost: {c.cost:.0f}"
+            ]
+            
+            # Add specific info
+            if hasattr(c, 'damage'): infos.append(f"Dmg: {c.damage}")
+            if hasattr(c, 'range'): infos.append(f"Rng: {c.range}")
+            if hasattr(c, 'thrust_force'): infos.append(f"Thrust: {c.thrust_force}")
+            if hasattr(c, 'energy_generation_rate'): infos.append(f"Gen: {c.energy_generation_rate}")
+
+            for line in infos:
+                t = font_sm.render(line, True, (200, 200, 200))
+                screen.blit(t, (hx, hy))
+                hy += 18
+                
+            # Active Modifiers
+            if c.modifiers:
+                hy += 5
+                t = font_sm.render("Mods:", True, (150, 255, 150))
+                screen.blit(t, (hx, hy))
+                hy += 18
+                for m in c.modifiers:
+                    t = font_sm.render(f"- {m.definition.name}", True, (150, 255, 150))
+                    screen.blit(t, (hx, hy))
+                    hy += 16
 
         # Draw Dragged Item
         if self.dragged_item:

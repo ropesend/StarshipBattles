@@ -12,10 +12,15 @@ class Button:
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEMOTION:
+            was_hovered = self.is_hovered
             self.is_hovered = self.rect.collidepoint(event.pos)
+            if self.is_hovered != was_hovered: return True
+            return self.is_hovered
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.is_hovered and self.callback:
                 self.callback()
+                return True
+        return False
 
     def draw(self, surface):
         color = self.hover_color if self.is_hovered else self.color
@@ -62,13 +67,18 @@ class Slider:
             if handle.collidepoint(event.pos) or self.rect.collidepoint(event.pos):
                 self.is_dragging = True
                 self.update_val(event.pos[0])
+                return True
                 
         elif event.type == pygame.MOUSEBUTTONUP:
-            self.is_dragging = False
+            if self.is_dragging:
+                self.is_dragging = False
+                return True
             
         elif event.type == pygame.MOUSEMOTION:
             if self.is_dragging:
                 self.update_val(event.pos[0])
+                return True
+        return False
                 
     def update_val(self, mouse_x):
         # Clamp x to rect

@@ -48,6 +48,7 @@ class Component:
         self.layer_assigned = None
         self.type_str = data['type']
         self.sprite_index = data.get('sprite_index', 0)
+        self.cost = data.get('cost', 0)
         
         self.modifiers = [] # list of ApplicationModifier
         # If cloning, data might have modifiers? Not yet supported in save/load but structure ready
@@ -116,7 +117,19 @@ class Component:
                 
             # Special effects handled by component subclasses or checking specific flags
             if 'arc_set' in eff:
-                setattr(self, 'firing_arc', val)
+                # Update base arc if weapon
+                if hasattr(self, 'firing_arc'):
+                    self.firing_arc = val
+            if 'arc_add' in eff:
+                # Add to base arc
+                if hasattr(self, 'firing_arc'):
+                    # We need to know 'base_firing_arc' to add correctly if we want it reversible?
+                    # Or we just add to current? Recalculate_stats resets to base.
+                    # We need to store base_firing_arc in init if we want to reset properly.
+                    # For now assume Component doesn't store base_arc separately, 
+                    # but we can look at data['firing_arc'] or default 3.
+                    base = self.data.get('firing_arc', 3)
+                    self.firing_arc = base + val
 
         self.current_hp = min(self.current_hp, self.max_hp) # Clamp if HP reduced? Or not?
 
@@ -138,6 +151,8 @@ class Weapon(Component):
         self.reload_time = data.get('reload', 1.0)
         self.ammo_cost = data.get('ammo_cost', 0)
         self.cooldown_timer = 0.0
+        self.firing_arc = data.get('firing_arc', 20) # Degrees
+        self.facing_angle = data.get('facing_angle', 0) # Degrees relative to component forward (0)
 
     def update(self, dt):
         if self.cooldown_timer > 0:
@@ -153,7 +168,16 @@ class Weapon(Component):
         return False
     
     def clone(self):
+        # Default clone for base weapon, though usually we clone concrete types
         return Weapon(self.data)
+
+class ProjectileWeapon(Weapon):
+    def __init__(self, data):
+        super().__init__(data)
+        self.projectile_speed = data.get('projectile_speed', 1200) # Default speed
+        
+    def clone(self):
+        return ProjectileWeapon(self.data)
 
 class Engine(Component):
     def __init__(self, data):
@@ -244,8 +268,8 @@ def load_components(filepath="components.json"):
             try:
                 if c_type == "Bridge":
                     obj = Bridge(comp_def)
-                elif c_type == "Weapon":
-                    obj = Weapon(comp_def)
+                elif c_type == "Weapon" or c_type == "ProjectileWeapon":
+                    obj = ProjectileWeapon(comp_def)
                 elif c_type == "Engine":
                     obj = Engine(comp_def)
                 elif c_type == "Thruster":

@@ -60,13 +60,17 @@ class InspectorTk:
         header.pack(pady=10)
         
         # Stats Frame
-        stats_frame = tk.Frame(self.window, bg="#202020")
-        stats_frame.pack(fill="x", padx=10)
+        self.stats_frame = tk.Frame(self.window, bg="#303030", padx=10, pady=10)
+        self.stats_frame.pack(fill="x", padx=5, pady=5)
         
-        self.labels['mass'] = tk.Label(stats_frame, text="", fg="#cccccc", bg="#202020", font=("Arial", 10))
-        self.labels['mass'].pack(anchor="w")
-        self.labels['hp'] = tk.Label(stats_frame, text="", fg="#cccccc", bg="#202020", font=("Arial", 10))
-        self.labels['hp'].pack(anchor="w")
+        self.add_stat("HP", "hp")
+        self.add_stat("Energy", "energy")
+        self.add_stat("Fuel", "fuel")
+        self.add_stat("Ammo", "ammo")
+        self.add_stat("Speed", "speed")
+        self.add_stat("Heading", "heading")
+        self.add_stat("Target", "target")
+        self.add_stat("State", "state")
         
         # Components Scrollable? For now just simple pack
         tk.Label(self.window, text="Components", fg="yellow", bg="#202020", font=("Arial", 12)).pack(pady=10)
@@ -81,6 +85,67 @@ class InspectorTk:
         
         # Initial populate
         self.rebuild_components()
+
+    def add_stat(self, label_text, key):
+        frame = tk.Frame(self.stats_frame, bg="#303030")
+        frame.pack(fill="x", pady=2)
+        
+        lbl_name = tk.Label(frame, text=f"{label_text}:", width=10, anchor="w", bg="#303030", fg="#AAAAAA")
+        lbl_name.pack(side="left")
+        
+        lbl_val = tk.Label(frame, text="--", anchor="w", bg="#303030", fg="#FFFFFF")
+        lbl_val.pack(side="left", fill="x", expand=True)
+        
+        self.labels[key] = lbl_val
+        
+    def update(self):
+        if not self.window.winfo_exists():
+            self.is_open = False
+            return
+            
+        if not self.ship.is_alive:
+            self.labels['state'].config(text="DESTROYED", fg="red")
+            return
+            
+        # Update Values
+        self.labels['hp'].config(text=f"{int(self.ship.hp)} / {int(self.ship.max_hp)}")
+        
+        self.labels['energy'].config(text=f"{int(self.ship.current_energy)} / {int(self.ship.max_energy)}")
+        self.labels['fuel'].config(text=f"{int(self.ship.current_fuel)} / {int(self.ship.max_fuel)}")
+        self.labels['ammo'].config(text=f"{int(self.ship.current_ammo)} / {int(self.ship.max_ammo)}")
+        
+        self.labels['speed'].config(text=f"{self.ship.current_speed:.1f} / {self.ship.max_speed:.1f}")
+        self.labels['heading'].config(text=f"{int(self.ship.angle)}°")
+        
+        t_name = "None"
+        if self.ship.current_target and self.ship.current_target.is_alive:
+            t_name = self.ship.current_target.name
+        self.labels['target'].config(text=t_name)
+        
+        self.labels['state'].config(text="Active", fg="green")
+        
+        # Update Components
+        if not hasattr(self, 'comp_widgets'): return
+        
+        for item in self.comp_widgets:
+            c = item['comp']
+            canvas = item['canvas']
+            
+            # Update Active Color
+            color = "white" if c.is_active else "#663333"
+            item['name_lbl'].config(fg=color)
+            
+            # Update Bar
+            canvas.delete("all")
+            if c.max_hp > 0:
+                pct = c.current_hp / c.max_hp
+                bar_w = 100 * pct
+                fill = "#00ff00"
+                if pct < 0.5: fill = "#cccc00"
+                if pct < 0.2: fill = "#cc0000"
+                if not c.is_active: fill = "#333333"
+                
+                canvas.create_rectangle(0, 0, bar_w, 8, fill=fill, width=0)
 
     def rebuild_components(self):
         for widget in self.comp_frame.winfo_children():
@@ -111,38 +176,6 @@ class InspectorTk:
                     'name_lbl': name_lbl,
                     'canvas': canvas
                 })
-
-    def update(self):
-        if not self.is_open: return
-        
-        s = self.ship
-        
-        # Update Stats
-        self.labels['mass'].config(text=f"Mass: {s.mass:.0f}")
-        self.labels['hp'].config(text=f"HP: {s.hp:.0f} / {s.max_hp:.0f}")
-        
-        # Update Components
-        if not hasattr(self, 'comp_widgets'): return
-        
-        for item in self.comp_widgets:
-            c = item['comp']
-            canvas = item['canvas']
-            
-            # Update Active Color
-            color = "white" if c.is_active else "#663333"
-            item['name_lbl'].config(fg=color)
-            
-            # Update Bar
-            canvas.delete("all")
-            if c.max_hp > 0:
-                pct = c.current_hp / c.max_hp
-                bar_w = 100 * pct
-                fill = "#00ff00"
-                if pct < 0.5: fill = "#cccc00"
-                if pct < 0.2: fill = "#cc0000"
-                if not c.is_active: fill = "#333333"
-                
-                canvas.create_rectangle(0, 0, bar_w, 8, fill=fill, width=0)
 
 
 pygame.font.init()
@@ -593,13 +626,25 @@ class Game:
         # 3. Process Attacks
         new_attacks = []
         for s in alive_ships:
-            attacks = s.fire_weapons()
-            if attacks:
-                new_attacks.extend(attacks)
+            # We don't force fire here anymore. 
+            # Ship.update() handles firing if trigger is pulled.
+            # We just collect the results.
+            if hasattr(s, 'just_fired_projectiles') and s.just_fired_projectiles:
+                new_attacks.extend(s.just_fired_projectiles)
+                s.just_fired_projectiles = [] # Clear buffer
             
         for attack in new_attacks:
             if attack['type'] == 'projectile':
-                self.projectiles.append(attack)
+                self.projectiles.append({
+                    'pos': attack['position'],
+                    'vel': attack['velocity'],
+                    'damage': attack['damage'],
+                    'range': attack['range'],
+                    'distance_traveled': 0,
+                    'owner': attack['source'],
+                    'radius': 3,
+                    'color': attack.get('color', (255, 255, 0))
+                })
             elif attack['type'] == 'beam':
                 # Beam Logic
                 start_pos = attack['origin']
@@ -690,14 +735,21 @@ class Game:
             p['pos'] += p['vel'] * dt
             p['distance_traveled'] += p['vel'].length() * dt
             
-            # Optimization: Only check target
-            target = p.get('target')
-            
+            # Collision Check (Any valid enemy)
             hit = False
-            if target and target.is_alive:
-                 if p['pos'].distance_to(target.position) < 40:
-                    target.take_damage(p['damage'])
+            
+            # Simple optimization: Check if near any enemy
+            # We can use the spatial grid if populated, or just iterate ships
+            # Since ship count is low < 20, iteration is fine.
+            for s in self.ships:
+                if not s.is_alive: continue
+                if s.team_id == p['owner'].team_id: continue # No friendly fire
+                
+                # Hit check
+                if p['pos'].distance_to(s.position) < (s.radius + 5): # 5 for tolerance? Or just radius
+                    s.take_damage(p['damage'])
                     hit = True
+                    break # Projectile destroyed on impact
             
             if hit or p['distance_traveled'] > p['range']:
                 if p in self.projectiles:
@@ -730,11 +782,61 @@ class Game:
             
             if max_range > 0:
                 # Convert radius to screen space
-                # Radius in pixels = range * zoom
                 r_screen = int(max_range * self.camera.zoom)
                 if r_screen > 0:
                     center = self.camera.world_to_screen(s.position)
                     pygame.draw.circle(self.screen, (100, 100, 100), (int(center.x), int(center.y)), r_screen, 1)
+
+            # 3. Aim Point (Blue X)
+            if hasattr(s, 'aim_point') and s.aim_point:
+                 aim_pos_screen = self.camera.world_to_screen(s.aim_point)
+                 # Draw Blue X
+                 length = 5
+                 color = (0, 100, 255)
+                 pygame.draw.line(self.screen, color, (aim_pos_screen.x - length, aim_pos_screen.y - length), (aim_pos_screen.x + length, aim_pos_screen.y + length), 2)
+                 pygame.draw.line(self.screen, color, (aim_pos_screen.x - length, aim_pos_screen.y + length), (aim_pos_screen.x + length, aim_pos_screen.y - length), 2)
+
+            # 4. Firing Arcs
+            center = self.camera.world_to_screen(s.position)
+            for layer in s.layers.values():
+                for comp in layer['components']:
+                    if isinstance(comp, Weapon) and comp.is_active:
+                        # Angle Logic
+                        ship_angle = s.angle
+                        facing = comp.facing_angle
+                        arc = comp.firing_arc
+                        rng = comp.range * self.camera.zoom
+                        
+                        start_angle = math.radians(ship_angle + facing - arc)
+                        end_angle = math.radians(ship_angle + facing + arc)
+                        
+                        # Draw Arc Lines
+                        # Center to Start
+                        x1 = center.x + math.cos(start_angle) * rng
+                        y1 = center.y + math.sin(start_angle) * rng
+                        
+                        x2 = center.x + math.cos(end_angle) * rng
+                        y2 = center.y + math.sin(end_angle) * rng
+                        
+                        # Color based on trigger status?
+                        arc_col = (255, 165, 0) # Orange
+                        
+                        pygame.draw.line(self.screen, arc_col, center, (x1, y1), 1)
+                        pygame.draw.line(self.screen, arc_col, center, (x2, y2), 1)
+                        # Maybe draw a small arc connecting them?
+                        rect = pygame.Rect(center.x - rng, center.y - rng, rng*2, rng*2)
+                        # Pygame arc takes radians but negated for screen coords? 
+                        # Pygame arc angles are in degrees, 0 is right, CCW?
+                        # ship.angle is usually degrees.
+                        # Convert to Pygame angles (-degrees)
+                        import math
+                        deg_start = -(ship_angle + facing + arc)
+                        deg_end = -(ship_angle + facing - arc)
+                        
+                        try:
+                            pygame.draw.arc(self.screen, arc_col, rect, math.radians(deg_start), math.radians(deg_end), 1)
+                        except:
+                            pass
 
     # Old Draw Inspector Removed
 

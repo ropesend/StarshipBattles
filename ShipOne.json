@@ -8,33 +8,86 @@
     "team_id": 0,
     "layers": {
         "CORE": [
-            "bridge",
-            "ordnance_tank",
-            "fuel_tank"
+            {
+                "id": "bridge",
+                "modifiers": []
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": []
+            },
+            {
+                "id": "ordnance_tank",
+                "modifiers": []
+            }
         ],
         "INNER": [
-            "standard_engine",
-            "standard_engine",
-            "standard_engine",
-            "standard_engine",
-            "thruster",
-            "thruster",
-            "thruster"
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "thruster",
+                "modifiers": []
+            },
+            {
+                "id": "thruster",
+                "modifiers": []
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "thruster",
+                "modifiers": []
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "thruster",
+                "modifiers": []
+            }
         ],
         "OUTER": [
-            "railgun",
-            "railgun"
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    }
+                ]
+            },
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    }
+                ]
+            }
         ],
         "ARMOR": [
-            "armor_plate",
-            "armor_plate",
-            "armor_plate",
-            "armor_plate",
-            "armor_plate",
-            "armor_plate",
-            "armor_plate",
-            "armor_plate",
-            "armor_plate"
+            {
+                "id": "armor_plate",
+                "modifiers": []
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": []
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": []
+            }
         ]
     }
 }

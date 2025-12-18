@@ -2,7 +2,7 @@ import pygame
 import random
 import math
 from physics import PhysicsBody
-from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon
+from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon, ProjectileWeapon
 
 class Ship(PhysicsBody):
     def __init__(self, name, x, y, color, team_id=0):
@@ -14,11 +14,15 @@ class Ship(PhysicsBody):
         
         # Layers
         self.layers = {
-            LayerType.CORE:  {'components': [], 'radius_pct': 0.2, 'hp_pool': 0, 'max_hp_pool': 0},
-            LayerType.INNER: {'components': [], 'radius_pct': 0.5, 'hp_pool': 0, 'max_hp_pool': 0},
-            LayerType.OUTER: {'components': [], 'radius_pct': 0.8, 'hp_pool': 0, 'max_hp_pool': 0},
-            LayerType.ARMOR: {'components': [], 'radius_pct': 1.0, 'hp_pool': 0, 'max_hp_pool': 0}
+            LayerType.CORE:  {'components': [], 'radius_pct': 0.2, 'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0},
+            LayerType.INNER: {'components': [], 'radius_pct': 0.5, 'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0},
+            LayerType.OUTER: {'components': [], 'radius_pct': 0.8, 'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0},
+            LayerType.ARMOR: {'components': [], 'radius_pct': 1.0, 'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0}
         }
+        
+        # New Stats
+        self.mass_limits_ok = True
+        self.layer_status = {}
         
         self.max_mass_budget = 1000
         self.current_mass = 0
@@ -79,6 +83,8 @@ class Ship(PhysicsBody):
         self.max_ammo = 0
         self.max_energy = 0
         self.energy_gen_rate = 0
+        self.mass_limits_ok = True  # Initialize here
+        self.layer_status = {}      # Initialize here
         
         self.drag = 0.5 # Default drag/friction
         self.layers[LayerType.ARMOR]['max_hp_pool'] = 0
@@ -110,22 +116,55 @@ class Ship(PhysicsBody):
         if self.layers[LayerType.ARMOR]['hp_pool'] == 0:
             self.layers[LayerType.ARMOR]['hp_pool'] = self.layers[LayerType.ARMOR]['max_hp_pool']
             
-        # Arcade Physics Calculations
-        # a = F/m
-        self.acceleration_rate = self.total_thrust / self.mass
-        # Max speed calculation:
-        # In Newtonian with Drag: v_term = a / drag. 
-        # We'll use this as our "Max Speed" cap for arcade feel.
-        # If drag is 0, we cap at something reasonable or 1000.
+        # Physics Stats
+        self.acceleration_rate = self.total_thrust / self.mass if self.mass > 0 else 0
         if self.drag > 0:
             self.max_speed = self.acceleration_rate / self.drag
         else:
-            self.max_speed = 1000
+            self.max_speed = 500 # Fallback
+            
+        # Validate Limits
+        self.mass_limits_ok = True
+        self.layer_limits = {
+            LayerType.ARMOR: 0.30,
+            LayerType.CORE: 0.30,
+            LayerType.OUTER: 0.50,
+            LayerType.INNER: 0.50
+        }
+        self.layer_status = {}
+        
+        # Recalculate Total Mass from scratch to avoid drift
+        self.current_mass = 0
+        for layer_type, layer_data in self.layers.items():
+            l_mass = sum(c.mass for c in layer_data['components'])
+            layer_data['mass'] = l_mass
+            self.current_mass += l_mass
+            
+        self.mass = self.current_mass if self.current_mass > 0 else 1
 
-        if self.drag > 0:
-            self.max_speed = self.acceleration_rate / self.drag
-        else:
-            self.max_speed = 1000
+        for layer_type, layer_data in self.layers.items():
+            # Ratio is now based on MAX BUDGET, not current mass
+            limit_ratio = self.layer_limits.get(layer_type, 1.0)
+            ratio = layer_data['mass'] / self.max_mass_budget
+            
+            is_ok = ratio <= limit_ratio
+            self.layer_status[layer_type] = {
+                'mass': layer_data['mass'],
+                'ratio': ratio,
+                'limit': limit_ratio,
+                'ok': is_ok
+            }
+            if not is_ok: self.mass_limits_ok = False
+        
+        if self.current_mass > self.max_mass_budget:
+            self.mass_limits_ok = False
+        
+        if self.mass > self.max_mass_budget:
+            self.mass_limits_ok = False
+
+    def check_validity(self):
+        self.recalculate_stats()
+        return self.mass_limits_ok
 
     @property
     def hp(self):
@@ -292,36 +331,83 @@ class Ship(PhysicsBody):
                         has_resource = (self.current_ammo >= cost)
                     
                     if has_resource and comp.can_fire():
-                        if comp.fire():
+                        # TARGETING
+                        valid_target = False
+                        aim_pos = None
+
+                        if self.current_target:
+                            target = self.current_target
+                            dist = self.position.distance_to(target.position)
+                            
+                            if dist <= comp.range:
+                                # Projectile Leading Logic
+                                aim_pos = target.position # Default
+                                
+                                if isinstance(comp, ProjectileWeapon):
+                                    # Quadratic Intercept
+                                    s_proj = comp.projectile_speed
+                                    D = target.position - self.position
+                                    V = target.velocity - self.velocity
+                                    
+                                    a_q = V.dot(V) - s_proj**2
+                                    b_q = 2 * V.dot(D)
+                                    c_q = D.dot(D)
+                                    
+                                    t = 0
+                                    if a_q == 0:
+                                        if b_q != 0: t = -c_q/b_q
+                                    else:
+                                        disc = b_q*b_q - 4*a_q*c_q
+                                        if disc >= 0:
+                                            t1 = (-b_q + math.sqrt(disc)) / (2*a_q)
+                                            t2 = (-b_q - math.sqrt(disc)) / (2*a_q)
+                                            ts = [x for x in [t1, t2] if x > 0]
+                                            if ts: t = min(ts)
+                                    
+                                    if t > 0:
+                                        aim_pos = target.position + target.velocity * t
+                                        self.aim_point = aim_pos
+                                else:
+                                     # Beam
+                                     self.aim_point = target.position
+
+                                # ARC CHECK
+                                aim_vec = aim_pos - self.position
+                                aim_angle = math.degrees(math.atan2(aim_vec.y, aim_vec.x)) % 360
+                                ship_angle = self.angle
+                                comp_facing = (ship_angle + comp.facing_angle) % 360
+                                diff = (aim_angle - comp_facing + 180) % 360 - 180
+                                
+                                if abs(diff) <= comp.firing_arc:
+                                    valid_target = True
+
+                        if valid_target and comp.fire():
                             # Deduct Resource
                             if isinstance(comp, BeamWeapon):
                                 self.current_energy -= cost
-                                # Beam Event
                                 attacks.append({
                                     'type': 'beam',
-                                    'owner': self,
+                                    'source': self,
                                     'target': self.current_target,
                                     'damage': comp.damage,
                                     'range': comp.range,
-                                    'origin': pygame.math.Vector2(self.position),
-                                    'direction': self.forward_vector(),
-                                    'component': comp
+                                    'hit': True # Revisit hit chance?
                                 })
                             else:
                                 self.current_ammo -= cost
-                                # Projectile Event
-                                muzzle_speed = 500
-                                forward = self.forward_vector()
-                                vel = self.velocity + forward * muzzle_speed
+                                # Projectile
+                                speed = comp.projectile_speed if isinstance(comp, ProjectileWeapon) else 1000
+                                aim_vec = aim_pos - self.position
+                                p_vel = aim_vec.normalize() * speed + self.velocity
+                                
                                 attacks.append({
                                     'type': 'projectile',
-                                    'pos': pygame.math.Vector2(self.position),
-                                    'vel': vel,
+                                    'source': self,
+                                    'position': pygame.math.Vector2(self.position),
+                                    'velocity': p_vel,
                                     'damage': comp.damage,
                                     'range': comp.range,
-                                    'distance_traveled': 0,
-                                    'owner': self,
-                                    'target': self.current_target
+                                    'color': (255, 200, 50)
                                 })
         return attacks
 
@@ -335,27 +421,77 @@ class Ship(PhysicsBody):
         }
         
         for ltype, layer_data in self.layers.items():
-            comp_ids = [c.id for c in layer_data['components']]
-            data["layers"][ltype.name] = comp_ids
-            
+            filter_comps = []
+            for c in layer_data['components']:
+                # Save component ID and Modifiers
+                c_data = {
+                    "id": c.id,
+                    "modifiers": []
+                }
+                for m in c.modifiers:
+                    c_data['modifiers'].append({
+                        "id": m.definition.id,
+                        "value": m.value
+                    })
+                filter_comps.append(c_data)
+                
+            data["layers"][ltype.name] = filter_comps
         return data
 
     @staticmethod
     def from_dict(data):
-        """Create new Ship instance from dictionary."""
-        # Using a dummy position, caller should update it
-        ship = Ship(data["name"], 0, 0, tuple(data["color"]), data.get("team_id", 0))
+        """Create ship from dictionary."""
+        name = data.get("name", "Unnamed")
+        color = data.get("color", (200, 200, 200))
+        # Ensure color is tuple
+        if isinstance(color, list): color = tuple(color)
         
-        from components import create_component, LayerType
+        s = Ship(name, 0, 0, color, data.get("team_id", 0))
         
-        # We need to import LayerType here or ensure it's available. It is imported at top.
+        # Load Layers
+        # We need access to COMPONENT_REGISTRY and MODIFIER_REGISTRY
+        # They are in components.py. Cyclic import?
+        # Ship imports components.py, so we can use components.COMPONENT_REGISTRY if exposed?
+        # components.py doesn't show COMPONENT_REGISTRY in imports in ship.py
+        # We need to import inside function to avoid circular dep if needed?
         
-        for layer_name, comp_ids in data["layers"].items():
-            ltype = LayerType[layer_name]
-            for cid in comp_ids:
-                comp = create_component(cid)
-                if comp:
-                    ship.add_component(comp, ltype)
+        from components import COMPONENT_REGISTRY, MODIFIER_REGISTRY, ApplicationModifier
+        
+        for l_name, comps_list in data.get("layers", {}).items():
+            layer_type = None
+            for l in LayerType:
+                if l.name == l_name:
+                    layer_type = l
+                    break
+            
+            if not layer_type: continue
+            
+            for c_entry in comps_list:
+                comp_id = ""
+                modifiers_data = []
+                
+                if isinstance(c_entry, str):
+                    comp_id = c_entry
+                elif isinstance(c_entry, dict):
+                    comp_id = c_entry.get("id")
+                    modifiers_data = c_entry.get("modifiers", [])
+                
+                if comp_id in COMPONENT_REGISTRY:
+                    new_comp = COMPONENT_REGISTRY[comp_id].clone()
                     
-        return ship
+                    # Apply Modifiers
+                    for m_dat in modifiers_data:
+                        mid = m_dat['id']
+                        mval = m_dat['value']
+                        if mid in MODIFIER_REGISTRY:
+                            mod_def = MODIFIER_REGISTRY[mid]
+                            app_mod = ApplicationModifier(mod_def, mval)
+                            new_comp.add_modifier(app_mod)
+                            
+                    s.add_component(new_comp, layer_type)
+        
+        s.recalculate_stats()
+        return s
+
+
 
