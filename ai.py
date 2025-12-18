@@ -1,6 +1,7 @@
 import math
 import pygame
 from components import LayerType
+from logger import log_info
 
 class AIController:
     def __init__(self, ship, grid, enemy_team_id):
@@ -90,11 +91,18 @@ class AIController:
                 # Ensure we have HP data
                 my_hp = self.ship.hp
                 their_hp = closest_threat.hp
-                if my_hp > their_hp * 2.0:
+                if my_hp > their_hp * 10.0:
                     should_ram = True
             
             if should_ram:
                 # Steer TOWARDS threat (RAM)
+                # Log only if new decision? 
+                # For now just log. 
+                # To prevent spam, check if we were already ramming? 
+                # AI doesn't persist state well.
+                # Maybe a low-prob log?
+                if pygame.time.get_ticks() % 60 == 0: # Occasional log
+                    log_info(f"AI: {self.ship.name} RAMMING {closest_threat.name} (HP Adv: {my_hp:.0f} vs {their_hp:.0f})")
                 override_target_pos = closest_threat.position
             else:
                 # Steer AWAY from threat

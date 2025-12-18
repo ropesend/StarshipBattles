@@ -17,7 +17,7 @@
         {
             "id": "railgun",
             "name": "Railgun",
-            "type": "Weapon",
+            "type": "ProjectileWeapon",
             "mass": 100,
             "hp": 150,
             "allowed_layers": [

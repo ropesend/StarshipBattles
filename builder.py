@@ -4,7 +4,7 @@ import pygame
 from tkinter import filedialog
 from tkinter import filedialog
 from ui import Button, Label, Slider
-from ship import Ship, LayerType
+from ship import Ship, LayerType, SHIP_CLASSES
 from components import get_all_components, MODIFIER_REGISTRY, Bridge, Weapon, Engine, Thruster, Armor, Tank
 from sprites import SpriteManager
 
@@ -47,13 +47,17 @@ class BuilderScene:
         # Create Buttons (Start, Save, Load)
         btn_width = 220
         btn_height = 40
+        self.class_order = ["Escort", "Frigate", "Destroyer", "Cruiser", "Battlecruiser", "Battleship", "Dreadnought"]
+        
         btn_x = screen_width - self.info_width + 15
+        
+        self.class_btn = Button(btn_x, 10, btn_width, 30, f"Class: {self.ship.ship_class}", self.cycle_class, (100, 100, 200))
         
         self.start_btn = Button(btn_x, screen_height - 60, btn_width, btn_height, "START BATTLE", self.try_start)
         self.save_btn = Button(btn_x, screen_height - 110, btn_width, btn_height, "SAVE DESIGN", self.save_ship)
         self.load_btn = Button(btn_x, screen_height - 160, btn_width, btn_height, "LOAD DESIGN", self.load_ship)
         
-        self.buttons.extend([self.start_btn, self.save_btn, self.load_btn])
+        self.buttons.extend([self.class_btn, self.start_btn, self.save_btn, self.load_btn])
 
         # Dragging State
         self.dragged_item = None # Instance being dragged
@@ -112,6 +116,27 @@ class BuilderScene:
                 print(f"Loaded ship from {filename}")
             except Exception as e:
                 self.show_error(f"Load failed: {e}")
+
+    def cycle_class(self):
+        # Find current index
+        try:
+            current_idx = self.class_order.index(self.ship.ship_class)
+        except ValueError:
+            current_idx = 0
+            
+        next_idx = (current_idx + 1) % len(self.class_order)
+        new_class = self.class_order[next_idx]
+        
+        self.ship.ship_class = new_class
+        self.ship.recalculate_stats()
+        
+        # Update Button Text
+        self.class_btn.text = f"Class: {self.ship.ship_class}"
+        
+        # Recalculate will change radius, maybe we should clear components if they fall outside new radius?
+        # For now, let's keep them (they might just look weird or be invalid layer pct).
+        # We should probably validate layers in checking?
+        pass
 
     def show_error(self, msg):
         self.error_message = msg

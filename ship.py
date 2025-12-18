@@ -6,13 +6,26 @@ from physics import PhysicsBody
 from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon, ProjectileWeapon
 from logger import log_debug
 
+
+# Ship Classes and their Mass Limits
+SHIP_CLASSES = {
+    "Escort": 1000,
+    "Frigate": 2000,
+    "Destroyer": 4000,
+    "Cruiser": 8000,
+    "Battlecruiser": 16000,
+    "Battleship": 32000,
+    "Dreadnought": 64000
+}
+
 class Ship(PhysicsBody):
-    def __init__(self, name, x, y, color, team_id=0):
+    def __init__(self, name, x, y, color, team_id=0, ship_class="Escort"):
         super().__init__(x, y)
         self.name = name
         self.color = color
         self.team_id = team_id
         self.current_target = None
+        self.ship_class = ship_class
         
         # Layers
         self.layers = {
@@ -22,35 +35,57 @@ class Ship(PhysicsBody):
             LayerType.ARMOR: {'components': [], 'radius_pct': 1.0, 'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0}
         }
         
-        # New Stats
+        # Stats
+        self.mass = 0
+        self.base_mass = 50 # Cockpit/Structure
+        self.total_thrust = 0
+        self.max_speed = 0
+        self.turn_speed = 0
+        self.drag = 0.5 # New Arcade Drag
+        self.max_hp = 100
+        self.hp = 100
+        
+        # Budget
+        self.max_mass_budget = SHIP_CLASSES.get(self.ship_class, 1000)
+        
+        self.radius = 40 # Will be recalculated
+        
+        # Resources (Capacities and Current)
+        self.max_energy = 100
+        self.current_energy = 100
+        self.max_fuel = 1000
+        self.current_fuel = 1000
+        self.max_ammo = 100
+        self.current_ammo = 100
+        self.energy_gen_rate = 5.0
+        
+        # New Stats (from old init, but now calculated or managed differently)
         self.mass_limits_ok = True
         self.layer_status = {}
         
-        self.max_mass_budget = 1000
-        self.current_mass = 0
-        
-        # Resources
-        self.max_fuel = 0
-        self.current_fuel = 0
-        self.max_ammo = 0
-        self.current_ammo = 0
-        self.max_energy = 0
-        self.current_energy = 0
-        self.energy_gen_rate = 0
+        # Old init values, now calculated or managed differently
+        # self.current_mass = 0 # Replaced by self.mass and self.base_mass
+        # self.max_fuel = 0 # Now initialized to 1000
+        # self.current_fuel = 0 # Now initialized to 1000
+        # self.max_ammo = 0 # Now initialized to 100
+        # self.current_ammo = 0 # Now initialized to 100
+        # self.max_energy = 0 # Now initialized to 100
+        # self.current_energy = 0 # Now initialized to 100
+        # self.energy_gen_rate = 0 # Now initialized to 5.0
         
         # Stats
-        self.total_thrust = 0
-        self.turn_speed = 0
+        # self.total_thrust = 0 # Now initialized to 0
+        # self.turn_speed = 0 # Now initialized to 0
         self.is_alive = True
         self.bridge_destroyed = False
         
         # Arcade Physics
         self.current_speed = 0
         self.acceleration_rate = 0
-        self.max_speed = 0
+        # self.max_speed = 0 # Now initialized to 0
         
         # Collision
-        self.radius = 40
+        # self.radius = 40 # Now initialized to 40, but will be recalculated
 
     def add_component(self, component: Component, layer_type: LayerType):
         if layer_type not in component.allowed_layers:
@@ -78,17 +113,31 @@ class Ship(PhysicsBody):
         return None
 
     def recalculate_stats(self):
-        self.mass = self.current_mass if self.current_mass > 0 else 1 # Avoid div by 0
+        # Base Stats
+        self.mass = self.current_mass + self.base_mass
         self.total_thrust = 0
         self.turn_speed = 0
         self.max_fuel = 0
         self.max_ammo = 0
         self.max_energy = 0
         self.energy_gen_rate = 0
-        self.mass_limits_ok = True  # Initialize here
-        self.layer_status = {}      # Initialize here
         
-        self.drag = 0.5 # Default drag/friction
+        # Budget & Scaling
+        self.max_mass_budget = SHIP_CLASSES.get(self.ship_class, 1000)
+        
+        # Radius Scaling: Cube root of mass ratio
+        # Reference: Escort (1000t) = 40 radius
+        base_radius = 40
+        ref_mass = 1000
+        # If budget is 0 or weird, default to ref
+        budget = max(self.max_mass_budget, 1000)
+        ratio = budget / ref_mass
+        self.radius = base_radius * (ratio ** (1/3.0))
+
+        self.mass_limits_ok = True
+        self.layer_status = {}
+        
+        self.drag = 0.5 
         self.layers[LayerType.ARMOR]['max_hp_pool'] = 0
         
         for layer_type, layer_data in self.layers.items():
@@ -417,6 +466,9 @@ class Ship(PhysicsBody):
                                     'range': comp.range,
                                     'color': (255, 200, 50)
                                 })
+                                # LOG SHOT
+                                aim_dir_str = f"({aim_vec.x:.1f}, {aim_vec.y:.1f})"
+                                log_debug(f"SHOT: {self.name} fired {comp.name}. ShipAngle: {self.angle:.1f}, AimAngle: {aim_angle:.1f}, Diff: {diff:.1f}, Arc: {comp.firing_arc}")
         return attacks
 
     def to_dict(self):
@@ -425,6 +477,7 @@ class Ship(PhysicsBody):
             "name": self.name,
             "color": self.color,
             "team_id": self.team_id,
+            "ship_class": self.ship_class,
             "layers": {}
         }
         
@@ -454,7 +507,7 @@ class Ship(PhysicsBody):
         # Ensure color is tuple
         if isinstance(color, list): color = tuple(color)
         
-        s = Ship(name, 0, 0, color, data.get("team_id", 0))
+        s = Ship(name, 0, 0, color, data.get("team_id", 0), ship_class=data.get("ship_class", "Escort"))
         
         # Load Layers
         # We need access to COMPONENT_REGISTRY and MODIFIER_REGISTRY
@@ -492,9 +545,8 @@ class Ship(PhysicsBody):
                         mid = m_dat['id']
                         mval = m_dat['value']
                         if mid in MODIFIER_REGISTRY:
-                            mod_def = MODIFIER_REGISTRY[mid]
-                            app_mod = ApplicationModifier(mod_def, mval)
-                            new_comp.add_modifier(app_mod)
+                            # FIX: Pass ID and Value, not the object. add_modifier handles creation.
+                            new_comp.add_modifier(mid, mval)
                             
                     s.add_component(new_comp, layer_type)
         

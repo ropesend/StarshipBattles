@@ -15,14 +15,13 @@ class Logger:
         self.logger = logging.getLogger("StarshipBattles")
         self.logger.setLevel(logging.DEBUG)
         
-        # Console Handler
-        ch = logging.StreamHandler(sys.stdout)
-        ch.setLevel(logging.DEBUG)
+        # File Handler (Instead of Console)
+        # ch = logging.StreamHandler(sys.stdout)
+        fh = logging.FileHandler('battle.log', mode='w')
+        fh.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        ch.setFormatter(formatter)
-        self.logger.addHandler(ch)
-        
-        # File Handler? optional
+        fh.setFormatter(formatter)
+        self.logger.addHandler(fh)
         
     def log(self, msg):
         if self.enabled:

@@ -829,7 +829,7 @@ class Game:
                         # Pygame arc angles are in degrees, 0 is right, CCW?
                         # ship.angle is usually degrees.
                         # Convert to Pygame angles (-degrees)
-                        import math
+                        # import math - REMOVED
                         deg_start = -(ship_angle + facing + arc)
                         deg_end = -(ship_angle + facing - arc)
                         
