@@ -501,6 +501,7 @@ class Game:
         # Simulation Speed Control
         self.sim_speed_multiplier = 1.0  # 1.0 = max speed, lower = slower
         self.sim_paused = False
+        self.sim_tick_counter = 0  # For throttling UI updates
         
         # Inspector Active Windows
         self.tk_root = tk.Tk()
@@ -590,17 +591,20 @@ class Game:
         # Use separate camera_dt for smooth camera movement
         self.camera.update_input(camera_dt if camera_dt else dt, events)
         
-        # Update Tkinter
-        try:
-            self.tk_root.update()
-        except:
-            pass # App closing
-            
-        for win in self.active_inspectors:
-            win.update()
+        self.sim_tick_counter += 1
         
-        # Clean up closed windows
-        self.active_inspectors = [w for w in self.active_inspectors if w.is_open]
+        # Throttle Tkinter/Inspector updates to every 10 ticks for performance
+        if self.sim_tick_counter % 10 == 0:
+            try:
+                self.tk_root.update()
+            except:
+                pass # App closing
+                
+            for win in self.active_inspectors:
+                win.update()
+            
+            # Clean up closed windows
+            self.active_inspectors = [w for w in self.active_inspectors if w.is_open]
 
         # Input for Selection
         for event in events:
@@ -710,41 +714,40 @@ class Game:
                     'color': (100, 255, 255)
                 })
 
-        # Ship-to-Ship Collisions
-        # Re-fetch alive ships strictly for this check
-        current_alive = [s for s in self.ships if s.is_alive]
-        
-        for i in range(len(current_alive)):
-            for j in range(i + 1, len(current_alive)):
-                s1 = current_alive[i]
-                s2 = current_alive[j]
+        # Ship-to-Ship Collisions (Ramming)
+        # Only check ships in 'kamikaze' mode against their specific target
+        for s in self.ships:
+            if not s.is_alive: continue
+            if getattr(s, 'ai_strategy', '') != 'kamikaze': continue
+            
+            target = s.current_target
+            if not target or not target.is_alive: continue
+            
+            # Check collision with target only
+            collision_radius = s.radius + target.radius
+            
+            if s.position.distance_to(target.position) < collision_radius:
+                # Ramming collision!
+                hp_rammer = s.hp
+                hp_target = target.hp
                 
-                if not s1.is_alive or not s2.is_alive: continue
-                
-                # Dynamic Radius Check
-                collision_radius = s1.radius + s2.radius
-                
-                if s1.position.distance_to(s2.position) < collision_radius:
-                    # Collision!
-                    hp1 = s1.hp
-                    hp2 = s2.hp
-                    
-                    if hp1 < hp2:
-                        # s1 is weaker -> destroyed
-                        # s2 takes damage equal to s1's HP
-                        s1.take_damage(hp1 + 9999)
-                        s2.take_damage(hp1)
-                        print(f"Ramming: {s1.name} destroyed by {s2.name}!")
-                    elif hp2 < hp1:
-                         # s2 is weaker -> destroyed
-                        s2.take_damage(hp2 + 9999)
-                        s1.take_damage(hp2)
-                        print(f"Ramming: {s2.name} destroyed by {s1.name}!")
-                    else:
-                        # Both die
-                        s1.take_damage(hp1 + 9999)
-                        s2.take_damage(hp2 + 9999)
-                        print(f"Ramming: Mutual destruction between {s1.name} and {s2.name}!")
+                if hp_rammer < hp_target:
+                    # Rammer is weaker -> destroyed
+                    # Target takes 50% of rammer's remaining HP as damage
+                    s.take_damage(hp_rammer + 9999)
+                    target.take_damage(hp_rammer * 0.5)
+                    print(f"Ramming: {s.name} destroyed by {target.name}! ({target.name} took {hp_rammer * 0.5:.0f} damage)")
+                elif hp_target < hp_rammer:
+                    # Target is weaker -> destroyed
+                    # Rammer takes 50% of target's remaining HP as damage
+                    target.take_damage(hp_target + 9999)
+                    s.take_damage(hp_target * 0.5)
+                    print(f"Ramming: {target.name} destroyed by {s.name}! ({s.name} took {hp_target * 0.5:.0f} damage)")
+                else:
+                    # Equal HP - both die
+                    s.take_damage(hp_rammer + 9999)
+                    target.take_damage(hp_target + 9999)
+                    print(f"Ramming: Mutual destruction between {s.name} and {target.name}!")
 
         # Update Projectiles
         # Pre-calculate ship states for CCD
@@ -763,57 +766,50 @@ class Game:
                 'radius': s.radius
             })
 
-        for p in self.projectiles[:]:
-            # CCD varies: We need to check the path from t0 to t1 against ships from t0 to t1.
-            # Ships are ALREADY updated to t1 in this frame (see s.update(dt) above).
-            # Projectile is currently at t0.
-            
+        # Optimized projectile update using set for removal tracking
+        projectiles_to_remove = set()
+        
+        for idx, p in enumerate(self.projectiles):
+            if idx in projectiles_to_remove:
+                continue
+                
             p_pos_t0 = p['pos']
             p_vel = p['vel']
+            p_vel_length = p_vel.length()  # Cache this calculation
             p_pos_t1 = p_pos_t0 + p_vel * dt
             
             hit_occurred = False
             
-            # Check against pre-calculated ship states
-            for state in ship_states:
-                s = state['ship']
-                if not s.is_alive: continue # Double check
-                if state['team_id'] == p['owner'].team_id: continue # No friendly fire
+            # Use spatial grid for broad-phase collision detection
+            # Query ships near the projectile's path (use midpoint + buffer)
+            query_pos = (p_pos_t0 + p_pos_t1) * 0.5
+            query_radius = p_vel_length * dt + 100  # Path length + buffer
+            nearby_ships = self.grid.query_radius(query_pos, query_radius)
+            
+            for s in nearby_ships:
+                if not s.is_alive: continue
+                if s.team_id == p['owner'].team_id: continue  # No friendly fire
                 
                 # Continuous Collision Detection (CCD)
-                # S(t) information cached
-                s_pos_t0 = state['pos_t0']
-                s_vel = state['vel']
-                
-                # Relative Motion
-                # P(t) = p_pos_t0 + p_vel * t
-                # S(t) = s_pos_t0 + s_vel * t
-                # D(t) = P(t) - S(t) = (p_t0 - s_t0) + (p_v - s_v) * t
+                s_vel = s.velocity
+                s_pos_t1 = s.position
+                s_pos_t0 = s_pos_t1 - s_vel * dt
                 
                 D0 = p_pos_t0 - s_pos_t0
                 DV = p_vel - s_vel
                 
-                # We want min(|D(t)|) < radius
-                # Minimize D(t)^2 = |D0 + DV*t|^2
-                # d/dt = 2 * (D0 + DV*t) . DV = 0
-                # D0.DV + |DV|^2 * t = 0
-                # t = - (D0 . DV) / |DV|^2
-                
                 dv_sq = DV.dot(DV)
-                collision_radius = state['radius'] + 5 # Tolerance
+                collision_radius = s.radius + 5
                 
                 hit = False
                 
                 if dv_sq == 0:
-                    # Parallel logic
                     if D0.length() < collision_radius:
                         hit = True
                 else:
                     t = -D0.dot(DV) / dv_sq
-                    # Clamp to [0, dt]
                     t_clamped = max(0, min(t, dt))
                     
-                    # Position at closest approach
                     p_at_t = p_pos_t0 + p_vel * t_clamped
                     s_at_t = s_pos_t0 + s_vel * t_clamped
                     
@@ -823,26 +819,25 @@ class Game:
                 if hit:
                     s.take_damage(p['damage'])
                     hit_occurred = True
-                    # Visual effect at impact point?
-                    # For now just delete
-                    break # One hit per projectile
+                    break
             
             if hit_occurred:
-                self.projectiles.remove(p)
+                projectiles_to_remove.add(idx)
             else:
-                # Update position for next frame
                 p['pos'] = p_pos_t1
-                p['distance_traveled'] += p_vel.length() * dt
-            
-            if p['distance_traveled'] > p['range']:
-                if p in self.projectiles:
-                    self.projectiles.remove(p)
+                p['distance_traveled'] += p_vel_length * dt
+                
+                if p['distance_traveled'] > p['range']:
+                    projectiles_to_remove.add(idx)
         
-        # Update Beams (Visuals)
-        for b in self.beams[:]:
+        # Batch remove projectiles using list comprehension (O(N) instead of O(N^2))
+        if projectiles_to_remove:
+            self.projectiles = [p for i, p in enumerate(self.projectiles) if i not in projectiles_to_remove]
+        
+        # Update Beams - decrement timers and filter expired
+        for b in self.beams:
             b['timer'] -= dt
-            if b['timer'] <= 0:
-                self.beams.remove(b)
+        self.beams = [b for b in self.beams if b['timer'] > 0]
 
     def draw_debug_overlay(self):
         for s in self.ships:
