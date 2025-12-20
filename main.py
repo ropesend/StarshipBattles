@@ -8,7 +8,7 @@ from spatial import SpatialGrid
 from designs import create_brick, create_interceptor
 from components import load_components, load_modifiers, Bridge, Weapon, Engine, Thruster, Armor, Tank
 from ui import Button
-from builder import BuilderScene
+from builder_gui import BuilderSceneGUI
 from sprites import SpriteManager
 
 # Constants
@@ -279,8 +279,8 @@ def draw_ship(surface, ship, camera):
     def scale(val):
         return int(val * camera.zoom)
     
-    # Layers
-    base_radius = 40
+    # Use ship's calculated radius (based on actual mass)
+    base_radius = ship.radius
     scaled_radius = scale(base_radius)
     
     if scaled_radius < 3:
@@ -484,8 +484,8 @@ class Game:
             Button(WIDTH//2 - 100, HEIGHT//2 + 20, 200, 50, "Ship Builder", self.start_builder)
         ]
         
-        # Builder
-        self.builder_scene = BuilderScene(WIDTH, HEIGHT, self.on_builder_finish)
+        # Builder (using pygame_gui)
+        self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_finish)
         
         # Camera
         self.camera = Camera(WIDTH, HEIGHT)
@@ -529,7 +529,7 @@ class Game:
 
     def start_builder(self):
         self.state = BUILDER
-        self.builder_scene = BuilderScene(WIDTH, HEIGHT, self.on_builder_finish)
+        self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_finish)
 
     def on_builder_finish(self, custom_ship):
         # Position custom ship in team 1
@@ -1083,6 +1083,7 @@ class Game:
                     btn.draw(self.screen)
             elif self.state == BUILDER:
                 self.builder_scene.update(frame_time)
+                self.builder_scene.process_ui_time(frame_time)
                 self.builder_scene.draw(self.screen)
             elif self.state == BATTLE:
                 # Fixed timestep simulation for determinism

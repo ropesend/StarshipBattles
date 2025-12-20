@@ -139,11 +139,11 @@ class Ship(PhysicsBody):
         # Budget & Scaling
         self.max_mass_budget = SHIP_CLASSES.get(self.ship_class, 1000)
         
-        # Radius Scaling
+        # Radius Scaling - based on actual mass (cube root scaling)
         base_radius = 40
         ref_mass = 1000
-        budget = max(self.max_mass_budget, 1000)
-        ratio = budget / ref_mass
+        actual_mass = max(self.mass, 100)  # Use actual mass, minimum 100 to avoid tiny radius
+        ratio = actual_mass / ref_mass
         self.radius = base_radius * (ratio ** (1/3.0))
 
         self.layers[LayerType.ARMOR]['max_hp_pool'] = 0
