@@ -44,88 +44,142 @@ class AIController:
             # Idle / Drift
             self.ship.comp_trigger_pulled = False
             return
-            
-        # Collision Avoidance / Ramming Logic
-        closest_threat = None
-        current_min_dist = float('inf') # Track actual closest for decision
         
-        # Dynamic check
-        nearby = self.grid.query_radius(self.ship.position, 2000) # Query broad, filter narrow
+        # Dispatch Strategy
+        strategy = getattr(self.ship, 'ai_strategy', 'max_range')
+        
+        if strategy == 'kamikaze':
+            self.update_kamikaze(dt, target)
+        elif strategy == 'attack_run':
+            self.update_attack_run(dt, target)
+        elif strategy == 'flee':
+            self.update_flee(dt, target)
+        else:
+            self.update_max_range(dt, target)
+
+    def update_kamikaze(self, dt, target):
+        # KAMIKAZE: Ram target, no avoidance
+        self.ship.comp_trigger_pulled = True
+        self.navigate_to(dt, target.position, stop_dist=0, precise=False)
+        
+    def update_flee(self, dt, target):
+        # FLEE: Run away from target
+        self.ship.comp_trigger_pulled = False # Don't fire while fleeing?
+        
+        vec = self.ship.position - target.position
+        if vec.length() == 0: vec = pygame.math.Vector2(1,0)
+        
+        flee_pos = self.ship.position + vec.normalize() * 1000
+        self.navigate_to(dt, flee_pos, stop_dist=0, precise=False)
+
+    def update_attack_run(self, dt, target):
+        # ATTACK RUN: Approach -> Turn -> Retreat -> Turn
+        # Need state. Initialize if missing.
+        if not hasattr(self, 'attack_state'):
+            self.attack_state = 'approach' 
+            self.attack_timer = 0
+            
+        dist = self.ship.position.distance_to(target.position)
+        
+        if self.attack_state == 'approach':
+            self.ship.comp_trigger_pulled = True
+            # Fly to near point blank (e.g. 150)
+            target_pos = target.position
+            
+            # Avoid direct collision if not kamikaze? 
+            # Offset slightly to pass by?
+            # For now, just aim at it, collision avoidance usually handles the specific hit.
+            # But let's try to do a "pass"
+            
+            self.navigate_to(dt, target_pos, stop_dist=100, precise=False)
+            
+            if dist < 200:
+                self.attack_state = 'retreat'
+                self.attack_timer = 2.0 # Run away for 2 seconds
+                
+        elif self.attack_state == 'retreat':
+            self.ship.comp_trigger_pulled = False
+            self.attack_timer -= dt
+            
+            # Fly away
+            vec = self.ship.position - target.position
+            if vec.length() == 0: vec = pygame.math.Vector2(1,0)
+            flee_pos = self.ship.position + vec.normalize() * 1000
+            
+            self.navigate_to(dt, flee_pos, stop_dist=0, precise=False)
+            
+            if self.attack_timer <= 0 and dist > self.ship.max_weapon_range * 0.8:
+                self.attack_state = 'approach'
+
+    def update_max_range(self, dt, target):
+        # MAX RANGE (Kiting) - Original behavior + Coll Avoidance
+        self.ship.comp_trigger_pulled = True
+        
+        # Collision Avoidance (Only for subtle/smart strategies)
+        override_pos = self.check_avoidance()
+        if override_pos:
+            self.navigate_to(dt, override_pos, stop_dist=0, precise=False)
+            return
+
+        # Optimal Distance
+        opt_dist = self.ship.max_weapon_range * 0.9
+        if opt_dist < 200: opt_dist = 200 # Minimum spacing
+        
+        dist = self.ship.position.distance_to(target.position)
+        
+        if dist > opt_dist:
+            # Close in
+            self.navigate_to(dt, target.position, stop_dist=opt_dist, precise=True)
+        else:
+            # Too close, back off or circle?
+            # Back off logic similar to flee but keeping facing?
+            # Simple kiting: just stop thrusting if too close, maybe reverse?
+            # If we just stop, we drift.
+            # Let's try to maintain distance.
+            vec = self.ship.position - target.position
+            if vec.length() == 0: vec = pygame.math.Vector2(1,0)
+            
+            # Kite point
+            kite_pos = target.position + vec.normalize() * opt_dist
+            self.navigate_to(dt, kite_pos, stop_dist=0, precise=True)
+
+    def check_avoidance(self):
+        # Extracted Collision Logic
+        nearby = self.grid.query_radius(self.ship.position, 1000)
+        closest = None
+        min_d = float('inf')
         
         for obj in nearby:
             if obj == self.ship: continue
             if not obj.is_alive: continue
             if not hasattr(obj, 'team_id'): continue
             
+            # Simple physical radius check
             d = self.ship.position.distance_to(obj.position)
+            thresh = self.ship.radius + getattr(obj, 'radius', 40) + 100
             
-            # Calculate dynamic threshold
-            # 1. Physical collision safety margin
-            obj_radius = getattr(obj, 'radius', 40)
-            physical_safe = self.ship.radius + obj_radius + 50
-            
-            # 2. Tactical range (stay further back)
-            tactical_safe = self.ship.max_weapon_range * 0.9
-            
-            avoid_threshold = max(physical_safe, tactical_safe)
-            
-            if d < avoid_threshold:
-                 # Check if this is the closest/most urgent threat relative to its own threshold?
-                 # Or just closest absolute?
-                 # Let's track the one that violates its threshold the most or is just closest absolute distance.
-                 if d < current_min_dist:
-                     closest_threat = obj
-                     current_min_dist = d
-                     # We break if we only care about ONE, but we should probably scan all to find the worst.
-                     # But for simplicity, closest absolute that is within threshold is fine.
+            if d < thresh:
+                if d < min_d:
+                    min_d = d
+                    closest = obj
         
-        override_target_pos = None
-        
-        if closest_threat:
-            # Decision Time
-            is_enemy = (closest_threat.team_id != self.ship.team_id)
-            
-            should_ram = False
-            if is_enemy:
-                # Check Overwhelming Favor (e.g. 2x HP)
-                # Ensure we have HP data
-                my_hp = self.ship.hp
-                their_hp = closest_threat.hp
-                if my_hp > their_hp * 10.0:
-                    should_ram = True
-            
-            if should_ram:
-                # Steer TOWARDS threat (RAM)
-                # Log only if new decision? 
-                # For now just log. 
-                # To prevent spam, check if we were already ramming? 
-                # AI doesn't persist state well.
-                # Maybe a low-prob log?
-                if pygame.time.get_ticks() % 60 == 0: # Occasional log
-                    log_info(f"AI: {self.ship.name} RAMMING {closest_threat.name} (HP Adv: {my_hp:.0f} vs {their_hp:.0f})")
-                override_target_pos = closest_threat.position
-            else:
-                # Steer AWAY from threat
-                # Vector from threat to me
-                flee_vec = self.ship.position - closest_threat.position
-                if flee_vec.length() == 0: flee_vec = pygame.math.Vector2(1,0)
-                # Target a point away
-                override_target_pos = self.ship.position + flee_vec.normalize() * 1000
+        if closest:
+            # Evade
+            vec = self.ship.position - closest.position
+            if vec.length() == 0: vec = pygame.math.Vector2(1,0)
+            return self.ship.position + vec.normalize() * 500
+        return None
 
-        # Determine navigation target
-        nav_target_pos = override_target_pos if override_target_pos else target.position
-
-        distance = self.ship.position.distance_to(nav_target_pos)
-        
+    def navigate_to(self, dt, target_pos, stop_dist=0, precise=False):
         # 1. Navigation
-        # Calculate angle to target
-        dx = nav_target_pos.x - self.ship.position.x
-        dy = nav_target_pos.y - self.ship.position.y
+        distance = self.ship.position.distance_to(target_pos)
+        
+        dx = target_pos.x - self.ship.position.x
+        dy = target_pos.y - self.ship.position.y
         
         target_angle = math.degrees(math.atan2(dy, dx)) % 360
         current_angle = self.ship.angle % 360
         
-        # Calculate difference (-180 to 180)
         angle_diff = (target_angle - current_angle + 180) % 360 - 180
         
         # Rotate
@@ -134,22 +188,12 @@ class AIController:
             self.ship.rotate(dt, direction)
         
         # Thrust
-        # Calculate dynamic stopping distance to prevent overshooting into collision
-        # Stop thrusting if within 80% of weapon range (if we have weapons)
-        # Otherwise default to 300
-        stop_dist = max(300, self.ship.max_weapon_range * 0.8)
+        # If precise, we slow down earlier
+        eff_stop_dist = stop_dist
         
-        if abs(angle_diff) < 20 and distance > stop_dist: 
-            if abs(angle_diff) < 5:
-                self.ship.thrust_forward(dt)
-
-        # 2. Combat
-        in_sights = abs(angle_diff) < 10
-        
-        if in_sights:
-            self.ship.comp_trigger_pulled = True
-        else:
-            self.ship.comp_trigger_pulled = False
+        if abs(angle_diff) < 30 and distance > eff_stop_dist:
+            # Throttle if facing roughly right
+             self.ship.thrust_forward(dt)
 
     # attempt_fire removed, logic moved to Ship update via trigger
 

@@ -78,6 +78,9 @@ class Ship(PhysicsBody):
         self.is_alive = True
         self.bridge_destroyed = False
         
+        # AI Strategy
+        self.ai_strategy = "max_range" # Options: max_range, attack_run, kamikaze, flee
+        
         # Arcade Physics
         self.current_speed = 0
         self.acceleration_rate = 0
@@ -392,6 +395,33 @@ class Ship(PhysicsBody):
         self.is_alive = False
         self.velocity = pygame.math.Vector2(0,0)
 
+    def solve_lead(self, pos, vel, t_pos, t_vel, p_speed):
+        """
+        Calculates interception time t for a projectile.
+        Returns t > 0 if solution found, else 0.
+        """
+        D = t_pos - pos
+        V = t_vel - vel
+        
+        a = V.dot(V) - p_speed**2
+        b = 2 * V.dot(D)
+        c = D.dot(D)
+        
+        if a == 0:
+            if b == 0: return 0
+            t = -c / b
+            return t if t > 0 else 0
+        
+        disc = b*b - 4*a*c
+        if disc < 0: return 0
+        
+        sqrt_disc = math.sqrt(disc)
+        t1 = (-b + sqrt_disc) / (2*a)
+        t2 = (-b - sqrt_disc) / (2*a)
+        
+        ts = [x for x in [t1, t2] if x > 0]
+        return min(ts) if ts else 0
+
     def fire_weapons(self):
         """
         Attempts to fire all ready weapons.
@@ -429,33 +459,33 @@ class Ship(PhysicsBody):
                                 if isinstance(comp, ProjectileWeapon):
                                     # Quadratic Intercept
                                     s_proj = comp.projectile_speed
-                                    D = target.position - self.position
-                                    V = target.velocity - self.velocity
+                                    # D = target.position - self.position # Original line, now target is self.current_target
+                                    # V = target.velocity - self.velocity # Original line
                                     
-                                    a_q = V.dot(V) - s_proj**2
-                                    b_q = 2 * V.dot(D)
-                                    c_q = D.dot(D)
-                                    
-                                    t = 0
-                                    if a_q == 0:
-                                        if b_q != 0: t = -c_q/b_q
-                                    else:
-                                        disc = b_q*b_q - 4*a_q*c_q
-                                        if disc >= 0:
-                                            t1 = (-b_q + math.sqrt(disc)) / (2*a_q)
-                                            t2 = (-b_q - math.sqrt(disc)) / (2*a_q)
-                                            ts = [x for x in [t1, t2] if x > 0]
-                                            if ts: t = min(ts)
-                                    
+                                    # a_q = V.dot(V) - s_proj**2 # Original line
+                                    # b_q = 2 * V.dot(D) # Original line
+                                    t = self.solve_lead(self.position, self.velocity, self.current_target.position, self.current_target.velocity, comp.projectile_speed)
                                     if t > 0:
-                                        aim_pos = target.position + target.velocity * t
+                                        aim_pos = self.current_target.position + self.current_target.velocity * t
                                         self.aim_point = aim_pos
+                                        
+                                        # Correct for our own velocity (Relative Intecept)
+                                        # aim_vec should be the direction we point the muzzle.
+                                        # Since P_vel = Muzzle_Dir * Speed + Ship_Vel
+                                        # We need to aim at (Intercept - Ship_Motion)
+                                        intercept_vec = aim_pos - self.position
+                                        aim_vec = intercept_vec - self.velocity * t
+                                    else:
+                                         # No solution, aim at target
+                                         aim_pos = self.current_target.position
+                                         aim_vec = aim_pos - self.position
                                 else:
                                      # Beam
-                                     self.aim_point = target.position
+                                     self.aim_point = self.current_target.position
+                                     aim_vec = self.aim_point - self.position
 
                                 # ARC CHECK
-                                aim_vec = aim_pos - self.position
+                                # aim_vec is now the Muzzle Direction
                                 aim_angle = math.degrees(math.atan2(aim_vec.y, aim_vec.x)) % 360
                                 ship_angle = self.angle
                                 comp_facing = (ship_angle + comp.facing_angle) % 360
@@ -467,8 +497,7 @@ class Ship(PhysicsBody):
                                     # ARC FAIL
                                     # Only log occasionally or if specific flag? 
                                     # For now, let's log.
-                                    pass
-                                    # log_debug(f"{self.name} weapon {comp.name} out of arc: {diff:.1f} vs {comp.firing_arc}")
+                                    log_debug(f"ARC FAIL: {self.name} weapon {comp.name} | ShipAng: {ship_angle:.1f} | FacMod: {comp.facing_angle} | GlbFac: {comp_facing:.1f} | Aim: {aim_angle:.1f} | Diff: {diff:.1f} | Arc: {comp.firing_arc}")
 
                         if valid_target and comp.fire():
                             # Deduct Resource
@@ -481,6 +510,7 @@ class Ship(PhysicsBody):
                                     'damage': comp.damage,
                                     'range': comp.range,
                                     'origin': self.position,
+                                    'component': comp,
                                     'direction': aim_vec.normalize() if aim_vec.length() > 0 else pygame.math.Vector2(1, 0),
                                     'hit': True # Revisit hit chance?
                                 })
@@ -488,7 +518,7 @@ class Ship(PhysicsBody):
                                 self.current_ammo -= cost
                                 # Projectile
                                 speed = comp.projectile_speed if isinstance(comp, ProjectileWeapon) else 1000
-                                aim_vec = aim_pos - self.position
+                                # aim_vec is already calculated correctly above (compensated for ShipVel)
                                 p_vel = aim_vec.normalize() * speed + self.velocity
                                 
                                 attacks.append({
@@ -512,6 +542,7 @@ class Ship(PhysicsBody):
             "color": self.color,
             "team_id": self.team_id,
             "ship_class": self.ship_class,
+            "ai_strategy": self.ai_strategy,
             "layers": {}
         }
         
@@ -542,6 +573,7 @@ class Ship(PhysicsBody):
         if isinstance(color, list): color = tuple(color)
         
         s = Ship(name, 0, 0, color, data.get("team_id", 0), ship_class=data.get("ship_class", "Escort"))
+        s.ai_strategy = data.get("ai_strategy", "max_range")
         
         # Load Layers
         # We need access to COMPONENT_REGISTRY and MODIFIER_REGISTRY
@@ -581,6 +613,9 @@ class Ship(PhysicsBody):
                         if mid in MODIFIER_REGISTRY:
                             # FIX: Pass ID and Value, not the object. add_modifier handles creation.
                             new_comp.add_modifier(mid, mval)
+                            
+                    if isinstance(new_comp, Weapon):
+                        log_debug(f"LOADED Weapon {new_comp.name} on {name}: Facing={new_comp.facing_angle}, Arc={new_comp.firing_arc}")
                             
                     s.add_component(new_comp, layer_type)
         

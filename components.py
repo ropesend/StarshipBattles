@@ -158,6 +158,11 @@ class Component:
                         self.range = self.data.get('range', 0) * (1.5 * level)
                     self.mass = self.base_mass * (2.0 * level)
 
+                elif eff['special'] == 'facing':
+                    # Value is Angle (0-360)
+                    if hasattr(self, 'facing_angle'):
+                        self.facing_angle = val
+
         self.current_hp = min(self.current_hp, self.max_hp) # Clamp if HP reduced? Or not?
 
     def clone(self):

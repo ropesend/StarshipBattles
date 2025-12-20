@@ -58,12 +58,13 @@ class BuilderScene:
         btn_x = screen_width - self.info_width + 15
         
         self.class_btn = Button(btn_x, 10, btn_width, 30, f"Class: {self.ship.ship_class}", self.cycle_class, (100, 100, 200))
+        self.ai_btn = Button(btn_x, 45, btn_width, 30, f"AI: {self.ship.ai_strategy.replace('_', ' ').title()}", self.cycle_ai, (150, 100, 150))
         
         self.start_btn = Button(btn_x, screen_height - 60, btn_width, btn_height, "START BATTLE", self.try_start)
         self.save_btn = Button(btn_x, screen_height - 110, btn_width, btn_height, "SAVE DESIGN", self.save_ship)
         self.load_btn = Button(btn_x, screen_height - 160, btn_width, btn_height, "LOAD DESIGN", self.load_ship)
         
-        self.buttons.extend([self.class_btn, self.start_btn, self.save_btn, self.load_btn])
+        self.buttons.extend([self.class_btn, self.ai_btn, self.start_btn, self.save_btn, self.load_btn])
 
         # Dragging State
         self.dragged_item = None # Instance being dragged
@@ -122,6 +123,8 @@ class BuilderScene:
                 new_ship.recalculate_stats()
                 
                 self.ship = new_ship
+                self.class_btn.text = f"Class: {self.ship.ship_class}"
+                self.ai_btn.text = f"AI: {self.ship.ai_strategy.replace('_', ' ').title()}"
                 print(f"Loaded ship from {filename}")
             except Exception as e:
                 self.show_error(f"Load failed: {e}")
@@ -142,10 +145,18 @@ class BuilderScene:
         # Update Button Text
         self.class_btn.text = f"Class: {self.ship.ship_class}"
         
-        # Recalculate will change radius, maybe we should clear components if they fall outside new radius?
-        # For now, let's keep them (they might just look weird or be invalid layer pct).
-        # We should probably validate layers in checking?
         pass
+
+    def cycle_ai(self):
+        modes = ["max_range", "attack_run", "kamikaze", "flee"]
+        try:
+            current_idx = modes.index(self.ship.ai_strategy)
+        except ValueError:
+            current_idx = 0
+            
+        next_idx = (current_idx + 1) % len(modes)
+        self.ship.ai_strategy = modes[next_idx]
+        self.ai_btn.text = f"AI: {self.ship.ai_strategy.replace('_', ' ').title()}"
 
     def show_error(self, msg):
         self.error_message = msg
@@ -411,7 +422,30 @@ class BuilderScene:
                     # Let's assume UP is default.
                     # Rotation angle: -current_angle - 90 (Pygame rotation is CCW, standard math is CCW from Right)
                     # Let's try simple rotation
-                    rotated_sprite = pygame.transform.rotate(sprite, -current_angle - 90)
+                    
+                    rotation_angle = -current_angle - 90
+                    
+                    # Check for explicit facing modifier override
+                    # If facing_angle != 0, we assume manual control relative to forward?
+                    # Or check for modifier presence?
+                    # Let's check for 'facing' modifier
+                    has_facing = False
+                    for m in comp.modifiers:
+                        if m.definition.id == 'facing':
+                            has_facing = True
+                            break
+                            
+                    if has_facing and hasattr(comp, 'facing_angle'):
+                        # Facing is relative to ship forward (Up in Draw?)
+                        # If 0 is forward.
+                        # Normal draw: 0 angle = Right?
+                        # No, Pygame 0 rotation = Up for these sprites.
+                        # ship forward is Up (-90 deg from Right).
+                        # comp.facing_angle 0 = Up.
+                        # So rotation = -comp.facing_angle (CCW -> CW) (+ correction)
+                        rotation_angle = -comp.facing_angle
+                        
+                    rotated_sprite = pygame.transform.rotate(sprite, rotation_angle)
                     rect = rotated_sprite.get_rect(center=(int(px), int(py)))
                     screen.blit(rotated_sprite, rect)
                 else:

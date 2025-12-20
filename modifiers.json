@@ -65,6 +65,27 @@
                     "BeamWeapon"
                 ]
             }
+        },
+        {
+            "id": "facing",
+            "name": "Facing Angle",
+            "type": "linear",
+            "description": "Sets the firing direction (0=Forward).",
+            "param_name": "Angle",
+            "min_val": 0,
+            "max_val": 359,
+            "default_val": 0,
+            "restrictions": {
+                "allow_types": [
+                    "ProjectileWeapon",
+                    "BeamWeapon",
+                    "Thruster",
+                    "Engine"
+                ]
+            },
+            "effects": {
+                "special": "facing"
+            }
         }
     ]
 }

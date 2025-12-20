@@ -6,10 +6,20 @@
         255
     ],
     "team_id": 0,
+    "ship_class": "Cruiser",
+    "ai_strategy": "max_range",
     "layers": {
         "CORE": [
             {
                 "id": "bridge",
+                "modifiers": []
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": []
+            },
+            {
+                "id": "ordnance_tank",
                 "modifiers": []
             },
             {
@@ -31,6 +41,34 @@
                 "modifiers": []
             },
             {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "thruster",
+                "modifiers": []
+            },
+            {
+                "id": "thruster",
+                "modifiers": []
+            },
+            {
+                "id": "thruster",
+                "modifiers": []
+            },
+            {
                 "id": "thruster",
                 "modifiers": []
             },
@@ -43,7 +81,7 @@
                 "modifiers": []
             },
             {
-                "id": "thruster",
+                "id": "standard_engine",
                 "modifiers": []
             },
             {
@@ -51,8 +89,13 @@
                 "modifiers": []
             },
             {
-                "id": "thruster",
-                "modifiers": []
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "facing",
+                        "value": 0
+                    }
+                ]
             }
         ],
         "OUTER": [
@@ -60,8 +103,8 @@
                 "id": "railgun",
                 "modifiers": [
                     {
-                        "id": "turret_mount",
-                        "value": 180.0
+                        "id": "facing",
+                        "value": 0
                     }
                 ]
             },
@@ -69,13 +112,42 @@
                 "id": "railgun",
                 "modifiers": [
                     {
-                        "id": "turret_mount",
-                        "value": 180.0
+                        "id": "facing",
+                        "value": 0
+                    }
+                ]
+            },
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "facing",
+                        "value": 0
                     }
                 ]
             }
         ],
         "ARMOR": [
+            {
+                "id": "armor_plate",
+                "modifiers": []
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": []
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": []
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": []
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": []
+            },
             {
                 "id": "armor_plate",
                 "modifiers": []
