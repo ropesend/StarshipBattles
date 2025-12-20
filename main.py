@@ -14,6 +14,7 @@ from sprites import SpriteManager
 # Constants
 WIDTH, HEIGHT = 3840, 2160
 FPS = 60
+FIXED_DT = 1.0 / 60.0  # Fixed simulation timestep for determinism
 BG_COLOR = (10, 10, 20)
 
 LAYER_COLORS = {
@@ -497,6 +498,10 @@ class Game:
         # Debug Overlay
         self.show_overlay = False
         
+        # Simulation Speed Control
+        self.sim_speed_multiplier = 1.0  # 1.0 = max speed, lower = slower
+        self.sim_paused = False
+        
         # Inspector Active Windows
         self.tk_root = tk.Tk()
         self.tk_root.withdraw() # Hide main root
@@ -545,7 +550,18 @@ class Game:
         
         self.start_battle(team1, team2)
 
-    def start_battle(self, team1_list, team2_list):
+    def start_battle(self, team1_list, team2_list, seed=None):
+        """Start a battle between two teams.
+        
+        Args:
+            team1_list: List of ships for team 1
+            team2_list: List of ships for team 2
+            seed: Optional RNG seed for reproducible/deterministic battles
+        """
+        # Seed RNG for deterministic battles if specified
+        if seed is not None:
+            random.seed(seed)
+            
         self.ships = []
         self.ai_controllers = []
         
@@ -570,8 +586,9 @@ class Game:
         self.state = BATTLE
         self.camera.fit_objects(self.ships)
 
-    def update_battle(self, dt, events):
-        self.camera.update_input(dt, events)
+    def update_battle(self, dt, events, camera_dt=None):
+        # Use separate camera_dt for smooth camera movement
+        self.camera.update_input(camera_dt if camera_dt else dt, events)
         
         # Update Tkinter
         try:
@@ -1022,8 +1039,10 @@ class Game:
         self.screen.blit(font_med.render(f"Team 2: {s2_live}", True, (255, 100, 100)), (sw - 150, 10))
 
     def run(self):
+        accumulator = 0.0
+        
         while self.running:
-            dt = self.clock.tick(FPS) / 1000.0
+            frame_time = self.clock.tick(FPS) / 1000.0
             
             events = pygame.event.get()
             for event in events:
@@ -1040,6 +1059,21 @@ class Game:
                     if self.state == BATTLE:
                         if event.key == pygame.K_o:
                             self.show_overlay = not self.show_overlay
+                        elif event.key == pygame.K_SPACE:
+                            # Toggle pause
+                            self.sim_paused = not self.sim_paused
+                        elif event.key == pygame.K_COMMA:
+                            # Slow down simulation
+                            if not self.sim_paused:
+                                self.sim_speed_multiplier = max(0.0625, self.sim_speed_multiplier / 2.0)
+                        elif event.key == pygame.K_PERIOD:
+                            # Speed up simulation
+                            if not self.sim_paused:
+                                self.sim_speed_multiplier = min(1.0, self.sim_speed_multiplier * 2.0)
+                        elif event.key == pygame.K_SLASH:
+                            # Reset to max speed
+                            self.sim_speed_multiplier = 1.0
+                            self.sim_paused = False
                 
                 if self.state == MENU:
                     for btn in self.menu_buttons:
@@ -1053,11 +1087,37 @@ class Game:
                 for btn in self.menu_buttons:
                     btn.draw(self.screen)
             elif self.state == BUILDER:
-                self.builder_scene.update(dt)
+                self.builder_scene.update(frame_time)
                 self.builder_scene.draw(self.screen)
             elif self.state == BATTLE:
-                self.update_battle(dt, events)
+                # Fixed timestep simulation for determinism
+                # Apply speed multiplier to frame_time before accumulating
+                if not self.sim_paused:
+                    accumulator += frame_time * self.sim_speed_multiplier
+                events_processed = False
+                
+                while accumulator >= FIXED_DT:
+                    # Pass events only on first iteration, use frame_time for camera smoothness
+                    self.update_battle(
+                        FIXED_DT, 
+                        events if not events_processed else [],
+                        camera_dt=frame_time if not events_processed else 0
+                    )
+                    events_processed = True
+                    accumulator -= FIXED_DT
+                
+                # Still allow camera movement when paused
+                if self.sim_paused and not events_processed:
+                    self.camera.update_input(frame_time, events)
+                
                 self.draw_battle()
+                
+                # Draw speed indicator
+                speed_text = "PAUSED" if self.sim_paused else f"Speed: {self.sim_speed_multiplier:.2f}x"
+                speed_color = (255, 100, 100) if self.sim_paused else (200, 200, 200)
+                if self.sim_speed_multiplier < 1.0:
+                    speed_color = (255, 200, 100)  # Orange for slowed
+                self.screen.blit(font_med.render(speed_text, True, speed_color), (WIDTH//2 - 50, 10))
                 
             pygame.display.flip()
         
