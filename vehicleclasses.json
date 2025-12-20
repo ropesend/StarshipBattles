@@ -1,0 +1,137 @@
+{
+    "classes": {
+        "Escort": {
+            "hull_mass": 50,
+            "max_mass": 1000,
+            "requirements": {
+                "command_control": {
+                    "component_type": "Bridge",
+                    "min_count": 1
+                },
+                "propulsion": {
+                    "component_type": "Engine",
+                    "min_count": 1
+                },
+                "fuel_storage": {
+                    "component_type": "Tank",
+                    "resource_type": "fuel",
+                    "min_count": 1
+                }
+            }
+        },
+        "Frigate": {
+            "hull_mass": 100,
+            "max_mass": 2000,
+            "requirements": {
+                "command_control": {
+                    "component_type": "Bridge",
+                    "min_count": 1
+                },
+                "propulsion": {
+                    "component_type": "Engine",
+                    "min_count": 1
+                },
+                "fuel_storage": {
+                    "component_type": "Tank",
+                    "resource_type": "fuel",
+                    "min_count": 1
+                }
+            }
+        },
+        "Destroyer": {
+            "hull_mass": 200,
+            "max_mass": 4000,
+            "requirements": {
+                "command_control": {
+                    "component_type": "Bridge",
+                    "min_count": 1
+                },
+                "propulsion": {
+                    "component_type": "Engine",
+                    "min_count": 1
+                },
+                "fuel_storage": {
+                    "component_type": "Tank",
+                    "resource_type": "fuel",
+                    "min_count": 1
+                }
+            }
+        },
+        "Cruiser": {
+            "hull_mass": 400,
+            "max_mass": 8000,
+            "requirements": {
+                "command_control": {
+                    "component_type": "Bridge",
+                    "min_count": 1
+                },
+                "propulsion": {
+                    "component_type": "Engine",
+                    "min_count": 1
+                },
+                "fuel_storage": {
+                    "component_type": "Tank",
+                    "resource_type": "fuel",
+                    "min_count": 1
+                }
+            }
+        },
+        "Battlecruiser": {
+            "hull_mass": 800,
+            "max_mass": 16000,
+            "requirements": {
+                "command_control": {
+                    "component_type": "Bridge",
+                    "min_count": 1
+                },
+                "propulsion": {
+                    "component_type": "Engine",
+                    "min_count": 1
+                },
+                "fuel_storage": {
+                    "component_type": "Tank",
+                    "resource_type": "fuel",
+                    "min_count": 1
+                }
+            }
+        },
+        "Battleship": {
+            "hull_mass": 1600,
+            "max_mass": 32000,
+            "requirements": {
+                "command_control": {
+                    "component_type": "Bridge",
+                    "min_count": 1
+                },
+                "propulsion": {
+                    "component_type": "Engine",
+                    "min_count": 1
+                },
+                "fuel_storage": {
+                    "component_type": "Tank",
+                    "resource_type": "fuel",
+                    "min_count": 1
+                }
+            }
+        },
+        "Dreadnought": {
+            "hull_mass": 3200,
+            "max_mass": 64000,
+            "requirements": {
+                "command_control": {
+                    "component_type": "Bridge",
+                    "min_count": 1
+                },
+                "propulsion": {
+                    "component_type": "Engine",
+                    "min_count": 1
+                },
+                "fuel_storage": {
+                    "component_type": "Tank",
+                    "resource_type": "fuel",
+                    "min_count": 1
+                }
+            }
+        }
+    }
+}

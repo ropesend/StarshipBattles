@@ -12,3 +12,6 @@ venv/
 !components.json
 !ShipOne.json
 !modifiers.json
+!vehicleclasses.json
+!component_presets.json
+!builder_theme.json

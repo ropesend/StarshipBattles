@@ -1,0 +1,12 @@
+{
+    "selection_list": {
+        "misc": {
+            "list_item_height": "40"
+        }
+    },
+    "selection_list.@selection_list_item": {
+        "font": {
+            "size": "18"
+        }
+    }
+}

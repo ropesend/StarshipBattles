@@ -51,6 +51,7 @@ class Component:
         self.type_str = data['type']
         self.sprite_index = data.get('sprite_index', 0)
         self.cost = data.get('cost', 0)
+        self.crew_required = data.get('crew_required', 0)  # Crew required to operate
         
         self.modifiers = [] # list of ApplicationModifier
         # If cloning, data might have modifiers? Not yet supported in save/load but structure ready
@@ -151,11 +152,16 @@ class Component:
                     if hasattr(self, 'capacity'): self.capacity = self.data.get('capacity', 0) * scale
                     
                 elif eff['special'] == 'range_mount':
-                    # Range * (1.5 * Value), Mass * (2.0 * Value)
+                    # Each level doubles range, mass/hp/cost increase by 3.5x per level
+                    # Level 0 = 1x, Level 1 = 2x range / 3.5x mass, Level 2 = 4x range / 12.25x mass, etc.
                     level = val
+                    range_mult = 2.0 ** level  # 1, 2, 4, 8, 16, 32
+                    cost_mult = 3.5 ** level   # 1, 3.5, 12.25, 42.875, etc.
+                    
                     if hasattr(self, 'range'):
-                        self.range = self.data.get('range', 0) * (1.5 * level)
-                    self.mass = self.base_mass * (2.0 * level)
+                        self.range = self.data.get('range', 0) * range_mult
+                    self.mass = self.base_mass * cost_mult
+                    self.max_hp = self.base_max_hp * cost_mult
 
                 elif eff['special'] == 'facing':
                     # Value is Angle (0-360)
@@ -261,6 +267,24 @@ class BeamWeapon(Weapon):
 
     def clone(self):
         return BeamWeapon(self.data)
+
+class CrewQuarters(Component):
+    """Provides crew capacity for the ship."""
+    def __init__(self, data):
+        super().__init__(data)
+        self.crew_capacity = data.get('crew_capacity', 10)
+    
+    def clone(self):
+        return CrewQuarters(self.data)
+
+class LifeSupport(Component):
+    """Provides life support capacity for crew."""
+    def __init__(self, data):
+        super().__init__(data)
+        self.life_support_capacity = data.get('life_support_capacity', 10)
+    
+    def clone(self):
+        return LifeSupport(self.data)
     
     def calculate_hit_chance(self, distance):
         # Linear falloff
@@ -313,6 +337,10 @@ def load_components(filepath="components.json"):
                     obj = Generator(comp_def)
                 elif c_type == "BeamWeapon":
                     obj = BeamWeapon(comp_def)
+                elif c_type == "CrewQuarters":
+                    obj = CrewQuarters(comp_def)
+                elif c_type == "LifeSupport":
+                    obj = LifeSupport(comp_def)
                 else:
                     obj = Component(comp_def)
                 

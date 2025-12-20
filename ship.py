@@ -2,21 +2,39 @@ import pygame
 import random
 import math
 import json
+import os
 from physics import PhysicsBody
-from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon, ProjectileWeapon
+from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon, ProjectileWeapon, CrewQuarters, LifeSupport
 from logger import log_debug
 
 
-# Ship Classes and their Mass Limits
-SHIP_CLASSES = {
-    "Escort": 1000,
-    "Frigate": 2000,
-    "Destroyer": 4000,
-    "Cruiser": 8000,
-    "Battlecruiser": 16000,
-    "Battleship": 32000,
-    "Dreadnought": 64000
-}
+# Load Vehicle Classes from JSON
+VEHICLE_CLASSES = {}
+SHIP_CLASSES = {}  # Legacy compatibility - maps class name to max_mass
+
+def load_vehicle_classes(filepath="vehicleclasses.json"):
+    global VEHICLE_CLASSES, SHIP_CLASSES
+    try:
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+            VEHICLE_CLASSES = data.get('classes', {})
+            # Build legacy SHIP_CLASSES dict for backward compatibility
+            SHIP_CLASSES = {name: cls['max_mass'] for name, cls in VEHICLE_CLASSES.items()}
+    except FileNotFoundError:
+        print(f"Warning: {filepath} not found, using defaults")
+        VEHICLE_CLASSES = {
+            "Escort": {"hull_mass": 50, "max_mass": 1000, "requirements": {}},
+            "Frigate": {"hull_mass": 100, "max_mass": 2000, "requirements": {}},
+            "Destroyer": {"hull_mass": 200, "max_mass": 4000, "requirements": {}},
+            "Cruiser": {"hull_mass": 400, "max_mass": 8000, "requirements": {}},
+            "Battlecruiser": {"hull_mass": 800, "max_mass": 16000, "requirements": {}},
+            "Battleship": {"hull_mass": 1600, "max_mass": 32000, "requirements": {}},
+            "Dreadnought": {"hull_mass": 3200, "max_mass": 64000, "requirements": {}}
+        }
+        SHIP_CLASSES = {name: cls['max_mass'] for name, cls in VEHICLE_CLASSES.items()}
+
+# Load on module import
+load_vehicle_classes()
 
 class Ship(PhysicsBody):
     def __init__(self, name, x, y, color, team_id=0, ship_class="Escort"):
@@ -37,7 +55,9 @@ class Ship(PhysicsBody):
         
         # Stats
         self.mass = 0
-        self.base_mass = 50 # Cockpit/Structure
+        # Get hull mass from vehicle class definition
+        class_def = VEHICLE_CLASSES.get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
+        self.base_mass = class_def.get('hull_mass', 50)  # Hull/Structure mass from class
         self.total_thrust = 0
         self.max_speed = 0
         self.turn_speed = 0
@@ -179,16 +199,15 @@ class Ship(PhysicsBody):
         # Physics Stats - INVERSE MASS SCALING
         # Max Speed proportional to 1/Mass
         # Accel proportional to 1/Mass^2
-        # Turn proportional to 1/Mass^2
+        # Turn proportional to 1/Mass^1.5 (changed from mass^2 for less sluggish heavy ships)
         
         # Tuning Constants to make it feel right
-        # Tuning Constants to make it feel right
         K_THRUST = 150000 
-        K_TURN = 3000000 
+        K_TURN = 150000  # Adjusted for 1.5 exponent
         
         if self.mass > 0:
             self.acceleration_rate = (self.total_thrust * K_THRUST) / (self.mass * self.mass)
-            self.turn_speed = (self.turn_speed * K_TURN) / (self.mass * self.mass)
+            self.turn_speed = (self.turn_speed * K_TURN) / (self.mass ** 1.5)  # Changed to 1.5 exponent
             
             # Max Speed = Thrust / Mass logic (Linear)
             # Or maintain drag model?
@@ -247,8 +266,69 @@ class Ship(PhysicsBody):
         if self.mass > self.max_mass_budget:
             self.mass_limits_ok = False
 
+    def get_missing_requirements(self):
+        """Check class requirements and return list of missing items."""
+        missing = []
+        class_def = VEHICLE_CLASSES.get(self.ship_class, {})
+        requirements = class_def.get('requirements', {})
+        
+        # Gather all components
+        all_components = [c for layer in self.layers.values() for c in layer['components']]
+        
+        for req_name, req_def in requirements.items():
+            comp_type = req_def.get('component_type', '')
+            min_count = req_def.get('min_count', 1)
+            resource_type = req_def.get('resource_type', None)
+            
+            # Count matching components
+            count = 0
+            for comp in all_components:
+                if comp.type_str == comp_type:
+                    if resource_type:
+                        # For tanks, check resource type
+                        if hasattr(comp, 'resource_type') and comp.resource_type == resource_type:
+                            count += 1
+                    else:
+                        count += 1
+            
+            if count < min_count:
+                # Format nice requirement name
+                nice_name = req_name.replace('_', ' ').title()
+                if resource_type:
+                    nice_name = f"{resource_type.title()} {comp_type}"
+                missing.append(f"⚠ Needs {nice_name}")
+        
+        # Crew Requirements Check
+        total_crew_required = 0
+        total_crew_capacity = 0
+        total_life_support = 0
+        
+        for comp in all_components:
+            # Sum up crew required by all components
+            if hasattr(comp, 'crew_required'):
+                total_crew_required += comp.crew_required
+            # Sum up crew capacity from Crew Quarters
+            if isinstance(comp, CrewQuarters):
+                total_crew_capacity += comp.crew_capacity
+            # Sum up life support capacity
+            if isinstance(comp, LifeSupport):
+                total_life_support += comp.life_support_capacity
+        
+        # Check if we have enough crew capacity
+        if total_crew_required > 0 and total_crew_capacity < total_crew_required:
+            missing.append(f"⚠ Need {total_crew_required - total_crew_capacity} more crew capacity")
+        
+        # Check if we have life support for crew
+        if total_crew_capacity > 0 and total_life_support < total_crew_capacity:
+            missing.append(f"⚠ Need {total_crew_capacity - total_life_support} more life support")
+        
+        return missing
+
     def check_validity(self):
         self.recalculate_stats()
+        # Check requirements too
+        if self.get_missing_requirements():
+            return False
         return self.mass_limits_ok
 
     @property

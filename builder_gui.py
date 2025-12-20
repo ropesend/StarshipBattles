@@ -4,7 +4,7 @@ Ship Builder using pygame_gui for a professional UI.
 import json
 import math
 import tkinter
-from tkinter import filedialog
+from tkinter import filedialog, simpledialog
 
 import pygame
 import pygame_gui
@@ -17,7 +17,8 @@ from pygame_gui.windows import UIConfirmationDialog
 from ship import Ship, LayerType, SHIP_CLASSES
 from components import (
     get_all_components, MODIFIER_REGISTRY, Bridge, Weapon, 
-    BeamWeapon, ProjectileWeapon, Engine, Thruster, Armor, Tank, Generator
+    BeamWeapon, ProjectileWeapon, Engine, Thruster, Armor, Tank, Generator,
+    CrewQuarters, LifeSupport
 )
 from sprites import SpriteManager
 
@@ -42,14 +43,17 @@ class BuilderSceneGUI:
         self.height = screen_height
         self.on_start_battle = on_start_battle
         
-        # UI Manager
+        # UI Manager with custom theme for larger list items
+        import os
+        theme_path = os.path.join(os.path.dirname(__file__), 'builder_theme.json')
         self.ui_manager = pygame_gui.UIManager(
             (screen_width, screen_height),
-            theme_path=None  # Use default theme
+            theme_path=theme_path if os.path.exists(theme_path) else None
         )
         
         # Ship being built
         self.ship = Ship("Custom Ship", screen_width // 2, screen_height // 2, (100, 100, 255))
+        self.ship.recalculate_stats()  # Initialize stats so mass shows correctly
         
         # Available components
         self.available_components = get_all_components()
@@ -73,12 +77,35 @@ class BuilderSceneGUI:
         self.sprite_mgr = SpriteManager.get_instance()
         
         # Layout dimensions
-        self.left_panel_width = 280
-        self.right_panel_width = 280
+        self.left_panel_width = 450  # Widened for wider sliders and finer control
+        self.right_panel_width = 380  # Widened for unified modifier interface
         self.bottom_bar_height = 60
+        self.component_row_height = 40  # 2x row height for larger icons/text
+        
+        # Component presets (persistent)
+        self.component_presets = {}
+        self._load_presets()
         
         # Create UI
         self._create_ui()
+        
+    def _load_presets(self):
+        """Load component presets from JSON."""
+        try:
+            with open('component_presets.json', 'r') as f:
+                data = json.load(f)
+                self.component_presets = data.get('presets', {})
+                logger.debug(f"Loaded {len(self.component_presets)} presets")
+        except FileNotFoundError:
+            self.component_presets = {}
+        except json.JSONDecodeError:
+            self.component_presets = {}
+            
+    def _save_presets(self):
+        """Save component presets to JSON."""
+        with open('component_presets.json', 'w') as f:
+            json.dump({'presets': self.component_presets}, f, indent=2)
+        logger.debug(f"Saved {len(self.component_presets)} presets")
         
     def _create_ui(self):
         """Create all pygame_gui UI elements."""
@@ -92,31 +119,25 @@ class BuilderSceneGUI:
         
         # Component list title
         UILabel(
-            relative_rect=pygame.Rect(10, 5, 200, 25),
+            relative_rect=pygame.Rect(10, 5, 200, 30),
             text="Components",
             manager=self.ui_manager,
             container=self.left_panel
         )
         
-        # Component selection list
+        # Component selection list - height fills to half page (where modifier settings start)
+        half_page_y = (self.height - self.bottom_bar_height) // 2
+        list_height = half_page_y - 40  # Leave space for title
         component_names = [f"{c.name} ({c.mass}t)" for c in self.available_components]
         self.component_list = UISelectionList(
-            relative_rect=pygame.Rect(5, 35, self.left_panel_width - 10, 300),
+            relative_rect=pygame.Rect(5, 35, self.left_panel_width - 10, list_height),
             item_list=component_names,
             manager=self.ui_manager,
             container=self.left_panel,
             allow_multi_select=False
         )
         
-        # Modifier settings title
-        UILabel(
-            relative_rect=pygame.Rect(10, 345, 200, 25),
-            text="New Component Settings",
-            manager=self.ui_manager,
-            container=self.left_panel
-        )
-        
-        # Modifier buttons will be created dynamically
+        # Modifier buttons will be created dynamically (includes the "New Component Settings" label)
         self.modifier_buttons = []
         self._rebuild_modifier_ui()
         
@@ -192,34 +213,58 @@ class BuilderSceneGUI:
         # Stats labels (will be updated dynamically)
         self.stat_labels = {}
         stat_names = [
-            'mass', 'radius', 'max_speed', 'turn_rate', 'acceleration',
-            'thrust', 'max_hp', 'energy_gen', 'max_fuel', 'max_ammo', 
-            'max_energy', 'weapon_range'
+            'mass', 'max_hp', 'max_speed', 'turn_rate', 'acceleration',
+            'thrust', 'energy_gen', 'max_fuel', 'max_ammo', 'max_energy'
         ]
         
         for stat in stat_names:
             self.stat_labels[stat] = UILabel(
-                relative_rect=pygame.Rect(10, y, 255, 20),
+                relative_rect=pygame.Rect(10, y, 350, 20),
                 text=f"{stat}: --",
                 manager=self.ui_manager,
                 container=self.right_panel
             )
-            y += 22
+            y += 20
+        
+        y += 5
+        
+        # Layer Usage Section
+        UILabel(
+            relative_rect=pygame.Rect(10, y, 150, 20),
+            text="── Layer Usage ──",
+            manager=self.ui_manager,
+            container=self.right_panel
+        )
+        y += 22
+        
+        # Layer stats labels
+        self.layer_labels = {}
+        for layer_name in ['CORE', 'INNER', 'OUTER', 'ARMOR']:
+            self.layer_labels[layer_name] = UILabel(
+                relative_rect=pygame.Rect(10, y, 350, 18),
+                text=f"{layer_name}: --%",
+                manager=self.ui_manager,
+                container=self.right_panel
+            )
+            y += 18
         
         y += 10
         
-        # Requirements Section
+        # Requirements Section - using UITextBox for scrolling
         UILabel(
-            relative_rect=pygame.Rect(10, y, 150, 25),
+            relative_rect=pygame.Rect(10, y, 150, 20),
             text="── Requirements ──",
             manager=self.ui_manager,
             container=self.right_panel
         )
-        y += 30
+        y += 22
         
-        self.requirements_label = UILabel(
-            relative_rect=pygame.Rect(10, y, 255, 60),
-            text="✓ All requirements met",
+        from pygame_gui.elements import UITextBox
+        # Calculate remaining height for requirements box
+        remaining_height = (self.height - self.bottom_bar_height) - y - 10
+        self.requirements_text_box = UITextBox(
+            html_text="✓ All requirements met",
+            relative_rect=pygame.Rect(10, y, self.right_panel_width - 25, remaining_height),
             manager=self.ui_manager,
             container=self.right_panel
         )
@@ -274,67 +319,223 @@ class BuilderSceneGUI:
         self._update_stats_display()
         
     def _rebuild_modifier_ui(self):
-        """Rebuild modifier toggle buttons and sliders."""
-        # Clear existing
-        for btn in self.modifier_buttons:
-            btn.kill()
+        """Rebuild unified modifier UI - works for both new components and editing existing ones."""
+        # Clear all modifier UI elements
+        for btn in getattr(self, 'modifier_buttons', []):
+            if btn:
+                btn.kill()
         self.modifier_buttons = []
         
-        # Clear existing sliders
-        if hasattr(self, 'modifier_sliders'):
-            for slider in self.modifier_sliders:
+        for slider in getattr(self, 'modifier_sliders', []):
+            if slider:  # Sliders can be None for boolean modifiers
                 slider.kill()
         self.modifier_sliders = []
         
-        if hasattr(self, 'modifier_slider_labels'):
-            for lbl in self.modifier_slider_labels:
+        for lbl in getattr(self, 'modifier_slider_labels', []):
+            if lbl:
                 lbl.kill()
         self.modifier_slider_labels = []
         
-        y = 375
+        for entry in getattr(self, 'modifier_entries', []):
+            if entry:  # Entries can be None for boolean modifiers
+                entry.kill()
+        self.modifier_entries = []
+        
+        for ui_el in getattr(self, 'modifier_extra_ui', []):
+            ui_el.kill()
+        self.modifier_extra_ui = []
+        
+        for name, btn in getattr(self, 'preset_buttons', []):
+            btn.kill()
+        self.preset_buttons = []
+        
+        for name, btn in getattr(self, 'preset_delete_buttons', []):
+            btn.kill()
+        self.preset_delete_buttons = []
+        
+        # Determine mode: editing selected component OR template for new components
+        editing_component = self.selected_component[2] if self.selected_component else None
+        
+        # Position at halfway down the panel
+        half_page_y = (self.height - self.bottom_bar_height) // 2
+        y = half_page_y
+        
+        # Title depends on mode
+        if editing_component:
+            title_text = f"── Editing: {editing_component.name} ──"
+        else:
+            title_text = "── New Component Settings ──"
+        
+        settings_label = UILabel(
+            relative_rect=pygame.Rect(10, y, self.left_panel_width - 20, 28),
+            text=title_text,
+            manager=self.ui_manager,
+            container=self.left_panel
+        )
+        self.modifier_extra_ui.append(settings_label)
+        y += 32
+        
+        # Clear Settings / Deselect Button
+        if editing_component:
+            btn_text = "✕ Deselect Component"
+        else:
+            btn_text = "🔄 Clear Settings"
+        
+        self.clear_settings_btn = UIButton(
+            relative_rect=pygame.Rect(10, y, self.left_panel_width - 20, 28),
+            text=btn_text,
+            manager=self.ui_manager,
+            container=self.left_panel
+        )
+        self.modifier_extra_ui.append(self.clear_settings_btn)
+        y += 35
+        
+        # Track mod_id for each button/slider/entry for event handling
+        self.modifier_id_list = []
+        
         for mod_id, mod_def in MODIFIER_REGISTRY.items():
-            is_active = mod_id in self.template_modifiers
+            # Check restrictions for editing mode
+            if editing_component:
+                allow = True
+                if mod_def.restrictions:
+                    if 'allow_types' in mod_def.restrictions:
+                        if editing_component.type_str not in mod_def.restrictions['allow_types']:
+                            allow = False
+                    if 'deny_types' in mod_def.restrictions:
+                        if editing_component.type_str in mod_def.restrictions['deny_types']:
+                            allow = False
+                if not allow:
+                    continue
+                    
+                # Get current value from component
+                existing_mod = editing_component.get_modifier(mod_id)
+                is_active = existing_mod is not None
+                current_val = existing_mod.value if is_active else mod_def.min_val
+            else:
+                # Template mode
+                is_active = mod_id in self.template_modifiers
+                current_val = self.template_modifiers.get(mod_id, mod_def.min_val) if is_active else mod_def.min_val
+            
+            self.modifier_id_list.append(mod_id)
+            
             text = f"[{'x' if is_active else ' '}] {mod_def.name}"
             
             btn = UIButton(
-                relative_rect=pygame.Rect(10, y, self.left_panel_width - 20, 28),
+                relative_rect=pygame.Rect(10, y, 170, 28),
                 text=text,
                 manager=self.ui_manager,
                 container=self.left_panel,
                 object_id=f'#mod_{mod_id}'
             )
             self.modifier_buttons.append(btn)
-            y += 32
             
-            # Add slider if active and has linear type
-            if is_active and mod_def.type_str == 'linear':
-                current_val = self.template_modifiers.get(mod_id, mod_def.min_val)
+            # For linear modifiers, add entry and slider on same row
+            if mod_def.type_str == 'linear':
+                from pygame_gui.elements import UITextEntryLine, UIHorizontalSlider
                 
-                # Value label
-                val_lbl = UILabel(
-                    relative_rect=pygame.Rect(15, y, self.left_panel_width - 30, 20),
-                    text=f"{mod_def.param_name}: {current_val:.0f}",
+                # Text entry
+                entry = UITextEntryLine(
+                    relative_rect=pygame.Rect(185, y, 70, 28),
                     manager=self.ui_manager,
-                    container=self.left_panel
+                    container=self.left_panel,
+                    object_id=f'#entry_{mod_id}'
                 )
-                self.modifier_slider_labels.append(val_lbl)
-                y += 22
+                entry.set_text(f"{current_val:.2f}")
+                if not is_active:
+                    entry.disable()
+                self.modifier_entries.append(entry)
                 
-                # Slider
-                from pygame_gui.elements import UIHorizontalSlider
+                # Slider - ensure right button doesn't overlap panel edge
                 slider = UIHorizontalSlider(
-                    relative_rect=pygame.Rect(10, y, self.left_panel_width - 20, 25),
+                    relative_rect=pygame.Rect(260, y, 165, 28),
                     start_value=current_val,
                     value_range=(mod_def.min_val, mod_def.max_val),
                     manager=self.ui_manager,
                     container=self.left_panel,
-                    object_id=f'#slider_{mod_id}'
+                    object_id=f'#slider_{mod_id}',
+                    click_increment=0.01
                 )
+                if not is_active:
+                    slider.disable()
                 self.modifier_sliders.append(slider)
-                y += 30
-                
-                logger.debug(f"Created slider for {mod_id}: range={mod_def.min_val}-{mod_def.max_val}, val={current_val}")
+            else:
+                # Boolean modifiers - no entry/slider needed, add placeholders
+                self.modifier_entries.append(None)
+                self.modifier_sliders.append(None)
             
+            y += 32
+        
+        # Only show presets when in template mode (not editing)
+        if not editing_component:
+            # Save Preset Button
+            y += 10
+            self.save_preset_btn = UIButton(
+                relative_rect=pygame.Rect(10, y, self.left_panel_width - 20, 28),
+                text="💾 Save Current Settings",
+                manager=self.ui_manager,
+                container=self.left_panel
+            )
+            y += 35
+            
+            # Presets list
+            if self.component_presets:
+                preset_label = UILabel(
+                    relative_rect=pygame.Rect(10, y, 200, 20),
+                    text="Saved Presets:",
+                    manager=self.ui_manager,
+                    container=self.left_panel
+                )
+                self.modifier_extra_ui.append(preset_label)
+                y += 22
+            
+            for preset_name in self.component_presets.keys():
+                safe_id = preset_name.replace(' ', '_').replace('.', '_')
+                
+                btn = UIButton(
+                    relative_rect=pygame.Rect(10, y, self.left_panel_width - 60, 28),
+                    text=f"📋 {preset_name}",
+                    manager=self.ui_manager,
+                    container=self.left_panel,
+                    object_id=f'#preset_{safe_id}'
+                )
+                self.preset_buttons.append((preset_name, btn))
+                
+                del_btn = UIButton(
+                    relative_rect=pygame.Rect(self.left_panel_width - 45, y, 35, 28),
+                    text="🗑",
+                    manager=self.ui_manager,
+                    container=self.left_panel,
+                    object_id=f'#preset_del_{safe_id}'
+                )
+                self.preset_delete_buttons.append((preset_name, del_btn))
+                y += 30
+        else:
+            # Set save_preset_btn to None when editing
+            self.save_preset_btn = None
+    
+    def _rebuild_selected_component_modifiers(self):
+        """Deprecated - now handled by unified _rebuild_modifier_ui. Clears old UI if present."""
+        # Clear any old selected component UI from the right panel
+        for btn in getattr(self, 'selected_comp_buttons', []):
+            btn.kill()
+        self.selected_comp_buttons = []
+        
+        for slider in getattr(self, 'selected_comp_sliders', []):
+            slider.kill()
+        self.selected_comp_sliders = []
+        
+        for lbl in getattr(self, 'selected_comp_labels', []):
+            lbl.kill()
+        self.selected_comp_labels = []
+        
+        for entry in getattr(self, 'selected_comp_entries', []):
+            if entry:
+                entry.kill()
+        self.selected_comp_entries = []
+        
+        # Now rebuild unified UI on left panel
+        self._rebuild_modifier_ui()
+
     def _update_stats_display(self):
         """Update ship stats labels."""
         s = self.ship
@@ -343,29 +544,50 @@ class BuilderSceneGUI:
         mass_status = "✓" if s.mass_limits_ok else "✗"
         self.stat_labels['mass'].set_text(f"Mass: {s.mass:.0f} / {s.max_mass_budget} {mass_status}")
         
-        self.stat_labels['radius'].set_text(f"Radius: {s.radius:.1f}")
+        self.stat_labels['max_hp'].set_text(f"Max HP: {s.max_hp:.0f}")
         self.stat_labels['max_speed'].set_text(f"Max Speed: {s.max_speed:.0f}")
         self.stat_labels['turn_rate'].set_text(f"Turn Rate: {s.turn_speed:.0f} deg/s")
         self.stat_labels['acceleration'].set_text(f"Acceleration: {s.acceleration_rate:.2f}")
         self.stat_labels['thrust'].set_text(f"Total Thrust: {s.total_thrust:.0f}")
-        self.stat_labels['max_hp'].set_text(f"Max HP: {s.max_hp:.0f}")
         self.stat_labels['energy_gen'].set_text(f"Energy Gen: {s.energy_gen_rate:.1f}/s")
         self.stat_labels['max_fuel'].set_text(f"Max Fuel: {s.max_fuel:.0f}")
         self.stat_labels['max_ammo'].set_text(f"Max Ammo: {s.max_ammo:.0f}")
         self.stat_labels['max_energy'].set_text(f"Max Energy: {s.max_energy:.0f}")
-        self.stat_labels['weapon_range'].set_text(f"Max Weapon Range: {s.max_weapon_range:.0f}")
         
-        # Update requirements
-        has_bridge = any(isinstance(c, Bridge) for l in s.layers.values() for c in l['components'])
-        if has_bridge and s.mass_limits_ok:
-            self.requirements_label.set_text("✓ All requirements met")
+        # Update layer stats
+        from ship import LayerType
+        layer_name_map = {
+            LayerType.CORE: 'CORE',
+            LayerType.INNER: 'INNER', 
+            LayerType.OUTER: 'OUTER',
+            LayerType.ARMOR: 'ARMOR'
+        }
+        
+        for layer_type, layer_name in layer_name_map.items():
+            status = s.layer_status.get(layer_type, {})
+            ratio = status.get('ratio', 0) * 100
+            limit = status.get('limit', 1.0) * 100
+            is_ok = status.get('ok', True)
+            mass = status.get('mass', 0)
+            
+            status_icon = "✓" if is_ok else "✗ OVER"
+            self.layer_labels[layer_name].set_text(
+                f"{layer_name}: {ratio:.0f}% / {limit:.0f}% ({mass:.0f}t) {status_icon}"
+            )
+        
+        # Update requirements - use ship's requirements system
+        missing_reqs = s.get_missing_requirements()
+        if not s.mass_limits_ok:
+            missing_reqs.append("⚠ Over mass limit")
+        
+        # Build HTML for requirements text box
+        if not missing_reqs:
+            html = "<font color='#88ff88'>✓ All requirements met</font>"
         else:
-            reqs = []
-            if not has_bridge:
-                reqs.append("⚠ Needs Bridge")
-            if not s.mass_limits_ok:
-                reqs.append("⚠ Over mass limit")
-            self.requirements_label.set_text("\n".join(reqs))
+            html = "<br>".join([f"<font color='#ffaa55'>{req}</font>" for req in missing_reqs])
+        
+        self.requirements_text_box.html_text = html
+        self.requirements_text_box.rebuild()
             
     def update(self, dt):
         """Update builder state."""
@@ -378,15 +600,38 @@ class BuilderSceneGUI:
         self.hovered_palette_index = None  # Track which palette item is hovered
         
         # Check palette area for hover (before schematic)
-        palette_list_rect = pygame.Rect(5, 35, self.left_panel_width - 10, 300)
-        if palette_list_rect.collidepoint(mx, my):
+        # Row height is 40px (set via builder_theme.json list_item_height)
+        list_top_y = 35
+        half_page_y = (self.height - self.bottom_bar_height) // 2
+        list_height = half_page_y - 40
+        item_height = 40  # Matches theme list_item_height
+        
+        # Check if mouse is in the component list area
+        if 5 <= mx < self.left_panel_width - 5 and list_top_y <= my < list_top_y + list_height:
             # Calculate which item is hovered based on y position
-            relative_y = my - 35
-            item_height = 25
+            relative_y = my - list_top_y
             idx = relative_y // item_height
+            
+            # Clamp to valid range
             if 0 <= idx < len(self.available_components):
                 self.hovered_palette_index = idx
-                self.hovered_component = self.available_components[idx]
+                # Create a temp component with template modifiers to show preview
+                base_comp = self.available_components[idx]
+                temp_comp = base_comp.clone()
+                for m_id, val in self.template_modifiers.items():
+                    if m_id in MODIFIER_REGISTRY:
+                        mod_def = MODIFIER_REGISTRY[m_id]
+                        allow = True
+                        if mod_def.restrictions:
+                            if 'allow_types' in mod_def.restrictions and base_comp.type_str not in mod_def.restrictions['allow_types']:
+                                allow = False
+                        if allow:
+                            temp_comp.add_modifier(m_id)
+                            m = temp_comp.get_modifier(m_id)
+                            if m:
+                                m.value = val
+                temp_comp.recalculate_stats()
+                self.hovered_component = temp_comp
         
         # Check ship schematic area for hover
         schematic_rect = pygame.Rect(
@@ -421,34 +666,146 @@ class BuilderSceneGUI:
                 self.show_firing_arcs = not self.show_firing_arcs
                 text = "Hide Firing Arcs" if self.show_firing_arcs else "Show Firing Arcs"
                 self.arc_toggle_btn.set_text(text)
-            else:
-                # Check modifier buttons
-                for i, btn in enumerate(self.modifier_buttons):
-                    if event.ui_element == btn:
-                        mod_id = list(MODIFIER_REGISTRY.keys())[i]
-                        if mod_id in self.template_modifiers:
-                            del self.template_modifiers[mod_id]
-                        else:
-                            self.template_modifiers[mod_id] = MODIFIER_REGISTRY[mod_id].min_val
+            elif hasattr(self, 'save_preset_btn') and event.ui_element == self.save_preset_btn:
+                # Use tkinter simpledialog for preset name (pygame_gui doesn't have text entry window)
+                if self.template_modifiers:
+                    preset_name = simpledialog.askstring("Save Preset", "Enter preset name:", parent=tk_root)
+                    if preset_name and preset_name.strip():
+                        self.component_presets[preset_name.strip()] = dict(self.template_modifiers)
+                        self._save_presets()
                         self._rebuild_modifier_ui()
+                        logger.info(f"Saved preset: {preset_name}")
+            elif hasattr(self, 'clear_settings_btn') and event.ui_element == self.clear_settings_btn:
+                if self.selected_component:
+                    # Deselect component
+                    self.selected_component = None
+                    self._rebuild_modifier_ui()
+                else:
+                    # Clear template modifiers
+                    self.template_modifiers = {}
+                    self._rebuild_modifier_ui()
+                logger.debug("Cleared settings or deselected component")
+            else:
+                # Check preset delete buttons
+                handled = False
+                for preset_name, btn in getattr(self, 'preset_delete_buttons', []):
+                    if event.ui_element == btn:
+                        if preset_name in self.component_presets:
+                            del self.component_presets[preset_name]
+                            self._save_presets()
+                            self._rebuild_modifier_ui()
+                            logger.info(f"Deleted preset: {preset_name}")
+                        handled = True
                         break
+                
+                # Check preset apply buttons
+                if not handled:
+                    for preset_name, btn in getattr(self, 'preset_buttons', []):
+                        if event.ui_element == btn:
+                            self.template_modifiers = dict(self.component_presets[preset_name])
+                            self._rebuild_modifier_ui()
+                            logger.debug(f"Applied preset: {preset_name}")
+                            handled = True
+                            break
+                
+                # Check unified modifier buttons (works for both template and editing modes)
+                if not handled:
+                    mod_id_list = getattr(self, 'modifier_id_list', [])
+                    for i, btn in enumerate(self.modifier_buttons):
+                        if event.ui_element == btn and i < len(mod_id_list):
+                            mod_id = mod_id_list[i]
+                            
+                            if self.selected_component:
+                                # Editing mode - toggle modifier on component
+                                layer, index, comp = self.selected_component
+                                if comp.get_modifier(mod_id):
+                                    comp.remove_modifier(mod_id)
+                                else:
+                                    comp.add_modifier(mod_id)
+                                comp.recalculate_stats()
+                                self.ship.recalculate_stats()
+                                self._update_stats_display()
+                                self._rebuild_modifier_ui()
+                                logger.debug(f"Toggled modifier {mod_id} on component {comp.name}")
+                            else:
+                                # Template mode - toggle template modifier
+                                if mod_id in self.template_modifiers:
+                                    del self.template_modifiers[mod_id]
+                                else:
+                                    self.template_modifiers[mod_id] = MODIFIER_REGISTRY[mod_id].min_val
+                                self._rebuild_modifier_ui()
+                                logger.debug(f"Toggled template modifier {mod_id}")
+                            handled = True
+                            break
                         
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
-            # Handle slider value changes for modifiers
+            # Handle unified slider changes (works for both template and editing modes)
+            mod_id_list = getattr(self, 'modifier_id_list', [])
             for i, slider in enumerate(getattr(self, 'modifier_sliders', [])):
-                if event.ui_element == slider:
-                    # Find which modifier this slider belongs to
-                    slider_idx = 0
-                    for mod_id, mod_def in MODIFIER_REGISTRY.items():
-                        if mod_id in self.template_modifiers and mod_def.type_str == 'linear':
-                            if slider_idx == i:
-                                self.template_modifiers[mod_id] = event.value
-                                # Update label
-                                if i < len(self.modifier_slider_labels):
-                                    self.modifier_slider_labels[i].set_text(f"{mod_def.param_name}: {event.value:.0f}")
-                                logger.debug(f"Slider {mod_id} changed to {event.value}")
-                                break
-                            slider_idx += 1
+                if slider and event.ui_element == slider and i < len(mod_id_list):
+                    mod_id = mod_id_list[i]
+                    mod_def = MODIFIER_REGISTRY.get(mod_id)
+                    
+                    if self.selected_component:
+                        # Editing mode - update component modifier
+                        layer, index, comp = self.selected_component
+                        m = comp.get_modifier(mod_id)
+                        if m:
+                            m.value = event.value
+                            comp.recalculate_stats()
+                            self.ship.recalculate_stats()
+                            self._update_stats_display()
+                            # Update entry to match slider
+                            if i < len(self.modifier_entries) and self.modifier_entries[i]:
+                                self.modifier_entries[i].set_text(f"{event.value:.2f}")
+                            logger.debug(f"Editing slider {mod_id} = {event.value:.2f}")
+                    else:
+                        # Template mode - update template modifier
+                        if mod_id in self.template_modifiers:
+                            self.template_modifiers[mod_id] = event.value
+                            # Update entry to match slider
+                            if i < len(self.modifier_entries) and self.modifier_entries[i]:
+                                self.modifier_entries[i].set_text(f"{event.value:.2f}")
+                            logger.debug(f"Template slider {mod_id} = {event.value:.2f}")
+                    break
+        
+        # Handle text entry changes (both during typing and on finish)
+        elif event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED or event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
+            mod_id_list = getattr(self, 'modifier_id_list', [])
+            for i, entry in enumerate(getattr(self, 'modifier_entries', [])):
+                if entry and event.ui_element == entry and i < len(mod_id_list):
+                    try:
+                        new_val = float(event.text)
+                        mod_id = mod_id_list[i]
+                        mod_def = MODIFIER_REGISTRY.get(mod_id)
+                        
+                        if mod_def:
+                            # Clamp to valid range
+                            new_val = max(mod_def.min_val, min(mod_def.max_val, new_val))
+                            
+                            if self.selected_component:
+                                # Editing mode
+                                layer, index, comp = self.selected_component
+                                m = comp.get_modifier(mod_id)
+                                if m:
+                                    m.value = new_val
+                                    comp.recalculate_stats()
+                                    self.ship.recalculate_stats()
+                                    self._update_stats_display()
+                            else:
+                                # Template mode
+                                if mod_id in self.template_modifiers:
+                                    self.template_modifiers[mod_id] = new_val
+                            
+                            # Update slider to match entry
+                            if i < len(self.modifier_sliders) and self.modifier_sliders[i]:
+                                self.modifier_sliders[i].set_current_value(new_val)
+                            
+                            # Only update entry text on finish to avoid cursor jumping
+                            if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
+                                entry.set_text(f"{new_val:.2f}")
+                    except ValueError:
+                        pass  # Invalid input, ignore
                     break
                     
         elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
@@ -490,7 +847,17 @@ class BuilderSceneGUI:
                 self._clear_design()
                 
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
+            if event.button == 3:  # Right-click
+                # Check if clicking on a preset button to delete it
+                for preset_name, btn in getattr(self, 'preset_buttons', []):
+                    if btn.rect.collidepoint(event.pos):
+                        if preset_name in self.component_presets:
+                            del self.component_presets[preset_name]
+                            self._save_presets()
+                            self._rebuild_modifier_ui()
+                            logger.info(f"Deleted preset: {preset_name}")
+                        break
+            elif event.button == 1:
                 # Check for component click in schematic
                 schematic_rect = pygame.Rect(
                     self.left_panel_width, 0,
@@ -515,18 +882,40 @@ class BuilderSceneGUI:
                             self.ship.remove_component(layer, index)
                             self.dragged_item = comp
                             self.selected_component = None
+                            self._rebuild_selected_component_modifiers()
                         else:
-                            # Select component
+                            # Select component and show modifier controls
                             self.selected_component = found
+                            self._rebuild_selected_component_modifiers()
+                            logger.debug(f"Selected component: {found[2].name}")
                     else:
                         self.selected_component = None
+                        self._rebuild_selected_component_modifiers()
                         
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and self.dragged_item:
+                # Check if shift is held for multi-add
+                keys = pygame.key.get_pressed()
+                shift_held = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
+                
+                # Store a reference to clone before dropping
+                item_to_clone = self.dragged_item
+                
                 self._handle_drop(event.pos)
-                self.dragged_item = None
-                # Note: pygame_gui UISelectionList doesn't have set_single_selection
-                # The selection will remain but dragged_item is cleared
+                
+                if shift_held:
+                    # Clone the component we just placed to continue adding
+                    self.dragged_item = item_to_clone.clone()
+                    # Copy modifiers
+                    for m in item_to_clone.modifiers:
+                        self.dragged_item.add_modifier(m.definition.id)
+                        new_m = self.dragged_item.get_modifier(m.definition.id)
+                        if new_m:
+                            new_m.value = m.value
+                    self.dragged_item.recalculate_stats()
+                    logger.debug(f"Multi-add: cloned {self.dragged_item.name} for continued placement")
+                else:
+                    self.dragged_item = None
                 
     def _try_start(self):
         """Validate and start battle."""
@@ -806,18 +1195,19 @@ class BuilderSceneGUI:
     
     def _draw_component_icons(self, screen):
         """Draw component icons next to list items."""
-        # The UISelectionList items start at y=35 in the left panel
-        # Match the actual item height used by pygame_gui (usually around 20px)
+        # Row height is set to 40px via builder_theme.json (list_item_height)
+        # Icons are 32x32 to match the larger text
         list_x = 8  # Left edge of icons
-        list_y = 38  # First item Y position (inside panel)
-        item_height = 20  # Matches pygame_gui default item height
+        list_y = 40  # First item Y position (accounts for title + padding)
+        item_height = 40  # Matches theme list_item_height
+        icon_size = 32  # 2x larger icons
         
         for i, comp in enumerate(self.available_components):
             sprite = self.sprite_mgr.get_sprite(comp.sprite_index)
             if sprite:
-                # Scale sprite to match text height
-                scaled = pygame.transform.scale(sprite, (16, 16))
-                screen.blit(scaled, (list_x, list_y + i * item_height + 2))
+                scaled = pygame.transform.scale(sprite, (icon_size, icon_size))
+                y_pos = list_y + i * item_height + (item_height - icon_size) // 2
+                screen.blit(scaled, (list_x, y_pos))
                 
     def _draw_tooltip(self, screen, comp):
         """Draw component tooltip."""

@@ -51,10 +51,10 @@
         {
             "id": "range_mount",
             "name": "Range Mount",
-            "description": "Boosts Range (1.5x) and Mass (2x) per level",
+            "description": "Each level doubles range. Mass/HP/Cost increase 3.5x per doubling.",
             "type": "linear",
-            "min_val": 1,
-            "max_val": 10,
+            "min_val": 0,
+            "max_val": 8,
             "param_name": "Level",
             "effects": {
                 "special": "range_mount"

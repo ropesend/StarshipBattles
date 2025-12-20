@@ -12,7 +12,8 @@
                 "OUTER",
                 "ARMOR"
             ],
-            "sprite_index": 0
+            "sprite_index": 0,
+            "crew_required": 5
         },
         {
             "id": "railgun",
@@ -28,7 +29,9 @@
             "reload": 2.0,
             "projectile_speed": 20000,
             "ammo_cost": 1,
-            "sprite_index": 18
+            "firing_arc": 1,
+            "sprite_index": 18,
+            "crew_required": 5
         },
         {
             "id": "standard_engine",
@@ -126,7 +129,8 @@
                 "INNER"
             ],
             "energy_generation": 25,
-            "sprite_index": 217
+            "sprite_index": 217,
+            "crew_required": 1
         },
         {
             "id": "laser_beam",
@@ -143,7 +147,35 @@
             "energy_cost": 5,
             "base_accuracy": 1.0,
             "accuracy_falloff": 0.0001,
-            "sprite_index": 22
+            "firing_arc": 1,
+            "sprite_index": 22,
+            "crew_required": 1
+        },
+        {
+            "id": "crew_quarters",
+            "name": "Crew Quarters",
+            "type": "CrewQuarters",
+            "mass": 30,
+            "hp": 60,
+            "allowed_layers": [
+                "CORE",
+                "INNER"
+            ],
+            "crew_capacity": 10,
+            "sprite_index": 0
+        },
+        {
+            "id": "life_support",
+            "name": "Life Support",
+            "type": "LifeSupport",
+            "mass": 20,
+            "hp": 40,
+            "allowed_layers": [
+                "CORE",
+                "INNER"
+            ],
+            "life_support_capacity": 10,
+            "sprite_index": 0
         }
     ]
 }
