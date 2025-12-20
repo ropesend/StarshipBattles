@@ -33,18 +33,18 @@ class TestArcadeMovement(unittest.TestCase):
         self.ship.current_fuel = self.ship.max_fuel
 
     def test_stats(self):
-        # Physics validation
-        # Acceleration = Force / Mass
-        expected_accel = self.ship.total_thrust / self.ship.mass
-        self.assertAlmostEqual(self.ship.acceleration_rate, expected_accel)
+        # Physics validation using current INVERSE MASS SCALING model
+        # Acceleration = (Thrust * K_THRUST) / (Mass^2)
+        # Max Speed = (Thrust * K_SPEED) / Mass
+        K_THRUST = 150000
+        K_SPEED = 1500
+        
+        expected_accel = (self.ship.total_thrust * K_THRUST) / (self.ship.mass ** 2)
+        self.assertAlmostEqual(self.ship.acceleration_rate, expected_accel, places=2)
         
         # Max Speed
-        # If drag > 0, max_speed = accel / drag
-        if self.ship.drag > 0:
-            expected_max = expected_accel / self.ship.drag
-            self.assertAlmostEqual(self.ship.max_speed, expected_max)
-        else:
-            self.assertEqual(self.ship.max_speed, 1000)
+        expected_max_speed = (self.ship.total_thrust * K_SPEED) / self.ship.mass
+        self.assertAlmostEqual(self.ship.max_speed, expected_max_speed, places=2)
 
     def test_thrust_increases_speed(self):
         dt = 0.1

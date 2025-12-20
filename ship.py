@@ -42,7 +42,6 @@ class Ship(PhysicsBody):
         self.max_speed = 0
         self.turn_speed = 0
         self.drag = 0.5 # New Arcade Drag
-        self.drag = 0.5 # New Arcade Drag
         
         # Budget
         self.max_mass_budget = SHIP_CLASSES.get(self.ship_class, 1000)

@@ -40,7 +40,6 @@ class Component:
         self.data = data # Store raw data for reference/cloning
         self.id = data['id']
         self.name = data['name']
-        self.name = data['name']
         self.base_mass = data['mass']
         self.mass = self.base_mass
         self.base_max_hp = data['hp']

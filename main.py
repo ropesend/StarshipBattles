@@ -6,10 +6,6 @@ from ship import Ship, LayerType
 from ai import AIController
 from spatial import SpatialGrid
 from designs import create_brick, create_interceptor
-from ship import Ship, LayerType
-from ai import AIController
-from spatial import SpatialGrid
-from designs import create_brick, create_interceptor
 from components import load_components, load_modifiers, Bridge, Weapon, Engine, Thruster, Armor, Tank
 from ui import Button
 from builder import BuilderScene
