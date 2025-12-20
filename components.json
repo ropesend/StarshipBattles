@@ -26,6 +26,7 @@
             "damage": 40,
             "range": 2400,
             "reload": 2.0,
+            "projectile_speed": 20000,
             "ammo_cost": 1,
             "sprite_index": 18
         },

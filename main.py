@@ -732,26 +732,77 @@ class Game:
 
         # Update Projectiles
         for p in self.projectiles[:]:
-            p['pos'] += p['vel'] * dt
-            p['distance_traveled'] += p['vel'].length() * dt
+            # CCD varies: We need to check the path from t0 to t1 against ships from t0 to t1.
+            # Ships are ALREADY updated to t1 in this frame (see s.update(dt) above).
+            # Projectile is currently at t0.
             
-            # Collision Check (Any valid enemy)
-            hit = False
+            p_pos_t0 = p['pos']
+            p_vel = p['vel']
+            p_pos_t1 = p_pos_t0 + p_vel * dt
+            
+            hit_occurred = False
             
             # Simple optimization: Check if near any enemy
-            # We can use the spatial grid if populated, or just iterate ships
-            # Since ship count is low < 20, iteration is fine.
             for s in self.ships:
                 if not s.is_alive: continue
                 if s.team_id == p['owner'].team_id: continue # No friendly fire
                 
-                # Hit check
-                if p['pos'].distance_to(s.position) < (s.radius + 5): # 5 for tolerance? Or just radius
+                # Continuous Collision Detection (CCD)
+                # Ship is at t1. Backtrack to t0.
+                s_vel = s.velocity
+                s_pos_t1 = s.position
+                s_pos_t0 = s_pos_t1 - s_vel * dt
+                
+                # Relative Motion
+                # P(t) = p_pos_t0 + p_vel * t
+                # S(t) = s_pos_t0 + s_vel * t
+                # D(t) = P(t) - S(t) = (p_t0 - s_t0) + (p_v - s_v) * t
+                
+                D0 = p_pos_t0 - s_pos_t0
+                DV = p_vel - s_vel
+                
+                # We want min(|D(t)|) < radius
+                # Minimize D(t)^2 = |D0 + DV*t|^2
+                # d/dt = 2 * (D0 + DV*t) . DV = 0
+                # D0.DV + |DV|^2 * t = 0
+                # t = - (D0 . DV) / |DV|^2
+                
+                dv_sq = DV.dot(DV)
+                collision_radius = s.radius + 5 # Tolerance
+                
+                hit = False
+                
+                if dv_sq == 0:
+                    # Parallel logic
+                    if D0.length() < collision_radius:
+                        hit = True
+                else:
+                    t = -D0.dot(DV) / dv_sq
+                    # Clamp to [0, dt]
+                    t_clamped = max(0, min(t, dt))
+                    
+                    # Position at closest approach
+                    p_at_t = p_pos_t0 + p_vel * t_clamped
+                    s_at_t = s_pos_t0 + s_vel * t_clamped
+                    
+                    if p_at_t.distance_to(s_at_t) < collision_radius:
+                        hit = True
+                        
+                if hit:
                     s.take_damage(p['damage'])
-                    hit = True
-                    break # Projectile destroyed on impact
+                    hit_occurred = True
+                    # Visual effect at impact point?
+                    # For now just delete
+                    break # One hit per projectile
             
-            if hit or p['distance_traveled'] > p['range']:
+            if hit_occurred:
+                self.projectiles.remove(p)
+            else:
+                # Update position for next frame
+                p['pos'] = p_pos_t1
+                p['distance_traveled'] += p_vel.length() * dt
+            
+            if p['distance_traveled'] > p['range']:
                 if p in self.projectiles:
                     self.projectiles.remove(p)
         
