@@ -660,7 +660,8 @@ class Game:
                     
                     a = direction.dot(direction)
                     b = 2 * f.dot(direction)
-                    c = f.dot(f) - 40**2 
+                    # Use actual target radius + tolerance? Or just radius.
+                    c = f.dot(f) - target.radius**2 
                     
                     discriminant = b*b - 4*a*c
                     hit_dist = 0
@@ -699,7 +700,6 @@ class Game:
         # Ship-to-Ship Collisions
         # Re-fetch alive ships strictly for this check
         current_alive = [s for s in self.ships if s.is_alive]
-        collision_radius = 40 # Approx ship radius
         
         for i in range(len(current_alive)):
             for j in range(i + 1, len(current_alive)):
@@ -708,7 +708,10 @@ class Game:
                 
                 if not s1.is_alive or not s2.is_alive: continue
                 
-                if s1.position.distance_to(s2.position) < (collision_radius * 2):
+                # Dynamic Radius Check
+                collision_radius = s1.radius + s2.radius
+                
+                if s1.position.distance_to(s2.position) < collision_radius:
                     # Collision!
                     hp1 = s1.hp
                     hp2 = s2.hp
@@ -731,6 +734,22 @@ class Game:
                         print(f"Ramming: Mutual destruction between {s1.name} and {s2.name}!")
 
         # Update Projectiles
+        # Pre-calculate ship states for CCD
+        ship_states = []
+        for s in self.ships:
+            if not s.is_alive: continue
+            # Ship is at t1. Backtrack to t0.
+            s_vel = s.velocity
+            s_pos_t1 = s.position
+            s_pos_t0 = s_pos_t1 - s_vel * dt
+            ship_states.append({
+                'ship': s,
+                'pos_t0': s_pos_t0,
+                'vel': s_vel,
+                'team_id': s.team_id,
+                'radius': s.radius
+            })
+
         for p in self.projectiles[:]:
             # CCD varies: We need to check the path from t0 to t1 against ships from t0 to t1.
             # Ships are ALREADY updated to t1 in this frame (see s.update(dt) above).
@@ -742,16 +761,16 @@ class Game:
             
             hit_occurred = False
             
-            # Simple optimization: Check if near any enemy
-            for s in self.ships:
-                if not s.is_alive: continue
-                if s.team_id == p['owner'].team_id: continue # No friendly fire
+            # Check against pre-calculated ship states
+            for state in ship_states:
+                s = state['ship']
+                if not s.is_alive: continue # Double check
+                if state['team_id'] == p['owner'].team_id: continue # No friendly fire
                 
                 # Continuous Collision Detection (CCD)
-                # Ship is at t1. Backtrack to t0.
-                s_vel = s.velocity
-                s_pos_t1 = s.position
-                s_pos_t0 = s_pos_t1 - s_vel * dt
+                # S(t) information cached
+                s_pos_t0 = state['pos_t0']
+                s_vel = state['vel']
                 
                 # Relative Motion
                 # P(t) = p_pos_t0 + p_vel * t
@@ -768,7 +787,7 @@ class Game:
                 # t = - (D0 . DV) / |DV|^2
                 
                 dv_sq = DV.dot(DV)
-                collision_radius = s.radius + 5 # Tolerance
+                collision_radius = state['radius'] + 5 # Tolerance
                 
                 hit = False
                 

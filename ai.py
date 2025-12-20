@@ -48,6 +48,16 @@ class AIController:
         # Dispatch Strategy
         strategy = getattr(self.ship, 'ai_strategy', 'max_range')
         
+        # State Reset Logic
+        if not hasattr(self, 'last_strategy'):
+            self.last_strategy = strategy
+        
+        if self.last_strategy != strategy:
+            # Strategy changed! Reset states.
+            if hasattr(self, 'attack_state'): del self.attack_state
+            if hasattr(self, 'attack_timer'): del self.attack_timer
+            self.last_strategy = strategy
+            
         if strategy == 'kamikaze':
             self.update_kamikaze(dt, target)
         elif strategy == 'attack_run':
