@@ -48,7 +48,7 @@ class TestWeaponBasics(unittest.TestCase):
     
     def test_beam_weapon_accuracy(self):
         """Beam weapon accuracy should fall off with distance."""
-        laser = create_component('laser_beam')
+        laser = create_component('laser_cannon')
         
         # Close range - high accuracy
         close_chance = laser.calculate_hit_chance(100)
@@ -60,7 +60,7 @@ class TestWeaponBasics(unittest.TestCase):
     
     def test_beam_accuracy_clamped(self):
         """Beam accuracy should be clamped between 0 and 1."""
-        laser = create_component('laser_beam')
+        laser = create_component('laser_cannon')
         
         # Very close
         close = laser.calculate_hit_chance(0)

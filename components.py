@@ -101,76 +101,107 @@ class Component:
         return None
 
     def recalculate_stats(self):
-        # Reset to base
+        """Recalculate component stats with multiplicative modifier stacking.
+        
+        Modifiers stack multiplicatively:
+        - size_mount 2x * range_mount 1.5x = 3x total multiplier
+        """
+        # Start with base values
         self.mass = self.base_mass
         self.max_hp = self.base_max_hp
         
-        # Apply Modifiers
+        # Initialize stat multipliers (start at 1.0)
+        mass_mult = 1.0
+        hp_mult = 1.0
+        damage_mult = 1.0
+        range_mult = 1.0
+        cost_mult = 1.0
+        thrust_mult = 1.0
+        turn_mult = 1.0
+        energy_gen_mult = 1.0
+        capacity_mult = 1.0
+        
+        # Process all modifiers to collect multipliers
         for m in self.modifiers:
             eff = m.definition.effects
             val = m.value
             
-            # Simple effect logic
+            # Simple additive effects (add percentage to multiplier)
             if 'mass_mult' in eff:
-                self.mass += self.base_mass * eff['mass_mult']
+                mass_mult *= (1.0 + eff['mass_mult'])  # 0.25 means +25% = 1.25x
             if 'hp_mult' in eff:
-                self.max_hp += self.base_max_hp * eff['hp_mult']
+                hp_mult *= (1.0 + eff['hp_mult'])  # 1.0 means +100% = 2x
                 
+            # Mass added per unit (e.g. turret mount)
             if 'mass_add_per_unit' in eff:
-                # Linear input
                 self.mass += val * eff['mass_add_per_unit']
                 
-            # Special effects handled by component subclasses or checking specific flags
+            # Arc effects
             if 'arc_add' in eff:
-                # Add to base arc
                 if hasattr(self, 'firing_arc'):
-                    # We need to know 'base_firing_arc' to add correctly if we want it reversible?
-                    # Or we just add to current? Recalculate_stats resets to base.
-                    # We need to store base_firing_arc in init if we want to reset properly.
-                    # For now assume Component doesn't store base_arc separately, 
-                    # but we can look at data['firing_arc'] or default 3.
                     base = self.data.get('firing_arc', 3)
                     self.firing_arc = base + val
                     
             if 'arc_set' in eff:
-                # Update base arc if weapon
                 if hasattr(self, 'firing_arc'):
                     self.firing_arc = val
                     
-            # SPECIAL EFFECTS
+            # SPECIAL EFFECTS - collect multipliers
             if 'special' in eff:
                 if eff['special'] == 'simple_size':
                     # Multiplies almost everything by Value (1x-128x)
                     scale = val
-                    self.mass = self.base_mass * scale
-                    if hasattr(self, 'max_hp'): self.max_hp = self.base_max_hp * scale
-                    if hasattr(self, 'current_hp'): self.current_hp = self.max_hp
-                    if hasattr(self, 'damage'): self.damage = self.data.get('damage', 0) * scale # Using self.data to be safe
-                    # Cost scaling? Let's scale cost (Mass/HP/etc usually imply cost)
-                    if hasattr(self, 'cost'): self.cost = self.data.get('cost', 0) * scale 
-                    if hasattr(self, 'thrust_force'): self.thrust_force = self.data.get('thrust_force', 0) * scale
-                    if hasattr(self, 'turn_speed'): self.turn_speed = self.data.get('turn_speed', 0) * scale
-                    if hasattr(self, 'energy_generation_rate'): self.energy_generation_rate = self.data.get('energy_generation_rate', 0) * scale
-                    if hasattr(self, 'capacity'): self.capacity = self.data.get('capacity', 0) * scale
+                    mass_mult *= scale
+                    hp_mult *= scale
+                    damage_mult *= scale
+                    cost_mult *= scale
+                    thrust_mult *= scale
+                    turn_mult *= scale
+                    energy_gen_mult *= scale
+                    capacity_mult *= scale
                     
                 elif eff['special'] == 'range_mount':
                     # Each level doubles range, mass/hp/cost increase by 3.5x per level
-                    # Level 0 = 1x, Level 1 = 2x range / 3.5x mass, Level 2 = 4x range / 12.25x mass, etc.
                     level = val
-                    range_mult = 2.0 ** level  # 1, 2, 4, 8, 16, 32
-                    cost_mult = 3.5 ** level   # 1, 3.5, 12.25, 42.875, etc.
+                    range_mult *= 2.0 ** level   # 1, 2, 4, 8, 16, 32
+                    cost_mult_increase = 3.5 ** level   # 1, 3.5, 12.25, etc.
+                    mass_mult *= cost_mult_increase
+                    hp_mult *= cost_mult_increase
                     
-                    if hasattr(self, 'range'):
-                        self.range = self.data.get('range', 0) * range_mult
-                    self.mass = self.base_mass * cost_mult
-                    self.max_hp = self.base_max_hp * cost_mult
-
+                elif eff['special'] == 'turret_mount':
+                    # Logarithmic scaling - first degrees cost most, diminishing returns
+                    # At 0°: 1.0x, at 90°: ~1.71x, at 180°: 2.0x
+                    # Formula: mult = 1.0 + 0.514 * ln(1 + arc/30)
+                    import math
+                    arc = val
+                    if arc > 0:
+                        turret_mult = 1.0 + 0.514 * math.log(1.0 + arc / 30.0)
+                        mass_mult *= turret_mult
+                    
                 elif eff['special'] == 'facing':
-                    # Value is Angle (0-360)
                     if hasattr(self, 'facing_angle'):
                         self.facing_angle = val
 
-        self.current_hp = min(self.current_hp, self.max_hp) # Clamp if HP reduced? Or not?
+        # Apply all accumulated multipliers to base values
+        self.mass *= mass_mult
+        self.max_hp = int(self.base_max_hp * hp_mult)
+        
+        if hasattr(self, 'damage'):
+            self.damage = int(self.data.get('damage', 0) * damage_mult)
+        if hasattr(self, 'range'):
+            self.range = int(self.data.get('range', 0) * range_mult)
+        if hasattr(self, 'cost'):
+            self.cost = int(self.data.get('cost', 0) * cost_mult)
+        if hasattr(self, 'thrust_force'):
+            self.thrust_force = self.data.get('thrust_force', 0) * thrust_mult
+        if hasattr(self, 'turn_speed'):
+            self.turn_speed = self.data.get('turn_speed', 0) * turn_mult
+        if hasattr(self, 'energy_generation_rate'):
+            self.energy_generation_rate = self.data.get('energy_generation', 0) * energy_gen_mult
+        if hasattr(self, 'capacity'):
+            self.capacity = int(self.data.get('capacity', 0) * capacity_mult)
+            
+        self.current_hp = min(self.current_hp, self.max_hp)
 
     def clone(self):
         # Create a new instance with the same data
@@ -269,6 +300,11 @@ class BeamWeapon(Weapon):
 
     def clone(self):
         return BeamWeapon(self.data)
+    
+    def calculate_hit_chance(self, distance):
+        """Calculate hit chance based on distance with linear falloff."""
+        chance = self.base_accuracy - (distance * self.accuracy_falloff)
+        return max(0.0, min(1.0, chance))
 
 class CrewQuarters(Component):
     """Provides crew capacity for the ship."""
@@ -305,11 +341,6 @@ class Electronics(Component):
     
     def clone(self):
         return Electronics(self.data)
-    
-    def calculate_hit_chance(self, distance):
-        # Linear falloff
-        chance = self.base_accuracy - (distance * self.accuracy_falloff)
-        return max(0.0, min(1.0, chance))
 
 
 COMPONENT_REGISTRY = {}

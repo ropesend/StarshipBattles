@@ -116,7 +116,7 @@ class TestComponentCloning(unittest.TestCase):
     
     def test_beam_weapon_clone(self):
         """BeamWeapon should clone correctly."""
-        laser = create_component('laser_beam')
+        laser = create_component('laser_cannon')
         clone = laser.clone()
         
         self.assertIsInstance(clone, BeamWeapon)

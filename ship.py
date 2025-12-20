@@ -322,6 +322,9 @@ class Ship(PhysicsBody):
         """Calculate total values for all abilities from components."""
         totals = {}
         
+        # Abilities that should multiply instead of sum
+        MULTIPLICATIVE_ABILITIES = {'ToHitAttackModifier', 'ToHitDefenseModifier'}
+        
         for comp in components:
             abilities = getattr(comp, 'abilities', {})
             for ability_name, value in abilities.items():
@@ -330,8 +333,12 @@ class Ship(PhysicsBody):
                     if value:
                         totals[ability_name] = True
                 elif isinstance(value, (int, float)):
-                    # Numeric abilities: sum values
-                    totals[ability_name] = totals.get(ability_name, 0) + value
+                    if ability_name in MULTIPLICATIVE_ABILITIES:
+                        # Multiplicative abilities: multiply values together
+                        totals[ability_name] = totals.get(ability_name, 1.0) * value
+                    else:
+                        # Additive abilities: sum values
+                        totals[ability_name] = totals.get(ability_name, 0) + value
                 # Object abilities (like VehicleLaunch) could be handled separately
         
         return totals

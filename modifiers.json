@@ -19,13 +19,13 @@
             "id": "turret_mount",
             "name": "Turret Mount",
             "type": "linear",
-            "description": "Adds firing arc. Mass increases with arc.",
+            "description": "Adds firing arc. Mass scales with arc (diminishing returns).",
             "param_name": "arc",
             "min_val": 0,
             "max_val": 180,
             "default_val": 45,
             "effects": {
-                "mass_add_per_unit": 0.5,
+                "special": "turret_mount",
                 "arc_set": true
             },
             "restrictions": {

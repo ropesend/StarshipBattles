@@ -997,36 +997,12 @@ class Game:
         if player_ship:
              draw_hud(self.screen, player_ship, 10, 10)
              
+            
         if self.show_overlay:
             self.draw_debug_overlay()
             
-            
-        pygame.display.flip()
-
-        for s in self.ships:
-            draw_ship(self.screen, s, self.camera)
-            if s.is_alive:
-                pos = self.camera.world_to_screen(s.position)
-                if s.max_hp > 0:
-                    draw_bar(self.screen, pos.x - 20, pos.y - 60, 40, 5, s.hp / s.max_hp, (0, 255, 0))
-        
-        for p in self.projectiles:
-            start = self.camera.world_to_screen(p['pos'])
-            vel_norm = p['vel'].normalize() if p['vel'].length() > 0 else pygame.math.Vector2(1,0)
-            end = self.camera.world_to_screen(p['pos'] - vel_norm * 10)
-            pygame.draw.line(self.screen, (255, 255, 0), start, end, 2)
-            
-        for b in self.beams:
-            alpha = int(255 * (b['timer'] / 0.2))
-            color = b['color'] 
-            start = self.camera.world_to_screen(b['start'])
-            end = self.camera.world_to_screen(b['end'])
-            pygame.draw.line(self.screen, color, start, end, max(1, int(3 * self.camera.zoom)))
-            
-        # Draw HUD
-        if self.show_overlay:
-            self.draw_debug_overlay()
-            
+        # Team score display
+        sw, sh = self.screen.get_size()
         s1_live = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
         s2_live = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
         
