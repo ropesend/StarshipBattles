@@ -4,18 +4,21 @@
             "hull_mass": 50,
             "max_mass": 1000,
             "requirements": {
-                "command_control": {
-                    "component_type": "Bridge",
-                    "min_count": 1
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
                 },
                 "propulsion": {
-                    "component_type": "Engine",
-                    "min_count": 1
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
                 },
-                "fuel_storage": {
-                    "component_type": "Tank",
-                    "resource_type": "fuel",
-                    "min_count": 1
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                },
+                "crew_balance": {
+                    "ability": "CrewCapacity",
+                    "min_value": 0
                 }
             }
         },
@@ -23,18 +26,21 @@
             "hull_mass": 100,
             "max_mass": 2000,
             "requirements": {
-                "command_control": {
-                    "component_type": "Bridge",
-                    "min_count": 1
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
                 },
                 "propulsion": {
-                    "component_type": "Engine",
-                    "min_count": 1
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
                 },
-                "fuel_storage": {
-                    "component_type": "Tank",
-                    "resource_type": "fuel",
-                    "min_count": 1
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                },
+                "crew_balance": {
+                    "ability": "CrewCapacity",
+                    "min_value": 0
                 }
             }
         },
@@ -42,18 +48,21 @@
             "hull_mass": 200,
             "max_mass": 4000,
             "requirements": {
-                "command_control": {
-                    "component_type": "Bridge",
-                    "min_count": 1
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
                 },
                 "propulsion": {
-                    "component_type": "Engine",
-                    "min_count": 1
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
                 },
-                "fuel_storage": {
-                    "component_type": "Tank",
-                    "resource_type": "fuel",
-                    "min_count": 1
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                },
+                "crew_balance": {
+                    "ability": "CrewCapacity",
+                    "min_value": 0
                 }
             }
         },
@@ -61,18 +70,21 @@
             "hull_mass": 400,
             "max_mass": 8000,
             "requirements": {
-                "command_control": {
-                    "component_type": "Bridge",
-                    "min_count": 1
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
                 },
                 "propulsion": {
-                    "component_type": "Engine",
-                    "min_count": 1
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
                 },
-                "fuel_storage": {
-                    "component_type": "Tank",
-                    "resource_type": "fuel",
-                    "min_count": 1
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                },
+                "crew_balance": {
+                    "ability": "CrewCapacity",
+                    "min_value": 0
                 }
             }
         },
@@ -80,18 +92,21 @@
             "hull_mass": 800,
             "max_mass": 16000,
             "requirements": {
-                "command_control": {
-                    "component_type": "Bridge",
-                    "min_count": 1
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
                 },
                 "propulsion": {
-                    "component_type": "Engine",
-                    "min_count": 1
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
                 },
-                "fuel_storage": {
-                    "component_type": "Tank",
-                    "resource_type": "fuel",
-                    "min_count": 1
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                },
+                "crew_balance": {
+                    "ability": "CrewCapacity",
+                    "min_value": 0
                 }
             }
         },
@@ -99,18 +114,21 @@
             "hull_mass": 1600,
             "max_mass": 32000,
             "requirements": {
-                "command_control": {
-                    "component_type": "Bridge",
-                    "min_count": 1
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
                 },
                 "propulsion": {
-                    "component_type": "Engine",
-                    "min_count": 1
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
                 },
-                "fuel_storage": {
-                    "component_type": "Tank",
-                    "resource_type": "fuel",
-                    "min_count": 1
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                },
+                "crew_balance": {
+                    "ability": "CrewCapacity",
+                    "min_value": 0
                 }
             }
         },
@@ -118,18 +136,21 @@
             "hull_mass": 3200,
             "max_mass": 64000,
             "requirements": {
-                "command_control": {
-                    "component_type": "Bridge",
-                    "min_count": 1
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
                 },
                 "propulsion": {
-                    "component_type": "Engine",
-                    "min_count": 1
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
                 },
-                "fuel_storage": {
-                    "component_type": "Tank",
-                    "resource_type": "fuel",
-                    "min_count": 1
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                },
+                "crew_balance": {
+                    "ability": "CrewCapacity",
+                    "min_value": 0
                 }
             }
         }

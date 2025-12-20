@@ -15,3 +15,4 @@ venv/
 !vehicleclasses.json
 !component_presets.json
 !builder_theme.json
+!abilities.json

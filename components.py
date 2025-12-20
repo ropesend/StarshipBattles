@@ -51,7 +51,9 @@ class Component:
         self.type_str = data['type']
         self.sprite_index = data.get('sprite_index', 0)
         self.cost = data.get('cost', 0)
-        self.crew_required = data.get('crew_required', 0)  # Crew required to operate
+        
+        # Parse abilities from data
+        self.abilities = data.get('abilities', {})
         
         self.modifiers = [] # list of ApplicationModifier
         # If cloning, data might have modifiers? Not yet supported in save/load but structure ready
@@ -285,6 +287,24 @@ class LifeSupport(Component):
     
     def clone(self):
         return LifeSupport(self.data)
+
+class Sensor(Component):
+    """Provides sensor capabilities like attack modifiers."""
+    def __init__(self, data):
+        super().__init__(data)
+        self.attack_modifier = self.abilities.get('ToHitAttackModifier', 1.0)
+    
+    def clone(self):
+        return Sensor(self.data)
+
+class Electronics(Component):
+    """Provides electronic warfare capabilities like defense modifiers."""
+    def __init__(self, data):
+        super().__init__(data)
+        self.defense_modifier = self.abilities.get('ToHitDefenseModifier', 1.0)
+    
+    def clone(self):
+        return Electronics(self.data)
     
     def calculate_hit_chance(self, distance):
         # Linear falloff
@@ -341,6 +361,10 @@ def load_components(filepath="components.json"):
                     obj = CrewQuarters(comp_def)
                 elif c_type == "LifeSupport":
                     obj = LifeSupport(comp_def)
+                elif c_type == "Sensor":
+                    obj = Sensor(comp_def)
+                elif c_type == "Electronics":
+                    obj = Electronics(comp_def)
                 else:
                     obj = Component(comp_def)
                 

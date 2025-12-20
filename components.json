@@ -13,7 +13,10 @@
                 "ARMOR"
             ],
             "sprite_index": 0,
-            "crew_required": 5
+            "abilities": {
+                "CommandAndControl": true,
+                "CrewCapacity": -5
+            }
         },
         {
             "id": "railgun",
@@ -31,7 +34,10 @@
             "ammo_cost": 1,
             "firing_arc": 1,
             "sprite_index": 18,
-            "crew_required": 5
+            "abilities": {
+                "ProjectileWeapon": true,
+                "CrewCapacity": -5
+            }
         },
         {
             "id": "standard_engine",
@@ -45,7 +51,10 @@
             ],
             "thrust_force": 150,
             "fuel_cost": 0.5,
-            "sprite_index": 9
+            "sprite_index": 9,
+            "abilities": {
+                "CombatPropulsion": 150
+            }
         },
         {
             "id": "thruster",
@@ -60,7 +69,10 @@
                 "ARMOR"
             ],
             "turn_speed": 30,
-            "sprite_index": 3
+            "sprite_index": 3,
+            "abilities": {
+                "ManeuveringThruster": 30
+            }
         },
         {
             "id": "armor_plate",
@@ -71,7 +83,10 @@
             "allowed_layers": [
                 "ARMOR"
             ],
-            "sprite_index": 27
+            "sprite_index": 27,
+            "abilities": {
+                "Armor": true
+            }
         },
         {
             "id": "fuel_tank",
@@ -86,7 +101,10 @@
             ],
             "capacity": 50000,
             "resource_type": "fuel",
-            "sprite_index": 26
+            "sprite_index": 26,
+            "abilities": {
+                "FuelStorage": 50000
+            }
         },
         {
             "id": "ordnance_tank",
@@ -101,7 +119,10 @@
             ],
             "capacity": 5000,
             "resource_type": "ammo",
-            "sprite_index": 34
+            "sprite_index": 34,
+            "abilities": {
+                "AmmoStorage": 5000
+            }
         },
         {
             "id": "battery",
@@ -116,7 +137,10 @@
             ],
             "capacity": 2000,
             "resource_type": "energy",
-            "sprite_index": 182
+            "sprite_index": 182,
+            "abilities": {
+                "EnergyStorage": 2000
+            }
         },
         {
             "id": "generator",
@@ -130,11 +154,14 @@
             ],
             "energy_generation": 25,
             "sprite_index": 217,
-            "crew_required": 1
+            "abilities": {
+                "EnergyGeneration": 25,
+                "CrewCapacity": -1
+            }
         },
         {
-            "id": "laser_beam",
-            "name": "Laser Beam",
+            "id": "laser_cannon",
+            "name": "Laser Cannon",
             "type": "BeamWeapon",
             "mass": 20,
             "hp": 40,
@@ -149,7 +176,10 @@
             "accuracy_falloff": 0.0001,
             "firing_arc": 1,
             "sprite_index": 22,
-            "crew_required": 1
+            "abilities": {
+                "BeamWeapon": true,
+                "CrewCapacity": -1
+            }
         },
         {
             "id": "crew_quarters",
@@ -161,8 +191,10 @@
                 "CORE",
                 "INNER"
             ],
-            "crew_capacity": 10,
-            "sprite_index": 0
+            "sprite_index": 0,
+            "abilities": {
+                "CrewCapacity": 10
+            }
         },
         {
             "id": "life_support",
@@ -174,8 +206,41 @@
                 "CORE",
                 "INNER"
             ],
-            "life_support_capacity": 10,
-            "sprite_index": 0
+            "sprite_index": 0,
+            "abilities": {
+                "LifeSupportCapacity": 10
+            }
+        },
+        {
+            "id": "combat_sensor",
+            "name": "Combat Sensor",
+            "type": "Sensor",
+            "mass": 30,
+            "hp": 50,
+            "allowed_layers": [
+                "CORE",
+                "INNER",
+                "OUTER"
+            ],
+            "sprite_index": 181,
+            "abilities": {
+                "ToHitAttackModifier": 2.0
+            }
+        },
+        {
+            "id": "ecm_suite",
+            "name": "ECM Suite",
+            "type": "Electronics",
+            "mass": 40,
+            "hp": 40,
+            "allowed_layers": [
+                "CORE",
+                "INNER"
+            ],
+            "sprite_index": 180,
+            "abilities": {
+                "ToHitDefenseModifier": 2.0
+            }
         }
     ]
 }

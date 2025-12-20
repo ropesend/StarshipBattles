@@ -1,0 +1,109 @@
+{
+    "abilities": {
+        "CommandAndControl": {
+            "description": "Ship command and control capability",
+            "value_type": "boolean",
+            "required_by_all_ships": true
+        },
+        "CombatPropulsion": {
+            "description": "Main thrust force for combat movement",
+            "value_type": "numeric",
+            "unit": "thrust_force",
+            "aggregation": "sum"
+        },
+        "ManeuveringThruster": {
+            "description": "Turning and maneuvering capability",
+            "value_type": "numeric",
+            "unit": "degrees_per_second",
+            "aggregation": "sum"
+        },
+        "Armor": {
+            "description": "Physical damage absorption",
+            "value_type": "boolean"
+        },
+        "FuelStorage": {
+            "description": "Fuel storage capacity",
+            "value_type": "numeric",
+            "unit": "fuel_units",
+            "aggregation": "sum"
+        },
+        "AmmoStorage": {
+            "description": "Ammunition storage capacity",
+            "value_type": "numeric",
+            "unit": "ammo_units",
+            "aggregation": "sum"
+        },
+        "EnergyStorage": {
+            "description": "Energy/battery storage capacity",
+            "value_type": "numeric",
+            "unit": "energy_units",
+            "aggregation": "sum"
+        },
+        "EnergyGeneration": {
+            "description": "Power generation rate",
+            "value_type": "numeric",
+            "unit": "energy_per_second",
+            "aggregation": "sum"
+        },
+        "ProjectileWeapon": {
+            "description": "Physical projectile weapon capability",
+            "value_type": "boolean"
+        },
+        "BeamWeapon": {
+            "description": "Energy beam weapon capability",
+            "value_type": "boolean"
+        },
+        "CrewCapacity": {
+            "description": "Crew housing (positive) or requirement (negative). Ship total must be >= 0",
+            "value_type": "numeric",
+            "unit": "crew",
+            "aggregation": "sum",
+            "validation": "sum_must_be_non_negative"
+        },
+        "LifeSupportCapacity": {
+            "description": "Life support for crew members",
+            "value_type": "numeric",
+            "unit": "crew",
+            "aggregation": "sum",
+            "validation": "must_be_gte_positive_crew_capacity"
+        },
+        "ToHitAttackModifier": {
+            "description": "Multiplier for outgoing hit probability. 2.0 = double hit chance",
+            "value_type": "numeric",
+            "unit": "multiplier",
+            "aggregation": "multiply",
+            "default": 1.0
+        },
+        "ToHitDefenseModifier": {
+            "description": "Multiplier reducing incoming hit probability. 2.0 = halve hit chance",
+            "value_type": "numeric",
+            "unit": "multiplier",
+            "aggregation": "multiply",
+            "default": 1.0
+        },
+        "SelfDestruct": {
+            "description": "Ship can initiate self-destruct sequence",
+            "value_type": "boolean"
+        },
+        "VehicleStorage": {
+            "description": "Capacity to store smaller vessels by mass",
+            "value_type": "numeric",
+            "unit": "mass_capacity",
+            "aggregation": "sum"
+        },
+        "VehicleLaunch": {
+            "description": "Capability to launch stored vessels",
+            "value_type": "object",
+            "properties": {
+                "max_launch_mass": {
+                    "description": "Maximum mass of vessel that can be launched",
+                    "type": "numeric"
+                },
+                "cycle_time": {
+                    "description": "Time between launches in seconds",
+                    "type": "numeric"
+                }
+            }
+        }
+    }
+}

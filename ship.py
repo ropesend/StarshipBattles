@@ -4,7 +4,7 @@ import math
 import json
 import os
 from physics import PhysicsBody
-from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon, ProjectileWeapon, CrewQuarters, LifeSupport
+from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon, ProjectileWeapon, CrewQuarters, LifeSupport, Sensor, Electronics
 from logger import log_debug
 
 
@@ -267,7 +267,7 @@ class Ship(PhysicsBody):
             self.mass_limits_ok = False
 
     def get_missing_requirements(self):
-        """Check class requirements and return list of missing items."""
+        """Check class requirements and return list of missing items based on abilities."""
         missing = []
         class_def = VEHICLE_CLASSES.get(self.ship_class, {})
         requirements = class_def.get('requirements', {})
@@ -275,54 +275,78 @@ class Ship(PhysicsBody):
         # Gather all components
         all_components = [c for layer in self.layers.values() for c in layer['components']]
         
+        # Calculate ability totals from all components
+        ability_totals = self._calculate_ability_totals(all_components)
+        
+        # Check each requirement
         for req_name, req_def in requirements.items():
-            comp_type = req_def.get('component_type', '')
-            min_count = req_def.get('min_count', 1)
-            resource_type = req_def.get('resource_type', None)
+            ability_name = req_def.get('ability', '')
+            min_value = req_def.get('min_value', 0)
             
-            # Count matching components
-            count = 0
-            for comp in all_components:
-                if comp.type_str == comp_type:
-                    if resource_type:
-                        # For tanks, check resource type
-                        if hasattr(comp, 'resource_type') and comp.resource_type == resource_type:
-                            count += 1
+            if not ability_name:
+                continue
+            
+            current_value = ability_totals.get(ability_name, 0)
+            
+            # Handle boolean abilities
+            if isinstance(min_value, bool):
+                if min_value and not current_value:
+                    nice_name = self._format_ability_name(ability_name)
+                    missing.append(f"⚠ Needs {nice_name}")
+            # Handle numeric abilities
+            elif isinstance(min_value, (int, float)):
+                if current_value < min_value:
+                    nice_name = self._format_ability_name(ability_name)
+                    if ability_name == 'CrewCapacity':
+                        # Special handling for crew - show deficit
+                        deficit = min_value - current_value
+                        missing.append(f"⚠ Need {abs(current_value)} more crew housing")
                     else:
-                        count += 1
-            
-            if count < min_count:
-                # Format nice requirement name
-                nice_name = req_name.replace('_', ' ').title()
-                if resource_type:
-                    nice_name = f"{resource_type.title()} {comp_type}"
-                missing.append(f"⚠ Needs {nice_name}")
+                        missing.append(f"⚠ Needs {nice_name}")
         
-        # Crew Requirements Check
-        total_crew_required = 0
-        total_crew_capacity = 0
-        total_life_support = 0
+        # Additional crew/life support validation
+        crew_capacity = ability_totals.get('CrewCapacity', 0)
+        life_support = ability_totals.get('LifeSupportCapacity', 0)
         
-        for comp in all_components:
-            # Sum up crew required by all components
-            if hasattr(comp, 'crew_required'):
-                total_crew_required += comp.crew_required
-            # Sum up crew capacity from Crew Quarters
-            if isinstance(comp, CrewQuarters):
-                total_crew_capacity += comp.crew_capacity
-            # Sum up life support capacity
-            if isinstance(comp, LifeSupport):
-                total_life_support += comp.life_support_capacity
+        # Crew required is the absolute value of negative crew capacity
+        crew_required = abs(min(0, crew_capacity))
+        crew_housed = max(0, crew_capacity)
         
-        # Check if we have enough crew capacity
-        if total_crew_required > 0 and total_crew_capacity < total_crew_required:
-            missing.append(f"⚠ Need {total_crew_required - total_crew_capacity} more crew capacity")
-        
-        # Check if we have life support for crew
-        if total_crew_capacity > 0 and total_life_support < total_crew_capacity:
-            missing.append(f"⚠ Need {total_crew_capacity - total_life_support} more life support")
+        # If we have crew requiring components but not enough life support
+        if crew_required > 0 and life_support < crew_required:
+            missing.append(f"⚠ Need {crew_required - life_support} more life support")
         
         return missing
+    
+    def _calculate_ability_totals(self, components):
+        """Calculate total values for all abilities from components."""
+        totals = {}
+        
+        for comp in components:
+            abilities = getattr(comp, 'abilities', {})
+            for ability_name, value in abilities.items():
+                if isinstance(value, bool):
+                    # Boolean abilities: any True makes total True
+                    if value:
+                        totals[ability_name] = True
+                elif isinstance(value, (int, float)):
+                    # Numeric abilities: sum values
+                    totals[ability_name] = totals.get(ability_name, 0) + value
+                # Object abilities (like VehicleLaunch) could be handled separately
+        
+        return totals
+    
+    def _format_ability_name(self, ability_name):
+        """Convert ability ID to readable name."""
+        # Insert spaces before capitals and title case
+        import re
+        return re.sub(r'(?<!^)(?=[A-Z])', ' ', ability_name)
+    
+    def get_ability_total(self, ability_name):
+        """Get total value of a specific ability across all components."""
+        all_components = [c for layer in self.layers.values() for c in layer['components']]
+        totals = self._calculate_ability_totals(all_components)
+        return totals.get(ability_name, 0)
 
     def check_validity(self):
         self.recalculate_stats()
