@@ -25,155 +25,8 @@ LAYER_COLORS = {
     LayerType.CORE: (220, 220, 220)
 }
 
-import tkinter as tk
-
-class InspectorTk:
-    def __init__(self, ship, root):
-        self.ship = ship
-        self.is_open = True
-        
-        # Create Toplevel window
-        self.window = tk.Toplevel(root)
-        self.window.title(f"Inspector: {ship.name}")
-        self.window.geometry("300x500")
-        self.window.configure(bg="#202020")
-        
-        # Handle close
-        self.window.protocol("WM_DELETE_WINDOW", self.on_close)
-        
-        # UI Elements
-        self.labels = {}
-        self.comp_frame = None
-        
-        # Setup UI
-        self.setup_ui()
-        
-    def on_close(self):
-        self.is_open = False
-        self.window.destroy()
-        
-    def setup_ui(self):
-        # Header
-        header = tk.Label(self.window, text=self.ship.name, font=("Arial", 16, "bold"), fg="white", bg="#202020")
-        header.pack(pady=10)
-        
-        # Stats Frame
-        self.stats_frame = tk.Frame(self.window, bg="#303030", padx=10, pady=10)
-        self.stats_frame.pack(fill="x", padx=5, pady=5)
-        
-        self.add_stat("HP", "hp")
-        self.add_stat("Energy", "energy")
-        self.add_stat("Fuel", "fuel")
-        self.add_stat("Ammo", "ammo")
-        self.add_stat("Speed", "speed")
-        self.add_stat("Heading", "heading")
-        self.add_stat("Target", "target")
-        self.add_stat("State", "state")
-        
-        # Components Scrollable? For now just simple pack
-        tk.Label(self.window, text="Components", fg="yellow", bg="#202020", font=("Arial", 12)).pack(pady=10)
-        
-        # We'll use a canvas or just rebuild frames for components on update?
-        # Rebuilding widgets every frame is bad.
-        # But components might not change often.
-        # Let's use a Frame and update labels inside.
-        
-        self.comp_frame = tk.Frame(self.window, bg="#202020")
-        self.comp_frame.pack(fill="both", expand=True, padx=5)
-        
-        # Initial populate
-        self.rebuild_components()
-
-    def add_stat(self, label_text, key):
-        frame = tk.Frame(self.stats_frame, bg="#303030")
-        frame.pack(fill="x", pady=2)
-        
-        lbl_name = tk.Label(frame, text=f"{label_text}:", width=10, anchor="w", bg="#303030", fg="#AAAAAA")
-        lbl_name.pack(side="left")
-        
-        lbl_val = tk.Label(frame, text="--", anchor="w", bg="#303030", fg="#FFFFFF")
-        lbl_val.pack(side="left", fill="x", expand=True)
-        
-        self.labels[key] = lbl_val
-        
-    def update(self):
-        if not self.window.winfo_exists():
-            self.is_open = False
-            return
-            
-        if not self.ship.is_alive:
-            self.labels['state'].config(text="DESTROYED", fg="red")
-            return
-            
-        # Update Values
-        self.labels['hp'].config(text=f"{int(self.ship.hp)} / {int(self.ship.max_hp)}")
-        
-        self.labels['energy'].config(text=f"{int(self.ship.current_energy)} / {int(self.ship.max_energy)}")
-        self.labels['fuel'].config(text=f"{int(self.ship.current_fuel)} / {int(self.ship.max_fuel)}")
-        self.labels['ammo'].config(text=f"{int(self.ship.current_ammo)} / {int(self.ship.max_ammo)}")
-        
-        self.labels['speed'].config(text=f"{self.ship.current_speed:.1f} / {self.ship.max_speed:.1f}")
-        self.labels['heading'].config(text=f"{int(self.ship.angle)}°")
-        
-        t_name = "None"
-        if self.ship.current_target and self.ship.current_target.is_alive:
-            t_name = self.ship.current_target.name
-        self.labels['target'].config(text=t_name)
-        
-        self.labels['state'].config(text="Active", fg="green")
-        
-        # Update Components
-        if not hasattr(self, 'comp_widgets'): return
-        
-        for item in self.comp_widgets:
-            c = item['comp']
-            canvas = item['canvas']
-            
-            # Update Active Color
-            color = "white" if c.is_active else "#663333"
-            item['name_lbl'].config(fg=color)
-            
-            # Update Bar
-            canvas.delete("all")
-            if c.max_hp > 0:
-                pct = c.current_hp / c.max_hp
-                bar_w = 100 * pct
-                fill = "#00ff00"
-                if pct < 0.5: fill = "#cccc00"
-                if pct < 0.2: fill = "#cc0000"
-                if not c.is_active: fill = "#333333"
-                
-                canvas.create_rectangle(0, 0, bar_w, 8, fill=fill, width=0)
-
-    def rebuild_components(self):
-        for widget in self.comp_frame.winfo_children():
-            widget.destroy()
-            
-        self.comp_widgets = []
-        
-        for ltype in [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]:
-            comps = self.ship.layers[ltype]['components']
-            if not comps: continue
-            
-            # Header
-            tk.Label(self.comp_frame, text=f"--- {ltype.name} ---", fg="#888", bg="#202020").pack(anchor="w")
-            
-            for c in comps:
-                row = tk.Frame(self.comp_frame, bg="#202020")
-                row.pack(fill="x", pady=1)
-                
-                name_lbl = tk.Label(row, text=c.name, fg="white", bg="#202020", width=15, anchor="w")
-                name_lbl.pack(side="left")
-                
-                # HP Bar Canvas
-                canvas = tk.Canvas(row, width=100, height=8, bg="#333", highlightthickness=0)
-                canvas.pack(side="left", padx=5)
-                
-                self.comp_widgets.append({
-                    'comp': c,
-                    'name_lbl': name_lbl,
-                    'canvas': canvas
-                })
+# Ship Stats Panel (replaces Tkinter inspector popups)
+# Panel state initialized in start_battle()
 
 
 pygame.font.init()
@@ -505,10 +358,10 @@ class Game:
         self.sim_paused = False
         self.sim_tick_counter = 0  # For throttling UI updates
         
-        # Inspector Active Windows
-        self.tk_root = tk.Tk()
-        self.tk_root.withdraw() # Hide main root
-        self.active_inspectors = [] # List of InspectorTk
+        # Ship Stats Panel (integrated, replaces Tkinter popups)
+        self.stats_panel_width = 350
+        self.expanded_ships = set()  # Ships currently expanded in panel
+        self.stats_scroll_offset = 0
 
     def start_quick_battle(self):
         # 5v5 Battle
@@ -558,7 +411,8 @@ class Game:
                     designs.append({
                         'path': filepath,
                         'name': data.get('name', filename),
-                        'ship_class': data.get('ship_class', 'Unknown')
+                        'ship_class': data.get('ship_class', 'Unknown'),
+                        'ai_strategy': data.get('ai_strategy', 'optimal_firing_range')
                     })
             except:
                 pass
@@ -599,12 +453,12 @@ class Game:
                             if event.button == 1:  # Left click - add to team 1
                                 self.setup_team1.append({
                                     'design': design,
-                                    'strategy': 'optimal_firing_range'
+                                    'strategy': design.get('ai_strategy', 'optimal_firing_range')
                                 })
                             elif event.button == 3:  # Right click - add to team 2
                                 self.setup_team2.append({
                                     'design': design,
-                                    'strategy': 'optimal_firing_range'
+                                    'strategy': design.get('ai_strategy', 'optimal_firing_range')
                                 })
                             break
                 
@@ -799,40 +653,6 @@ class Game:
         self.camera.update_input(camera_dt if camera_dt else dt, events)
         
         self.sim_tick_counter += 1
-        
-        # Throttle Tkinter/Inspector updates to every 10 ticks for performance
-        if self.sim_tick_counter % 10 == 0:
-            try:
-                self.tk_root.update()
-            except:
-                pass # App closing
-                
-            for win in self.active_inspectors:
-                win.update()
-            
-            # Clean up closed windows
-            self.active_inspectors = [w for w in self.active_inspectors if w.is_open]
-
-        # Input for Selection
-        for event in events:
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                # Hit test
-                mx, my = pygame.mouse.get_pos()
-                world_pos = self.camera.screen_to_world((mx, my))
-                
-                # Simple circle check
-                found = None
-                for s in self.ships:
-                    if not s.is_alive: continue
-                    # Rough hit radius
-                    if s.position.distance_to(world_pos) < 60: # generous click radius
-                        found = s
-                        break
-                
-                if found:
-                    # Create New Window
-                    new_win = InspectorTk(found, self.tk_root)
-                    self.active_inspectors.append(new_win)
         
         # 1. Update Grid
         self.grid.clear()
@@ -1153,6 +973,240 @@ class Game:
                             
                         except:
                             pass
+
+    def handle_stats_panel_click(self, mx, my, button):
+        """Handle mouse clicks on the ship stats panel."""
+        sw, sh = self.screen.get_size()
+        panel_x = sw - self.stats_panel_width
+        
+        # Only handle clicks in panel area
+        if mx < panel_x:
+            return False
+        
+        # Calculate relative position in panel
+        rel_x = mx - panel_x
+        rel_y = my + self.stats_scroll_offset  # Scroll-adjusted y position
+        
+        print(f"DEBUG CLICK: mouse=({mx},{my}), panel_x={panel_x}, rel_y={rel_y}, scroll={self.stats_scroll_offset}")
+        
+        # Build list of ships in display order
+        team1_ships = [s for s in self.ships if s.team_id == 0]
+        team2_ships = [s for s in self.ships if s.team_id == 1]
+        
+        y_pos = 10  # Panel starts at y=10
+        
+        # Team 1 header
+        y_pos += 30
+        print(f"DEBUG: After Team 1 header, y_pos={y_pos}")
+        
+        for ship in team1_ships:
+            banner_height = 25
+            print(f"DEBUG: Ship '{ship.name}' banner range: {y_pos} to {y_pos + banner_height}, rel_y={rel_y}")
+            if y_pos <= rel_y < y_pos + banner_height:
+                # Clicked on ship banner - toggle expansion
+                print(f"DEBUG: HIT! Toggling ship '{ship.name}'")
+                if ship in self.expanded_ships:
+                    self.expanded_ships.discard(ship)
+                else:
+                    self.expanded_ships.add(ship)
+                return True
+            y_pos += banner_height
+            
+            if ship in self.expanded_ships:
+                # Skip over expanded content
+                exp_height = self._get_expanded_height(ship)
+                print(f"DEBUG: Ship '{ship.name}' is expanded, adding {exp_height} to y_pos")
+                y_pos += exp_height
+        
+        # Team 2 header
+        y_pos += 15  # Gap between teams
+        y_pos += 30  # Team 2 header
+        print(f"DEBUG: After Team 2 header, y_pos={y_pos}")
+        
+        for ship in team2_ships:
+            banner_height = 25
+            print(f"DEBUG: Ship '{ship.name}' banner range: {y_pos} to {y_pos + banner_height}, rel_y={rel_y}")
+            if y_pos <= rel_y < y_pos + banner_height:
+                print(f"DEBUG: HIT! Toggling ship '{ship.name}'")
+                if ship in self.expanded_ships:
+                    self.expanded_ships.discard(ship)
+                else:
+                    self.expanded_ships.add(ship)
+                return True
+            y_pos += banner_height
+            
+            if ship in self.expanded_ships:
+                exp_height = self._get_expanded_height(ship)
+                print(f"DEBUG: Ship '{ship.name}' is expanded, adding {exp_height} to y_pos")
+                y_pos += exp_height
+        
+        print(f"DEBUG: No hit, final y_pos={y_pos}")
+        return False
+    
+    def _get_expanded_height(self, ship):
+        """Calculate height needed for expanded ship stats."""
+        # Base stats: 6 lines (HP, Fuel, Energy, Ammo, Speed, Target)
+        base_height = 6 * 18
+        # Components: count all components
+        comp_count = sum(len(l['components']) for l in ship.layers.values())
+        comp_height = comp_count * 16 + 20  # +20 for header
+        return base_height + comp_height + 10  # +10 padding
+    
+    def _draw_bar(self, surface, x, y, width, height, pct, color):
+        """Draw a progress bar."""
+        pygame.draw.rect(surface, (40, 40, 40), (x, y, width, height))
+        if pct > 0:
+            fill_w = int(width * min(1.0, pct))
+            pygame.draw.rect(surface, color, (x, y, fill_w, height))
+        pygame.draw.rect(surface, (80, 80, 80), (x, y, width, height), 1)
+    
+    def draw_ship_stats_panel(self):
+        """Draw the integrated ship stats panel on the right side."""
+        sw, sh = self.screen.get_size()
+        panel_x = sw - self.stats_panel_width
+        panel_w = self.stats_panel_width
+        
+        # Panel background
+        panel_surf = pygame.Surface((panel_w, sh), pygame.SRCALPHA)
+        panel_surf.fill((20, 25, 35, 230))
+        
+        font_title = pygame.font.Font(None, 28)
+        font_name = pygame.font.Font(None, 22)
+        font_stat = pygame.font.Font(None, 18)
+        
+        y = 10 - self.stats_scroll_offset
+        
+        # Team 1
+        team1_ships = [s for s in self.ships if s.team_id == 0]
+        team1_alive = sum(1 for s in team1_ships if s.is_alive)
+        
+        title = font_title.render(f"TEAM 1 ({team1_alive}/{len(team1_ships)})", True, (100, 200, 255))
+        panel_surf.blit(title, (10, y))
+        y += 30
+        
+        for ship in team1_ships:
+            # Ship banner
+            arrow = "▼" if ship in self.expanded_ships else "►"
+            status = "" if ship.is_alive else " [DEAD]"
+            color = (200, 200, 200) if ship.is_alive else (100, 100, 100)
+            banner_color = (40, 60, 80) if ship.is_alive else (40, 40, 40)
+            
+            pygame.draw.rect(panel_surf, banner_color, (5, y, panel_w - 10, 22))
+            name_text = font_name.render(f"{arrow} {ship.name}{status}", True, color)
+            panel_surf.blit(name_text, (10, y + 3))
+            y += 25
+            
+            if ship in self.expanded_ships:
+                y = self._draw_ship_details(panel_surf, ship, y, panel_w, font_stat)
+        
+        y += 15
+        
+        # Team 2
+        team2_ships = [s for s in self.ships if s.team_id == 1]
+        team2_alive = sum(1 for s in team2_ships if s.is_alive)
+        
+        title = font_title.render(f"TEAM 2 ({team2_alive}/{len(team2_ships)})", True, (255, 100, 100))
+        panel_surf.blit(title, (10, y))
+        y += 30
+        
+        for ship in team2_ships:
+            arrow = "▼" if ship in self.expanded_ships else "►"
+            status = "" if ship.is_alive else " [DEAD]"
+            color = (200, 200, 200) if ship.is_alive else (100, 100, 100)
+            banner_color = (80, 40, 40) if ship.is_alive else (40, 40, 40)
+            
+            pygame.draw.rect(panel_surf, banner_color, (5, y, panel_w - 10, 22))
+            name_text = font_name.render(f"{arrow} {ship.name}{status}", True, color)
+            panel_surf.blit(name_text, (10, y + 3))
+            y += 25
+            
+            if ship in self.expanded_ships:
+                y = self._draw_ship_details(panel_surf, ship, y, panel_w, font_stat)
+        
+        # Store total content height for scrolling
+        self._stats_panel_content_height = y + self.stats_scroll_offset
+        
+        # Blit panel to screen
+        self.screen.blit(panel_surf, (panel_x, 0))
+        
+        # Draw border
+        pygame.draw.line(self.screen, (60, 60, 80), (panel_x, 0), (panel_x, sh), 2)
+    
+    def _draw_ship_details(self, surface, ship, y, panel_w, font):
+        """Draw expanded ship details. Returns new y position."""
+        x_indent = 20
+        bar_w = 120
+        bar_h = 10
+        
+        # HP Bar
+        hp_pct = ship.hp / ship.max_hp if ship.max_hp > 0 else 0
+        hp_color = (0, 255, 0) if hp_pct > 0.5 else ((255, 200, 0) if hp_pct > 0.2 else (255, 50, 50))
+        text = font.render(f"HP: {int(ship.hp)}/{int(ship.max_hp)}", True, (180, 180, 180))
+        surface.blit(text, (x_indent, y))
+        self._draw_bar(surface, x_indent + 100, y, bar_w, bar_h, hp_pct, hp_color)
+        y += 16
+        
+        # Fuel Bar
+        fuel_pct = ship.current_fuel / ship.max_fuel if ship.max_fuel > 0 else 0
+        text = font.render(f"Fuel: {int(ship.current_fuel)}/{int(ship.max_fuel)}", True, (180, 180, 180))
+        surface.blit(text, (x_indent, y))
+        self._draw_bar(surface, x_indent + 100, y, bar_w, bar_h, fuel_pct, (255, 165, 0))
+        y += 16
+        
+        # Energy Bar
+        energy_pct = ship.current_energy / ship.max_energy if ship.max_energy > 0 else 0
+        text = font.render(f"Energy: {int(ship.current_energy)}/{int(ship.max_energy)}", True, (180, 180, 180))
+        surface.blit(text, (x_indent, y))
+        self._draw_bar(surface, x_indent + 100, y, bar_w, bar_h, energy_pct, (100, 200, 255))
+        y += 16
+        
+        # Ammo Bar
+        ammo_pct = ship.current_ammo / ship.max_ammo if ship.max_ammo > 0 else 0
+        text = font.render(f"Ammo: {int(ship.current_ammo)}/{int(ship.max_ammo)}", True, (180, 180, 180))
+        surface.blit(text, (x_indent, y))
+        self._draw_bar(surface, x_indent + 100, y, bar_w, bar_h, ammo_pct, (200, 200, 100))
+        y += 16
+        
+        # Speed
+        text = font.render(f"Speed: {ship.current_speed:.0f}/{ship.max_speed:.0f}", True, (180, 180, 180))
+        surface.blit(text, (x_indent, y))
+        y += 16
+        
+        # Target
+        target_name = "None"
+        if ship.current_target and ship.current_target.is_alive:
+            target_name = ship.current_target.name
+        text = font.render(f"Target: {target_name}", True, (180, 180, 180))
+        surface.blit(text, (x_indent, y))
+        y += 18
+        
+        # Components header
+        text = font.render("Components:", True, (200, 200, 100))
+        surface.blit(text, (x_indent, y))
+        y += 16
+        
+        # Draw each component
+        for layer_type in [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]:
+            for comp in ship.layers[layer_type]['components']:
+                hp_pct = comp.current_hp / comp.max_hp if comp.max_hp > 0 else 1.0
+                color = (150, 150, 150) if comp.is_active else (80, 80, 80)
+                bar_color = (0, 200, 0) if hp_pct > 0.5 else ((200, 200, 0) if hp_pct > 0.2 else (200, 50, 50))
+                if not comp.is_active:
+                    bar_color = (60, 60, 60)
+                
+                # Truncate name if too long
+                name = comp.name[:10] + ".." if len(comp.name) > 12 else comp.name
+                # Show name and HP numerically
+                hp_text = f"{int(comp.current_hp)}/{int(comp.max_hp)}"
+                text = font.render(name, True, color)
+                surface.blit(text, (x_indent + 5, y))
+                hp_val = font.render(hp_text, True, color)
+                surface.blit(hp_val, (x_indent + 95, y))
+                self._draw_bar(surface, x_indent + 160, y, 60, 8, hp_pct, bar_color)
+                y += 14
+        
+        y += 5  # Padding after components
+        return y
                         
     def draw_battle(self):
         self.screen.fill(BG_COLOR)
@@ -1198,23 +1252,55 @@ class Game:
             end = self.camera.world_to_screen(b['end'])
             pygame.draw.line(self.screen, b['color'], start, end, 3)
 
-        # Draw HUD (for player ship only? Or selected?)
-        # Let's keep HUD for first ship of Team 0 as "Player"
-        player_ship = next((s for s in self.ships if s.team_id == 0), None)
-        if player_ship:
-             draw_hud(self.screen, player_ship, 10, 10)
-             
-            
+        # Debug overlay (if enabled)
         if self.show_overlay:
             self.draw_debug_overlay()
-            
-        # Team score display
-        sw, sh = self.screen.get_size()
-        s1_live = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
-        s2_live = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
         
-        self.screen.blit(font_med.render(f"Team 1: {s1_live}", True, (100, 200, 255)), (10, 10))
-        self.screen.blit(font_med.render(f"Team 2: {s2_live}", True, (255, 100, 100)), (sw - 150, 10))
+        # Ship Stats Panel (right side)
+        self.draw_ship_stats_panel()
+        
+        # Check for battle end and show return button
+        team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
+        team2_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
+        
+        if team1_alive == 0 or team2_alive == 0:
+            # Battle is over!
+            sw, sh = self.screen.get_size()
+            
+            # Semi-transparent overlay
+            overlay = pygame.Surface((sw - self.stats_panel_width, sh), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 150))
+            self.screen.blit(overlay, (0, 0))
+            
+            # Winner text
+            if team1_alive > 0:
+                winner_text = "TEAM 1 WINS!"
+                winner_color = (100, 200, 255)
+            elif team2_alive > 0:
+                winner_text = "TEAM 2 WINS!"
+                winner_color = (255, 100, 100)
+            else:
+                winner_text = "DRAW!"
+                winner_color = (200, 200, 200)
+            
+            win_font = pygame.font.Font(None, 72)
+            win_surf = win_font.render(winner_text, True, winner_color)
+            center_x = (sw - self.stats_panel_width) // 2
+            self.screen.blit(win_surf, (center_x - win_surf.get_width() // 2, sh // 2 - 80))
+            
+            # Return to Battle Setup button
+            btn_font = pygame.font.Font(None, 36)
+            btn_w, btn_h = 250, 50
+            btn_x = center_x - btn_w // 2
+            btn_y = sh // 2
+            
+            pygame.draw.rect(self.screen, (50, 80, 120), (btn_x, btn_y, btn_w, btn_h))
+            pygame.draw.rect(self.screen, (100, 150, 200), (btn_x, btn_y, btn_w, btn_h), 2)
+            btn_text = btn_font.render("Return to Battle Setup", True, (255, 255, 255))
+            self.screen.blit(btn_text, (btn_x + btn_w // 2 - btn_text.get_width() // 2, btn_y + 12))
+            
+            # Store button rect for click detection
+            self.battle_end_button_rect = pygame.Rect(btn_x, btn_y, btn_w, btn_h)
 
     def run(self):
         accumulator = 0.0
@@ -1252,6 +1338,26 @@ class Game:
                             # Reset to max speed
                             self.sim_speed_multiplier = 1.0
                             self.sim_paused = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.state == BATTLE:
+                        mx, my = event.pos
+                        # Check if battle is over and return button clicked
+                        if hasattr(self, 'battle_end_button_rect') and self.battle_end_button_rect.collidepoint(mx, my):
+                            self.start_battle_setup()
+                        # Check if click is on stats panel
+                        elif not self.handle_stats_panel_click(mx, my, event.button):
+                            # Click was not on panel - could add other click handling here
+                            pass
+                elif event.type == pygame.MOUSEWHEEL:
+                    if self.state == BATTLE:
+                        # Scroll stats panel
+                        mx, my = pygame.mouse.get_pos()
+                        sw = self.screen.get_size()[0]
+                        if mx >= sw - self.stats_panel_width:
+                            self.stats_scroll_offset -= event.y * 30
+                            # Clamp scroll
+                            max_scroll = max(0, getattr(self, '_stats_panel_content_height', 0) - self.screen.get_size()[1] + 50)
+                            self.stats_scroll_offset = max(0, min(max_scroll, self.stats_scroll_offset))
                 
                 if self.state == MENU:
                     for btn in self.menu_buttons:
