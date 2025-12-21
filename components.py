@@ -320,6 +320,23 @@ class Electronics(Component):
     def clone(self):
         return Electronics(self.data)
 
+class Shield(Component):
+    def __init__(self, data):
+        super().__init__(data)
+        # We might parse 'ShieldProjection' from abilities as a direct property
+        self.shield_capacity = self.abilities.get('ShieldProjection', 0)
+    
+    def clone(self):
+        return Shield(self.data)
+
+class ShieldRegenerator(Component):
+    def __init__(self, data):
+        super().__init__(data)
+        self.regen_rate = self.abilities.get('ShieldRegeneration', 0)
+        self.energy_cost = self.abilities.get('EnergyConsumption', 0)
+    
+    def clone(self):
+        return ShieldRegenerator(self.data)
 
 COMPONENT_REGISTRY = {}
 
@@ -373,6 +390,10 @@ def load_components(filepath="data/components.json"):
                     obj = Sensor(comp_def)
                 elif c_type == "Electronics":
                     obj = Electronics(comp_def)
+                elif c_type == "Shield":
+                    obj = Shield(comp_def)
+                elif c_type == "ShieldRegenerator":
+                    obj = ShieldRegenerator(comp_def)
                 else:
                     obj = Component(comp_def)
                 

@@ -241,6 +241,37 @@
             "abilities": {
                 "ToHitDefenseModifier": 2.0
             }
+        },
+        {
+            "id": "shield_generator",
+            "name": "Shield Projector",
+            "type": "Shield",
+            "mass": 50,
+            "hp": 100,
+            "allowed_layers": [
+                "INNER",
+                "CORE"
+            ],
+            "sprite_index": 180,
+            "abilities": {
+                "ShieldProjection": 500
+            }
+        },
+        {
+            "id": "shield_regen",
+            "name": "Shield Regen",
+            "type": "ShieldRegenerator",
+            "mass": 40,
+            "hp": 80,
+            "allowed_layers": [
+                "INNER",
+                "CORE"
+            ],
+            "sprite_index": 217,
+            "abilities": {
+                "ShieldRegeneration": 5.0,
+                "EnergyConsumption": 2.0
+            }
         }
     ]
 }

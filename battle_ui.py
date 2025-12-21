@@ -263,6 +263,14 @@ class BattleInterface:
         surface.blit(text, (x_indent, y))
         y += 16
         
+        # Shield Bar
+        if ship.max_shields > 0:
+            shield_pct = ship.current_shields / ship.max_shields
+            text = font.render(f"Shield: {int(ship.current_shields)}/{int(ship.max_shields)}", True, (180, 180, 180))
+            surface.blit(text, (x_indent, y))
+            self.draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, shield_pct, (0, 200, 255))
+            y += 16
+            
         # HP Bar
         hp_pct = ship.hp / ship.max_hp if ship.max_hp > 0 else 0
         hp_color = (0, 255, 0) if hp_pct > 0.5 else ((255, 200, 0) if hp_pct > 0.2 else (255, 50, 50))
@@ -347,6 +355,9 @@ class BattleInterface:
     def get_expanded_height(self, ship):
         """Calculate height needed for expanded ship stats."""
         base_height = 146
+        if ship.max_shields > 0:
+            base_height += 16
+            
         comp_count = sum(len(l['components']) for l in ship.layers.values())
         comp_height = comp_count * 14
         return base_height + comp_height + 5

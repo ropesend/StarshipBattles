@@ -259,7 +259,8 @@ class BuilderSceneGUI:
         # Stats labels
         self.stat_labels = {}
         stat_names = [
-            'mass', 'max_hp', 'max_speed', 'turn_rate', 'acceleration',
+            'mass', 'max_hp', 'max_shields', 'shield_regen', 'shield_cost', 
+            'max_speed', 'turn_rate', 'acceleration',
             'thrust', 'energy_gen', 'max_fuel', 'max_ammo', 'max_energy'
         ]
         
@@ -679,6 +680,10 @@ class BuilderSceneGUI:
         self.stat_labels['mass'].set_text(f"Mass: {s.mass:.0f} / {s.max_mass_budget} {mass_status}")
         
         self.stat_labels['max_hp'].set_text(f"Max HP: {s.max_hp:.0f}")
+        self.stat_labels['max_shields'].set_text(f"Shields: {s.max_shields:.0f}")
+        self.stat_labels['shield_regen'].set_text(f"Shield Regen: {s.shield_regen_rate:.1f}/s")
+        self.stat_labels['shield_cost'].set_text(f"Regen Cost: {s.shield_regen_cost:.1f} E/t")
+        
         self.stat_labels['max_speed'].set_text(f"Max Speed: {s.max_speed:.0f}")
         self.stat_labels['turn_rate'].set_text(f"Turn Rate: {s.turn_speed:.0f} deg/s")
         self.stat_labels['acceleration'].set_text(f"Acceleration: {s.acceleration_rate:.2f}")

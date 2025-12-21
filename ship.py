@@ -4,7 +4,7 @@ import math
 import json
 import os
 from physics import PhysicsBody
-from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon, ProjectileWeapon, CrewQuarters, LifeSupport, Sensor, Electronics
+from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon, ProjectileWeapon, CrewQuarters, LifeSupport, Sensor, Electronics, Shield, ShieldRegenerator
 from logger import log_debug
 
 
@@ -107,6 +107,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.current_ammo = 0
         self.energy_gen_rate = 0
         
+        # Shield Stats
+        self.max_shields = 0
+        self.current_shields = 0
+        self.shield_regen_rate = 0
+        self.shield_regen_cost = 0
+        
         # New Stats (from old init, but now calculated or managed differently)
         self.mass_limits_ok = True
         self.layer_status = {}
@@ -176,6 +182,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.max_ammo = 0
         self.max_energy = 0
         self.energy_gen_rate = 0
+        self.max_shields = 0
+        self.shield_regen_rate = 0
+        self.shield_regen_cost = 0
         
         # Budget & Scaling
         self.max_mass_budget = SHIP_CLASSES.get(self.ship_class, 1000)
@@ -207,11 +216,17 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                         self.max_energy += comp.capacity
                 elif isinstance(comp, Armor) and layer_type == LayerType.ARMOR:
                     self.layers[LayerType.ARMOR]['max_hp_pool'] += comp.max_hp
+                elif isinstance(comp, Shield):
+                    self.max_shields += comp.shield_capacity
+                elif isinstance(comp, ShieldRegenerator):
+                    self.shield_regen_rate += comp.regen_rate
+                    self.shield_regen_cost += comp.energy_cost
                     
         # Reset current resources if initializing (simplified)
         if self.current_fuel == 0: self.current_fuel = self.max_fuel
         if self.current_ammo == 0: self.current_ammo = self.max_ammo
         if self.current_energy == 0: self.current_energy = self.max_energy
+        if self.current_shields == 0 and self.max_shields > 0: self.current_shields = self.max_shields
         
         # Armor HP initialization
         if self.layers[LayerType.ARMOR]['hp_pool'] == 0:

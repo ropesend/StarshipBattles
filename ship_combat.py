@@ -25,6 +25,17 @@ class ShipCombatMixin:
             if self.current_energy > self.max_energy:
                 self.current_energy = self.max_energy
         
+        # Regenerate Shields (if energy available)
+        if self.current_shields < self.max_shields and self.shield_regen_rate > 0:
+            regen_amount = self.shield_regen_rate * dt / 60.0
+            cost_amount = self.shield_regen_cost * dt / 60.0
+            
+            if self.current_energy >= cost_amount:
+                self.current_energy -= cost_amount
+                self.current_shields += regen_amount
+                if self.current_shields > self.max_shields:
+                    self.current_shields = self.max_shields
+        
         # Component Cooldowns
         for layer in self.layers.values():
             for comp in layer['components']:
@@ -167,6 +178,13 @@ class ShipCombatMixin:
         if not self.is_alive: return
 
         remaining_damage = damage_amount
+        
+        # Shield Absorption
+        if self.current_shields > 0:
+            absorbed = min(self.current_shields, remaining_damage)
+            self.current_shields -= absorbed
+            remaining_damage -= absorbed
+            
         layer_order = [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]
         
         for ltype in layer_order:
