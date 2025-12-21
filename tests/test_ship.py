@@ -5,12 +5,13 @@ import pygame
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ship import Ship, LayerType
+from ship import Ship, LayerType, initialize_ship_data
 from components import load_components, create_component, Bridge
 
 class TestShip(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        initialize_ship_data("C:\\Dev\\Starship Battles") 
         load_components("data/components.json")
 
     def test_add_component_constraints(self):

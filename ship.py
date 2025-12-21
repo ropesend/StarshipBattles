@@ -13,13 +13,26 @@ VEHICLE_CLASSES = {}
 SHIP_CLASSES = {}  # Legacy compatibility - maps class name to max_mass
 
 def load_vehicle_classes(filepath="data/vehicleclasses.json"):
+    """
+    Load vehicle class definitions from JSON.
+    This should be called explicitly during game initialization.
+    """
     global VEHICLE_CLASSES, SHIP_CLASSES
+    # Check if we need to resolve path relative to this file
+    if not os.path.exists(filepath):
+        # Try finding it relative to module
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        abs_path = os.path.join(base_dir, filepath)
+        if os.path.exists(abs_path):
+            filepath = abs_path
+            
     try:
         with open(filepath, 'r') as f:
             data = json.load(f)
             VEHICLE_CLASSES = data.get('classes', {})
             # Build legacy SHIP_CLASSES dict for backward compatibility
             SHIP_CLASSES = {name: cls['max_mass'] for name, cls in VEHICLE_CLASSES.items()}
+            print(f"Loaded {len(VEHICLE_CLASSES)} vehicle classes.")
     except FileNotFoundError:
         print(f"Warning: {filepath} not found, using defaults")
         VEHICLE_CLASSES = {
@@ -33,10 +46,18 @@ def load_vehicle_classes(filepath="data/vehicleclasses.json"):
         }
         SHIP_CLASSES = {name: cls['max_mass'] for name, cls in VEHICLE_CLASSES.items()}
 
-# Load on module import
-load_vehicle_classes()
+def initialize_ship_data(base_path=None):
+    """Facade for initializing all ship-related data."""
+    if base_path:
+        path = os.path.join(base_path, "data", "vehicleclasses.json")
+        load_vehicle_classes(path)
+    else:
+        load_vehicle_classes()
 
-class Ship(PhysicsBody):
+from ship_physics import ShipPhysicsMixin
+from ship_combat import ShipCombatMixin
+
+class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     def __init__(self, name, x, y, color, team_id=0, ship_class="Escort"):
         super().__init__(x, y)
         self.name = name
@@ -83,17 +104,7 @@ class Ship(PhysicsBody):
         
         # Old init values, now calculated or managed differently
         self.current_mass = 0 # Replaced by self.mass and self.base_mass
-        # self.max_fuel = 0 # Now initialized to 1000
-        # self.current_fuel = 0 # Now initialized to 1000
-        # self.max_ammo = 0 # Now initialized to 100
-        # self.current_ammo = 0 # Now initialized to 100
-        # self.max_energy = 0 # Now initialized to 100
-        # self.current_energy = 0 # Now initialized to 100
-        # self.energy_gen_rate = 0 # Now initialized to 5.0
         
-        # Stats
-        # self.total_thrust = 0 # Now initialized to 0
-        # self.turn_speed = 0 # Now initialized to 0
         self.is_alive = True
         self.bridge_destroyed = False
         
@@ -104,10 +115,10 @@ class Ship(PhysicsBody):
         # Arcade Physics
         self.current_speed = 0
         self.acceleration_rate = 0
-        # self.max_speed = 0 # Now initialized to 0
         
-        # Collision
-        # self.radius = 40 # Now initialized to 40, but will be recalculated
+        # Aiming
+        self.aim_point = None
+        self.just_fired_projectiles = []
 
     def add_component(self, component: Component, layer_type: LayerType):
         if layer_type not in component.allowed_layers:
@@ -198,35 +209,19 @@ class Ship(PhysicsBody):
             self.layers[LayerType.ARMOR]['hp_pool'] = self.layers[LayerType.ARMOR]['max_hp_pool']
             
         # Physics Stats - INVERSE MASS SCALING
-        # Max Speed proportional to 1/Mass
-        # Accel proportional to 1/Mass^2
-        # Turn proportional to 1/Mass^1.5 (changed from mass^2 for less sluggish heavy ships)
         
         # Tuning Constants - scaled for tick-based physics (dt=1.0 per tick)
-        # Previously tuned for dt=1/60, now divided by 60
         K_THRUST = 2500  # Was 150000, now 150000/60
         K_TURN = 2500    # Was 150000, now 150000/60
         
         if self.mass > 0:
             self.acceleration_rate = (self.total_thrust * K_THRUST) / (self.mass * self.mass)
-            # turn_speed was already accumulated from thrusters above, now apply mass scaling
             raw_turn_speed = self.turn_speed  # This is the sum from all thrusters
             self.turn_speed = (raw_turn_speed * K_TURN) / (self.mass ** 1.5)  # Changed to 1.5 exponent
             
             # Max Speed = Thrust / Mass logic (Linear)
-            # Or maintain drag model?
-            # User said "top speed proportional to 1/ mass".
-            # With Accel ~ 1/m^2 and Drag constant, Max Speed would be 1/m^2. 
-            # So we must adjust Drag or Max Speed calculation explicitly.
-            
-            # Let's enforce Max Speed explicitly
             K_SPEED = 25  # Was 1500, now 1500/60
             self.max_speed = (self.total_thrust * K_SPEED) / self.mass if self.total_thrust > 0 else 0
-            
-            # Adjust Drag so that Accel / Drag ~= Max Speed?
-            # Accel = T*K_T/m^2.  MaxSpeed = T*K_S/m.
-            # Drag = Accel / MaxSpeed = (T*K_T/m^2) / (T*K_S/m) = (K_T/K_S) * (1/m)
-            # So Drag must be proportional to 1/m.
             
             if self.max_speed > 0:
                 self.drag = self.acceleration_rate / self.max_speed
@@ -249,7 +244,6 @@ class Ship(PhysicsBody):
         }
         self.layer_status = {}
         
-
         for layer_type, layer_data in self.layers.items():
             # Ratio is now based on MAX BUDGET, not current mass
             limit_ratio = self.layer_limits.get(layer_type, 1.0)
@@ -314,7 +308,6 @@ class Ship(PhysicsBody):
         
         # Crew required is the absolute value of negative crew capacity
         crew_required = abs(min(0, crew_capacity))
-        crew_housed = max(0, crew_capacity)
         
         # If we have crew requiring components but not enough life support
         if crew_required > 0 and life_support < crew_required:
@@ -343,7 +336,6 @@ class Ship(PhysicsBody):
                     else:
                         # Additive abilities: sum values
                         totals[ability_name] = totals.get(ability_name, 0) + value
-                # Object abilities (like VehicleLaunch) could be handled separately
         
         return totals
     
@@ -387,268 +379,14 @@ class Ship(PhysicsBody):
     def update(self, dt):
         if not self.is_alive: return
 
-        # Regenerate Energy (scaled for tick-based physics)
-        if self.current_energy < self.max_energy:
-            self.current_energy += self.energy_gen_rate * dt / 60.0
-            if self.current_energy > self.max_energy:
-                self.current_energy = self.max_energy
-        
-        # Arcade Movement Logic
-        # 1. Rotation and cooldowns are handled
-        pass # Rotation is done in rotate() or super().update? Wait, PhysicsBody handles rotation integration.
-        # PhysicsBody.update processes: angular_velocity.
-        # But we want direct control over rotation? "turning rate".
-        # PhysicsBody uses angular_velocity. We can keep that.
-        
-        # 2. Movement
-        # Explicitly set velocity based on direction and speed
-        forward = self.forward_vector()
-        self.velocity = forward * self.current_speed
-        self.position += self.velocity * dt
-        
-        # Apply Drag/Friction to Speed if NOT thrusting? -> Logic moved to thrust_forward/update
-        # If we are NOT thrusting, should we slow down?
-        # "Fuel should simply be consumed constantly by the engines"
-        # Let's handle friction here if no thrust input (assumed by lack of speed increase).
-        # Actually, we don't know "input" state here easily unless we track "is_thrusting".
-        # Let's assume standard drag applies to current_speed every frame, and thrust counteracts it.
-        # Simple damping (scaled for tick-based physics)
-        self.current_speed *= (1 - self.drag * dt / 60.0)
-        if self.current_speed < 0.1: self.current_speed = 0
-        
-        # Sync with PhysicsBody (just position mostly)
-        # We are overriding PhysicsBody.update behavior which did accel/velocity integration.
-        
-        self.angle += self.angular_velocity * dt
-        self.angle %= 360
-        self.angular_velocity = 0 # Reset each frame for direct control style? 
-        # If "turn_speed" is degrees/sec, we likely set angular_velocity in rotate().
-        
-        # Cooldowns
-        for layer in self.layers.values():
-            for comp in layer['components']:
-                if hasattr(comp, 'update') and comp.is_active:
-                    comp.update(dt)
+        # Delegate to Mixins
+        self.update_combat_cooldowns(dt)
+        self.update_physics_movement(dt)
         
         # Handle Firing
         self.just_fired_projectiles = []
         if getattr(self, 'comp_trigger_pulled', False):
              self.just_fired_projectiles = self.fire_weapons()
-
-    def thrust_forward(self, dt):
-        if self.current_fuel > 0:
-            # Consume Fuel
-            fuel_cost = 0
-            # Speed increase
-            thrust_added = 0
-            
-            for layer in self.layers.values():
-                for comp in layer['components']:
-                    if isinstance(comp, Engine) and comp.is_active:
-                        # Scale for tick-based physics: fuel_cost_per_sec was tuned for 60 fps
-                        fuel_cost += comp.fuel_cost_per_sec * dt / 60.0
-            
-            if self.current_fuel >= fuel_cost:
-                self.current_fuel -= fuel_cost
-                
-                # Apply Acceleration
-                # We add acceleration to speed, capped at max_speed
-                # Note: Drag is applied in update(), so we need to add enough to overcome it to reach max.
-                # If max_speed = accel / drag, then:
-                # speed += accel * dt
-                # speed *= (1 - drag * dt)
-                # Equilibrium: speed = speed * (1-drag*dt) + accel*dt -> speed*drag*dt = accel*dt -> speed = accel/drag. Checks out.
-                
-                self.current_speed += self.acceleration_rate * dt
-                # Hard cap just in case
-                if self.current_speed > self.max_speed:
-                    self.current_speed = self.max_speed
-            else:
-                self.current_fuel = 0
-
-    def rotate(self, dt, direction):
-        """Direction: -1 left, 1 right"""
-        self.angle += direction * self.turn_speed * dt
-
-    def take_damage(self, damage_amount):
-        if not self.is_alive: return
-
-        remaining_damage = damage_amount
-        
-        # Damage travels through layers
-        layer_order = [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]
-        
-        for ltype in layer_order:
-            if remaining_damage <= 0: break
-            remaining_damage = self._damage_layer(ltype, remaining_damage)
-
-    def _damage_layer(self, layer_type, damage):
-        """
-        Applies damage to a random living component in the layer.
-        Returns the remaining damage (0 if fully absorbed, >0 if overflow/pass-through).
-        """
-        layer = self.layers[layer_type]
-        living_components = [c for c in layer['components'] if c.is_active]
-        
-        if not living_components:
-            return damage # Pass through entire damage
-            
-        target = random.choice(living_components)
-        
-        # Apply damage
-        # Damage absorbed is min(hp, damage)
-        damage_absorbed = min(target.current_hp, damage)
-        target.take_damage(damage) 
-        
-        if isinstance(target, Bridge) and not target.is_active:
-            self.die()
-            
-        return damage - damage_absorbed
-
-    def die(self):
-        print(f"{self.name} EXPLODED!")
-        self.is_alive = False
-        self.velocity = pygame.math.Vector2(0,0)
-
-    def solve_lead(self, pos, vel, t_pos, t_vel, p_speed):
-        """
-        Calculates interception time t for a projectile.
-        Returns t > 0 if solution found, else 0.
-        """
-        D = t_pos - pos
-        V = t_vel - vel
-        
-        a = V.dot(V) - p_speed**2
-        b = 2 * V.dot(D)
-        c = D.dot(D)
-        
-        if a == 0:
-            if b == 0: return 0
-            t = -c / b
-            return t if t > 0 else 0
-        
-        disc = b*b - 4*a*c
-        if disc < 0: return 0
-        
-        sqrt_disc = math.sqrt(disc)
-        t1 = (-b + sqrt_disc) / (2*a)
-        t2 = (-b - sqrt_disc) / (2*a)
-        
-        ts = [x for x in [t1, t2] if x > 0]
-        return min(ts) if ts else 0
-
-    def fire_weapons(self):
-        """
-        Attempts to fire all ready weapons.
-        Returns a list of dicts representing attacks (Projectiles or Beams).
-        """
-        attacks = []
-
-        for layer in self.layers.values():
-            for comp in layer['components']:
-                if isinstance(comp, Weapon) and comp.is_active:
-                    # Determine cost and resource type
-                    cost = 0
-                    has_resource = False
-                    
-                    if isinstance(comp, BeamWeapon):
-                        cost = comp.energy_cost
-                        has_resource = (self.current_energy >= cost)
-                    else:
-                        cost = comp.ammo_cost
-                        has_resource = (self.current_ammo >= cost)
-                    
-                    if has_resource and comp.can_fire():
-                        # TARGETING
-                        valid_target = False
-                        aim_pos = None
-
-                        if self.current_target:
-                            target = self.current_target
-                            dist = self.position.distance_to(target.position)
-                            
-                            if dist <= comp.range:
-                                # Projectile Leading Logic
-                                aim_pos = target.position # Default
-                                
-                                if isinstance(comp, ProjectileWeapon):
-                                    # Quadratic Intercept
-                                    s_proj = comp.projectile_speed
-                                    # D = target.position - self.position # Original line, now target is self.current_target
-                                    # V = target.velocity - self.velocity # Original line
-                                    
-                                    # a_q = V.dot(V) - s_proj**2 # Original line
-                                    # b_q = 2 * V.dot(D) # Original line
-                                    t = self.solve_lead(self.position, self.velocity, self.current_target.position, self.current_target.velocity, comp.projectile_speed)
-                                    if t > 0:
-                                        aim_pos = self.current_target.position + self.current_target.velocity * t
-                                        self.aim_point = aim_pos
-                                        
-                                        # Correct for our own velocity (Relative Intecept)
-                                        # aim_vec should be the direction we point the muzzle.
-                                        # Since P_vel = Muzzle_Dir * Speed + Ship_Vel
-                                        # We need to aim at (Intercept - Ship_Motion)
-                                        intercept_vec = aim_pos - self.position
-                                        aim_vec = intercept_vec - self.velocity * t
-                                    else:
-                                         # No solution, aim at target
-                                         aim_pos = self.current_target.position
-                                         aim_vec = aim_pos - self.position
-                                else:
-                                     # Beam
-                                     self.aim_point = self.current_target.position
-                                     aim_vec = self.aim_point - self.position
-
-                                # ARC CHECK
-                                # aim_vec is now the Muzzle Direction
-                                aim_angle = math.degrees(math.atan2(aim_vec.y, aim_vec.x)) % 360
-                                ship_angle = self.angle
-                                comp_facing = (ship_angle + comp.facing_angle) % 360
-                                diff = (aim_angle - comp_facing + 180) % 360 - 180
-                                
-                                if abs(diff) <= comp.firing_arc:
-                                    valid_target = True
-                                else:
-                                    # ARC FAIL
-                                    # Only log occasionally or if specific flag? 
-                                    # For now, let's log.
-                                    log_debug(f"ARC FAIL: {self.name} weapon {comp.name} | ShipAng: {ship_angle:.1f} | FacMod: {comp.facing_angle} | GlbFac: {comp_facing:.1f} | Aim: {aim_angle:.1f} | Diff: {diff:.1f} | Arc: {comp.firing_arc}")
-
-                        if valid_target and comp.fire():
-                            # Deduct Resource
-                            if isinstance(comp, BeamWeapon):
-                                self.current_energy -= cost
-                                attacks.append({
-                                    'type': 'beam',
-                                    'source': self,
-                                    'target': self.current_target,
-                                    'damage': comp.damage,
-                                    'range': comp.range,
-                                    'origin': self.position,
-                                    'component': comp,
-                                    'direction': aim_vec.normalize() if aim_vec.length() > 0 else pygame.math.Vector2(1, 0),
-                                    'hit': True # Revisit hit chance?
-                                })
-                            else:
-                                self.current_ammo -= cost
-                                # Projectile
-                                speed = comp.projectile_speed if isinstance(comp, ProjectileWeapon) else 1000
-                                # aim_vec is already calculated correctly above (compensated for ShipVel)
-                                p_vel = aim_vec.normalize() * speed + self.velocity
-                                
-                                attacks.append({
-                                    'type': 'projectile',
-                                    'source': self,
-                                    'position': pygame.math.Vector2(self.position),
-                                    'velocity': p_vel,
-                                    'damage': comp.damage,
-                                    'range': comp.range,
-                                    'color': (255, 200, 50)
-                                })
-                                # LOG SHOT
-                                aim_dir_str = f"({aim_vec.x:.1f}, {aim_vec.y:.1f})"
-                                log_debug(f"SHOT: {self.name} fired {comp.name}. ShipAngle: {self.angle:.1f}, AimAngle: {aim_angle:.1f}, Diff: {diff:.1f}, Arc: {comp.firing_arc}")
-        return attacks
 
     def to_dict(self):
         """Serialize ship to dictionary."""
@@ -705,14 +443,7 @@ class Ship(PhysicsBody):
         s = Ship(name, 0, 0, color, data.get("team_id", 0), ship_class=data.get("ship_class", "Escort"))
         s.ai_strategy = data.get("ai_strategy", "optimal_firing_range")
         
-        # Load Layers
-        # We need access to COMPONENT_REGISTRY and MODIFIER_REGISTRY
-        # They are in components.py. Cyclic import?
-        # Ship imports components.py, so we can use components.COMPONENT_REGISTRY if exposed?
-        # components.py doesn't show COMPONENT_REGISTRY in imports in ship.py
-        # We need to import inside function to avoid circular dep if needed?
-        
-        from components import COMPONENT_REGISTRY, MODIFIER_REGISTRY, ApplicationModifier
+        from components import COMPONENT_REGISTRY, MODIFIER_REGISTRY
         
         for l_name, comps_list in data.get("layers", {}).items():
             layer_type = None
@@ -741,11 +472,11 @@ class Ship(PhysicsBody):
                         mid = m_dat['id']
                         mval = m_dat['value']
                         if mid in MODIFIER_REGISTRY:
-                            # FIX: Pass ID and Value, not the object. add_modifier handles creation.
                             new_comp.add_modifier(mid, mval)
                             
                     if isinstance(new_comp, Weapon):
-                        log_debug(f"LOADED Weapon {new_comp.name} on {name}: Facing={new_comp.facing_angle}, Arc={new_comp.firing_arc}")
+                        # Use logger if needed, but avoid circular import if possible or lazy import
+                        pass
                             
                     s.add_component(new_comp, layer_type)
         

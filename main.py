@@ -47,6 +47,10 @@ class Game:
         load_components(os.path.join(base_path, "data", "components.json"))
         load_modifiers(os.path.join(base_path, "data", "modifiers.json"))
         
+        # Initialize ship data (Vehicle Classes)
+        from ship import initialize_ship_data
+        initialize_ship_data(base_path)
+        
         # Load sprites
         sprite_mgr = SpriteManager.get_instance()
         sprite_mgr.load_atlas(os.path.join(base_path, "resources", "images", "Components.bmp"))
