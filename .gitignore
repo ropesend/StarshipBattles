@@ -8,12 +8,8 @@ venv/
 .env
 .venv
 .vscode/
-*.json
-!data/components.json
-!data/modifiers.json
-!data/vehicleclasses.json
-!data/abilities.json
-!data/combatstrategies.json
-!builder_theme.json
-!ShipOne.json
-!component_presets.json
+
+# Allow all JSON files in data/ and ships/ folders
+# Ignore root-level config JSONs except specific ones
+/builder_theme.json
+/component_presets.json

@@ -1,0 +1,244 @@
+{
+    "name": "DN 1",
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "team_id": 0,
+    "ship_class": "Dreadnought",
+    "ai_strategy": "max_weapons_range",
+    "layers": {
+        "CORE": [
+            {
+                "id": "bridge",
+                "modifiers": []
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": []
+            },
+            {
+                "id": "life_support",
+                "modifiers": []
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            },
+            {
+                "id": "generator",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            },
+            {
+                "id": "battery",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            }
+        ],
+        "INNER": [
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            },
+            {
+                "id": "thruster",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            },
+            {
+                "id": "thruster",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            },
+            {
+                "id": "thruster",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            }
+        ],
+        "OUTER": [
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "turret_mount",
+                        "value": 180
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 4
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "turret_mount",
+                        "value": 180
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 4
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "turret_mount",
+                        "value": 180
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 4
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "turret_mount",
+                        "value": 180
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 4
+                    }
+                ]
+            }
+        ],
+        "ARMOR": [
+            {
+                "id": "armor_plate",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 32.0
+                    }
+                ]
+            }
+        ]
+    }
+}

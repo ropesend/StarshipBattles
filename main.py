@@ -391,11 +391,12 @@ class Game:
         self.state = MENU
         
     def scan_ship_designs(self):
-        """Scan for available ship design JSON files."""
+        """Scan for available ship design JSON files in ships/ folder."""
         import os
         import glob
         base_path = os.path.dirname(os.path.abspath(__file__))
-        json_files = glob.glob(os.path.join(base_path, "*.json"))
+        ships_folder = os.path.join(base_path, "ships")
+        json_files = glob.glob(os.path.join(ships_folder, "*.json"))
         
         designs = []
         for filepath in json_files:
@@ -418,13 +419,20 @@ class Game:
                 pass
         return designs
     
-    def start_battle_setup(self):
+    def start_battle_setup(self, preserve_teams=False):
         """Enter battle setup screen."""
         self.state = BATTLE_SETUP
         self.available_ship_designs = self.scan_ship_designs()
-        self.setup_team1 = []  # List of {'design': design_dict, 'strategy': str}
-        self.setup_team2 = []
+        
+        # Only reset teams if not preserving (first time or explicit reset)
+        if not preserve_teams or not hasattr(self, 'setup_team1'):
+            self.setup_team1 = []  # List of {'design': design_dict, 'strategy': str}
+            self.setup_team2 = []
+        
         self.setup_scroll_offset = 0
+        
+        # AI dropdown state
+        self.ai_dropdown_open = None  # (team_idx, ship_idx) or None
         
         # Import AI strategies
         from ai import COMBAT_STRATEGIES
@@ -470,10 +478,9 @@ class Game:
                         if y + 25 <= my < y + 50 and mx >= col2_x + 200:
                             self.setup_team1.pop(i)
                             break
-                        # Cycle strategy on click
-                        if y <= my < y + 25:
-                            current_idx = self.ai_strategies.index(entry['strategy']) if entry['strategy'] in self.ai_strategies else 0
-                            entry['strategy'] = self.ai_strategies[(current_idx + 1) % len(self.ai_strategies)]
+                        # Open dropdown for AI selection
+                        if y + 25 <= my < y + 50 and mx < col2_x + 200:
+                            self.ai_dropdown_open = (1, i)  # Team 1, ship index
                             break
                 
                 # Check team 2 remove buttons
@@ -484,10 +491,9 @@ class Game:
                         if y + 25 <= my < y + 50 and mx >= col3_x + 200:
                             self.setup_team2.pop(i)
                             break
-                        # Cycle strategy
-                        if y <= my < y + 25:
-                            current_idx = self.ai_strategies.index(entry['strategy']) if entry['strategy'] in self.ai_strategies else 0
-                            entry['strategy'] = self.ai_strategies[(current_idx + 1) % len(self.ai_strategies)]
+                        # Open dropdown for AI selection
+                        if y + 25 <= my < y + 50 and mx < col3_x + 200:
+                            self.ai_dropdown_open = (2, i)  # Team 2, ship index
                             break
                 
                 # Begin Battle button
@@ -499,6 +505,31 @@ class Game:
                 # Return button
                 if sw // 2 + 120 <= mx < sw // 2 + 240 and btn_y <= my < btn_y + 50:
                     self.state = MENU
+                
+                # Clear All button
+                if sw // 2 - 300 <= mx < sw // 2 - 180 and btn_y <= my < btn_y + 50:
+                    self.setup_team1 = []
+                    self.setup_team2 = []
+                    self.ai_dropdown_open = None
+                
+                # Check for dropdown clicks
+                if self.ai_dropdown_open is not None:
+                    team_idx, ship_idx = self.ai_dropdown_open
+                    team_list = self.setup_team1 if team_idx == 1 else self.setup_team2
+                    col_x = col2_x if team_idx == 1 else col3_x
+                    
+                    # Dropdown position
+                    ship_y = 150 + ship_idx * 60 + 55
+                    dropdown_height = len(self.ai_strategies) * 22
+                    
+                    if col_x <= mx < col_x + 180 and ship_y <= my < ship_y + dropdown_height:
+                        # Click on dropdown option
+                        option_idx = (my - ship_y) // 22
+                        if 0 <= option_idx < len(self.ai_strategies):
+                            team_list[ship_idx]['strategy'] = self.ai_strategies[option_idx]
+                    
+                    # Close dropdown on any click
+                    self.ai_dropdown_open = None
     
     def draw_battle_setup(self):
         """Draw battle setup screen."""
@@ -587,6 +618,35 @@ class Game:
         pygame.draw.rect(self.screen, (150, 150, 150), (sw // 2 + 120, btn_y, 120, 50), 2)
         ret_text = label_font.render("RETURN", True, (200, 200, 200))
         self.screen.blit(ret_text, (sw // 2 + 180 - ret_text.get_width() // 2, btn_y + 12))
+        
+        # Clear All button
+        pygame.draw.rect(self.screen, (120, 50, 50), (sw // 2 - 300, btn_y, 120, 50))
+        pygame.draw.rect(self.screen, (200, 100, 100), (sw // 2 - 300, btn_y, 120, 50), 2)
+        clr_text = label_font.render("CLEAR ALL", True, (255, 200, 200))
+        self.screen.blit(clr_text, (sw // 2 - 240 - clr_text.get_width() // 2, btn_y + 12))
+        
+        # Draw AI dropdown if open
+        if hasattr(self, 'ai_dropdown_open') and self.ai_dropdown_open is not None:
+            team_idx, ship_idx = self.ai_dropdown_open
+            col_x = col2_x if team_idx == 1 else col3_x
+            ship_y = 150 + ship_idx * 60 + 55
+            
+            dropdown_w = 180
+            dropdown_h = len(self.ai_strategies) * 22
+            
+            # Background
+            pygame.draw.rect(self.screen, (30, 30, 40), (col_x, ship_y, dropdown_w, dropdown_h))
+            pygame.draw.rect(self.screen, (100, 100, 150), (col_x, ship_y, dropdown_w, dropdown_h), 1)
+            
+            # Options
+            for idx, strat_id in enumerate(self.ai_strategies):
+                strat_name = COMBAT_STRATEGIES.get(strat_id, {}).get('name', strat_id)
+                opt_y = ship_y + idx * 22
+                
+                # Highlight on hover (approximate)
+                text_color = (220, 220, 220)
+                opt_text = item_font.render(strat_name, True, text_color)
+                self.screen.blit(opt_text, (col_x + 5, opt_y + 3))
     
     def start_battle_from_setup(self):
         """Start battle using ships selected in battle setup."""
@@ -737,7 +797,7 @@ class Game:
                 self.beams.append({
                     'start': start_pos,
                     'end': end_pos,
-                    'timer': 0.2, 
+                    'timer': 0.8,  # Visual duration - beams visible longer
                     'color': (100, 255, 255)
                 })
 
@@ -1044,13 +1104,17 @@ class Game:
         return False
     
     def _get_expanded_height(self, ship):
-        """Calculate height needed for expanded ship stats."""
-        # Base stats: 6 lines (HP, Fuel, Energy, Ammo, Speed, Target)
-        base_height = 6 * 18
-        # Components: count all components
+        """Calculate height needed for expanded ship stats.
+        Must match exactly what _draw_ship_details produces."""
+        # HP, Fuel, Energy, Ammo, Speed = 5 lines @ 16px each = 80
+        # Target = 1 line @ 18px = 18
+        # Components header = 16px
+        # Each component = 14px
+        # Final padding = 5px
+        base_height = 5 * 16 + 18 + 16  # 80 + 18 + 16 = 114
         comp_count = sum(len(l['components']) for l in ship.layers.values())
-        comp_height = comp_count * 16 + 20  # +20 for header
-        return base_height + comp_height + 10  # +10 padding
+        comp_height = comp_count * 14
+        return base_height + comp_height + 5  # +5 padding
     
     def _draw_bar(self, surface, x, y, width, height, pct, color):
         """Draw a progress bar."""
@@ -1238,10 +1302,11 @@ class Game:
         
         # Draw Objects
         for p in self.projectiles:
-             # simple line
-             start = self.camera.world_to_screen(p['pos'] - p['vel'].normalize() * 10)
-             end = self.camera.world_to_screen(p['pos'])
-             pygame.draw.line(self.screen, (255, 255, 0), start, end, 2)
+            # Draw projectile trail (longer for visibility)
+            trail_length = 50  # Visual only - doesn't affect physics
+            start = self.camera.world_to_screen(p['pos'] - p['vel'].normalize() * trail_length)
+            end = self.camera.world_to_screen(p['pos'])
+            pygame.draw.line(self.screen, (255, 220, 50), start, end, 2)  # Yellow color
              
         for s in self.ships:
             draw_ship(self.screen, s, self.camera)
@@ -1329,7 +1394,7 @@ class Game:
                         elif event.key == pygame.K_COMMA:
                             # Slow down simulation
                             if not self.sim_paused:
-                                self.sim_speed_multiplier = max(0.0625, self.sim_speed_multiplier / 2.0)
+                                self.sim_speed_multiplier = max(0.01, self.sim_speed_multiplier / 2.0)  # Allow slower
                         elif event.key == pygame.K_PERIOD:
                             # Speed up simulation
                             if not self.sim_paused:
@@ -1343,7 +1408,7 @@ class Game:
                         mx, my = event.pos
                         # Check if battle is over and return button clicked
                         if hasattr(self, 'battle_end_button_rect') and self.battle_end_button_rect.collidepoint(mx, my):
-                            self.start_battle_setup()
+                            self.start_battle_setup(preserve_teams=True)
                         # Check if click is on stats panel
                         elif not self.handle_stats_panel_click(mx, my, event.button):
                             # Click was not on panel - could add other click handling here

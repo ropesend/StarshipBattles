@@ -981,7 +981,10 @@ class BuilderSceneGUI:
     def _save_ship(self):
         """Save ship design to file."""
         data = self.ship.to_dict()
+        import os
+        ships_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ships")
         filename = filedialog.asksaveasfilename(
+            initialdir=ships_folder,
             defaultextension=".json",
             filetypes=[("JSON Files", "*.json")]
         )
@@ -995,7 +998,12 @@ class BuilderSceneGUI:
                 
     def _load_ship(self):
         """Load ship design from file."""
-        filename = filedialog.askopenfilename(filetypes=[("JSON Files", "*.json")])
+        import os
+        ships_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ships")
+        filename = filedialog.askopenfilename(
+            initialdir=ships_folder,
+            filetypes=[("JSON Files", "*.json")]
+        )
         if filename:
             try:
                 with open(filename, 'r') as f:
