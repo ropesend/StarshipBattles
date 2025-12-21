@@ -947,36 +947,106 @@ class BuilderSceneGUI:
                 screen.blit(scaled, (list_x, y_pos))
                 
     def _draw_tooltip(self, screen, comp):
-        """Draw tooltip."""
+        """Draw tooltip with comprehensive component info."""
         mx, my = pygame.mouse.get_pos()
         font = pygame.font.SysFont("Arial", 14)
         font_sm = pygame.font.SysFont("Arial", 12)
         
-        lines = [
-            (comp.name, (255, 255, 100)),
-            (f"Type: {comp.type_str}", (200, 200, 200)),
-            (f"Mass: {comp.mass:.1f}t", (200, 200, 200)),
-            (f"HP: {comp.max_hp:.0f}", (200, 200, 200)),
-        ]
+        lines = []
         
-        if hasattr(comp, 'damage'): lines.append((f"Damage: {comp.damage}", (255, 150, 150)))
-        if hasattr(comp, 'range'): lines.append((f"Range: {comp.range}", (255, 150, 150)))
-        if hasattr(comp, 'reload_time'): lines.append((f"Reload: {comp.reload_time}s", (255, 150, 150)))
-        if hasattr(comp, 'firing_arc'): lines.append((f"Firing Arc: {comp.firing_arc}°", (255, 150, 150)))
-        if hasattr(comp, 'thrust_force'): lines.append((f"Thrust: {comp.thrust_force}", (100, 255, 100)))
-        if hasattr(comp, 'fuel_cost_per_sec'): lines.append((f"Fuel Cost: {comp.fuel_cost_per_sec}/s", (255, 200, 100)))
+        # Header
+        lines.append((comp.name, (255, 255, 100)))
         
+        # Basic Stats
+        lines.append((f"Type: {comp.type_str}", (200, 200, 200)))
+        lines.append((f"Mass: {comp.mass:.1f}t", (200, 200, 200)))
+        lines.append((f"HP: {comp.max_hp:.0f}", (200, 200, 200)))
+        
+        # Allowed Layers
+        layers = [l.name for l in comp.allowed_layers]
+        lines.append((f"Layers: {', '.join(layers)}", (150, 150, 200)))
+        
+        # Separator
+        lines.append(("---", (100, 100, 100)))
+        
+        # Weapon Stats
+        if hasattr(comp, 'damage') and comp.damage > 0:
+            lines.append((f"Damage: {comp.damage}", (255, 100, 100)))
+        if hasattr(comp, 'range') and comp.range > 0:
+            lines.append((f"Range: {comp.range}", (255, 165, 0)))
+        if hasattr(comp, 'reload_time'):
+            lines.append((f"Reload: {comp.reload_time}s", (255, 200, 100)))
+        if hasattr(comp, 'ammo_cost') and comp.ammo_cost > 0:
+             lines.append((f"Ammo Cost: {comp.ammo_cost}", (200, 200, 50)))
+        if hasattr(comp, 'energy_cost') and comp.energy_cost > 0:
+             lines.append((f"Energy Cost: {comp.energy_cost}", (100, 200, 255)))
+        if hasattr(comp, 'firing_arc'):
+            lines.append((f"Arc: {comp.firing_arc}°", (255, 100, 255)))
+            
+        # Engine Stats
+        if hasattr(comp, 'thrust_force') and comp.thrust_force > 0:
+            lines.append((f"Thrust: {comp.thrust_force}", (100, 255, 100)))
+        if hasattr(comp, 'turn_speed') and comp.turn_speed > 0:
+            lines.append((f"Turn Speed: {comp.turn_speed}°/s", (100, 255, 150)))
+        if hasattr(comp, 'fuel_cost_per_sec') and comp.fuel_cost_per_sec > 0:
+            lines.append((f"Fuel Usage: {comp.fuel_cost_per_sec}/s", (255, 165, 0)))
+            
+        # Resource Stats (Tank/Gen)
+        if hasattr(comp, 'capacity') and comp.capacity > 0:
+            rtype = getattr(comp, 'resource_type', 'Resource').title()
+            lines.append((f"{rtype} Cap: {comp.capacity}", (100, 255, 255)))
+        if hasattr(comp, 'energy_generation_rate') and comp.energy_generation_rate > 0:
+            lines.append((f"Energy Gen: {comp.energy_generation_rate}/s", (255, 255, 0)))
+            
+        # Shield Stats
+        if hasattr(comp, 'shield_capacity') and comp.shield_capacity > 0:
+             lines.append((f"Shield Max: {comp.shield_capacity}", (0, 255, 255)))
+        if hasattr(comp, 'regen_rate') and comp.regen_rate > 0:
+             lines.append((f"Shield Regen: {comp.regen_rate}/s", (0, 200, 255)))
+        if hasattr(comp, 'energy_cost') and hasattr(comp, 'regen_rate') and comp.energy_cost > 0:
+             lines.append((f"Regen Cost: {comp.energy_cost}/s", (100, 150, 255)))
+             
+        # Abilities
+        if comp.abilities:
+            lines.append(("Abilities:", (255, 255, 255)))
+            for k, v in comp.abilities.items():
+                if k == "CommandAndControl":
+                    lines.append(("  • Command & Control", (150, 255, 150)))
+                elif k == "CrewCapacity":
+                    label = "Crew Capacity" if v > 0 else "Crew Required"
+                    val = v if v > 0 else -v
+                    color = (150, 255, 150) if v > 0 else (255, 150, 150)
+                    lines.append((f"  • {label}: {val}", color))
+                elif k == "LifeSupportCapacity":
+                    lines.append((f"  • Life Support: {v}", (150, 255, 255)))
+                elif k == "ToHitAttackModifier":
+                    lines.append((f"  • Targeting: x{v}", (255, 100, 100)))
+                elif k == "ToHitDefenseModifier":
+                    lines.append((f"  • ECM/Jamming: x{v}", (100, 255, 255)))
+                # Don't duplicate redundant info (ShieldProjection already handled by direct prop check usually, 
+                # but if class logic differs from json ability, we might duplicates. 
+                # Our classes map abilities to props, so we should skip if processed.)
+                elif k in ["ShieldProjection", "ShieldRegeneration", "EnergyConsumption", "EnergyGeneration", 
+                           "FuelStorage", "AmmoStorage", "EnergyStorage", "CombatPropulsion", "ManeuveringThruster",
+                           "ProjectileWeapon", "BeamWeapon", "Armor"]:
+                    continue # Already shown as main stat
+                else:
+                    lines.append((f"  • {k}: {v}", (200, 200, 200)))
+        
+        # Modifiers
         if comp.modifiers:
-            lines.append(("", (0, 0, 0)))
             lines.append(("Modifiers:", (150, 255, 150)))
             for m in comp.modifiers:
                 lines.append((f"  • {m.definition.name}: {m.value:.0f}", (150, 255, 150)))
                 
         line_height = 18
         padding = 10
+        # Filter None/Empty lines
+        lines = [l for l in lines if l[0] != "---" or l[1] != (0,0,0)] # "---" is separator, handle logic below
+        
         max_width = max(font.size(l[0])[0] for l in lines) + padding * 2
         box_h = len(lines) * line_height + padding * 2
-        box_w = max(max_width, 200)
+        box_w = max(max_width, 220)
         
         box_x = mx + 15
         box_y = my + 15
@@ -992,7 +1062,9 @@ class BuilderSceneGUI:
             
         y = box_y + padding
         for text, color in lines:
-            if text:
+            if text == "---":
+                pygame.draw.line(screen, color, (box_x + 5, y + line_height//2), (box_x + box_w - 5, y + line_height//2))
+            else:
                 surf = font_sm.render(text, True, color)
                 screen.blit(surf, (box_x + padding, y))
             y += line_height
