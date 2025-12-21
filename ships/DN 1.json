@@ -7,7 +7,7 @@
     ],
     "team_id": 0,
     "ship_class": "Dreadnought",
-    "theme_id": "Federation",
+    "theme_id": "Atlantians",
     "ai_strategy": "max_weapons_range",
     "layers": {
         "CORE": [

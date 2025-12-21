@@ -556,7 +556,16 @@ class BuilderSceneGUI:
         if new_ship:
             self.ship = new_ship
             self.name_entry.set_text(self.ship.name)
-            self.class_dropdown.selected_option = self.ship.ship_class
+            
+            # Sync Class Dropdown
+            if self.ship.ship_class in self.class_dropdown.options_list:
+                self.class_dropdown.selected_option = self.ship.ship_class
+            
+            # Sync Theme Dropdown
+            if hasattr(self, 'theme_dropdown'):
+                curr_theme = getattr(self.ship, 'theme_id', 'Federation')
+                if curr_theme in self.theme_dropdown.options_list:
+                    self.theme_dropdown.selected_option = curr_theme
             
             from ai import COMBAT_STRATEGIES
             ai_display = self.ship.ai_strategy.replace('_', ' ').title()
@@ -759,6 +768,35 @@ class BuilderSceneGUI:
             found = self.get_component_at_pos((mx, my))
             if found:
                 self.hovered_component = found[2]
+        else:
+             # Check component list hover (Manual calculation)
+             list_x = 8
+             list_y = 40
+             item_height = 40
+             icon_size = 32
+             # Panel width is left_panel_width (default 260)
+             if mx < self.left_panel_width and my > list_y:
+                 idx = (my - list_y) // item_height
+                 if 0 <= idx < len(self.available_components):
+                     comp_template = self.available_components[idx]
+                     # Clone and apply modifiers for preview
+                     preview_comp = comp_template.clone()
+                     
+                     # Apply current template modifiers
+                     for m_id, val in self.template_modifiers.items():
+                        if m_id in MODIFIER_REGISTRY:
+                            mod_def = MODIFIER_REGISTRY[m_id]
+                            allow = True
+                            if mod_def.restrictions:
+                                if 'allow_types' in mod_def.restrictions and preview_comp.type_str not in mod_def.restrictions['allow_types']:
+                                    allow = False
+                            if allow:
+                                preview_comp.add_modifier(m_id)
+                                m = preview_comp.get_modifier(m_id)
+                                if m: m.value = val
+                     
+                     preview_comp.recalculate_stats()
+                     self.hovered_component = preview_comp
                 
         # Update ship name from entry
         if self.name_entry.get_text() != self.ship.name:
@@ -817,7 +855,7 @@ class BuilderSceneGUI:
             
             # Use aspect ratio preserving scale
             img_w, img_h = ship_img.get_size()
-            target_size = max_r * 2
+            target_size = max_r * 2 * 2.5  # Increased scale by 2.5x as requested
             
             # Simple scale to fit logic
             scale = target_size / max(img_w, img_h)
