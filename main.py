@@ -1013,7 +1013,7 @@ class Game:
         accumulator = 0.0
         
         while self.running:
-            frame_time = self.clock.tick(FPS) / 1000.0
+            frame_time = self.clock.tick(0) / 1000.0  # No FPS cap - run as fast as possible
             
             events = pygame.event.get()
             for event in events:
@@ -1062,24 +1062,19 @@ class Game:
                 self.builder_scene.process_ui_time(frame_time)
                 self.builder_scene.draw(self.screen)
             elif self.state == BATTLE:
-                # Fixed timestep simulation for determinism
-                # Apply speed multiplier to frame_time before accumulating
+                # Tick-based simulation - one physics step per frame
+                # sim_speed_multiplier controls how many ticks per frame
                 if not self.sim_paused:
-                    accumulator += frame_time * self.sim_speed_multiplier
-                events_processed = False
-                
-                while accumulator >= FIXED_DT:
-                    # Pass events only on first iteration, use frame_time for camera smoothness
-                    self.update_battle(
-                        FIXED_DT, 
-                        events if not events_processed else [],
-                        camera_dt=frame_time if not events_processed else 0
-                    )
-                    events_processed = True
-                    accumulator -= FIXED_DT
-                
-                # Still allow camera movement when paused
-                if self.sim_paused and not events_processed:
+                    # Run physics ticks based on speed multiplier
+                    ticks_to_run = max(1, int(self.sim_speed_multiplier))
+                    for _ in range(ticks_to_run):
+                        self.update_battle(
+                            1.0,  # Fixed dt=1.0 per tick (time-independent)
+                            events if _ == 0 else [],
+                            camera_dt=frame_time if _ == 0 else 0
+                        )
+                else:
+                    # Still allow camera movement when paused
                     self.camera.update_input(frame_time, events)
                 
                 self.draw_battle()

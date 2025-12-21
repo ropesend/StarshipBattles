@@ -201,9 +201,10 @@ class Ship(PhysicsBody):
         # Accel proportional to 1/Mass^2
         # Turn proportional to 1/Mass^1.5 (changed from mass^2 for less sluggish heavy ships)
         
-        # Tuning Constants to make it feel right
-        K_THRUST = 150000 
-        K_TURN = 150000  # Adjusted for 1.5 exponent
+        # Tuning Constants - scaled for tick-based physics (dt=1.0 per tick)
+        # Previously tuned for dt=1/60, now divided by 60
+        K_THRUST = 2500  # Was 150000, now 150000/60
+        K_TURN = 2500    # Was 150000, now 150000/60
         
         if self.mass > 0:
             self.acceleration_rate = (self.total_thrust * K_THRUST) / (self.mass * self.mass)
@@ -218,7 +219,7 @@ class Ship(PhysicsBody):
             # So we must adjust Drag or Max Speed calculation explicitly.
             
             # Let's enforce Max Speed explicitly
-            K_SPEED = 1500
+            K_SPEED = 25  # Was 1500, now 1500/60
             self.max_speed = (self.total_thrust * K_SPEED) / self.mass if self.total_thrust > 0 else 0
             
             # Adjust Drag so that Accel / Drag ~= Max Speed?
@@ -385,9 +386,9 @@ class Ship(PhysicsBody):
     def update(self, dt):
         if not self.is_alive: return
 
-        # Regenerate Energy
+        # Regenerate Energy (scaled for tick-based physics)
         if self.current_energy < self.max_energy:
-            self.current_energy += self.energy_gen_rate * dt
+            self.current_energy += self.energy_gen_rate * dt / 60.0
             if self.current_energy > self.max_energy:
                 self.current_energy = self.max_energy
         
@@ -410,8 +411,8 @@ class Ship(PhysicsBody):
         # Let's handle friction here if no thrust input (assumed by lack of speed increase).
         # Actually, we don't know "input" state here easily unless we track "is_thrusting".
         # Let's assume standard drag applies to current_speed every frame, and thrust counteracts it.
-        # Simple damping:
-        self.current_speed *= (1 - self.drag * dt)
+        # Simple damping (scaled for tick-based physics)
+        self.current_speed *= (1 - self.drag * dt / 60.0)
         if self.current_speed < 0.1: self.current_speed = 0
         
         # Sync with PhysicsBody (just position mostly)
@@ -443,7 +444,8 @@ class Ship(PhysicsBody):
             for layer in self.layers.values():
                 for comp in layer['components']:
                     if isinstance(comp, Engine) and comp.is_active:
-                        fuel_cost += comp.fuel_cost_per_sec * dt
+                        # Scale for tick-based physics: fuel_cost_per_sec was tuned for 60 fps
+                        fuel_cost += comp.fuel_cost_per_sec * dt / 60.0
             
             if self.current_fuel >= fuel_cost:
                 self.current_fuel -= fuel_cost

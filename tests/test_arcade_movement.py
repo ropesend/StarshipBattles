@@ -33,11 +33,12 @@ class TestArcadeMovement(unittest.TestCase):
         self.ship.current_fuel = self.ship.max_fuel
 
     def test_stats(self):
-        # Physics validation using current INVERSE MASS SCALING model
+        # Physics validation using tick-based INVERSE MASS SCALING model
         # Acceleration = (Thrust * K_THRUST) / (Mass^2)
         # Max Speed = (Thrust * K_SPEED) / Mass
-        K_THRUST = 150000
-        K_SPEED = 1500
+        # Constants scaled for dt=1.0 per tick
+        K_THRUST = 2500   # Tick-based constant
+        K_SPEED = 25      # Tick-based constant
         
         expected_accel = (self.ship.total_thrust * K_THRUST) / (self.ship.mass ** 2)
         self.assertAlmostEqual(self.ship.acceleration_rate, expected_accel, places=2)
