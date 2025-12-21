@@ -37,60 +37,93 @@ def draw_ship(surface, ship, camera):
     base_radius = ship.radius
     scaled_radius = scale(base_radius)
     
-    if scaled_radius < 3:
-        # Draw simple dot icon for low zoom
+    # Draw Theme Image if available
+    from ship_theme import ShipThemeManager
+    theme_mgr = ShipThemeManager.get_instance()
+    theme_id = getattr(ship, 'theme_id', 'Federation')
+    ship_img = theme_mgr.get_image(theme_id, ship.ship_class)
+    
+    drawn_image = False
+    
+    if ship_img and camera.zoom > 0.1:
+        # Scale logic: "scaled so that the visible portion of the vesle is approximatly the same length as the diameter of the circle"
+        # Circle diameter = 2 * base_radius. 
+        target_size = 2 * scale(base_radius) * 1.2 # Slightly larger than collision circle looks better
+        
+        img_w, img_h = ship_img.get_size()
+        scale_factor = target_size / max(img_w, img_h)
+        
+        rotation_angle = -ship.angle - 90
+        
+        new_w = int(img_w * scale_factor)
+        new_h = int(img_h * scale_factor)
+        
+        if new_w > 0 and new_h > 0:
+            scaled_img = pygame.transform.scale(ship_img, (new_w, new_h))
+            rotated_img = pygame.transform.rotate(scaled_img, rotation_angle)
+            
+            rect = rotated_img.get_rect(center=(cx, cy))
+            surface.blit(rotated_img, rect)
+            drawn_image = True
+            
+    # Draw Overlay Circles (Collision Radius)
+    # "I want to have a empty circle that should represent the radius of the vesle when the ovelay is on"
+    show_overlay = getattr(camera, 'show_overlay', False) 
+    
+    if show_overlay:
+        pygame.draw.circle(surface, (100, 255, 100), (cx, cy), scale(base_radius), 1)
+        
+        # Draw Layers (from large to small)
+        pygame.draw.circle(surface, LAYER_COLORS[LayerType.ARMOR], (cx, cy), scale(base_radius), 1)
+        pygame.draw.circle(surface, LAYER_COLORS[LayerType.OUTER], (cx, cy), scale(base_radius * 0.8), 1)
+        pygame.draw.circle(surface, LAYER_COLORS[LayerType.INNER], (cx, cy), scale(base_radius * 0.5), 1)
+        pygame.draw.circle(surface, LAYER_COLORS[LayerType.CORE], (cx, cy), scale(base_radius * 0.2), 1)
+
+        # Draw Components (Simplified visualization for Battle)
+        if camera.zoom > 0.3:
+            for ltype, data in ship.layers.items():
+                radius = 0
+                if ltype == LayerType.CORE: radius = base_radius * 0.1
+                elif ltype == LayerType.INNER: radius = base_radius * 0.35
+                elif ltype == LayerType.OUTER: radius = base_radius * 0.65
+                elif ltype == LayerType.ARMOR: radius = base_radius * 0.9
+                
+                comps = data['components']
+                if not comps:
+                    continue
+                
+                angle_step = 360 / len(comps)
+                current_angle = ship.angle  # Rotate with ship
+                
+                for comp in comps:
+                    if not comp.is_active:
+                        continue
+                    rad = math.radians(current_angle)
+                    off_x = math.cos(rad) * radius
+                    off_y = math.sin(rad) * radius
+                    
+                    comp_world_pos = ship.position + pygame.math.Vector2(off_x, off_y)
+                    comp_screen = camera.world_to_screen(comp_world_pos)
+                    
+                    color = (200, 200, 200)
+                    if isinstance(comp, Weapon): color = (255, 50, 50)
+                    elif isinstance(comp, Engine): color = (50, 255, 100)
+                    elif isinstance(comp, Armor): color = (100, 100, 100)
+                    
+                    pygame.draw.circle(surface, color, (int(comp_screen.x), int(comp_screen.y)), max(1, scale(3)))
+                    current_angle += angle_step
+        
+        # Draw Direction indicator
+        dir_vec = ship.forward_vector()
+        end_pos_screen = camera.world_to_screen(ship.position + dir_vec * (base_radius + 10))
+        pygame.draw.line(surface, (255, 255, 0), (cx, cy), (int(end_pos_screen.x), int(end_pos_screen.y)), max(1, scale(2)))
+
+    
+    if scaled_radius < 3 and not drawn_image:
+        # Draw simple dot icon for low zoom if no image
         color = ship.color  # Use ship identity color
         pygame.draw.circle(surface, color, (cx, cy), 3)  # Fixed 3px dot
-        # Direction
-        dir_vec = ship.forward_vector()
-        end_pos = camera.world_to_screen(ship.position + dir_vec * 100)
-        pygame.draw.line(surface, (255, 255, 0), (cx, cy), (int(end_pos.x), int(end_pos.y)), 1)
         return
-
-    # Draw Layers (from large to small)
-    pygame.draw.circle(surface, LAYER_COLORS[LayerType.ARMOR], (cx, cy), scale(base_radius))
-    pygame.draw.circle(surface, LAYER_COLORS[LayerType.OUTER], (cx, cy), scale(base_radius * 0.8))
-    pygame.draw.circle(surface, LAYER_COLORS[LayerType.INNER], (cx, cy), scale(base_radius * 0.5))
-    pygame.draw.circle(surface, LAYER_COLORS[LayerType.CORE], (cx, cy), scale(base_radius * 0.2))
-    
-    # Draw Direction indicator
-    dir_vec = ship.forward_vector()
-    end_pos_screen = camera.world_to_screen(ship.position + dir_vec * (base_radius + 10))
-    pygame.draw.line(surface, (255, 255, 0), (cx, cy), (int(end_pos_screen.x), int(end_pos_screen.y)), max(1, scale(2)))
-
-    # Draw Components (Simplified visualization for Battle)
-    if camera.zoom > 0.3:
-        for ltype, data in ship.layers.items():
-            radius = 0
-            if ltype == LayerType.CORE: radius = base_radius * 0.1
-            elif ltype == LayerType.INNER: radius = base_radius * 0.35
-            elif ltype == LayerType.OUTER: radius = base_radius * 0.65
-            elif ltype == LayerType.ARMOR: radius = base_radius * 0.9
-            
-            comps = data['components']
-            if not comps:
-                continue
-            
-            angle_step = 360 / len(comps)
-            current_angle = ship.angle  # Rotate with ship
-            
-            for comp in comps:
-                if not comp.is_active:
-                    continue
-                rad = math.radians(current_angle)
-                off_x = math.cos(rad) * radius
-                off_y = math.sin(rad) * radius
-                
-                comp_world_pos = ship.position + pygame.math.Vector2(off_x, off_y)
-                comp_screen = camera.world_to_screen(comp_world_pos)
-                
-                color = (200, 200, 200)
-                if isinstance(comp, Weapon): color = (255, 50, 50)
-                elif isinstance(comp, Engine): color = (50, 255, 100)
-                elif isinstance(comp, Armor): color = (100, 100, 100)
-                
-                pygame.draw.circle(surface, color, (int(comp_screen.x), int(comp_screen.y)), max(1, scale(3)))
-                current_angle += angle_step
 
 
 def draw_bar(surface, x, y, w, h, pct, color):

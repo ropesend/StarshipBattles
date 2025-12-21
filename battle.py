@@ -354,6 +354,7 @@ class BattleScene:
             pygame.draw.circle(screen, (255, 255, 100), (int(end[0]), int(end[1])), 4)
         
         # Draw ships
+        self.camera.show_overlay = self.ui.show_overlay # Hack to pass state to renderer
         for s in self.ships:
             draw_ship(screen, s, self.camera)
         

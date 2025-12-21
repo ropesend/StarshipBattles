@@ -29,13 +29,17 @@ def load_vehicle_classes(filepath="data/vehicleclasses.json"):
     try:
         with open(filepath, 'r') as f:
             data = json.load(f)
-            VEHICLE_CLASSES = data.get('classes', {})
+            # Update in place to preserve references
+            VEHICLE_CLASSES.clear()
+            VEHICLE_CLASSES.update(data.get('classes', {}))
+            
             # Build legacy SHIP_CLASSES dict for backward compatibility
-            SHIP_CLASSES = {name: cls['max_mass'] for name, cls in VEHICLE_CLASSES.items()}
+            SHIP_CLASSES.clear()
+            SHIP_CLASSES.update({name: cls['max_mass'] for name, cls in VEHICLE_CLASSES.items()})
             print(f"Loaded {len(VEHICLE_CLASSES)} vehicle classes.")
     except FileNotFoundError:
         print(f"Warning: {filepath} not found, using defaults")
-        VEHICLE_CLASSES = {
+        defaults = {
             "Escort": {"hull_mass": 50, "max_mass": 1000, "requirements": {}},
             "Frigate": {"hull_mass": 100, "max_mass": 2000, "requirements": {}},
             "Destroyer": {"hull_mass": 200, "max_mass": 4000, "requirements": {}},
@@ -44,7 +48,11 @@ def load_vehicle_classes(filepath="data/vehicleclasses.json"):
             "Battleship": {"hull_mass": 1600, "max_mass": 32000, "requirements": {}},
             "Dreadnought": {"hull_mass": 3200, "max_mass": 64000, "requirements": {}}
         }
-        SHIP_CLASSES = {name: cls['max_mass'] for name, cls in VEHICLE_CLASSES.items()}
+        VEHICLE_CLASSES.clear()
+        VEHICLE_CLASSES.update(defaults)
+        
+        SHIP_CLASSES.clear()
+        SHIP_CLASSES.update({name: cls['max_mass'] for name, cls in VEHICLE_CLASSES.items()})
 
 def initialize_ship_data(base_path=None):
     """Facade for initializing all ship-related data."""
@@ -58,13 +66,14 @@ from ship_physics import ShipPhysicsMixin
 from ship_combat import ShipCombatMixin
 
 class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
-    def __init__(self, name, x, y, color, team_id=0, ship_class="Escort"):
+    def __init__(self, name, x, y, color, team_id=0, ship_class="Escort", theme_id="Federation"):
         super().__init__(x, y)
         self.name = name
         self.color = color
         self.team_id = team_id
         self.current_target = None
         self.ship_class = ship_class
+        self.theme_id = theme_id
         
         # Layers
         self.layers = {
@@ -398,6 +407,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             "color": self.color,
             "team_id": self.team_id,
             "ship_class": self.ship_class,
+            "theme_id": getattr(self, 'theme_id', 'Federation'),
             "ai_strategy": self.ai_strategy,
             "layers": {},
             # Save expected stats for verification when loading
@@ -440,7 +450,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Ensure color is tuple
         if isinstance(color, list): color = tuple(color)
         
-        s = Ship(name, 0, 0, color, data.get("team_id", 0), ship_class=data.get("ship_class", "Escort"))
+        s = Ship(name, 0, 0, color, data.get("team_id", 0), ship_class=data.get("ship_class", "Escort"), theme_id=data.get("theme_id", "Federation"))
         s.ai_strategy = data.get("ai_strategy", "optimal_firing_range")
         
         from components import COMPONENT_REGISTRY, MODIFIER_REGISTRY

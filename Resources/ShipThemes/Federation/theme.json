@@ -1,0 +1,12 @@
+{
+    "name": "Federation",
+    "images": {
+        "Escort": "escort.png",
+        "Frigate": "Frigate.png",
+        "Destroyer": "Destroyer.png",
+        "Cruiser": "cruser.png",
+        "Battlecruiser": "battlecruser.png",
+        "Battleship": "battleship.png",
+        "Dreadnought": "dreadnaught.png"
+    }
+}

@@ -5,6 +5,7 @@ import json
 import math
 import tkinter
 from tkinter import simpledialog
+import os
 
 import pygame
 import pygame_gui
@@ -24,6 +25,7 @@ from sprites import SpriteManager
 from preset_manager import PresetManager
 from ship_io import ShipIO
 from builder_components import ModifierEditorPanel
+from ship_theme import ShipThemeManager
 
 # Initialize Tkinter root and hide it (for simpledialog)
 try:
@@ -148,6 +150,16 @@ class BuilderSceneGUI:
             object_id='#right_panel'
         )
         
+        # Helper for Presets
+        from preset_manager import PresetManager
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        self.preset_manager = PresetManager(os.path.join(base_path, "data", "presets.json"))
+        
+        # Theme Manager
+        self.theme_manager = ShipThemeManager.get_instance()
+        self.theme_manager.initialize(base_path)
+        
+        # Theme Dropdown (Right Panel)
         y = 10
         
         # Ship Name
@@ -165,6 +177,27 @@ class BuilderSceneGUI:
         self.name_entry.set_text(self.ship.name)
         y += 40
         
+        # Theme Dropdown
+        UILabel(
+            relative_rect=pygame.Rect(10, y, 60, 25),
+            text="Theme:",
+            manager=self.ui_manager,
+            container=self.right_panel
+        )
+        theme_options = self.theme_manager.get_available_themes()
+        curr_theme = getattr(self.ship, 'theme_id', 'Federation')
+        if curr_theme not in theme_options and theme_options:
+            curr_theme = theme_options[0]
+            
+        self.theme_dropdown = UIDropDownMenu(
+            options_list=theme_options,
+            starting_option=curr_theme,
+            relative_rect=pygame.Rect(70, y, 195, 30),
+            manager=self.ui_manager,
+            container=self.right_panel
+        )
+        y += 40
+        
         # Ship Class Dropdown
         UILabel(
             relative_rect=pygame.Rect(10, y, 60, 25),
@@ -172,10 +205,16 @@ class BuilderSceneGUI:
             manager=self.ui_manager,
             container=self.right_panel
         )
-        class_options = list(SHIP_CLASSES.keys())
+        # Safeguard if SHIP_CLASSES is empty (shouldn't happen if initialized)
+        if not SHIP_CLASSES:
+             logger.error("SHIP_CLASSES is empty during Builder Init!")
+             class_options = ["Escort"]
+        else:
+             class_options = list(SHIP_CLASSES.keys())
+             
         self.class_dropdown = UIDropDownMenu(
             options_list=class_options,
-            starting_option=self.ship.ship_class,
+            starting_option=self.ship.ship_class if self.ship.ship_class in class_options else class_options[0],
             relative_rect=pygame.Rect(70, y, 195, 30),
             manager=self.ui_manager,
             container=self.right_panel
@@ -402,6 +441,9 @@ class BuilderSceneGUI:
                 self.ship.ship_class = event.text
                 self.ship.recalculate_stats()
                 self._update_stats_display()
+            elif hasattr(self, 'theme_dropdown') and event.ui_element == self.theme_dropdown:
+                self.ship.theme_id = event.text
+                logger.info(f"Changed theme to {event.text}")
             elif event.ui_element == self.ai_dropdown:
                 from ai import COMBAT_STRATEGIES
                 selected_name = event.text
@@ -763,6 +805,36 @@ class BuilderSceneGUI:
         cx = self.left_panel_width + (self.width - self.left_panel_width - self.right_panel_width) // 2
         cy = (self.height - self.bottom_bar_height) // 2
         max_r = 250
+        
+        # Draw Theme Image
+        theme_id = getattr(self.ship, 'theme_id', 'Federation')
+        ship_img = self.theme_manager.get_image(theme_id, self.ship.ship_class)
+        
+        if ship_img:
+            # Scale image to match max_r (diameter approx twice max_r?)
+            # Usage: "scaled so that the visible portion of the vesle is approximatly the same length as the diameter of the circle"
+            # The circle logic uses max_r as radius. So Diameter = 2 * max_r (500)
+            
+            # Use aspect ratio preserving scale
+            img_w, img_h = ship_img.get_size()
+            target_size = max_r * 2
+            
+            # Simple scale to fit logic
+            scale = target_size / max(img_w, img_h)
+            new_w = int(img_w * scale)
+            new_h = int(img_h * scale)
+            
+            scaled_img = pygame.transform.scale(ship_img, (new_w, new_h))
+            
+            # Rotate -90 degrees because images point UP but 0 is RIGHT in many systems, 
+            # BUT in this game: "The image of the vesel should rotate with the ship." e.g. Battle
+            # In Builder, just having it upright (pointing UP) is usually standard. 
+            # Assuming source images point UP.
+            # Let's draw it centered.
+            
+            rect = scaled_img.get_rect(center=(cx, cy))
+            screen.blit(scaled_img, rect)
+            
         
         pygame.draw.circle(screen, (100, 100, 100), (cx, cy), max_r, 2)
         pygame.draw.circle(screen, (200, 50, 50), (cx, cy), int(max_r * 0.8), 2)

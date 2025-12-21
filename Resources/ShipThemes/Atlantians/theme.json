@@ -1,0 +1,12 @@
+{
+    "name": "Atlantians",
+    "images": {
+        "Escort": "Escort.png",
+        "Frigate": "Frigate.png",
+        "Destroyer": "Destroyer.png",
+        "Cruiser": "Crusier.png",
+        "Battlecruiser": "Battlecrusier.png",
+        "Battleship": "Battleship.png",
+        "Dreadnought": "Dreadnaught.png"
+    }
+}
