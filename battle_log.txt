@@ -1,2 +1,3 @@
 === BATTLE LOG STARTED ===
-Battle started: 1 vs 1 ships
+Battle started: 1 vs 5 ships
+=== BATTLE LOG ENDED ===

@@ -1,0 +1,12 @@
+{
+    "name": "Romulans",
+    "images": {
+        "Escort": "processed_output/escort.png",
+        "Frigate": "processed_output/frigate.png",
+        "Destroyer": "processed_output/Destroyer.png",
+        "Cruiser": "processed_output/cruiser.png",
+        "Battlecruiser": "processed_output/Battlecruiser.png",
+        "Battleship": "processed_output/battleship.png",
+        "Dreadnought": "processed_output/Dreadnaught.png"
+    }
+}

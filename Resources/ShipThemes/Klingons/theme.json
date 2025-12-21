@@ -1,0 +1,12 @@
+{
+    "name": "Klingons",
+    "images": {
+        "Escort": "escort.png",
+        "Frigate": "frigate.png",
+        "Destroyer": "destroyer.png",
+        "Cruiser": "cruiser.png",
+        "Battlecruiser": "battlecruiser.png",
+        "Battleship": "battleship.png",
+        "Dreadnought": "dreadnaught.png"
+    }
+}
