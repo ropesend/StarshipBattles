@@ -29,6 +29,10 @@
             {
                 "id": "crew_quarters",
                 "modifiers": []
+            },
+            {
+                "id": "ordnance_tank",
+                "modifiers": []
             }
         ],
         "INNER": [
@@ -42,10 +46,6 @@
             },
             {
                 "id": "standard_engine",
-                "modifiers": []
-            },
-            {
-                "id": "thruster",
                 "modifiers": []
             },
             {
@@ -103,5 +103,16 @@
                 "modifiers": []
             }
         ]
+    },
+    "expected_stats": {
+        "max_hp": 2660,
+        "max_fuel": 50000,
+        "max_ammo": 5000,
+        "max_energy": 0,
+        "max_speed": 11.315691126120445,
+        "turn_speed": 2.392511898744883,
+        "total_thrust": 450,
+        "mass": 994.1946872366632,
+        "armor_hp_pool": 1500
     }
 }

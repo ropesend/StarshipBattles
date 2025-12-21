@@ -651,13 +651,28 @@ class Ship(PhysicsBody):
 
     def to_dict(self):
         """Serialize ship to dictionary."""
+        # Recalculate stats to ensure they're current
+        self.recalculate_stats()
+        
         data = {
             "name": self.name,
             "color": self.color,
             "team_id": self.team_id,
             "ship_class": self.ship_class,
             "ai_strategy": self.ai_strategy,
-            "layers": {}
+            "layers": {},
+            # Save expected stats for verification when loading
+            "expected_stats": {
+                "max_hp": self.max_hp,
+                "max_fuel": self.max_fuel,
+                "max_ammo": self.max_ammo,
+                "max_energy": self.max_energy,
+                "max_speed": self.max_speed,
+                "turn_speed": self.turn_speed,
+                "total_thrust": self.total_thrust,
+                "mass": self.mass,
+                "armor_hp_pool": self.layers[LayerType.ARMOR]['max_hp_pool']
+            }
         }
         
         for ltype, layer_data in self.layers.items():
@@ -734,6 +749,36 @@ class Ship(PhysicsBody):
                     s.add_component(new_comp, layer_type)
         
         s.recalculate_stats()
+        
+        # Verify loaded stats match expected stats (if saved)
+        expected = data.get('expected_stats', {})
+        if expected:
+            mismatches = []
+            if expected.get('max_hp') and abs(s.max_hp - expected['max_hp']) > 1:
+                mismatches.append(f"max_hp: got {s.max_hp}, expected {expected['max_hp']}")
+            if expected.get('max_fuel') and abs(s.max_fuel - expected['max_fuel']) > 1:
+                mismatches.append(f"max_fuel: got {s.max_fuel}, expected {expected['max_fuel']}")
+            if expected.get('max_energy') and abs(s.max_energy - expected['max_energy']) > 1:
+                mismatches.append(f"max_energy: got {s.max_energy}, expected {expected['max_energy']}")
+            if expected.get('max_ammo') and abs(s.max_ammo - expected['max_ammo']) > 1:
+                mismatches.append(f"max_ammo: got {s.max_ammo}, expected {expected['max_ammo']}")
+            if expected.get('max_speed') and abs(s.max_speed - expected['max_speed']) > 0.1:
+                mismatches.append(f"max_speed: got {s.max_speed:.1f}, expected {expected['max_speed']:.1f}")
+            if expected.get('turn_speed') and abs(s.turn_speed - expected['turn_speed']) > 0.1:
+                mismatches.append(f"turn_speed: got {s.turn_speed:.1f}, expected {expected['turn_speed']:.1f}")
+            if expected.get('total_thrust') and abs(s.total_thrust - expected['total_thrust']) > 1:
+                mismatches.append(f"total_thrust: got {s.total_thrust}, expected {expected['total_thrust']}")
+            if expected.get('mass') and abs(s.mass - expected['mass']) > 1:
+                mismatches.append(f"mass: got {s.mass}, expected {expected['mass']}")
+            armor_hp = s.layers[LayerType.ARMOR]['max_hp_pool']  
+            if expected.get('armor_hp_pool') and abs(armor_hp - expected['armor_hp_pool']) > 1:
+                mismatches.append(f"armor_hp_pool: got {armor_hp}, expected {expected['armor_hp_pool']}")
+            
+            if mismatches:
+                print(f"WARNING: Ship '{s.name}' stats mismatch after loading!")
+                for m in mismatches:
+                    print(f"  - {m}")
+        
         return s
 
 

@@ -34,6 +34,37 @@ font_small = pygame.font.SysFont("arial", 12)
 font_med = pygame.font.SysFont("arial", 20)
 font_large = pygame.font.SysFont("arial", 32)
 
+# Battle Logging System
+class BattleLogger:
+    """Toggleable logger that writes to file instead of console."""
+    def __init__(self, filename="battle_log.txt", enabled=True):
+        self.enabled = enabled
+        self.filename = filename
+        self.file = None
+        
+    def start_session(self):
+        """Start a new logging session."""
+        if self.enabled:
+            self.file = open(self.filename, 'w')
+            self.log("=== BATTLE LOG STARTED ===")
+    
+    def log(self, message):
+        """Log a message if logging is enabled."""
+        if self.enabled and self.file:
+            self.file.write(f"{message}\n")
+            self.file.flush()
+    
+    def close(self):
+        """Close the log file."""
+        if self.file:
+            self.log("=== BATTLE LOG ENDED ===")
+            self.file.close()
+            self.file = None
+
+# Global battle logger instance - set enabled=False for profiling/deployment
+BATTLE_LOG = BattleLogger(enabled=True)
+
+
 
 class Camera:
     def __init__(self, width, height):
@@ -357,6 +388,9 @@ class Game:
         self.sim_speed_multiplier = 1.0  # 1.0 = max speed, lower = slower
         self.sim_paused = False
         self.sim_tick_counter = 0  # For throttling UI updates
+        self.tick_rate_timer = 0.0  # For calculating ticks/second
+        self.tick_rate_count = 0  # Ticks in current second
+        self.current_tick_rate = 0  # Displayed ticks per second
         
         # Ship Stats Panel (integrated, replaces Tkinter popups)
         self.stats_panel_width = 350
@@ -512,6 +546,11 @@ class Game:
                     self.setup_team2 = []
                     self.ai_dropdown_open = None
                 
+                # Quick Battle (Headless) button
+                if sw // 2 + 260 <= mx < sw // 2 + 400 and btn_y <= my < btn_y + 50:
+                    if self.setup_team1 and self.setup_team2:
+                        self.run_headless_battle()
+                
                 # Check for dropdown clicks
                 if self.ai_dropdown_open is not None:
                     team_idx, ship_idx = self.ai_dropdown_open
@@ -625,6 +664,13 @@ class Game:
         clr_text = label_font.render("CLEAR ALL", True, (255, 200, 200))
         self.screen.blit(clr_text, (sw // 2 - 240 - clr_text.get_width() // 2, btn_y + 12))
         
+        # Quick Battle (Headless) button
+        quick_color = (80, 50, 120) if (self.setup_team1 and self.setup_team2) else (40, 40, 40)
+        pygame.draw.rect(self.screen, quick_color, (sw // 2 + 260, btn_y, 140, 50))
+        pygame.draw.rect(self.screen, (150, 100, 200), (sw // 2 + 260, btn_y, 140, 50), 2)
+        quick_text = label_font.render("QUICK BATTLE", True, (220, 200, 255))
+        self.screen.blit(quick_text, (sw // 2 + 330 - quick_text.get_width() // 2, btn_y + 12))
+        
         # Draw AI dropdown if open
         if hasattr(self, 'ai_dropdown_open') and self.ai_dropdown_open is not None:
             team_idx, ship_idx = self.ai_dropdown_open
@@ -672,14 +718,60 @@ class Game:
             team2_ships.append(ship)
         
         self.start_battle(team1_ships, team2_ships)
-    def start_battle(self, team1_list, team2_list, seed=None):
+    
+    def run_headless_battle(self):
+        """Run battle simulation without visuals - uses same code path as normal battle."""
+        # Load ships same as start_battle_from_setup
+        team1_ships = []
+        for i, entry in enumerate(self.setup_team1):
+            with open(entry['design']['path'], 'r') as f:
+                data = json.load(f)
+            ship = Ship.from_dict(data)
+            ship.position = pygame.math.Vector2(20000, 30000 + i * 5000)
+            ship.ai_strategy = entry['strategy']
+            ship.recalculate_stats()
+            team1_ships.append(ship)
+        
+        team2_ships = []
+        for i, entry in enumerate(self.setup_team2):
+            with open(entry['design']['path'], 'r') as f:
+                data = json.load(f)
+            ship = Ship.from_dict(data)
+            ship.position = pygame.math.Vector2(80000, 30000 + i * 5000)
+            ship.angle = 180
+            ship.ai_strategy = entry['strategy']
+            ship.recalculate_stats()
+            team2_ships.append(ship)
+        
+        # Print initial info
+        initial_team1_hp = sum(s.max_hp for s in team1_ships)
+        initial_team2_hp = sum(s.max_hp for s in team2_ships)
+        print(f"Team 1: {len(team1_ships)} ships ({initial_team1_hp:.0f} total HP)")
+        print(f"Team 2: {len(team2_ships)} ships ({initial_team2_hp:.0f} total HP)")
+        print("Running simulation...")
+        
+        # Start battle with headless flag - the run loop handles the rest
+        # Start battle with headless flag - the run loop handles the rest
+        self.start_battle(team1_ships, team2_ships, headless=True)
+
+
+    def start_battle(self, team1_list, team2_list, seed=None, headless=False):
         """Start a battle between two teams.
         
         Args:
             team1_list: List of ships for team 1
             team2_list: List of ships for team 2
             seed: Optional RNG seed for reproducible/deterministic battles
+            headless: If True, run without rendering and print summary at end
         """
+        # Store headless flag
+        self.headless_mode = headless
+        self.headless_start_time = None
+        if headless:
+            import time
+            self.headless_start_time = time.time()
+            print("\n=== STARTING HEADLESS BATTLE ===")
+        
         # Seed RNG for deterministic battles if specified
         if seed is not None:
             random.seed(seed)
@@ -706,7 +798,12 @@ class Game:
         self.projectiles = []
         self.beams = []
         self.state = BATTLE
-        self.camera.fit_objects(self.ships)
+        
+        # Start battle logging
+        BATTLE_LOG.start_session()
+        BATTLE_LOG.log(f"Battle started: {len(team1_list)} vs {len(team2_list)} ships")
+        if not headless:
+            self.camera.fit_objects(self.ships)
 
     def update_battle(self, dt, events, camera_dt=None):
         # Use separate camera_dt for smooth camera movement
@@ -739,6 +836,7 @@ class Game:
             
         for attack in new_attacks:
             if attack['type'] == 'projectile':
+                BATTLE_LOG.log(f"Projectile fired at {attack['position']}")
                 self.projectiles.append({
                     'pos': attack['position'],
                     'vel': attack['velocity'],
@@ -797,7 +895,7 @@ class Game:
                 self.beams.append({
                     'start': start_pos,
                     'end': end_pos,
-                    'timer': 0.8,  # Visual duration - beams visible longer
+                    'timer': 30,  # Ticks (~0.5 seconds of visibility)
                     'color': (100, 255, 255)
                 })
 
@@ -823,18 +921,18 @@ class Game:
                     # Target takes 50% of rammer's remaining HP as damage
                     s.take_damage(hp_rammer + 9999)
                     target.take_damage(hp_rammer * 0.5)
-                    print(f"Ramming: {s.name} destroyed by {target.name}! ({target.name} took {hp_rammer * 0.5:.0f} damage)")
+                    BATTLE_LOG.log(f"Ramming: {s.name} destroyed by {target.name}! ({target.name} took {hp_rammer * 0.5:.0f} damage)")
                 elif hp_target < hp_rammer:
                     # Target is weaker -> destroyed
                     # Rammer takes 50% of target's remaining HP as damage
                     target.take_damage(hp_target + 9999)
                     s.take_damage(hp_target * 0.5)
-                    print(f"Ramming: {target.name} destroyed by {s.name}! ({s.name} took {hp_target * 0.5:.0f} damage)")
+                    BATTLE_LOG.log(f"Ramming: {target.name} destroyed by {s.name}! ({s.name} took {hp_target * 0.5:.0f} damage)")
                 else:
                     # Equal HP - both die
                     s.take_damage(hp_rammer + 9999)
                     target.take_damage(hp_target + 9999)
-                    print(f"Ramming: Mutual destruction between {s.name} and {target.name}!")
+                    BATTLE_LOG.log(f"Ramming: Mutual destruction between {s.name} and {target.name}!")
 
         # Update Projectiles
         # Pre-calculate ship states for CCD
@@ -1303,10 +1401,13 @@ class Game:
         # Draw Objects
         for p in self.projectiles:
             # Draw projectile trail (longer for visibility)
-            trail_length = 50  # Visual only - doesn't affect physics
+            trail_length = 100  # Visual only - doesn't affect physics
             start = self.camera.world_to_screen(p['pos'] - p['vel'].normalize() * trail_length)
             end = self.camera.world_to_screen(p['pos'])
-            pygame.draw.line(self.screen, (255, 220, 50), start, end, 2)  # Yellow color
+            # Draw thicker, brighter trail
+            pygame.draw.line(self.screen, (255, 200, 50), start, end, 3)  # Bright yellow, thicker
+            # Draw a bright dot at the projectile head
+            pygame.draw.circle(self.screen, (255, 255, 100), (int(end[0]), int(end[1])), 4)
              
         for s in self.ships:
             draw_ship(self.screen, s, self.camera)
@@ -1444,29 +1545,98 @@ class Game:
             elif self.state == BATTLE_SETUP:
                 self.draw_battle_setup()
             elif self.state == BATTLE:
-                # Tick-based simulation - one physics step per frame
-                # sim_speed_multiplier controls how many ticks per frame
-                if not self.sim_paused:
-                    # Run physics ticks based on speed multiplier
-                    ticks_to_run = max(1, int(self.sim_speed_multiplier))
-                    for _ in range(ticks_to_run):
-                        self.update_battle(
-                            1.0,  # Fixed dt=1.0 per tick (time-independent)
-                            events if _ == 0 else [],
-                            camera_dt=frame_time if _ == 0 else 0
-                        )
+                # Check for headless mode - run at max speed without rendering
+                if getattr(self, 'headless_mode', False):
+                    # Run many ticks per frame without drawing
+                    for _ in range(1000):  # Run 1000 ticks per frame in headless
+                        self.update_battle(1.0, [], camera_dt=0)
+                        
+                        # Check if battle ended (win/loss or tick limit)
+                        team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
+                        team2_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
+                        tick_limit_reached = self.sim_tick_counter >= 3000000
+                        
+                        if team1_alive == 0 or team2_alive == 0 or tick_limit_reached:
+                            # Battle over - print summary
+                            import time
+                            elapsed = time.time() - self.headless_start_time if self.headless_start_time else 0
+                            
+                            team1_ships = [s for s in self.ships if s.team_id == 0]
+                            team2_ships = [s for s in self.ships if s.team_id == 1]
+                            team1_survivors = [s for s in team1_ships if s.is_alive]
+                            team2_survivors = [s for s in team2_ships if s.is_alive]
+                            
+                            print(f"\n=== BATTLE COMPLETE ===")
+                            print(f"Time: {elapsed:.2f}s, Ticks: {self.sim_tick_counter}")
+                            
+                            if tick_limit_reached:
+                                print(f"DRAW (tick limit: {self.sim_tick_counter:,} ticks)")
+                            elif team1_alive > 0 and team2_alive == 0:
+                                print("WINNER: Team 1!")
+                            elif team2_alive > 0 and team1_alive == 0:
+                                print("WINNER: Team 2!")
+                            else:
+                                print("DRAW!")
+                            
+                            print(f"\nTeam 1: {len(team1_survivors)}/{len(team1_ships)} survived")
+                            for s in team1_survivors:
+                                print(f"  - {s.name}: {s.hp:.0f}/{s.max_hp:.0f} HP")
+                            
+                            print(f"\nTeam 2: {len(team2_survivors)}/{len(team2_ships)} survived")
+                            for s in team2_survivors:
+                                print(f"  - {s.name}: {s.hp:.0f}/{s.max_hp:.0f} HP")
+                            
+                            print("=" * 30 + "\n")
+                            
+                            # Return to battle setup
+                            self.headless_mode = False
+                            self.start_battle_setup(preserve_teams=True)
+                            break
+                    
+                    # Progress indicator
+                    if self.sim_tick_counter % 10000 == 0:
+                        t1 = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
+                        t2 = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
+                        print(f"  Tick {self.sim_tick_counter}: Team1={t1}, Team2={t2}")
                 else:
-                    # Still allow camera movement when paused
-                    self.camera.update_input(frame_time, events)
-                
-                self.draw_battle()
-                
-                # Draw speed indicator
-                speed_text = "PAUSED" if self.sim_paused else f"Speed: {self.sim_speed_multiplier:.2f}x"
-                speed_color = (255, 100, 100) if self.sim_paused else (200, 200, 200)
-                if self.sim_speed_multiplier < 1.0:
-                    speed_color = (255, 200, 100)  # Orange for slowed
-                self.screen.blit(font_med.render(speed_text, True, speed_color), (WIDTH//2 - 50, 10))
+                    # Normal visual battle mode
+                    # Tick-based simulation - one physics step per frame
+                    # sim_speed_multiplier controls how many ticks per frame
+                    if not self.sim_paused:
+                        # Run physics ticks based on speed multiplier
+                        ticks_to_run = max(1, int(self.sim_speed_multiplier))
+                        for _ in range(ticks_to_run):
+                            self.update_battle(
+                                1.0,  # Fixed dt=1.0 per tick (time-independent)
+                                events if _ == 0 else [],
+                                camera_dt=frame_time if _ == 0 else 0
+                            )
+                    else:
+                        # Still allow camera movement when paused
+                        self.camera.update_input(frame_time, events)
+                    
+                    self.draw_battle()
+                    
+                    # Update tick rate calculation
+                    self.tick_rate_count += ticks_to_run if not self.sim_paused else 0
+                    self.tick_rate_timer += frame_time
+                    if self.tick_rate_timer >= 1.0:
+                        self.current_tick_rate = self.tick_rate_count
+                        self.tick_rate_count = 0
+                        self.tick_rate_timer = 0.0
+                    
+                    # Draw tick counters (upper left)
+                    tick_text = f"Ticks: {self.sim_tick_counter:,}"
+                    rate_text = f"Tick Rate: {self.current_tick_rate:,}/s"
+                    self.screen.blit(font_med.render(tick_text, True, (180, 180, 180)), (10, 10))
+                    self.screen.blit(font_med.render(rate_text, True, (180, 180, 180)), (10, 35))
+                    
+                    # Draw speed indicator (center)
+                    speed_text = "PAUSED" if self.sim_paused else f"Speed: {self.sim_speed_multiplier:.2f}x"
+                    speed_color = (255, 100, 100) if self.sim_paused else (200, 200, 200)
+                    if self.sim_speed_multiplier < 1.0:
+                        speed_color = (255, 200, 100)  # Orange for slowed
+                    self.screen.blit(font_med.render(speed_text, True, speed_color), (WIDTH//2 - 50, 10))
                 
             pygame.display.flip()
         

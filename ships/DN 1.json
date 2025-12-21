@@ -48,6 +48,28 @@
                         "value": 32.0
                     }
                 ]
+            },
+            {
+                "id": "ordnance_tank",
+                "modifiers": []
+            },
+            {
+                "id": "generator",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 12
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 12
+                    }
+                ]
             }
         ],
         "INNER": [
@@ -113,6 +135,31 @@
                         "value": 32.0
                     }
                 ]
+            },
+            {
+                "id": "combat_sensor",
+                "modifiers": []
+            },
+            {
+                "id": "combat_sensor",
+                "modifiers": []
+            },
+            {
+                "id": "combat_sensor",
+                "modifiers": []
+            },
+            {
+                "id": "combat_sensor",
+                "modifiers": []
+            },
+            {
+                "id": "battery",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 12
+                    }
+                ]
             }
         ],
         "OUTER": [
@@ -125,28 +172,11 @@
                     },
                     {
                         "id": "simple_size_mount",
-                        "value": 1
+                        "value": 8.0
                     },
                     {
                         "id": "range_mount",
-                        "value": 4
-                    }
-                ]
-            },
-            {
-                "id": "laser_cannon",
-                "modifiers": [
-                    {
-                        "id": "turret_mount",
-                        "value": 180
-                    },
-                    {
-                        "id": "simple_size_mount",
-                        "value": 1
-                    },
-                    {
-                        "id": "range_mount",
-                        "value": 4
+                        "value": 2
                     },
                     {
                         "id": "facing",
@@ -163,11 +193,32 @@
                     },
                     {
                         "id": "simple_size_mount",
-                        "value": 1
+                        "value": 8.0
                     },
                     {
                         "id": "range_mount",
-                        "value": 4
+                        "value": 2
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "turret_mount",
+                        "value": 180
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 8.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 2
                     },
                     {
                         "id": "facing",
@@ -184,11 +235,15 @@
                     },
                     {
                         "id": "simple_size_mount",
-                        "value": 1
+                        "value": 8.0
                     },
                     {
                         "id": "range_mount",
-                        "value": 4
+                        "value": 2
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0
                     }
                 ]
             }
@@ -238,7 +293,26 @@
                         "value": 32.0
                     }
                 ]
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": []
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": []
             }
         ]
+    },
+    "expected_stats": {
+        "max_hp": 82400,
+        "max_fuel": 1600000,
+        "max_ammo": 5000,
+        "max_energy": 88000,
+        "max_speed": 11.61621453579335,
+        "turn_speed": 0.8571712117612483,
+        "total_thrust": 19200.0,
+        "mass": 41321.55088225714,
+        "armor_hp_pool": 40500
     }
 }
