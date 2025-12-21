@@ -229,6 +229,7 @@ class Weapon(Component):
         self.cooldown_timer = 0.0
         self.firing_arc = data.get('firing_arc', 20) # Degrees
         self.facing_angle = data.get('facing_angle', 0) # Degrees relative to component forward (0)
+        self.fire_count = 0  # Track how many times weapon has fired
 
     def update(self, dt):
         # Scale for tick-based physics (reload_time is in seconds)
@@ -241,6 +242,7 @@ class Weapon(Component):
     def fire(self):
         if self.can_fire():
             self.cooldown_timer = self.reload_time
+            self.fire_count += 1
             return True
         return False
     

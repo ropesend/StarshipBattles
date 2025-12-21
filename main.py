@@ -3,6 +3,7 @@ import time
 import math
 import random
 import json
+import os
 from ship import Ship, LayerType
 from ai import AIController
 from spatial import SpatialGrid
@@ -503,31 +504,35 @@ class Game:
                                 })
                             break
                 
-                # Check team 1 remove buttons
-                if col2_x <= mx < col2_x + 300:
+                # Check team 1 ships (AI dropdown and remove button)
+                if col2_x <= mx < col2_x + 350:
                     for i, entry in enumerate(self.setup_team1):
-                        y = 150 + i * 60
-                        # Remove button (X)
-                        if y + 25 <= my < y + 50 and mx >= col2_x + 200:
-                            self.setup_team1.pop(i)
-                            break
-                        # Open dropdown for AI selection
-                        if y + 25 <= my < y + 50 and mx < col2_x + 200:
-                            self.ai_dropdown_open = (1, i)  # Team 1, ship index
-                            break
+                        y = 150 + i * 35  # Compact: 35px per ship
+                        if y <= my < y + 30:
+                            ai_btn_x = col2_x + 150
+                            # Remove button (X) - rightmost
+                            if mx >= col2_x + 300:
+                                self.setup_team1.pop(i)
+                                return  # Done handling this click
+                            # AI dropdown button
+                            elif mx >= ai_btn_x and mx < ai_btn_x + 130:
+                                self.ai_dropdown_open = (1, i)  # Team 1, ship index
+                                return  # Don't let the dropdown check close it immediately
                 
-                # Check team 2 remove buttons
-                if col3_x <= mx < col3_x + 300:
+                # Check team 2 ships (AI dropdown and remove button)
+                if col3_x <= mx < col3_x + 350:
                     for i, entry in enumerate(self.setup_team2):
-                        y = 150 + i * 60
-                        # Remove button
-                        if y + 25 <= my < y + 50 and mx >= col3_x + 200:
-                            self.setup_team2.pop(i)
-                            break
-                        # Open dropdown for AI selection
-                        if y + 25 <= my < y + 50 and mx < col3_x + 200:
-                            self.ai_dropdown_open = (2, i)  # Team 2, ship index
-                            break
+                        y = 150 + i * 35  # Compact: 35px per ship
+                        if y <= my < y + 30:
+                            ai_btn_x = col3_x + 150
+                            # Remove button (X) - rightmost
+                            if mx >= col3_x + 300:
+                                self.setup_team2.pop(i)
+                                return  # Done handling this click
+                            # AI dropdown button
+                            elif mx >= ai_btn_x and mx < ai_btn_x + 130:
+                                self.ai_dropdown_open = (2, i)  # Team 2, ship index
+                                return  # Don't let the dropdown check close it immediately
                 
                 # Begin Battle button
                 btn_y = sh - 80
@@ -554,13 +559,14 @@ class Game:
                 if self.ai_dropdown_open is not None:
                     team_idx, ship_idx = self.ai_dropdown_open
                     team_list = self.setup_team1 if team_idx == 1 else self.setup_team2
-                    col_x = col2_x if team_idx == 1 else col3_x
+                    base_col_x = col2_x if team_idx == 1 else col3_x
                     
-                    # Dropdown position
-                    ship_y = 150 + ship_idx * 60 + 55
+                    # Dropdown position - aligned with AI button, below ship row
+                    dropdown_x = base_col_x + 150  # AI button offset
+                    ship_y = 150 + ship_idx * 35 + 30  # Compact layout + button height
                     dropdown_height = len(self.ai_strategies) * 22
                     
-                    if col_x <= mx < col_x + 180 and ship_y <= my < ship_y + dropdown_height:
+                    if dropdown_x <= mx < dropdown_x + 180 and ship_y <= my < ship_y + dropdown_height:
                         # Click on dropdown option
                         option_idx = (my - ship_y) // 22
                         if 0 <= option_idx < len(self.ai_strategies):
@@ -599,47 +605,63 @@ class Game:
             pygame.draw.rect(self.screen, (80, 80, 100), (col1_x, y, 250, 35), 1)
             self.screen.blit(text, (col1_x + 10, y + 8))
         
-        # Team 1 (middle column)
-        lbl = label_font.render("Team 1 (click to change AI)", True, (100, 200, 255))
+        # Team 1 (middle column) - compact layout
+        lbl = label_font.render("Team 1", True, (100, 200, 255))
         self.screen.blit(lbl, (col2_x, 110))
         
         for i, entry in enumerate(self.setup_team1):
-            y = 150 + i * 60
+            y = 150 + i * 35  # Compact: 35px per ship
             design = entry['design']
             strategy = entry['strategy']
-            strat_name = COMBAT_STRATEGIES.get(strategy, {}).get('name', strategy)
+            strat_name = COMBAT_STRATEGIES.get(strategy, {}).get('name', strategy)[:12]  # Truncate
             
-            pygame.draw.rect(self.screen, (30, 50, 70), (col2_x, y, 280, 55))
-            pygame.draw.rect(self.screen, (100, 150, 200), (col2_x, y, 280, 55), 1)
+            # Background
+            pygame.draw.rect(self.screen, (30, 50, 70), (col2_x, y, 350, 30))
+            pygame.draw.rect(self.screen, (100, 150, 200), (col2_x, y, 350, 30), 1)
             
-            name_text = item_font.render(design['name'], True, (255, 255, 255))
-            strat_text = item_font.render(f"AI: {strat_name}", True, (150, 200, 255))
+            # Ship name (left)
+            name_text = item_font.render(design['name'][:15], True, (255, 255, 255))
+            self.screen.blit(name_text, (col2_x + 5, y + 5))
+            
+            # AI dropdown button (middle)
+            ai_btn_x = col2_x + 150
+            pygame.draw.rect(self.screen, (40, 60, 90), (ai_btn_x, y + 2, 130, 26))
+            pygame.draw.rect(self.screen, (80, 120, 180), (ai_btn_x, y + 2, 130, 26), 1)
+            ai_text = item_font.render(strat_name + " ▼", True, (150, 200, 255))
+            self.screen.blit(ai_text, (ai_btn_x + 5, y + 5))
+            
+            # Remove button (right)
             x_text = item_font.render("[X]", True, (255, 100, 100))
-            
-            self.screen.blit(name_text, (col2_x + 10, y + 5))
-            self.screen.blit(strat_text, (col2_x + 10, y + 30))
-            self.screen.blit(x_text, (col2_x + 240, y + 30))
+            self.screen.blit(x_text, (col2_x + 315, y + 5))
         
-        # Team 2 (right column)
-        lbl = label_font.render("Team 2 (click to change AI)", True, (255, 100, 100))
+        # Team 2 (right column) - compact layout
+        lbl = label_font.render("Team 2", True, (255, 100, 100))
         self.screen.blit(lbl, (col3_x, 110))
         
         for i, entry in enumerate(self.setup_team2):
-            y = 150 + i * 60
+            y = 150 + i * 35  # Compact: 35px per ship
             design = entry['design']
             strategy = entry['strategy']
-            strat_name = COMBAT_STRATEGIES.get(strategy, {}).get('name', strategy)
+            strat_name = COMBAT_STRATEGIES.get(strategy, {}).get('name', strategy)[:12]  # Truncate
             
-            pygame.draw.rect(self.screen, (70, 30, 30), (col3_x, y, 280, 55))
-            pygame.draw.rect(self.screen, (200, 100, 100), (col3_x, y, 280, 55), 1)
+            # Background
+            pygame.draw.rect(self.screen, (70, 30, 30), (col3_x, y, 350, 30))
+            pygame.draw.rect(self.screen, (200, 100, 100), (col3_x, y, 350, 30), 1)
             
-            name_text = item_font.render(design['name'], True, (255, 255, 255))
-            strat_text = item_font.render(f"AI: {strat_name}", True, (255, 150, 150))
+            # Ship name (left)
+            name_text = item_font.render(design['name'][:15], True, (255, 255, 255))
+            self.screen.blit(name_text, (col3_x + 5, y + 5))
+            
+            # AI dropdown button (middle)
+            ai_btn_x = col3_x + 150
+            pygame.draw.rect(self.screen, (90, 40, 40), (ai_btn_x, y + 2, 130, 26))
+            pygame.draw.rect(self.screen, (180, 80, 80), (ai_btn_x, y + 2, 130, 26), 1)
+            ai_text = item_font.render(strat_name + " ▼", True, (255, 150, 150))
+            self.screen.blit(ai_text, (ai_btn_x + 5, y + 5))
+            
+            # Remove button (right)
             x_text = item_font.render("[X]", True, (255, 100, 100))
-            
-            self.screen.blit(name_text, (col3_x + 10, y + 5))
-            self.screen.blit(strat_text, (col3_x + 10, y + 30))
-            self.screen.blit(x_text, (col3_x + 240, y + 30))
+            self.screen.blit(x_text, (col3_x + 315, y + 5))
         
         # Buttons at bottom
         btn_y = sh - 80
@@ -674,7 +696,9 @@ class Game:
         if hasattr(self, 'ai_dropdown_open') and self.ai_dropdown_open is not None:
             team_idx, ship_idx = self.ai_dropdown_open
             col_x = col2_x if team_idx == 1 else col3_x
-            ship_y = 150 + ship_idx * 60 + 55
+            # Position dropdown below the AI button for selected ship
+            ship_y = 150 + ship_idx * 35 + 30  # Compact layout: 35px per ship + 30 for button height
+            col_x = col_x + 150  # Align with AI button
             
             dropdown_w = 180
             dropdown_h = len(self.ai_strategies) * 22
@@ -702,6 +726,7 @@ class Game:
             ship = Ship.from_dict(data)
             ship.position = pygame.math.Vector2(20000, 30000 + i * 5000)
             ship.ai_strategy = entry['strategy']
+            ship.source_file = os.path.basename(entry['design']['path'])
             ship.recalculate_stats()
             team1_ships.append(ship)
         
@@ -713,6 +738,7 @@ class Game:
             ship.position = pygame.math.Vector2(80000, 30000 + i * 5000)
             ship.angle = 180
             ship.ai_strategy = entry['strategy']
+            ship.source_file = os.path.basename(entry['design']['path'])
             ship.recalculate_stats()
             team2_ships.append(ship)
         
@@ -728,6 +754,7 @@ class Game:
             ship = Ship.from_dict(data)
             ship.position = pygame.math.Vector2(20000, 30000 + i * 5000)
             ship.ai_strategy = entry['strategy']
+            ship.source_file = os.path.basename(entry['design']['path'])
             ship.recalculate_stats()
             team1_ships.append(ship)
         
@@ -739,6 +766,7 @@ class Game:
             ship.position = pygame.math.Vector2(80000, 30000 + i * 5000)
             ship.angle = 180
             ship.ai_strategy = entry['strategy']
+            ship.source_file = os.path.basename(entry['design']['path'])
             ship.recalculate_stats()
             team2_ships.append(ship)
         
@@ -1208,7 +1236,8 @@ class Game:
         # Components header = 16px
         # Each component = 14px
         # Final padding = 5px
-        base_height = 5 * 16 + 18 + 16  # 80 + 18 + 16 = 114
+        # Height includes: File(16) + AI(16) + HP/Fuel/Energy/Ammo/Speed(5*16) + Target(18) + Components header(16)
+        base_height = 16 + 16 + 5 * 16 + 18 + 16  # 146
         comp_count = sum(len(l['components']) for l in ship.layers.values())
         comp_height = comp_count * 14
         return base_height + comp_height + 5  # +5 padding
@@ -1299,6 +1328,19 @@ class Game:
         bar_w = 120
         bar_h = 10
         
+        # Source file (if available)
+        if hasattr(ship, 'source_file') and ship.source_file:
+            text = font.render(f"File: {ship.source_file}", True, (150, 150, 200))
+            surface.blit(text, (x_indent, y))
+            y += 16
+        
+        # AI Strategy
+        from ai import COMBAT_STRATEGIES
+        strat_name = COMBAT_STRATEGIES.get(ship.ai_strategy, {}).get('name', ship.ai_strategy)
+        text = font.render(f"AI: {strat_name}", True, (150, 200, 150))
+        surface.blit(text, (x_indent, y))
+        y += 16
+        
         # HP Bar
         hp_pct = ship.hp / ship.max_hp if ship.max_hp > 0 else 0
         hp_color = (0, 255, 0) if hp_pct > 0.5 else ((255, 200, 0) if hp_pct > 0.2 else (255, 50, 50))
@@ -1364,6 +1406,12 @@ class Game:
                 hp_val = font.render(hp_text, True, color)
                 surface.blit(hp_val, (x_indent + 95, y))
                 self._draw_bar(surface, x_indent + 160, y, 60, 8, hp_pct, bar_color)
+                
+                # Show fire count for weapons
+                if hasattr(comp, 'fire_count') and comp.fire_count > 0:
+                    fire_text = font.render(f"x{comp.fire_count}", True, (255, 200, 100))
+                    surface.blit(fire_text, (x_indent + 230, y))
+                
                 y += 14
         
         y += 5  # Padding after components
@@ -1466,6 +1514,21 @@ class Game:
             
             # Store button rect for click detection
             self.battle_end_button_rect = pygame.Rect(btn_x, btn_y, btn_w, btn_h)
+        else:
+            # Battle still ongoing - show End Battle button in corner
+            sw, sh = self.screen.get_size()
+            btn_font = pygame.font.Font(None, 24)
+            btn_w, btn_h = 120, 30
+            btn_x = 10
+            btn_y = 70  # Below tick counters
+            
+            pygame.draw.rect(self.screen, (80, 40, 40), (btn_x, btn_y, btn_w, btn_h))
+            pygame.draw.rect(self.screen, (150, 80, 80), (btn_x, btn_y, btn_w, btn_h), 1)
+            btn_text = btn_font.render("End Battle", True, (255, 200, 200))
+            self.screen.blit(btn_text, (btn_x + btn_w // 2 - btn_text.get_width() // 2, btn_y + 7))
+            
+            # Store for click detection
+            self.end_battle_early_rect = pygame.Rect(btn_x, btn_y, btn_w, btn_h)
 
     def run(self):
         accumulator = 0.0
@@ -1508,6 +1571,10 @@ class Game:
                         mx, my = event.pos
                         # Check if battle is over and return button clicked
                         if hasattr(self, 'battle_end_button_rect') and self.battle_end_button_rect.collidepoint(mx, my):
+                            BATTLE_LOG.close()
+                            self.start_battle_setup(preserve_teams=True)
+                        # Check if End Battle early button clicked
+                        elif hasattr(self, 'end_battle_early_rect') and self.end_battle_early_rect.collidepoint(mx, my):
                             BATTLE_LOG.close()
                             self.start_battle_setup(preserve_teams=True)
                         # Check if click is on stats panel

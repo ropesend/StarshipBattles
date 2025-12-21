@@ -68,14 +68,14 @@ class Ship(PhysicsBody):
         
         self.radius = 40 # Will be recalculated
         
-        # Resources (Capacities and Current)
-        self.max_energy = 100
-        self.current_energy = 100
-        self.max_fuel = 1000
-        self.current_fuel = 1000
-        self.max_ammo = 100
-        self.current_ammo = 100
-        self.energy_gen_rate = 5.0
+        # Resources (Capacities and Current) - start at 0, recalculate_stats sets them
+        self.max_energy = 0
+        self.current_energy = 0
+        self.max_fuel = 0
+        self.current_fuel = 0
+        self.max_ammo = 0
+        self.current_ammo = 0
+        self.energy_gen_rate = 0
         
         # New Stats (from old init, but now calculated or managed differently)
         self.mass_limits_ok = True
@@ -99,6 +99,7 @@ class Ship(PhysicsBody):
         
         # AI Strategy
         self.ai_strategy = "optimal_firing_range"  # See combatstrategies.json for options
+        self.source_file = None  # Path to the JSON file this ship was loaded from
         
         # Arcade Physics
         self.current_speed = 0
