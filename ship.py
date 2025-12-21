@@ -12,7 +12,7 @@ from logger import log_debug
 VEHICLE_CLASSES = {}
 SHIP_CLASSES = {}  # Legacy compatibility - maps class name to max_mass
 
-def load_vehicle_classes(filepath="vehicleclasses.json"):
+def load_vehicle_classes(filepath="data/vehicleclasses.json"):
     global VEHICLE_CLASSES, SHIP_CLASSES
     try:
         with open(filepath, 'r') as f:
@@ -98,7 +98,7 @@ class Ship(PhysicsBody):
         self.bridge_destroyed = False
         
         # AI Strategy
-        self.ai_strategy = "max_range" # Options: max_range, attack_run, kamikaze, flee
+        self.ai_strategy = "optimal_firing_range"  # See combatstrategies.json for options
         
         # Arcade Physics
         self.current_speed = 0
@@ -685,7 +685,7 @@ class Ship(PhysicsBody):
         if isinstance(color, list): color = tuple(color)
         
         s = Ship(name, 0, 0, color, data.get("team_id", 0), ship_class=data.get("ship_class", "Escort"))
-        s.ai_strategy = data.get("ai_strategy", "max_range")
+        s.ai_strategy = data.get("ai_strategy", "optimal_firing_range")
         
         # Load Layers
         # We need access to COMPONENT_REGISTRY and MODIFIER_REGISTRY

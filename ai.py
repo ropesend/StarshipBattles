@@ -8,7 +8,7 @@ from logger import log_info
 COMBAT_STRATEGIES = {}
 ENGAGE_DISTANCES = {}
 
-def load_combat_strategies(filepath="combatstrategies.json"):
+def load_combat_strategies(filepath="data/combatstrategies.json"):
     global COMBAT_STRATEGIES, ENGAGE_DISTANCES
     try:
         with open(filepath, 'r') as f:

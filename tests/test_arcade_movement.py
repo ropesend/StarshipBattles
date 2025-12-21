@@ -12,7 +12,7 @@ from components import load_components, create_component, Engine, Thruster
 class TestArcadeMovement(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        load_components("components.json")
+        load_components("data/components.json")
 
     def setUp(self):
         self.ship = Ship("TestShip", 100, 100, (255, 255, 255))

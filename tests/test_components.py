@@ -12,8 +12,8 @@ from components import (
 class TestComponents(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        load_components("components.json")
-        load_modifiers("modifiers.json")
+        load_components("data/components.json")
+        load_modifiers("data/modifiers.json")
 
     def test_load_components(self):
         """Verify components.json is loaded correctly."""
@@ -40,8 +40,8 @@ class TestModifierStacking(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        load_components("components.json")
-        load_modifiers("modifiers.json")
+        load_components("data/components.json")
+        load_modifiers("data/modifiers.json")
     
     def test_single_size_modifier(self):
         """Size mount 2x should double mass."""
@@ -126,8 +126,8 @@ class TestModifierOrder(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        load_components("components.json")
-        load_modifiers("modifiers.json")
+        load_components("data/components.json")
+        load_modifiers("data/modifiers.json")
     
     def test_order_independence(self):
         """Adding modifiers in different order should give same result."""
@@ -152,8 +152,8 @@ class TestTurretMount(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        load_components("components.json")
-        load_modifiers("modifiers.json")
+        load_components("data/components.json")
+        load_modifiers("data/modifiers.json")
     
     def test_turret_0_degrees_no_change(self):
         """0 degree turret should not increase mass."""

@@ -460,9 +460,9 @@ class Game:
         print(f"DEBUG: Base Path: {base_path}")
         
         # Initialize Game Data
-        comp_path = os.path.join(base_path, "components.json")
+        comp_path = os.path.join(base_path, "data", "components.json")
         load_components(comp_path)
-        mod_path = os.path.join(base_path, "modifiers.json")
+        mod_path = os.path.join(base_path, "data", "modifiers.json")
         load_modifiers(mod_path)
         
         # Initialize Sprites

@@ -15,8 +15,8 @@ from components import (
 class TestModifiers(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        load_components("components.json")
-        load_modifiers("modifiers.json")
+        load_components("data/components.json")
+        load_modifiers("data/modifiers.json")
     
     def test_modifiers_loaded(self):
         """Verify modifiers.json is loaded correctly."""
@@ -91,8 +91,8 @@ class TestModifiers(unittest.TestCase):
 class TestComponentCloning(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        load_components("components.json")
-        load_modifiers("modifiers.json")
+        load_components("data/components.json")
+        load_modifiers("data/modifiers.json")
     
     def test_clone_creates_independent_copy(self):
         """Cloned component should be independent."""

@@ -16,7 +16,7 @@ from components import load_components, create_component
 class TestAIController(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        load_components("components.json")
+        load_components("data/components.json")
     
     def setUp(self):
         self.grid = SpatialGrid(cell_size=2000)
@@ -115,7 +115,7 @@ class TestAIStrategyStates(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        load_components("components.json")
+        load_components("data/components.json")
     
     def setUp(self):
         self.grid = SpatialGrid(cell_size=2000)

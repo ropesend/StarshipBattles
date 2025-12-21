@@ -345,7 +345,7 @@ class Electronics(Component):
 
 COMPONENT_REGISTRY = {}
 
-def load_components(filepath="components.json"):
+def load_components(filepath="data/components.json"):
     global COMPONENT_REGISTRY
     import os
     print(f"DEBUG: load_components called with filepath='{filepath}'")
@@ -408,7 +408,7 @@ def load_components(filepath="components.json"):
     except Exception as e:
         print(f"ERROR loading/parsing components json: {e}")
 
-def load_modifiers(filepath="modifiers.json"):
+def load_modifiers(filepath="data/modifiers.json"):
     global MODIFIER_REGISTRY
     import os
     if not os.path.exists(filepath):

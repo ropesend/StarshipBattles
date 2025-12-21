@@ -17,7 +17,7 @@ from components import (
 class TestWeaponBasics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        load_components("components.json")
+        load_components("data/components.json")
     
     def test_weapon_initialization(self):
         """Weapon should initialize with correct stats."""
@@ -76,7 +76,7 @@ class TestWeaponBasics(unittest.TestCase):
 class TestWeaponFiring(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        load_components("components.json")
+        load_components("data/components.json")
     
     def setUp(self):
         # Create ship with weapons
@@ -140,7 +140,7 @@ class TestWeaponFiring(unittest.TestCase):
 class TestLeadCalculation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        load_components("components.json")
+        load_components("data/components.json")
     
     def setUp(self):
         self.ship = Ship("Shooter", 0, 0, (255, 255, 255))

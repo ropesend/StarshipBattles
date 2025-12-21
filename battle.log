@@ -1,5 +1,5 @@
-2025-12-20 16:08:17,277 - INFO - Loaded 12 combat strategies
-2025-12-20 16:08:17,820 - DEBUG - LOADED Weapon Railgun on TestShip: Facing=0, Arc=1
-2025-12-20 16:08:17,910 - DEBUG - SHOT: Gunship fired Railgun. ShipAngle: 0.0, AimAngle: 0.0, Diff: 0.0, Arc: 1
-2025-12-20 16:08:17,910 - DEBUG - SHOT: Gunship fired Railgun. ShipAngle: 0.0, AimAngle: 0.0, Diff: 0.0, Arc: 1
-2025-12-20 16:08:17,911 - DEBUG - ARC FAIL: Gunship weapon Railgun | ShipAng: 180.0 | FacMod: 0 | GlbFac: 180.0 | Aim: 0.0 | Diff: -180.0 | Arc: 1
+2025-12-20 16:14:40,999 - INFO - Loaded 12 combat strategies
+2025-12-20 16:14:41,530 - DEBUG - LOADED Weapon Railgun on TestShip: Facing=0, Arc=1
+2025-12-20 16:14:41,619 - DEBUG - SHOT: Gunship fired Railgun. ShipAngle: 0.0, AimAngle: 0.0, Diff: 0.0, Arc: 1
+2025-12-20 16:14:41,619 - DEBUG - SHOT: Gunship fired Railgun. ShipAngle: 0.0, AimAngle: 0.0, Diff: 0.0, Arc: 1
+2025-12-20 16:14:41,620 - DEBUG - ARC FAIL: Gunship weapon Railgun | ShipAng: 180.0 | FacMod: 0 | GlbFac: 180.0 | Aim: 0.0 | Diff: -180.0 | Arc: 1

@@ -1032,8 +1032,8 @@ class BuilderSceneGUI:
         self.template_modifiers = {}
         
         # Reset AI
-        self.ship.ai_strategy = "max_range"
-        self.ai_dropdown.selected_option = "Max Range"
+        self.ship.ai_strategy = "optimal_firing_range"
+        self.ai_dropdown.selected_option = "Optimal Firing Range"
         
         # Recalculate - this will reset mass properly
         self.ship.recalculate_stats()

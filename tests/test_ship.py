@@ -11,7 +11,7 @@ from components import load_components, create_component, Bridge
 class TestShip(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        load_components("components.json")
+        load_components("data/components.json")
 
     def test_add_component_constraints(self):
         ship = Ship("TestShip", 0, 0, (255, 255, 255))

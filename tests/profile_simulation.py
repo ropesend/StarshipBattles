@@ -29,8 +29,8 @@ def run_battle_simulation(num_ships_per_team=10, num_ticks=300):
     
     # Load components
     base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    load_components(os.path.join(base_path, "components.json"))
-    load_modifiers(os.path.join(base_path, "modifiers.json"))
+    load_components(os.path.join(base_path, "data/components.json"))
+    load_modifiers(os.path.join(base_path, "data/modifiers.json"))
     
     # Create ships
     ships = []
