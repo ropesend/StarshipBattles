@@ -63,7 +63,8 @@ class TestAIController(unittest.TestCase):
     
     def test_strategy_dispatch_max_range(self):
         """AI should use max_range strategy by default."""
-        self.ship1.ai_strategy = 'max_range'
+        self.ship1.ai_strategy = 'max_weapons_range'
+        self.ship1.comp_trigger_pulled = False  # Initialize attribute
         self.ai.update(0.016)
         # Should have trigger pulled for firing
         self.assertTrue(self.ship1.comp_trigger_pulled)
@@ -71,8 +72,9 @@ class TestAIController(unittest.TestCase):
     def test_strategy_dispatch_flee(self):
         """AI flee strategy should not fire."""
         self.ship1.ai_strategy = 'flee'
+        self.ship1.comp_trigger_pulled = True  # Initialize with True to confirm it gets set False
         self.ai.update(0.016)
-        # Flee strategy should NOT fire
+        # Flee strategy should NOT fire (retreat_hp_threshold=1.0 means always flee)
         self.assertFalse(self.ship1.comp_trigger_pulled)
     
     def test_strategy_dispatch_kamikaze(self):
@@ -136,6 +138,14 @@ class TestAIStrategyStates(unittest.TestCase):
     def test_attack_run_state_initialization(self):
         """Attack run should initialize state on first update."""
         self.ship.ai_strategy = 'attack_run'
+        self.ship.comp_trigger_pulled = False
+        # Move ship far away so it starts in approach mode
+        self.ship.position = pygame.math.Vector2(0, 0)
+        self.target.position = pygame.math.Vector2(5000, 0)  # Far away
+        self.grid.clear()
+        self.grid.insert(self.ship)
+        self.grid.insert(self.target)
+        
         self.ai.update(0.016)
         
         self.assertTrue(hasattr(self.ai, 'attack_state'))

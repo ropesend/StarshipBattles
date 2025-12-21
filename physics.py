@@ -1,5 +1,4 @@
 import pygame
-import math
 
 class Vector2(pygame.math.Vector2):
     """
@@ -36,29 +35,6 @@ class PhysicsBody:
         """Applies a force vector to the body."""
         if self.mass > 0:
             self.acceleration += force / self.mass
-
-    def update_physics(self, dt):
-        """Updates position and velocity based on acceleration and drag."""
-        # Simple Euler integration
-        
-        # Linear
-        self.velocity += self.acceleration * dt
-        
-        # Apply Drag
-        if self.velocity.length() > 0:
-            # Simple friction/drag model: F_drag = -k * v
-            # We apply it as a damping factor for stability 
-            # velocity *= (1.0 - self.drag * dt) would be exponential decay
-            # let's stick to simple damping for space feel but preventing runaways
-            pass 
-        
-        self.position += self.velocity * dt
-        self.acceleration = pygame.math.Vector2(0, 0) # Reset acceleration
-
-        # Angular
-        self.angle += self.angular_velocity * dt
-        # Wrap angle 0-360
-        self.angle %= 360
 
     def forward_vector(self):
         """Returns the forward directional vector based on angle."""

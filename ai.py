@@ -1,125 +1,249 @@
 import math
+import json
 import pygame
 from components import LayerType
 from logger import log_info
+
+# Load combat strategies from JSON
+COMBAT_STRATEGIES = {}
+ENGAGE_DISTANCES = {}
+
+def load_combat_strategies(filepath="combatstrategies.json"):
+    global COMBAT_STRATEGIES, ENGAGE_DISTANCES
+    try:
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+            COMBAT_STRATEGIES = data.get('strategies', {})
+            ENGAGE_DISTANCES = data.get('engage_distances', {})
+            log_info(f"Loaded {len(COMBAT_STRATEGIES)} combat strategies")
+    except FileNotFoundError:
+        print(f"Warning: {filepath} not found, using defaults")
+        COMBAT_STRATEGIES = {
+            'max_range': {
+                'name': 'Max Range',
+                'engage_distance': 'max_range',
+                'targeting_priority': ['nearest'],
+                'avoid_collisions': True,
+                'retreat_hp_threshold': 0.1
+            }
+        }
+        ENGAGE_DISTANCES = {'max_range': 1.0, 'ram': 0}
+
+# Load on module import
+load_combat_strategies()
+
+def get_strategy_names():
+    """Return list of available strategy IDs for UI."""
+    return list(COMBAT_STRATEGIES.keys())
 
 class AIController:
     def __init__(self, ship, grid, enemy_team_id):
         self.ship = ship
         self.grid = grid
         self.enemy_team_id = enemy_team_id
+        self.attack_state = 'approach'
+        self.attack_timer = 0
+        self.last_strategy = None
         
+    def get_current_strategy(self):
+        """Get strategy definition for ship's current strategy."""
+        strategy_id = getattr(self.ship, 'ai_strategy', 'max_weapons_range')
+        return COMBAT_STRATEGIES.get(strategy_id, COMBAT_STRATEGIES.get('max_weapons_range', {}))
+    
     def find_target(self):
-        # Efficiently find nearest enemy using grid?
-        # For now, simplistic: query large radius or just iterate all known if passed?
-        # The prompt implies using the grid for targeting.
-        # Let's query a large radius (e.g., 200000) around the ship to find candidates.
+        """Find target based on strategy's targeting priority."""
         candidates = self.grid.query_radius(self.ship.position, 200000)
+        enemies = [obj for obj in candidates 
+                   if obj.is_alive and hasattr(obj, 'team_id') 
+                   and obj.team_id == self.enemy_team_id]
         
-        nearest = None
-        min_dist = float('inf')
-        
-        for obj in candidates:
-            if not obj.is_alive: continue
-            if not hasattr(obj, 'team_id'): continue # Ignore non-ships
-            if obj.team_id != self.enemy_team_id: continue
+        if not enemies:
+            return None
             
-            d = self.ship.position.distance_to(obj.position)
-            if d < min_dist:
-                min_dist = d
-                nearest = obj
+        strategy = self.get_current_strategy()
+        priorities = strategy.get('targeting_priority', ['nearest'])
+        
+        # Score each enemy based on priorities
+        def score_target(enemy):
+            score = 0
+            for i, priority in enumerate(priorities):
+                weight = len(priorities) - i  # Higher weight for earlier priorities
                 
-        return nearest
+                if priority == 'nearest':
+                    dist = self.ship.position.distance_to(enemy.position)
+                    score -= dist * weight  # Negative = prefer closer
+                elif priority == 'farthest':
+                    dist = self.ship.position.distance_to(enemy.position)
+                    score += dist * weight
+                elif priority == 'largest':
+                    score += getattr(enemy, 'mass', 100) * weight
+                elif priority == 'smallest':
+                    score -= getattr(enemy, 'mass', 100) * weight
+                elif priority == 'fastest':
+                    speed = getattr(enemy, 'velocity', pygame.math.Vector2(0,0)).length()
+                    score += speed * weight
+                elif priority == 'slowest':
+                    speed = getattr(enemy, 'velocity', pygame.math.Vector2(0,0)).length()
+                    score -= speed * weight
+                elif priority == 'most_damaged':
+                    hp_pct = self._get_hp_percent(enemy)
+                    score -= hp_pct * weight * 100  # Prefer lower HP%
+                elif priority == 'least_damaged':
+                    hp_pct = self._get_hp_percent(enemy)
+                    score += hp_pct * weight * 100
+                elif priority == 'strongest':
+                    score += getattr(enemy, 'mass', 100) * weight
+                elif priority == 'weakest':
+                    score -= getattr(enemy, 'mass', 100) * weight
+                elif priority == 'has_weapons':
+                    has_wpns = any(hasattr(c, 'damage') for layer in getattr(enemy, 'layers', {}).values() 
+                                   for c in layer.get('components', []))
+                    score += weight * 1000 if has_wpns else 0
+                elif priority == 'most_armor':
+                    armor_hp = getattr(enemy, 'layers', {}).get(LayerType.ARMOR, {}).get('hp_pool', 0)
+                    score += armor_hp * weight
+                elif priority == 'least_armor':
+                    armor_hp = getattr(enemy, 'layers', {}).get(LayerType.ARMOR, {}).get('hp_pool', 0)
+                    score -= armor_hp * weight
+            return score
+        
+        return max(enemies, key=score_target)
+    
+    def _get_hp_percent(self, ship):
+        """Get ship's current HP as percentage."""
+        # Check armor layer HP pool
+        total_max = sum(layer.get('max_hp_pool', 0) for layer in getattr(ship, 'layers', {}).values())
+        total_current = sum(layer.get('hp_pool', 0) for layer in getattr(ship, 'layers', {}).values())
+        
+        # If no armor HP pools, check individual component HP
+        if total_max == 0:
+            for layer in getattr(ship, 'layers', {}).values():
+                for comp in layer.get('components', []):
+                    total_max += getattr(comp, 'max_hp', 0)
+                    total_current += getattr(comp, 'current_hp', getattr(comp, 'max_hp', 0))
+        
+        return total_current / total_max if total_max > 0 else 1.0
 
     def update(self, dt):
-        if not self.ship.is_alive: return
+        if not self.ship.is_alive: 
+            return
 
-        # Target Acquisition
+        strategy = self.get_current_strategy()
+        strategy_id = getattr(self.ship, 'ai_strategy', 'max_weapons_range')
+        
+        # Target Acquisition (do this first so retreat can use target)
         target = self.ship.current_target
         if not target or not target.is_alive:
             target = self.find_target()
             self.ship.current_target = target
             
         if not target:
-            # Idle / Drift
             self.ship.comp_trigger_pulled = False
             return
         
-        # Dispatch Strategy
-        strategy = getattr(self.ship, 'ai_strategy', 'max_range')
+        # Check retreat condition
+        hp_pct = self._get_hp_percent(self.ship)
+        retreat_threshold = strategy.get('retreat_hp_threshold', 0.1)
         
-        # State Reset Logic
-        if not hasattr(self, 'last_strategy'):
-            self.last_strategy = strategy
+        if hp_pct <= retreat_threshold and retreat_threshold > 0:
+            # Retreat mode
+            self.update_flee(dt, target, strategy.get('fire_while_retreating', False))
+            return
         
-        if self.last_strategy != strategy:
-            # Strategy changed! Reset states.
-            if hasattr(self, 'attack_state'): del self.attack_state
-            if hasattr(self, 'attack_timer'): del self.attack_timer
-            self.last_strategy = strategy
-            
-        if strategy == 'kamikaze':
-            self.update_kamikaze(dt, target)
-        elif strategy == 'attack_run':
-            self.update_attack_run(dt, target)
-        elif strategy == 'flee':
-            self.update_flee(dt, target)
+        # Reset state on strategy change
+        if self.last_strategy != strategy_id:
+            self.attack_state = 'approach'
+            self.attack_timer = 0
+            self.last_strategy = strategy_id
+        
+        # Get engage distance multiplier
+        engage_key = strategy.get('engage_distance', 'max_range')
+        engage_mult = ENGAGE_DISTANCES.get(engage_key, 1.0)
+        
+        # Dispatch based on engage distance
+        if engage_key == 'ram':
+            self.update_ramming(dt, target)
+        elif strategy.get('attack_run_behavior'):
+            self.update_attack_run(dt, target, strategy)
         else:
-            self.update_max_range(dt, target)
+            self.update_range_engagement(dt, target, engage_mult, strategy)
 
-    def update_kamikaze(self, dt, target):
-        # KAMIKAZE: Ram target, no avoidance
+    def update_ramming(self, dt, target):
+        """Ram target, no avoidance."""
         self.ship.comp_trigger_pulled = True
         self.navigate_to(dt, target.position, stop_dist=0, precise=False)
         
-    def update_flee(self, dt, target):
-        # FLEE: Run away from target
-        self.ship.comp_trigger_pulled = False # Don't fire while fleeing?
+    def update_flee(self, dt, target, fire_while_fleeing=False):
+        """Run away from target."""
+        self.ship.comp_trigger_pulled = fire_while_fleeing
         
         vec = self.ship.position - target.position
-        if vec.length() == 0: vec = pygame.math.Vector2(1,0)
+        if vec.length() == 0: 
+            vec = pygame.math.Vector2(1, 0)
         
         flee_pos = self.ship.position + vec.normalize() * 1000
         self.navigate_to(dt, flee_pos, stop_dist=0, precise=False)
 
-    def update_attack_run(self, dt, target):
-        # ATTACK RUN: Approach -> Turn -> Retreat -> Turn
-        # Need state. Initialize if missing.
-        if not hasattr(self, 'attack_state'):
-            self.attack_state = 'approach' 
-            self.attack_timer = 0
-            
+    def update_attack_run(self, dt, target, strategy):
+        """Attack run: approach -> fire -> retreat -> repeat."""
+        behavior = strategy.get('attack_run_behavior', {})
+        approach_dist = self.ship.max_weapon_range * behavior.get('approach_distance', 0.3)
+        retreat_dist = self.ship.max_weapon_range * behavior.get('retreat_distance', 0.8)
+        retreat_duration = behavior.get('retreat_duration', 2.0)
+        
         dist = self.ship.position.distance_to(target.position)
         
         if self.attack_state == 'approach':
             self.ship.comp_trigger_pulled = True
-            # Fly to near point blank (e.g. 150)
-            target_pos = target.position
+            self.navigate_to(dt, target.position, stop_dist=approach_dist, precise=False)
             
-            # Avoid direct collision if not kamikaze? 
-            # Offset slightly to pass by?
-            # For now, just aim at it, collision avoidance usually handles the specific hit.
-            # But let's try to do a "pass"
-            
-            self.navigate_to(dt, target_pos, stop_dist=100, precise=False)
-            
-            if dist < 200:
+            if dist < approach_dist * 1.5:
                 self.attack_state = 'retreat'
-                self.attack_timer = 2.0 # Run away for 2 seconds
+                self.attack_timer = retreat_duration
                 
         elif self.attack_state == 'retreat':
-            self.ship.comp_trigger_pulled = False
+            self.ship.comp_trigger_pulled = strategy.get('fire_while_retreating', False)
             self.attack_timer -= dt
             
-            # Fly away
             vec = self.ship.position - target.position
-            if vec.length() == 0: vec = pygame.math.Vector2(1,0)
+            if vec.length() == 0: 
+                vec = pygame.math.Vector2(1, 0)
             flee_pos = self.ship.position + vec.normalize() * 1000
             
             self.navigate_to(dt, flee_pos, stop_dist=0, precise=False)
             
-            if self.attack_timer <= 0 and dist > self.ship.max_weapon_range * 0.8:
+            if self.attack_timer <= 0 and dist > retreat_dist:
                 self.attack_state = 'approach'
+
+    def update_range_engagement(self, dt, target, engage_mult, strategy):
+        """Engage at specified range multiplier of max weapon range."""
+        self.ship.comp_trigger_pulled = True
+        
+        # Collision avoidance if enabled
+        if strategy.get('avoid_collisions', True):
+            override_pos = self.check_avoidance()
+            if override_pos:
+                self.navigate_to(dt, override_pos, stop_dist=0, precise=False)
+                return
+        
+        # Calculate optimal distance based on engage multiplier
+        opt_dist = self.ship.max_weapon_range * engage_mult
+        if opt_dist < 150:
+            opt_dist = 150  # Minimum spacing
+        
+        dist = self.ship.position.distance_to(target.position)
+        
+        if dist > opt_dist:
+            # Close in
+            self.navigate_to(dt, target.position, stop_dist=opt_dist, precise=True)
+        else:
+            # Kite - maintain distance
+            vec = self.ship.position - target.position
+            if vec.length() == 0: 
+                vec = pygame.math.Vector2(1, 0)
+            
+            kite_pos = target.position + vec.normalize() * opt_dist
+            self.navigate_to(dt, kite_pos, stop_dist=0, precise=True)
 
     def update_max_range(self, dt, target):
         # MAX RANGE (Kiting) - Original behavior + Coll Avoidance

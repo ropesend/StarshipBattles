@@ -16,3 +16,4 @@ venv/
 !component_presets.json
 !builder_theme.json
 !abilities.json
+!combatstrategies.json

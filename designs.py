@@ -17,6 +17,7 @@ def create_brick(x, y):
     
     ship.add_component(create_component("fuel_tank"), LayerType.CORE)
     ship.add_component(create_component("ordnance_tank"), LayerType.CORE)
+    ship.add_component(create_component("generator"), LayerType.INNER)  # Added generator
     
     return ship
 
@@ -40,5 +41,6 @@ def create_interceptor(x, y):
     ship.add_component(create_component("fuel_tank"), LayerType.INNER)
     ship.add_component(create_component("ordnance_tank"), LayerType.CORE)
     ship.add_component(create_component("ordnance_tank"), LayerType.INNER)
+    ship.add_component(create_component("generator"), LayerType.INNER)  # Added generator
     
     return ship

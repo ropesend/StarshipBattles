@@ -207,7 +207,9 @@ class Ship(PhysicsBody):
         
         if self.mass > 0:
             self.acceleration_rate = (self.total_thrust * K_THRUST) / (self.mass * self.mass)
-            self.turn_speed = (self.turn_speed * K_TURN) / (self.mass ** 1.5)  # Changed to 1.5 exponent
+            # turn_speed was already accumulated from thrusters above, now apply mass scaling
+            raw_turn_speed = self.turn_speed  # This is the sum from all thrusters
+            self.turn_speed = (raw_turn_speed * K_TURN) / (self.mass ** 1.5)  # Changed to 1.5 exponent
             
             # Max Speed = Thrust / Mass logic (Linear)
             # Or maintain drag model?
