@@ -4,9 +4,13 @@
         "Escort": "escort.png",
         "Frigate": "frigate.png",
         "Destroyer": "destroyer.png",
+        "Light Cruiser": "lightcruiser.png",
         "Cruiser": "cruiser.png",
-        "Battlecruiser": "battlecruiser.png",
+        "Heavy Cruiser": "heavycruiser.png",
+        "Battle Cruiser": "battlecruiser.png",
         "Battleship": "battleship.png",
-        "Dreadnought": "dreadnaught.png"
+        "Dreadnought": "dreadnaught.png",
+        "Superdreadnaugh": "superdreadnaught.png",
+        "Monitor": "monitor.png"
     }
 }

@@ -70,6 +70,9 @@ class TestBuilderImprovements(unittest.TestCase):
         mock_ship.max_fuel = 1000
         mock_ship.max_ammo = 100
         mock_ship.max_energy = 1000
+        mock_ship.max_shields = 200
+        mock_ship.shield_regen_rate = 10
+        mock_ship.shield_regen_cost = 5
         mock_ship.layer_status = {}
         mock_ship.get_ability_total.return_value = 100
         

@@ -66,8 +66,8 @@
                 }
             }
         },
-        "Cruiser": {
-            "hull_mass": 400,
+        "Light Cruiser": {
+            "hull_mass": 300,
             "max_mass": 8000,
             "requirements": {
                 "command": {
@@ -88,9 +88,53 @@
                 }
             }
         },
-        "Battlecruiser": {
-            "hull_mass": 800,
+        "Cruiser": {
+            "hull_mass": 400,
             "max_mass": 16000,
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                },
+                "crew_balance": {
+                    "ability": "CrewCapacity",
+                    "min_value": 0
+                }
+            }
+        },
+        "Heavy Cruiser": {
+            "hull_mass": 600,
+            "max_mass": 32000,
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                },
+                "crew_balance": {
+                    "ability": "CrewCapacity",
+                    "min_value": 0
+                }
+            }
+        },
+        "Battle Cruiser": {
+            "hull_mass": 800,
+            "max_mass": 64000,
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -112,7 +156,7 @@
         },
         "Battleship": {
             "hull_mass": 1600,
-            "max_mass": 32000,
+            "max_mass": 128000,
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -134,7 +178,51 @@
         },
         "Dreadnought": {
             "hull_mass": 3200,
-            "max_mass": 64000,
+            "max_mass": 256000,
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                },
+                "crew_balance": {
+                    "ability": "CrewCapacity",
+                    "min_value": 0
+                }
+            }
+        },
+        "Superdreadnaugh": {
+            "hull_mass": 6400,
+            "max_mass": 512000,
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                },
+                "crew_balance": {
+                    "ability": "CrewCapacity",
+                    "min_value": 0
+                }
+            }
+        },
+        "Monitor": {
+            "hull_mass": 12800,
+            "max_mass": 1024000,
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",

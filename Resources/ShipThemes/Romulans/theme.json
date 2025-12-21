@@ -4,9 +4,13 @@
         "Escort": "processed_output/escort.png",
         "Frigate": "processed_output/frigate.png",
         "Destroyer": "processed_output/Destroyer.png",
+        "Light Cruiser": "processed_output/cruiser.png",
         "Cruiser": "processed_output/cruiser.png",
-        "Battlecruiser": "processed_output/Battlecruiser.png",
+        "Heavy Cruiser": "processed_output/cruiser.png",
+        "Battle Cruiser": "processed_output/Battlecruiser.png",
         "Battleship": "processed_output/battleship.png",
-        "Dreadnought": "processed_output/Dreadnaught.png"
+        "Dreadnought": "processed_output/Dreadnaught.png",
+        "Superdreadnaugh": "processed_output/Dreadnaught.png",
+        "Monitor": "processed_output/Dreadnaught.png"
     }
 }
