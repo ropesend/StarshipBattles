@@ -103,103 +103,72 @@ class Component:
     def recalculate_stats(self):
         """Recalculate component stats with multiplicative modifier stacking.
         
-        Modifiers stack multiplicatively:
-        - size_mount 2x * range_mount 1.5x = 3x total multiplier
+        Modifiers stack multiplicatively.
+        Logic is now delegated to component_modifiers.py registry.
         """
+        from component_modifiers import apply_modifier_effects
+
         # Start with base values
         self.mass = self.base_mass
         self.max_hp = self.base_max_hp
         
-        # Initialize stat multipliers (start at 1.0)
-        mass_mult = 1.0
-        hp_mult = 1.0
-        damage_mult = 1.0
-        range_mult = 1.0
-        cost_mult = 1.0
-        thrust_mult = 1.0
-        turn_mult = 1.0
-        energy_gen_mult = 1.0
-        capacity_mult = 1.0
+        # Initialize stat multipliers and accumulators
+        stats = {
+            'mass_mult': 1.0,
+            'hp_mult': 1.0,
+            'damage_mult': 1.0,
+            'range_mult': 1.0,
+            'cost_mult': 1.0,
+            'thrust_mult': 1.0,
+            'turn_mult': 1.0,
+            'energy_gen_mult': 1.0,
+            'capacity_mult': 1.0,
+            'mass_add': 0.0,
+            'arc_add': 0.0,
+            'arc_set': None,
+            'properties': {}
+        }
         
-        # Process all modifiers to collect multipliers
+        # Process all modifiers
         for m in self.modifiers:
-            eff = m.definition.effects
-            val = m.value
-            
-            # Simple additive effects (add percentage to multiplier)
-            if 'mass_mult' in eff:
-                mass_mult *= (1.0 + eff['mass_mult'])  # 0.25 means +25% = 1.25x
-            if 'hp_mult' in eff:
-                hp_mult *= (1.0 + eff['hp_mult'])  # 1.0 means +100% = 2x
-                
-            # Mass added per unit (e.g. turret mount)
-            if 'mass_add_per_unit' in eff:
-                self.mass += val * eff['mass_add_per_unit']
-                
-            # Arc effects
-            if 'arc_add' in eff:
-                if hasattr(self, 'firing_arc'):
-                    base = self.data.get('firing_arc', 3)
-                    self.firing_arc = base + val
-                    
-            if 'arc_set' in eff:
-                if hasattr(self, 'firing_arc'):
-                    self.firing_arc = val
-                    
-            # SPECIAL EFFECTS - collect multipliers
-            if 'special' in eff:
-                if eff['special'] == 'simple_size':
-                    # Multiplies almost everything by Value (1x-128x)
-                    scale = val
-                    mass_mult *= scale
-                    hp_mult *= scale
-                    damage_mult *= scale
-                    cost_mult *= scale
-                    thrust_mult *= scale
-                    turn_mult *= scale
-                    energy_gen_mult *= scale
-                    capacity_mult *= scale
-                    
-                elif eff['special'] == 'range_mount':
-                    # Each level doubles range, mass/hp/cost increase by 3.5x per level
-                    level = val
-                    range_mult *= 2.0 ** level   # 1, 2, 4, 8, 16, 32
-                    cost_mult_increase = 3.5 ** level   # 1, 3.5, 12.25, etc.
-                    mass_mult *= cost_mult_increase
-                    hp_mult *= cost_mult_increase
-                    
-                elif eff['special'] == 'turret_mount':
-                    # Logarithmic scaling - first degrees cost most, diminishing returns
-                    # At 0°: 1.0x, at 90°: ~1.71x, at 180°: 2.0x
-                    # Formula: mult = 1.0 + 0.514 * ln(1 + arc/30)
-                    import math
-                    arc = val
-                    if arc > 0:
-                        turret_mult = 1.0 + 0.514 * math.log(1.0 + arc / 30.0)
-                        mass_mult *= turret_mult
-                    
-                elif eff['special'] == 'facing':
-                    if hasattr(self, 'facing_angle'):
-                        self.facing_angle = val
+            apply_modifier_effects(m.definition, m.value, stats)
+
+        # Apply specific property overrides (like facing)
+        for prop, val in stats['properties'].items():
+            if hasattr(self, prop):
+                setattr(self, prop, val)
+
+        # Apply Arc effects
+        if hasattr(self, 'firing_arc'):
+            # If 'arc_set' was used, it overrides everything else
+            if stats['arc_set'] is not None:
+                self.firing_arc = stats['arc_set']
+            else:
+                # Otherwise apply additive modifiers to base
+                # Using 3 as base assumption if missing, to match original logic
+                base = self.data.get('firing_arc', 3)
+                self.firing_arc = base + stats['arc_add']
 
         # Apply all accumulated multipliers to base values
-        self.mass *= mass_mult
-        self.max_hp = int(self.base_max_hp * hp_mult)
+        # Mass has an additive component too
+        self.mass = (self.mass + stats['mass_add']) * stats['mass_mult']
+        
+        self.max_hp = int(self.base_max_hp * stats['hp_mult'])
         
         if hasattr(self, 'damage'):
-            self.damage = int(self.data.get('damage', 0) * damage_mult)
+            self.damage = int(self.data.get('damage', 0) * stats['damage_mult'])
         if hasattr(self, 'range'):
-            self.range = int(self.data.get('range', 0) * range_mult)
+            self.range = int(self.data.get('range', 0) * stats['range_mult'])
         if hasattr(self, 'cost'):
-            self.cost = int(self.data.get('cost', 0) * cost_mult)
+            self.cost = int(self.data.get('cost', 0) * stats['cost_mult'])
         if hasattr(self, 'thrust_force'):
-            self.thrust_force = self.data.get('thrust_force', 0) * thrust_mult
+            self.thrust_force = self.data.get('thrust_force', 0) * stats['thrust_mult']
         if hasattr(self, 'turn_speed'):
-            self.turn_speed = self.data.get('turn_speed', 0) * turn_mult
+            self.turn_speed = self.data.get('turn_speed', 0) * stats['turn_mult']
         if hasattr(self, 'energy_generation_rate'):
-            self.energy_generation_rate = self.data.get('energy_generation', 0) * energy_gen_mult
+            self.energy_generation_rate = self.data.get('energy_generation', 0) * stats['energy_gen_mult']
         if hasattr(self, 'capacity'):
-            self.capacity = int(self.data.get('capacity', 0) * capacity_mult)
+            self.capacity = int(self.data.get('capacity', 0) * stats['capacity_mult'])
             
         # If component was at full HP before recalculation (or is new), set to new max
         # Otherwise just ensure current_hp doesn't exceed new max
@@ -375,7 +344,6 @@ def load_components(filepath="data/components.json"):
         with open(filepath, 'r') as f:
             data = json.load(f)
             
-
         
         for comp_def in data['components']:
             c_type = comp_def['type']
@@ -444,6 +412,3 @@ def create_component(component_id):
 
 def get_all_components():
     return list(COMPONENT_REGISTRY.values())
-
-# For backwards compatibility during refactor, we might need aliases references.
-# But better to fix the calls.

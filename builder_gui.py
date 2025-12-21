@@ -4,7 +4,7 @@ Ship Builder using pygame_gui for a professional UI.
 import json
 import math
 import tkinter
-from tkinter import filedialog, simpledialog
+from tkinter import simpledialog
 
 import pygame
 import pygame_gui
@@ -21,10 +21,15 @@ from components import (
     CrewQuarters, LifeSupport
 )
 from sprites import SpriteManager
+from preset_manager import PresetManager
+from ship_io import ShipIO
 
-# Initialize Tkinter root and hide it (for file dialogs)
-tk_root = tkinter.Tk()
-tk_root.withdraw()
+# Initialize Tkinter root and hide it (for simpledialog)
+try:
+    tk_root = tkinter.Tk()
+    tk_root.withdraw()
+except:
+    tk_root = None
 
 # Colors
 BG_COLOR = (20, 20, 30)
@@ -76,36 +81,17 @@ class BuilderSceneGUI:
         # Sprite manager
         self.sprite_mgr = SpriteManager.get_instance()
         
-        # Layout dimensions
-        self.left_panel_width = 450  # Widened for wider sliders and finer control
-        self.right_panel_width = 380  # Widened for unified modifier interface
-        self.bottom_bar_height = 60
-        self.component_row_height = 40  # 2x row height for larger icons/text
+        # Managers
+        self.preset_manager = PresetManager()
         
-        # Component presets (persistent)
-        self.component_presets = {}
-        self._load_presets()
+        # Layout dimensions
+        self.left_panel_width = 450
+        self.right_panel_width = 380
+        self.bottom_bar_height = 60
+        self.component_row_height = 40
         
         # Create UI
         self._create_ui()
-        
-    def _load_presets(self):
-        """Load component presets from JSON."""
-        try:
-            with open('component_presets.json', 'r') as f:
-                data = json.load(f)
-                self.component_presets = data.get('presets', {})
-                logger.debug(f"Loaded {len(self.component_presets)} presets")
-        except FileNotFoundError:
-            self.component_presets = {}
-        except json.JSONDecodeError:
-            self.component_presets = {}
-            
-    def _save_presets(self):
-        """Save component presets to JSON."""
-        with open('component_presets.json', 'w') as f:
-            json.dump({'presets': self.component_presets}, f, indent=2)
-        logger.debug(f"Saved {len(self.component_presets)} presets")
         
     def _create_ui(self):
         """Create all pygame_gui UI elements."""
@@ -125,9 +111,9 @@ class BuilderSceneGUI:
             container=self.left_panel
         )
         
-        # Component selection list - height fills to half page (where modifier settings start)
+        # Component selection list
         half_page_y = (self.height - self.bottom_bar_height) // 2
-        list_height = half_page_y - 40  # Leave space for title
+        list_height = half_page_y - 40
         component_names = [f"{c.name} ({c.mass}t)" for c in self.available_components]
         self.component_list = UISelectionList(
             relative_rect=pygame.Rect(5, 35, self.left_panel_width - 10, list_height),
@@ -137,7 +123,7 @@ class BuilderSceneGUI:
             allow_multi_select=False
         )
         
-        # Modifier buttons will be created dynamically (includes the "New Component Settings" label)
+        # Modifier buttons will be created dynamically
         self.modifier_buttons = []
         self._rebuild_modifier_ui()
         
@@ -218,7 +204,7 @@ class BuilderSceneGUI:
         )
         y += 30
         
-        # Stats labels (will be updated dynamically)
+        # Stats labels
         self.stat_labels = {}
         stat_names = [
             'mass', 'max_hp', 'max_speed', 'turn_rate', 'acceleration',
@@ -330,7 +316,7 @@ class BuilderSceneGUI:
             manager=self.ui_manager
         )
         
-        # Firing arc toggle (in center area)
+        # Firing arc toggle
         self.arc_toggle_btn = UIButton(
             relative_rect=pygame.Rect(
                 self.left_panel_width + 10,
@@ -348,26 +334,22 @@ class BuilderSceneGUI:
         self._update_stats_display()
         
     def _rebuild_modifier_ui(self):
-        """Rebuild unified modifier UI - works for both new components and editing existing ones."""
+        """Rebuild unified modifier UI."""
         # Clear all modifier UI elements
         for btn in getattr(self, 'modifier_buttons', []):
-            if btn:
-                btn.kill()
+            if btn: btn.kill()
         self.modifier_buttons = []
         
         for slider in getattr(self, 'modifier_sliders', []):
-            if slider:  # Sliders can be None for boolean modifiers
-                slider.kill()
+            if slider: slider.kill()
         self.modifier_sliders = []
         
         for lbl in getattr(self, 'modifier_slider_labels', []):
-            if lbl:
-                lbl.kill()
+            if lbl: lbl.kill()
         self.modifier_slider_labels = []
         
         for entry in getattr(self, 'modifier_entries', []):
-            if entry:  # Entries can be None for boolean modifiers
-                entry.kill()
+            if entry: entry.kill()
         self.modifier_entries = []
         
         for ui_el in getattr(self, 'modifier_extra_ui', []):
@@ -474,7 +456,7 @@ class BuilderSceneGUI:
                     entry.disable()
                 self.modifier_entries.append(entry)
                 
-                # Slider - ensure right button doesn't overlap panel edge
+                # Slider
                 slider = UIHorizontalSlider(
                     relative_rect=pygame.Rect(260, y, 165, 28),
                     start_value=current_val,
@@ -488,7 +470,6 @@ class BuilderSceneGUI:
                     slider.disable()
                 self.modifier_sliders.append(slider)
             else:
-                # Boolean modifiers - no entry/slider needed, add placeholders
                 self.modifier_entries.append(None)
                 self.modifier_sliders.append(None)
             
@@ -507,7 +488,8 @@ class BuilderSceneGUI:
             y += 35
             
             # Presets list
-            if self.component_presets:
+            presets = self.preset_manager.get_all_presets()
+            if presets:
                 preset_label = UILabel(
                     relative_rect=pygame.Rect(10, y, 200, 20),
                     text="Saved Presets:",
@@ -517,7 +499,7 @@ class BuilderSceneGUI:
                 self.modifier_extra_ui.append(preset_label)
                 y += 22
             
-            for preset_name in self.component_presets.keys():
+            for preset_name in presets.keys():
                 safe_id = preset_name.replace(' ', '_').replace('.', '_')
                 
                 btn = UIButton(
@@ -539,30 +521,10 @@ class BuilderSceneGUI:
                 self.preset_delete_buttons.append((preset_name, del_btn))
                 y += 30
         else:
-            # Set save_preset_btn to None when editing
             self.save_preset_btn = None
-    
+            
     def _rebuild_selected_component_modifiers(self):
-        """Deprecated - now handled by unified _rebuild_modifier_ui. Clears old UI if present."""
-        # Clear any old selected component UI from the right panel
-        for btn in getattr(self, 'selected_comp_buttons', []):
-            btn.kill()
-        self.selected_comp_buttons = []
-        
-        for slider in getattr(self, 'selected_comp_sliders', []):
-            slider.kill()
-        self.selected_comp_sliders = []
-        
-        for lbl in getattr(self, 'selected_comp_labels', []):
-            lbl.kill()
-        self.selected_comp_labels = []
-        
-        for entry in getattr(self, 'selected_comp_entries', []):
-            if entry:
-                entry.kill()
-        self.selected_comp_entries = []
-        
-        # Now rebuild unified UI on left panel
+        """Rebuild unified component modifiers UI."""
         self._rebuild_modifier_ui()
 
     def _update_stats_display(self):
@@ -604,16 +566,13 @@ class BuilderSceneGUI:
                 f"{layer_name}: {ratio:.0f}% / {limit:.0f}% ({mass:.0f}t) {status_icon}"
             )
         
-        # Update crew stats using ability totals
+        # Update crew stats
         crew_capacity = s.get_ability_total('CrewCapacity')
         life_support = s.get_ability_total('LifeSupportCapacity')
         
-        # Crew required is the absolute value of negative crew capacity
         crew_required = abs(min(0, crew_capacity))
-        # Crew housed is positive crew capacity
         crew_housed = max(0, crew_capacity)
         
-        # Display crew stats with balance check
         crew_ok = crew_capacity >= 0
         crew_status = "✓" if crew_ok else f"✗ -{abs(crew_capacity)}"
         self.crew_labels['crew_required'].set_text(f"Crew Required: {crew_required}")
@@ -623,12 +582,11 @@ class BuilderSceneGUI:
         ls_status = "✓" if ls_ok else f"✗ -{crew_required - life_support}"
         self.crew_labels['life_support'].set_text(f"Life Support: {life_support} {ls_status}")
         
-        # Update requirements - use ship's requirements system
+        # Update requirements
         missing_reqs = s.get_missing_requirements()
         if not s.mass_limits_ok:
             missing_reqs.append("⚠ Over mass limit")
         
-        # Build HTML for requirements text box
         if not missing_reqs:
             html = "<font color='#88ff88'>✓ All requirements met</font>"
         else:
@@ -645,25 +603,21 @@ class BuilderSceneGUI:
         # Update hover detection
         mx, my = pygame.mouse.get_pos()
         self.hovered_component = None
-        self.hovered_palette_index = None  # Track which palette item is hovered
+        self.hovered_palette_index = None
         
-        # Check palette area for hover (before schematic)
-        # Row height is 40px (set via builder_theme.json list_item_height)
         list_top_y = 35
         half_page_y = (self.height - self.bottom_bar_height) // 2
         list_height = half_page_y - 40
-        item_height = 40  # Matches theme list_item_height
+        item_height = 40
         
-        # Check if mouse is in the component list area
+        # Check component list hover
         if 5 <= mx < self.left_panel_width - 5 and list_top_y <= my < list_top_y + list_height:
-            # Calculate which item is hovered based on y position
             relative_y = my - list_top_y
             idx = relative_y // item_height
             
-            # Clamp to valid range
             if 0 <= idx < len(self.available_components):
                 self.hovered_palette_index = idx
-                # Create a temp component with template modifiers to show preview
+                # Preview temp component
                 base_comp = self.available_components[idx]
                 temp_comp = base_comp.clone()
                 for m_id, val in self.template_modifiers.items():
@@ -676,12 +630,11 @@ class BuilderSceneGUI:
                         if allow:
                             temp_comp.add_modifier(m_id)
                             m = temp_comp.get_modifier(m_id)
-                            if m:
-                                m.value = val
+                            if m: m.value = val
                 temp_comp.recalculate_stats()
                 self.hovered_component = temp_comp
         
-        # Check ship schematic area for hover
+        # Check schematic hover
         schematic_rect = pygame.Rect(
             self.left_panel_width, 0,
             self.width - self.left_panel_width - self.right_panel_width,
@@ -715,21 +668,17 @@ class BuilderSceneGUI:
                 text = "Hide Firing Arcs" if self.show_firing_arcs else "Show Firing Arcs"
                 self.arc_toggle_btn.set_text(text)
             elif hasattr(self, 'save_preset_btn') and event.ui_element == self.save_preset_btn:
-                # Use tkinter simpledialog for preset name (pygame_gui doesn't have text entry window)
                 if self.template_modifiers:
                     preset_name = simpledialog.askstring("Save Preset", "Enter preset name:", parent=tk_root)
                     if preset_name and preset_name.strip():
-                        self.component_presets[preset_name.strip()] = dict(self.template_modifiers)
-                        self._save_presets()
+                        self.preset_manager.add_preset(preset_name.strip(), self.template_modifiers)
                         self._rebuild_modifier_ui()
                         logger.info(f"Saved preset: {preset_name}")
             elif hasattr(self, 'clear_settings_btn') and event.ui_element == self.clear_settings_btn:
                 if self.selected_component:
-                    # Deselect component
                     self.selected_component = None
                     self._rebuild_modifier_ui()
                 else:
-                    # Clear template modifiers
                     self.template_modifiers = {}
                     self._rebuild_modifier_ui()
                 logger.debug("Cleared settings or deselected component")
@@ -738,11 +687,10 @@ class BuilderSceneGUI:
                 handled = False
                 for preset_name, btn in getattr(self, 'preset_delete_buttons', []):
                     if event.ui_element == btn:
-                        if preset_name in self.component_presets:
-                            del self.component_presets[preset_name]
-                            self._save_presets()
-                            self._rebuild_modifier_ui()
-                            logger.info(f"Deleted preset: {preset_name}")
+                        # Use PresetManager to delete
+                        self.preset_manager.delete_preset(preset_name)
+                        self._rebuild_modifier_ui()
+                        logger.info(f"Deleted preset: {preset_name}")
                         handled = True
                         break
                 
@@ -750,13 +698,15 @@ class BuilderSceneGUI:
                 if not handled:
                     for preset_name, btn in getattr(self, 'preset_buttons', []):
                         if event.ui_element == btn:
-                            self.template_modifiers = dict(self.component_presets[preset_name])
-                            self._rebuild_modifier_ui()
-                            logger.debug(f"Applied preset: {preset_name}")
+                            preset = self.preset_manager.get_preset(preset_name)
+                            if preset:
+                                self.template_modifiers = dict(preset)
+                                self._rebuild_modifier_ui()
+                                logger.debug(f"Applied preset: {preset_name}")
                             handled = True
                             break
                 
-                # Check unified modifier buttons (works for both template and editing modes)
+                # Check unified modifier buttons
                 if not handled:
                     mod_id_list = getattr(self, 'modifier_id_list', [])
                     for i, btn in enumerate(self.modifier_buttons):
@@ -764,7 +714,6 @@ class BuilderSceneGUI:
                             mod_id = mod_id_list[i]
                             
                             if self.selected_component:
-                                # Editing mode - toggle modifier on component
                                 layer, index, comp = self.selected_component
                                 if comp.get_modifier(mod_id):
                                     comp.remove_modifier(mod_id)
@@ -774,28 +723,22 @@ class BuilderSceneGUI:
                                 self.ship.recalculate_stats()
                                 self._update_stats_display()
                                 self._rebuild_modifier_ui()
-                                logger.debug(f"Toggled modifier {mod_id} on component {comp.name}")
                             else:
-                                # Template mode - toggle template modifier
                                 if mod_id in self.template_modifiers:
                                     del self.template_modifiers[mod_id]
                                 else:
                                     self.template_modifiers[mod_id] = MODIFIER_REGISTRY[mod_id].min_val
                                 self._rebuild_modifier_ui()
-                                logger.debug(f"Toggled template modifier {mod_id}")
                             handled = True
                             break
                         
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
-            # Handle unified slider changes (works for both template and editing modes)
             mod_id_list = getattr(self, 'modifier_id_list', [])
             for i, slider in enumerate(getattr(self, 'modifier_sliders', [])):
                 if slider and event.ui_element == slider and i < len(mod_id_list):
                     mod_id = mod_id_list[i]
-                    mod_def = MODIFIER_REGISTRY.get(mod_id)
                     
                     if self.selected_component:
-                        # Editing mode - update component modifier
                         layer, index, comp = self.selected_component
                         m = comp.get_modifier(mod_id)
                         if m:
@@ -803,21 +746,15 @@ class BuilderSceneGUI:
                             comp.recalculate_stats()
                             self.ship.recalculate_stats()
                             self._update_stats_display()
-                            # Update entry to match slider
                             if i < len(self.modifier_entries) and self.modifier_entries[i]:
                                 self.modifier_entries[i].set_text(f"{event.value:.2f}")
-                            logger.debug(f"Editing slider {mod_id} = {event.value:.2f}")
                     else:
-                        # Template mode - update template modifier
                         if mod_id in self.template_modifiers:
                             self.template_modifiers[mod_id] = event.value
-                            # Update entry to match slider
                             if i < len(self.modifier_entries) and self.modifier_entries[i]:
                                 self.modifier_entries[i].set_text(f"{event.value:.2f}")
-                            logger.debug(f"Template slider {mod_id} = {event.value:.2f}")
                     break
         
-        # Handle text entry changes (both during typing and on finish)
         elif event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED or event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
             mod_id_list = getattr(self, 'modifier_id_list', [])
             for i, entry in enumerate(getattr(self, 'modifier_entries', [])):
@@ -828,11 +765,9 @@ class BuilderSceneGUI:
                         mod_def = MODIFIER_REGISTRY.get(mod_id)
                         
                         if mod_def:
-                            # Clamp to valid range
                             new_val = max(mod_def.min_val, min(mod_def.max_val, new_val))
                             
                             if self.selected_component:
-                                # Editing mode
                                 layer, index, comp = self.selected_component
                                 m = comp.get_modifier(mod_id)
                                 if m:
@@ -841,19 +776,16 @@ class BuilderSceneGUI:
                                     self.ship.recalculate_stats()
                                     self._update_stats_display()
                             else:
-                                # Template mode
                                 if mod_id in self.template_modifiers:
                                     self.template_modifiers[mod_id] = new_val
                             
-                            # Update slider to match entry
                             if i < len(self.modifier_sliders) and self.modifier_sliders[i]:
                                 self.modifier_sliders[i].set_current_value(new_val)
                             
-                            # Only update entry text on finish to avoid cursor jumping
                             if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
                                 entry.set_text(f"{new_val:.2f}")
                     except ValueError:
-                        pass  # Invalid input, ignore
+                        pass
                     break
                     
         elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
@@ -862,7 +794,6 @@ class BuilderSceneGUI:
                 self.ship.recalculate_stats()
                 self._update_stats_display()
             elif event.ui_element == self.ai_dropdown:
-                # Look up strategy ID by display name
                 from ai import COMBAT_STRATEGIES
                 selected_name = event.text
                 for strategy_id, strat in COMBAT_STRATEGIES.items():
@@ -870,16 +801,13 @@ class BuilderSceneGUI:
                         self.ship.ai_strategy = strategy_id
                         break
                 else:
-                    # Fallback: convert display name to ID
                     self.ship.ai_strategy = event.text.lower().replace(' ', '_')
                 
         elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
             if event.ui_element == self.component_list:
-                # Start drag from palette
                 idx = self.component_list.get_single_selection()
                 if idx is not None:
-                    # Find component by name match
-                    for i, c in enumerate(self.available_components):
+                    for c in self.available_components:
                         name_str = f"{c.name} ({c.mass}t)"
                         if name_str == idx:
                             self.dragged_item = c.clone()
@@ -894,8 +822,7 @@ class BuilderSceneGUI:
                                     if allow:
                                         self.dragged_item.add_modifier(m_id)
                                         m = self.dragged_item.get_modifier(m_id)
-                                        if m:
-                                            m.value = val
+                                        if m: m.value = val
                             self.dragged_item.recalculate_stats()
                             break
                             
@@ -905,17 +832,13 @@ class BuilderSceneGUI:
                 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 3:  # Right-click
-                # Check if clicking on a preset button to delete it
                 for preset_name, btn in getattr(self, 'preset_buttons', []):
                     if btn.rect.collidepoint(event.pos):
-                        if preset_name in self.component_presets:
-                            del self.component_presets[preset_name]
-                            self._save_presets()
-                            self._rebuild_modifier_ui()
-                            logger.info(f"Deleted preset: {preset_name}")
+                        self.preset_manager.delete_preset(preset_name)
+                        self._rebuild_modifier_ui()
+                        logger.info(f"Deleted preset: {preset_name}")
                         break
             elif event.button == 1:
-                # Check for component click in schematic
                 schematic_rect = pygame.Rect(
                     self.left_panel_width, 0,
                     self.width - self.left_panel_width - self.right_panel_width,
@@ -926,7 +849,6 @@ class BuilderSceneGUI:
                     if found:
                         keys = pygame.key.get_pressed()
                         if keys[pygame.K_LALT] or keys[pygame.K_RALT]:
-                            # Clone component
                             original = found[2]
                             self.dragged_item = original.clone()
                             for m in original.modifiers:
@@ -934,14 +856,12 @@ class BuilderSceneGUI:
                                 self.dragged_item.modifiers.append(new_m)
                             self.dragged_item.recalculate_stats()
                         elif self.selected_component == found:
-                            # Pick up selected component
                             layer, index, comp = found
                             self.ship.remove_component(layer, index)
                             self.dragged_item = comp
                             self.selected_component = None
                             self._rebuild_selected_component_modifiers()
                         else:
-                            # Select component and show modifier controls
                             self.selected_component = found
                             self._rebuild_selected_component_modifiers()
                             logger.debug(f"Selected component: {found[2].name}")
@@ -951,26 +871,19 @@ class BuilderSceneGUI:
                         
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and self.dragged_item:
-                # Check if shift is held for multi-add
                 keys = pygame.key.get_pressed()
                 shift_held = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
                 
-                # Store a reference to clone before dropping
                 item_to_clone = self.dragged_item
-                
                 self._handle_drop(event.pos)
                 
                 if shift_held:
-                    # Clone the component we just placed to continue adding
                     self.dragged_item = item_to_clone.clone()
-                    # Copy modifiers
                     for m in item_to_clone.modifiers:
                         self.dragged_item.add_modifier(m.definition.id)
                         new_m = self.dragged_item.get_modifier(m.definition.id)
-                        if new_m:
-                            new_m.value = m.value
+                        if new_m: new_m.value = m.value
                     self.dragged_item.recalculate_stats()
-                    logger.debug(f"Multi-add: cloned {self.dragged_item.name} for continued placement")
                 else:
                     self.dragged_item = None
                 
@@ -980,54 +893,32 @@ class BuilderSceneGUI:
         
     def _save_ship(self):
         """Save ship design to file."""
-        data = self.ship.to_dict()
-        import os
-        ships_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ships")
-        filename = filedialog.asksaveasfilename(
-            initialdir=ships_folder,
-            defaultextension=".json",
-            filetypes=[("JSON Files", "*.json")]
-        )
-        if filename:
-            try:
-                with open(filename, 'w') as f:
-                    json.dump(data, f, indent=4)
-                print(f"Saved ship to {filename}")
-            except Exception as e:
-                self._show_error(f"Save failed: {e}")
+        success, message = ShipIO.save_ship(self.ship)
+        if success:
+            print(message)
+        elif message:
+            self._show_error(message)
                 
     def _load_ship(self):
         """Load ship design from file."""
-        import os
-        ships_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ships")
-        filename = filedialog.askopenfilename(
-            initialdir=ships_folder,
-            filetypes=[("JSON Files", "*.json")]
-        )
-        if filename:
-            try:
-                with open(filename, 'r') as f:
-                    data = json.load(f)
-                    
-                new_ship = Ship.from_dict(data)
-                new_ship.position = pygame.math.Vector2(self.width // 2, self.height // 2)
-                new_ship.recalculate_stats()
-                
-                self.ship = new_ship
-                self.name_entry.set_text(self.ship.name)
-                self.class_dropdown.selected_option = self.ship.ship_class
-                # Get display name from strategy definition
-                from ai import COMBAT_STRATEGIES
-                ai_display = self.ship.ai_strategy.replace('_', ' ').title()
-                for strategy_id, strat in COMBAT_STRATEGIES.items():
-                    if strategy_id == self.ship.ai_strategy:
-                        ai_display = strat.get('name', ai_display)
-                        break
-                self.ai_dropdown.selected_option = ai_display
-                self._update_stats_display()
-                print(f"Loaded ship from {filename}")
-            except Exception as e:
-                self._show_error(f"Load failed: {e}")
+        new_ship, message = ShipIO.load_ship(self.width, self.height)
+        if new_ship:
+            self.ship = new_ship
+            self.name_entry.set_text(self.ship.name)
+            self.class_dropdown.selected_option = self.ship.ship_class
+            
+            from ai import COMBAT_STRATEGIES
+            ai_display = self.ship.ai_strategy.replace('_', ' ').title()
+            for strategy_id, strat in COMBAT_STRATEGIES.items():
+                if strategy_id == self.ship.ai_strategy:
+                    ai_display = strat.get('name', ai_display)
+                    break
+            self.ai_dropdown.selected_option = ai_display
+            
+            self._update_stats_display()
+            print(message)
+        elif message:
+            self._show_error(message)
                 
     def _show_clear_confirmation(self):
         """Show confirmation dialog for clearing design."""
@@ -1041,30 +932,21 @@ class BuilderSceneGUI:
     def _clear_design(self):
         """Clear all components and reset settings."""
         logger.info("Clearing ship design")
-        
-        # Clear all layers and reset their HP pools
         for layer_type, layer_data in self.ship.layers.items():
             layer_data['components'] = []
             layer_data['hp_pool'] = 0
             layer_data['max_hp_pool'] = 0
             layer_data['mass'] = 0
             layer_data['hp'] = 0
-            logger.debug(f"Cleared layer {layer_type.name}")
             
-        # Reset modifiers template
         self.template_modifiers = {}
-        
-        # Reset AI
         self.ship.ai_strategy = "optimal_firing_range"
         self.ai_dropdown.selected_option = "Optimal Firing Range"
         
-        # Recalculate - this will reset mass properly
         self.ship.recalculate_stats()
         self._update_stats_display()
         self._rebuild_modifier_ui()
-        
         self.selected_component = None
-        logger.info(f"Design cleared. Ship mass now: {self.ship.mass}")
         
     def _show_error(self, msg):
         """Display error message."""
@@ -1080,20 +962,14 @@ class BuilderSceneGUI:
         hit_radius = 25
         
         for ltype, data in self.ship.layers.items():
-            if ltype == LayerType.CORE:
-                radius = max_r * 0.1
-            elif ltype == LayerType.INNER:
-                radius = max_r * 0.35
-            elif ltype == LayerType.OUTER:
-                radius = max_r * 0.65
-            elif ltype == LayerType.ARMOR:
-                radius = max_r * 0.9
-            else:
-                continue
+            if ltype == LayerType.CORE: radius = max_r * 0.1
+            elif ltype == LayerType.INNER: radius = max_r * 0.35
+            elif ltype == LayerType.OUTER: radius = max_r * 0.65
+            elif ltype == LayerType.ARMOR: radius = max_r * 0.9
+            else: continue
                 
             comps = data['components']
-            if not comps:
-                continue
+            if not comps: continue
                 
             angle_step = 360 / len(comps)
             current_angle = 0
@@ -1106,9 +982,7 @@ class BuilderSceneGUI:
                 d = math.hypot(mx - px, my - py)
                 if d < hit_radius:
                     return (ltype, i, comp)
-                    
                 current_angle += angle_step
-                
         return None
         
     def _handle_drop(self, pos):
@@ -1120,14 +994,10 @@ class BuilderSceneGUI:
         dist = math.hypot(pos[0] - cx, pos[1] - cy)
         
         layer = None
-        if dist < max_r * 0.2:
-            layer = LayerType.CORE
-        elif dist < max_r * 0.5:
-            layer = LayerType.INNER
-        elif dist < max_r * 0.8:
-            layer = LayerType.OUTER
-        elif dist < max_r * 1.0:
-            layer = LayerType.ARMOR
+        if dist < max_r * 0.2: layer = LayerType.CORE
+        elif dist < max_r * 0.5: layer = LayerType.INNER
+        elif dist < max_r * 0.8: layer = LayerType.OUTER
+        elif dist < max_r * 1.0: layer = LayerType.ARMOR
             
         if layer:
             comp = self.dragged_item
@@ -1142,10 +1012,8 @@ class BuilderSceneGUI:
                 
     def draw(self, screen):
         """Draw the builder scene."""
-        # Background
         screen.fill(SHIP_VIEW_BG)
         
-        # Draw schematic area background
         schematic_rect = pygame.Rect(
             self.left_panel_width, 0,
             self.width - self.left_panel_width - self.right_panel_width,
@@ -1153,33 +1021,25 @@ class BuilderSceneGUI:
         )
         pygame.draw.rect(screen, SHIP_VIEW_BG, schematic_rect)
         
-        # Draw ship schematic
         self._draw_schematic(screen)
         
-        # Draw firing arcs if enabled
         if self.show_firing_arcs:
             self._draw_all_firing_arcs(screen)
         elif self.hovered_component and isinstance(self.hovered_component, Weapon):
             self._draw_component_firing_arc(screen, self.hovered_component)
             
-        # Draw pygame_gui
         self.ui_manager.draw_ui(screen)
-        
-        # Draw component icons over the selection list items
         self._draw_component_icons(screen)
         
-        # Draw tooltip (on top of everything)
         if self.hovered_component and not self.dragged_item:
             self._draw_tooltip(screen, self.hovered_component)
             
-        # Draw dragged item
         if self.dragged_item:
             mx, my = pygame.mouse.get_pos()
             sprite = self.sprite_mgr.get_sprite(self.dragged_item.sprite_index)
             if sprite:
                 screen.blit(sprite, (mx - 16, my - 16))
                 
-        # Draw error message
         if self.error_timer > 0:
             font = pygame.font.SysFont("Arial", 18)
             err_surf = font.render(self.error_message, True, (255, 100, 100))
@@ -1192,13 +1052,11 @@ class BuilderSceneGUI:
         cy = (self.height - self.bottom_bar_height) // 2
         max_r = 250
         
-        # Draw rings
-        pygame.draw.circle(screen, (100, 100, 100), (cx, cy), max_r, 2)  # Armor
-        pygame.draw.circle(screen, (200, 50, 50), (cx, cy), int(max_r * 0.8), 2)  # Outer
-        pygame.draw.circle(screen, (50, 50, 200), (cx, cy), int(max_r * 0.5), 2)  # Inner
-        pygame.draw.circle(screen, (200, 200, 200), (cx, cy), int(max_r * 0.2), 2)  # Core
+        pygame.draw.circle(screen, (100, 100, 100), (cx, cy), max_r, 2)
+        pygame.draw.circle(screen, (200, 50, 50), (cx, cy), int(max_r * 0.8), 2)
+        pygame.draw.circle(screen, (50, 50, 200), (cx, cy), int(max_r * 0.5), 2)
+        pygame.draw.circle(screen, (200, 200, 200), (cx, cy), int(max_r * 0.2), 2)
         
-        # Draw labels
         font = pygame.font.SysFont("Arial", 10)
         labels = [
             (max_r * 0.95, "ARMOR"),
@@ -1210,22 +1068,15 @@ class BuilderSceneGUI:
             surf = font.render(text, True, (80, 80, 80))
             screen.blit(surf, (cx - surf.get_width() // 2, cy - r - 12))
         
-        # Draw components
         for ltype, data in self.ship.layers.items():
-            if ltype == LayerType.CORE:
-                radius = max_r * 0.1
-            elif ltype == LayerType.INNER:
-                radius = max_r * 0.35
-            elif ltype == LayerType.OUTER:
-                radius = max_r * 0.65
-            elif ltype == LayerType.ARMOR:
-                radius = max_r * 0.9
-            else:
-                continue
+            if ltype == LayerType.CORE: radius = max_r * 0.1
+            elif ltype == LayerType.INNER: radius = max_r * 0.35
+            elif ltype == LayerType.OUTER: radius = max_r * 0.65
+            elif ltype == LayerType.ARMOR: radius = max_r * 0.9
+            else: continue
                 
             comps = data['components']
-            if not comps:
-                continue
+            if not comps: continue
                 
             angle_step = 360 / len(comps)
             current_angle = 0
@@ -1237,7 +1088,6 @@ class BuilderSceneGUI:
                 
                 sprite = self.sprite_mgr.get_sprite(comp.sprite_index)
                 if sprite:
-                    # Rotate sprite
                     has_facing = any(m.definition.id == 'facing' for m in comp.modifiers)
                     if has_facing and hasattr(comp, 'facing_angle'):
                         rotation_angle = -comp.facing_angle
@@ -1248,7 +1098,6 @@ class BuilderSceneGUI:
                     rect = rotated.get_rect(center=(int(px), int(py)))
                     screen.blit(rotated, rect)
                     
-                    # Highlight selected
                     if self.selected_component and self.selected_component[2] == comp:
                         pygame.draw.circle(screen, (255, 255, 0), (int(px), int(py)), 20, 2)
                 else:
@@ -1257,13 +1106,11 @@ class BuilderSceneGUI:
                 current_angle += angle_step
     
     def _draw_component_icons(self, screen):
-        """Draw component icons next to list items."""
-        # Row height is set to 40px via builder_theme.json (list_item_height)
-        # Icons are 32x32 to match the larger text
-        list_x = 8  # Left edge of icons
-        list_y = 40  # First item Y position (accounts for title + padding)
-        item_height = 40  # Matches theme list_item_height
-        icon_size = 32  # 2x larger icons
+        """Draw component icons."""
+        list_x = 8
+        list_y = 40
+        item_height = 40
+        icon_size = 32
         
         for i, comp in enumerate(self.available_components):
             sprite = self.sprite_mgr.get_sprite(comp.sprite_index)
@@ -1273,12 +1120,11 @@ class BuilderSceneGUI:
                 screen.blit(scaled, (list_x, y_pos))
                 
     def _draw_tooltip(self, screen, comp):
-        """Draw component tooltip."""
+        """Draw tooltip."""
         mx, my = pygame.mouse.get_pos()
         font = pygame.font.SysFont("Arial", 14)
         font_sm = pygame.font.SysFont("Arial", 12)
         
-        # Build info lines
         lines = [
             (comp.name, (255, 255, 100)),
             (f"Type: {comp.type_str}", (200, 200, 200)),
@@ -1286,58 +1132,37 @@ class BuilderSceneGUI:
             (f"HP: {comp.max_hp:.0f}", (200, 200, 200)),
         ]
         
-        # Type-specific stats
-        if hasattr(comp, 'damage'):
-            lines.append((f"Damage: {comp.damage}", (255, 150, 150)))
-        if hasattr(comp, 'range'):
-            lines.append((f"Range: {comp.range}", (255, 150, 150)))
-        if hasattr(comp, 'reload_time'):
-            lines.append((f"Reload: {comp.reload_time}s", (255, 150, 150)))
-        if hasattr(comp, 'firing_arc'):
-            lines.append((f"Firing Arc: {comp.firing_arc}°", (255, 150, 150)))
-        if hasattr(comp, 'thrust_force'):
-            lines.append((f"Thrust: {comp.thrust_force}", (100, 255, 100)))
-        if hasattr(comp, 'fuel_cost_per_sec'):
-            lines.append((f"Fuel Cost: {comp.fuel_cost_per_sec}/s", (255, 200, 100)))
-        if hasattr(comp, 'turn_speed') and comp.turn_speed > 0:
-            lines.append((f"Turn Speed: {comp.turn_speed}", (100, 200, 255)))
-        if hasattr(comp, 'capacity'):
-            lines.append((f"Capacity: {comp.capacity}", (200, 200, 255)))
-        if hasattr(comp, 'energy_generation_rate') and comp.energy_generation_rate > 0:
-            lines.append((f"Energy Gen: {comp.energy_generation_rate}/s", (100, 200, 255)))
-            
-        # Modifiers
+        if hasattr(comp, 'damage'): lines.append((f"Damage: {comp.damage}", (255, 150, 150)))
+        if hasattr(comp, 'range'): lines.append((f"Range: {comp.range}", (255, 150, 150)))
+        if hasattr(comp, 'reload_time'): lines.append((f"Reload: {comp.reload_time}s", (255, 150, 150)))
+        if hasattr(comp, 'firing_arc'): lines.append((f"Firing Arc: {comp.firing_arc}°", (255, 150, 150)))
+        if hasattr(comp, 'thrust_force'): lines.append((f"Thrust: {comp.thrust_force}", (100, 255, 100)))
+        if hasattr(comp, 'fuel_cost_per_sec'): lines.append((f"Fuel Cost: {comp.fuel_cost_per_sec}/s", (255, 200, 100)))
+        
         if comp.modifiers:
             lines.append(("", (0, 0, 0)))
             lines.append(("Modifiers:", (150, 255, 150)))
             for m in comp.modifiers:
                 lines.append((f"  • {m.definition.name}: {m.value:.0f}", (150, 255, 150)))
                 
-        # Calculate box size
         line_height = 18
         padding = 10
         max_width = max(font.size(l[0])[0] for l in lines) + padding * 2
         box_h = len(lines) * line_height + padding * 2
         box_w = max(max_width, 200)
         
-        # Position
         box_x = mx + 15
         box_y = my + 15
-        if box_x + box_w > self.width:
-            box_x = mx - box_w - 15
-        if box_y + box_h > self.height:
-            box_y = my - box_h - 15
+        if box_x + box_w > self.width: box_x = mx - box_w - 15
+        if box_y + box_h > self.height: box_y = my - box_h - 15
             
-        # Draw box
         pygame.draw.rect(screen, (25, 25, 35), (box_x, box_y, box_w, box_h))
         pygame.draw.rect(screen, (100, 100, 150), (box_x, box_y, box_w, box_h), 1)
         
-        # Draw sprite
         sprite = self.sprite_mgr.get_sprite(comp.sprite_index)
         if sprite:
             screen.blit(sprite, (box_x + box_w - 42, box_y + 8))
             
-        # Draw text
         y = box_y + padding
         for text, color in lines:
             if text:
@@ -1364,26 +1189,20 @@ class BuilderSceneGUI:
             
     def _draw_weapon_arc(self, screen, weapon, cx, cy):
         """Draw a weapon's firing arc visualization."""
-        # Get weapon properties
         arc_degrees = getattr(weapon, 'firing_arc', 20)
         weapon_range = getattr(weapon, 'range', 1000)
         facing = getattr(weapon, 'facing_angle', 0)
         
-        # Scale range for display (max 300 pixels)
         display_range = min(weapon_range / 10, 300)
         
-        # Calculate arc angles (in pygame coordinates)
-        # 0 degrees = up (ship forward)
         start_angle = math.radians(90 - facing - arc_degrees / 2)
         end_angle = math.radians(90 - facing + arc_degrees / 2)
         
-        # Color based on weapon type
         if isinstance(weapon, BeamWeapon):
-            color = (100, 255, 255, 100)  # Cyan for beams
+            color = (100, 255, 255, 100)
         else:
-            color = (255, 200, 100, 100)  # Orange for projectiles
+            color = (255, 200, 100, 100)
             
-        # Draw arc wedge
         points = [(cx, cy)]
         for angle in range(int(math.degrees(start_angle)), int(math.degrees(end_angle)) + 1, 2):
             rad = math.radians(angle)
@@ -1393,13 +1212,11 @@ class BuilderSceneGUI:
         points.append((cx, cy))
         
         if len(points) > 2:
-            # Create surface for transparency
             arc_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
             pygame.draw.polygon(arc_surface, (*color[:3], 50), points)
             pygame.draw.lines(arc_surface, color[:3], True, points, 2)
             screen.blit(arc_surface, (0, 0))
             
-        # Draw range label
         font = pygame.font.SysFont("Arial", 10)
         mid_angle = (start_angle + end_angle) / 2
         label_x = cx + math.cos(mid_angle) * (display_range + 15)
