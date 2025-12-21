@@ -16,7 +16,7 @@ class SpriteManager:
         return SpriteManager._instance
 
     def load_atlas(self, path):
-        print(f"DEBUG: Attempting to load atlas from: {os.path.abspath(path)}")
+
         if not os.path.exists(path):
             print(f"ERROR: Atlas file not found at {path}")
             return
@@ -30,7 +30,7 @@ class SpriteManager:
             
             self._slice_sprites()
             print(f"SUCCESS: Loaded Atlas: {path} ({self.atlas.get_width()}x{self.atlas.get_height()})")
-            print(f"DEBUG: Sliced {len(self.sprites)} sprites with tile size {self.tile_size}")
+
         except Exception as e:
             print(f"ERROR: Exception loading atlas: {e}")
             import traceback

@@ -355,14 +355,14 @@ COMPONENT_REGISTRY = {}
 def load_components(filepath="data/components.json"):
     global COMPONENT_REGISTRY
     import os
-    print(f"DEBUG: load_components called with filepath='{filepath}'")
+
     
     # Try absolute path based on this file if CWD fails
     if not os.path.exists(filepath):
         print(f"WARN: {filepath} not found in CWD ({os.getcwd()}).")
         base_dir = os.path.dirname(os.path.abspath(__file__))
         abs_path = os.path.join(base_dir, filepath)
-        print(f"DEBUG: Trying absolute path: {abs_path}")
+
         if os.path.exists(abs_path):
             filepath = abs_path
         else:
@@ -373,7 +373,7 @@ def load_components(filepath="data/components.json"):
         with open(filepath, 'r') as f:
             data = json.load(f)
             
-        print(f"DEBUG: Loaded JSON data. Found {len(data.get('components', []))} definitions.")
+
         
         for comp_def in data['components']:
             c_type = comp_def['type']
@@ -410,7 +410,7 @@ def load_components(filepath="data/components.json"):
             except Exception as e:
                 print(f"ERROR creating component {comp_def.get('id')}: {e}")
                 
-        print(f"DEBUG: COMPONENT_REGISTRY now has {len(COMPONENT_REGISTRY)} items.")
+
         
     except Exception as e:
         print(f"ERROR loading/parsing components json: {e}")
@@ -430,7 +430,7 @@ def load_modifiers(filepath="data/modifiers.json"):
             mod = Modifier(mod_def)
             MODIFIER_REGISTRY[mod.id] = mod
             
-        print(f"DEBUG: Loaded {len(MODIFIER_REGISTRY)} modifiers.")
+
     except Exception as e:
         print(f"ERROR loading modifiers: {e}")
 

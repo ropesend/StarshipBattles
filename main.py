@@ -343,7 +343,6 @@ class Game:
         # Build absolute path to resources
         import os
         base_path = os.path.dirname(os.path.abspath(__file__))
-        print(f"DEBUG: Base Path: {base_path}")
         
         # Initialize Game Data
         comp_path = os.path.join(base_path, "data", "components.json")
@@ -449,8 +448,8 @@ class Game:
                         'ship_class': data.get('ship_class', 'Unknown'),
                         'ai_strategy': data.get('ai_strategy', 'optimal_firing_range')
                     })
-            except:
-                pass
+            except Exception:
+                pass  # Skip invalid ship files
         return designs
     
     def start_battle_setup(self, preserve_teams=False):
@@ -1129,8 +1128,8 @@ class Game:
                             # Or just normal radians but Y is flipped?
                             # Usually simple line drawing is safer.
                             
-                        except:
-                            pass
+                        except Exception:
+                            pass  # Silently skip arc drawing errors
 
     def handle_stats_panel_click(self, mx, my, button):
         """Handle mouse clicks on the ship stats panel."""
@@ -1145,7 +1144,7 @@ class Game:
         rel_x = mx - panel_x
         rel_y = my + self.stats_scroll_offset  # Scroll-adjusted y position
         
-        print(f"DEBUG CLICK: mouse=({mx},{my}), panel_x={panel_x}, rel_y={rel_y}, scroll={self.stats_scroll_offset}")
+
         
         # Build list of ships in display order
         team1_ships = [s for s in self.ships if s.team_id == 0]
@@ -1155,14 +1154,14 @@ class Game:
         
         # Team 1 header
         y_pos += 30
-        print(f"DEBUG: After Team 1 header, y_pos={y_pos}")
+
         
         for ship in team1_ships:
             banner_height = 25
-            print(f"DEBUG: Ship '{ship.name}' banner range: {y_pos} to {y_pos + banner_height}, rel_y={rel_y}")
+
             if y_pos <= rel_y < y_pos + banner_height:
                 # Clicked on ship banner - toggle expansion
-                print(f"DEBUG: HIT! Toggling ship '{ship.name}'")
+
                 if ship in self.expanded_ships:
                     self.expanded_ships.discard(ship)
                 else:
@@ -1173,19 +1172,19 @@ class Game:
             if ship in self.expanded_ships:
                 # Skip over expanded content
                 exp_height = self._get_expanded_height(ship)
-                print(f"DEBUG: Ship '{ship.name}' is expanded, adding {exp_height} to y_pos")
+
                 y_pos += exp_height
         
         # Team 2 header
         y_pos += 15  # Gap between teams
         y_pos += 30  # Team 2 header
-        print(f"DEBUG: After Team 2 header, y_pos={y_pos}")
+
         
         for ship in team2_ships:
             banner_height = 25
-            print(f"DEBUG: Ship '{ship.name}' banner range: {y_pos} to {y_pos + banner_height}, rel_y={rel_y}")
+
             if y_pos <= rel_y < y_pos + banner_height:
-                print(f"DEBUG: HIT! Toggling ship '{ship.name}'")
+
                 if ship in self.expanded_ships:
                     self.expanded_ships.discard(ship)
                 else:
@@ -1195,10 +1194,10 @@ class Game:
             
             if ship in self.expanded_ships:
                 exp_height = self._get_expanded_height(ship)
-                print(f"DEBUG: Ship '{ship.name}' is expanded, adding {exp_height} to y_pos")
+
                 y_pos += exp_height
         
-        print(f"DEBUG: No hit, final y_pos={y_pos}")
+
         return False
     
     def _get_expanded_height(self, ship):
@@ -1509,6 +1508,7 @@ class Game:
                         mx, my = event.pos
                         # Check if battle is over and return button clicked
                         if hasattr(self, 'battle_end_button_rect') and self.battle_end_button_rect.collidepoint(mx, my):
+                            BATTLE_LOG.close()
                             self.start_battle_setup(preserve_teams=True)
                         # Check if click is on stats panel
                         elif not self.handle_stats_panel_click(mx, my, event.button):
@@ -1589,6 +1589,7 @@ class Game:
                             print("=" * 30 + "\n")
                             
                             # Return to battle setup
+                            BATTLE_LOG.close()
                             self.headless_mode = False
                             self.start_battle_setup(preserve_teams=True)
                             break
