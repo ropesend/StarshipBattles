@@ -2,6 +2,7 @@ import pygame
 import time
 import math
 import random
+import json
 from ship import Ship, LayerType
 from ai import AIController
 from spatial import SpatialGrid
@@ -444,6 +445,7 @@ def draw_hud(surface, ship, x, y):
 MENU = 0
 BUILDER = 1
 BATTLE = 2
+BATTLE_SETUP = 3
 
 class Game:
     def __init__(self):
@@ -480,12 +482,12 @@ class Game:
         
         # Menu UI
         self.menu_buttons = [
-            Button(WIDTH//2 - 100, HEIGHT//2 - 50, 200, 50, "Quick Battle", self.start_quick_battle),
-            Button(WIDTH//2 - 100, HEIGHT//2 + 20, 200, 50, "Ship Builder", self.start_builder)
+            Button(WIDTH//2 - 100, HEIGHT//2 - 50, 200, 50, "Ship Builder", self.start_builder),
+            Button(WIDTH//2 - 100, HEIGHT//2 + 20, 200, 50, "Battle Setup", self.start_battle_setup)
         ]
         
         # Builder (using pygame_gui)
-        self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_finish)
+        self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return)
         
         # Camera
         self.camera = Camera(WIDTH, HEIGHT)
@@ -529,28 +531,233 @@ class Game:
 
     def start_builder(self):
         self.state = BUILDER
-        self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_finish)
+        self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return)
 
-    def on_builder_finish(self, custom_ship):
-        # Position custom ship in team 1
-        team1 = [custom_ship]
-        # create 4 friends
-        for i in range(4):
-            team1.append(create_brick(0,0))
-            
-        # Place them
-        for i, s in enumerate(team1):
-            s.position = pygame.math.Vector2(20000, 40000 + i * 5000)
-            s.recalculate_stats() # Just in case
-
-        team2 = []
-        for i in range(5):
-            s = create_interceptor(80000, 40000 + i * 5000)
-            s.angle = 180
-            team2.append(s)
+    def on_builder_return(self, custom_ship=None):
+        """Return from builder to main menu."""
+        self.state = MENU
         
-        self.start_battle(team1, team2)
-
+    def scan_ship_designs(self):
+        """Scan for available ship design JSON files."""
+        import os
+        import glob
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        json_files = glob.glob(os.path.join(base_path, "*.json"))
+        
+        designs = []
+        for filepath in json_files:
+            filename = os.path.basename(filepath)
+            # Skip config files
+            if filename in ['builder_theme.json', 'component_presets.json']:
+                continue
+            # Try to load and verify it's a ship design
+            try:
+                with open(filepath, 'r') as f:
+                    data = json.load(f)
+                if 'name' in data and 'layers' in data:
+                    designs.append({
+                        'path': filepath,
+                        'name': data.get('name', filename),
+                        'ship_class': data.get('ship_class', 'Unknown')
+                    })
+            except:
+                pass
+        return designs
+    
+    def start_battle_setup(self):
+        """Enter battle setup screen."""
+        self.state = BATTLE_SETUP
+        self.available_ship_designs = self.scan_ship_designs()
+        self.setup_team1 = []  # List of {'design': design_dict, 'strategy': str}
+        self.setup_team2 = []
+        self.setup_scroll_offset = 0
+        
+        # Import AI strategies
+        from ai import COMBAT_STRATEGIES
+        self.ai_strategies = list(COMBAT_STRATEGIES.keys())
+    
+    def update_battle_setup(self, events):
+        """Handle battle setup screen input."""
+        from ai import COMBAT_STRATEGIES
+        
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = event.pos
+                sw, sh = self.screen.get_size()
+                
+                # Column positions
+                col1_x = 50  # Available ships
+                col2_x = sw // 3 + 50  # Team 1
+                col3_x = 2 * sw // 3 + 50  # Team 2
+                
+                # Check available ships list (left column)
+                if col1_x <= mx < col1_x + 250:
+                    for i, design in enumerate(self.available_ship_designs):
+                        y = 150 + i * 40
+                        if y <= my < y + 35:
+                            # Click on ship design
+                            if event.button == 1:  # Left click - add to team 1
+                                self.setup_team1.append({
+                                    'design': design,
+                                    'strategy': 'optimal_firing_range'
+                                })
+                            elif event.button == 3:  # Right click - add to team 2
+                                self.setup_team2.append({
+                                    'design': design,
+                                    'strategy': 'optimal_firing_range'
+                                })
+                            break
+                
+                # Check team 1 remove buttons
+                if col2_x <= mx < col2_x + 300:
+                    for i, entry in enumerate(self.setup_team1):
+                        y = 150 + i * 60
+                        # Remove button (X)
+                        if y + 25 <= my < y + 50 and mx >= col2_x + 200:
+                            self.setup_team1.pop(i)
+                            break
+                        # Cycle strategy on click
+                        if y <= my < y + 25:
+                            current_idx = self.ai_strategies.index(entry['strategy']) if entry['strategy'] in self.ai_strategies else 0
+                            entry['strategy'] = self.ai_strategies[(current_idx + 1) % len(self.ai_strategies)]
+                            break
+                
+                # Check team 2 remove buttons
+                if col3_x <= mx < col3_x + 300:
+                    for i, entry in enumerate(self.setup_team2):
+                        y = 150 + i * 60
+                        # Remove button
+                        if y + 25 <= my < y + 50 and mx >= col3_x + 200:
+                            self.setup_team2.pop(i)
+                            break
+                        # Cycle strategy
+                        if y <= my < y + 25:
+                            current_idx = self.ai_strategies.index(entry['strategy']) if entry['strategy'] in self.ai_strategies else 0
+                            entry['strategy'] = self.ai_strategies[(current_idx + 1) % len(self.ai_strategies)]
+                            break
+                
+                # Begin Battle button
+                btn_y = sh - 80
+                if sw // 2 - 100 <= mx < sw // 2 + 100 and btn_y <= my < btn_y + 50:
+                    if self.setup_team1 and self.setup_team2:
+                        self.start_battle_from_setup()
+                
+                # Return button
+                if sw // 2 + 120 <= mx < sw // 2 + 240 and btn_y <= my < btn_y + 50:
+                    self.state = MENU
+    
+    def draw_battle_setup(self):
+        """Draw battle setup screen."""
+        from ai import COMBAT_STRATEGIES
+        
+        self.screen.fill((20, 25, 35))
+        sw, sh = self.screen.get_size()
+        
+        # Title
+        title_font = pygame.font.Font(None, 64)
+        title = title_font.render("BATTLE SETUP", True, (200, 200, 255))
+        self.screen.blit(title, (sw // 2 - title.get_width() // 2, 30))
+        
+        label_font = pygame.font.Font(None, 36)
+        item_font = pygame.font.Font(None, 28)
+        
+        col1_x = 50
+        col2_x = sw // 3 + 50
+        col3_x = 2 * sw // 3 + 50
+        
+        # Available Ships (left column)
+        lbl = label_font.render("Available Ships (L/R click to add)", True, (150, 150, 200))
+        self.screen.blit(lbl, (col1_x, 110))
+        
+        for i, design in enumerate(self.available_ship_designs):
+            y = 150 + i * 40
+            text = item_font.render(f"{design['name']} ({design['ship_class']})", True, (200, 200, 200))
+            pygame.draw.rect(self.screen, (40, 45, 55), (col1_x, y, 250, 35))
+            pygame.draw.rect(self.screen, (80, 80, 100), (col1_x, y, 250, 35), 1)
+            self.screen.blit(text, (col1_x + 10, y + 8))
+        
+        # Team 1 (middle column)
+        lbl = label_font.render("Team 1 (click to change AI)", True, (100, 200, 255))
+        self.screen.blit(lbl, (col2_x, 110))
+        
+        for i, entry in enumerate(self.setup_team1):
+            y = 150 + i * 60
+            design = entry['design']
+            strategy = entry['strategy']
+            strat_name = COMBAT_STRATEGIES.get(strategy, {}).get('name', strategy)
+            
+            pygame.draw.rect(self.screen, (30, 50, 70), (col2_x, y, 280, 55))
+            pygame.draw.rect(self.screen, (100, 150, 200), (col2_x, y, 280, 55), 1)
+            
+            name_text = item_font.render(design['name'], True, (255, 255, 255))
+            strat_text = item_font.render(f"AI: {strat_name}", True, (150, 200, 255))
+            x_text = item_font.render("[X]", True, (255, 100, 100))
+            
+            self.screen.blit(name_text, (col2_x + 10, y + 5))
+            self.screen.blit(strat_text, (col2_x + 10, y + 30))
+            self.screen.blit(x_text, (col2_x + 240, y + 30))
+        
+        # Team 2 (right column)
+        lbl = label_font.render("Team 2 (click to change AI)", True, (255, 100, 100))
+        self.screen.blit(lbl, (col3_x, 110))
+        
+        for i, entry in enumerate(self.setup_team2):
+            y = 150 + i * 60
+            design = entry['design']
+            strategy = entry['strategy']
+            strat_name = COMBAT_STRATEGIES.get(strategy, {}).get('name', strategy)
+            
+            pygame.draw.rect(self.screen, (70, 30, 30), (col3_x, y, 280, 55))
+            pygame.draw.rect(self.screen, (200, 100, 100), (col3_x, y, 280, 55), 1)
+            
+            name_text = item_font.render(design['name'], True, (255, 255, 255))
+            strat_text = item_font.render(f"AI: {strat_name}", True, (255, 150, 150))
+            x_text = item_font.render("[X]", True, (255, 100, 100))
+            
+            self.screen.blit(name_text, (col3_x + 10, y + 5))
+            self.screen.blit(strat_text, (col3_x + 10, y + 30))
+            self.screen.blit(x_text, (col3_x + 240, y + 30))
+        
+        # Buttons at bottom
+        btn_y = sh - 80
+        
+        # Begin Battle button
+        btn_color = (50, 150, 50) if (self.setup_team1 and self.setup_team2) else (50, 50, 50)
+        pygame.draw.rect(self.screen, btn_color, (sw // 2 - 100, btn_y, 200, 50))
+        pygame.draw.rect(self.screen, (100, 200, 100), (sw // 2 - 100, btn_y, 200, 50), 2)
+        btn_text = label_font.render("BEGIN BATTLE", True, (255, 255, 255))
+        self.screen.blit(btn_text, (sw // 2 - btn_text.get_width() // 2, btn_y + 12))
+        
+        # Return button
+        pygame.draw.rect(self.screen, (80, 80, 80), (sw // 2 + 120, btn_y, 120, 50))
+        pygame.draw.rect(self.screen, (150, 150, 150), (sw // 2 + 120, btn_y, 120, 50), 2)
+        ret_text = label_font.render("RETURN", True, (200, 200, 200))
+        self.screen.blit(ret_text, (sw // 2 + 180 - ret_text.get_width() // 2, btn_y + 12))
+    
+    def start_battle_from_setup(self):
+        """Start battle using ships selected in battle setup."""
+        team1_ships = []
+        for i, entry in enumerate(self.setup_team1):
+            with open(entry['design']['path'], 'r') as f:
+                data = json.load(f)
+            ship = Ship.from_dict(data)
+            ship.position = pygame.math.Vector2(20000, 30000 + i * 5000)
+            ship.ai_strategy = entry['strategy']
+            ship.recalculate_stats()
+            team1_ships.append(ship)
+        
+        team2_ships = []
+        for i, entry in enumerate(self.setup_team2):
+            with open(entry['design']['path'], 'r') as f:
+                data = json.load(f)
+            ship = Ship.from_dict(data)
+            ship.position = pygame.math.Vector2(80000, 30000 + i * 5000)
+            ship.angle = 180
+            ship.ai_strategy = entry['strategy']
+            ship.recalculate_stats()
+            team2_ships.append(ship)
+        
+        self.start_battle(team1_ships, team2_ships)
     def start_battle(self, team1_list, team2_list, seed=None):
         """Start a battle between two teams.
         
@@ -1051,6 +1258,8 @@ class Game:
                         btn.handle_event(event)
                 elif self.state == BUILDER:
                     self.builder_scene.handle_event(event)
+                elif self.state == BATTLE_SETUP:
+                    self.update_battle_setup([event])
             
             # Logic & Draw
             if self.state == MENU:
@@ -1061,6 +1270,8 @@ class Game:
                 self.builder_scene.update(frame_time)
                 self.builder_scene.process_ui_time(frame_time)
                 self.builder_scene.draw(self.screen)
+            elif self.state == BATTLE_SETUP:
+                self.draw_battle_setup()
             elif self.state == BATTLE:
                 # Tick-based simulation - one physics step per frame
                 # sim_speed_multiplier controls how many ticks per frame

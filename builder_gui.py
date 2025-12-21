@@ -326,7 +326,7 @@ class BuilderSceneGUI:
         
         self.start_btn = UIButton(
             relative_rect=pygame.Rect(start_x + (btn_w + spacing) * 3, btn_y, btn_w, btn_h),
-            text="Start Battle",
+            text="Return",
             manager=self.ui_manager
         )
         
@@ -975,17 +975,8 @@ class BuilderSceneGUI:
                     self.dragged_item = None
                 
     def _try_start(self):
-        """Validate and start battle."""
-        if not self.ship.check_validity():
-            self._show_error("Ship Invalid (Check Stats)")
-            return
-            
-        has_bridge = any(isinstance(c, Bridge) for l in self.ship.layers.values() for c in l['components'])
-        if not has_bridge:
-            self._show_error("Ship needs a Bridge!")
-            return
-            
-        self.on_start_battle(self.ship)
+        """Return to main menu."""
+        self.on_start_battle(None)
         
     def _save_ship(self):
         """Save ship design to file."""
