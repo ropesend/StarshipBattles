@@ -190,8 +190,16 @@ class BuilderSceneGUI:
             manager=self.ui_manager,
             container=self.right_panel
         )
-        ai_options = ["Max Range", "Attack Run", "Kamikaze", "Flee"]
+        # Load AI options from combatstrategies.json
+        from ai import COMBAT_STRATEGIES
+        ai_options = [strat.get('name', strategy_id.replace('_', ' ').title()) 
+                      for strategy_id, strat in COMBAT_STRATEGIES.items()]
         ai_display = self.ship.ai_strategy.replace('_', ' ').title()
+        # Find matching display name from strategies
+        for strategy_id, strat in COMBAT_STRATEGIES.items():
+            if strategy_id == self.ship.ai_strategy:
+                ai_display = strat.get('name', ai_display)
+                break
         self.ai_dropdown = UIDropDownMenu(
             options_list=ai_options,
             starting_option=ai_display,
@@ -854,7 +862,16 @@ class BuilderSceneGUI:
                 self.ship.recalculate_stats()
                 self._update_stats_display()
             elif event.ui_element == self.ai_dropdown:
-                self.ship.ai_strategy = event.text.lower().replace(' ', '_')
+                # Look up strategy ID by display name
+                from ai import COMBAT_STRATEGIES
+                selected_name = event.text
+                for strategy_id, strat in COMBAT_STRATEGIES.items():
+                    if strat.get('name', '') == selected_name:
+                        self.ship.ai_strategy = strategy_id
+                        break
+                else:
+                    # Fallback: convert display name to ID
+                    self.ship.ai_strategy = event.text.lower().replace(' ', '_')
                 
         elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
             if event.ui_element == self.component_list:
@@ -1000,7 +1017,14 @@ class BuilderSceneGUI:
                 self.ship = new_ship
                 self.name_entry.set_text(self.ship.name)
                 self.class_dropdown.selected_option = self.ship.ship_class
-                self.ai_dropdown.selected_option = self.ship.ai_strategy.replace('_', ' ').title()
+                # Get display name from strategy definition
+                from ai import COMBAT_STRATEGIES
+                ai_display = self.ship.ai_strategy.replace('_', ' ').title()
+                for strategy_id, strat in COMBAT_STRATEGIES.items():
+                    if strategy_id == self.ship.ai_strategy:
+                        ai_display = strat.get('name', ai_display)
+                        break
+                self.ai_dropdown.selected_option = ai_display
                 self._update_stats_display()
                 print(f"Loaded ship from {filename}")
             except Exception as e:
