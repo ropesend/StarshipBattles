@@ -14,8 +14,8 @@ class ShipCombatMixin:
     - current_target (for aiming)
     """
 
-    def update_combat_cooldowns(self, dt=1.0):
-        """Update weapon cooldowns and energy regeneration. dt is ignored (1 tick)."""
+    def update_combat_cooldowns(self):
+        """Update weapon cooldowns and energy regeneration. Assumes 1 tick cycle."""
         if not self.is_alive: return
 
         # Regenerate Energy
@@ -44,7 +44,7 @@ class ShipCombatMixin:
                     # Comp update might need tick awareness, pass 1.0 or nothing
                     # Check component definition.
                     # Standard components usually just decrement counters.
-                    comp.update(1.0) # Assuming comps treat dt as seconds reduction? 
+                    comp.update() # Cycle-based now 
                     # If comp.reload_current is in seconds, we subtract 1/100.
                     # Or we change comp to use ticks.
                     # Let's look at Component.update. It likely does: timer -= dt.
@@ -73,7 +73,7 @@ class ShipCombatMixin:
                     # Let's pass 0.01 for now to mimic the 100 ticks = 1 sec requirement comfortably 
                     # without breaking the internal timer logic if it is float seconds.
                     # This obeys "Physics and Logic based on cycles", where 1 cycle removes 0.01 "time units" from cooldown.
-                    comp.update(0.01)
+                    comp.update()
 
     def fire_weapons(self):
         """

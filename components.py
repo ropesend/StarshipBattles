@@ -200,7 +200,7 @@ class Weapon(Component):
         self.facing_angle = data.get('facing_angle', 0) # Degrees relative to component forward (0)
         self.fire_count = 0  # Track how many times weapon has fired
 
-    def update(self, dt=1.0):
+    def update(self):
         # Cycle-Based: 1 tick = 0.01 seconds. Decrement timer by 0.01.
         if self.cooldown_timer > 0:
             self.cooldown_timer -= 0.01

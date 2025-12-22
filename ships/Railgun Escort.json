@@ -8,7 +8,7 @@
     "team_id": 0,
     "ship_class": "Escort",
     "theme_id": "Federation",
-    "ai_strategy": "optimal_firing_range",
+    "ai_strategy": "point_blank",
     "layers": {
         "CORE": [
             {
@@ -82,18 +82,22 @@
             {
                 "id": "armor_plate",
                 "modifiers": []
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": []
             }
         ]
     },
     "expected_stats": {
-        "max_hp": 1580,
+        "max_hp": 1830,
         "max_fuel": 50000,
         "max_ammo": 0,
         "max_energy": 0,
-        "max_speed": 11.967581407141088,
-        "turn_speed": 2.6022083450128157,
-        "total_thrust": 450.0,
-        "mass": 940.0395633228862,
-        "armor_hp_pool": 500
+        "max_speed": 11.597465119322496,
+        "turn_speed": 2.4824304641294797,
+        "total_thrust": 450,
+        "mass": 970.0395633228862,
+        "armor_hp_pool": 750
     }
 }

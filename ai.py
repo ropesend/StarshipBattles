@@ -124,7 +124,7 @@ class AIController:
         
         return total_current / total_max if total_max > 0 else 1.0
 
-    def update(self, dt):
+    def update(self):
         if not self.ship.is_alive: 
             return
 
@@ -147,7 +147,7 @@ class AIController:
         
         if hp_pct <= retreat_threshold and retreat_threshold > 0:
             # Retreat mode
-            self.update_flee(dt, target, strategy.get('fire_while_retreating', False))
+            self.update_flee(target, strategy.get('fire_while_retreating', False))
             return
         
         # Reset state on strategy change
@@ -162,18 +162,18 @@ class AIController:
         
         # Dispatch based on engage distance
         if engage_key == 'ram':
-            self.update_ramming(dt, target)
+            self.update_ramming(target)
         elif strategy.get('attack_run_behavior'):
-            self.update_attack_run(dt, target, strategy)
+            self.update_attack_run(target, strategy)
         else:
-            self.update_range_engagement(dt, target, engage_mult, strategy)
+            self.update_range_engagement(target, engage_mult, strategy)
 
-    def update_ramming(self, dt, target):
+    def update_ramming(self, target):
         """Ram target, no avoidance."""
         self.ship.comp_trigger_pulled = True
-        self.navigate_to(dt, target.position, stop_dist=0, precise=False)
+        self.navigate_to(target.position, stop_dist=0, precise=False)
         
-    def update_flee(self, dt, target, fire_while_fleeing=False):
+    def update_flee(self, target, fire_while_fleeing=False):
         """Run away from target."""
         self.ship.comp_trigger_pulled = fire_while_fleeing
         
@@ -182,9 +182,9 @@ class AIController:
             vec = pygame.math.Vector2(1, 0)
         
         flee_pos = self.ship.position + vec.normalize() * 1000
-        self.navigate_to(dt, flee_pos, stop_dist=0, precise=False)
+        self.navigate_to(flee_pos, stop_dist=0, precise=False)
 
-    def update_attack_run(self, dt, target, strategy):
+    def update_attack_run(self, target, strategy):
         """Attack run: approach -> fire -> retreat -> repeat."""
         behavior = strategy.get('attack_run_behavior', {})
         approach_dist = self.ship.max_weapon_range * behavior.get('approach_distance', 0.3)
@@ -195,7 +195,7 @@ class AIController:
         
         if self.attack_state == 'approach':
             self.ship.comp_trigger_pulled = True
-            self.navigate_to(dt, target.position, stop_dist=approach_dist, precise=False)
+            self.navigate_to(target.position, stop_dist=approach_dist, precise=False)
             
             if dist < approach_dist * 1.5:
                 self.attack_state = 'retreat'
@@ -211,12 +211,12 @@ class AIController:
                 vec = pygame.math.Vector2(1, 0)
             flee_pos = self.ship.position + vec.normalize() * 1000
             
-            self.navigate_to(dt, flee_pos, stop_dist=0, precise=False)
+            self.navigate_to(flee_pos, stop_dist=0, precise=False)
             
             if self.attack_timer <= 0 and dist > retreat_dist:
                 self.attack_state = 'approach'
 
-    def update_range_engagement(self, dt, target, engage_mult, strategy):
+    def update_range_engagement(self, target, engage_mult, strategy):
         """Engage at specified range multiplier of max weapon range."""
         self.ship.comp_trigger_pulled = True
         
@@ -224,7 +224,7 @@ class AIController:
         if strategy.get('avoid_collisions', True):
             override_pos = self.check_avoidance()
             if override_pos:
-                self.navigate_to(dt, override_pos, stop_dist=0, precise=False)
+                self.navigate_to(override_pos, stop_dist=0, precise=False)
                 return
         
         # Calculate optimal distance based on engage multiplier
@@ -236,7 +236,7 @@ class AIController:
         
         if dist > opt_dist:
             # Close in
-            self.navigate_to(dt, target.position, stop_dist=opt_dist, precise=True)
+            self.navigate_to(target.position, stop_dist=opt_dist, precise=True)
         else:
             # Kite - maintain distance
             vec = self.ship.position - target.position
@@ -244,16 +244,16 @@ class AIController:
                 vec = pygame.math.Vector2(1, 0)
             
             kite_pos = target.position + vec.normalize() * opt_dist
-            self.navigate_to(dt, kite_pos, stop_dist=0, precise=True)
+            self.navigate_to(kite_pos, stop_dist=0, precise=True)
 
-    def update_max_range(self, dt, target):
+    def update_max_range(self, target):
         # MAX RANGE (Kiting) - Original behavior + Coll Avoidance
         self.ship.comp_trigger_pulled = True
         
         # Collision Avoidance (Only for subtle/smart strategies)
         override_pos = self.check_avoidance()
         if override_pos:
-            self.navigate_to(dt, override_pos, stop_dist=0, precise=False)
+            self.navigate_to(override_pos, stop_dist=0, precise=False)
             return
 
         # Optimal Distance
@@ -264,7 +264,7 @@ class AIController:
         
         if dist > opt_dist:
             # Close in
-            self.navigate_to(dt, target.position, stop_dist=opt_dist, precise=True)
+            self.navigate_to(target.position, stop_dist=opt_dist, precise=True)
         else:
             # Too close, back off or circle?
             # Back off logic similar to flee but keeping facing?
@@ -276,7 +276,7 @@ class AIController:
             
             # Kite point
             kite_pos = target.position + vec.normalize() * opt_dist
-            self.navigate_to(dt, kite_pos, stop_dist=0, precise=True)
+            self.navigate_to(kite_pos, stop_dist=0, precise=True)
 
     def check_avoidance(self):
         # Extracted Collision Logic
@@ -305,7 +305,7 @@ class AIController:
             return self.ship.position + vec.normalize() * 500
         return None
 
-    def navigate_to(self, dt, target_pos, stop_dist=0, precise=False):
+    def navigate_to(self, target_pos, stop_dist=0, precise=False):
         # 1. Navigation
         distance = self.ship.position.distance_to(target_pos)
         
@@ -320,7 +320,7 @@ class AIController:
         # Rotate
         if abs(angle_diff) > 5:
             direction = 1 if angle_diff > 0 else -1
-            self.ship.rotate(dt, direction)
+            self.ship.rotate(direction)
         
         # Thrust
         # If precise, we slow down earlier
@@ -328,7 +328,7 @@ class AIController:
         
         if abs(angle_diff) < 30 and distance > eff_stop_dist:
             # Throttle if facing roughly right
-             self.ship.thrust_forward(dt)
+             self.ship.thrust_forward()
 
     # attempt_fire removed, logic moved to Ship update via trigger
 

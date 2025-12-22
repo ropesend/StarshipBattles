@@ -49,11 +49,11 @@ class TestArcadeMovement(unittest.TestCase):
         self.assertAlmostEqual(self.ship.max_speed, expected_max_speed, places=2)
 
     def test_thrust_increases_speed(self):
-        dt = 1.0 # 1 tick
+        # dt = 1.0 # 1 tick (removed)
         initial_speed = self.ship.current_speed
         self.assertEqual(initial_speed, 0)
         
-        self.ship.thrust_forward(dt)
+        self.ship.thrust_forward()
         
         # Cycle-Based: Thrust adds 1/100th of acceleration_rate per tick
         expected_speed = self.ship.acceleration_rate / 100.0
@@ -69,7 +69,9 @@ class TestArcadeMovement(unittest.TestCase):
         
         initial_pos = pygame.math.Vector2(self.ship.position)
         
-        self.ship.update(dt)
+        initial_pos = pygame.math.Vector2(self.ship.position)
+        
+        self.ship.update()
         
         # Should move 100 units right (minus drag decay on speed, but position uses velocity calculated from speed)
         # Wait, update applies drag to speed!
@@ -92,20 +94,20 @@ class TestArcadeMovement(unittest.TestCase):
         
         initial_pos = pygame.math.Vector2(self.ship.position)
         self.ship.current_speed = 100 # Reset speed
-        self.ship.update(dt)
+        self.ship.update()
         
         diff = self.ship.position - initial_pos
         self.assertAlmostEqual(diff.x, 0, delta=1.0) 
         self.assertGreater(diff.y, 50) # Moved down
 
     def test_max_speed_cap(self):
-        dt = 1.0
+        # dt = 1.0
         # Force huge speed
         self.ship.current_speed = self.ship.max_speed + 1000
         
         # Thrusting should cap it? 
         # thrust_forward Caps it: if speed > max: speed = max
-        self.ship.thrust_forward(dt)
+        self.ship.thrust_forward()
         
         # Note: thrust_forward adds accel first, THEN caps.
         self.assertLessEqual(self.ship.current_speed, self.ship.max_speed + 0.01) # Float tolerance

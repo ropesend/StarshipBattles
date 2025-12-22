@@ -135,9 +135,12 @@ class BattleScene:
         if not headless:
             self.camera.fit_objects(self.ships)
     
-    def update(self, dt, events, camera_dt=None):
-        """Update battle simulation for one tick."""
-        self.camera.update_input(camera_dt if camera_dt else dt, events)
+    def update(self, events, visual_dt_for_camera=0.0):
+        """
+        Update battle simulation for one tick.
+        visual_dt_for_camera: Real time passed, ONLY for camera/UI smoothing.
+        """
+        self.camera.update_input(visual_dt_for_camera, events)
         self.sim_tick_counter += 1
         
         # 1. Update Grid
@@ -148,9 +151,9 @@ class BattleScene:
         
         # 2. Update AI & Ships
         for ai in self.ai_controllers:
-            ai.update(dt)
+            ai.update()
         for s in self.ships:
-            s.update(dt)
+            s.update()
         
         # 3. Process Attacks
         new_attacks = []
@@ -179,11 +182,11 @@ class BattleScene:
         self._process_ramming()
         
         # 5. Update Projectiles
-        self._update_projectiles(dt)
+        self._update_projectiles()
         
-        # 6. Update Beams
+        # 6. Update Beams (Cycle-Based: 1 tick = 0.01 seconds)
         for b in self.beams:
-            b['timer'] -= dt
+            b['timer'] -= 0.01
         self.beams = [b for b in self.beams if b['timer'] > 0]
     
     def _process_beam_attack(self, attack):
@@ -255,8 +258,8 @@ class BattleScene:
                     target.take_damage(hp_target + 9999)
                     BATTLE_LOG.log(f"Ramming: Mutual destruction!")
     
-    def _update_projectiles(self, dt=1.0):
-        """Update projectile positions and check collisions. dt ignored (1 tick)."""
+    def _update_projectiles(self):
+        """Update projectile positions and check collisions."""
         projectiles_to_remove = set()
         
         for idx, p in enumerate(self.projectiles):

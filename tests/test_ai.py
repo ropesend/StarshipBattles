@@ -58,14 +58,14 @@ class TestAIController(unittest.TestCase):
     
     def test_update_sets_target(self):
         """AI update should set current_target."""
-        self.ai.update(0.016)
+        self.ai.update()
         self.assertEqual(self.ship1.current_target, self.ship2)
     
     def test_strategy_dispatch_max_range(self):
         """AI should use max_range strategy by default."""
         self.ship1.ai_strategy = 'max_weapons_range'
         self.ship1.comp_trigger_pulled = False  # Initialize attribute
-        self.ai.update(0.016)
+        self.ai.update()
         # Should have trigger pulled for firing
         self.assertTrue(self.ship1.comp_trigger_pulled)
     
@@ -73,14 +73,14 @@ class TestAIController(unittest.TestCase):
         """AI flee strategy should not fire."""
         self.ship1.ai_strategy = 'flee'
         self.ship1.comp_trigger_pulled = True  # Initialize with True to confirm it gets set False
-        self.ai.update(0.016)
+        self.ai.update()
         # Flee strategy should NOT fire (retreat_hp_threshold=1.0 means always flee)
         self.assertFalse(self.ship1.comp_trigger_pulled)
     
     def test_strategy_dispatch_kamikaze(self):
         """AI kamikaze should fire and charge."""
         self.ship1.ai_strategy = 'kamikaze'
-        self.ai.update(0.016)
+        self.ai.update()
         # Kamikaze always fires
         self.assertTrue(self.ship1.comp_trigger_pulled)
     
@@ -91,7 +91,7 @@ class TestAIController(unittest.TestCase):
         
         # Navigate should rotate ship toward target
         initial_angle = self.ship1.angle
-        self.ai.navigate_to(0.5, target_pos)
+        self.ai.navigate_to(target_pos)
         
         # Angle should change (rotating toward down/90 degrees)
         # Can't assert exact value due to turn speed limits
@@ -146,7 +146,9 @@ class TestAIStrategyStates(unittest.TestCase):
         self.grid.insert(self.ship)
         self.grid.insert(self.target)
         
-        self.ai.update(0.016)
+        self.grid.insert(self.target)
+        
+        self.ai.update()
         
         self.assertTrue(hasattr(self.ai, 'attack_state'))
         self.assertEqual(self.ai.attack_state, 'approach')
@@ -157,7 +159,7 @@ class TestAIStrategyStates(unittest.TestCase):
         self.ship.position = pygame.math.Vector2(0, 0)
         self.target.position = pygame.math.Vector2(150, 0)  # Very close
         
-        self.ai.update(0.016)
+        self.ai.update()
         # After being very close, should switch to retreat
         self.assertEqual(self.ai.attack_state, 'retreat')
 

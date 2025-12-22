@@ -10,10 +10,9 @@ class ShipPhysicsMixin:
     - angle, angular_velocity, turn_speed
     """
     
-    def update_physics_movement(self, dt=1.0):
+    def update_physics_movement(self):
         """
         Update ship position and rotation based on cycle-based physics.
-        dt is ignored/assumed to be 1 tick.
         """
         # Explicitly set velocity based on direction and speed (Arcade Style)
         forward = self.forward_vector()
@@ -34,7 +33,7 @@ class ShipPhysicsMixin:
         self.angle %= 360
         self.angular_velocity = 0 # Reset each frame for direct control style if desired
 
-    def thrust_forward(self, dt=1.0):
+    def thrust_forward(self):
         """Apply thrust, consuming fuel and increasing speed."""
         if self.current_fuel > 0:
             # Consume Fuel
@@ -84,11 +83,10 @@ class ShipPhysicsMixin:
             else:
                 self.current_fuel = 0
 
-    def rotate(self, dt, direction):
+    def rotate(self, direction):
         """
         Rotate the ship.
         direction: -1 for left, 1 for right
-        dt: ignored
         """
         # Direct angle modification (Arcade style)
         # Turn speed is degrees/sec. Convert to degrees/tick.

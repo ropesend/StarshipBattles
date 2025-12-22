@@ -400,12 +400,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                         max_rng = comp.range
         return max_rng
 
-    def update(self, dt):
+    def update(self):
         if not self.is_alive: return
 
         # Delegate to Mixins
-        self.update_combat_cooldowns(dt)
-        self.update_physics_movement(dt)
+        self.update_combat_cooldowns()
+        self.update_physics_movement()
         
         # Handle Firing
         self.just_fired_projectiles = []

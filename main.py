@@ -143,7 +143,7 @@ class Game:
                     # Plan says: "Pass no dt (or 1.0)"
                     # Let's pass 1.0 as "1 Tick" to keep signature valid for now, 
                     # but logic will treat it as ONE DISCRETE TICK unit.
-                    self.battle_scene.update(1.0, events) 
+                    self.battle_scene.update(events) 
                     accumulator -= dt
                     
                 self.battle_scene.draw(self.screen)
@@ -240,7 +240,7 @@ class Game:
         if self.battle_scene.headless_mode:
             # Headless mode - run fast without rendering
             for _ in range(1000):
-                self.battle_scene.update(1.0, [], camera_dt=0)
+                self.battle_scene.update([], visual_dt_for_camera=0)
                 
                 tick_limit_reached = self.battle_scene.sim_tick_counter >= 3000000
                 
@@ -262,9 +262,8 @@ class Game:
                 ticks_to_run = max(1, int(self.battle_scene.sim_speed_multiplier))
                 for i in range(ticks_to_run):
                     self.battle_scene.update(
-                        1.0,
                         events if i == 0 else [],
-                        camera_dt=frame_time if i == 0 else 0
+                        visual_dt_for_camera=frame_time if i == 0 else 0
                     )
             else:
                 self.battle_scene.camera.update_input(frame_time, events)
