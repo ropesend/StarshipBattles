@@ -278,13 +278,13 @@
             "name": "Capital Missile",
             "type": "SeekerWeapon",
             "mass": 60,
-            "hp": 80,
+            "hp": 10,
             "allowed_layers": [
                 "OUTER"
             ],
             "damage": 100,
             "projectile_speed": 6000,
-            "turn_rate": 90,
+            "turn_rate": 200,
             "endurance": 5.0,
             "reload": 4.0,
             "ammo_cost": 5,
@@ -304,9 +304,9 @@
             "allowed_layers": [
                 "OUTER"
             ],
-            "damage": 1,
+            "damage": 4,
             "range": 800,
-            "reload": 0.1,
+            "reload": 0.04,
             "energy_cost": 2,
             "base_accuracy": 1.0,
             "accuracy_falloff": 0.001,
