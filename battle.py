@@ -476,7 +476,10 @@ class BattleScene:
         if self.ui.show_overlay:
             self.ui.draw_debug_overlay(screen)
         
-        # Stats panel
+        # Seeker panel (Left)
+        self.ui.draw_seeker_panel(screen)
+        
+        # Stats panel (Right)
         self.ui.draw_ship_stats_panel(screen)
         
         # Battle end UI

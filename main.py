@@ -295,9 +295,11 @@ class Game:
             rate_text = f"TPS: {self.battle_scene.current_tick_rate:,}/s"
             zoom_text = f"Zoom: {self.battle_scene.camera.zoom:.3f}x"
             
-            self.screen.blit(font_med.render(tick_text, True, (180, 180, 180)), (10, 10))
-            self.screen.blit(font_med.render(rate_text, True, (180, 180, 180)), (10, 35))
-            self.screen.blit(font_med.render(zoom_text, True, (150, 200, 255)), (10, 60))
+            # Draw to the right of seeker panel (panel is 300px wide)
+            panel_offset = self.battle_scene.ui.seeker_panel_width + 10
+            self.screen.blit(font_med.render(tick_text, True, (180, 180, 180)), (panel_offset, 10))
+            self.screen.blit(font_med.render(rate_text, True, (180, 180, 180)), (panel_offset, 35))
+            self.screen.blit(font_med.render(zoom_text, True, (150, 200, 255)), (panel_offset, 60))
             
             # Draw speed indicator
             speed_text = "PAUSED" if self.battle_scene.sim_paused else f"Speed: {self.battle_scene.sim_speed_multiplier:.2f}x"

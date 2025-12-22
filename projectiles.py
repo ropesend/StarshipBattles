@@ -11,6 +11,7 @@ class Projectile(PhysicsBody):
         self.damage = damage
         self.max_range = range_val
         self.endurance = endurance # in seconds
+        self.max_endurance = endurance  # Store initial value for UI
         self.type = proj_type # 'projectile', 'missile', 'beam' (beams usually separate but maybe unified later)
         
         # Optional args
@@ -18,10 +19,13 @@ class Projectile(PhysicsBody):
         self.max_speed = kwargs.get('max_speed', 0)
         self.target = kwargs.get('target', None)
         self.hp = kwargs.get('hp', 1) # Missiles can be shot down
-        self.radius = kwargs.get('radius', 3)
+        self.max_hp = self.hp  # Store initial value for UI
         self.radius = kwargs.get('radius', 3)
         self.color = kwargs.get('color', (255, 255, 0))
         self.source_weapon = source_weapon
+        
+        # Turn direction commitment for stable guidance (prevents oscillation)
+        self.last_turn_direction = 0  # -1 for clockwise, +1 for counter-clockwise
         
         self.distance_traveled = 0
         self.is_alive = True
@@ -120,6 +124,17 @@ class Projectile(PhysicsBody):
                     rotation = max_turn_step if angle_diff > 0 else -max_turn_step
                 else:
                     rotation = angle_diff
+                
+                # Commit to turn direction near ±180° to prevent oscillation
+                # When target is behind us, angle_to can flip between +179 and -180
+                # causing flip-flop turning. Lock to previous direction instead.
+                if abs(abs(angle_diff) - 180) < 10:  # Within 10° of 180
+                    if self.last_turn_direction != 0:
+                        rotation = abs(rotation) * self.last_turn_direction
+                
+                # Store turn direction for next frame
+                if rotation != 0:
+                    self.last_turn_direction = 1 if rotation > 0 else -1
                 
                 new_vel = current_dir.rotate(rotation) * self.max_speed
                 self.velocity = new_vel

@@ -80,21 +80,18 @@ class BattleInterface:
         
         y = 10 - self.seeker_scroll_offset
         
-        # Header
-        title = font_title.render("SEEKER MONITOR", True, (255, 200, 100))
+        # Header with active/total count
+        active_count = sum(1 for p in self.tracked_seekers if p.status == 'active')
+        total_count = len(self.tracked_seekers)
+        title = font_title.render(f"SEEKER MONITOR ({active_count}/{total_count})", True, (255, 200, 100))
         panel_surf.blit(title, (10, y))
         y += 30
         
-        # Content
-        # Filter tracked seekers? No, user wants to remove manually.
-        # Draw list
+        # Draw seeker entries
         for i, proj in enumerate(self.tracked_seekers):
             y = self.draw_seeker_entry(panel_surf, proj, y, panel_w, font_name, font_stat)
             
         self.seeker_panel_content_height = y + self.seeker_scroll_offset
-        
-        # Draw "Clear Inactive" button at bottom (fixed position relative to screen, not scroll)
-        # Let's put it fixed at bottom of screen.
         
         screen.blit(panel_surf, (0, 0))
         
@@ -164,26 +161,48 @@ class BattleInterface:
         return y
 
     def draw_seeker_details(self, surface, proj, y, panel_w, font):
+        """Draw expanded seeker details with stats and progress bars."""
         x_indent = 20
-        # Stats
-        p_vel_len = proj.velocity.length() * 100.0 # Pixels/sec approx (ticks * 100)
+        bar_w = 80
+        bar_h = 8
+        
+        # Speed
+        p_vel_len = proj.velocity.length() * 100.0  # Pixels/sec approx (ticks * 100)
+        max_speed = getattr(proj, 'max_speed', p_vel_len) * 100.0 if getattr(proj, 'max_speed', 0) > 0 else p_vel_len
+        txt = font.render(f"Speed: {p_vel_len:.0f} px/s", True, (180, 180, 180))
+        surface.blit(txt, (x_indent, y))
+        y += 14
+        
+        # HP with bar
         hp = getattr(proj, 'hp', 0)
+        max_hp = getattr(proj, 'max_hp', hp) if getattr(proj, 'max_hp', 0) > 0 else max(hp, 1)
+        hp_pct = hp / max_hp if max_hp > 0 else 0
+        hp_color = (0, 255, 0) if hp_pct > 0.5 else ((255, 200, 0) if hp_pct > 0.2 else (255, 50, 50))
+        
+        txt = font.render(f"HP: {hp:.0f}/{max_hp:.0f}", True, (180, 180, 180))
+        surface.blit(txt, (x_indent, y))
+        self.draw_stat_bar(surface, x_indent + 80, y, bar_w, bar_h, hp_pct, hp_color)
+        y += 14
+        
+        # Endurance (Fuel) with bar
         endurance = getattr(proj, 'endurance', 0)
+        max_endurance = getattr(proj, 'max_endurance', endurance) if getattr(proj, 'max_endurance', 0) > 0 else max(endurance, 1)
+        fuel_pct = endurance / max_endurance if max_endurance > 0 else 0
+        fuel_color = (255, 165, 0) if fuel_pct > 0.3 else (255, 50, 50)
         
-        lines = [
-            f"Speed: {p_vel_len:.0f} px/s",
-            f"HP: {hp:.1f}",
-            f"Fuel: {endurance:.1f}s",
-            f"Dmg: {proj.damage}"
-        ]
+        txt = font.render(f"Fuel: {endurance:.1f}s", True, (180, 180, 180))
+        surface.blit(txt, (x_indent, y))
+        self.draw_stat_bar(surface, x_indent + 80, y, bar_w, bar_h, fuel_pct, fuel_color)
+        y += 14
         
-        for line in lines:
-            txt = font.render(line, True, (200, 200, 200))
-            surface.blit(txt, (x_indent, y))
-            y += 14
-            
+        # Damage
+        txt = font.render(f"Damage: {proj.damage}", True, (255, 150, 150))
+        surface.blit(txt, (x_indent, y))
+        y += 14
+        
+        # Target
         target = getattr(proj, 'target', None)
-        t_name = target.name if target else "None"
+        t_name = target.name if target and hasattr(target, 'name') else "None"
         txt = font.render(f"Target: {t_name}", True, (150, 200, 150))
         surface.blit(txt, (x_indent, y))
         y += 16
@@ -704,17 +723,8 @@ class BattleInterface:
              
              y_pos += 25
              if proj in self.expanded_seekers:
-                 y_pos += 72 # 4 lines * 14 + 1 target * 16 = 56 + 16 = 72 approx.
-                 # wait, draw_seeker_details logic:
-                 # 4 lines * 14 = 56
-                 # + target * 16? 
-                 # Let's count lines:
-                 # line 1: 14 height
-                 # line 2: 14
-                 # line 3: 14
-                 # line 4: 14
-                 # target: 16
-                 # Total = 56 + 16 = 72. Yes.
+                 # Height: Speed(14) + HP(14) + Fuel(14) + Damage(14) + Target(16) = 72
+                 y_pos += 72
         return False
 
     def handle_stats_panel_click(self, rel_x, rel_y):
