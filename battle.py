@@ -153,10 +153,15 @@ class BattleScene:
             self.grid.insert(s)
         
         # 2. Update AI & Ships
+        combat_context = {
+            'projectiles': self.projectiles,
+            'grid': self.grid
+        }
+        
         for ai in self.ai_controllers:
             ai.update()
         for s in self.ships:
-            s.update()
+            s.update(context=combat_context)
         
         # 3. Process Attacks
         new_attacks = []
@@ -166,38 +171,26 @@ class BattleScene:
                 s.just_fired_projectiles = []
         
         for attack in new_attacks:
-            if attack['type'] == 'projectile':
-                BATTLE_LOG.log(f"Projectile fired at {attack['position']}")
-                self.projectiles.append({
-                    'type': 'projectile',
-                    'pos': attack['position'],
-                    'vel': attack['velocity'],
-                    'damage': attack['damage'],
-                    'range': attack['range'],
-                    'distance_traveled': 0,
-                    'owner': attack['source'],
-                    'radius': 3,
-                    'color': attack.get('color', (255, 255, 0))
-                })
-            elif attack['type'] == 'missile':
-                BATTLE_LOG.log(f"Missile fired at {attack.get('target', 'unknown')}")
-                self.projectiles.append({
-                    'type': 'missile',
-                    'pos': attack['position'],
-                    'vel': attack['velocity'],
-                    'damage': attack['damage'],
-                    'range': attack['range'], # We can use range as max distance if needed, but endurance handles it
-                    'distance_traveled': 0,
-                    'owner': attack['source'],
-                    'radius': 5,
-                    'color': attack.get('color', (255, 50, 50)),
-                    'target': attack.get('target'),
-                    'turn_rate': attack.get('turn_rate', 30),
-                    'max_speed': attack.get('max_speed', 10),
-                    'endurance': attack.get('endurance', 5.0), # In seconds
-                    'hp': attack.get('hp', 1)
-                })
-            elif attack['type'] == 'beam':
+            # Check if attack is a dict (Beam) or Object (Projectile)
+            is_dict = isinstance(attack, dict)
+            attack_type = attack.get('type') if is_dict else attack.type
+            
+            if attack_type == 'projectile' or attack_type == 'missile':
+                # It's a Projectile Object (now returned by fire_weapons)
+                # Ensure it is an object
+                if is_dict:
+                    # Generic handling if something still returns dicts (legacy safety)
+                     # For now, let's assume we migrated everything or log warning
+                     # But ship_combat returns objects now for projectiles.
+                     pass 
+                else:
+                    self.projectiles.append(attack)
+                    if attack_type == 'projectile':
+                        BATTLE_LOG.log(f"Projectile fired at {attack.position}")
+                    else:
+                        BATTLE_LOG.log(f"Missile fired at {getattr(attack, 'target', 'unknown')}")
+
+            elif attack_type == 'beam':
                 self._process_beam_attack(attack)
         
         # 4. Ship-to-Ship Collisions (Ramming)
@@ -320,74 +313,53 @@ class BattleScene:
             if idx in projectiles_to_remove:
                 continue
             
-            p_pos_t0 = p['pos']
-            p_vel = p['vel']
-            p_vel_length = p_vel.length()
-
-            # Missile Logic
-            if p.get('type') == 'missile':
-                # Endurance check
-                p['endurance'] -= 0.01
-                if p['endurance'] <= 0:
-                    projectiles_to_remove.add(idx)
-                    continue
-
-                # Guidance
-                target = p.get('target')
-                if target and target.is_alive:
-                    # Calculate lead
-                    # solve_lead expects (pos, vel, t_pos, t_vel, speed)
-                    # For guided missiles, we want to know intersect time assuming we steer continuously at max_speed.
-                    # Passing current p['vel'] breaks the math if missile is turning or speed varies.
-                    # Passing (0,0) treats it as "Interceptor launching from P0 at Speed S".
-                    t = p['owner'].solve_lead(p_pos_t0, pygame.math.Vector2(0, 0), target.position, target.velocity, p['max_speed'])
-                    
-                    aim_pos = target.position
-                    if t > 0:
-                        aim_pos = target.position + target.velocity * t
-                    
-                    desired_vec = aim_pos - p_pos_t0
-                    if desired_vec.length_squared() > 0:
-                        desired_dir = desired_vec.normalize()
-                        current_dir = p_vel.normalize() if p_vel.length() > 0 else pygame.math.Vector2(1, 0)
-                        
-                        # angle_to returns angle from current to desired
-                        angle_diff = current_dir.angle_to(desired_dir)
-                        max_turn = p['turn_rate'] / 100.0 # Degrees per tick
-                        
-                        # Handle wrapping if needed, but angle_to handles -180 to 180 usually
-                        # Just clamp
-                        if abs(angle_diff) > max_turn:
-                            rotation = max_turn if angle_diff > 0 else -max_turn
-                        else:
-                            rotation = angle_diff
-                        
-                        new_vel = current_dir.rotate(rotation) * p['max_speed']
-                        p['vel'] = new_vel
-                        p_vel = new_vel
-                        p_vel_length = p_vel.length()
+            # Use Projectile Object Update
+            p.update(0.01) # 1 tick
             
-            # Pos update per tick
-            p_pos_t1 = p_pos_t0 + p_vel 
+            if not p.is_alive:
+                projectiles_to_remove.add(idx)
+                continue
+                
+            p_pos = p.position 
+            
+            # Simple Radius Check for Hits
+            # For Projectiles, we can assume they move fast, so we might need raycast check (CCD)
+            # The previous implementation had CCD. Projectile.update moves it.
+            # We need to check collision along the path?
+            # Projectile.update moved it `velocity`.
+            # So start was `p.position - p.velocity` (approx)
+            
+            # Let's perform collision check here
+            # Retrieve ships to check
+            
+            query_radius = p.velocity.length() + 100
+            nearby_ships = self.grid.query_radius(p_pos, query_radius)
             
             hit_occurred = False
             
-            query_pos = (p_pos_t0 + p_pos_t1) * 0.5
-            # Radius checks for 1 tick of movement
-            query_radius = p_vel_length + 100
-            nearby_ships = self.grid.query_radius(query_pos, query_radius)
+            # Define Ray Segment
+            p_start = p_pos - p.velocity
+            p_end = p_pos
+            ray_vec = p.velocity # movement this tick
+            ray_len_sq = ray_vec.length_squared()
             
+            # Check against Ships
             for s in nearby_ships:
                 if not s.is_alive: continue
-                if s.team_id == p['owner'].team_id: continue
+                if s.team_id == p.team_id: continue
                 
-                # CCD
+                # Check against Projectiles (Missile Interception)
+                # Not iterating projectiles here... this loop is likely generic objects from grid.
+                # Grid contains ships. Does it contain Projectiles? No.
+                # So we only hit ships here.
+                
+                # ... Existing CCD Logic Adapted ...
                 s_vel = s.velocity
-                s_pos_t1 = s.position
-                s_pos_t0 = s_pos_t1 - s_vel # Backtrack 1 tick
+                s_pos = s.position
+                s_prev_pos = s_pos - s_vel
                 
-                D0 = p_pos_t0 - s_pos_t0
-                DV = p_vel - s_vel
+                D0 = p_start - s_prev_pos
+                DV = p.velocity - s_vel
                 
                 dv_sq = DV.dot(DV)
                 collision_radius = s.radius + 5
@@ -399,27 +371,41 @@ class BattleScene:
                         hit = True
                 else:
                     t = -D0.dot(DV) / dv_sq
-                    t_clamped = max(0, min(t, 1.0)) # Clamped to 1 tick
+                    t_clamped = max(0, min(t, 1.0))
                     
-                    p_at_t = p_pos_t0 + p_vel * t_clamped
-                    s_at_t = s_pos_t0 + s_vel * t_clamped
+                    p_at_t = p_start + p.velocity * t_clamped
+                    s_at_t = s_prev_pos + s_vel * t_clamped
                     
                     if p_at_t.distance_to(s_at_t) < collision_radius:
                         hit = True
                 
                 if hit:
-                    s.take_damage(p['damage'])
+                    s.take_damage(p.damage)
                     hit_occurred = True
+                    # Visual Hit Effect?
                     break
             
+            # Check against OTHER Projectiles (if seeker targeting)
+            # This is O(N^2) if we check all.
+            # But the requirement is "Seekers... can be targeted by other weapons".
+            # Usually means weapons hit them.
+            # Do projectiles collide with projectiles?
+            # PDC beams hit missiles.
+            # Missiles hitting missiles?
+            # Anti-missile missiles.
+            # We need to check if 'p' is an anti-missile that targets a missile.
+            if p.type == 'missile' and p.target and isinstance(p.target, type(p)):
+                 # Check collision with target missile
+                 t_missile = p.target
+                 if t_missile.is_alive:
+                     dist = p.position.distance_to(t_missile.position)
+                     if dist < (p.radius + t_missile.radius + 10): # proximity fuse
+                         t_missile.take_damage(p.damage)
+                         hit_occurred = True
+            
             if hit_occurred:
+                p.is_alive = False
                 projectiles_to_remove.add(idx)
-            else:
-                p['pos'] = p_pos_t1
-                p['distance_traveled'] += p_vel_length
-                
-                if p['distance_traveled'] > p['range']:
-                    projectiles_to_remove.add(idx)
         
         if projectiles_to_remove:
             self.projectiles = [p for i, p in enumerate(self.projectiles) if i not in projectiles_to_remove]
@@ -451,10 +437,15 @@ class BattleScene:
         # Draw projectiles
         for p in self.projectiles:
             trail_length = 100
-            start = self.camera.world_to_screen(p['pos'] - p['vel'].normalize() * trail_length)
-            end = self.camera.world_to_screen(p['pos'])
-            pygame.draw.line(screen, (255, 200, 50), start, end, 3)
-            pygame.draw.circle(screen, (255, 255, 100), (int(end[0]), int(end[1])), 4)
+            start_pos = p.position - p.velocity.normalize() * trail_length
+            end_pos = p.position
+            
+            start = self.camera.world_to_screen(start_pos)
+            end = self.camera.world_to_screen(end_pos)
+            
+            color = getattr(p, 'color', (255, 200, 50))
+            pygame.draw.line(screen, color, start, end, 3)
+            pygame.draw.circle(screen, (255, 255, 100), (int(end[0]), int(end[1])), int(getattr(p, 'radius', 4)))
         
         # Draw ships
         self.camera.show_overlay = self.ui.show_overlay # Hack to pass state to renderer

@@ -20,8 +20,6 @@ class ShipCombatMixin:
 
         # Regenerate Energy
         if self.current_energy < self.max_energy:
-            # self.energy_gen_rate is Per Second. 100 ticks/sec.
-            # Add 1/100th of rate per tick.
             self.current_energy += self.energy_gen_rate / 100.0
             if self.current_energy > self.max_energy:
                 self.current_energy = self.max_energy
@@ -41,47 +39,18 @@ class ShipCombatMixin:
         for layer in self.layers.values():
             for comp in layer['components']:
                 if hasattr(comp, 'update') and comp.is_active:
-                    # Comp update might need tick awareness, pass 1.0 or nothing
-                    # Check component definition.
-                    # Standard components usually just decrement counters.
-                    comp.update() # Cycle-based now 
-                    # If comp.reload_current is in seconds, we subtract 1/100.
-                    # Or we change comp to use ticks.
-                    # Let's look at Component.update. It likely does: timer -= dt.
-                    # If initialized with reload_time (seconds), we must subtract 0.01 per tick
-                    # OR convert reload_time to ticks at start.
-                    # For now, passing 0.01 (1 tick in seconds) preserves behavior IF comps use seconds.
-                    # BUT user wants "No Time". Ideally comps count ticks.
-                    # If I pass 0.01 here, I am using "seconds".
-                    # If I pass 1.0 here, the component subtracts 1.0 "unit".
-                    # If reload_time is 2.0 "units", then 1.0 clears it in 2 ticks. Too fast.
-                    # OPTION A: Pass 0.01 (representing 1 tick's worth of seconds).
-                    # OPTION B: Refactor Components to store ticks.
-                    # Given constraints, Option A is safest step for "cycle based" where cycle = 0.01s.
-                    # BUT user said "Reload Time 2.0s -> 200 ticks".
-                    # So reload_timer should start at 200. update(1) reduces by 1.
-                    # I can't refactor ALL components in this one step easily without seeing Component class.
-                    # I will assume for this step: Pass 0.01 to legacy seconds-based counters, 
-                    # effectively mapping 1 tick = 0.01 seconds deduction.
-                    # This achieves the "100 ticks = 1 second" result.
-                    pass 
-                    
-                    # Correction: I am refactoring `comp.update` call. 
-                    # I will look at Component class next. For now, let's stick to consistent logic.
-                    # If I change logic to Ticks, I should pass 1 (tick).
-                    # If Component still stores 2.0 (seconds), I need to change Component.
-                    # Let's pass 0.01 for now to mimic the 100 ticks = 1 sec requirement comfortably 
-                    # without breaking the internal timer logic if it is float seconds.
-                    # This obeys "Physics and Logic based on cycles", where 1 cycle removes 0.01 "time units" from cooldown.
-                    comp.update()
+                    # Pass 1 tick (0.01 seconds) to update
+                    comp.update(0.01)
 
-    def fire_weapons(self):
+    def fire_weapons(self, context=None):
         """
         Attempts to fire all ready weapons.
-        Returns a list of dicts representing attacks (Projectiles or Beams).
+        Args:
+            context (dict): Optional combat context dict containing 'projectiles' list, 'grid', etc.
+        Returns a list of Projectile objects or dicts (for beams).
         """
         attacks = []
-        if not self.is_alive: return attacks
+        if not self.is_alive or getattr(self, 'is_derelict', False): return attacks
 
         for layer in self.layers.values():
             for comp in layer['components']:
@@ -100,41 +69,48 @@ class ShipCombatMixin:
                     if has_resource and comp.can_fire():
                         # TARGETING logic
                         valid_target = False
+                        target = self.current_target
                         
-                        # We need 'aim_vec' for the firing check
-                        aim_vec = pygame.math.Vector2(1, 0).rotate(self.angle) # Default forward
-                        comp_facing = 0
-                        diff = 0
+                        # PDC Override: look for missiles if context provided
+                        is_pdc = comp.abilities.get('PointDefense', False)
+                        if is_pdc and context:
+                            pdc_target = self._find_pdc_target(comp, context)
+                            if pdc_target:
+                                target = pdc_target
+                        
+                        # If no target found for PDC, it can still fire at main target if valid?
+                        # Usually PDCs only fire at missiles/fighters. 
+                        # Let's say if it found a missile target, use it. 
+                        # Else if it's dual purpose, use main target?
+                        # For now, strict PDC behavior: ONLY targets missiles if found, else if main target is close enough?
+                        # Ignoring main target for PDC unless it matches criteria?
+                        # Let's assume PDCs can shoot ships if no missiles.
+                        
+                        if not target: continue
+                        
+                        # Distance Check
+                        dist = self.position.distance_to(target.position)
+                        max_range = comp.range
+                        if isinstance(comp, SeekerWeapon):
+                            # Approximate max range for initial check
+                            max_range = comp.projectile_speed * comp.endurance * 2.0 
 
-                        if self.current_target:
-                            target = self.current_target
-                            dist = self.position.distance_to(target.position)
+                        if dist <= max_range:
+                            # Solve Firing Solution
+                            aim_pos, aim_vec = self._calculate_firing_solution(comp, target)
                             
-                            max_range = comp.range
-                            if isinstance(comp, SeekerWeapon):
-                                # Seeker weapons have dynamic range usually defined by flight time,
-                                # but for initial check assume component range is sufficient or use endurance.
-                                # data/components.json doesn't have range for seeker, so we might need to derive it
-                                # or rely on base class 'range'.
-                                # For now assume comp.range is populated via derived stats or safely use projectile speed * endurance
-                                max_range = comp.projectile_speed * comp.endurance * 0.8
-
-                            if dist <= max_range:
-                                # Solve Firing Solution
-                                aim_pos, aim_vec = self._calculate_firing_solution(comp, target)
-
-                                # ARC CHECK
-                                aim_angle = math.degrees(math.atan2(aim_vec.y, aim_vec.x)) % 360
-                                ship_angle = self.angle
-                                comp_facing = (ship_angle + comp.facing_angle) % 360
-                                diff = (aim_angle - comp_facing + 180) % 360 - 180
-                                
-                                if abs(diff) <= comp.firing_arc:
-                                    valid_target = True
-                                elif isinstance(comp, SeekerWeapon):
-                                    # Seeker weapons can launch if target is out of arc
-                                    valid_target = True
-
+                            # ARC CHECK
+                            aim_angle = math.degrees(math.atan2(aim_vec.y, aim_vec.x)) % 360
+                            ship_angle = self.angle
+                            comp_facing = (ship_angle + comp.facing_angle) % 360
+                            diff = (aim_angle - comp_facing + 180) % 360 - 180
+                            
+                            if abs(diff) <= comp.firing_arc:
+                                valid_target = True
+                            elif isinstance(comp, SeekerWeapon):
+                                # Seeker weapons can launch if target is out of arc
+                                valid_target = True
+                        
                         if valid_target and comp.fire():
                             self.total_shots_fired += 1
                             # Deduct Resource
@@ -143,7 +119,7 @@ class ShipCombatMixin:
                                 attacks.append({
                                     'type': 'beam',
                                     'source': self,
-                                    'target': self.current_target,
+                                    'target': target,
                                     'damage': comp.damage,
                                     'range': comp.range,
                                     'origin': self.position,
@@ -151,62 +127,90 @@ class ShipCombatMixin:
                                     'direction': aim_vec.normalize() if aim_vec.length() > 0 else pygame.math.Vector2(1, 0),
                                     'hit': True
                                 })
-                            elif isinstance(comp, SeekerWeapon):
+                            else:
+                                from projectiles import Projectile
                                 self.current_ammo -= cost
-                                # Determine launch vector
-                                launch_vec = aim_vec
                                 
-                                # If target is outside arc, launch forward (along component facing)
-                                if abs(diff) > comp.firing_arc:
+                                # Seeker Logic
+                                if isinstance(comp, SeekerWeapon):
+                                    # Launch vector
                                     rad = math.radians(comp_facing)
                                     launch_vec = pygame.math.Vector2(math.cos(rad), math.sin(rad))
-                                
-                                speed = comp.projectile_speed / 100.0  # Pixels/tick
-                                p_vel = launch_vec.normalize() * speed + self.velocity
-                                
-                                attacks.append({
-                                    'type': 'missile',
-                                    'source': self,
-                                    'position': pygame.math.Vector2(self.position),
-                                    'velocity': p_vel,
-                                    'damage': comp.damage,
-                                    'range': comp.projectile_speed * comp.endurance, 
-                                    'max_speed': speed,
-                                    'turn_rate': comp.turn_rate,
-                                    'endurance': comp.endurance, # Seconds
-                                    'hp': comp.hp,
-                                    'target': self.current_target,
-                                    'owner': self,
-                                    'color': (255, 50, 50)
-                                })
-                            else:
-                                self.current_ammo -= cost
-                                # Projectile
-                                # Speed was pixels/sec. Now pixels/tick?
-                                # If projectile_speed is 2000 (pixels/sec), 
-                                # and we run 100 ticks/sec, speed per tick is 20.
-                                speed = comp.projectile_speed / 100.0 if isinstance(comp, ProjectileWeapon) else 10.0
-                                p_vel = aim_vec.normalize() * speed + self.velocity
-                                
-                                attacks.append({
-                                    'type': 'projectile',
-                                    'source': self,
-                                    'position': pygame.math.Vector2(self.position),
-                                    'velocity': p_vel,
-                                    'damage': comp.damage,
-                                    'range': comp.range,
-                                    'color': (255, 200, 50)
-                                })
+                                    
+                                    # If target in arc, launch at target
+                                    if abs(diff) <= comp.firing_arc:
+                                        launch_vec = aim_vec.normalize() if aim_vec.length() > 0 else launch_vec
+
+                                    speed = comp.projectile_speed / 100.0  # Pixels/tick
+                                    p_vel = launch_vec * speed + self.velocity
+                                    
+                                    proj = Projectile(
+                                        owner=self,
+                                        position=pygame.math.Vector2(self.position),
+                                        velocity=p_vel,
+                                        damage=comp.damage,
+                                        range_val=comp.projectile_speed * comp.endurance,
+                                        endurance=comp.endurance,
+                                        proj_type='missile',
+                                        turn_rate=comp.turn_rate,
+                                        max_speed=speed,
+                                        target=target,
+                                        hp=comp.hp,
+                                        color=(255, 50, 50)
+                                    )
+                                    attacks.append(proj)
+                                    
+                                else:
+                                    # Standard Projectile
+                                    speed = comp.projectile_speed / 100.0
+                                    p_vel = aim_vec.normalize() * speed + self.velocity
+                                    
+                                    proj = Projectile(
+                                        owner=self,
+                                        position=pygame.math.Vector2(self.position),
+                                        velocity=p_vel,
+                                        damage=comp.damage,
+                                        range_val=comp.range,
+                                        endurance=None, # Range limited
+                                        proj_type='projectile',
+                                        color=(255, 200, 50)
+                                    )
+                                    attacks.append(proj)
         return attacks
+
+    def _find_pdc_target(self, comp, context):
+        """Find the best target for a Point Defense Cannon."""
+        projectiles = context.get('projectiles', [])
+        if not projectiles: return None
+        
+        possible_targets = []
+        for p in projectiles:
+            if not p.is_alive: continue
+            if getattr(p, 'team_id', -1) == self.team_id: continue # Don't shoot friendly missiles
+            
+            # Check range
+            dist = self.position.distance_to(p.position)
+            if dist > comp.range: continue
+                
+            possible_targets.append((p, dist))
+            
+        if not possible_targets: return None
+        
+        # Sort by distance (closest first)
+        possible_targets.sort(key=lambda x: x[1])
+        return possible_targets[0][0]
 
     def _calculate_firing_solution(self, comp, target):
         """Helper to solve lead and return aim_pos, aim_vec."""
-        aim_pos = target.position # Default
+        aim_pos = target.position 
+        
+        # Determine target velocity
+        t_vel = getattr(target, 'velocity', pygame.math.Vector2(0,0))
         
         if isinstance(comp, ProjectileWeapon):
-            t = self.solve_lead(self.position, self.velocity, target.position, target.velocity, comp.projectile_speed)
+            t = self.solve_lead(self.position, self.velocity, target.position, t_vel, comp.projectile_speed / 100.0)
             if t > 0:
-                aim_pos = target.position + target.velocity * t
+                aim_pos = target.position + t_vel * t
                 
                 # Correct for our own velocity (Relative Intercept)
                 intercept_vec = aim_pos - self.position
@@ -226,6 +230,7 @@ class ShipCombatMixin:
         """
         Calculates interception time t for a projectile.
         Returns t > 0 if solution found, else 0.
+        Note: p_speed should be per tick if vel is per tick.
         """
         D = t_pos - pos
         V = t_vel - vel

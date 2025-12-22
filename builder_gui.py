@@ -288,12 +288,12 @@ class BuilderSceneGUI:
         self.layer_labels = {}
         for layer_name in ['CORE', 'INNER', 'OUTER', 'ARMOR']:
             self.layer_labels[layer_name] = UILabel(
-                relative_rect=pygame.Rect(10, y, 350, 18),
+                relative_rect=pygame.Rect(10, y, 350, 22),
                 text=f"{layer_name}: --%",
                 manager=self.ui_manager,
                 container=self.right_panel
             )
-            y += 18
+            y += 22
         
         y += 10
         
@@ -309,12 +309,12 @@ class BuilderSceneGUI:
         self.crew_labels = {}
         for crew_stat in ['crew_required', 'crew_housed', 'life_support']:
             self.crew_labels[crew_stat] = UILabel(
-                relative_rect=pygame.Rect(10, y, 350, 18),
+                relative_rect=pygame.Rect(10, y, 350, 22),
                 text=f"{crew_stat}: --",
                 manager=self.ui_manager,
                 container=self.right_panel
             )
-            y += 18
+            y += 22
         
         y += 10
         
@@ -730,6 +730,7 @@ class BuilderSceneGUI:
         self.crew_labels['crew_required'].set_text(f"Crew Required: {crew_required}")
         self.crew_labels['crew_housed'].set_text(f"Crew On Board: {crew_housed} {crew_status}")
         
+        life_support = s.get_ability_total('LifeSupportCapacity')
         ls_ok = life_support >= crew_required
         ls_status = "✓" if ls_ok else f"✗ -{crew_required - life_support}"
         self.crew_labels['life_support'].set_text(f"Life Support: {life_support} {ls_status}")

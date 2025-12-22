@@ -512,7 +512,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                         max_rng = comp.range
         return max_rng
 
-    def update(self):
+    def update(self, context=None):
         if not self.is_alive: return
 
         # Delegate to Mixins
@@ -522,7 +522,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Handle Firing
         self.just_fired_projectiles = []
         if getattr(self, 'comp_trigger_pulled', False):
-             self.just_fired_projectiles = self.fire_weapons()
+             self.just_fired_projectiles = self.fire_weapons(context=context)
 
     def to_dict(self):
         """Serialize ship to dictionary."""
