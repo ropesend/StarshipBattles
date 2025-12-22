@@ -1,3 +1,32 @@
 === BATTLE LOG STARTED ===
-Battle started: 1 vs 1 ships
+Battle started: 1 vs 6 ships
+Missile fired at <ship.Ship object at 0x000001EF83BF77F0>
+Missile fired at <ship.Ship object at 0x000001EF83BF77F0>
+Missile fired at <ship.Ship object at 0x000001EF83BF77F0>
+Missile fired at <ship.Ship object at 0x000001EF83BF77F0>
+Missile fired at <ship.Ship object at 0x000001EF83BF77F0>
+Missile fired at <ship.Ship object at 0x000001EF83BF77F0>
+Missile fired at <ship.Ship object at 0x000001EF83BF77F0>
+Missile fired at <ship.Ship object at 0x000001EF83BF77F0>
+Missile fired at <ship.Ship object at 0x000001EF83BF78E0>
+Missile fired at <ship.Ship object at 0x000001EF83BF78E0>
+Missile fired at <ship.Ship object at 0x000001EF83BF78E0>
+Missile fired at <ship.Ship object at 0x000001EF83BF78E0>
+Missile fired at <ship.Ship object at 0x000001EF83BF78E0>
+Missile fired at <ship.Ship object at 0x000001EF83BF78E0>
+Missile fired at <ship.Ship object at 0x000001EF83BF78E0>
+Missile fired at <ship.Ship object at 0x000001EF83BF78E0>
+Missile fired at <ship.Ship object at 0x000001EF83BF78E0>
+Missile fired at <ship.Ship object at 0x000001EF83BF78E0>
+Missile fired at <ship.Ship object at 0x000001EF83BF78E0>
+Missile fired at <ship.Ship object at 0x000001EF83BF78E0>
+Projectile fired at [9491.14, 15021.8]
+Projectile fired at [6128.05, 12889.7]
+Missile fired at <ship.Ship object at 0x000001EF83BF7BE0>
+Missile fired at <ship.Ship object at 0x000001EF83BF7BE0>
+Projectile fired at [2646.61, 10956.9]
+Projectile fired at [-866.207, 9081.21]
+Missile fired at <ship.Ship object at 0x000001EF83BF7BE0>
+Missile fired at <ship.Ship object at 0x000001EF83BF7BE0>
+Projectile fired at [-4381.12, 7209.44]
 === BATTLE LOG ENDED ===

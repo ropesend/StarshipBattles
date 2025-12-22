@@ -365,15 +365,6 @@ class BattleInterface:
         
         y = 10 - self.stats_scroll_offset
         
-        # Simulation Stats
-        tick_str = f"Ticks: {self.scene.sim_tick_counter:,}"
-        rate_str = f"TPS: {self.scene.current_tick_rate:,}"
-        
-        # Render roughly side by side or stacked
-        stats_surf = font_name.render(f"Sim: {tick_str} | {rate_str}", True, (150, 150, 180))
-        panel_surf.blit(stats_surf, (10, y))
-        y += 25
-        
         # Team 1
         team1_ships = [s for s in self.scene.ships if s.team_id == 0]
         team1_alive = sum(1 for s in team1_ships if s.is_alive and not getattr(s, 'is_derelict', False))
@@ -739,9 +730,6 @@ class BattleInterface:
         # Must match draw layout!
         # Initial y = 10
         y_pos = 10 
-        
-        # Skip Sim Stats (25 height)
-        y_pos += 25
         
         # Skip Team 1 Header (30 height)
         y_pos += 30

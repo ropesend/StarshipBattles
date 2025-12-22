@@ -76,12 +76,12 @@ class TestAIController(unittest.TestCase):
         self.assertTrue(self.ship1.comp_trigger_pulled)
     
     def test_strategy_dispatch_flee(self):
-        """AI flee strategy should not fire."""
+        """AI flee strategy should fire while retreating (per config)."""
         self.ship1.ai_strategy = 'flee'
-        self.ship1.comp_trigger_pulled = True  # Initialize with True to confirm it gets set False
+        self.ship1.comp_trigger_pulled = False  # Initialize to check it gets set True
         self.ai.update()
-        # Flee strategy should NOT fire (retreat_hp_threshold=1.0 means always flee)
-        self.assertFalse(self.ship1.comp_trigger_pulled)
+        # Flee strategy has fire_while_retreating=true (per user config)
+        self.assertTrue(self.ship1.comp_trigger_pulled)
     
     def test_strategy_dispatch_kamikaze(self):
         """AI kamikaze should fire and charge."""

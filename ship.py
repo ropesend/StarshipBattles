@@ -388,6 +388,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
         # Resource Initialization (Auto-fill on first load only, or when capacity increases)
         # Track previous max values to detect capacity increases
+        prev_max_fuel = getattr(self, '_prev_max_fuel', 0)
+        prev_max_ammo = getattr(self, '_prev_max_ammo', 0)
+        prev_max_energy = getattr(self, '_prev_max_energy', 0)
         prev_max_shields = getattr(self, '_prev_max_shields', 0)
         
         if not self._resources_initialized:
@@ -402,10 +405,19 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             self._resources_initialized = True
         else:
             # Handle capacity increases from new components
+            if self.max_fuel > prev_max_fuel:
+                self.current_fuel += (self.max_fuel - prev_max_fuel)
+            if self.max_ammo > prev_max_ammo:
+                self.current_ammo += (self.max_ammo - prev_max_ammo)
+            if self.max_energy > prev_max_energy:
+                self.current_energy += (self.max_energy - prev_max_energy)
             if self.max_shields > prev_max_shields:
                 self.current_shields += (self.max_shields - prev_max_shields)
         
         # Remember current max for next recalculate
+        self._prev_max_fuel = self.max_fuel
+        self._prev_max_ammo = self.max_ammo
+        self._prev_max_energy = self.max_energy
         self._prev_max_shields = self.max_shields
 
     def get_missing_requirements(self):
