@@ -240,8 +240,17 @@ class BattleInterface:
     def draw_ship_entry(self, surface, ship, y, panel_w, font_name, font_stat, banner_color):
         """Draw a single ship entry in the stats panel. Returns new y position."""
         arrow = "▼" if ship in self.expanded_ships else "►"
-        status = "" if ship.is_alive else " [DEAD]"
-        color = (200, 200, 200) if ship.is_alive else (100, 100, 100)
+        status = ""
+        if not ship.is_alive:
+            status = " [DEAD]"
+        elif getattr(ship, 'is_derelict', False):
+            status = " [DERELICT]"
+            
+        color = (200, 200, 200)
+        if not ship.is_alive:
+            color = (100, 100, 100)
+        elif getattr(ship, 'is_derelict', False):
+            color = (255, 165, 0) # Orange for Derelict
         bg_color = banner_color if ship.is_alive else (40, 40, 40)
         
         pygame.draw.rect(surface, bg_color, (5, y, panel_w - 10, 22))

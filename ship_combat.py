@@ -265,6 +265,9 @@ class ShipCombatMixin:
         for ltype in layer_order:
             if remaining_damage <= 0: break
             remaining_damage = self._damage_layer(ltype, remaining_damage)
+            
+        if remaining_damage < damage_amount:
+            self.recalculate_stats()
 
     def _damage_layer(self, layer_type, damage):
         layer = self.layers[layer_type]
@@ -286,3 +289,5 @@ class ShipCombatMixin:
         print(f"{self.name} EXPLODED!")
         self.is_alive = False
         self.velocity = pygame.math.Vector2(0,0)
+        # Recalculate to ensure UI shows 0 stats
+        self.recalculate_stats()

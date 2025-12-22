@@ -55,7 +55,8 @@ class AIController:
         candidates = self.grid.query_radius(self.ship.position, 200000)
         enemies = [obj for obj in candidates 
                    if obj.is_alive and hasattr(obj, 'team_id') 
-                   and obj.team_id == self.enemy_team_id]
+                   and obj.team_id == self.enemy_team_id
+                   and not getattr(obj, 'is_derelict', False)]
         
         if not enemies:
             return None

@@ -121,6 +121,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.current_mass = 0 # Replaced by self.mass and self.base_mass
         
         self.is_alive = True
+        self.is_derelict = False
         self.bridge_destroyed = False
         
         # AI Strategy
@@ -301,23 +302,42 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # 5. Phase 4: Physics & Limits
         # ----------------------------
         
+        # Derelict Check
+        # Condition: No functional Bridge OR No functional Engines (Thrust <= 0)
+        has_active_bridge = False
+        for c in component_pool:
+            if isinstance(c, Bridge) and c.is_active:
+                has_active_bridge = True
+                break
+        
+        if (not has_active_bridge) or (self.total_thrust <= 0):
+            self.is_derelict = True
+            self.total_thrust = 0 # Ensure 0
+        else:
+            self.is_derelict = False
+        
         # Physics Stats - INVERSE MASS SCALING
         K_THRUST = 2500
-        K_TURN = 2500
+        K_TURN = 25000
         
         if self.mass > 0:
-            self.acceleration_rate = (self.total_thrust * K_THRUST) / (self.mass * self.mass)
-            raw_turn_speed = self.turn_speed
-            self.turn_speed = (raw_turn_speed * K_TURN) / (self.mass ** 1.5)
-            
-            K_SPEED = 25
-            self.max_speed = (self.total_thrust * K_SPEED) / self.mass if self.total_thrust > 0 else 0
+            if self.is_derelict:
+                self.acceleration_rate = 0
+                self.turn_speed = 0
+                self.max_speed = 0
+            else:
+                self.acceleration_rate = (self.total_thrust * K_THRUST) / (self.mass * self.mass)
+                raw_turn_speed = self.turn_speed
+                self.turn_speed = (raw_turn_speed * K_TURN) / (self.mass ** 1.5)
+                
+                K_SPEED = 25
+                self.max_speed = (self.total_thrust * K_SPEED) / self.mass if self.total_thrust > 0 else 0
         else:
             self.acceleration_rate = 0
             self.max_speed = 0
             
-        # Ensure minimums only if we have working engines
-        if self.total_thrust > 0 and self.max_speed < 10: self.max_speed = 10
+        # Ensure minimums only if we have working engines AND not derelict
+        if self.total_thrust > 0 and self.max_speed < 10 and not self.is_derelict: self.max_speed = 10
             
         # Limit Checks (Budget)
         self.mass_limits_ok = True
