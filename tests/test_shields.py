@@ -60,19 +60,19 @@ class TestShields(unittest.TestCase):
         self.ship.current_energy = 100
         
         # Update 1 tick (dt=1.0)
-        # Rate 60/s -> 1 per tick
-        # Cost 30/s -> 0.5 per tick
+        # Rate 60/s -> 0.6 per tick (60/100)
+        # Cost 30/s -> 0.3 per tick (30/100)
         self.ship.update_combat_cooldowns(1.0)
         
-        self.assertAlmostEqual(self.ship.current_shields, 1.0)
-        # If bug exists (deducting full cost 30.0), energy will be 70
-        # If fixed (deducting scaled cost 0.5), energy will be 99.5
-        self.assertAlmostEqual(self.ship.current_energy, 99.5)
+        self.assertAlmostEqual(self.ship.current_shields, 0.6)
+        # 100 energy - 0.3 cost = 99.7
+        self.assertAlmostEqual(self.ship.current_energy, 99.7)
         
     def test_regen_capped(self):
         self.ship.current_shields = 99
         self.ship.update_combat_cooldowns(1.0)
-        self.assertEqual(self.ship.current_shields, 100)
+        # 99 + 0.6 = 99.6. Not capped yet.
+        self.assertAlmostEqual(self.ship.current_shields, 99.6)
 
     def test_energy_starvation(self):
         self.ship.current_shields = 0

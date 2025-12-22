@@ -41,8 +41,11 @@ class TestWeaponBasics(unittest.TestCase):
         # Now should be on cooldown
         self.assertFalse(railgun.can_fire())
         
-        # Update past cooldown - tick-based: reload_time * 60 ticks + some extra
-        railgun.update((railgun.reload_time + 0.1) * 60)
+        # Cycle-Based: reload_time is seconds, 0.01s per tick. 
+        # Need (reload_time / 0.01) + 1 ticks to clear cooldown.
+        ticks_needed = int(railgun.reload_time / 0.01) + 10 # Plus buffer
+        for _ in range(ticks_needed):
+            railgun.update()
         
         # Should be able to fire again
         self.assertTrue(railgun.can_fire())

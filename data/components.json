@@ -222,7 +222,7 @@
                 "INNER",
                 "OUTER"
             ],
-            "sprite_index": 181,
+            "sprite_index": 11,
             "abilities": {
                 "ToHitAttackModifier": 2.0
             }
@@ -252,7 +252,7 @@
                 "INNER",
                 "CORE"
             ],
-            "sprite_index": 180,
+            "sprite_index": 30,
             "abilities": {
                 "ShieldProjection": 500
             }
@@ -267,7 +267,7 @@
                 "INNER",
                 "CORE"
             ],
-            "sprite_index": 217,
+            "sprite_index": 33,
             "abilities": {
                 "ShieldRegeneration": 5.0,
                 "EnergyConsumption": 2.0

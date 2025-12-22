@@ -255,8 +255,8 @@ class BattleScene:
                     target.take_damage(hp_target + 9999)
                     BATTLE_LOG.log(f"Ramming: Mutual destruction!")
     
-    def _update_projectiles(self, dt):
-        """Update projectile positions and check collisions."""
+    def _update_projectiles(self, dt=1.0):
+        """Update projectile positions and check collisions. dt ignored (1 tick)."""
         projectiles_to_remove = set()
         
         for idx, p in enumerate(self.projectiles):
@@ -266,12 +266,15 @@ class BattleScene:
             p_pos_t0 = p['pos']
             p_vel = p['vel']
             p_vel_length = p_vel.length()
-            p_pos_t1 = p_pos_t0 + p_vel * dt
+            
+            # Pos update per tick
+            p_pos_t1 = p_pos_t0 + p_vel 
             
             hit_occurred = False
             
             query_pos = (p_pos_t0 + p_pos_t1) * 0.5
-            query_radius = p_vel_length * dt + 100
+            # Radius checks for 1 tick of movement
+            query_radius = p_vel_length + 100
             nearby_ships = self.grid.query_radius(query_pos, query_radius)
             
             for s in nearby_ships:
@@ -281,7 +284,7 @@ class BattleScene:
                 # CCD
                 s_vel = s.velocity
                 s_pos_t1 = s.position
-                s_pos_t0 = s_pos_t1 - s_vel * dt
+                s_pos_t0 = s_pos_t1 - s_vel # Backtrack 1 tick
                 
                 D0 = p_pos_t0 - s_pos_t0
                 DV = p_vel - s_vel
@@ -296,7 +299,7 @@ class BattleScene:
                         hit = True
                 else:
                     t = -D0.dot(DV) / dv_sq
-                    t_clamped = max(0, min(t, dt))
+                    t_clamped = max(0, min(t, 1.0)) # Clamped to 1 tick
                     
                     p_at_t = p_pos_t0 + p_vel * t_clamped
                     s_at_t = s_pos_t0 + s_vel * t_clamped
@@ -313,7 +316,7 @@ class BattleScene:
                 projectiles_to_remove.add(idx)
             else:
                 p['pos'] = p_pos_t1
-                p['distance_traveled'] += p_vel_length * dt
+                p['distance_traveled'] += p_vel_length
                 
                 if p['distance_traveled'] > p['range']:
                     projectiles_to_remove.add(idx)

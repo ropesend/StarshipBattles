@@ -49,14 +49,14 @@ class TestArcadeMovement(unittest.TestCase):
         self.assertAlmostEqual(self.ship.max_speed, expected_max_speed, places=2)
 
     def test_thrust_increases_speed(self):
-        dt = 0.1
+        dt = 1.0 # 1 tick
         initial_speed = self.ship.current_speed
         self.assertEqual(initial_speed, 0)
         
         self.ship.thrust_forward(dt)
         
-        # Should increase by accel * dt
-        expected_speed = self.ship.acceleration_rate * dt
+        # Cycle-Based: Thrust adds 1/100th of acceleration_rate per tick
+        expected_speed = self.ship.acceleration_rate / 100.0
         self.assertAlmostEqual(self.ship.current_speed, expected_speed)
         
         # Fuel consumed

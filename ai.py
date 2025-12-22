@@ -203,7 +203,8 @@ class AIController:
                 
         elif self.attack_state == 'retreat':
             self.ship.comp_trigger_pulled = strategy.get('fire_while_retreating', False)
-            self.attack_timer -= dt
+            # Cycle-Based: 1 tick = 0.01 seconds. Decrement timer by 0.01.
+            self.attack_timer -= 0.01
             
             vec = self.ship.position - target.position
             if vec.length() == 0: 

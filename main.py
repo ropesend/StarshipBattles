@@ -87,8 +87,20 @@ class Game:
     
     def run(self):
         """Main game loop."""
+        # Fixed time step accumulator
+        accumulator = 0.0
+        dt = 0.01  # 100 ticks per second = 0.01s per tick attempt
+        
         while self.running:
+            # We still need real frame time for rendering smoothness or UI
+            # But the simulation MUST advance in fixed steps.
             frame_time = self.clock.tick(0) / 1000.0
+            
+            # Cap frame_time to avoid spiral of death
+            if frame_time > 0.1:
+                frame_time = 0.1
+                
+            accumulator += frame_time
             
             events = pygame.event.get()
             for event in events:
@@ -112,8 +124,30 @@ class Game:
                 elif self.state == BATTLE_SETUP:
                     self.battle_setup.update([event], self.screen.get_size())
             
-            # Update and draw
-            self._update_and_draw(frame_time, events)
+            # Update logic
+            if self.state == MENU:
+                self._draw_menu()
+            elif self.state == BUILDER:
+                self.builder_scene.update(frame_time) # UI uses real time
+                self.builder_scene.process_ui_time(frame_time)
+                self.builder_scene.draw(self.screen)
+            elif self.state == BATTLE_SETUP:
+                self._update_battle_setup()
+            elif self.state == BATTLE:
+                # BATTLE UPDATE LOOP - FIXED STEPS
+                # We can perform multiple ticks per frame if we have time accumulated
+                # However, for simplicity and ensuring we hit the requested Logic Ticks:
+                # If we want 100 ticks/sec, we do:
+                while accumulator >= dt:
+                    # Pass dt (which is 1 tick) or just 1.0 to signify one tick?
+                    # Plan says: "Pass no dt (or 1.0)"
+                    # Let's pass 1.0 as "1 Tick" to keep signature valid for now, 
+                    # but logic will treat it as ONE DISCRETE TICK unit.
+                    self.battle_scene.update(1.0, events) 
+                    accumulator -= dt
+                    
+                self.battle_scene.draw(self.screen)
+            
             pygame.display.flip()
         
         pygame.quit()

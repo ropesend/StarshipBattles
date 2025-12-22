@@ -1,0 +1,99 @@
+{
+    "name": "Railgun Escort",
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "team_id": 0,
+    "ship_class": "Escort",
+    "theme_id": "Federation",
+    "ai_strategy": "optimal_firing_range",
+    "layers": {
+        "CORE": [
+            {
+                "id": "bridge",
+                "modifiers": []
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": []
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": []
+            },
+            {
+                "id": "life_support",
+                "modifiers": []
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": []
+            }
+        ],
+        "INNER": [
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "thruster",
+                "modifiers": []
+            }
+        ],
+        "OUTER": [
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "turret_mount",
+                        "value": 180
+                    }
+                ]
+            },
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "turret_mount",
+                        "value": 180
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    }
+                ]
+            }
+        ],
+        "ARMOR": [
+            {
+                "id": "armor_plate",
+                "modifiers": []
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": []
+            }
+        ]
+    },
+    "expected_stats": {
+        "max_hp": 1580,
+        "max_fuel": 50000,
+        "max_ammo": 0,
+        "max_energy": 0,
+        "max_speed": 11.967581407141088,
+        "turn_speed": 2.6022083450128157,
+        "total_thrust": 450.0,
+        "mass": 940.0395633228862,
+        "armor_hp_pool": 500
+    }
+}

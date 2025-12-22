@@ -18,18 +18,25 @@ class PhysicsBody:
         self.drag = 0.5  # Linear drag to prevent infinite drift stability issues
         self.angular_drag = 0.5
 
-    def update(self, dt):
-        # Apply Acceleration
-        self.velocity += self.acceleration * dt
+    def update(self, dt=1.0):
+        """
+        Update physics. dt is ignored (1 tick = fixed step).
+        NOTE: Ship class overrides this with its own cycle-based mixins.
+        This base implementation is here for non-ship PhysicsBody entities if any.
+        """
+        # Apply Acceleration (per tick)
+        self.velocity += self.acceleration
         self.acceleration = pygame.math.Vector2(0, 0) # Reset acceleration
 
-        # Apply Drag
-        self.velocity *= (1 - self.drag * dt)
-        self.angular_velocity *= (1 - self.angular_drag * dt)
+        # Apply Drag (fixed percentage per tick)
+        drag_factor = self.drag
+        if drag_factor > 1: drag_factor = 1
+        self.velocity *= (1 - drag_factor)
+        self.angular_velocity *= (1 - self.angular_drag)
         
-        # Apply Movement
-        self.position += self.velocity * dt
-        self.angle += self.angular_velocity * dt
+        # Apply Movement (per tick)
+        self.position += self.velocity
+        self.angle += self.angular_velocity
 
     def apply_force(self, force: pygame.math.Vector2):
         """Applies a force vector to the body."""

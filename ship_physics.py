@@ -10,47 +10,31 @@ class ShipPhysicsMixin:
     - angle, angular_velocity, turn_speed
     """
     
-    def update_physics_movement(self, dt):
+    def update_physics_movement(self, dt=1.0):
         """
-        Update ship position and rotation based on arcade physics.
-        This handles:
-        1. Velocity calculation based on forward vector and current_speed
-        2. Damping/Drag
-        3. Angular updates
+        Update ship position and rotation based on cycle-based physics.
+        dt is ignored/assumed to be 1 tick.
         """
         # Explicitly set velocity based on direction and speed (Arcade Style)
         forward = self.forward_vector()
         self.velocity = forward * self.current_speed
-        self.position += self.velocity * dt
+        self.position += self.velocity # Velocity is effectively pixels/tick
         
         # Apply Drag/Friction to Speed (Simple damping)
-        # Note: We assume dt is around 1/60 usually, but we scale for it.
-        # Ensure we don't flip speed direction if dt is huge
-        drag_factor = self.drag * dt / 60.0
+        # Drag is now a fixed percentage loss per tick
+        # e.g. drag 0.05 = 5% speed loss per tick
+        drag_factor = getattr(self, 'drag', 0.01) # Default small drag
         if drag_factor > 1: drag_factor = 1
         
         self.current_speed *= (1 - drag_factor)
-        if self.current_speed < 0.1: self.current_speed = 0
+        if self.current_speed < 0.001: self.current_speed = 0
         
         # Angular Update
-        # Note: self.angular_velocity might be set by rotate(), or we just use turn_speed directly in rotate?
-        # In Ship.rotate(), we added to angle directly? No, Ship.rotate updated angle.
-        # PhysicsBody.update() usually integrates angular_velocity.
-        # Let's align with the existing logic:
-        # self.angle += self.angular_velocity * dt
-        
-        # Wait, if we inherit from PhysicsBody, it has simple integration.
-        # But `Ship.update` was overriding it.
-        # Let's keep the override logic here.
-        # But we must be careful not to double-integrate if we call super().update()!
-        # The Ship class will likely delegate to this INSTEAD of super().update() for movement.
-        
-        # Angular integration
-        self.angle += self.angular_velocity * dt
+        self.angle += self.angular_velocity # Angular velocity is degrees/tick
         self.angle %= 360
         self.angular_velocity = 0 # Reset each frame for direct control style if desired
 
-    def thrust_forward(self, dt):
+    def thrust_forward(self, dt=1.0):
         """Apply thrust, consuming fuel and increasing speed."""
         if self.current_fuel > 0:
             # Consume Fuel
@@ -62,16 +46,41 @@ class ShipPhysicsMixin:
                 for layer in self.layers.values():
                     for comp in layer['components']:
                         if isinstance(comp, Engine) and comp.is_active:
-                            fuel_cost += comp.fuel_cost_per_sec * dt / 60.0
+                            # 100 ticks = 1 second.
+                            # Input Rate: X/sec -> X/100 per tick
+                            fuel_cost += comp.fuel_cost_per_sec / 100.0
             
             if self.current_fuel >= fuel_cost:
                 self.current_fuel -= fuel_cost
                 
                 # Apply Acceleration
-                self.current_speed += self.acceleration_rate * dt
-                # Hard cap
-                if self.current_speed > self.max_speed:
-                    self.current_speed = self.max_speed
+                # Input Rate: accel_rate (pixels/sec^2? No, pixels/tick increment?)
+                # Assuming accel_rate is derived from Thrust/Mass (pixels/sec^2)
+                # We need to scale it to Per Tick.
+                # If accel is pixels/sec/sec... 
+                # speed += accel * dt ; pos += speed * dt
+                # speed (pixels/sec) += accel (pixels/sec^2) * dt (sec)
+                # Converted to ticks:
+                # speed (pixels/tick) = speed(pixels/sec) / 100
+                # accel (pixels/tick^2) = accel(pixels/sec^2) / 10000 ?
+                # 
+                # Let's assume acceleration_rate stored on ship is ALREADY scaled or 
+                # we treat it as "Speed increment per tick". 
+                # Physics model says: Accel = (Thrust * 2500) / Mass^2
+                # If we assume that formula produces a "Per Second" acceleration...
+                # We should divide by 100 to get "Per Tick speed increase".
+                
+                accel_per_tick = self.acceleration_rate / 100.0
+                self.current_speed += accel_per_tick
+                
+                # Max Speed Check
+                # Max Speed is typically pixels/sec. 
+                # We need current_speed to be pixels/tick. 
+                # So we compare current_speed to max_speed / 100.
+                max_speed_per_tick = self.max_speed / 100.0
+                
+                if self.current_speed > max_speed_per_tick:
+                    self.current_speed = max_speed_per_tick
             else:
                 self.current_fuel = 0
 
@@ -79,6 +88,9 @@ class ShipPhysicsMixin:
         """
         Rotate the ship.
         direction: -1 for left, 1 for right
+        dt: ignored
         """
         # Direct angle modification (Arcade style)
-        self.angle += direction * self.turn_speed * dt
+        # Turn speed is degrees/sec. Convert to degrees/tick.
+        turn_per_tick = self.turn_speed / 100.0
+        self.angle += direction * turn_per_tick
