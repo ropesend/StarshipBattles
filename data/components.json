@@ -243,6 +243,22 @@
             }
         },
         {
+            "id": "multiplex_tracking",
+            "name": "Multiplex Tracking",
+            "type": "Electronics",
+            "mass": 40,
+            "hp": 60,
+            "allowed_layers": [
+                "CORE",
+                "INNER"
+            ],
+            "sprite_index": 180,
+            "abilities": {
+                "MultiplexTracking": 10,
+                "CrewRequired": 2
+            }
+        },
+        {
             "id": "shield_generator",
             "name": "Shield Projector",
             "type": "Shield",

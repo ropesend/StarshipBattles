@@ -69,49 +69,58 @@ class ShipCombatMixin:
                     if has_resource and comp.can_fire():
                         # TARGETING logic
                         valid_target = False
-                        target = self.current_target
+                        target = None
                         
+                        # Potential targets list: Primary + Secondaries
+                        potential_targets = []
+                        if self.current_target:
+                            potential_targets.append(self.current_target)
+                        
+                        # Only consider secondary targets if we have the capability
+                        # (Although max_targets should handle the list population, safe to check)
+                        if getattr(self, 'max_targets', 1) > 1 and hasattr(self, 'secondary_targets'):
+                            potential_targets.extend(self.secondary_targets)
+
                         # PDC Override: look for missiles if context provided
                         is_pdc = comp.abilities.get('PointDefense', False)
                         if is_pdc and context:
                             pdc_target = self._find_pdc_target(comp, context)
                             if pdc_target:
-                                target = pdc_target
+                                # PDCs prioritize missiles above all else
+                                potential_targets = [pdc_target]
                         
-                        # If no target found for PDC, it can still fire at main target if valid?
-                        # Usually PDCs only fire at missiles/fighters. 
-                        # Let's say if it found a missile target, use it. 
-                        # Else if it's dual purpose, use main target?
-                        # For now, strict PDC behavior: ONLY targets missiles if found, else if main target is close enough?
-                        # Ignoring main target for PDC unless it matches criteria?
-                        # Let's assume PDCs can shoot ships if no missiles.
-                        
-                        if not target: continue
-                        
-                        # Distance Check
-                        dist = self.position.distance_to(target.position)
-                        max_range = comp.range
-                        if isinstance(comp, SeekerWeapon):
-                            # Approximate max range for initial check
-                            max_range = comp.projectile_speed * comp.endurance * 2.0 
+                        # Iterate through potential targets to find the first one we can hit
+                        for candidate in potential_targets:
+                            if not candidate: continue
+                            
+                            # Distance Check
+                            dist = self.position.distance_to(candidate.position)
+                            max_range = comp.range
+                            if isinstance(comp, SeekerWeapon):
+                                # Approximate max range for initial check
+                                max_range = comp.projectile_speed * comp.endurance * 2.0 
 
-                        if dist <= max_range:
-                            # Solve Firing Solution
-                            aim_pos, aim_vec = self._calculate_firing_solution(comp, target)
-                            
-                            # ARC CHECK
-                            aim_angle = math.degrees(math.atan2(aim_vec.y, aim_vec.x)) % 360
-                            ship_angle = self.angle
-                            comp_facing = (ship_angle + comp.facing_angle) % 360
-                            diff = (aim_angle - comp_facing + 180) % 360 - 180
-                            
-                            if abs(diff) <= comp.firing_arc:
-                                valid_target = True
-                            elif isinstance(comp, SeekerWeapon):
-                                # Seeker weapons can launch if target is out of arc
-                                valid_target = True
-                        
-                        if valid_target and comp.fire():
+                            if dist <= max_range:
+                                # Solve Firing Solution
+                                aim_pos, aim_vec = self._calculate_firing_solution(comp, candidate)
+                                
+                                # ARC CHECK
+                                aim_angle = math.degrees(math.atan2(aim_vec.y, aim_vec.x)) % 360
+                                ship_angle = self.angle
+                                comp_facing = (ship_angle + comp.facing_angle) % 360
+                                diff = (aim_angle - comp_facing + 180) % 360 - 180
+                                
+                                if abs(diff) <= comp.firing_arc:
+                                    valid_target = True
+                                    target = candidate
+                                    break # Found a valid target, fire!
+                                elif isinstance(comp, SeekerWeapon):
+                                    # Seeker weapons can launch if target is out of arc
+                                    valid_target = True
+                                    target = candidate
+                                    break
+
+                        if valid_target and target and comp.fire():
                             self.total_shots_fired += 1
                             comp.shots_fired += 1
                             
@@ -184,8 +193,10 @@ class ShipCombatMixin:
                                         endurance=None, # Range limited
                                         proj_type='projectile',
                                         color=(255, 200, 50),
-                                        source_weapon=comp
+                                        source_weapon=comp,
+                                        target=target
                                     )
+
                                     attacks.append(proj)
         return attacks
 

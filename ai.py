@@ -109,6 +109,81 @@ class AIController:
             return score
         
         return max(enemies, key=score_target)
+
+    def find_secondary_targets(self):
+        """Find additional targets if ship has multiplex tracking."""
+        max_targets = getattr(self.ship, 'max_targets', 1)
+        if max_targets <= 1:
+            return []
+            
+        count_needed = max_targets - 1
+        current = self.ship.current_target
+        
+        candidates = self.grid.query_radius(self.ship.position, 200000)
+        enemies = [obj for obj in candidates 
+                   if obj.is_alive and hasattr(obj, 'team_id') 
+                   and obj.team_id == self.enemy_team_id
+                   and not getattr(obj, 'is_derelict', False)
+                   and obj != current]
+                   
+        if not enemies:
+            return []
+            
+        # Use same scoring logic as primary for consistency, or just nearest?
+        # User asked for "criteria for selecting targets should be that all weapons... should be able to fire".
+        # This implies we should prioritize targets we CAN hit.
+        # But for AI target selection (strategic), we usually stick to priorities.
+        # Let's blindly trust strategy priorities for now, or just distance.
+        # Re-using strategy logic:
+        
+        strategy = self.get_current_strategy()
+        priorities = strategy.get('targeting_priority', ['nearest'])
+        
+        def score_target(enemy):
+            score = 0
+            for i, priority in enumerate(priorities):
+                weight = len(priorities) - i
+                if priority == 'nearest':
+                    dist = self.ship.position.distance_to(enemy.position)
+                    score -= dist * weight
+                elif priority == 'farthest':
+                    dist = self.ship.position.distance_to(enemy.position)
+                    score += dist * weight
+                elif priority == 'largest':
+                    score += getattr(enemy, 'mass', 100) * weight
+                elif priority == 'smallest':
+                    score -= getattr(enemy, 'mass', 100) * weight
+                elif priority == 'fastest':
+                    speed = getattr(enemy, 'velocity', pygame.math.Vector2(0,0)).length()
+                    score += speed * weight
+                elif priority == 'slowest':
+                    speed = getattr(enemy, 'velocity', pygame.math.Vector2(0,0)).length()
+                    score -= speed * weight
+                elif priority == 'most_damaged':
+                    hp_pct = self._get_hp_percent(enemy)
+                    score -= hp_pct * weight * 100
+                elif priority == 'least_damaged':
+                    hp_pct = self._get_hp_percent(enemy)
+                    score += hp_pct * weight * 100
+                elif priority == 'strongest':
+                    score += getattr(enemy, 'mass', 100) * weight
+                elif priority == 'weakest':
+                    score -= getattr(enemy, 'mass', 100) * weight
+                elif priority == 'has_weapons':
+                    has_wpns = any(hasattr(c, 'damage') for layer in getattr(enemy, 'layers', {}).values() 
+                                   for c in layer.get('components', []))
+                    score += weight * 1000 if has_wpns else 0
+                elif priority == 'most_armor':
+                    armor_hp = getattr(enemy, 'layers', {}).get(LayerType.ARMOR, {}).get('hp_pool', 0)
+                    score += armor_hp * weight
+                elif priority == 'least_armor':
+                    armor_hp = getattr(enemy, 'layers', {}).get(LayerType.ARMOR, {}).get('hp_pool', 0)
+                    score -= armor_hp * weight
+            return score
+            
+        # Sort by score info desc
+        enemies.sort(key=score_target, reverse=True)
+        return enemies[:count_needed]
     
     def _get_hp_percent(self, ship):
         """Get ship's current HP as percentage."""
@@ -146,10 +221,19 @@ class AIController:
             if not target.is_alive or getattr(target, 'is_derelict', False):
                 target = None
                 self.ship.current_target = None
+                self.ship.secondary_targets = []
+
                 
         if not target:
             target = self.find_target()
             self.ship.current_target = target
+            
+        # Update Secondary Targets if capable
+        if self.ship.max_targets > 1:
+            self.ship.secondary_targets = self.find_secondary_targets()
+        else:
+            self.ship.secondary_targets = []
+
             
         if not target:
             self.ship.comp_trigger_pulled = False

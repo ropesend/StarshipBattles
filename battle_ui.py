@@ -525,9 +525,25 @@ class BattleInterface:
         target_name = "None"
         if ship.current_target and ship.current_target.is_alive:
             target_name = ship.current_target.name
+        
+        # Secondary Targets
+        sec_count = len(getattr(ship, 'secondary_targets', []))
+        if sec_count > 0:
+            target_name += f" (+{sec_count})"
+            
         text = font.render(f"Target: {target_name}", True, (180, 180, 180))
         surface.blit(text, (x_indent, y))
         y += 18
+        
+        # Targeting Cap
+        max_targets = getattr(ship, 'max_targets', 1)
+        cap_text = "Single" if max_targets == 1 else f"Multi ({max_targets})"
+        text = font.render(f"Sys: {cap_text}", True, (150, 150, 150))
+        surface.blit(text, (x_indent + 200, y - 18)) # Draw roughly same line as Target? Or next line?
+        # Actually let's just append to Target line or put below.
+        # "Target: Alpha (+2) [Multi: 10]"
+        
+
         
         # Weapons
         text = font.render(f"Weapons:", True, (200, 200, 150))

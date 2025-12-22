@@ -72,6 +72,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.color = color
         self.team_id = team_id
         self.current_target = None
+        self.secondary_targets = []  # List of additional targets
+        self.max_targets = 1         # Default 1 target (primary only)
         self.ship_class = ship_class
         self.theme_id = theme_id
         
@@ -239,6 +241,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Store for UI
         self.crew_onboard = available_crew
         self.crew_required = 0
+        self.max_targets = 1 # Reset to default
+
         
         # Effective Crew is limited by Life Support
         effective_crew = min(available_crew, available_life_support)
@@ -307,6 +311,20 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             elif isinstance(comp, ShieldRegenerator):
                 self.shield_regen_rate += comp.regen_rate
                 self.shield_regen_cost += comp.energy_cost
+            
+            # Check for generic abilities that affect stats
+            # MultiplexTracking
+            mt = comp.abilities.get('MultiplexTracking', 0)
+            if mt > 0:
+                # We take the best tracking computer's val (or sum? implementation plan implied capability)
+                # Let's say it doesn't stack, or stacks?
+                # "Ability to target up to 10" implies replacing the default 1.
+                # If we have 2 computers (10 each), do we get 20? 
+                # Let's assume max(existing, new) or just overwrite if higher? 
+                # Let's simple sum for now or max. Let's use max to avoid 100 targets.
+                if mt > self.max_targets:
+                    self.max_targets = mt
+
 
         # 5. Phase 4: Physics & Limits
         # ----------------------------

@@ -186,7 +186,8 @@ class BuilderRightPanel:
         
         self.stat_labels = {}
         stat_names = ['mass', 'max_hp', 'max_shields', 'shield_regen', 'shield_cost', 'max_speed', 
-                      'turn_rate', 'acceleration', 'thrust', 'energy_gen', 'max_fuel', 'max_ammo', 'max_energy']
+                      'turn_rate', 'acceleration', 'thrust', 'energy_gen', 'max_fuel', 'max_ammo', 'max_energy', 'targeting']
+
         
         for stat in stat_names:
             self.stat_labels[stat] = UILabel(pygame.Rect(10, y, 350, 20), f"{stat}: --", manager=self.manager, container=self.panel)
@@ -237,6 +238,13 @@ class BuilderRightPanel:
         self.stat_labels['max_fuel'].set_text(f"Max Fuel: {s.max_fuel:.0f}")
         self.stat_labels['max_ammo'].set_text(f"Max Ammo: {s.max_ammo:.0f}")
         self.stat_labels['max_energy'].set_text(f"Max Energy: {s.max_energy:.0f}")
+        
+        # Targeting
+        t_count = getattr(s, 'max_targets', 1)
+        t_text = "Single" if t_count == 1 else f"Multi ({t_count})"
+        self.stat_labels['targeting'].set_text(f"Targeting: {t_text}")
+        
+
         
         # Update layer stats
         from ship import LayerType
