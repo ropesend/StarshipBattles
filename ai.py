@@ -179,11 +179,65 @@ class AIController:
                 elif priority == 'least_armor':
                     armor_hp = getattr(enemy, 'layers', {}).get(LayerType.ARMOR, {}).get('hp_pool', 0)
                     score -= armor_hp * weight
+                elif priority == 'missiles_in_pdc_arc':
+                    # Only score high if it is a missile AND in arc
+                    if getattr(enemy, 'type', '') == 'missile':
+                        # Check strictly if it is in valid arc of any PDC
+                        if self._is_in_pdc_arc(enemy):
+                             score += weight * 2000 # High priority
+                        else:
+                             score -= 999999 # Hard filter: NEVER satisfy if not in arc?
+                             # Or just very low priority? User said "never be on the list".
+                             return -float('inf')
+                    else:
+                        pass # Ignore non-missiles for this specific priority, but don't penalize?
+
             return score
             
+        # Candidates expansion: If missile priority is active, we must include projectiles
+        if 'missiles_in_pdc_arc' in priorities:
+             missiles = [obj for obj in self.grid.query_radius(self.ship.position, 1500) 
+                         if getattr(obj, 'type', '') == 'missile' 
+                         and obj.is_alive 
+                         and getattr(obj, 'team_id', -1) != self.ship.team_id]
+             enemies.extend(missiles)
+        
         # Sort by score info desc
         enemies.sort(key=score_target, reverse=True)
-        return enemies[:count_needed]
+        
+        # Filter negative infinity (hard filter)
+        valid_enemies = [e for e in enemies if score_target(e) > -9999]
+        
+        return valid_enemies[:count_needed]
+
+    def _is_in_pdc_arc(self, target):
+        """Check if target is within range and arc of at least one active PDC."""
+        # This requires iterating ship components.
+        import math
+        from components import Weapon
+        
+        for layer in self.ship.layers.values():
+            for comp in layer['components']:
+                if isinstance(comp, Weapon) and comp.is_active and comp.abilities.get('PointDefense', False):
+                    # Check Range
+                    dist = self.ship.position.distance_to(target.position)
+                    if dist > comp.range: continue
+                    
+                    # Check Arc
+                    # Simple angle check to target (not lead pos, to be fast)
+                    vec_to_target = target.position - self.ship.position
+                    if vec_to_target.length_squared() == 0: continue
+                    
+                    angle_to_target = math.degrees(math.atan2(vec_to_target.y, vec_to_target.x)) % 360
+                    
+                    ship_angle = self.ship.angle
+                    comp_facing = (ship_angle + comp.facing_angle) % 360
+                    diff = (angle_to_target - comp_facing + 180) % 360 - 180
+                    
+                    if abs(diff) <= comp.firing_arc:
+                        return True
+        return False
+
     
     def _get_hp_percent(self, ship):
         """Get ship's current HP as percentage."""

@@ -146,14 +146,13 @@ class Game:
             elif event.key == pygame.K_SPACE:
                 self.battle_scene.sim_paused = not self.battle_scene.sim_paused
             elif event.key == pygame.K_COMMA:
-                if not self.battle_scene.sim_paused:
-                    self.battle_scene.sim_speed_multiplier = max(0.0625, self.battle_scene.sim_speed_multiplier / 2.0)
+                self.battle_scene.sim_speed_multiplier = max(0.00390625, self.battle_scene.sim_speed_multiplier / 2.0)
             elif event.key == pygame.K_PERIOD:
-                if not self.battle_scene.sim_paused:
-                    self.battle_scene.sim_speed_multiplier = min(16.0, self.battle_scene.sim_speed_multiplier * 2.0)
+                self.battle_scene.sim_speed_multiplier = min(16.0, self.battle_scene.sim_speed_multiplier * 2.0)
+            elif event.key == pygame.K_m:
+                 self.battle_scene.sim_speed_multiplier = 1.0
             elif event.key == pygame.K_SLASH:
                 self.battle_scene.sim_speed_multiplier = 100.0 # Max Speed
-                self.battle_scene.sim_paused = False
     
     def _handle_click(self, event):
         """Handle mouse click events."""
@@ -302,8 +301,15 @@ class Game:
             self.screen.blit(font_med.render(zoom_text, True, (150, 200, 255)), (panel_offset, 60))
             
             # Draw speed indicator
-            speed_text = "PAUSED" if self.battle_scene.sim_paused else f"Speed: {self.battle_scene.sim_speed_multiplier:.2f}x"
-            if self.battle_scene.sim_speed_multiplier >= 10.0: speed_text = "MAX SPEED"
+            if self.battle_scene.sim_speed_multiplier >= 10.0:
+                 speed_val_text = "MAX SPEED"
+            else:
+                 speed_val_text = f"{self.battle_scene.sim_speed_multiplier:.4g}x"
+
+            if self.battle_scene.sim_paused:
+                 speed_text = f"PAUSED ({speed_val_text})"
+            else:
+                 speed_text = f"Speed: {speed_val_text}"
             
             speed_color = (255, 100, 100) if self.battle_scene.sim_paused else (200, 200, 200)
             if self.battle_scene.sim_speed_multiplier < 1.0:

@@ -521,19 +521,25 @@ class BattleInterface:
         surface.blit(text, (x_indent, y))
         y += 16
         
-        # Target
         target_name = "None"
         if ship.current_target and ship.current_target.is_alive:
-            target_name = ship.current_target.name
+            target_name = getattr(ship.current_target, 'name', getattr(ship.current_target, 'type', 'Target').title())
         
-        # Secondary Targets
-        sec_count = len(getattr(ship, 'secondary_targets', []))
-        if sec_count > 0:
-            target_name += f" (+{sec_count})"
-            
         text = font.render(f"Target: {target_name}", True, (180, 180, 180))
         surface.blit(text, (x_indent, y))
         y += 18
+        
+        # Secondary Targets - List them all
+        sec_targets = getattr(ship, 'secondary_targets', [])
+        if sec_targets:
+            for i, st in enumerate(sec_targets):
+                if st.is_alive:
+                    st_name = getattr(st, 'name', getattr(st, 'type', 'Target').title())
+                    # Maybe dim color for secondary?
+                    text = font.render(f"  T{i+2}: {st_name}", True, (150, 150, 150))
+                    surface.blit(text, (x_indent, y))
+                    y += 16
+
         
         # Targeting Cap
         max_targets = getattr(ship, 'max_targets', 1)

@@ -3,6 +3,8 @@ import pygame
 import json
 import os
 import glob
+import tkinter as tk
+from tkinter import filedialog
 
 from ship import Ship
 from ai import COMBAT_STRATEGIES
@@ -90,6 +92,115 @@ class BattleSetupScreen:
         team1_ships = load_ships_from_entries(self.team1, team_id=0, start_x=20000, start_y=30000, facing_angle=0)
         team2_ships = load_ships_from_entries(self.team2, team_id=1, start_x=80000, start_y=30000, facing_angle=180)
         return team1_ships, team2_ships
+
+    def save_setup(self):
+        """Open dialog to save current setup to JSON."""
+        root = tk.Tk()
+        root.withdraw()
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        battles_dir = os.path.join(base_path, "data", "battles")
+        if not os.path.exists(battles_dir):
+            os.makedirs(battles_dir)
+            
+        filepath = filedialog.asksaveasfilename(
+            initialdir=battles_dir,
+            title="Save Battle Setup",
+            filetypes=(("JSON files", "*.json"), ("All files", "*.*")),
+            defaultextension=".json"
+        )
+        root.destroy()
+        
+        if not filepath:
+            return
+
+        data = {
+            "name": os.path.basename(filepath).replace(".json", ""),
+            "team1": [],
+            "team2": []
+        }
+        
+        for entry in self.team1:
+            data["team1"].append({
+                "design_file": os.path.basename(entry['design']['path']),
+                "strategy": entry['strategy']
+            })
+            
+        for entry in self.team2:
+            data["team2"].append({
+                "design_file": os.path.basename(entry['design']['path']),
+                "strategy": entry['strategy']
+            })
+            
+        try:
+            with open(filepath, 'w') as f:
+                json.dump(data, f, indent=2)
+            print(f"Saved battle setup to {filepath}")
+        except Exception as e:
+            print(f"Error saving setup: {e}")
+
+    def load_setup(self):
+        """Open dialog to load a battle setup."""
+        if self.team1 or self.team2:
+             # Maybe confirm overwrite? For now just do it.
+             pass
+             
+        root = tk.Tk()
+        root.withdraw()
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        battles_dir = os.path.join(base_path, "data", "battles")
+        
+        filepath = filedialog.askopenfilename(
+            initialdir=battles_dir,
+            title="Load Battle Setup",
+            filetypes=(("JSON files", "*.json"), ("All files", "*.*"))
+        )
+        root.destroy()
+        
+        if not filepath:
+            return
+            
+        try:
+            with open(filepath, 'r') as f:
+                data = json.load(f)
+            
+            # Helper to find design by filename
+            def find_design(filename):
+                for d in self.available_ship_designs:
+                    if os.path.basename(d['path']) == filename:
+                        return d
+                return None
+            
+            new_team1 = []
+            new_team2 = []
+            
+            for item in data.get('team1', []):
+                d = find_design(item['design_file'])
+                if d:
+                    new_team1.append({
+                        'design': d,
+                        'strategy': item['strategy']
+                    })
+                else:
+                    print(f"Warning: Design {item['design_file']} not found")
+
+            for item in data.get('team2', []):
+                d = find_design(item['design_file'])
+                if d:
+                    new_team2.append({
+                        'design': d,
+                        'strategy': item['strategy']
+                    })
+                else:
+                    print(f"Warning: Design {item['design_file']} not found")
+            
+            self.team1 = new_team1
+            self.team2 = new_team2
+            self.ai_dropdown_open = None
+            print(f"Loaded setup from {filepath}")
+            
+        except Exception as e:
+            print(f"Error loading setup: {e}")
+
     
     def update(self, events, screen_size):
         """Handle input events. Returns action string or None."""
@@ -119,6 +230,33 @@ class BattleSetupScreen:
                                     'strategy': design.get('ai_strategy', 'optimal_firing_range')
                                 })
                             break
+                
+                # Check Save/Load Buttons (Top Right area? Or near Clear All?)
+                # Let's put them near Clear All.
+                
+                # Save: sw/2 - 300 (Clear is -300 to -180). Let's put Save/Load to the left of Clear?
+                # Or below the team lists?
+                # Setup buttons row: [Clear] [Begin] [Return] [Quick]
+                # Let's add [Load] [Save] to the far left or far right.
+                
+                # Let's put them under the "Available Ships" list?
+                # Available ships list ends at logic ??? it renders infinite list?
+                # No, we don't have scrolling yet, assumes fits.
+                
+                # Let's put small keys near the bottom left:
+                # [Load Setup] [Save Setup]
+                
+                btn_load_rect = pygame.Rect(50, sh - 80, 120, 50)
+                btn_save_rect = pygame.Rect(180, sh - 80, 120, 50)
+                
+                if btn_load_rect.collidepoint(mx, my):
+                    self.load_setup()
+                    return # Dialog blocks, so return after
+                    
+                if btn_save_rect.collidepoint(mx, my):
+                    self.save_setup()
+                    return
+
                 
                 # Check team 1 ships
                 if col2_x <= mx < col2_x + 350:
@@ -213,6 +351,22 @@ class BattleSetupScreen:
             pygame.draw.rect(screen, (40, 45, 55), (col1_x, y, 250, 35))
             pygame.draw.rect(screen, (80, 80, 100), (col1_x, y, 250, 35), 1)
             screen.blit(text, (col1_x + 10, y + 8))
+            
+        # Save/Load Buttons (Bottom Left)
+        btn_y = sh - 80
+        
+        # Load Button
+        pygame.draw.rect(screen, (60, 60, 80), (50, btn_y, 120, 50))
+        pygame.draw.rect(screen, (100, 100, 150), (50, btn_y, 120, 50), 2)
+        lid_text = label_font.render("LOAD", True, (200, 200, 255))
+        screen.blit(lid_text, (50 + 60 - lid_text.get_width()//2, btn_y + 12))
+        
+        # Save Button
+        pygame.draw.rect(screen, (60, 60, 80), (180, btn_y, 120, 50))
+        pygame.draw.rect(screen, (100, 100, 150), (180, btn_y, 120, 50), 2)
+        sav_text = label_font.render("SAVE", True, (200, 200, 255))
+        screen.blit(sav_text, (180 + 60 - sav_text.get_width()//2, btn_y + 12))
+
         
         # Team 1 (middle column)
         lbl = label_font.render("Team 1", True, (100, 200, 255))

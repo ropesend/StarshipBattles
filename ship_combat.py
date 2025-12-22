@@ -81,13 +81,22 @@ class ShipCombatMixin:
                         if getattr(self, 'max_targets', 1) > 1 and hasattr(self, 'secondary_targets'):
                             potential_targets.extend(self.secondary_targets)
 
-                        # PDC Override: look for missiles if context provided
-                        is_pdc = comp.abilities.get('PointDefense', False)
-                        if is_pdc and context:
-                            pdc_target = self._find_pdc_target(comp, context)
-                            if pdc_target:
-                                # PDCs prioritize missiles above all else
-                                potential_targets = [pdc_target]
+                        # PDC Override REMOVED - Rely on AI prioritization in secondary_targets
+                        
+                        # Iterate through potential targets to find the first one we can hit
+                        for candidate in potential_targets:
+                            if not candidate: continue
+                            
+                            # SAFETY: Non-PDC weapons should NOT fire at missiles (unless desperate?)
+                            # User implied specialization.
+                            # Also generic projectiles can't hit missiles well.
+                            is_pdc = comp.abilities.get('PointDefense', False)
+                            t_type = getattr(candidate, 'type', 'ship')
+                            
+                            if t_type == 'missile' and not is_pdc:
+                                continue # Standard guns ignore missiles
+                                
+                            # Distance Check
                         
                         # Iterate through potential targets to find the first one we can hit
                         for candidate in potential_targets:

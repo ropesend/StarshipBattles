@@ -75,6 +75,22 @@
                         "value": 64.0
                     }
                 ]
+            },
+            {
+                "id": "multiplex_tracking",
+                "modifiers": []
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": []
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": []
+            },
+            {
+                "id": "life_support",
+                "modifiers": []
             }
         ],
         "INNER": [
@@ -589,6 +605,36 @@
                         "value": 2.0
                     }
                 ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 2.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 2.0
+                    }
+                ]
             }
         ],
         "ARMOR": [
@@ -1063,14 +1109,14 @@
         ]
     },
     "expected_stats": {
-        "max_hp": 2524754,
+        "max_hp": 2527914,
         "max_fuel": 6400000,
         "max_ammo": 320000,
         "max_energy": 128000,
-        "max_speed": 10,
-        "turn_speed": 0.20463436580432262,
+        "max_speed": 9.084208952342921,
+        "turn_speed": 2.0041440931496886,
         "total_thrust": 364800.0,
-        "mass": 990089.9190226517,
+        "mass": 1003939.9190226517,
         "armor_hp_pool": 1664000
     }
 }

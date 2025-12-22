@@ -182,6 +182,12 @@ class BattleScene:
         alive_ships = [s for s in self.ships if s.is_alive]
         for s in alive_ships:
             self.grid.insert(s)
+            
+        # Insert Projectiles into Grid so AI can find them (e.g. for PDC targeting)
+        # Only insert active missiles/projectiles
+        for p in self.projectiles:
+            if p.is_alive:
+                self.grid.insert(p)
         
         # 2. Update AI & Ships
         combat_context = {
