@@ -218,7 +218,7 @@ class Game:
         if self.battle_scene.headless_mode:
             # Headless mode - run fast without rendering
             for _ in range(1000):
-                self.battle_scene.update([], visual_dt_for_camera=0)
+                self.battle_scene.update([])
                 
                 tick_limit_reached = self.battle_scene.sim_tick_counter >= 3000000
                 
@@ -237,9 +237,8 @@ class Game:
         else:
             # Normal visual battle
             
-            # Update Camera Input (always, for smooth panning even if paused)
-            if self.battle_scene.sim_paused:
-                self.battle_scene.camera.update_input(frame_time, events)
+            # Update Visuals (Camera, Beams) - ALWAYS run this once per frame with real time
+            self.battle_scene.update_visuals(frame_time, events)
             
             # Update Simulation
             # ACCUMULATOR LOGIC for deterministic speed control
@@ -257,7 +256,7 @@ class Game:
                     # Max Speed / Turbo mode: Just run fixed N ticks per frame
                     ticks_to_run = int(speed_mult) # e.g. 100 ticks per frame
                     for i in range(ticks_to_run):
-                        self.battle_scene.update(events if i==0 else [], visual_dt_for_camera=0)
+                        self.battle_scene.update(events if i==0 else [])
                     
                     self.battle_scene.tick_rate_count += ticks_to_run
                 else:
@@ -276,7 +275,7 @@ class Game:
                         
                     ticks_run_this_frame = 0
                     while self._battle_accumulator >= dt:
-                        self.battle_scene.update(events if ticks_run_this_frame==0 else [], visual_dt_for_camera=dt)
+                        self.battle_scene.update(events if ticks_run_this_frame==0 else [])
                         self._battle_accumulator -= dt
                         ticks_run_this_frame += 1
                         
@@ -294,8 +293,11 @@ class Game:
             # Draw tick counters
             tick_text = f"Ticks: {self.battle_scene.sim_tick_counter:,}"
             rate_text = f"TPS: {self.battle_scene.current_tick_rate:,}/s"
+            zoom_text = f"Zoom: {self.battle_scene.camera.zoom:.3f}x"
+            
             self.screen.blit(font_med.render(tick_text, True, (180, 180, 180)), (10, 10))
             self.screen.blit(font_med.render(rate_text, True, (180, 180, 180)), (10, 35))
+            self.screen.blit(font_med.render(zoom_text, True, (150, 200, 255)), (10, 60))
             
             # Draw speed indicator
             speed_text = "PAUSED" if self.battle_scene.sim_paused else f"Speed: {self.battle_scene.sim_speed_multiplier:.2f}x"

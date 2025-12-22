@@ -1095,8 +1095,8 @@ class BuilderSceneGUI:
         
         display_range = min(weapon_range / 10, 300)
         
-        start_angle = math.radians(90 - facing - arc_degrees / 2)
-        end_angle = math.radians(90 - facing + arc_degrees / 2)
+        start_angle = math.radians(90 - facing - arc_degrees)
+        end_angle = math.radians(90 - facing + arc_degrees)
         
         if isinstance(weapon, BeamWeapon):
             color = (100, 255, 255, 100)

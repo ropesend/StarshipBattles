@@ -137,12 +137,11 @@ class BattleScene:
         if not headless:
             self.camera.fit_objects(self.ships)
     
-    def update(self, events, visual_dt_for_camera=0.0):
+    def update(self, events):
         """
         Update battle simulation for one tick.
-        visual_dt_for_camera: Real time passed, ONLY for camera/UI smoothing.
         """
-        self.camera.update_input(visual_dt_for_camera, events)
+        # Note: Camera input is now handled in update_visuals or main.py independently
         
         if not self.is_battle_over():
             self.sim_tick_counter += 1
@@ -188,10 +187,21 @@ class BattleScene:
         # 5. Update Projectiles
         self._update_projectiles()
         
-        # 6. Update Beams (Visual Time based: decouple from ticks)
-        if visual_dt_for_camera > 0:
+        # 6. Update Beams (Cleanup only, or moved to visual update?)
+        # Actually beams are purely visual, but they are generated here.
+        # Timer decrement should be in update_visuals.
+    
+    def update_visuals(self, dt, events):
+        """
+        Update visual elements (beams, camera) based on real-time delta.
+        Independent of simulation ticks.
+        """
+        self.camera.update_input(dt, events)
+        
+        # Update Beams
+        if dt > 0:
             for b in self.beams:
-                b['timer'] -= visual_dt_for_camera
+                b['timer'] -= dt
             self.beams = [b for b in self.beams if b['timer'] > 0]
     
     def _process_beam_attack(self, attack):
@@ -231,7 +241,7 @@ class BattleScene:
         self.beams.append({
             'start': start_pos,
             'end': end_pos,
-            'timer': 0.5, # VISUAL ONLY: 0.5 seconds duration. Does not affect physics.
+            'timer': 0.15, # VISUAL ONLY: 0.15 seconds duration. Does not affect physics.
             'color': (100, 255, 255)
         })
     

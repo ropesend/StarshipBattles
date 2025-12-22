@@ -45,7 +45,7 @@ def draw_ship(surface, ship, camera):
     
     drawn_image = False
     
-    if ship_img and camera.zoom > 0.1:
+    if ship_img and camera.zoom > 0.01:
         # Scale logic: "scaled so that the visible portion of the vesle is approximatly the same length as the diameter of the circle"
         # Circle diameter = 2 * base_radius. 
         target_size = 2 * scale(base_radius) # Matches diameter exactly
