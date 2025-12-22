@@ -257,8 +257,14 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         for comp in component_pool:
             if not comp.is_active: continue # Already damaged
             
-            # Check Crew Requirement (Negative CrewCapacity)
-            req_crew = abs(min(0, comp.abilities.get('CrewCapacity', 0)))
+            # Check Crew Requirement (Use positive CrewRequired)
+            req_crew = comp.abilities.get('CrewRequired', 0)
+            
+            # Legacy fallback: Check for negative CrewCapacity if CrewRequired missing
+            # (Though we updated JSON, this is safe for any custom mods)
+            if req_crew == 0:
+                 req_crew = abs(min(0, comp.abilities.get('CrewCapacity', 0)))
+
             self.crew_required += req_crew
             
             if req_crew > 0:
@@ -418,20 +424,27 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             elif isinstance(min_value, (int, float)):
                 if current_value < min_value:
                     nice_name = self._format_ability_name(ability_name)
-                    if ability_name == 'CrewCapacity':
-                        # Special handling for crew - show deficit
-                        deficit = min_value - current_value
-                        missing.append(f"⚠ Need {abs(current_value)} more crew housing")
-                    else:
-                        missing.append(f"⚠ Needs {nice_name}")
+                    # Generic missing ability check
+                    missing.append(f"⚠ Needs {nice_name}")
         
         # Additional crew/life support validation
+        # CrewRequired is now explicit
         crew_capacity = ability_totals.get('CrewCapacity', 0)
+        # Handle case where CrewCapacity might still be negative in some legacy data (safety)
+        if crew_capacity < 0:
+             crew_capacity = 0
+             
         life_support = ability_totals.get('LifeSupportCapacity', 0)
+        crew_required = ability_totals.get('CrewRequired', 0)
         
-        # Crew required is the absolute value of negative crew capacity
-        crew_required = abs(min(0, crew_capacity))
+        # Add legacy negative capacity to required if present
+        legacy_req = abs(min(0, ability_totals.get('CrewCapacity', 0)))
+        crew_required += legacy_req
         
+        # Check if we have enough housing for the required crew
+        if crew_capacity < crew_required:
+             missing.append(f"⚠ Need {crew_required - crew_capacity} more crew housing")
+
         # If we have crew requiring components but not enough life support
         if crew_required > 0 and life_support < crew_required:
             missing.append(f"⚠ Need {crew_required - life_support} more life support")

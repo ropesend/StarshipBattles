@@ -15,7 +15,7 @@
             "sprite_index": 0,
             "abilities": {
                 "CommandAndControl": true,
-                "CrewCapacity": -5
+                "CrewRequired": 5
             }
         },
         {
@@ -36,7 +36,7 @@
             "sprite_index": 18,
             "abilities": {
                 "ProjectileWeapon": true,
-                "CrewCapacity": -5
+                "CrewRequired": 5
             }
         },
         {
@@ -156,7 +156,7 @@
             "sprite_index": 217,
             "abilities": {
                 "EnergyGeneration": 25,
-                "CrewCapacity": -1
+                "CrewRequired": 1
             }
         },
         {
@@ -178,7 +178,7 @@
             "sprite_index": 22,
             "abilities": {
                 "BeamWeapon": true,
-                "CrewCapacity": -1
+                "CrewRequired": 1
             }
         },
         {
@@ -292,7 +292,7 @@
             "sprite_index": 21,
             "abilities": {
                 "SeekerWeapon": true,
-                "CrewCapacity": -3
+                "CrewRequired": 3
             }
         },
         {
@@ -315,7 +315,7 @@
             "abilities": {
                 "BeamWeapon": true,
                 "PointDefense": true,
-                "CrewCapacity": -1
+                "CrewRequired": 1
             }
         }
     ]

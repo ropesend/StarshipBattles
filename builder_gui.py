@@ -716,14 +716,17 @@ class BuilderSceneGUI:
             )
         
         # Update crew stats
-        crew_capacity = s.get_ability_total('CrewCapacity')
-        life_support = s.get_ability_total('LifeSupportCapacity')
+        crew_capacity = max(0, s.get_ability_total('CrewCapacity'))
+        crew_required = s.get_ability_total('CrewRequired')
         
-        crew_required = abs(min(0, crew_capacity))
-        crew_housed = max(0, crew_capacity)
+        # Legacy fallback for display
+        legacy_req = abs(min(0, s.get_ability_total('CrewCapacity')))
+        crew_required += legacy_req
         
-        crew_ok = crew_capacity >= 0
-        crew_status = "✓" if crew_ok else f"✗ -{abs(crew_capacity)}"
+        crew_housed = crew_capacity
+        
+        crew_ok = crew_capacity >= crew_required
+        crew_status = "✓" if crew_ok else f"✗ Missing {crew_required - crew_capacity}"
         self.crew_labels['crew_required'].set_text(f"Crew Required: {crew_required}")
         self.crew_labels['crew_housed'].set_text(f"Crew On Board: {crew_housed} {crew_status}")
         
