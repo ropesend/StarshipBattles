@@ -138,8 +138,8 @@ class BattleInterface:
 
     def draw_battle_end_ui(self, screen):
         """Draw battle end overlay or ongoing battle buttons."""
-        team1_alive = sum(1 for s in self.scene.ships if s.team_id == 0 and s.is_alive)
-        team2_alive = sum(1 for s in self.scene.ships if s.team_id == 1 and s.is_alive)
+        team1_alive = sum(1 for s in self.scene.ships if s.team_id == 0 and s.is_alive and not getattr(s, 'is_derelict', False))
+        team2_alive = sum(1 for s in self.scene.ships if s.team_id == 1 and s.is_alive and not getattr(s, 'is_derelict', False))
         sw, sh = screen.get_size()
         
         if team1_alive == 0 or team2_alive == 0:
@@ -210,7 +210,7 @@ class BattleInterface:
         
         # Team 1
         team1_ships = [s for s in self.scene.ships if s.team_id == 0]
-        team1_alive = sum(1 for s in team1_ships if s.is_alive)
+        team1_alive = sum(1 for s in team1_ships if s.is_alive and not getattr(s, 'is_derelict', False))
         
         title = font_title.render(f"TEAM 1 ({team1_alive}/{len(team1_ships)})", True, (100, 200, 255))
         panel_surf.blit(title, (10, y))
@@ -223,7 +223,7 @@ class BattleInterface:
         
         # Team 2
         team2_ships = [s for s in self.scene.ships if s.team_id == 1]
-        team2_alive = sum(1 for s in team2_ships if s.is_alive)
+        team2_alive = sum(1 for s in team2_ships if s.is_alive and not getattr(s, 'is_derelict', False))
         
         title = font_title.render(f"TEAM 2 ({team2_alive}/{len(team2_ships)})", True, (255, 100, 100))
         panel_surf.blit(title, (10, y))
@@ -325,6 +325,19 @@ class BattleInterface:
 
         # Total Shots
         text = font.render(f"Shots: {ship.total_shots_fired}", True, (255, 200, 100))
+        surface.blit(text, (x_indent, y))
+        y += 16
+
+        # Crew Stats
+        crew_req = getattr(ship, 'crew_required', 0)
+        crew_cur = getattr(ship, 'crew_onboard', 0)
+        
+        # Color warning if shortage
+        crew_color = (180, 180, 180)
+        if crew_cur < crew_req:
+            crew_color = (255, 100, 100)
+            
+        text = font.render(f"Crew: {crew_cur}/{crew_req}", True, crew_color)
         surface.blit(text, (x_indent, y))
         y += 16
         
@@ -500,8 +513,8 @@ class BattleInterface:
         
         team1_ships = [s for s in self.scene.ships if s.team_id == 0]
         team2_ships = [s for s in self.scene.ships if s.team_id == 1]
-        team1_survivors = [s for s in team1_ships if s.is_alive]
-        team2_survivors = [s for s in team2_ships if s.is_alive]
+        team1_survivors = [s for s in team1_ships if s.is_alive and not getattr(s, 'is_derelict', False)]
+        team2_survivors = [s for s in team2_ships if s.is_alive and not getattr(s, 'is_derelict', False)]
         
         print(f"\n=== BATTLE COMPLETE ===")
         print(f"Time: {elapsed:.2f}s, Ticks: {tick_counter}")

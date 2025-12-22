@@ -117,7 +117,7 @@ class ShipCombatMixin:
                                 # data/components.json doesn't have range for seeker, so we might need to derive it
                                 # or rely on base class 'range'.
                                 # For now assume comp.range is populated via derived stats or safely use projectile speed * endurance
-                                max_range = comp.projectile_speed * comp.endurance
+                                max_range = comp.projectile_speed * comp.endurance * 0.8
 
                             if dist <= max_range:
                                 # Solve Firing Solution

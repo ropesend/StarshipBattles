@@ -129,18 +129,34 @@ class AIController:
         if not self.ship.is_alive: 
             return
 
+        # Derelict Check - Stop all AI if derelict
+        if getattr(self.ship, 'is_derelict', False):
+            self.ship.comp_trigger_pulled = False
+            self.ship.target_speed = 0 # Ensure we stop
+            return
+
         strategy = self.get_current_strategy()
         strategy_id = getattr(self.ship, 'ai_strategy', 'max_weapons_range')
         
         # Target Acquisition (do this first so retreat can use target)
         target = self.ship.current_target
-        if not target or not target.is_alive:
+        
+        # Check if current target is invalid or derelict
+        if target:
+            if not target.is_alive or getattr(target, 'is_derelict', False):
+                target = None
+                self.ship.current_target = None
+                
+        if not target:
             target = self.find_target()
             self.ship.current_target = target
             
         if not target:
             self.ship.comp_trigger_pulled = False
             return
+            
+        # Always attempt to fire if we have a target
+        self.ship.comp_trigger_pulled = True
         
         # Check retreat condition
         hp_pct = self._get_hp_percent(self.ship)
@@ -171,12 +187,11 @@ class AIController:
 
     def update_ramming(self, target):
         """Ram target, no avoidance."""
-        self.ship.comp_trigger_pulled = True
         self.navigate_to(target.position, stop_dist=0, precise=False)
         
     def update_flee(self, target, fire_while_fleeing=False):
         """Run away from target."""
-        self.ship.comp_trigger_pulled = fire_while_fleeing
+        
         
         vec = self.ship.position - target.position
         if vec.length() == 0: 
@@ -195,7 +210,6 @@ class AIController:
         dist = self.ship.position.distance_to(target.position)
         
         if self.attack_state == 'approach':
-            self.ship.comp_trigger_pulled = True
             self.navigate_to(target.position, stop_dist=approach_dist, precise=False)
             
             if dist < approach_dist * 1.5:
@@ -203,7 +217,6 @@ class AIController:
                 self.attack_timer = retreat_duration
                 
         elif self.attack_state == 'retreat':
-            self.ship.comp_trigger_pulled = strategy.get('fire_while_retreating', False)
             # Cycle-Based: 1 tick = 0.01 seconds. Decrement timer by 0.01.
             self.attack_timer -= 0.01
             
@@ -219,7 +232,6 @@ class AIController:
 
     def update_range_engagement(self, target, engage_mult, strategy):
         """Engage at specified range multiplier of max weapon range."""
-        self.ship.comp_trigger_pulled = True
         
         # Collision avoidance if enabled
         if strategy.get('avoid_collisions', True):
@@ -249,7 +261,6 @@ class AIController:
 
     def update_max_range(self, target):
         # MAX RANGE (Kiting) - Original behavior + Coll Avoidance
-        self.ship.comp_trigger_pulled = True
         
         # Collision Avoidance (Only for subtle/smart strategies)
         override_pos = self.check_avoidance()

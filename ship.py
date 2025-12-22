@@ -233,13 +233,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
         # 3. Phase 2: Resource Allocation (Crew & Life Support)
         # -----------------------------------------------------
+        # Store for UI
+        self.crew_onboard = available_crew
+        self.crew_required = 0
+        
         # Effective Crew is limited by Life Support
         effective_crew = min(available_crew, available_life_support)
-        
-        # We need to satisfy crew requirements. 
-        # Priority: Bridge > LifeSupport (circular dependency handled by initial pass) > Generators > Engines > Weapons
-        # For simplicity, we just iterate order. 
-        # Ideally we'd sort component_pool by priority.
         
         # Priority: Bridge > Engine > Weapon > Others
         def priority_sort(c):
@@ -260,6 +259,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             
             # Check Crew Requirement (Negative CrewCapacity)
             req_crew = abs(min(0, comp.abilities.get('CrewCapacity', 0)))
+            self.crew_required += req_crew
             
             if req_crew > 0:
                 if effective_crew >= req_crew:
@@ -322,7 +322,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         
         if self.mass > 0:
             if self.is_derelict:
-                self.acceleration_rate = 0
+                self.acceleration_rate = 2.0 # Allow deceleration to stop
                 self.turn_speed = 0
                 self.max_speed = 0
             else:
@@ -335,9 +335,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         else:
             self.acceleration_rate = 0
             self.max_speed = 0
-            
-        # Ensure minimums only if we have working engines AND not derelict
-        if self.total_thrust > 0 and self.max_speed < 10 and not self.is_derelict: self.max_speed = 10
             
         # Limit Checks (Budget)
         self.mass_limits_ok = True

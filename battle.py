@@ -426,14 +426,14 @@ class BattleScene:
     
     def is_battle_over(self):
         """Check if the battle has ended."""
-        team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
-        team2_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
+        team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive and not getattr(s, 'is_derelict', False))
+        team2_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive and not getattr(s, 'is_derelict', False))
         return team1_alive == 0 or team2_alive == 0
     
     def get_winner(self):
         """Get the winning team. Returns 0, 1, or -1 for draw."""
-        team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
-        team2_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
+        team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive and not getattr(s, 'is_derelict', False))
+        team2_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive and not getattr(s, 'is_derelict', False))
         if team1_alive > 0 and team2_alive == 0:
             return 0
         elif team2_alive > 0 and team1_alive == 0:
