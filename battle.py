@@ -17,25 +17,50 @@ class BattleLogger:
         self.enabled = enabled
         self.filename = filename
         self.file = None
+    
+    def __enter__(self):
+        """Context manager entry."""
+        self.start_session()
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - ensures file is closed."""
+        self.close()
+        return False
+    
+    def __del__(self):
+        """Destructor - ensures file is closed on garbage collection."""
+        self.close()
         
     def start_session(self):
         """Start a new logging session."""
         if self.enabled:
-            self.file = open(self.filename, 'w')
-            self.log("=== BATTLE LOG STARTED ===")
+            try:
+                self.file = open(self.filename, 'w', encoding='utf-8')
+                self.log("=== BATTLE LOG STARTED ===")
+            except IOError as e:
+                print(f"Warning: Could not open battle log: {e}")
+                self.enabled = False
     
     def log(self, message):
         """Log a message if logging is enabled."""
         if self.enabled and self.file:
-            self.file.write(f"{message}\n")
-            self.file.flush()
+            try:
+                self.file.write(f"{message}\n")
+                self.file.flush()
+            except IOError:
+                pass  # Silently ignore write errors
     
     def close(self):
         """Close the log file."""
         if self.file:
-            self.log("=== BATTLE LOG ENDED ===")
-            self.file.close()
-            self.file = None
+            try:
+                self.log("=== BATTLE LOG ENDED ===")
+                self.file.close()
+            except IOError:
+                pass  # Silently ignore close errors
+            finally:
+                self.file = None
 
 
 # Global battle logger instance

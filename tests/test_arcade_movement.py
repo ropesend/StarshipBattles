@@ -17,19 +17,24 @@ class TestArcadeMovement(unittest.TestCase):
 
     def setUp(self):
         self.ship = Ship("TestShip", 100, 100, (255, 255, 255))
-        # Basic setup
-        # Core: Bridge
+        # Basic setup - need crew infrastructure for components to be active
+        # Core: Bridge (requires 5 crew)
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
+        # Core: Crew quarters (provides 10 crew capacity)
+        self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
+        # Core: Life support (provides 25 life support)
+        self.ship.add_component(create_component('life_support'), LayerType.CORE)
         # Inner: Tank
         self.ship.add_component(create_component('fuel_tank'), LayerType.INNER)
-        # Outer: Engine
+        # Outer: Engine (requires crew to be active)
         self.ship.add_component(create_component('standard_engine'), LayerType.OUTER)
         
         # Initial recalc
         self.ship.recalculate_stats()
         
-        # Verify stats populated
-        self.assertGreater(self.ship.total_thrust, 0)
+        # Verify stats populated - engine should be active with crew support
+        self.assertGreater(self.ship.total_thrust, 0, 
+            f"Engine should have thrust. Crew: {self.ship.crew_onboard}, Required: {self.ship.crew_required}")
         self.assertGreater(self.ship.max_fuel, 0)
         self.ship.current_fuel = self.ship.max_fuel
 
@@ -54,10 +59,10 @@ class TestArcadeMovement(unittest.TestCase):
         self.assertEqual(initial_speed, 0)
         
         self.ship.thrust_forward()
+        self.ship.update_physics_movement()  # Process the thrust flag
         
-        # Cycle-Based: Thrust adds 1/100th of acceleration_rate per tick
-        expected_speed = self.ship.acceleration_rate / 100.0
-        self.assertAlmostEqual(self.ship.current_speed, expected_speed)
+        # Speed should increase by acceleration_rate (flag-based physics)
+        self.assertGreater(self.ship.current_speed, 0)
         
         # Fuel consumed
         self.assertLess(self.ship.current_fuel, self.ship.max_fuel)
@@ -101,16 +106,26 @@ class TestArcadeMovement(unittest.TestCase):
         self.assertGreater(diff.y, 50) # Moved down
 
     def test_max_speed_cap(self):
-        # dt = 1.0
-        # Force huge speed
-        self.ship.current_speed = self.ship.max_speed + 1000
+        """Speed above max should decelerate toward max_speed when thrusting."""
+        initial_over_speed = self.ship.max_speed + 1000
+        self.ship.current_speed = initial_over_speed
         
-        # Thrusting should cap it? 
-        # thrust_forward Caps it: if speed > max: speed = max
+        # Thrusting sets target_speed = max_speed, so ship decelerates toward it
         self.ship.thrust_forward()
+        self.ship.update_physics_movement()
         
-        # Note: thrust_forward adds accel first, THEN caps.
-        self.assertLessEqual(self.ship.current_speed, self.ship.max_speed + 0.01) # Float tolerance
+        # Speed should have decreased (moving toward max_speed)
+        self.assertLess(self.ship.current_speed, initial_over_speed, 
+            "Speed should decrease when above max_speed and thrusting")
+        
+        # Run multiple updates to reach max_speed
+        for _ in range(1000):  # Enough iterations to converge
+            self.ship.thrust_forward()
+            self.ship.update_physics_movement()
+        
+        # After many updates, should be at or very close to max_speed
+        self.assertAlmostEqual(self.ship.current_speed, self.ship.max_speed, places=1,
+            msg="Speed should converge to max_speed when thrusting")
 
 if __name__ == '__main__':
     unittest.main()

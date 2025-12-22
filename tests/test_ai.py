@@ -21,15 +21,21 @@ class TestAIController(unittest.TestCase):
     def setUp(self):
         self.grid = SpatialGrid(cell_size=2000)
         
-        # Create two ships
+        # Create two ships with full crew infrastructure
         self.ship1 = Ship("Ally", 0, 0, (0, 255, 0), team_id=0)
         self.ship1.add_component(create_component('bridge'), LayerType.CORE)
+        self.ship1.add_component(create_component('crew_quarters'), LayerType.CORE)
+        self.ship1.add_component(create_component('life_support'), LayerType.CORE)
         self.ship1.add_component(create_component('standard_engine'), LayerType.OUTER)
         self.ship1.add_component(create_component('thruster'), LayerType.INNER)
         self.ship1.recalculate_stats()
         
         self.ship2 = Ship("Enemy", 1000, 0, (255, 0, 0), team_id=1)
         self.ship2.add_component(create_component('bridge'), LayerType.CORE)
+        self.ship2.add_component(create_component('crew_quarters'), LayerType.CORE)
+        self.ship2.add_component(create_component('life_support'), LayerType.CORE)
+        self.ship2.add_component(create_component('standard_engine'), LayerType.OUTER)
+        self.ship2.add_component(create_component('thruster'), LayerType.INNER)
         self.ship2.recalculate_stats()
         
         # Insert ships into grid
@@ -122,12 +128,18 @@ class TestAIStrategyStates(unittest.TestCase):
         
         self.ship = Ship("Attacker", 0, 0, (0, 255, 0), team_id=0)
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
+        self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
+        self.ship.add_component(create_component('life_support'), LayerType.CORE)
         self.ship.add_component(create_component('standard_engine'), LayerType.OUTER)
         self.ship.add_component(create_component('railgun'), LayerType.OUTER)
         self.ship.recalculate_stats()
         
         self.target = Ship("Target", 500, 0, (255, 0, 0), team_id=1)
         self.target.add_component(create_component('bridge'), LayerType.CORE)
+        self.target.add_component(create_component('crew_quarters'), LayerType.CORE)
+        self.target.add_component(create_component('life_support'), LayerType.CORE)
+        self.target.add_component(create_component('standard_engine'), LayerType.OUTER)
+        self.target.add_component(create_component('thruster'), LayerType.INNER)
         self.target.recalculate_stats()
         
         self.grid.insert(self.ship)

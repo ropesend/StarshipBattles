@@ -294,7 +294,7 @@ class ShipCombatMixin:
             
         target = random.choice(living_components)
         damage_absorbed = min(target.current_hp, damage)
-        target.take_damage(damage) 
+        target.take_damage(damage_absorbed)  # FIX: Only deal absorbed amount, not full damage
         
         if isinstance(target, Bridge) and not target.is_active:
             self.die()

@@ -191,7 +191,8 @@ class AIController:
         
     def update_flee(self, target, fire_while_fleeing=False):
         """Run away from target."""
-        
+        # Only fire while fleeing if strategy allows it
+        self.ship.comp_trigger_pulled = fire_while_fleeing
         
         vec = self.ship.position - target.position
         if vec.length() == 0: 

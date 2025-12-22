@@ -113,6 +113,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.shield_regen_rate = 0
         self.shield_regen_cost = 0
         
+        # Resource initialization tracking (distinguish between "never set" and "depleted to 0")
+        self._resources_initialized = False
+        
         # New Stats (from old init, but now calculated or managed differently)
         self.mass_limits_ok = True
         self.layer_status = {}
@@ -383,15 +386,27 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         if self.layers[LayerType.ARMOR]['hp_pool'] == 0:
             self.layers[LayerType.ARMOR]['hp_pool'] = self.layers[LayerType.ARMOR]['max_hp_pool']
 
-        # Resource Initialization (Auto-fill on first load)
-        if self.max_fuel > 0 and self.current_fuel == 0:
-            self.current_fuel = self.max_fuel
-        if self.max_ammo > 0 and self.current_ammo == 0:
-            self.current_ammo = self.max_ammo
-        if self.max_energy > 0 and self.current_energy == 0:
-            self.current_energy = self.max_energy
-        if self.max_shields > 0 and self.current_shields == 0:
-            self.current_shields = self.max_shields
+        # Resource Initialization (Auto-fill on first load only, or when capacity increases)
+        # Track previous max values to detect capacity increases
+        prev_max_shields = getattr(self, '_prev_max_shields', 0)
+        
+        if not self._resources_initialized:
+            if self.max_fuel > 0:
+                self.current_fuel = self.max_fuel
+            if self.max_ammo > 0:
+                self.current_ammo = self.max_ammo
+            if self.max_energy > 0:
+                self.current_energy = self.max_energy
+            if self.max_shields > 0:
+                self.current_shields = self.max_shields
+            self._resources_initialized = True
+        else:
+            # Handle capacity increases from new components
+            if self.max_shields > prev_max_shields:
+                self.current_shields += (self.max_shields - prev_max_shields)
+        
+        # Remember current max for next recalculate
+        self._prev_max_shields = self.max_shields
 
     def get_missing_requirements(self):
         """Check class requirements and return list of missing items based on abilities."""

@@ -37,7 +37,7 @@
             "retreat_when_weapons_gone": true,
             "retreat_hp_threshold": 0.1,
             "avoid_collisions": true,
-            "fire_while_retreating": false
+            "fire_while_retreating": true
         },
         "dont_get_hurt": {
             "name": "Don't Get Hurt",
@@ -51,7 +51,7 @@
             "retreat_when_weapons_gone": true,
             "retreat_hp_threshold": 0.25,
             "avoid_collisions": true,
-            "fire_while_retreating": false
+            "fire_while_retreating": true
         },
         "fighter_attack": {
             "name": "Fighter Attack",
@@ -108,7 +108,7 @@
             "retreat_when_weapons_gone": true,
             "retreat_hp_threshold": 0.1,
             "avoid_collisions": true,
-            "fire_while_retreating": false
+            "fire_while_retreating": true
         },
         "point_blank": {
             "name": "Point Blank",
@@ -137,7 +137,7 @@
             "retreat_when_weapons_gone": true,
             "retreat_hp_threshold": 0.15,
             "avoid_collisions": true,
-            "fire_while_retreating": false,
+            "fire_while_retreating": true,
             "attack_run_behavior": {
                 "approach_distance": 0.3,
                 "retreat_distance": 0.8,
@@ -184,7 +184,7 @@
             "retreat_when_weapons_gone": true,
             "retreat_hp_threshold": 1.0,
             "avoid_collisions": true,
-            "fire_while_retreating": false
+            "fire_while_retreating": true
         },
         "assassin": {
             "name": "Assassin",
