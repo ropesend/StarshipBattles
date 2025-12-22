@@ -132,10 +132,10 @@ def draw_ship(surface, ship, camera):
         pygame.draw.line(surface, (255, 255, 0), (cx, cy), (int(end_pos_screen.x), int(end_pos_screen.y)), max(1, scale(2)))
 
     
-    if scaled_radius < 3 and not drawn_image:
+    if not drawn_image:
         # Draw simple dot icon for low zoom if no image
         color = ship.color  # Use ship identity color
-        pygame.draw.circle(surface, color, (cx, cy), 3)  # Fixed 3px dot
+        pygame.draw.circle(surface, color, (cx, cy), max(2, scale(3)))  # Minimum 2px dot
         return
 
 

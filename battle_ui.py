@@ -401,7 +401,15 @@ class BattleInterface:
         team1_ships = [s for s in self.scene.ships if s.team_id == 0]
         team2_ships = [s for s in self.scene.ships if s.team_id == 1]
         
-        y_pos = 40  # Header
+        # Must match draw layout!
+        # Initial y = 10
+        y_pos = 10 
+        
+        # Skip Sim Stats (25 height)
+        y_pos += 25
+        
+        # Skip Team 1 Header (30 height)
+        y_pos += 30
         
         for ship in team1_ships:
             banner_height = 25
@@ -415,7 +423,8 @@ class BattleInterface:
             if ship in self.expanded_ships:
                 y_pos += self.get_expanded_height(ship)
         
-        y_pos += 45  # Gap + Team 2 header
+        # Skip Spacer (15) + Team 2 Header (30)
+        y_pos += 45 
         
         for ship in team2_ships:
             banner_height = 25

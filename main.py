@@ -124,29 +124,7 @@ class Game:
                 elif self.state == BATTLE_SETUP:
                     self.battle_setup.update([event], self.screen.get_size())
             
-            # Update logic
-            if self.state == MENU:
-                self._draw_menu()
-            elif self.state == BUILDER:
-                self.builder_scene.update(frame_time) # UI uses real time
-                self.builder_scene.process_ui_time(frame_time)
-                self.builder_scene.draw(self.screen)
-            elif self.state == BATTLE_SETUP:
-                self._update_battle_setup()
-            elif self.state == BATTLE:
-                # BATTLE UPDATE LOOP - FIXED STEPS
-                # We can perform multiple ticks per frame if we have time accumulated
-                # However, for simplicity and ensuring we hit the requested Logic Ticks:
-                # If we want 100 ticks/sec, we do:
-                while accumulator >= dt:
-                    # Pass dt (which is 1 tick) or just 1.0 to signify one tick?
-                    # Plan says: "Pass no dt (or 1.0)"
-                    # Let's pass 1.0 as "1 Tick" to keep signature valid for now, 
-                    # but logic will treat it as ONE DISCRETE TICK unit.
-                    self.battle_scene.update(events) 
-                    accumulator -= dt
-                    
-                self.battle_scene.draw(self.screen)
+            self._update_and_draw(frame_time, events)
             
             pygame.display.flip()
         
@@ -169,12 +147,12 @@ class Game:
                 self.battle_scene.sim_paused = not self.battle_scene.sim_paused
             elif event.key == pygame.K_COMMA:
                 if not self.battle_scene.sim_paused:
-                    self.battle_scene.sim_speed_multiplier = max(0.01, self.battle_scene.sim_speed_multiplier / 2.0)
+                    self.battle_scene.sim_speed_multiplier = max(0.0625, self.battle_scene.sim_speed_multiplier / 2.0)
             elif event.key == pygame.K_PERIOD:
                 if not self.battle_scene.sim_paused:
-                    self.battle_scene.sim_speed_multiplier = min(1.0, self.battle_scene.sim_speed_multiplier * 2.0)
+                    self.battle_scene.sim_speed_multiplier = min(16.0, self.battle_scene.sim_speed_multiplier * 2.0)
             elif event.key == pygame.K_SLASH:
-                self.battle_scene.sim_speed_multiplier = 1.0
+                self.battle_scene.sim_speed_multiplier = 100.0 # Max Speed
                 self.battle_scene.sim_paused = False
     
     def _handle_click(self, event):
@@ -258,22 +236,55 @@ class Game:
                 print(f"  Tick {self.battle_scene.sim_tick_counter}: Team1={t1}, Team2={t2}")
         else:
             # Normal visual battle
-            if not self.battle_scene.sim_paused:
-                ticks_to_run = max(1, int(self.battle_scene.sim_speed_multiplier))
-                for i in range(ticks_to_run):
-                    self.battle_scene.update(
-                        events if i == 0 else [],
-                        visual_dt_for_camera=frame_time if i == 0 else 0
-                    )
-            else:
+            
+            # Update Camera Input (always, for smooth panning even if paused)
+            if self.battle_scene.sim_paused:
                 self.battle_scene.camera.update_input(frame_time, events)
+            
+            # Update Simulation
+            # ACCUMULATOR LOGIC for deterministic speed control
+            if not self.battle_scene.sim_paused:
+                dt = 0.01 # 100 ticks per second standard
+                
+                # We scale "time passed" by the speed multiplier
+                # If multiplier is 0.5, we accumulate half as much real time -> runs half as fast
+                # If multiplier is 2.0, we accumulate twice as much -> runs 2x fast
+                # For "MAX SPEED" (e.g. 100x), we might just run a fixed batch per frame to avoid huge spirals
+                
+                speed_mult = self.battle_scene.sim_speed_multiplier
+                
+                if speed_mult > 10.0:
+                    # Max Speed / Turbo mode: Just run fixed N ticks per frame
+                    ticks_to_run = int(speed_mult) # e.g. 100 ticks per frame
+                    for i in range(ticks_to_run):
+                        self.battle_scene.update(events if i==0 else [], visual_dt_for_camera=0)
+                    
+                    self.battle_scene.tick_rate_count += ticks_to_run
+                else:
+                    # Time-Accurate Simulation (Slow/Normal/Fast)
+                    # Use a persistent accumulator logic.
+                    # Note: We need a persistent accumulator attribute on the Game class or BattleScene.
+                    # Since we are refactoring _update_battle which was stateless-ish, let's use a dynamic attribute or check if one exists.
+                    if not hasattr(self, '_battle_accumulator'):
+                        self._battle_accumulator = 0.0
+                    
+                    self._battle_accumulator += frame_time * speed_mult
+                    
+                    # Safety cap
+                    if self._battle_accumulator > 1.0:
+                        self._battle_accumulator = 1.0
+                        
+                    ticks_run_this_frame = 0
+                    while self._battle_accumulator >= dt:
+                        self.battle_scene.update(events if ticks_run_this_frame==0 else [], visual_dt_for_camera=dt)
+                        self._battle_accumulator -= dt
+                        ticks_run_this_frame += 1
+                        
+                    self.battle_scene.tick_rate_count += ticks_run_this_frame
             
             self.battle_scene.draw(self.screen)
             
             # Update tick rate calculation
-            if not self.battle_scene.sim_paused:
-                ticks_to_run = max(1, int(self.battle_scene.sim_speed_multiplier))
-                self.battle_scene.tick_rate_count += ticks_to_run
             self.battle_scene.tick_rate_timer += frame_time
             if self.battle_scene.tick_rate_timer >= 1.0:
                 self.battle_scene.current_tick_rate = self.battle_scene.tick_rate_count
@@ -282,15 +293,20 @@ class Game:
             
             # Draw tick counters
             tick_text = f"Ticks: {self.battle_scene.sim_tick_counter:,}"
-            rate_text = f"Tick Rate: {self.battle_scene.current_tick_rate:,}/s"
+            rate_text = f"TPS: {self.battle_scene.current_tick_rate:,}/s"
             self.screen.blit(font_med.render(tick_text, True, (180, 180, 180)), (10, 10))
             self.screen.blit(font_med.render(rate_text, True, (180, 180, 180)), (10, 35))
             
             # Draw speed indicator
             speed_text = "PAUSED" if self.battle_scene.sim_paused else f"Speed: {self.battle_scene.sim_speed_multiplier:.2f}x"
+            if self.battle_scene.sim_speed_multiplier >= 10.0: speed_text = "MAX SPEED"
+            
             speed_color = (255, 100, 100) if self.battle_scene.sim_paused else (200, 200, 200)
             if self.battle_scene.sim_speed_multiplier < 1.0:
                 speed_color = (255, 200, 100)
+            elif self.battle_scene.sim_speed_multiplier > 1.0:
+                speed_color = (100, 255, 100)
+                
             self.screen.blit(font_med.render(speed_text, True, speed_color), (WIDTH//2 - 50, 10))
 
 

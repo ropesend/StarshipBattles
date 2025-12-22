@@ -132,6 +132,8 @@ class BattleScene:
         BATTLE_LOG.start_session()
         BATTLE_LOG.log(f"Battle started: {len(team1_ships)} vs {len(team2_ships)} ships")
         
+        self.sim_speed_multiplier = 1.0 # Reset speed on new battle
+        
         if not headless:
             self.camera.fit_objects(self.ships)
     
@@ -141,7 +143,9 @@ class BattleScene:
         visual_dt_for_camera: Real time passed, ONLY for camera/UI smoothing.
         """
         self.camera.update_input(visual_dt_for_camera, events)
-        self.sim_tick_counter += 1
+        
+        if not self.is_battle_over():
+            self.sim_tick_counter += 1
         
         # 1. Update Grid
         self.grid.clear()
