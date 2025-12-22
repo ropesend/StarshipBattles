@@ -32,7 +32,8 @@
                 "allow_types": [
                     "Weapon",
                     "ProjectileWeapon",
-                    "BeamWeapon"
+                    "BeamWeapon",
+                    "SeekerWeapon"
                 ]
             }
         },
@@ -62,7 +63,8 @@
             "restrictions": {
                 "allow_types": [
                     "ProjectileWeapon",
-                    "BeamWeapon"
+                    "BeamWeapon",
+                    "SeekerWeapon"
                 ]
             }
         },
@@ -80,7 +82,8 @@
                     "ProjectileWeapon",
                     "BeamWeapon",
                     "Thruster",
-                    "Engine"
+                    "Engine",
+                    "SeekerWeapon"
                 ]
             },
             "effects": {

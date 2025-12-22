@@ -1,5 +1,5 @@
 {
-    "name": "Railgun Escort",
+    "name": "Missle Frigate",
     "color": [
         100,
         100,
@@ -16,10 +16,6 @@
                 "modifiers": []
             },
             {
-                "id": "fuel_tank",
-                "modifiers": []
-            },
-            {
                 "id": "crew_quarters",
                 "modifiers": []
             },
@@ -28,11 +24,15 @@
                 "modifiers": []
             },
             {
-                "id": "crew_quarters",
+                "id": "fuel_tank",
                 "modifiers": []
             },
             {
                 "id": "ordnance_tank",
+                "modifiers": []
+            },
+            {
+                "id": "crew_quarters",
                 "modifiers": []
             }
         ],
@@ -50,35 +50,41 @@
                 "modifiers": []
             },
             {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "thruster",
+                "modifiers": []
+            },
+            {
                 "id": "thruster",
                 "modifiers": []
             }
         ],
         "OUTER": [
             {
-                "id": "railgun",
-                "modifiers": [
-                    {
-                        "id": "turret_mount",
-                        "value": 180
-                    }
-                ]
+                "id": "capital_missile",
+                "modifiers": []
             },
             {
-                "id": "railgun",
-                "modifiers": [
-                    {
-                        "id": "turret_mount",
-                        "value": 180
-                    },
-                    {
-                        "id": "facing",
-                        "value": 180.0
-                    }
-                ]
+                "id": "capital_missile",
+                "modifiers": []
             }
         ],
         "ARMOR": [
+            {
+                "id": "armor_plate",
+                "modifiers": []
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": []
+            },
             {
                 "id": "armor_plate",
                 "modifiers": []
@@ -90,14 +96,14 @@
         ]
     },
     "expected_stats": {
-        "max_hp": 1660,
+        "max_hp": 2260,
         "max_fuel": 50000,
         "max_ammo": 5000,
         "max_energy": 0,
-        "max_speed": 11.479128415853094,
-        "turn_speed": 2.444532700541658,
-        "total_thrust": 450,
-        "mass": 980.0395633228862,
-        "armor_hp_pool": 500
+        "max_speed": 19.9468085106383,
+        "turn_speed": 5.204745263724273,
+        "total_thrust": 750.0,
+        "mass": 940.0,
+        "armor_hp_pool": 1000
     }
 }

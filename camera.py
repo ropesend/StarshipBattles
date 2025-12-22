@@ -12,9 +12,16 @@ class Camera:
         self.zoom = 1.0
         self.min_zoom = 0.01
         self.max_zoom = 5.0
+        self.target = None # Object to follow (must have .position)
         
     def update_input(self, dt, events):
         """Handle keyboard and mouse input for camera movement."""
+        # If following a target, update position
+        if self.target:
+             if hasattr(self.target, 'is_alive') and not self.target.is_alive:
+                 pass # Keep looking at dead ship position or stop? Let's keep looking.
+             self.position = pygame.math.Vector2(self.target.position)
+
         keys = pygame.key.get_pressed()
         speed = 1000 / self.zoom  # Pan faster when zoomed out
         
@@ -26,12 +33,14 @@ class Camera:
         
         if move.length() > 0:
             self.position += move.normalize() * speed * dt
+            self.target = None # Break focus on manual move
 
-        # Middle Mouse Panning
+        # Middle Mouse Panning (or Left Click Drag if implemented later, usually Middle is pan)
         if pygame.mouse.get_pressed()[1]:
             rel = pygame.mouse.get_rel()
             delta = pygame.math.Vector2(rel) / self.zoom
             self.position -= delta
+            self.target = None # Break focus
         else:
             pygame.mouse.get_rel()  # clear relative movement
 

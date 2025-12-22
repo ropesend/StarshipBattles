@@ -401,6 +401,10 @@ class BattleInterface:
         team1_ships = [s for s in self.scene.ships if s.team_id == 0]
         team2_ships = [s for s in self.scene.ships if s.team_id == 1]
         
+        # Check if Shift is held
+        keys = pygame.key.get_pressed()
+        shift_held = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
+
         # Must match draw layout!
         # Initial y = 10
         y_pos = 10 
@@ -414,6 +418,8 @@ class BattleInterface:
         for ship in team1_ships:
             banner_height = 25
             if y_pos <= rel_y < y_pos + banner_height:
+                if shift_held:
+                    return ("focus_ship", ship)
                 if ship in self.expanded_ships:
                     self.expanded_ships.discard(ship)
                 else:
@@ -429,6 +435,8 @@ class BattleInterface:
         for ship in team2_ships:
             banner_height = 25
             if y_pos <= rel_y < y_pos + banner_height:
+                if shift_held:
+                    return ("focus_ship", ship)
                 if ship in self.expanded_ships:
                     self.expanded_ships.discard(ship)
                 else:

@@ -222,6 +222,26 @@ class BattleScene:
             for b in self.beams:
                 b['timer'] -= dt
             self.beams = [b for b in self.beams if b['timer'] > 0]
+            
+        # Keyboard cycle handling
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFTBRACKET:
+                    self._cycle_camera_focus(-1)
+                elif event.key == pygame.K_RIGHTBRACKET:
+                    self._cycle_camera_focus(1)
+
+    def _cycle_camera_focus(self, direction):
+        """Cycle camera focus through living ships."""
+        alive_ships = [s for s in self.ships if s.is_alive]
+        if not alive_ships: return
+        
+        current_idx = -1
+        if self.camera.target in alive_ships:
+            current_idx = alive_ships.index(self.camera.target)
+        
+        new_idx = (current_idx + direction) % len(alive_ships)
+        self.camera.target = alive_ships[new_idx]
     
     def _process_beam_attack(self, attack):
         """Process a beam weapon attack."""
@@ -317,8 +337,10 @@ class BattleScene:
                 if target and target.is_alive:
                     # Calculate lead
                     # solve_lead expects (pos, vel, t_pos, t_vel, speed)
-                    # All units in pixels/tick
-                    t = p['owner'].solve_lead(p_pos_t0, p_vel, target.position, target.velocity, p['max_speed'])
+                    # For guided missiles, we want to know intersect time assuming we steer continuously at max_speed.
+                    # Passing current p['vel'] breaks the math if missile is turning or speed varies.
+                    # Passing (0,0) treats it as "Interceptor launching from P0 at Speed S".
+                    t = p['owner'].solve_lead(p_pos_t0, pygame.math.Vector2(0, 0), target.position, target.velocity, p['max_speed'])
                     
                     aim_pos = target.position
                     if t > 0:
@@ -458,10 +480,20 @@ class BattleScene:
     def handle_click(self, mx, my, button, screen_size):
         """Handle mouse clicks. Returns True if click was handled."""
         result = self.ui.handle_click(mx, my, button)
+        
+        if isinstance(result, tuple) and result[0] == "focus_ship":
+            self.camera.target = result[1]
+            return True
+            
         if result == "end_battle":
             BATTLE_LOG.close()
             self.action_return_to_setup = True
             return True
+        
+        # If UI didn't handle it and it's a left click, clear focus
+        if not result and button == 1:
+            self.camera.target = None
+            
         return result
     
     def handle_scroll(self, scroll_y, screen_height):
