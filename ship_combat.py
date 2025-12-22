@@ -113,9 +113,18 @@ class ShipCombatMixin:
                         
                         if valid_target and comp.fire():
                             self.total_shots_fired += 1
+                            comp.shots_fired += 1
+                            
                             # Deduct Resource
                             if isinstance(comp, BeamWeapon):
                                 self.current_energy -= cost
+                                comp.shots_hit += 1 # Beams are hitscan and we only fire if valid_target (in arc/range)
+                                # Technically valid_target means "can hit", but accuracy fail?
+                                # BeamWeapon has accuracy falloff. 
+                                # Current 'fire_weapons' logic assumes 100% hit if valid_target?
+                                # Lines 120-129 create 'beam' attack dict with 'hit': True.
+                                # So yes, increment hits.
+                                
                                 attacks.append({
                                     'type': 'beam',
                                     'source': self,
@@ -156,7 +165,8 @@ class ShipCombatMixin:
                                         max_speed=speed,
                                         target=target,
                                         hp=comp.hp,
-                                        color=(255, 50, 50)
+                                        color=(255, 50, 50),
+                                        source_weapon=comp
                                     )
                                     attacks.append(proj)
                                     
@@ -173,7 +183,8 @@ class ShipCombatMixin:
                                         range_val=comp.range,
                                         endurance=None, # Range limited
                                         proj_type='projectile',
-                                        color=(255, 200, 50)
+                                        color=(255, 200, 50),
+                                        source_weapon=comp
                                     )
                                     attacks.append(proj)
         return attacks

@@ -210,11 +210,13 @@ class Weapon(Component):
         self.firing_arc = data.get('firing_arc', 20) # Degrees
         self.facing_angle = data.get('facing_angle', 0) # Degrees relative to component forward (0)
         self.fire_count = 0  # Track how many times weapon has fired
+        self.shots_fired = 0
+        self.shots_hit = 0
 
-    def update(self):
-        # Cycle-Based: 1 tick = 0.01 seconds. Decrement timer by 0.01.
+    def update(self, dt=0.01):
+        # Cycle-Based: 1 tick = 0.01 seconds. Decrement timer by dt.
         if self.cooldown_timer > 0:
-            self.cooldown_timer -= 0.01
+            self.cooldown_timer -= dt
 
     def can_fire(self):
         return self.is_active and self.cooldown_timer <= 0

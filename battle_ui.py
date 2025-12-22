@@ -16,7 +16,7 @@ class BattleInterface:
         self.height = screen_height
         
         # UI state
-        self.stats_panel_width = 350
+        self.stats_panel_width = 450
         self.seeker_panel_width = 300
         self.expanded_ships = set()
         self.stats_scroll_offset = 0
@@ -65,10 +65,14 @@ class BattleInterface:
         sw, sh = screen.get_size()
         panel_w = self.seeker_panel_width
         
+        # Position on LEFT side of screen
+        panel_x = 0
+        
         panel_surf = pygame.Surface((panel_w, sh), pygame.SRCALPHA)
         panel_surf.fill((20, 25, 35, 230))
         
-        pygame.draw.line(panel_surf, (60, 60, 80), (panel_w-1, 0), (panel_w-1, sh), 2)
+        # Draw line on Right edge (separator from game)
+        pygame.draw.line(panel_surf, (60, 60, 80), (panel_w - 1, 0), (panel_w - 1, sh), 2)
         
         font_title = pygame.font.Font(None, 28)
         font_name = pygame.font.Font(None, 22)
@@ -90,17 +94,15 @@ class BattleInterface:
         self.seeker_panel_content_height = y + self.seeker_scroll_offset
         
         # Draw "Clear Inactive" button at bottom (fixed position relative to screen, not scroll)
-        # Or duplicate strict panel behavior overlaying content?
-        # Let's put it at the very top or bottom of panel area.
-        # Let's put it at bottom of the panel Surface if we scroll up, but that's complex.
         # Let's put it fixed at bottom of screen.
         
         screen.blit(panel_surf, (0, 0))
         
-        # Floating Clear Button
+        # Floating Clear Button at bottom of left panel
         btn_h = 30
         btn_y = sh - btn_h - 10
-        btn_rect = pygame.Rect(10, btn_y, panel_w - 20, btn_h)
+        btn_x = 10  # Left side
+        btn_rect = pygame.Rect(btn_x, btn_y, panel_w - 20, btn_h)
         self.clear_vars_rect = btn_rect
         
         mouse_pos = pygame.mouse.get_pos()
@@ -287,10 +289,11 @@ class BattleInterface:
         sw, sh = screen.get_size()
         
         if team1_alive == 0 or team2_alive == 0:
-            # Battle over overlay
-            overlay = pygame.Surface((sw - self.stats_panel_width, sh), pygame.SRCALPHA)
+            # Battle over overlay (between left and right panels)
+            overlay_w = sw - self.stats_panel_width - self.seeker_panel_width
+            overlay = pygame.Surface((overlay_w, sh), pygame.SRCALPHA)
             overlay.fill((0, 0, 0, 150))
-            screen.blit(overlay, (0, 0))
+            screen.blit(overlay, (self.seeker_panel_width, 0))
             
             if team1_alive > 0:
                 winner_text, winner_color = "TEAM 1 WINS!", (100, 200, 255)
@@ -301,7 +304,7 @@ class BattleInterface:
             
             win_font = pygame.font.Font(None, 72)
             win_surf = win_font.render(winner_text, True, winner_color)
-            center_x = (sw - self.stats_panel_width) // 2
+            center_x = self.seeker_panel_width + (sw - self.stats_panel_width - self.seeker_panel_width) // 2
             screen.blit(win_surf, (center_x - win_surf.get_width() // 2, sh // 2 - 80))
             
             btn_font = pygame.font.Font(None, 36)
@@ -493,14 +496,91 @@ class BattleInterface:
         surface.blit(text, (x_indent, y))
         y += 18
         
+        # Weapons
+        text = font.render(f"Weapons:", True, (200, 200, 150))
+        surface.blit(text, (x_indent, y))
+        y += 18
+        
+        from components import Weapon, ComponentStatus
+        
+        # Helper to find weapons in layers
+        # Use LayerType enums, matches ship.py structure
+        for layer_type in [LayerType.OUTER, LayerType.INNER, LayerType.CORE]:
+            layer = ship.layers.get(layer_type)
+            if not layer: continue
+            
+            for comp in layer['components']:
+                if isinstance(comp, Weapon):
+                    # Name
+                    c_color = (200, 200, 200) if comp.is_active else (150, 50, 50)
+                    if not comp.is_active and getattr(comp, 'status', ComponentStatus.ACTIVE) != ComponentStatus.ACTIVE:
+                         c_color = (255, 100, 100) # Red if broken
+                         
+                    name_str = comp.name
+                    if len(name_str) > 12:
+                        name_str = name_str[:12] + ".."
+                    
+                    # Component Layout (Standard Left Alignment)
+                    # Name
+                    c_text = font.render(name_str, True, c_color)
+                    surface.blit(c_text, (x_indent + 5, y))
+                    
+                    # HP Text
+                    hp_text = f"{int(comp.current_hp)}/{int(comp.max_hp)}"
+                    hp_val = font.render(hp_text, True, c_color)
+                    surface.blit(hp_val, (x_indent + 95, y))
+                    
+                    # HP/Status Logic
+                    hp_pct = comp.current_hp / comp.max_hp
+                    hp_col = (0, 200, 0)
+                    status_text = ""
+                    status_color = (200, 200, 200)
+                    
+                    if not comp.is_active:
+                        hp_col = (100, 50, 50)
+                        if getattr(comp, 'status', ComponentStatus.ACTIVE) == ComponentStatus.DAMAGED:
+                            status_text = "[DMG]"
+                            status_color = (255, 50, 50)
+                        elif getattr(comp, 'status', ComponentStatus.ACTIVE) == ComponentStatus.NO_CREW:
+                            status_text = "[CREW]"
+                            status_color = (255, 165, 0)
+                        elif getattr(comp, 'status', ComponentStatus.ACTIVE) == ComponentStatus.NO_POWER:
+                            status_text = "[PWR]"
+                            status_color = (255, 255, 0)
+                        elif getattr(comp, 'status', ComponentStatus.ACTIVE) == ComponentStatus.NO_FUEL:
+                            status_text = "[FUEL]"
+                            status_color = (255, 100, 0)
+                    elif hp_pct < 0.5: 
+                         hp_col = (200, 200, 0)
+                         
+                    # Bar
+                    self.draw_stat_bar(surface, x_indent + 160, y, 60, 8, hp_pct, hp_col)
+                    
+                    # Status text
+                    if status_text:
+                        st = font.render(status_text, True, status_color)
+                        surface.blit(st, (x_indent + 230, y))
+                        
+                    # Stats: S: X H: Y (Right Aligned)
+                    stats_str = f"S:{getattr(comp, 'shots_fired', 0)} H:{getattr(comp, 'shots_hit', 0)}"
+                    s_text = font.render(stats_str, True, (150, 150, 255))
+                    s_x = panel_w - s_text.get_width() - 10
+                    surface.blit(s_text, (s_x, y))
+                    
+                    y += 16
+        
+        y += 8
+        
         # Components header
         text = font.render("Components:", True, (200, 200, 100))
         surface.blit(text, (x_indent, y))
         y += 16
         
-        # Components list
+        # Components list (Non-Weapons)
         for layer_type in [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]:
             for comp in ship.layers[layer_type]['components']:
+                if isinstance(comp, Weapon): continue
+                
                 hp_pct = comp.current_hp / comp.max_hp if comp.max_hp > 0 else 1.0
                 
                 # Determine colors and status text
@@ -513,8 +593,6 @@ class BattleInterface:
                     color = (100, 50, 50) # Darkened red/gray
                     bar_color = (100, 50, 50) 
                     
-                    # Import Status to check type
-                    from components import ComponentStatus
                     if getattr(comp, 'status', ComponentStatus.ACTIVE) == ComponentStatus.DAMAGED:
                         status_text = "[DMG]"
                         status_color = (255, 50, 50)
@@ -542,13 +620,10 @@ class BattleInterface:
                 
                 self.draw_stat_bar(surface, x_indent + 160, y, 60, 8, hp_pct, bar_color)
                 
-                # Draw Status Text or Fire Count
+                # Draw Status Text
                 if status_text:
                     stat_render = font.render(status_text, True, status_color)
                     surface.blit(stat_render, (x_indent + 230, y))
-                elif hasattr(comp, 'fire_count') and comp.fire_count > 0:
-                    fire_text = font.render(f"x{comp.fire_count}", True, (255, 200, 100))
-                    surface.blit(fire_text, (x_indent + 230, y))
                 
                 y += 14
         
@@ -591,7 +666,7 @@ class BattleInterface:
             self.tracked_seekers = [p for p in self.tracked_seekers if p.status == 'active']
             return True
 
-        # Check seeker panel click
+        # Check seeker panel click (LEFT side)
         if mx < self.seeker_panel_width:
              return self.handle_seeker_panel_click(mx, my + self.seeker_scroll_offset)
         
@@ -699,6 +774,7 @@ class BattleInterface:
         mx, my = pygame.mouse.get_pos()
         sw = self.width
         
+        # Seeker panel on LEFT side
         if mx < self.seeker_panel_width:
              self.seeker_scroll_offset -= scroll_y * 30
              max_scroll = max(0, self.seeker_panel_content_height - screen_h + 50)

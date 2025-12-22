@@ -145,6 +145,12 @@ class BattleScene:
         
         if not self.is_battle_over():
             self.sim_tick_counter += 1
+            
+        # Process Events (Input)
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                 if event.key == pygame.K_F3:
+                     self.ui.show_overlay = not self.ui.show_overlay
         
         # 1. Update Grid
         self.grid.clear()
@@ -411,6 +417,8 @@ class BattleScene:
             if hit_occurred:
                 p.is_alive = False
                 p.status = 'hit'
+                if hasattr(p, 'source_weapon') and p.source_weapon:
+                    p.source_weapon.shots_hit += 1
                 projectiles_to_remove.add(idx)
         
         if projectiles_to_remove:
@@ -495,7 +503,7 @@ class BattleScene:
     
     def handle_scroll(self, scroll_y, screen_height):
         """Handle mouse wheel scrolling on stats panel."""
-        self.ui.handle_scroll(scroll_y)
+        self.ui.handle_scroll(scroll_y, screen_height)
     
     def print_headless_summary(self):
         """Print summary."""

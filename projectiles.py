@@ -3,7 +3,7 @@ from physics import PhysicsBody
 from logger import log_debug
 
 class Projectile(PhysicsBody):
-    def __init__(self, owner, position, velocity, damage, range_val, endurance, proj_type, **kwargs):
+    def __init__(self, owner, position, velocity, damage, range_val, endurance, proj_type, source_weapon=None, **kwargs):
         super().__init__(position.x, position.y)
         self.velocity = velocity
         self.owner = owner
@@ -19,7 +19,9 @@ class Projectile(PhysicsBody):
         self.target = kwargs.get('target', None)
         self.hp = kwargs.get('hp', 1) # Missiles can be shot down
         self.radius = kwargs.get('radius', 3)
+        self.radius = kwargs.get('radius', 3)
         self.color = kwargs.get('color', (255, 255, 0))
+        self.source_weapon = source_weapon
         
         self.distance_traveled = 0
         self.is_alive = True
