@@ -18,7 +18,7 @@ from pygame_gui.windows import UIConfirmationDialog
 from ship import Ship, LayerType, SHIP_CLASSES
 from components import (
     get_all_components, MODIFIER_REGISTRY, Bridge, Weapon, 
-    BeamWeapon, ProjectileWeapon, Engine, Thruster, Armor, Tank, Generator,
+    BeamWeapon, ProjectileWeapon, SeekerWeapon, Engine, Thruster, Armor, Tank, Generator,
     CrewQuarters, LifeSupport
 )
 from sprites import SpriteManager
@@ -983,6 +983,14 @@ class BuilderSceneGUI:
              lines.append((f"Energy Cost: {comp.energy_cost}", (100, 200, 255)))
         if hasattr(comp, 'firing_arc'):
             lines.append((f"Arc: {comp.firing_arc}°", (255, 100, 255)))
+        
+        # Missile Stats
+        if hasattr(comp, 'endurance'):
+            lines.append((f"Endurance: {comp.endurance}s", (100, 200, 255)))
+        if hasattr(comp, 'turn_rate') and hasattr(comp, 'endurance'): # Heuristic for missile
+            lines.append((f"Turn Rate: {comp.turn_rate}°/s", (100, 255, 100)))
+            if hasattr(comp, 'projectile_speed'):
+                lines.append((f"Speed: {comp.projectile_speed}", (200, 200, 50)))
             
         # Engine Stats
         if hasattr(comp, 'thrust_force') and comp.thrust_force > 0:

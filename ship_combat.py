@@ -1,7 +1,7 @@
 import pygame
 import math
 import random
-from components import LayerType, Weapon, BeamWeapon, ProjectileWeapon, Bridge
+from components import LayerType, Weapon, BeamWeapon, ProjectileWeapon, Bridge, SeekerWeapon
 from logger import log_debug
 
 class ShipCombatMixin:
@@ -103,12 +103,23 @@ class ShipCombatMixin:
                         
                         # We need 'aim_vec' for the firing check
                         aim_vec = pygame.math.Vector2(1, 0).rotate(self.angle) # Default forward
+                        comp_facing = 0
+                        diff = 0
 
                         if self.current_target:
                             target = self.current_target
                             dist = self.position.distance_to(target.position)
                             
-                            if dist <= comp.range:
+                            max_range = comp.range
+                            if isinstance(comp, SeekerWeapon):
+                                # Seeker weapons have dynamic range usually defined by flight time,
+                                # but for initial check assume component range is sufficient or use endurance.
+                                # data/components.json doesn't have range for seeker, so we might need to derive it
+                                # or rely on base class 'range'.
+                                # For now assume comp.range is populated via derived stats or safely use projectile speed * endurance
+                                max_range = comp.projectile_speed * comp.endurance
+
+                            if dist <= max_range:
                                 # Solve Firing Solution
                                 aim_pos, aim_vec = self._calculate_firing_solution(comp, target)
 
@@ -120,8 +131,9 @@ class ShipCombatMixin:
                                 
                                 if abs(diff) <= comp.firing_arc:
                                     valid_target = True
-                                else:
-                                    pass
+                                elif isinstance(comp, SeekerWeapon):
+                                    # Seeker weapons can launch if target is out of arc
+                                    valid_target = True
 
                         if valid_target and comp.fire():
                             self.total_shots_fired += 1
@@ -138,6 +150,34 @@ class ShipCombatMixin:
                                     'component': comp,
                                     'direction': aim_vec.normalize() if aim_vec.length() > 0 else pygame.math.Vector2(1, 0),
                                     'hit': True
+                                })
+                            elif isinstance(comp, SeekerWeapon):
+                                self.current_ammo -= cost
+                                # Determine launch vector
+                                launch_vec = aim_vec
+                                
+                                # If target is outside arc, launch forward (along component facing)
+                                if abs(diff) > comp.firing_arc:
+                                    rad = math.radians(comp_facing)
+                                    launch_vec = pygame.math.Vector2(math.cos(rad), math.sin(rad))
+                                
+                                speed = comp.projectile_speed / 100.0  # Pixels/tick
+                                p_vel = launch_vec.normalize() * speed + self.velocity
+                                
+                                attacks.append({
+                                    'type': 'missile',
+                                    'source': self,
+                                    'position': pygame.math.Vector2(self.position),
+                                    'velocity': p_vel,
+                                    'damage': comp.damage,
+                                    'range': comp.projectile_speed * comp.endurance, 
+                                    'max_speed': speed,
+                                    'turn_rate': comp.turn_rate,
+                                    'endurance': comp.endurance, # Seconds
+                                    'hp': comp.hp,
+                                    'target': self.current_target,
+                                    'owner': self,
+                                    'color': (255, 50, 50)
                                 })
                             else:
                                 self.current_ammo -= cost

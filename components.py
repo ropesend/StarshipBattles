@@ -285,6 +285,18 @@ class BeamWeapon(Weapon):
         chance = self.base_accuracy - (distance * self.accuracy_falloff)
         return max(0.0, min(1.0, chance))
 
+class SeekerWeapon(Weapon):
+    def __init__(self, data):
+        super().__init__(data)
+        self.projectile_speed = data.get('projectile_speed', 1000)
+        self.turn_rate = data.get('turn_rate', 30)
+        self.endurance = data.get('endurance', 5.0)
+        self.hp = data.get('hp', 1)
+        self.range = self.projectile_speed * self.endurance
+        
+    def clone(self):
+        return SeekerWeapon(self.data)
+
 class CrewQuarters(Component):
     """Provides crew capacity for the ship."""
     def __init__(self, data):
@@ -395,6 +407,8 @@ def load_components(filepath="data/components.json"):
                     obj = Shield(comp_def)
                 elif c_type == "ShieldRegenerator":
                     obj = ShieldRegenerator(comp_def)
+                elif c_type == "SeekerWeapon":
+                    obj = SeekerWeapon(comp_def)
                 else:
                     obj = Component(comp_def)
                 

@@ -272,6 +272,28 @@
                 "ShieldRegeneration": 5.0,
                 "EnergyConsumption": 2.0
             }
+        },
+        {
+            "id": "capital_missile",
+            "name": "Capital Missile",
+            "type": "SeekerWeapon",
+            "mass": 60,
+            "hp": 80,
+            "allowed_layers": [
+                "OUTER"
+            ],
+            "damage": 100,
+            "projectile_speed": 6000,
+            "turn_rate": 90,
+            "endurance": 5.0,
+            "reload": 4.0,
+            "ammo_cost": 5,
+            "firing_arc": 45,
+            "sprite_index": 21,
+            "abilities": {
+                "SeekerWeapon": true,
+                "CrewCapacity": -3
+            }
         }
     ]
 }

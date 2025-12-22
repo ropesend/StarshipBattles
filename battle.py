@@ -169,6 +169,7 @@ class BattleScene:
             if attack['type'] == 'projectile':
                 BATTLE_LOG.log(f"Projectile fired at {attack['position']}")
                 self.projectiles.append({
+                    'type': 'projectile',
                     'pos': attack['position'],
                     'vel': attack['velocity'],
                     'damage': attack['damage'],
@@ -177,6 +178,24 @@ class BattleScene:
                     'owner': attack['source'],
                     'radius': 3,
                     'color': attack.get('color', (255, 255, 0))
+                })
+            elif attack['type'] == 'missile':
+                BATTLE_LOG.log(f"Missile fired at {attack.get('target', 'unknown')}")
+                self.projectiles.append({
+                    'type': 'missile',
+                    'pos': attack['position'],
+                    'vel': attack['velocity'],
+                    'damage': attack['damage'],
+                    'range': attack['range'], # We can use range as max distance if needed, but endurance handles it
+                    'distance_traveled': 0,
+                    'owner': attack['source'],
+                    'radius': 5,
+                    'color': attack.get('color', (255, 50, 50)),
+                    'target': attack.get('target'),
+                    'turn_rate': attack.get('turn_rate', 30),
+                    'max_speed': attack.get('max_speed', 10),
+                    'endurance': attack.get('endurance', 5.0), # In seconds
+                    'hp': attack.get('hp', 1)
                 })
             elif attack['type'] == 'beam':
                 self._process_beam_attack(attack)
@@ -284,6 +303,47 @@ class BattleScene:
             p_pos_t0 = p['pos']
             p_vel = p['vel']
             p_vel_length = p_vel.length()
+
+            # Missile Logic
+            if p.get('type') == 'missile':
+                # Endurance check
+                p['endurance'] -= 0.01
+                if p['endurance'] <= 0:
+                    projectiles_to_remove.add(idx)
+                    continue
+
+                # Guidance
+                target = p.get('target')
+                if target and target.is_alive:
+                    # Calculate lead
+                    # solve_lead expects (pos, vel, t_pos, t_vel, speed)
+                    # All units in pixels/tick
+                    t = p['owner'].solve_lead(p_pos_t0, p_vel, target.position, target.velocity, p['max_speed'])
+                    
+                    aim_pos = target.position
+                    if t > 0:
+                        aim_pos = target.position + target.velocity * t
+                    
+                    desired_vec = aim_pos - p_pos_t0
+                    if desired_vec.length_squared() > 0:
+                        desired_dir = desired_vec.normalize()
+                        current_dir = p_vel.normalize() if p_vel.length() > 0 else pygame.math.Vector2(1, 0)
+                        
+                        # angle_to returns angle from current to desired
+                        angle_diff = current_dir.angle_to(desired_dir)
+                        max_turn = p['turn_rate'] / 100.0 # Degrees per tick
+                        
+                        # Handle wrapping if needed, but angle_to handles -180 to 180 usually
+                        # Just clamp
+                        if abs(angle_diff) > max_turn:
+                            rotation = max_turn if angle_diff > 0 else -max_turn
+                        else:
+                            rotation = angle_diff
+                        
+                        new_vel = current_dir.rotate(rotation) * p['max_speed']
+                        p['vel'] = new_vel
+                        p_vel = new_vel
+                        p_vel_length = p_vel.length()
             
             # Pos update per tick
             p_pos_t1 = p_pos_t0 + p_vel 
