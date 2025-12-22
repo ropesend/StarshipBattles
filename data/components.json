@@ -294,6 +294,29 @@
                 "SeekerWeapon": true,
                 "CrewCapacity": -3
             }
+        },
+        {
+            "id": "point_defence_cannon",
+            "name": "Point Defence Cannon",
+            "type": "BeamWeapon",
+            "mass": 10,
+            "hp": 30,
+            "allowed_layers": [
+                "OUTER"
+            ],
+            "damage": 1,
+            "range": 800,
+            "reload": 0.1,
+            "energy_cost": 2,
+            "base_accuracy": 1.0,
+            "accuracy_falloff": 0.001,
+            "firing_arc": 90,
+            "sprite_index": 18,
+            "abilities": {
+                "BeamWeapon": true,
+                "PointDefense": true,
+                "CrewCapacity": -1
+            }
         }
     ]
 }
