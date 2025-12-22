@@ -185,6 +185,9 @@ class BattleScene:
                      pass 
                 else:
                     self.projectiles.append(attack)
+                    if self.ui:
+                         self.ui.track_projectile(attack)
+
                     if attack_type == 'projectile':
                         BATTLE_LOG.log(f"Projectile fired at {attack.position}")
                     else:
@@ -402,9 +405,12 @@ class BattleScene:
                      if dist < (p.radius + t_missile.radius + 10): # proximity fuse
                          t_missile.take_damage(p.damage)
                          hit_occurred = True
+                         if not t_missile.is_alive:
+                             t_missile.status = 'destroyed'
             
             if hit_occurred:
                 p.is_alive = False
+                p.status = 'hit'
                 projectiles_to_remove.add(idx)
         
         if projectiles_to_remove:

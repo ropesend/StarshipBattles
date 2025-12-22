@@ -17,14 +17,27 @@ class BattleInterface:
         
         # UI state
         self.stats_panel_width = 350
+        self.seeker_panel_width = 300
         self.expanded_ships = set()
         self.stats_scroll_offset = 0
         self.stats_panel_content_height = 0
         self.show_overlay = False
         
+        # Seeker Panel State
+        self.tracked_seekers = [] # List of projectiles
+        self.expanded_seekers = set()
+        self.seeker_scroll_offset = 0
+        self.seeker_panel_content_height = 0
+        self.clear_vars_rect = None # Rect for "Clear Inactive" button
+        
         # Button rects for click detection
         self.battle_end_button_rect = None
         self.end_battle_early_rect = None
+
+    def track_projectile(self, proj):
+        """Add a projectile to the tracker if it is a missile."""
+        if getattr(proj, 'type', '') == 'missile':
+            self.tracked_seekers.append(proj)
 
     def draw(self, screen):
         """Draw the battle scene UI elements (excluding ships/projectiles)."""
@@ -38,11 +51,142 @@ class BattleInterface:
         if self.show_overlay:
             self.draw_debug_overlay(screen)
         
-        # Stats panel
+        # Stats panel (Right)
         self.draw_ship_stats_panel(screen)
+        
+        # Seeker panel (Left)
+        self.draw_seeker_panel(screen)
         
         # Battle end UI
         self.draw_battle_end_ui(screen)
+
+    def draw_seeker_panel(self, screen):
+        """Draw the seeker monitor panel on the left side."""
+        sw, sh = screen.get_size()
+        panel_w = self.seeker_panel_width
+        
+        panel_surf = pygame.Surface((panel_w, sh), pygame.SRCALPHA)
+        panel_surf.fill((20, 25, 35, 230))
+        
+        pygame.draw.line(panel_surf, (60, 60, 80), (panel_w-1, 0), (panel_w-1, sh), 2)
+        
+        font_title = pygame.font.Font(None, 28)
+        font_name = pygame.font.Font(None, 22)
+        font_stat = pygame.font.Font(None, 18)
+        
+        y = 10 - self.seeker_scroll_offset
+        
+        # Header
+        title = font_title.render("SEEKER MONITOR", True, (255, 200, 100))
+        panel_surf.blit(title, (10, y))
+        y += 30
+        
+        # Content
+        # Filter tracked seekers? No, user wants to remove manually.
+        # Draw list
+        for i, proj in enumerate(self.tracked_seekers):
+            y = self.draw_seeker_entry(panel_surf, proj, y, panel_w, font_name, font_stat)
+            
+        self.seeker_panel_content_height = y + self.seeker_scroll_offset
+        
+        # Draw "Clear Inactive" button at bottom (fixed position relative to screen, not scroll)
+        # Or duplicate strict panel behavior overlaying content?
+        # Let's put it at the very top or bottom of panel area.
+        # Let's put it at bottom of the panel Surface if we scroll up, but that's complex.
+        # Let's put it fixed at bottom of screen.
+        
+        screen.blit(panel_surf, (0, 0))
+        
+        # Floating Clear Button
+        btn_h = 30
+        btn_y = sh - btn_h - 10
+        btn_rect = pygame.Rect(10, btn_y, panel_w - 20, btn_h)
+        self.clear_vars_rect = btn_rect
+        
+        mouse_pos = pygame.mouse.get_pos()
+        hover = btn_rect.collidepoint(mouse_pos)
+        col = (60, 40, 40) if hover else (50, 30, 30)
+        border = (150, 80, 80) if hover else (100, 60, 60)
+        
+        pygame.draw.rect(screen, col, btn_rect)
+        pygame.draw.rect(screen, border, btn_rect, 1)
+        
+        text = font_name.render("Clear Inactive", True, (255, 150, 150))
+        screen.blit(text, (btn_rect.centerx - text.get_width()//2, btn_rect.centery - text.get_height()//2))
+
+    def draw_seeker_entry(self, surface, proj, y, panel_w, font_name, font_stat):
+        """Draw single seeker entry."""
+        arrow = "▼" if proj in self.expanded_seekers else "►"
+        
+        status = getattr(proj, 'status', 'active')
+        color = (255, 255, 255)
+        bg_color = (40, 40, 40)
+        
+        if status == 'hit':
+            color = (50, 255, 50)
+            status_str = "[HIT]"
+        elif status == 'miss':
+            color = (150, 150, 150)
+            status_str = "[MISS]"
+        elif status == 'destroyed':
+            color = (255, 50, 50)
+            status_str = "[DEAD]"
+        else:
+            color = (255, 255, 100)
+            status_str = "[ACT]"
+            bg_color = (50, 50, 60)
+            
+        pygame.draw.rect(surface, bg_color, (5, y, panel_w - 35, 22))
+        
+        # Name
+        name = "Missile" # Generic
+        text = font_name.render(f"{arrow} {name} {status_str}", True, color)
+        surface.blit(text, (10, y + 3))
+        
+        # X button to remove
+        if status != 'active':
+            x_rect = pygame.Rect(panel_w - 25, y, 20, 22)
+            pygame.draw.rect(surface, (60, 30, 30), x_rect)
+            pygame.draw.rect(surface, (100, 50, 50), x_rect, 1)
+            x_text = font_name.render("X", True, (255, 100, 100))
+            surface.blit(x_text, (x_rect.centerx - x_text.get_width()//2, x_rect.centery - x_text.get_height()//2))
+            
+            # Use a special way to track clicks? 
+            # We defer click handling to handle_click.
+        
+        y += 25
+        
+        if proj in self.expanded_seekers:
+            y = self.draw_seeker_details(surface, proj, y, panel_w, font_stat)
+            
+        return y
+
+    def draw_seeker_details(self, surface, proj, y, panel_w, font):
+        x_indent = 20
+        # Stats
+        p_vel_len = proj.velocity.length() * 100.0 # Pixels/sec approx (ticks * 100)
+        hp = getattr(proj, 'hp', 0)
+        endurance = getattr(proj, 'endurance', 0)
+        
+        lines = [
+            f"Speed: {p_vel_len:.0f} px/s",
+            f"HP: {hp:.1f}",
+            f"Fuel: {endurance:.1f}s",
+            f"Dmg: {proj.damage}"
+        ]
+        
+        for line in lines:
+            txt = font.render(line, True, (200, 200, 200))
+            surface.blit(txt, (x_indent, y))
+            y += 14
+            
+        target = getattr(proj, 'target', None)
+        t_name = target.name if target else "None"
+        txt = font.render(f"Target: {t_name}", True, (150, 200, 150))
+        surface.blit(txt, (x_indent, y))
+        y += 16
+        
+        return y
 
     def draw_grid(self, screen):
         """Draw the background grid."""
@@ -442,11 +586,60 @@ class BattleInterface:
         if self.end_battle_early_rect and self.end_battle_early_rect.collidepoint(mx, my):
             return "end_battle"
         
+        # Check Clear Inactive button
+        if self.clear_vars_rect and self.clear_vars_rect.collidepoint(mx, my):
+            self.tracked_seekers = [p for p in self.tracked_seekers if p.status == 'active']
+            return True
+
+        # Check seeker panel click
+        if mx < self.seeker_panel_width:
+             return self.handle_seeker_panel_click(mx, my + self.seeker_scroll_offset)
+        
         # Check stats panel click
         panel_x = sw - self.stats_panel_width
         if mx >= panel_x:
             return self.handle_stats_panel_click(mx - panel_x, my + self.stats_scroll_offset)
         
+        return False
+    
+    def handle_seeker_panel_click(self, rel_x, rel_y):
+        """Handle clicks on Seeker Panel."""
+        # Check entries
+        y_pos = 10
+        # Header + spacer
+        y_pos += 30
+        
+        for proj in self.tracked_seekers:
+             rect_h = 22
+             if y_pos <= rel_y < y_pos + rect_h:
+                 # Check X button (approx right side)
+                 # X rect was at panel_w - 25, width 20
+                 x_btn_x_start = self.seeker_panel_width - 25
+                 if rel_x >= x_btn_x_start and rel_x <= x_btn_x_start + 20:
+                     if proj.status != 'active':
+                         self.tracked_seekers.remove(proj)
+                         return True
+                 
+                 # Toggle expand
+                 if proj in self.expanded_seekers:
+                     self.expanded_seekers.discard(proj)
+                 else:
+                     self.expanded_seekers.add(proj)
+                 return True
+             
+             y_pos += 25
+             if proj in self.expanded_seekers:
+                 y_pos += 72 # 4 lines * 14 + 1 target * 16 = 56 + 16 = 72 approx.
+                 # wait, draw_seeker_details logic:
+                 # 4 lines * 14 = 56
+                 # + target * 16? 
+                 # Let's count lines:
+                 # line 1: 14 height
+                 # line 2: 14
+                 # line 3: 14
+                 # line 4: 14
+                 # target: 16
+                 # Total = 56 + 16 = 72. Yes.
         return False
 
     def handle_stats_panel_click(self, rel_x, rel_y):
@@ -501,11 +694,20 @@ class BattleInterface:
         
         return False
 
-    def handle_scroll(self, scroll_y):
+    def handle_scroll(self, scroll_y, screen_h):
         """Handle mouse wheel scrolling on stats panel."""
-        self.stats_scroll_offset -= scroll_y * 30
-        max_scroll = max(0, self.stats_panel_content_height - self.height + 50)
-        self.stats_scroll_offset = max(0, min(max_scroll, self.stats_scroll_offset))
+        mx, my = pygame.mouse.get_pos()
+        sw = self.width
+        
+        if mx < self.seeker_panel_width:
+             self.seeker_scroll_offset -= scroll_y * 30
+             max_scroll = max(0, self.seeker_panel_content_height - screen_h + 50)
+             self.seeker_scroll_offset = max(0, min(max_scroll, self.seeker_scroll_offset))
+             
+        elif mx >= sw - self.stats_panel_width:
+            self.stats_scroll_offset -= scroll_y * 30
+            max_scroll = max(0, self.stats_panel_content_height - screen_h + 50)
+            self.stats_scroll_offset = max(0, min(max_scroll, self.stats_scroll_offset))
 
     def print_headless_summary(self, start_time, tick_counter):
         """Print battle summary."""

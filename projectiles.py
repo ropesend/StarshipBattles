@@ -27,6 +27,9 @@ class Projectile(PhysicsBody):
         # Flag for targeting systems
         self.is_derelict = False # Projectiles aren't ships, but this helps unified filtering
         
+        # Status for UI tracking
+        self.status = 'active' # active, hit, miss, destroyed
+        
     def update(self, dt=0.01):
         if not self.is_alive: return
 
@@ -35,6 +38,7 @@ class Projectile(PhysicsBody):
              self.endurance -= dt
              if self.endurance <= 0:
                  self.is_alive = False
+                 self.status = 'miss'
                  return
 
         # Guidance Logic (if missile)
@@ -60,6 +64,7 @@ class Projectile(PhysicsBody):
         self.distance_traveled += self.velocity.length()
         if self.max_range and self.distance_traveled > self.max_range:
             self.is_alive = False
+            self.status = 'miss'
 
     def _update_guidance(self, dt):
         target = self.target
@@ -121,4 +126,5 @@ class Projectile(PhysicsBody):
         self.hp -= amount
         if self.hp <= 0:
             self.is_alive = False
+            self.status = 'destroyed'
             log_debug(f"Projectile {self} destroyed by point defense!")

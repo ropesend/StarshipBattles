@@ -170,7 +170,7 @@ class Game:
         if self.state == BATTLE:
             mx, my = pygame.mouse.get_pos()
             sw = self.screen.get_size()[0]
-            if mx >= sw - self.battle_scene.stats_panel_width:
+            if mx >= sw - self.battle_scene.stats_panel_width or mx < self.battle_scene.ui.seeker_panel_width:
                 self.battle_scene.handle_scroll(event.y, self.screen.get_size()[1])
     
     def _update_and_draw(self, frame_time, events):
