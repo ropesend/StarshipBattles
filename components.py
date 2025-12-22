@@ -1,5 +1,13 @@
 import json
-from enum import Enum
+from enum import Enum, auto
+
+class ComponentStatus(Enum):
+    ACTIVE = auto()
+    DAMAGED = auto() # >50% damage
+    NO_CREW = auto()
+    NO_POWER = auto()
+    NO_FUEL = auto()
+    NO_AMMO = auto()
 
 class LayerType(Enum):
     CORE = 1
@@ -47,6 +55,7 @@ class Component:
         self.current_hp = self.max_hp
         self.allowed_layers = [LayerType.from_string(l) for l in data['allowed_layers']]
         self.is_active = True
+        self.status = ComponentStatus.ACTIVE
         self.layer_assigned = None
         self.type_str = data['type']
         self.sprite_index = data.get('sprite_index', 0)
@@ -69,6 +78,7 @@ class Component:
     def reset_hp(self):
         self.current_hp = self.max_hp
         self.is_active = True
+        self.status = ComponentStatus.ACTIVE
 
     def add_modifier(self, mod_id, value=None):
         if mod_id not in MODIFIER_REGISTRY: return False

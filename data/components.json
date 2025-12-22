@@ -208,7 +208,7 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "LifeSupportCapacity": 10
+                "LifeSupportCapacity": 25
             }
         },
         {

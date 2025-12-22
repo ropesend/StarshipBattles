@@ -336,20 +336,51 @@ class BattleInterface:
         for layer_type in [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]:
             for comp in ship.layers[layer_type]['components']:
                 hp_pct = comp.current_hp / comp.max_hp if comp.max_hp > 0 else 1.0
-                color = (150, 150, 150) if comp.is_active else (80, 80, 80)
-                bar_color = (0, 200, 0) if hp_pct > 0.5 else ((200, 200, 0) if hp_pct > 0.2 else (200, 50, 50))
+                
+                # Determine colors and status text
+                color = (150, 150, 150)
+                bar_color = (0, 200, 0)
+                status_text = ""
+                status_color = (200, 200, 200)
+                
                 if not comp.is_active:
-                    bar_color = (60, 60, 60)
+                    color = (100, 50, 50) # Darkened red/gray
+                    bar_color = (100, 50, 50) 
+                    
+                    # Import Status to check type
+                    from components import ComponentStatus
+                    if getattr(comp, 'status', ComponentStatus.ACTIVE) == ComponentStatus.DAMAGED:
+                        status_text = "[DMG]"
+                        status_color = (255, 50, 50)
+                    elif getattr(comp, 'status', ComponentStatus.ACTIVE) == ComponentStatus.NO_CREW:
+                        status_text = "[CREW]"
+                        status_color = (255, 165, 0)
+                    elif getattr(comp, 'status', ComponentStatus.ACTIVE) == ComponentStatus.NO_POWER:
+                        status_text = "[PWR]"
+                        status_color = (255, 255, 0)
+                    elif getattr(comp, 'status', ComponentStatus.ACTIVE) == ComponentStatus.NO_FUEL:
+                        status_text = "[FUEL]"
+                        status_color = (255, 100, 0)
+                else:
+                    # Healthy colors
+                    bar_color = (0, 200, 0) if hp_pct > 0.5 else ((200, 200, 0) if hp_pct > 0.2 else (200, 50, 50))
                 
                 name = comp.name[:10] + ".." if len(comp.name) > 12 else comp.name
                 hp_text = f"{int(comp.current_hp)}/{int(comp.max_hp)}"
+                
                 text = font.render(name, True, color)
                 surface.blit(text, (x_indent + 5, y))
+                
                 hp_val = font.render(hp_text, True, color)
                 surface.blit(hp_val, (x_indent + 95, y))
+                
                 self.draw_stat_bar(surface, x_indent + 160, y, 60, 8, hp_pct, bar_color)
                 
-                if hasattr(comp, 'fire_count') and comp.fire_count > 0:
+                # Draw Status Text or Fire Count
+                if status_text:
+                    stat_render = font.render(status_text, True, status_color)
+                    surface.blit(stat_render, (x_indent + 230, y))
+                elif hasattr(comp, 'fire_count') and comp.fire_count > 0:
                     fire_text = font.render(f"x{comp.fire_count}", True, (255, 200, 100))
                     surface.blit(fire_text, (x_indent + 230, y))
                 

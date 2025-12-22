@@ -725,7 +725,7 @@ class BuilderSceneGUI:
         crew_ok = crew_capacity >= 0
         crew_status = "✓" if crew_ok else f"✗ -{abs(crew_capacity)}"
         self.crew_labels['crew_required'].set_text(f"Crew Required: {crew_required}")
-        self.crew_labels['crew_housed'].set_text(f"Crew Housed: {crew_housed} {crew_status}")
+        self.crew_labels['crew_housed'].set_text(f"Crew On Board: {crew_housed} {crew_status}")
         
         ls_ok = life_support >= crew_required
         ls_status = "✓" if ls_ok else f"✗ -{crew_required - life_support}"
