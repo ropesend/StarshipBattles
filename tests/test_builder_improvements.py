@@ -85,7 +85,7 @@ class TestBuilderImprovements(unittest.TestCase):
         
         # Check UI Elements (Real UISelectionLists in Dropdowns)
         # Dropdown.selected_option might be (label, value) or value in some versions
-        selected = builder.class_dropdown.selected_option
+        selected = builder.right_panel.class_dropdown.selected_option
         if isinstance(selected, tuple):
             self.assertEqual(selected[0], "Escort")
         else:

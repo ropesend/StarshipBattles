@@ -1,2 +1,10 @@
-2025-12-22 08:16:58,780 - INFO - Loaded 12 combat strategies
-2025-12-22 08:17:01,259 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+2025-12-22 09:14:23,522 - INFO - Loaded 12 combat strategies
+2025-12-22 09:14:25,998 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+2025-12-22 09:15:31,520 - DEBUG - Projectile <projectiles.Projectile object at 0x00000297B8A44220> destroyed by point defense!
+2025-12-22 09:15:31,520 - DEBUG - Projectile <projectiles.Projectile object at 0x00000297B8A44280> destroyed by point defense!
+2025-12-22 09:15:31,562 - DEBUG - Projectile <projectiles.Projectile object at 0x00000297B8A442B0> destroyed by point defense!
+2025-12-22 09:15:31,562 - DEBUG - Projectile <projectiles.Projectile object at 0x00000297B8A442E0> destroyed by point defense!
+2025-12-22 09:15:31,895 - DEBUG - Projectile <projectiles.Projectile object at 0x00000297B8A44340> destroyed by point defense!
+2025-12-22 09:15:33,595 - DEBUG - Projectile <projectiles.Projectile object at 0x00000297B8A44BE0> destroyed by point defense!
+2025-12-22 09:15:33,641 - DEBUG - Projectile <projectiles.Projectile object at 0x00000297B8A44C40> destroyed by point defense!
+2025-12-22 09:15:35,628 - DEBUG - Projectile <projectiles.Projectile object at 0x00000297B8A45000> destroyed by point defense!

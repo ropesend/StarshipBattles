@@ -97,7 +97,7 @@ class TestProjectileMovement(unittest.TestCase):
         )
         
         initial_pos = pygame.math.Vector2(proj.position)
-        proj.update(0.01)
+        proj.update()
         
         # Position should change by velocity
         self.assertAlmostEqual(proj.position.x, initial_pos.x + 10, places=1)
@@ -116,15 +116,15 @@ class TestProjectileMovement(unittest.TestCase):
         )
         
         # First update: 100 distance
-        proj.update(0.01)
+        proj.update()
         self.assertTrue(proj.is_alive)
         
         # Second update: 200 distance
-        proj.update(0.01)
+        proj.update()
         self.assertTrue(proj.is_alive)
         
         # Third update: 300 distance > 250 range
-        proj.update(0.01)
+        proj.update()
         self.assertFalse(proj.is_alive)
         self.assertEqual(proj.status, 'miss')
     
@@ -141,11 +141,11 @@ class TestProjectileMovement(unittest.TestCase):
         )
         
         # First tick
-        proj.update(0.01)
+        proj.update()
         self.assertTrue(proj.is_alive)
         
         # Second tick - should deplete
-        proj.update(0.01)
+        proj.update()
         self.assertFalse(proj.is_alive)
         self.assertEqual(proj.status, 'miss')
 
@@ -257,7 +257,7 @@ class TestMissileGuidance(unittest.TestCase):
         
         # After several updates, should be turning toward target (to the right)
         for _ in range(20):
-            proj.update(0.01)
+            proj.update()
         
         # Velocity x-component should have increased (turning right toward target)
         self.assertGreater(proj.velocity.x, initial_vel.x)
@@ -282,7 +282,7 @@ class TestMissileGuidance(unittest.TestCase):
         self.target.is_alive = False
         
         initial_vel = pygame.math.Vector2(proj.velocity)
-        proj.update(0.01)
+        proj.update()
         
         # Velocity should remain unchanged (no guidance adjustment)
         self.assertAlmostEqual(proj.velocity.x, initial_vel.x, places=1)

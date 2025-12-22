@@ -36,8 +36,11 @@ class Projectile(PhysicsBody):
         # Status for UI tracking
         self.status = 'active' # active, hit, miss, destroyed
         
-    def update(self, dt=0.01):
+    def update(self):
         if not self.is_alive: return
+
+        # Fixed tick duration (1 tick = 0.01s)
+        dt = 0.01
 
         # Endurance check
         if self.endurance is not None:
@@ -112,6 +115,14 @@ class Projectile(PhysicsBody):
                 current_dir = p_vel.normalize() if p_vel.length() > 0 else pygame.math.Vector2(1, 0)
                 
                 angle_diff = current_dir.angle_to(desired_dir)
+                
+                # Normalize angle to [-180, 180] to ensure shortest turn path
+                # Pygame's angle_to can return values like 225 instead of -135
+                if angle_diff > 180:
+                    angle_diff -= 360
+                elif angle_diff < -180:
+                    angle_diff += 360
+                    
                 max_turn = self.turn_rate * dt * 100 # turn_rate is deg/sec? wait. 
                 # In components.json: "turn_rate": 90 (deg/sec assumed?)
                 # In battle.py: max_turn = p['turn_rate'] / 100.0 (Degrees per tick)
@@ -128,7 +139,9 @@ class Projectile(PhysicsBody):
                 # Commit to turn direction near ±180° to prevent oscillation
                 # When target is behind us, angle_to can flip between +179 and -180
                 # causing flip-flop turning. Lock to previous direction instead.
-                if abs(abs(angle_diff) - 180) < 10:  # Within 10° of 180
+                # Commit to turn direction when target is generally behind (>135 degrees offset)
+                # This prevents flip-flopping efficiently for rear-aspect launches.
+                if abs(abs(angle_diff) - 180) < 45:  # Within 45° of 180 (i.e. > 135°)
                     if self.last_turn_direction != 0:
                         rotation = abs(rotation) * self.last_turn_direction
                 

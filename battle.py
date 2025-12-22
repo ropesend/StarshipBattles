@@ -348,7 +348,7 @@ class BattleScene:
                 continue
             
             # Use Projectile Object Update
-            p.update(0.01) # 1 tick
+            p.update() # 1 tick
             
             if not p.is_alive:
                 projectiles_to_remove.add(idx)

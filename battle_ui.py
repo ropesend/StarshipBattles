@@ -30,7 +30,11 @@ class BattleInterface:
         self.seeker_panel_content_height = 0
         self.clear_vars_rect = None # Rect for "Clear Inactive" button
         
-        # Button rects for click detection
+        # Surface Caching
+        self.stats_panel_surface = None
+        self.seeker_panel_surface = None
+        
+        # Interaction Rects
         self.battle_end_button_rect = None
         self.end_battle_early_rect = None
 
@@ -65,14 +69,20 @@ class BattleInterface:
         sw, sh = screen.get_size()
         panel_w = self.seeker_panel_width
         
-        # Position on LEFT side of screen
-        panel_x = 0
+        # Ensure cached surface exists and is correct size
+        if (self.seeker_panel_surface is None or 
+            self.seeker_panel_surface.get_width() != panel_w or 
+            self.seeker_panel_surface.get_height() != sh):
+            self.seeker_panel_surface = pygame.Surface((panel_w, sh), pygame.SRCALPHA)
+            
+        # Clear surface
+        self.seeker_panel_surface.fill((0, 0, 0, 0)) # Fully transparent clear
         
-        panel_surf = pygame.Surface((panel_w, sh), pygame.SRCALPHA)
-        panel_surf.fill((20, 25, 35, 230))
+        # Fill background
+        self.seeker_panel_surface.fill((20, 25, 35, 230))
         
         # Draw line on Right edge (separator from game)
-        pygame.draw.line(panel_surf, (60, 60, 80), (panel_w - 1, 0), (panel_w - 1, sh), 2)
+        pygame.draw.line(self.seeker_panel_surface, (60, 60, 80), (panel_w - 1, 0), (panel_w - 1, sh), 2)
         
         font_title = pygame.font.Font(None, 28)
         font_name = pygame.font.Font(None, 22)
@@ -84,18 +94,24 @@ class BattleInterface:
         active_count = sum(1 for p in self.tracked_seekers if p.status == 'active')
         total_count = len(self.tracked_seekers)
         title = font_title.render(f"SEEKER MONITOR ({active_count}/{total_count})", True, (255, 200, 100))
-        panel_surf.blit(title, (10, y))
+        self.seeker_panel_surface.blit(title, (10, y))
         y += 30
         
         # Draw seeker entries
         for i, proj in enumerate(self.tracked_seekers):
-            y = self.draw_seeker_entry(panel_surf, proj, y, panel_w, font_name, font_stat)
+            y = self.draw_seeker_entry(self.seeker_panel_surface, proj, y, panel_w, font_name, font_stat)
             
         self.seeker_panel_content_height = y + self.seeker_scroll_offset
         
-        screen.blit(panel_surf, (0, 0))
+        screen.blit(self.seeker_panel_surface, (0, 0))
         
-        # Floating Clear Button at bottom of left panel
+        # Floating Clear Button at bottom of left panel (Draw directly on screen to be on top of scrolling?)
+        # Actually it was floating at bottom, so it should be on screen relative to window, not scrolled
+        # But previous code drew it AFTER blitting panel_surf, so it was on top.
+        # We can keep drawing it on screen or on panel. If on panel, it scrolls if we scroll panel?
+        # No, previous code calculated `btn_y = sh - btn_h - 10`. That is fixed screen position.
+        # So we should draw it on screen AFTER blitting the panel surface.
+        
         btn_h = 30
         btn_y = sh - btn_h - 10
         btn_x = 10  # Left side
@@ -356,8 +372,15 @@ class BattleInterface:
         panel_x = sw - self.stats_panel_width
         panel_w = self.stats_panel_width
         
-        panel_surf = pygame.Surface((panel_w, sh), pygame.SRCALPHA)
-        panel_surf.fill((20, 25, 35, 230))
+        # Ensure cached surface
+        if (self.stats_panel_surface is None or 
+            self.stats_panel_surface.get_width() != panel_w or 
+            self.stats_panel_surface.get_height() != sh):
+            self.stats_panel_surface = pygame.Surface((panel_w, sh), pygame.SRCALPHA)
+            
+        # Clear
+        self.stats_panel_surface.fill((0, 0, 0, 0)) # Fully transparent
+        self.stats_panel_surface.fill((20, 25, 35, 230)) # Backfill
         
         font_title = pygame.font.Font(None, 28)
         font_name = pygame.font.Font(None, 22)
@@ -370,11 +393,11 @@ class BattleInterface:
         team1_alive = sum(1 for s in team1_ships if s.is_alive and not getattr(s, 'is_derelict', False))
         
         title = font_title.render(f"TEAM 1 ({team1_alive}/{len(team1_ships)})", True, (100, 200, 255))
-        panel_surf.blit(title, (10, y))
+        self.stats_panel_surface.blit(title, (10, y))
         y += 30
         
         for ship in team1_ships:
-            y = self.draw_ship_entry(panel_surf, ship, y, panel_w, font_name, font_stat, (40, 60, 80))
+            y = self.draw_ship_entry(self.stats_panel_surface, ship, y, panel_w, font_name, font_stat, (40, 60, 80))
         
         y += 15
         
@@ -383,15 +406,15 @@ class BattleInterface:
         team2_alive = sum(1 for s in team2_ships if s.is_alive and not getattr(s, 'is_derelict', False))
         
         title = font_title.render(f"TEAM 2 ({team2_alive}/{len(team2_ships)})", True, (255, 100, 100))
-        panel_surf.blit(title, (10, y))
+        self.stats_panel_surface.blit(title, (10, y))
         y += 30
         
         for ship in team2_ships:
-            y = self.draw_ship_entry(panel_surf, ship, y, panel_w, font_name, font_stat, (80, 40, 40))
+            y = self.draw_ship_entry(self.stats_panel_surface, ship, y, panel_w, font_name, font_stat, (80, 40, 40))
         
         self.stats_panel_content_height = y + self.stats_scroll_offset
         
-        screen.blit(panel_surf, (panel_x, 0))
+        screen.blit(self.stats_panel_surface, (panel_x, 0))
         pygame.draw.line(screen, (60, 60, 80), (panel_x, 0), (panel_x, sh), 2)
 
     def draw_ship_entry(self, surface, ship, y, panel_w, font_name, font_stat, banner_color):

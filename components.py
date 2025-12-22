@@ -213,8 +213,9 @@ class Weapon(Component):
         self.shots_fired = 0
         self.shots_hit = 0
 
-    def update(self, dt=0.01):
+    def update(self):
         # Cycle-Based: 1 tick = 0.01 seconds. Decrement timer by dt.
+        dt = 0.01
         if self.cooldown_timer > 0:
             self.cooldown_timer -= dt
 

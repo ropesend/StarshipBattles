@@ -1,0 +1,293 @@
+import pygame
+import pygame_gui
+from pygame_gui.elements import UIPanel, UILabel, UISelectionList, UIButton, UITextEntryLine, UIDropDownMenu, UITextBox
+from builder_components import ModifierEditorPanel
+from ship import SHIP_CLASSES
+from ai import COMBAT_STRATEGIES
+import logging
+
+class BuilderLeftPanel:
+    def __init__(self, builder, manager, rect):
+        self.builder = builder
+        self.manager = manager
+        self.rect = rect
+        
+        self.panel = UIPanel(
+            relative_rect=rect,
+            manager=manager,
+            object_id='#left_panel'
+        )
+        
+        # Title
+        UILabel(
+            relative_rect=pygame.Rect(10, 5, 200, 30),
+            text="Components",
+            manager=manager,
+            container=self.panel
+        )
+        
+        # List
+        # Use exact metrics from builder_gui for hover compatibility
+        self.list_y = 35
+        self.item_height = 40 # Inferred from builder_gui logic
+        
+        half_page_y = rect.height // 2
+        list_height = half_page_y - 40
+        self.list_height = list_height
+        
+        component_names = [f"{c.name} ({c.mass}t)" for c in builder.available_components]
+        
+        self.component_list = UISelectionList(
+            relative_rect=pygame.Rect(5, self.list_y, rect.width - 10, list_height),
+            item_list=component_names,
+            manager=manager,
+            container=self.panel,
+            allow_multi_select=False
+        )
+        
+        # Modifier Panel
+        self.modifier_panel = ModifierEditorPanel(
+            manager=manager,
+            container=self.panel,
+            width=rect.width,
+            preset_manager=builder.preset_manager,
+            on_change_callback=self._on_modifier_change
+        )
+        
+    def draw(self, screen):
+        """Draw component icons to match list items."""
+        # Use exact metrics from builder_gui
+        list_x = self.rect.x + 8
+        list_y = self.rect.y + 40 # 35 (list start) + 5 padding/offset? Original was 40.
+        # In original: list_y = 40. self.list_y = 35. 
+        # The list itself starts at y=35.
+        
+        item_height = 40
+        icon_size = 32
+        
+        # We need to respect the panel position
+        # Note regarding scrolling: usage of UISelectionList without syncing scroll 
+        # means icons will desync if list scrolls. 
+        # Replicating original behavior which appeared to be linear drawing.
+        
+        # Clip to list area to avoid drawing outside panel if list is long
+        clip_rect = pygame.Rect(self.rect.x, self.list_y, self.rect.width, self.list_height)
+        prev_clip = screen.get_clip()
+        screen.set_clip(clip_rect)
+        
+        for i, comp in enumerate(self.builder.available_components):
+            sprite = self.builder.sprite_mgr.get_sprite(comp.sprite_index)
+            if sprite:
+                scaled = pygame.transform.scale(sprite, (icon_size, icon_size))
+                y_pos = list_y + i * item_height + (item_height - icon_size) // 2
+                
+                # Check visibility optimization
+                if self.rect.y <= y_pos <= self.rect.bottom:
+                     screen.blit(scaled, (list_x, y_pos))
+        
+        screen.set_clip(prev_clip)
+
+    def _on_modifier_change(self):
+        # Call back to builder to update stats
+        if self.builder.selected_component:
+            self.builder.selected_component[2].recalculate_stats()
+        self.builder.ship.recalculate_stats()
+        self.builder.right_panel.update_stats_display(self.builder.ship)
+
+    def rebuild_modifier_ui(self):
+        # Delegate to internal modifier panel
+        editing_component = self.builder.selected_component[2] if self.builder.selected_component else None
+        half_page_y = self.rect.height // 2
+        
+        self.modifier_panel.rebuild(editing_component, self.builder.template_modifiers)
+        self.modifier_panel.layout(half_page_y)
+
+    def handle_event(self, event):
+        # Check modifier panel events
+        action = self.modifier_panel.handle_event(event)
+        return action
+        
+    def get_hovered_component(self, mx, my):
+        # Translate screen coordinates to panel-local
+        panel_x, panel_y = self.rect.topleft
+        rel_x = mx - panel_x
+        rel_y = my - panel_y
+        
+        if 0 <= rel_x < self.rect.width and self.list_y <= rel_y < self.list_y + self.list_height:
+             idx = int((rel_y - self.list_y) // self.item_height)
+             if 0 <= idx < len(self.builder.available_components):
+                 return self.builder.available_components[idx]
+        return None
+
+class BuilderRightPanel:
+    def __init__(self, builder, manager, rect):
+        self.builder = builder
+        self.manager = manager
+        self.rect = rect
+        
+        self.panel = UIPanel(
+            relative_rect=rect,
+            manager=manager,
+            object_id='#right_panel'
+        )
+        
+        self.setup_controls()
+        self.setup_stats()
+        
+    def setup_controls(self):
+        y = 10
+        width = self.rect.width
+        col_w = width - 20
+        
+        # Name
+        UILabel(pygame.Rect(10, y, 60, 25), "Name:", manager=self.manager, container=self.panel)
+        self.name_entry = UITextEntryLine(pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
+        self.name_entry.set_text(self.builder.ship.name)
+        y += 40
+        
+        # Theme
+        UILabel(pygame.Rect(10, y, 60, 25), "Theme:", manager=self.manager, container=self.panel)
+        theme_options = self.builder.theme_manager.get_available_themes()
+        curr_theme = getattr(self.builder.ship, 'theme_id', 'Federation')
+        if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
+        
+        self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
+        y += 40
+        
+        # Class
+        UILabel(pygame.Rect(10, y, 60, 25), "Class:", manager=self.manager, container=self.panel)
+        class_options = list(SHIP_CLASSES.keys()) if SHIP_CLASSES else ["Escort"]
+        curr_class = self.builder.ship.ship_class
+        if curr_class not in class_options: curr_class = class_options[0]
+        
+        self.class_dropdown = UIDropDownMenu(class_options, curr_class, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
+        y += 40
+        
+        # AI
+        UILabel(pygame.Rect(10, y, 60, 25), "AI:", manager=self.manager, container=self.panel)
+        ai_options = [strat.get('name', sid.replace('_', ' ').title()) for sid, strat in COMBAT_STRATEGIES.items()]
+        
+        ai_display = self.builder.ship.ai_strategy.replace('_', ' ').title()
+        for sid, strat in COMBAT_STRATEGIES.items():
+            if sid == self.builder.ship.ai_strategy:
+                ai_display = strat.get('name', ai_display)
+                break
+                
+        self.ai_dropdown = UIDropDownMenu(ai_options, ai_display, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
+        
+        self.last_y = y + 50
+
+    def setup_stats(self):
+        y = self.last_y
+        
+        # Stats Header
+        UILabel(pygame.Rect(10, y, 150, 25), "── Ship Stats ──", manager=self.manager, container=self.panel)
+        y += 30
+        
+        self.stat_labels = {}
+        stat_names = ['mass', 'max_hp', 'max_shields', 'shield_regen', 'shield_cost', 'max_speed', 
+                      'turn_rate', 'acceleration', 'thrust', 'energy_gen', 'max_fuel', 'max_ammo', 'max_energy']
+        
+        for stat in stat_names:
+            self.stat_labels[stat] = UILabel(pygame.Rect(10, y, 350, 20), f"{stat}: --", manager=self.manager, container=self.panel)
+            y += 20
+        y += 5
+        
+        # Layer Usage
+        UILabel(pygame.Rect(10, y, 150, 20), "── Layer Usage ──", manager=self.manager, container=self.panel)
+        y += 22
+        self.layer_labels = {}
+        for l in ['CORE', 'INNER', 'OUTER', 'ARMOR']:
+            self.layer_labels[l] = UILabel(pygame.Rect(10, y, 350, 22), f"{l}: --%", manager=self.manager, container=self.panel)
+            y += 22
+        y += 10
+        
+         # Crew
+        UILabel(pygame.Rect(10, y, 150, 20), "── Crew ──", manager=self.manager, container=self.panel)
+        y += 22
+        self.crew_labels = {}
+        for c in ['crew_required', 'crew_housed', 'life_support']:
+            self.crew_labels[c] = UILabel(pygame.Rect(10, y, 350, 22), f"{c}: --", manager=self.manager, container=self.panel)
+            y += 22
+        y += 10
+
+        # Requirements
+        UILabel(pygame.Rect(10, y, 150, 20), "── Requirements ──", manager=self.manager, container=self.panel)
+        y += 22
+        
+        rem_h = self.rect.height - y - 10
+        self.requirements_text_box = UITextBox("✓ All requirements met", pygame.Rect(10, y, self.rect.width - 25, rem_h), manager=self.manager, container=self.panel)
+
+    def update_stats_display(self, s):
+        """Update ship stats labels."""
+        # Mass with color indicator
+        mass_status = "✓" if s.mass_limits_ok else "✗"
+        self.stat_labels['mass'].set_text(f"Mass: {s.mass:.0f} / {s.max_mass_budget} {mass_status}")
+        
+        self.stat_labels['max_hp'].set_text(f"Max HP: {s.max_hp:.0f}")
+        self.stat_labels['max_shields'].set_text(f"Shields: {s.max_shields:.0f}")
+        self.stat_labels['shield_regen'].set_text(f"Shield Regen: {s.shield_regen_rate:.1f}/s")
+        self.stat_labels['shield_cost'].set_text(f"Regen Cost: {s.shield_regen_cost:.1f} E/t")
+        
+        self.stat_labels['max_speed'].set_text(f"Max Speed: {s.max_speed:.0f}")
+        self.stat_labels['turn_rate'].set_text(f"Turn Rate: {s.turn_speed:.0f} deg/s")
+        self.stat_labels['acceleration'].set_text(f"Acceleration: {s.acceleration_rate:.2f}")
+        self.stat_labels['thrust'].set_text(f"Total Thrust: {s.total_thrust:.0f}")
+        self.stat_labels['energy_gen'].set_text(f"Energy Gen: {s.energy_gen_rate:.1f}/s")
+        self.stat_labels['max_fuel'].set_text(f"Max Fuel: {s.max_fuel:.0f}")
+        self.stat_labels['max_ammo'].set_text(f"Max Ammo: {s.max_ammo:.0f}")
+        self.stat_labels['max_energy'].set_text(f"Max Energy: {s.max_energy:.0f}")
+        
+        # Update layer stats
+        from ship import LayerType
+        layer_name_map = {
+            LayerType.CORE: 'CORE',
+            LayerType.INNER: 'INNER', 
+            LayerType.OUTER: 'OUTER',
+            LayerType.ARMOR: 'ARMOR'
+        }
+        
+        for layer_type, layer_name in layer_name_map.items():
+            status = s.layer_status.get(layer_type, {})
+            ratio = status.get('ratio', 0) * 100
+            limit = status.get('limit', 1.0) * 100
+            is_ok = status.get('ok', True)
+            mass = status.get('mass', 0)
+            
+            status_icon = "✓" if is_ok else "✗ OVER"
+            self.layer_labels[layer_name].set_text(
+                f"{layer_name}: {ratio:.0f}% / {limit:.0f}% ({mass:.0f}t) {status_icon}"
+            )
+        
+        # Update crew stats
+        crew_capacity = max(0, s.get_ability_total('CrewCapacity'))
+        crew_required = s.get_ability_total('CrewRequired')
+        
+        # Legacy fallback
+        legacy_req = abs(min(0, s.get_ability_total('CrewCapacity')))
+        crew_required += legacy_req
+        
+        crew_housed = crew_capacity
+        
+        crew_ok = crew_capacity >= crew_required
+        crew_status = "✓" if crew_ok else f"✗ Missing {crew_required - crew_capacity}"
+        self.crew_labels['crew_required'].set_text(f"Crew Required: {crew_required}")
+        self.crew_labels['crew_housed'].set_text(f"Crew On Board: {crew_housed} {crew_status}")
+        
+        life_support = s.get_ability_total('LifeSupportCapacity')
+        ls_ok = life_support >= crew_required
+        ls_status = "✓" if ls_ok else f"✗ -{crew_required - life_support}"
+        self.crew_labels['life_support'].set_text(f"Life Support: {life_support} {ls_status}")
+        
+        # Update requirements
+        missing_reqs = s.get_missing_requirements()
+        if not s.mass_limits_ok:
+            missing_reqs.append("⚠ Over mass limit")
+        
+        if not missing_reqs:
+            html = "<font color='#88ff88'>✓ All requirements met</font>"
+        else:
+            html = "<br>".join([f"<font color='#ffaa55'>{req}</font>" for req in missing_reqs])
+        
+        self.requirements_text_box.html_text = html
+        self.requirements_text_box.rebuild()

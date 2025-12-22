@@ -40,7 +40,7 @@ class ShipCombatMixin:
             for comp in layer['components']:
                 if hasattr(comp, 'update') and comp.is_active:
                     # Pass 1 tick (0.01 seconds) to update
-                    comp.update(0.01)
+                    comp.update()
 
     def fire_weapons(self, context=None):
         """
