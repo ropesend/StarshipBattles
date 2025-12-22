@@ -17,6 +17,8 @@ class ShipThemeManager:
              raise Exception("This class is a singleton!")
              
         self.themes = {}  # {theme_name: {class_name: surface}}
+        self.image_metrics = {} # {theme_name: {class_name: rect}}
+        self.manual_scales = {} # {theme_name: {class_name: float}}
         self.base_path = None
         self.default_theme = "Federation"
         self.loaded = False
@@ -53,12 +55,38 @@ class ShipThemeManager:
             
             self.themes[theme_name] = {}
             
-            for ship_class, filename in image_map.items():
+            for ship_class, data_entry in image_map.items():
+                filename = ""
+                manual_scale = 1.0
+                
+                if isinstance(data_entry, str):
+                    filename = data_entry
+                elif isinstance(data_entry, dict):
+                    filename = data_entry.get('file', '')
+                    manual_scale = data_entry.get('scale', 1.0)
+                
+                if not filename: continue
+                
                 img_path = os.path.join(theme_dir, filename)
                 if os.path.exists(img_path):
                     try:
                         surf = pygame.image.load(img_path).convert_alpha()
                         self.themes[theme_name][ship_class] = surf
+                        
+                        # Store manual scale
+                        if theme_name not in self.manual_scales:
+                            self.manual_scales[theme_name] = {}
+                        self.manual_scales[theme_name][ship_class] = manual_scale
+                        
+                        # Calculate visible metrics
+                        # Use get_bounding_rect to find non-transparent area
+                        rect = surf.get_bounding_rect(min_alpha=20)
+                        
+                        # Store as (rect, visible_max_dim)
+                        if theme_name not in self.image_metrics:
+                            self.image_metrics[theme_name] = {}
+                        self.image_metrics[theme_name][ship_class] = rect
+                        
                     except Exception as e:
                         log_error(f"Failed to load image {img_path}: {e}")
                 else:
@@ -81,6 +109,27 @@ class ShipThemeManager:
                 return self.themes[theme_name][ship_class]
             
         return self._create_fallback_image(ship_class)
+
+    def get_image_metrics(self, theme_name, ship_class):
+        """Get the visible bounding rect for the image."""
+        if not self.loaded: return None
+        
+        if theme_name not in self.themes: theme_name = self.default_theme
+        
+        if theme_name in self.image_metrics:
+             if ship_class in self.image_metrics[theme_name]:
+                 return self.image_metrics[theme_name][ship_class]
+        
+        return None
+
+    def get_manual_scale(self, theme_name, ship_class):
+        """Get manual scale factor for a ship (default 1.0)."""
+        if not self.loaded: return 1.0
+        if theme_name not in self.themes: theme_name = self.default_theme
+        
+        if theme_name in self.manual_scales:
+            return self.manual_scales[theme_name].get(ship_class, 1.0)
+        return 1.0
 
     def _create_fallback_image(self, ship_class):
         """Generate a placeholder image."""

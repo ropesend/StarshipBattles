@@ -91,7 +91,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.total_thrust = 0
         self.max_speed = 0
         self.turn_speed = 0
-        self.drag = 0.5 # New Arcade Drag
+        self.target_speed = 0 # New Target Speed Control
         
         # Budget
         self.max_mass_budget = SHIP_CLASSES.get(self.ship_class, 1000)
@@ -130,10 +130,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Arcade Physics
         self.current_speed = 0
         self.acceleration_rate = 0
+        self.is_thrusting = False
         
         # Aiming
         self.aim_point = None
         self.just_fired_projectiles = []
+        self.total_shots_fired = 0
 
     def add_component(self, component: Component, layer_type: LayerType):
         if layer_type not in component.allowed_layers:
@@ -235,8 +237,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Physics Stats - INVERSE MASS SCALING
         
         # Tuning Constants - scaled for tick-based physics (dt=1.0 per tick)
-        K_THRUST = 2500  # Was 150000, now 150000/60
-        K_TURN = 2500    # Was 150000, now 150000/60
+        K_THRUST = 2500  # Reverted
+        K_TURN = 2500    # Reverted
         
         if self.mass > 0:
             self.acceleration_rate = (self.total_thrust * K_THRUST) / (self.mass * self.mass)
@@ -244,13 +246,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             self.turn_speed = (raw_turn_speed * K_TURN) / (self.mass ** 1.5)  # Changed to 1.5 exponent
             
             # Max Speed = Thrust / Mass logic (Linear)
-            K_SPEED = 25  # Was 1500, now 1500/60
+            K_SPEED = 25  # Reverted
             self.max_speed = (self.total_thrust * K_SPEED) / self.mass if self.total_thrust > 0 else 0
             
-            if self.max_speed > 0:
-                self.drag = self.acceleration_rate / self.max_speed
-            else:
-                self.drag = 0.5
         else:
             self.acceleration_rate = 0
             self.max_speed = 0

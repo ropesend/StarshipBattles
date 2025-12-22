@@ -48,10 +48,23 @@ def draw_ship(surface, ship, camera):
     if ship_img and camera.zoom > 0.1:
         # Scale logic: "scaled so that the visible portion of the vesle is approximatly the same length as the diameter of the circle"
         # Circle diameter = 2 * base_radius. 
-        target_size = 2 * scale(base_radius) * 1.2 # Slightly larger than collision circle looks better
+        target_size = 2 * scale(base_radius) # Matches diameter exactly
         
         img_w, img_h = ship_img.get_size()
-        scale_factor = target_size / max(img_w, img_h)
+        
+        # Get visible metrics to ignore transparent padding
+        metrics = theme_mgr.get_image_metrics(theme_id, ship.ship_class)
+        visible_size = max(img_w, img_h)
+        if metrics:
+            visible_size = max(metrics.width, metrics.height)
+            
+        # Avoid division by zero
+        if visible_size < 1: visible_size = 1
+        
+        # Get optional manual scale from theme.json (default 1.0)
+        manual_scale = theme_mgr.get_manual_scale(theme_id, ship.ship_class)
+        
+        scale_factor = (target_size / visible_size) * manual_scale
         
         rotation_angle = -ship.angle - 90
         

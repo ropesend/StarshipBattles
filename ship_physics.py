@@ -13,82 +13,65 @@ class ShipPhysicsMixin:
     def update_physics_movement(self):
         """
         Update ship position and rotation based on cycle-based physics.
+        Target Speed Logic: Accelerate/Decelerate linearly to match target_speed.
         """
-        # Explicitly set velocity based on direction and speed (Arcade Style)
+        # Determine target speed based on input state
+        if getattr(self, 'is_thrusting', False):
+            self.target_speed = self.max_speed
+        else:
+            self.target_speed = 0
+            
+        # Reset input flag for next frame
+        self.is_thrusting = False
+    
+        # 1. Update Speed (Linear Acceleration/Deceleration)
+        # We move current_speed towards target_speed by acceleration_rate
+        
+        diff = self.target_speed - self.current_speed
+        
+        if diff != 0:
+            # Determine step size (Acceleration rate)
+            # Both accel and decel use the same rate as requested
+            step = self.acceleration_rate
+            
+            if abs(diff) <= step:
+                self.current_speed = self.target_speed
+            else:
+                self.current_speed += step if diff > 0 else -step
+        
+        # 2. Update Position
+        # Velocity matches heading * speed (No drift, Arcade style)
         forward = self.forward_vector()
         self.velocity = forward * self.current_speed
-        self.position += self.velocity # Velocity is effectively pixels/tick
+        self.position += self.velocity
         
-        # Apply Drag/Friction to Speed (Simple damping)
-        # Drag is now a fixed percentage loss per tick
-        # e.g. drag 0.05 = 5% speed loss per tick
-        drag_factor = getattr(self, 'drag', 0.01) # Default small drag
-        if drag_factor > 1: drag_factor = 1
-        
-        self.current_speed *= (1 - drag_factor)
-        if self.current_speed < 0.001: self.current_speed = 0
-        
-        # Angular Update
-        self.angle += self.angular_velocity # Angular velocity is degrees/tick
+        # 3. Angular Update
+        self.angle += self.angular_velocity
         self.angle %= 360
-        self.angular_velocity = 0 # Reset each frame for direct control style if desired
+        self.angular_velocity = 0
 
     def thrust_forward(self):
-        """Apply thrust, consuming fuel and increasing speed."""
-        if self.current_fuel > 0:
-            # Consume Fuel
-            fuel_cost = 0
-            
-            # Calculate cost from active engines
-            # We assume self.layers exists
-            if hasattr(self, 'layers'):
-                for layer in self.layers.values():
-                    for comp in layer['components']:
-                        if isinstance(comp, Engine) and comp.is_active:
-                            # 100 ticks = 1 second.
-                            # Input Rate: X/sec -> X/100 per tick
-                            fuel_cost += comp.fuel_cost_per_sec / 100.0
-            
-            if self.current_fuel >= fuel_cost:
-                self.current_fuel -= fuel_cost
-                
-                # Apply Acceleration
-                # Input Rate: accel_rate (pixels/sec^2? No, pixels/tick increment?)
-                # Assuming accel_rate is derived from Thrust/Mass (pixels/sec^2)
-                # We need to scale it to Per Tick.
-                # If accel is pixels/sec/sec... 
-                # speed += accel * dt ; pos += speed * dt
-                # speed (pixels/sec) += accel (pixels/sec^2) * dt (sec)
-                # Converted to ticks:
-                # speed (pixels/tick) = speed(pixels/sec) / 100
-                # accel (pixels/tick^2) = accel(pixels/sec^2) / 10000 ?
-                # 
-                # Let's assume acceleration_rate stored on ship is ALREADY scaled or 
-                # we treat it as "Speed increment per tick". 
-                # Physics model says: Accel = (Thrust * 2500) / Mass^2
-                # If we assume that formula produces a "Per Second" acceleration...
-                # We should divide by 100 to get "Per Tick speed increase".
-                
-                accel_per_tick = self.acceleration_rate / 100.0
-                self.current_speed += accel_per_tick
-                
-                # Max Speed Check
-                # Max Speed is typically pixels/sec. 
-                # We need current_speed to be pixels/tick. 
-                # So we compare current_speed to max_speed / 100.
-                max_speed_per_tick = self.max_speed / 100.0
-                
-                if self.current_speed > max_speed_per_tick:
-                    self.current_speed = max_speed_per_tick
-            else:
-                self.current_fuel = 0
+        """Apply thrust logic: Consume fuel and set thrusting flag."""
+        # Cost depends on Engines
+        fuel_cost = 0
+        if hasattr(self, 'layers'):
+            for layer in self.layers.values():
+                for comp in layer['components']:
+                    if isinstance(comp, Engine) and comp.is_active:
+                         fuel_cost += comp.fuel_cost_per_sec / 100.0
+        
+        # Only thrust if we have fuel
+        if self.current_fuel >= fuel_cost:
+            self.current_fuel -= fuel_cost
+            self.is_thrusting = True
+        else:
+            self.current_fuel = 0
+            self.is_thrusting = False
 
     def rotate(self, direction):
         """
         Rotate the ship.
         direction: -1 for left, 1 for right
         """
-        # Direct angle modification (Arcade style)
-        # Turn speed is degrees/sec. Convert to degrees/tick.
         turn_per_tick = self.turn_speed / 100.0
         self.angle += direction * turn_per_tick

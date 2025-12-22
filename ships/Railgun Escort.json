@@ -30,6 +30,10 @@
             {
                 "id": "crew_quarters",
                 "modifiers": []
+            },
+            {
+                "id": "ordnance_tank",
+                "modifiers": []
             }
         ],
         "INNER": [
@@ -82,22 +86,18 @@
             {
                 "id": "armor_plate",
                 "modifiers": []
-            },
-            {
-                "id": "armor_plate",
-                "modifiers": []
             }
         ]
     },
     "expected_stats": {
-        "max_hp": 1830,
+        "max_hp": 1660,
         "max_fuel": 50000,
-        "max_ammo": 0,
+        "max_ammo": 5000,
         "max_energy": 0,
-        "max_speed": 11.597465119322496,
-        "turn_speed": 2.4824304641294797,
+        "max_speed": 114.79128415853093,
+        "turn_speed": 24.44532700541658,
         "total_thrust": 450,
-        "mass": 970.0395633228862,
-        "armor_hp_pool": 750
+        "mass": 980.0395633228862,
+        "armor_hp_pool": 500
     }
 }

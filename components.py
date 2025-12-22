@@ -112,6 +112,8 @@ class Component:
         self.mass = self.base_mass
         self.max_hp = self.base_max_hp
         
+        old_max_hp = self.max_hp
+        
         # Initialize stat multipliers and accumulators
         stats = {
             'mass_mult': 1.0,
@@ -170,12 +172,11 @@ class Component:
         if hasattr(self, 'capacity'):
             self.capacity = int(self.data.get('capacity', 0) * stats['capacity_mult'])
             
-        # If component was at full HP before recalculation (or is new), set to new max
-        # Otherwise just ensure current_hp doesn't exceed new max
-        if self.current_hp == self.base_max_hp or self.current_hp > self.max_hp:
+        # If component was at full HP before calculation, or is new (current>=old_max), update to new max
+        if self.current_hp >= old_max_hp:
             self.current_hp = self.max_hp
-        # If component has taken damage, keep current_hp but cap at new max
         else:
+            # Otherwise keep damage but cap at new max
             self.current_hp = min(self.current_hp, self.max_hp)
 
     def clone(self):

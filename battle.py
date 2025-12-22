@@ -184,10 +184,11 @@ class BattleScene:
         # 5. Update Projectiles
         self._update_projectiles()
         
-        # 6. Update Beams (Cycle-Based: 1 tick = 0.01 seconds)
-        for b in self.beams:
-            b['timer'] -= 0.01
-        self.beams = [b for b in self.beams if b['timer'] > 0]
+        # 6. Update Beams (Visual Time based: decouple from ticks)
+        if visual_dt_for_camera > 0:
+            for b in self.beams:
+                b['timer'] -= visual_dt_for_camera
+            self.beams = [b for b in self.beams if b['timer'] > 0]
     
     def _process_beam_attack(self, attack):
         """Process a beam weapon attack."""
@@ -226,7 +227,7 @@ class BattleScene:
         self.beams.append({
             'start': start_pos,
             'end': end_pos,
-            'timer': 30,
+            'timer': 0.5, # VISUAL ONLY: 0.5 seconds duration. Does not affect physics.
             'color': (100, 255, 255)
         })
     

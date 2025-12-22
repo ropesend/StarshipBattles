@@ -513,6 +513,7 @@ class BuilderSceneGUI:
                             self.dragged_item = comp
                             self.selected_component = None
                             self._rebuild_selected_component_modifiers()
+                            self._update_stats_display()
                         else:
                             self.selected_component = found
                             self._rebuild_selected_component_modifiers()

@@ -124,6 +124,7 @@ class ShipCombatMixin:
                                     pass
 
                         if valid_target and comp.fire():
+                            self.total_shots_fired += 1
                             # Deduct Resource
                             if isinstance(comp, BeamWeapon):
                                 self.current_energy -= cost

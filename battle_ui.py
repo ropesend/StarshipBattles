@@ -199,6 +199,15 @@ class BattleInterface:
         
         y = 10 - self.stats_scroll_offset
         
+        # Simulation Stats
+        tick_str = f"Ticks: {self.scene.sim_tick_counter:,}"
+        rate_str = f"TPS: {self.scene.current_tick_rate:,}"
+        
+        # Render roughly side by side or stacked
+        stats_surf = font_name.render(f"Sim: {tick_str} | {rate_str}", True, (150, 150, 180))
+        panel_surf.blit(stats_surf, (10, y))
+        y += 25
+        
         # Team 1
         team1_ships = [s for s in self.scene.ships if s.team_id == 0]
         team1_alive = sum(1 for s in team1_ships if s.is_alive)
@@ -302,6 +311,11 @@ class BattleInterface:
         
         # Speed
         text = font.render(f"Speed: {ship.current_speed:.0f}/{ship.max_speed:.0f}", True, (180, 180, 180))
+        surface.blit(text, (x_indent, y))
+        y += 16
+
+        # Total Shots
+        text = font.render(f"Shots: {ship.total_shots_fired}", True, (255, 200, 100))
         surface.blit(text, (x_indent, y))
         y += 16
         
