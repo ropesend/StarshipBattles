@@ -287,19 +287,32 @@ class ShipCombatMixin:
 
     def _damage_layer(self, layer_type, damage):
         layer = self.layers[layer_type]
-        living_components = [c for c in layer['components'] if c.is_active]
         
-        if not living_components:
-            return damage 
+        # Loop until damage is exhausted or no valid targets remain
+        while damage > 0:
+            # Filter for components with HP > 0 (even if inactive/non-functional)
+            targets = [c for c in layer['components'] if c.current_hp > 0]
             
-        target = random.choice(living_components)
-        damage_absorbed = min(target.current_hp, damage)
-        target.take_damage(damage_absorbed)  # FIX: Only deal absorbed amount, not full damage
-        
-        if isinstance(target, Bridge) and not target.is_active:
-            self.die()
+            if not targets:
+                break
+                
+            # Weighted random selection based on current HP
+            # Higher HP = higher chance to be hit
+            weights = [c.current_hp for c in targets]
             
-        return damage - damage_absorbed
+            # random.choices returns a list, even for k=1
+            target = random.choices(targets, weights=weights, k=1)[0]
+            
+            damage_absorbed = min(target.current_hp, damage)
+            target.take_damage(damage_absorbed)
+            
+            damage -= damage_absorbed
+            
+            if isinstance(target, Bridge) and target.current_hp <= 0:
+                self.die()
+                break # Ship died, stop processing
+                
+        return damage
 
     def die(self):
         print(f"{self.name} EXPLODED!")
