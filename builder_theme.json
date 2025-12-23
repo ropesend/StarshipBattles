@@ -1,12 +1,27 @@
 {
-    "selection_list": {
-        "misc": {
-            "list_item_height": "40"
+    "defaults": {
+        "font": {
+            "name": "arial",
+            "size": "14",
+            "regular_resource": {
+                "package": "pygame_gui.data",
+                "resource": "FiraCode-Regular.ttf"
+            }
         }
     },
-    "selection_list.@selection_list_item": {
-        "font": {
-            "size": "18"
+    "selection_list": {
+        "misc": {
+            "shape": "rectangle",
+            "corner_radius": 2,
+            "list_item_height": 20
+        },
+        "background_colour": "#25292e",
+        "border_colour": "#404050"
+    },
+    "drop_down_menu": {
+        "misc": {
+            "shape": "rounded_rectangle",
+            "corner_radius": 2
         }
     }
 }

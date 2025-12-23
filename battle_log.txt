@@ -1,3 +1,10 @@
 === BATTLE LOG STARTED ===
-Battle started: 10 vs 1 ships
+Battle started: 1 vs 29 ships
+Projectile fired at [20000, 30000]
+Projectile fired at [20000, 30000]
+Projectile fired at [20000, 30000]
+Projectile fired at [20000, 30000]
+Projectile fired at [20000, 30000]
+Projectile fired at [20000, 30000]
+Projectile fired at [20000, 30000]
 === BATTLE LOG ENDED ===

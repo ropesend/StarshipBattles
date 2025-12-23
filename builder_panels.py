@@ -21,17 +21,16 @@ class ComponentListItem:
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
         )
 
-        # Generate Tooltip
-        tooltip_text = self._generate_tooltip(component)
+        # Store tooltip data for custom rendering (not using pygame_gui's built-in)
+        self.tooltip_text = self._generate_tooltip(component)
         
-        # Button for interaction (covers the whole item)
+        # Button for interaction (covers the whole item) - NO tool_tip_text
         self.button = UIButton(
             relative_rect=pygame.Rect(0, 0, width, self.height),
             text="",
             manager=manager,
             container=self.panel,
-            tool_tip_text=tooltip_text,
-            # object_id='#component_item_bg', # Optional: custom theming
+            # tool_tip_text removed to allow custom tooltip handling
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
         
@@ -66,7 +65,7 @@ class ComponentListItem:
         lines.append(f"<i>{classification}</i>")
         lines.append("----------------")
         lines.append(f"Type: {c.type_str}")
-        lines.append(f"Mass: {c.mass}t  HP: {c.hp}")
+        lines.append(f"Mass: {c.mass}t  HP: {c.max_hp}")
         
         # Specific stats from data to be safe, or attributes if reliable
         if 'damage' in c.data: lines.append(f"Damage: {c.data['damage']}")
@@ -115,6 +114,26 @@ class BuilderLeftPanel:
             container=self.panel
         )
         
+        # Scroll Container - Created FIRST to ensure Dropdowns draw on top (Z-order)
+        self.list_y = 80
+        container_height = (rect.height // 2) - 85
+        self.scroll_container = UIScrollingContainer(
+            relative_rect=pygame.Rect(5, self.list_y, rect.width - 10, container_height),
+            manager=manager,
+            container=self.panel,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
+        )
+
+        # Controls Row 1: Sort
+        self.sort_options = [
+            "Default (JSON Order)", 
+            "Name (A-Z)", 
+            "Classification", 
+            "Type", 
+            "Mass (Low-High)", 
+            "Mass (High-Low)"
+        ]
+        self.current_sort = "Default (JSON Order)"
         # Controls Row 1: Sort
         self.sort_options = [
             "Default (JSON Order)", 
@@ -132,6 +151,7 @@ class BuilderLeftPanel:
             manager=manager,
             container=self.panel
         )
+        self.sort_dropdown.change_layer(5) # Ensure above list
         
         # Controls Row 2: Filters
         y_filters = 40
@@ -149,6 +169,7 @@ class BuilderLeftPanel:
             manager=manager,
             container=self.panel
         )
+        self.filter_type_dropdown.change_layer(5)
         
         # Filter: Layer
         self.layer_filter_options = ["All Layers", "CORE", "INNER", "OUTER", "ARMOR"]
@@ -160,16 +181,8 @@ class BuilderLeftPanel:
             manager=manager,
             container=self.panel
         )
-        
-        # Scroll Container
-        self.list_y = 80
-        container_height = (rect.height // 2) - 85
-        self.scroll_container = UIScrollingContainer(
-            relative_rect=pygame.Rect(5, self.list_y, rect.width - 10, container_height),
-            manager=manager,
-            container=self.panel,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
-        )
+        self.filter_layer_dropdown.change_layer(5)
+
         
         # Modifier Panel
         self.modifier_panel = ModifierEditorPanel(
@@ -179,6 +192,52 @@ class BuilderLeftPanel:
             preset_manager=builder.preset_manager,
             on_change_callback=self._on_modifier_change
         )
+        
+    def update(self, dt):
+        """Update panel logic."""
+        # Check for expanded dropdowns
+        self._dropdown_expanded = False
+        dropdowns = [self.sort_dropdown, self.filter_type_dropdown, self.filter_layer_dropdown]
+        for dd in dropdowns:
+             if dd.current_state == dd.menu_states['expanded']:
+                 self._dropdown_expanded = True
+                 break
+        
+        # Hide list completely if dropdown is open to prevent visual overlap
+        if self._dropdown_expanded:
+             if self.scroll_container.visible:
+                 self.scroll_container.hide()
+        else:
+             if not self.scroll_container.visible:
+                 self.scroll_container.show()
+                 
+    def is_dropdown_expanded(self):
+        """Check if any filter/sort dropdown is currently expanded."""
+        return getattr(self, '_dropdown_expanded', False)
+        
+    def get_hovered_list_item(self, mx, my):
+        """
+        Returns the ComponentListItem that the mouse is hovering over, if any.
+        Returns None if mouse is not over an item or if a dropdown is expanded.
+        """
+        if self.is_dropdown_expanded():
+            return None
+            
+        # Check if mouse is within the scroll container's visible area
+        container_rect = self.scroll_container.get_abs_rect()
+        if not container_rect.collidepoint(mx, my):
+            return None
+            
+        # Find which item is hovered
+        for item in self.items:
+            # Get the absolute rect of the item's panel
+            item_abs_rect = item.panel.get_abs_rect()
+            # Also need to check it's within the visible scroll area (clip)
+            if item_abs_rect.collidepoint(mx, my):
+                # Check if this part of the item is actually visible (not scrolled out)
+                if container_rect.contains(item_abs_rect) or container_rect.colliderect(item_abs_rect):
+                    return item
+        return None
         
     def update_component_list(self):
         """Filter, sort, and populate the component list."""
@@ -441,8 +500,8 @@ class BuilderRightPanel:
         self.stat_labels['targeting'].set_text(f"Targeting: {t_text}")
         
         # To-Hit Stats
-        self.stat_labels['target_profile'].set_text(f"Target Profile: {s.to_hit_profile:.2f}x")
-        self.stat_labels['scan_strength'].set_text(f"Scan Strength: {s.baseline_to_hit_offense:.1f}x")
+        self.stat_labels['target_profile'].set_text(f"Defensive Odds to Hit: {s.to_hit_profile:.4f}x")
+        self.stat_labels['scan_strength'].set_text(f"Offensive odds to hit: {s.baseline_to_hit_offense:.1f}x")
         
 
         

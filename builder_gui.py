@@ -494,6 +494,9 @@ class BuilderSceneGUI:
         if self.error_timer > 0:
             self.error_timer -= dt
             
+        # Update panels
+        self.left_panel.update(dt)
+            
         # Update hover detection
         mx, my = pygame.mouse.get_pos()
         self.hovered_component = None
@@ -510,9 +513,11 @@ class BuilderSceneGUI:
             if found:
                 self.hovered_component = found[2]
         else:
-             # Check component list hover via panel
-             comp_template = self.left_panel.get_hovered_component(mx, my)
-             if comp_template:
+             # Check component list hover via panel (custom tooltip system)
+             hovered_item = self.left_panel.get_hovered_list_item(mx, my)
+             if hovered_item:
+                 # Get the underlying component template
+                 comp_template = hovered_item.component
                  # Clone and apply modifiers for preview
                  preview_comp = comp_template.clone()
                  
