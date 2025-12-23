@@ -11,6 +11,14 @@
         "Battleship": "battleship.png",
         "Dreadnought": "dreadnaught.png",
         "Superdreadnaugh": "superdreadnaught.png",
-        "Monitor": "monitor.png"
+        "Monitor": "monitor.png",
+        "Fighter (Small)": "small fighter.png",
+        "Fighter (Medium)": "medium fighter.png",
+        "Fighter (Large)": "large fighter.png",
+        "Fighter (Heavy)": "heavy Fighter.png",
+        "Satellite (Small)": "small satellite.png",
+        "Satellite (Medium)": "medium satellite.png",
+        "Satellite (Large)": "large satellite.png",
+        "Satellite (Heavy)": "heavy satellite.png"
     }
 }

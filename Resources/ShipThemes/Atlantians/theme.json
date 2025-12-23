@@ -4,13 +4,21 @@
         "Escort": "Escort.png",
         "Frigate": "Frigate.png",
         "Destroyer": "Destroyer.png",
-        "Light Cruiser": "Crusier.png",
-        "Cruiser": "Crusier.png",
-        "Heavy Cruiser": "Crusier.png",
-        "Battle Cruiser": "Battlecrusier.png",
+        "Light Cruiser": "light cruiser.png",
+        "Cruiser": "Cruiser.png",
+        "Heavy Cruiser": "heavey cruiser.png",
+        "Battle Cruiser": "Battlecruiser.png",
         "Battleship": "Battleship.png",
         "Dreadnought": "Dreadnaught.png",
-        "Superdreadnaugh": "Dreadnaught.png",
-        "Monitor": "Dreadnaught.png"
+        "Superdreadnaugh": "super dreadnaught.png",
+        "Monitor": "monitor.png",
+        "Fighter (Small)": "small fighter.png",
+        "Fighter (Medium)": "medium fighter.png",
+        "Fighter (Large)": "large fighter.png",
+        "Fighter (Heavy)": "heavy fighter.png",
+        "Satellite (Small)": "small satellite.png",
+        "Satellite (Medium)": "medium satellite.png",
+        "Satellite (Large)": "large satellite.png",
+        "Satellite (Heavy)": "heavy satellite.png"
     }
 }

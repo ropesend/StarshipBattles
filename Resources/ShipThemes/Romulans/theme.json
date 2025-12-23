@@ -1,16 +1,24 @@
 {
     "name": "Romulans",
     "images": {
-        "Escort": "processed_output/escort.png",
-        "Frigate": "processed_output/frigate.png",
-        "Destroyer": "processed_output/Destroyer.png",
-        "Light Cruiser": "processed_output/cruiser.png",
-        "Cruiser": "processed_output/cruiser.png",
-        "Heavy Cruiser": "processed_output/cruiser.png",
-        "Battle Cruiser": "processed_output/Battlecruiser.png",
-        "Battleship": "processed_output/battleship.png",
-        "Dreadnought": "processed_output/Dreadnaught.png",
-        "Superdreadnaugh": "processed_output/Dreadnaught.png",
-        "Monitor": "processed_output/Dreadnaught.png"
+        "Escort": "escort.png",
+        "Frigate": "frigate.png",
+        "Destroyer": "Destroyer.png",
+        "Light Cruiser": "light cruiser.png",
+        "Cruiser": "cruiser.png",
+        "Heavy Cruiser": "heavy cruiser.png",
+        "Battle Cruiser": "Battlecruiser.png",
+        "Battleship": "battleship.png",
+        "Dreadnought": "Dreadnaught.png",
+        "Superdreadnaugh": "super dreadnaught.png",
+        "Monitor": "monitor.png",
+        "Fighter (Small)": "small fighter.png",
+        "Fighter (Medium)": "medium fighter.png",
+        "Fighter (Large)": "large fighter.png",
+        "Fighter (Heavy)": "heavy fighter.png",
+        "Satellite (Small)": "small satellite.png",
+        "Satellite (Medium)": "medium satellite.png",
+        "Satellite (Large)": "large satellite.png",
+        "Satellite (Heavy)": "Heavy Satellite.png"
     }
 }
