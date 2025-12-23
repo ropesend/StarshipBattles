@@ -246,13 +246,6 @@ class ShipStatsCalculator:
 
     def _check_mass_limits(self, ship):
         ship.mass_limits_ok = True
-        layer_limits = {
-            LayerType.ARMOR: 0.30,
-            LayerType.CORE: 0.30,
-            LayerType.OUTER: 0.50,
-            LayerType.INNER: 0.50
-        }
-        
         # Budget check (Max Mass)
         ship.max_mass_budget = 1000 # Default
         
@@ -260,7 +253,7 @@ class ShipStatsCalculator:
              ship.max_mass_budget = self.vehicle_classes[ship.ship_class].get('max_mass', 1000)
 
         for layer_type, layer_data in ship.layers.items():
-            limit_ratio = layer_limits.get(layer_type, 1.0)
+            limit_ratio = layer_data.get('max_mass_pct', 1.0)
             ratio = layer_data['mass'] / ship.max_mass_budget
             is_ok = ratio <= limit_ratio
             ship.layer_status[layer_type] = {

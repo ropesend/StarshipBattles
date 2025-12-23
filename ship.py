@@ -101,10 +101,35 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                     'components': [],
                     'radius_pct': l_def.get('radius_pct', 0.5),
                     'restrictions': l_def.get('restrictions', []),
+                    'max_mass_pct': l_def.get('max_mass_pct', 1.0),
                     'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0
                 }
             except KeyError:
                 print(f"Warning: Unknown LayerType {l_type_str} in class {ship_class}")
+
+        # Recalculate layer radii based on max_mass_pct (Area proportional to mass capacity)
+        # Sort layers: CORE -> INNER -> OUTER -> ARMOR
+        layer_order = [LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR]
+        
+        # Filter layers present in this ship
+        present_layers = [l for l in layer_order if l in self.layers]
+        
+        # Calculate total mass capacity (sum of max_mass_pct)
+        total_capacity_pct = sum(self.layers[l]['max_mass_pct'] for l in present_layers)
+        
+        if total_capacity_pct > 0:
+            cumulative_mass_pct = 0.0
+            for l_type in present_layers:
+                cumulative_mass_pct += self.layers[l_type]['max_mass_pct']
+                # Area = pi * r^2. Mass proportional to Area.
+                # Mass_ratio = Current_Cumulative / Total
+                # Radius_ratio = sqrt(Mass_ratio)
+                self.layers[l_type]['radius_pct'] = math.sqrt(cumulative_mass_pct / total_capacity_pct)
+        else:
+            # Fallback if no mass limits defined (shouldn't happen with new data)
+            # Distribute evenly? Or keep json defaults? 
+            # If total is 0, we can't do math. Let's trust JSON defaults if they exist, or linear.
+            pass
         
         # Stats
         self.mass = 0
@@ -188,6 +213,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
              print(f"Error: Restriction: {reason}")
              return False
 
+        if self.mass_budget_exceeded(component.mass, layer_type):
+            print(f"Error: Mass budget exceeded for {layer_type.name}")
+            return False
+
         if self.current_mass + component.mass > self.max_mass_budget:
             print(f"Error: Mass budget exceeded for {self.name}")
             return False
@@ -227,6 +256,16 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             self.recalculate_stats()
             return comp
         return None
+
+    def mass_budget_exceeded(self, component_mass, layer_type):
+        if layer_type in self.layers:
+            layer_data = self.layers[layer_type]
+            current_layer_mass = sum(c.mass for c in layer_data['components'])
+            max_layer_mass = self.max_mass_budget * layer_data.get('max_mass_pct', 1.0)
+            
+            if current_layer_mass + component_mass > max_layer_mass:
+                return True
+        return False
 
     def recalculate_stats(self):
         """

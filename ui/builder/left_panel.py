@@ -77,7 +77,8 @@ class BuilderLeftPanel:
         self.filter_type_dropdown.change_layer(5)
         
         # Filter: Layer
-        self.layer_filter_options = ["All Layers", "CORE", "INNER", "OUTER", "ARMOR"]
+        # Initial population - will be updated dynamically
+        self.layer_filter_options = ["All Layers"] + [l.name for l in builder.ship.layers.keys()]
         self.current_layer_filter = "All Layers"
         self.filter_layer_dropdown = UIDropDownMenu(
             options_list=self.layer_filter_options,
@@ -170,11 +171,41 @@ class BuilderLeftPanel:
             filtered = [c for c in filtered if c.type_str == self.current_type_filter]
             
         # 3. Filter by Layer
+        # 3. Filter by Layer
+        
+        # Refresh options map based on current ship layers
+        current_ship_layers = [l.name for l in self.builder.ship.layers.keys()]
+        expected_options = ["All Layers"] + sorted(current_ship_layers)
+        
+        # If options changed (e.g. ship class changed), rebuild dropdown
+        # Note: We can't easily check internal options of UIDropDownMenu in all versions, but we can check our list
+        if expected_options != self.layer_filter_options:
+            self.layer_filter_options = expected_options
+            # Reset filter if current selection is invalid
+            if self.current_layer_filter not in self.layer_filter_options:
+                self.current_layer_filter = "All Layers"
+                
+            # Recreate dropdown (cleanest way to update options)
+            self.filter_layer_dropdown.kill()
+            y_filters = 40
+            self.filter_layer_dropdown = UIDropDownMenu(
+                options_list=self.layer_filter_options,
+                starting_option=self.current_layer_filter,
+                relative_rect=pygame.Rect((self.rect.width//2)+5, y_filters, (self.rect.width//2)-10, 30),
+                manager=self.manager,
+                container=self.panel
+            )
+            self.filter_layer_dropdown.change_layer(5)
+
         if self.current_layer_filter != "All Layers":
-            # allowed_layers is list of LayerType enum. 
-            # We need to map string to enum for comparison or check enum name.
-            # Enum names are CORE, INNER, etc.
-            filtered = [c for c in filtered if any(l.name == self.current_layer_filter for l in c.allowed_layers)]
+             # Filter by specific layer
+             filtered = [c for c in filtered if any(l.name == self.current_layer_filter for l in c.allowed_layers)]
+        else:
+             # "All Layers": Only show components compatible with AT LEAST ONE of the CURRENT ship's layers
+             # Access ship layers via builder
+             valid_layer_types = set(self.builder.ship.layers.keys())
+             # Filter items that have at least one allowed layer that is present on this ship
+             filtered = [c for c in filtered if any(l in valid_layer_types for l in c.allowed_layers)]
         
         # 4. Sort
         if self.current_sort == "Default (JSON Order)":

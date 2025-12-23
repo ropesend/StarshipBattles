@@ -8,18 +8,18 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.3,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.7
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -45,18 +45,18 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.3,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.7
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -82,18 +82,18 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.3,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.7
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -119,18 +119,18 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.3,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.7
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -156,23 +156,23 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.2,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 },
                 {
                     "type": "INNER",
-                    "radius_pct": 0.5,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -198,23 +198,23 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.2,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 },
                 {
                     "type": "INNER",
-                    "radius_pct": 0.5,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -240,23 +240,23 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.2,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 },
                 {
                     "type": "INNER",
-                    "radius_pct": 0.5,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -282,23 +282,23 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.2,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 },
                 {
                     "type": "INNER",
-                    "radius_pct": 0.5,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -324,23 +324,23 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.2,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 },
                 {
                     "type": "INNER",
-                    "radius_pct": 0.5,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -366,23 +366,23 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.2,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 },
                 {
                     "type": "INNER",
-                    "radius_pct": 0.5,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -408,23 +408,23 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.2,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 },
                 {
                     "type": "INNER",
-                    "radius_pct": 0.5,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -450,13 +450,13 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.5,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 1.0
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -482,13 +482,13 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.5,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 1.0
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -514,13 +514,13 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.5,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 1.0
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -546,13 +546,13 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.5,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 1.0
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -578,18 +578,18 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.3,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.7
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -607,18 +607,18 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.3,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.7
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -636,18 +636,18 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.3,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.7
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {
@@ -665,18 +665,18 @@
             "layers": [
                 {
                     "type": "CORE",
-                    "radius_pct": 0.3,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
                 },
                 {
                     "type": "OUTER",
-                    "radius_pct": 0.8,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.7
                 },
                 {
                     "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "restrictions": []
+                    "restrictions": [],
+                    "max_mass_pct": 0.3
                 }
             ],
             "requirements": {

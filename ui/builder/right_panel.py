@@ -102,9 +102,15 @@ class BuilderRightPanel:
         UILabel(pygame.Rect(10, y, 150, 20), "── Layer Usage ──", manager=self.manager, container=self.panel)
         y += 22
         self.layer_labels = {}
-        for l in ['CORE', 'INNER', 'OUTER', 'ARMOR']:
-            self.layer_labels[l] = UILabel(pygame.Rect(10, y, 350, 22), f"{l}: --%", manager=self.manager, container=self.panel)
-            y += 22
+        # Create FIXED slots for layers to prevent overlap
+        self.layer_label_slots = []
+        for i in range(4): # Max 4 layers likely
+            lbl = UILabel(pygame.Rect(10, y, 350, 22), f"Slot {i}: --%", manager=self.manager, container=self.panel)
+            lbl.hide()
+            self.layer_label_slots.append(lbl)
+            y += 22 
+
+
         y += 10
         
          # Crew
@@ -161,17 +167,35 @@ class BuilderRightPanel:
             LayerType.ARMOR: 'ARMOR'
         }
         
-        for layer_type, layer_name in layer_name_map.items():
-            status = s.layer_status.get(layer_type, {})
-            ratio = status.get('ratio', 0) * 100
-            limit = status.get('limit', 1.0) * 100
-            is_ok = status.get('ok', True)
-            mass = status.get('mass', 0)
+        
+        # Hide all first
+        # Hide all slots first
+        for slot in self.layer_label_slots:
+            slot.hide()
             
-            status_icon = "✓" if is_ok else "✗ OVER"
-            self.layer_labels[layer_name].set_text(
-                f"{layer_name}: {ratio:.0f}% / {limit:.0f}% ({mass:.0f}t) {status_icon}"
-            )
+        # Show and update present layers
+        # sort by order if possible? default dict order should be fine or LayerType value
+        # Sort by radius_pct descending (Outer first) or ascending (Core first)? 
+        # Usually Core first is better list? 
+        # Actually logic uses radius_pct. Let's stick to consistent sorting: Core -> Inner -> Outer -> Armor or similar.
+        # LayerType enum values usually are 0,1,2,3 etc.
+        sorted_layers = sorted(s.layers.items(), key=lambda x: x[0].value) 
+        
+        slot_idx = 0
+        for layer_type, layer_data in sorted_layers:
+            if slot_idx < len(self.layer_label_slots):
+                status = s.layer_status.get(layer_type, {})
+                ratio = status.get('ratio', 0) * 100
+                limit = status.get('limit', 1.0) * 100
+                is_ok = status.get('ok', True)
+                mass = status.get('mass', 0)
+                
+                status_icon = "✓" if is_ok else "✗ OVER"
+                
+                lbl = self.layer_label_slots[slot_idx]
+                lbl.set_text(f"{layer_type.name}: {ratio:.0f}% / {limit:.0f}% ({mass:.0f}t) {status_icon}")
+                lbl.show()
+                slot_idx += 1
         
         # Update crew stats
         crew_capacity = max(0, s.get_ability_total('CrewCapacity'))

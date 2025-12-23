@@ -390,20 +390,27 @@ class BuilderSceneGUI:
         btn_w = 140
         btn_h = 40
         spacing = 10
-        total_width = btn_w * 4 + spacing * 3
+        
+        # Define buttons to create in order
+        # (Attribute Name, Text, Width)
+        button_defs = [
+            ('clear_btn', "Clear Design", 140),
+            ('save_btn', "Save", 140),
+            ('load_btn', "Load", 140),
+            ('arc_toggle_btn', "Show Firing Arcs", 160),
+            ('target_btn', "Select Target", 140),
+            ('verbose_btn', "Toggle Verbose", 160),
+            ('start_btn', "Return", 140)
+        ]
+        
+        total_width = sum(b[2] for b in button_defs) + spacing * (len(button_defs) - 1)
         start_x = (self.width - total_width) // 2
         
-        self.clear_btn = UIButton(pygame.Rect(start_x, btn_y, btn_w, btn_h), "Clear Design", self.ui_manager)
-        self.save_btn = UIButton(pygame.Rect(start_x + btn_w + spacing, btn_y, btn_w, btn_h), "Save", self.ui_manager)
-        self.load_btn = UIButton(pygame.Rect(start_x + (btn_w + spacing) * 2, btn_y, btn_w, btn_h), "Load", self.ui_manager)
-        self.start_btn = UIButton(pygame.Rect(start_x + (btn_w + spacing) * 3, btn_y, btn_w, btn_h), "Return", self.ui_manager)
-        self.target_btn = UIButton(pygame.Rect(start_x + (btn_w + spacing) * 4, btn_y, 140, btn_h), "Select Target", self.ui_manager)
-        self.verbose_btn = UIButton(pygame.Rect(start_x + (btn_w + spacing) * 4 + 150, btn_y, 160, btn_h), "Toggle Verbose", self.ui_manager)
-        
-        self.arc_toggle_btn = UIButton(
-            pygame.Rect(self.left_panel_width + 10, 10, 150, 30),
-            "Show Firing Arcs", self.ui_manager
-        )
+        current_x = start_x
+        for attr_name, text, w in button_defs:
+            btn = UIButton(pygame.Rect(current_x, btn_y, w, btn_h), text, self.ui_manager)
+            setattr(self, attr_name, btn)
+            current_x += w + spacing
         
         self.confirm_dialog = None
         
@@ -512,8 +519,9 @@ class BuilderSceneGUI:
             elif hasattr(self.right_panel, 'vehicle_type_dropdown') and event.ui_element == self.right_panel.vehicle_type_dropdown:
                 new_type = event.text
                 if new_type != getattr(self.ship, 'vehicle_type', "Ship"):
-                     valid_classes = [n for n, c in VEHICLE_CLASSES.items() if c.get('type', 'Ship') == new_type]
-                     valid_classes.sort()
+                     valid_classes = [(n, VEHICLE_CLASSES[n].get('max_mass', 0)) for n, c in VEHICLE_CLASSES.items() if c.get('type', 'Ship') == new_type]
+                     valid_classes.sort(key=lambda x: x[1])
+                     valid_classes = [n for n, m in valid_classes]
                      if not valid_classes: valid_classes = ["Escort"]
                      
                      self.right_panel.class_dropdown.kill()
