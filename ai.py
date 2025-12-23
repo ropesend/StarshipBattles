@@ -305,6 +305,13 @@ class AIController:
             self.update_flee(target, strategy.get('fire_while_retreating', False))
             return
         
+        # Satellite Exception: Satellites do NOT navigate or maneuver.
+        # They are stationary platforms that just target and fire.
+        if getattr(self.ship, 'vehicle_type', 'Ship') == 'Satellite':
+            # Satellite AI: Just targeting and firing (comp_trigger already set above)
+            # No movement, no navigation. Skip all movement logic.
+            return
+        
         # Reset state on strategy change
         if self.last_strategy != strategy_id:
             self.attack_state = 'approach'

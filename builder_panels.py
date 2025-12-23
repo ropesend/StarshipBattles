@@ -2,7 +2,6 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UISelectionList, UIButton, UITextEntryLine, UIDropDownMenu, UITextBox
 from builder_components import ModifierEditorPanel
-from builder_components import ModifierEditorPanel
 from ship import SHIP_CLASSES, VEHICLE_CLASSES
 from ai import COMBAT_STRATEGIES
 import logging
