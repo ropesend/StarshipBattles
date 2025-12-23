@@ -53,7 +53,7 @@ class Game:
         
         # Load sprites
         sprite_mgr = SpriteManager.get_instance()
-        sprite_mgr.load_atlas(os.path.join(base_path, "resources", "images", "Components.bmp"))
+        sprite_mgr.load_sprites(base_path)
         
         # Menu UI
         self.menu_buttons = [

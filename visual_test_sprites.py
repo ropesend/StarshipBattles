@@ -18,14 +18,21 @@ def main():
     # Load Sprites
     mgr = SpriteManager.get_instance()
     base_path = os.path.dirname(os.path.abspath(__file__))
-    atlas_path = os.path.join(base_path, "resources", "images", "Components.bmp")
     
-    print(f"Loading: {atlas_path}")
-    if not os.path.exists(atlas_path):
-        print("ERROR: File not found!")
-        return
-
-    mgr.load_atlas(atlas_path)
+    # We use load_sprites now
+    mgr.load_sprites(base_path)
+    
+    # For visualization of full atlas, we need to manually load it if we want to show it
+    # But since we are moving away from atlas, maybe we just show the sprites?
+    # Or try to load the fallback atlas for visualization purpose if it exists?
+    atlas_path = os.path.join(base_path, "resources", "images", "Components.bmp")
+    if os.path.exists(atlas_path):
+        try:
+             mgr.atlas = pygame.image.load(atlas_path).convert()
+        except:
+             pass 
+    
+    # mgr.load_atlas(atlas_path) # Deprecated
     
     show_atlas = True
     
