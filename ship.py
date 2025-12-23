@@ -90,6 +90,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Get hull mass from vehicle class definition
         class_def = VEHICLE_CLASSES.get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
         self.base_mass = class_def.get('hull_mass', 50)  # Hull/Structure mass from class
+        self.vehicle_type = class_def.get('type', "Ship")
         self.total_thrust = 0
         self.max_speed = 0
         self.turn_speed = 0
@@ -146,6 +147,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     def add_component(self, component: Component, layer_type: LayerType):
         if layer_type not in component.allowed_layers:
             print(f"Error: {component.name} not allowed in {layer_type}")
+            return False
+
+        if self.vehicle_type not in component.allowed_vehicle_types:
+            print(f"Error: {component.name} not allowed on {self.vehicle_type}")
             return False
 
         if self.current_mass + component.mass > self.max_mass_budget:
@@ -267,6 +272,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             # Check Crew Requirement (Use positive CrewRequired)
             req_crew = comp.abilities.get('CrewRequired', 0)
             
+            # Satellite Exception: Satellites ignore crew requirements
+            if self.vehicle_type == "Satellite":
+                req_crew = 0
+            
             # Legacy fallback: Check for negative CrewCapacity if CrewRequired missing
             # (Though we updated JSON, this is safe for any custom mods)
             if req_crew == 0:
@@ -337,11 +346,17 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 has_active_bridge = True
                 break
         
-        if (not has_active_bridge) or (self.total_thrust <= 0):
-            self.is_derelict = True
-            self.total_thrust = 0 # Ensure 0
+        if self.vehicle_type == "Satellite":
+            if not has_active_bridge:
+                self.is_derelict = True
+            else:
+                self.is_derelict = False
         else:
-            self.is_derelict = False
+            if (not has_active_bridge) or (self.total_thrust <= 0):
+                self.is_derelict = True
+                self.total_thrust = 0 # Ensure 0
+            else:
+                self.is_derelict = False
         
         # Physics Stats - INVERSE MASS SCALING
         K_THRUST = 2500

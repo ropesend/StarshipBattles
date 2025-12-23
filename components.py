@@ -54,6 +54,7 @@ class Component:
         self.max_hp = self.base_max_hp
         self.current_hp = self.max_hp
         self.allowed_layers = [LayerType.from_string(l) for l in data['allowed_layers']]
+        self.allowed_vehicle_types = data.get('allowed_vehicle_types', ["Ship"])
         self.is_active = True
         self.status = ComponentStatus.ACTIVE
         self.layer_assigned = None

@@ -15,7 +15,7 @@ from pygame_gui.elements import (
 )
 from pygame_gui.windows import UIConfirmationDialog
 
-from ship import Ship, LayerType, SHIP_CLASSES
+from ship import Ship, LayerType, SHIP_CLASSES, VEHICLE_CLASSES
 from components import (
     get_all_components, MODIFIER_REGISTRY, Bridge, Weapon, 
     BeamWeapon, ProjectileWeapon, SeekerWeapon, Engine, Thruster, Armor, Tank, Generator,
@@ -174,6 +174,7 @@ class BuilderSceneGUI:
         
         # Update stats display
         self._update_stats_display()
+        self.left_panel.update_component_list()
         
     def _rebuild_modifier_ui(self):
         self.left_panel.rebuild_modifier_ui()
@@ -227,8 +228,38 @@ class BuilderSceneGUI:
         elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
             if event.ui_element == self.right_panel.class_dropdown:
                 self.ship.ship_class = event.text
+                # Update base mass and budget
+                c_def = VEHICLE_CLASSES.get(self.ship.ship_class, {})
+                self.ship.base_mass = c_def.get('hull_mass', 50)
+                self.ship.vehicle_type = c_def.get('type', 'Ship')
                 self.ship.recalculate_stats()
                 self._update_stats_display()
+                self.left_panel.update_component_list() # Just in case
+            elif hasattr(self.right_panel, 'vehicle_type_dropdown') and event.ui_element == self.right_panel.vehicle_type_dropdown:
+                new_type = event.text
+                if new_type != getattr(self.ship, 'vehicle_type', "Ship"):
+                     # Update compatible classes
+                     valid_classes = [n for n, c in VEHICLE_CLASSES.items() if c.get('type', 'Ship') == new_type]
+                     valid_classes.sort()
+                     if not valid_classes: valid_classes = ["Escort"]
+
+                     # Recreate Class Dropdown
+                     self.right_panel.class_dropdown.kill()
+                     self.right_panel.class_dropdown = UIDropDownMenu(valid_classes, valid_classes[0], 
+                                                        pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30), 
+                                                        manager=self.ui_manager, container=self.right_panel.panel)
+                     
+                     # Update Ship 
+                     self.ship.ship_class = valid_classes[0]
+                     cls_def = VEHICLE_CLASSES.get(valid_classes[0], {})
+                     self.ship.base_mass = cls_def.get('hull_mass', 50)
+                     self.ship.vehicle_type = cls_def.get('type', "Ship")
+                     
+                     self.ship.recalculate_stats()
+                     self._update_stats_display()
+                     
+                     # Update Component List
+                     self.left_panel.update_component_list()
             elif hasattr(self.right_panel, 'theme_dropdown') and event.ui_element == self.right_panel.theme_dropdown:
                 self.ship.theme_id = event.text
                 logger.info(f"Changed theme to {event.text}")

@@ -1,6 +1,7 @@
 {
     "classes": {
         "Escort": {
+            "type": "Ship",
             "hull_mass": 50,
             "max_mass": 1000,
             "requirements": {
@@ -19,6 +20,7 @@
             }
         },
         "Frigate": {
+            "type": "Ship",
             "hull_mass": 100,
             "max_mass": 2000,
             "requirements": {
@@ -37,6 +39,7 @@
             }
         },
         "Destroyer": {
+            "type": "Ship",
             "hull_mass": 200,
             "max_mass": 4000,
             "requirements": {
@@ -55,6 +58,7 @@
             }
         },
         "Light Cruiser": {
+            "type": "Ship",
             "hull_mass": 300,
             "max_mass": 8000,
             "requirements": {
@@ -73,6 +77,7 @@
             }
         },
         "Cruiser": {
+            "type": "Ship",
             "hull_mass": 400,
             "max_mass": 16000,
             "requirements": {
@@ -91,6 +96,7 @@
             }
         },
         "Heavy Cruiser": {
+            "type": "Ship",
             "hull_mass": 600,
             "max_mass": 32000,
             "requirements": {
@@ -109,6 +115,7 @@
             }
         },
         "Battle Cruiser": {
+            "type": "Ship",
             "hull_mass": 800,
             "max_mass": 64000,
             "requirements": {
@@ -127,6 +134,7 @@
             }
         },
         "Battleship": {
+            "type": "Ship",
             "hull_mass": 1600,
             "max_mass": 128000,
             "requirements": {
@@ -145,6 +153,7 @@
             }
         },
         "Dreadnought": {
+            "type": "Ship",
             "hull_mass": 3200,
             "max_mass": 256000,
             "requirements": {
@@ -163,6 +172,7 @@
             }
         },
         "Superdreadnaugh": {
+            "type": "Ship",
             "hull_mass": 6400,
             "max_mass": 512000,
             "requirements": {
@@ -181,6 +191,7 @@
             }
         },
         "Monitor": {
+            "type": "Ship",
             "hull_mass": 12800,
             "max_mass": 1024000,
             "requirements": {
@@ -195,6 +206,126 @@
                 "fuel": {
                     "ability": "FuelStorage",
                     "min_value": 1
+                }
+            }
+        },
+        "Fighter (Small)": {
+            "type": "Fighter",
+            "hull_mass": 5,
+            "max_mass": 25,
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Fighter (Medium)": {
+            "type": "Fighter",
+            "hull_mass": 10,
+            "max_mass": 35,
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Fighter (Large)": {
+            "type": "Fighter",
+            "hull_mass": 15,
+            "max_mass": 50,
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Fighter (Heavy)": {
+            "type": "Fighter",
+            "hull_mass": 20,
+            "max_mass": 70,
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Satellite (Small)": {
+            "type": "Satellite",
+            "hull_mass": 50,
+            "max_mass": 250,
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Satellite (Medium)": {
+            "type": "Satellite",
+            "hull_mass": 100,
+            "max_mass": 500,
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Satellite (Large)": {
+            "type": "Satellite",
+            "hull_mass": 200,
+            "max_mass": 1000,
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Satellite (Heavy)": {
+            "type": "Satellite",
+            "hull_mass": 400,
+            "max_mass": 2000,
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
                 }
             }
         }

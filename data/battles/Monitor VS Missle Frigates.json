@@ -1,0 +1,123 @@
+{
+  "name": "Monitor VS Missle Frigates",
+  "team1": [
+    {
+      "design_file": "Devastator (MN).json",
+      "strategy": "optimal_firing_range"
+    }
+  ],
+  "team2": [
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    },
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    }
+  ]
+}

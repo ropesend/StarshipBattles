@@ -2,7 +2,8 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UISelectionList, UIButton, UITextEntryLine, UIDropDownMenu, UITextBox
 from builder_components import ModifierEditorPanel
-from ship import SHIP_CLASSES
+from builder_components import ModifierEditorPanel
+from ship import SHIP_CLASSES, VEHICLE_CLASSES
 from ai import COMBAT_STRATEGIES
 import logging
 
@@ -53,6 +54,18 @@ class BuilderLeftPanel:
             preset_manager=builder.preset_manager,
             on_change_callback=self._on_modifier_change
         )
+        
+    def update_component_list(self):
+        """Filter component list based on current ship vehicle type."""
+        # Get allowed vehicle type
+        v_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
+        
+        filtered_names = []
+        for c in self.builder.available_components:
+            if v_type in c.allowed_vehicle_types:
+                filtered_names.append(f"{c.name} ({c.mass}t)")
+        
+        self.component_list.set_item_list(filtered_names)
         
     def draw(self, screen):
         """Draw component icons to match list items."""
@@ -154,9 +167,25 @@ class BuilderRightPanel:
         self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
         y += 40
         
+        # Vehicle Type
+        UILabel(pygame.Rect(10, y, 60, 25), "Type:", manager=self.manager, container=self.panel)
+        # Get unique types
+        types = sorted(list(set(c.get('type', 'Ship') for c in VEHICLE_CLASSES.values())))
+        if not types: types = ["Ship"]
+        
+        curr_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
+        if curr_type not in types: curr_type = types[0]
+        
+        self.vehicle_type_dropdown = UIDropDownMenu(types, curr_type, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
+        y += 40
+
         # Class
         UILabel(pygame.Rect(10, y, 60, 25), "Class:", manager=self.manager, container=self.panel)
-        class_options = list(SHIP_CLASSES.keys()) if SHIP_CLASSES else ["Escort"]
+        # Filter classes by current type
+        class_options = [name for name, cls in VEHICLE_CLASSES.items() if cls.get('type', 'Ship') == curr_type]
+        class_options.sort()
+        if not class_options: class_options = ["Escort"]
+
         curr_class = self.builder.ship.ship_class
         if curr_class not in class_options: curr_class = class_options[0]
         
