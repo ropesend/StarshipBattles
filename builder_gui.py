@@ -26,7 +26,7 @@ from preset_manager import PresetManager
 from ship_io import ShipIO
 from builder_components import ModifierEditorPanel
 from ship_theme import ShipThemeManager
-from builder_panels import BuilderLeftPanel, BuilderRightPanel
+from builder_panels import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel
 
 # Initialize Tkinter root and hide it (for simpledialog)
 try:
@@ -92,6 +92,7 @@ class BuilderSceneGUI:
         self.left_panel_width = 450
         self.right_panel_width = 380
         self.bottom_bar_height = 60
+        self.weapons_report_height = 150
         self.component_row_height = 40
         
         # Create UI
@@ -123,7 +124,16 @@ class BuilderSceneGUI:
         self.right_panel = BuilderRightPanel(
             self, self.ui_manager,
             pygame.Rect(self.width - self.right_panel_width, 0, 
-                        self.right_panel_width, self.height - self.bottom_bar_height)
+                        self.right_panel_width, self.height - self.bottom_bar_height - self.weapons_report_height)
+        )
+        
+        # === WEAPONS REPORT PANEL ===
+        weapons_panel_y = self.height - self.bottom_bar_height - self.weapons_report_height
+        weapons_panel_width = self.width - self.left_panel_width
+        self.weapons_report_panel = WeaponsReportPanel(
+            self, self.ui_manager,
+            pygame.Rect(self.left_panel_width, weapons_panel_y, weapons_panel_width, self.weapons_report_height),
+            self.sprite_mgr
         )
         
         # === BOTTOM BAR: Buttons ===
@@ -496,6 +506,7 @@ class BuilderSceneGUI:
             
         # Update panels
         self.left_panel.update(dt)
+        self.weapons_report_panel.update()
             
         # Update hover detection
         mx, my = pygame.mouse.get_pos()
@@ -505,7 +516,7 @@ class BuilderSceneGUI:
         schematic_rect = pygame.Rect(
             self.left_panel_width, 0,
             self.width - self.left_panel_width - self.right_panel_width,
-            self.height - self.bottom_bar_height
+            self.height - self.bottom_bar_height - self.weapons_report_height
         )
         
         if schematic_rect.collidepoint(mx, my):
@@ -548,7 +559,7 @@ class BuilderSceneGUI:
         schematic_rect = pygame.Rect(
             self.left_panel_width, 0,
             self.width - self.left_panel_width - self.right_panel_width,
-            self.height - self.bottom_bar_height
+            self.height - self.bottom_bar_height - self.weapons_report_height
         )
         pygame.draw.rect(screen, SHIP_VIEW_BG, schematic_rect)
         
@@ -560,6 +571,7 @@ class BuilderSceneGUI:
             self._draw_component_firing_arc(screen, self.hovered_component)
             
         self.left_panel.draw(screen)
+        self.weapons_report_panel.draw(screen)
         self.ui_manager.draw_ui(screen)
         
         if self.hovered_component and not self.dragged_item:

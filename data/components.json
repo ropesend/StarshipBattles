@@ -383,7 +383,7 @@
             "damage": 100,
             "projectile_speed": 6000,
             "turn_rate": 200,
-            "endurance": 5.0,
+            "endurance": 3.0,
             "reload": 4.0,
             "ammo_cost": 5,
             "firing_arc": 45,

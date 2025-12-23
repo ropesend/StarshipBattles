@@ -4,6 +4,7 @@ from pygame_gui.elements import UIPanel, UILabel, UISelectionList, UIButton, UIT
 from builder_components import ModifierEditorPanel
 from ship import SHIP_CLASSES, VEHICLE_CLASSES
 from ai import COMBAT_STRATEGIES
+from components import Weapon, BeamWeapon, SeekerWeapon
 import logging
 
 class ComponentListItem:
@@ -568,3 +569,190 @@ class BuilderRightPanel:
         
         self.requirements_text_box.html_text = html
         self.requirements_text_box.rebuild()
+
+
+class WeaponsReportPanel:
+    """Panel displaying weapon range and hit probability visualization."""
+    
+    THRESHOLDS = [0.99, 0.90, 0.80, 0.70, 0.60, 0.50, 0.40, 0.30, 0.20, 0.10, 0.01]
+    WEAPON_ROW_HEIGHT = 28
+    WEAPON_NAME_WIDTH = 180
+    RANGE_BAR_LEFT_MARGIN = 10
+    
+    def __init__(self, builder, manager, rect, sprite_mgr):
+        self.builder = builder
+        self.manager = manager
+        self.rect = rect
+        self.sprite_mgr = sprite_mgr
+        
+        # Background panel
+        self.panel = UIPanel(
+            relative_rect=rect,
+            manager=manager,
+            object_id='#weapons_report_panel'
+        )
+        
+        # Title label
+        UILabel(
+            relative_rect=pygame.Rect(10, 5, 200, 20),
+            text="── Weapons Report ──",
+            manager=manager,
+            container=self.panel
+        )
+        
+        # Cache for drawn content
+        self._weapons_cache = []
+        self._max_range = 0
+        
+    def _get_all_weapons(self, ship):
+        """Get list of all weapon components from ship."""
+        weapons = []
+        for layer_data in ship.layers.values():
+            for comp in layer_data['components']:
+                if isinstance(comp, Weapon):
+                    weapons.append(comp)
+        return weapons
+    
+    def _calculate_threshold_ranges(self, weapon, ship):
+        """
+        Calculate the range at which each hit probability threshold is reached.
+        
+        Returns list of tuples: (threshold, range_value, damage)
+        Range is None if threshold is unreachable within weapon range.
+        """
+        results = []
+        target_defense = 1.0  # As specified by user
+        
+        base_acc = getattr(weapon, 'base_accuracy', 1.0)
+        falloff = getattr(weapon, 'accuracy_falloff', 0.0)
+        max_range = getattr(weapon, 'range', 0)
+        ship_offense = getattr(ship, 'baseline_to_hit_offense', 1.0)
+        damage = getattr(weapon, 'damage', 0)
+        
+        for threshold in self.THRESHOLDS:
+            # Calculate range needed for this hit chance
+            if falloff > 0:
+                # effective_hit = (base_acc - range * falloff) * ship_offense * target_defense
+                # threshold = effective_hit
+                # range = (base_acc - threshold / (ship_offense * target_defense)) / falloff
+                effective_threshold = threshold / (ship_offense * target_defense)
+                range_for_threshold = (base_acc - effective_threshold) / falloff
+            else:
+                # No falloff - either always or never hits at this threshold
+                effective_base = base_acc * ship_offense * target_defense
+                if effective_base >= threshold:
+                    range_for_threshold = max_range  # Achievable at max range
+                else:
+                    range_for_threshold = None  # Never reaches this threshold
+            
+            # Clamp to weapon's max range
+            if range_for_threshold is not None:
+                if range_for_threshold <= 0:
+                    range_for_threshold = 0
+                elif range_for_threshold > max_range:
+                    range_for_threshold = None  # Unreachable within weapon range
+                    
+            results.append((threshold, range_for_threshold, damage))
+            
+        return results
+    
+    def update(self):
+        """Update weapon list and calculations."""
+        ship = self.builder.ship
+        self._weapons_cache = self._get_all_weapons(ship)
+        
+        # Find max range across all weapons
+        self._max_range = 0
+        for weapon in self._weapons_cache:
+            weapon_range = getattr(weapon, 'range', 0)
+            if weapon_range > self._max_range:
+                self._max_range = weapon_range
+    
+    def draw(self, screen):
+        """Draw the weapons report visualization."""
+        if not self._weapons_cache:
+            # No weapons to display
+            font = pygame.font.SysFont("Arial", 12)
+            text = font.render("No weapons equipped", True, (100, 100, 100))
+            x = self.rect.x + 10
+            y = self.rect.y + 30
+            screen.blit(text, (x, y))
+            return
+            
+        ship = self.builder.ship
+        
+        # Drawing area
+        start_x = self.rect.x + self.WEAPON_NAME_WIDTH + self.RANGE_BAR_LEFT_MARGIN
+        bar_width = self.rect.width - self.WEAPON_NAME_WIDTH - self.RANGE_BAR_LEFT_MARGIN - 20
+        start_y = self.rect.y + 28
+        
+        font = pygame.font.SysFont("Arial", 11)
+        small_font = pygame.font.SysFont("Arial", 9)
+        
+        # Draw max range reference line
+        if self._max_range > 0:
+            max_range_x = start_x + bar_width
+            pygame.draw.line(screen, (100, 100, 150), 
+                           (max_range_x, start_y - 5), 
+                           (max_range_x, start_y + len(self._weapons_cache) * self.WEAPON_ROW_HEIGHT + 5), 2)
+            # Label
+            range_label = small_font.render(f"{int(self._max_range)}", True, (150, 150, 200))
+            screen.blit(range_label, (max_range_x - range_label.get_width()//2, start_y - 18))
+        
+        # Draw each weapon row
+        for i, weapon in enumerate(self._weapons_cache):
+            row_y = start_y + i * self.WEAPON_ROW_HEIGHT
+            
+            # Draw weapon icon
+            sprite = self.sprite_mgr.get_sprite(weapon.sprite_index)
+            if sprite:
+                scaled = pygame.transform.scale(sprite, (20, 20))
+                screen.blit(scaled, (self.rect.x + 5, row_y + 2))
+            
+            # Draw weapon name (truncated if needed)
+            name = weapon.name
+            if len(name) > 18:
+                name = name[:16] + ".."
+            name_surf = font.render(name, True, (200, 200, 200))
+            screen.blit(name_surf, (self.rect.x + 30, row_y + 5))
+            
+            # Draw range bar background
+            bar_y = row_y + 10
+            weapon_range = getattr(weapon, 'range', 0)
+            
+            if self._max_range > 0 and weapon_range > 0:
+                weapon_bar_width = int((weapon_range / self._max_range) * bar_width)
+                pygame.draw.line(screen, (50, 50, 80), (start_x, bar_y), (start_x + weapon_bar_width, bar_y), 4)
+                
+                # Calculate and draw threshold markers
+                threshold_data = self._calculate_threshold_ranges(weapon, ship)
+                
+                # Colors for thresholds (green to red gradient)
+                colors = [
+                    (0, 255, 0),    # 99% - bright green
+                    (50, 230, 0),   # 90%
+                    (100, 200, 0),  # 80%
+                    (150, 180, 0),  # 70%
+                    (180, 150, 0),  # 60%
+                    (200, 120, 0),  # 50% - yellow-orange
+                    (220, 90, 0),   # 40%
+                    (240, 60, 0),   # 30%
+                    (255, 30, 0),   # 20%
+                    (255, 0, 0),    # 10% - red
+                    (150, 0, 0),    # 1% - dark red
+                ]
+                
+                for j, (threshold, range_val, damage) in enumerate(threshold_data):
+                    if range_val is not None and range_val > 0:
+                        marker_x = start_x + int((range_val / self._max_range) * bar_width)
+                        color = colors[j] if j < len(colors) else (150, 150, 150)
+                        
+                        # Draw marker
+                        pygame.draw.circle(screen, color, (marker_x, bar_y), 4)
+                        
+                        # Draw damage value (only for key thresholds to avoid clutter)
+                        if threshold in [0.99, 0.50, 0.01]:
+                            dmg_label = small_font.render(f"{int(damage)}", True, color)
+                            label_x = marker_x - dmg_label.get_width() // 2
+                            label_y = bar_y - 12 if threshold == 0.99 else bar_y + 6
+                            screen.blit(dmg_label, (label_x, label_y))
