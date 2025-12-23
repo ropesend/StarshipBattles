@@ -487,6 +487,10 @@ class BuilderSceneGUI:
     def selected_component(self):
         return self.controller.selected_component
         
+    @selected_component.setter
+    def selected_component(self, value):
+        self.controller.selected_component = value
+        
     @property
     def dragged_item(self):
         return self.controller.dragged_item
@@ -512,6 +516,10 @@ class BuilderSceneGUI:
             action = self.layer_panel.handle_event(event)
 
         if action:
+            if isinstance(action, bool):
+                 # Just consumed event, no data
+                 return
+
             act_type, data = action
             if act_type == 'refresh_ui':
                 # Check for group propagation
@@ -521,12 +529,29 @@ class BuilderSceneGUI:
                 self.update_stats()
                 
             elif act_type == 'select_component_type':
-                # Left panel selection
-                # Clear Layer Panel selection
+                c = data
+                # Clear Layer Panel Selection (avoid confusion)
                 self.layer_panel.selected_group_key = None
                 self.layer_panel.selected_component_id = None
                 self.layer_panel.rebuild()
-                pass
+                
+                self.controller.dragged_item = c.clone()
+                # Apply template modifiers
+                for m_id, val in self.template_modifiers.items():
+                   if m_id in MODIFIER_REGISTRY:
+                       mod_def = MODIFIER_REGISTRY[m_id]
+                       allow = True
+                       if mod_def.restrictions:
+                           if 'allow_types' in mod_def.restrictions and c.type_str not in mod_def.restrictions['allow_types']:
+                               allow = False
+                       if allow:
+                           self.controller.dragged_item.add_modifier(m_id)
+                           m = self.controller.dragged_item.get_modifier(m_id)
+                           if m: m.value = val
+                self.controller.dragged_item.recalculate_stats()
+                
+                # Set as selected so modifiers panel updates
+                self.on_selection_changed(self.controller.dragged_item)
                 
             elif act_type == 'select_group':
                 # data is group_key
@@ -550,11 +575,12 @@ class BuilderSceneGUI:
                  from ui.builder.layer_panel import get_component_group_key
                  to_remove = []
                  for l_type, layers in self.ship.layers.items():
-                    for c in layers['components']:
+                    for idx, c in enumerate(layers['components']):
                          if get_component_group_key(c) == data:
-                             to_remove.append((l_type, c))
-                 for l_type, c in to_remove:
-                     self.ship.remove_component(c, l_type)
+                             to_remove.append((l_type, idx))
+                 # Remove in reverse order to avoid index shifting
+                 for l_type, idx in reversed(to_remove):
+                     self.ship.remove_component(l_type, idx)
                  
                  self.layer_panel.selected_group_key = None # Clear Selection
                  self.on_selection_changed(None)
@@ -562,14 +588,15 @@ class BuilderSceneGUI:
                  
             elif act_type == 'remove_individual':
                  # data is component
-                 if hasattr(data, 'layer_assigned') and data.layer_assigned:
-                     self.ship.remove_component(data, data.layer_assigned)
-                 else:
-                     # Fallback search
-                     for l_type, layers in self.ship.layers.items():
-                         if data in layers['components']:
-                             self.ship.remove_component(data, l_type)
+                 removed = False
+                 for l_type, layers in self.ship.layers.items():
+                     for idx, c in enumerate(layers['components']):
+                         if c is data:
+                             self.ship.remove_component(l_type, idx)
+                             removed = True
                              break
+                     if removed:
+                         break
                  
                  self.on_selection_changed(None)
                  self.update_stats()
@@ -582,22 +609,9 @@ class BuilderSceneGUI:
                 self.on_selection_changed(None)
                 self.left_panel.rebuild_modifier_ui()
                 logger.debug("Cleared settings or deselected component")
-            elif act_type == 'select_component_type':
-                c = data
-                self.controller.dragged_item = c.clone()
-                # Apply template modifiers
-                for m_id, val in self.template_modifiers.items():
-                   if m_id in MODIFIER_REGISTRY:
-                       mod_def = MODIFIER_REGISTRY[m_id]
-                       allow = True
-                       if mod_def.restrictions:
-                           if 'allow_types' in mod_def.restrictions and c.type_str not in mod_def.restrictions['allow_types']:
-                               allow = False
-                       if allow:
-                           self.controller.dragged_item.add_modifier(m_id)
-                           m = self.controller.dragged_item.get_modifier(m_id)
-                           if m: m.value = val
-                self.controller.dragged_item.recalculate_stats()
+            elif act_type == 'toggle_layer':
+                # Layer header toggle - already handled by callback
+                pass
             return
         
         self.controller.handle_event(event)
