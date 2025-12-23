@@ -23,32 +23,41 @@ class TestMultitarget(unittest.TestCase):
         self.ship.ai_controller = self.ai
         
         # Add Infrastructure to avoid derelict status and allow components to work
-        # 1. Generator
-        if 'fusion_reactor' in COMPONENT_REGISTRY:
-            gen = COMPONENT_REGISTRY['fusion_reactor'].clone()
-            self.ship.add_component(gen, LayerType.CORE)
-        
-        # 2. Bridge
+        # 1. Bridge (required for non-derelict)
         if 'bridge' in COMPONENT_REGISTRY:
             bridge = COMPONENT_REGISTRY['bridge'].clone()
             self.ship.add_component(bridge, LayerType.CORE)
         
-        # 3. Engine
-        if 'nuclear_drive' in COMPONENT_REGISTRY:
-            engine = COMPONENT_REGISTRY['nuclear_drive'].clone()
+        # 2. Engine (required for non-derelict on Ships)
+        if 'standard_engine' in COMPONENT_REGISTRY:
+            engine = COMPONENT_REGISTRY['standard_engine'].clone()
             self.ship.add_component(engine, LayerType.INNER)
             
-        # 4. Crew Quarters (Need enough for Multi-tracker + weapons)
+        # 3. Generator
+        if 'generator' in COMPONENT_REGISTRY:
+            gen = COMPONENT_REGISTRY['generator'].clone()
+            self.ship.add_component(gen, LayerType.CORE)
+        
+        # 4. Battery (for energy storage - required for beam weapons)
+        if 'battery' in COMPONENT_REGISTRY:
+            bat = COMPONENT_REGISTRY['battery'].clone()
+            self.ship.add_component(bat, LayerType.INNER)
+            
+        # 4. Crew Quarters (Need enough for Multi-tracker + weapons + bridge)
         if 'crew_quarters' in COMPONENT_REGISTRY:
             cq1 = COMPONENT_REGISTRY['crew_quarters'].clone()
             self.ship.add_component(cq1, LayerType.INNER)
             cq2 = COMPONENT_REGISTRY['crew_quarters'].clone()
             self.ship.add_component(cq2, LayerType.INNER)
+            cq3 = COMPONENT_REGISTRY['crew_quarters'].clone()
+            self.ship.add_component(cq3, LayerType.INNER)
         
         # 5. Life Support
         if 'life_support' in COMPONENT_REGISTRY:
             ls = COMPONENT_REGISTRY['life_support'].clone()
             self.ship.add_component(ls, LayerType.INNER)
+            ls2 = COMPONENT_REGISTRY['life_support'].clone()
+            self.ship.add_component(ls2, LayerType.INNER)
         
         self.ship.recalculate_stats()
         
@@ -141,6 +150,12 @@ class TestMultitarget(unittest.TestCase):
         # Manually set secondary targets as AI update would
         self.ship.secondary_targets = sec
         context = {'projectiles': [m1, m2]}
+        
+        # Ensure ship has resources to fire
+        self.ship.current_energy = self.ship.max_energy
+        
+        # Ensure PDC is not on cooldown
+        pdc.cooldown_timer = 0
         
         fired = self.ship.fire_weapons(context)
         
