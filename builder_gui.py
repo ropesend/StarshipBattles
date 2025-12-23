@@ -23,7 +23,7 @@ from preset_manager import PresetManager
 from ship_io import ShipIO
 from builder_components import ModifierEditorPanel
 from ship_theme import ShipThemeManager
-from builder_panels import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel
+from ui.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel
 
 # Initialize Tkinter root and hide it (for simpledialog)
 try:

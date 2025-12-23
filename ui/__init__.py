@@ -1,5 +1,7 @@
 import pygame
 
+# --- Legacy UI Widgets (moved from ui.py) ---
+
 class Button:
     def __init__(self, x, y, w, h, text, callback, color=(100, 100, 100), hover_color=(150, 150, 150)):
         self.rect = pygame.Rect(x, y, w, h)
@@ -96,3 +98,4 @@ class Slider:
         # Track
         pygame.draw.rect(surface, (100, 100, 100), self.rect)
         # Handle
+        pygame.draw.rect(surface, (200, 200, 200), self.get_handle_rect())

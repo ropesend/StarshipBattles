@@ -9,7 +9,7 @@ sys.path.append(os.getcwd())
 
 try:
     # Attempt to import the modified modules
-    from builder_panels import BuilderLeftPanel, ComponentListItem
+    from ui.builder import BuilderLeftPanel, ComponentListItem
     from builder_gui import BuilderSceneGUI
     print("Imports successful.")
 except Exception as e:
