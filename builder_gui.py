@@ -341,7 +341,7 @@ class BuilderSceneGUI:
         # Layout
         self.left_panel_width = 450
         self.right_panel_width = 380
-        self.layer_panel_width = 320 # New Column
+        self.layer_panel_width = 450 # Widened
         self.detail_panel_width = 550
         self.bottom_bar_height = 60
         self.weapons_report_height = 600
@@ -360,6 +360,8 @@ class BuilderSceneGUI:
         self.error_message = ""
         self.error_timer = 0
         self.show_firing_arcs = False
+        
+        self.selected_component_group = None
         
         self._create_ui()
         
@@ -439,14 +441,48 @@ class BuilderSceneGUI:
         
     def on_selection_changed(self, component_tuple):
         # component_tuple is (layer, index, comp) or None
-        # We need to expose selected_component to LeftPanel if it uses it.
-        # Currently LeftPanel uses builder.selected_component.
-        # But now selected_component is in controller.
-        # We should proxy it or alias it.
-        # For legacy compatibility, let's add a property or sync it?
-        # A property is better.
+        # OR just comp if coming from layer panel
+        
+        # New: support selected_component_group
+        # If component_tuple is just a component object (from layer panel), wrap it mockingly
+        
+        if component_tuple:
+            if isinstance(component_tuple, tuple):
+                self.selected_component = component_tuple
+            else:
+                # It's a component object
+                self.selected_component = (None, -1, component_tuple)
+        else:
+            self.selected_component = None
+            self.selected_component_group = None
+            
         self.left_panel.rebuild_modifier_ui()
-
+            
+    def propagate_group_modifiers(self, leader_comp):
+        """
+        Copy modifiers from leader component to all others in the selected group.
+        """
+        if not self.selected_component_group: return
+        
+        # Definition of "Identical" relies on modifiers matching.
+        # Use serialization/deserialization or manual copy.
+        
+        leader_mods = leader_comp.modifiers
+        
+        for comp in self.selected_component_group:
+            if comp is leader_comp: continue
+            
+            # Clear and Copy
+            comp.modifiers = []
+            for m in leader_mods:
+                # Create new AppMod with same def and value
+                new_mod = m.__class__(m.definition, m.value)
+                comp.modifiers.append(new_mod)
+            
+            comp.recalculate_stats()
+            
+        self.ship.recalculate_stats()
+        
     @property
     def selected_component(self):
         return self.controller.selected_component
@@ -472,27 +508,80 @@ class BuilderSceneGUI:
          # Pass to modifier panel
         action = self.left_panel.handle_event(event)
         if not action:
-            # Pass to layer panel (headers)
-            if self.layer_panel.handle_event(event):
-                # Layer panel consumed event
-                pass
-        
+            # Pass to layer panel (headers and items)
+            action = self.layer_panel.handle_event(event)
+
         if action:
             act_type, data = action
             if act_type == 'refresh_ui':
-                self.left_panel.rebuild_modifier_ui()
-                self.update_stats() 
-            elif act_type == 'clear_settings':
-                if self.controller.selected_component:
-                    self.controller.selected_component = None
-                    self.on_selection_changed(None)
-                else:
-                    self.template_modifiers = {}
-                self.left_panel.rebuild_modifier_ui()
-                logger.debug("Cleared settings or deselected component")
+                # Check for group propagation
+                if self.selected_component_group and self.selected_component:
+                    self.propagate_group_modifiers(self.selected_component[2])
+                    
+                self.update_stats()
+                
+            elif act_type == 'select_component_type':
+                # Left panel selection
+                # Clear Layer Panel selection
+                self.layer_panel.selected_group_key = None
+                self.layer_panel.selected_component_id = None
+                self.layer_panel.rebuild()
+                pass
+                
+            elif act_type == 'select_group':
+                # data is group_key
+                comps = []
+                from ui.builder.layer_panel import get_component_group_key
+                for layers in self.ship.layers.values():
+                    for c in layers['components']:
+                         if get_component_group_key(c) == data:
+                             comps.append(c)
+                
+                self.selected_component_group = comps
+                if comps:
+                    self.on_selection_changed(comps[0]) # Set leader
+                
+            elif act_type == 'select_individual':
+                self.selected_component_group = None
+                self.on_selection_changed(data)
+                
+            elif act_type == 'remove_group':
+                 # data is group_key
+                 from ui.builder.layer_panel import get_component_group_key
+                 to_remove = []
+                 for l_type, layers in self.ship.layers.items():
+                    for c in layers['components']:
+                         if get_component_group_key(c) == data:
+                             to_remove.append((l_type, c))
+                 for l_type, c in to_remove:
+                     self.ship.remove_component(c, l_type)
+                 
+                 self.layer_panel.selected_group_key = None # Clear Selection
+                 self.on_selection_changed(None)
+                 self.update_stats()
+                 
+            elif act_type == 'remove_individual':
+                 # data is component
+                 if hasattr(data, 'layer_assigned') and data.layer_assigned:
+                     self.ship.remove_component(data, data.layer_assigned)
+                 else:
+                     # Fallback search
+                     for l_type, layers in self.ship.layers.items():
+                         if data in layers['components']:
+                             self.ship.remove_component(data, l_type)
+                             break
+                 
+                 self.on_selection_changed(None)
+                 self.update_stats()
             elif act_type == 'apply_preset':
                 self.template_modifiers = data
                 self.left_panel.rebuild_modifier_ui()
+            elif act_type == 'clear_settings':
+                self.controller.selected_component = None
+                self.template_modifiers = {}
+                self.on_selection_changed(None)
+                self.left_panel.rebuild_modifier_ui()
+                logger.debug("Cleared settings or deselected component")
             elif act_type == 'select_component_type':
                 c = data
                 self.controller.dragged_item = c.clone()

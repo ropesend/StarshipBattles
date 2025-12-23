@@ -20,10 +20,15 @@ def get_component_group_key(component):
 
 class IndividualComponentItem:
     """Row for a single component inside an expanded group."""
-    def __init__(self, manager, container, component, max_mass, y_pos, width, sprite_mgr):
+    def __init__(self, manager, container, component, max_mass, y_pos, width, sprite_mgr, callback_remove, callback_select, is_selected):
         self.component = component
+        self.callback_remove = callback_remove
+        self.callback_select = callback_select
         self.height = 30
         self.rect = pygame.Rect(0, y_pos, width, self.height)
+        
+        # Highlight if selected
+        bg_color = "#333344" if is_selected else "#151515"
         
         self.panel = UIPanel(
             relative_rect=self.rect,
@@ -31,6 +36,17 @@ class IndividualComponentItem:
             container=container,
             object_id='#individual_component_item',
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
+        )
+        self.panel.background_colour = pygame.Color(bg_color) 
+        
+        # Clickable Area (Button covering text/icon)
+        self.select_button = UIButton(
+            relative_rect=pygame.Rect(0, 0, width - 35, self.height),
+            text="",
+            manager=manager,
+            container=self.panel,
+            object_id='#transparent_button', 
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
         
         # Indent Icon
@@ -52,8 +68,9 @@ class IndividualComponentItem:
             container=self.panel
         )
         
+        # Mass shifted right
         UILabel(
-            relative_rect=pygame.Rect(-160, 0, 80, self.height),
+            relative_rect=pygame.Rect(-130, 0, 60, self.height),
             text=f"{int(component.mass)}t",
             manager=manager,
             container=self.panel,
@@ -62,13 +79,31 @@ class IndividualComponentItem:
         
         pct_val = (component.mass / max_mass * 100) if max_mass > 0 else 0
         UILabel(
-            relative_rect=pygame.Rect(-70, 0, 60, self.height),
+            relative_rect=pygame.Rect(-70, 0, 50, self.height),
             text=f"{pct_val:.1f}%",
             manager=manager,
             container=self.panel,
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}
         )
+
+        # Remove Button
+        self.remove_button = UIButton(
+            relative_rect=pygame.Rect(-32, 2, 28, 26),
+            text="✕",
+            manager=manager,
+            container=self.panel,
+            object_id='#delete_button',
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+        )
         
+    def handle_event(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.remove_button:
+                return self.callback_remove(self.component)
+            elif event.ui_element == self.select_button:
+                return self.callback_select(self.component)
+        return False
+
     def kill(self):
         self.panel.kill()
 
@@ -76,13 +111,17 @@ class LayerComponentItem:
     """
     Row representing a component group.
     """
-    def __init__(self, manager, container, component, count, total_mass, total_pct, is_expanded, callback, group_key, y_pos, width, sprite_mgr):
+    def __init__(self, manager, container, component, count, total_mass, total_pct, is_expanded, callback_expand, callback_select, callback_remove, group_key, is_selected, y_pos, width, sprite_mgr):
         self.group_key = group_key
-        self.callback = callback
+        self.callback_expand = callback_expand
+        self.callback_select = callback_select
+        self.callback_remove = callback_remove
         self.count = count
         self.height = 40
         self.rect = pygame.Rect(0, y_pos, width, self.height)
         
+        bg_color = "#444455" if is_selected else "#202020"
+
         self.panel = UIPanel(
             relative_rect=self.rect,
             manager=manager,
@@ -90,26 +129,30 @@ class LayerComponentItem:
             object_id='#layer_component_item',
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
         )
+        self.panel.background_colour = pygame.Color(bg_color)
         
-        # Helper to make row clickable
-        self.button = UIButton(
-            relative_rect=pygame.Rect(0, 0, width, self.height),
+        # Selection Button (Covers most area)
+        self.select_button = UIButton(
+            relative_rect=pygame.Rect(0, 0, width - 35, self.height),
             text="",
             manager=manager,
             container=self.panel,
-            object_id='#layer_component_button',
+            object_id='#transparent_button',
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
         
-        # Expansion Arrow (if count > 1)
+        # Expand Button
         if count > 1:
             arrow = "▼" if is_expanded else "▶"
-            UILabel(
-                relative_rect=pygame.Rect(2, 0, 15, self.height),
+            self.expand_button = UIButton(
+                relative_rect=pygame.Rect(2, 5, 20, 30),
                 text=arrow,
                 manager=manager,
-                container=self.panel
+                container=self.panel,
+                object_id='#expand_button'
             )
+        else:
+            self.expand_button = None
         
         # Icon
         icon_size = 32
@@ -117,7 +160,7 @@ class LayerComponentItem:
         if sprite:
             scaled = pygame.transform.scale(sprite, (icon_size, icon_size))
             UIImage(
-                relative_rect=pygame.Rect(20, (self.height - icon_size)//2, icon_size, icon_size),
+                relative_rect=pygame.Rect(25, (self.height - icon_size)//2, icon_size, icon_size),
                 image_surface=scaled,
                 manager=manager,
                 container=self.panel
@@ -129,7 +172,7 @@ class LayerComponentItem:
             name_text += f" x{count}"
             
         UILabel(
-            relative_rect=pygame.Rect(60, 0, 160, self.height),
+            relative_rect=pygame.Rect(65, 0, 160, self.height),
             text=name_text,
             manager=manager,
             container=self.panel
@@ -137,7 +180,7 @@ class LayerComponentItem:
         
         # Mass
         UILabel(
-            relative_rect=pygame.Rect(-160, 0, 80, self.height),
+            relative_rect=pygame.Rect(-130, 0, 60, self.height),
             text=f"{int(total_mass)}t",
             manager=manager,
             container=self.panel,
@@ -146,18 +189,32 @@ class LayerComponentItem:
         
         # Percent
         UILabel(
-            relative_rect=pygame.Rect(-70, 0, 60, self.height),
+            relative_rect=pygame.Rect(-70, 0, 50, self.height),
             text=f"{total_pct:.1f}%",
             manager=manager,
             container=self.panel,
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}
         )
+        
+        # Remove Button
+        self.remove_button = UIButton(
+            relative_rect=pygame.Rect(-32, 5, 28, 30),
+            text="✕",
+            manager=manager,
+            container=self.panel,
+            object_id='#delete_button',
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+        )
 
     def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.button:
-            if self.count > 1:
-                self.callback(self.group_key)
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if self.expand_button and event.ui_element == self.expand_button:
+                self.callback_expand(self.group_key)
                 return True
+            elif event.ui_element == self.remove_button:
+                return self.callback_remove(self.group_key)
+            elif event.ui_element == self.select_button:
+                return self.callback_select(self.group_key)
         return False
 
     def kill(self):
@@ -244,6 +301,10 @@ class LayerPanel:
         self.rect = rect
         self.items = [] 
         
+        # State
+        self.selected_group_key = None
+        self.selected_component_id = None # Check by instance match?
+        
         self.panel = UIPanel(
             relative_rect=rect,
             manager=manager,
@@ -283,13 +344,32 @@ class LayerPanel:
         self.expanded_groups[group_key] = not self.expanded_groups.get(group_key, False)
         self.rebuild()
         
+    def on_select_group(self, group_key):
+        self.selected_group_key = group_key
+        self.selected_component_id = None
+        self.rebuild()
+        return ('select_group', group_key)
+        
+    def on_select_individual(self, component):
+        self.selected_group_key = None
+        self.selected_component_id = component
+        self.rebuild()
+        return ('select_individual', component)
+        
+    def on_remove_group(self, group_key):
+        return ('remove_group', group_key)
+        
+    def on_remove_individual(self, component):
+        return ('remove_individual', component)
+        
     def rebuild(self):
         for item in self.items:
             item.kill()
         self.items = []
         
         y_pos = 0
-        content_width = self.scroll_container.get_container().get_rect().width
+        container_rect = self.scroll_container.get_container().get_rect()
+        content_width = container_rect.width
         
         layer_order = [LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR]
         ship = self.builder.ship
@@ -322,6 +402,7 @@ class LayerPanel:
                 for comp_list, count, mass_total, group_key in groups:
                     pct_val = (mass_total / max_mass * 100) if max_mass > 0 else 0
                     is_expanded = self.expanded_groups.get(group_key, False)
+                    is_selected_group = (self.selected_group_key == group_key)
                     
                     # Use first component as template
                     comp_template = comp_list[0]
@@ -335,7 +416,10 @@ class LayerPanel:
                         pct_val,
                         is_expanded,
                         self.toggle_group,
+                        self.on_select_group,
+                        self.on_remove_group,
                         group_key,
+                        is_selected_group,
                         y_pos,
                         content_width,
                         self.builder.sprite_mgr
@@ -345,6 +429,7 @@ class LayerPanel:
                     
                     if is_expanded:
                         for comp in comp_list:
+                             is_sel_ind = (self.selected_component_id == comp)
                              ind_item = IndividualComponentItem(
                                 self.manager,
                                 self.scroll_container,
@@ -352,7 +437,10 @@ class LayerPanel:
                                 max_mass,
                                 y_pos,
                                 content_width,
-                                self.builder.sprite_mgr
+                                self.builder.sprite_mgr,
+                                self.on_remove_individual,
+                                self.on_select_individual,
+                                is_sel_ind
                              )
                              self.items.append(ind_item)
                              y_pos += ind_item.height
@@ -386,8 +474,9 @@ class LayerPanel:
     def handle_event(self, event):
         for item in self.items:
             if hasattr(item, 'handle_event'):
-                if item.handle_event(event):
-                    return True
+                result = item.handle_event(event)
+                if result:
+                    return result
         return False
 
     def update(self, dt):
