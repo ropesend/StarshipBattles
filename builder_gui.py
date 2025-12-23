@@ -88,11 +88,10 @@ class BuilderSceneGUI:
         # Managers
         self.preset_manager = PresetManager()
         
-        # Layout dimensions
         self.left_panel_width = 450
         self.right_panel_width = 380
         self.bottom_bar_height = 60
-        self.weapons_report_height = 150
+        self.weapons_report_height = 600  # Doubled again from 300
         self.component_row_height = 40
         
         # Create UI
@@ -168,11 +167,32 @@ class BuilderSceneGUI:
             manager=self.ui_manager
         )
         
-        # Firing arc toggle
+        # Select Target Button (for Weapons Report)
+        self.target_btn = UIButton(
+            relative_rect=pygame.Rect(start_x + (btn_w + spacing) * 4, btn_y, 140, btn_h),
+            text="Select Target",
+            manager=self.ui_manager
+        )
+        
+        # Select Target Button (for Weapons Report)
+        self.target_btn = UIButton(
+            relative_rect=pygame.Rect(start_x + (btn_w + spacing) * 4, btn_y, 140, btn_h),
+            text="Select Target",
+            manager=self.ui_manager
+        )
+        
+        # Verbose Toggle Button
+        self.verbose_btn = UIButton(
+            relative_rect=pygame.Rect(start_x + (btn_w + spacing) * 4 + 150, btn_y, 160, btn_h),
+            text="Toggle Verbose",
+            manager=self.ui_manager
+        )
+        
+        # Firing arc toggle (moved to top of schematic area)
         self.arc_toggle_btn = UIButton(
             relative_rect=pygame.Rect(
                 self.left_panel_width + 10,
-                self.height - self.bottom_bar_height - 40,
+                10,
                 150, 30
             ),
             text="Show Firing Arcs",
@@ -244,6 +264,14 @@ class BuilderSceneGUI:
                 self.show_firing_arcs = not self.show_firing_arcs
                 text = "Hide Firing Arcs" if self.show_firing_arcs else "Show Firing Arcs"
                 self.arc_toggle_btn.set_text(text)
+            elif event.ui_element == self.target_btn:
+                self._on_select_target_pressed()
+            elif event.ui_element == self.verbose_btn:
+                if hasattr(self, 'weapons_report_panel'):
+                    self.weapons_report_panel.verbose_tooltip = not self.weapons_report_panel.verbose_tooltip
+                    # Optional: update button text or visual state if desired
+                    state = self.weapons_report_panel.verbose_tooltip
+                    logger.info(f"Toggled verbose tooltips: {state}")
             
             # Right Panel Buttons check (if not covered by above, but above covers main ones)
             # Actually, save_btn/load_btn/etc are members of builder_gui (created at bottom bar).
@@ -404,6 +432,16 @@ class BuilderSceneGUI:
             print(message)
         elif message:
             self._show_error(message)
+            
+    def _on_select_target_pressed(self):
+        """Handle Select Target button press."""
+        # Reuse ShipIO to load a ship, but don't replace current design
+        target_ship, message = ShipIO.load_ship(self.width, self.height)
+        if target_ship:
+            self.weapons_report_panel.set_target(target_ship)
+            print(f"Target selected: {target_ship.name}")
+        elif message and "Cancelled" not in message:
+            self._show_error(message)
                 
     def _show_clear_confirmation(self):
         """Show confirmation dialog for clearing design."""
@@ -428,10 +466,27 @@ class BuilderSceneGUI:
         self.ship.ai_strategy = "optimal_firing_range"
         self.right_panel.ai_dropdown.selected_option = "Optimal Firing Range"
         
+        self.right_panel.ai_dropdown.selected_option = "Optimal Firing Range"
+        
         self.ship.recalculate_stats()
         self._update_stats_display()
         self._rebuild_modifier_ui()
         self.selected_component = None
+        
+        # Clear target in weapons report
+        if hasattr(self, 'weapons_report_panel'):
+            self.weapons_report_panel.clear_target()
+            
+    def _on_select_target_pressed(self):
+        """Handle Select Target button press."""
+        # Reuse ShipIO to load a ship, but don't replace current design
+        target_ship, message = ShipIO.load_ship(self.width, self.height)
+        if target_ship:
+            self.weapons_report_panel.set_target(target_ship)
+            # Notify user via console for now, visual update will happen in panel
+            logger.info(f"Selected target: {target_ship.name}")
+        elif message and "Cancelled" not in message:
+            self._show_error(message)
         
     def _show_error(self, msg):
         """Display error message."""
@@ -571,8 +626,8 @@ class BuilderSceneGUI:
             self._draw_component_firing_arc(screen, self.hovered_component)
             
         self.left_panel.draw(screen)
-        self.weapons_report_panel.draw(screen)
         self.ui_manager.draw_ui(screen)
+        self.weapons_report_panel.draw(screen)
         
         if self.hovered_component and not self.dragged_item:
             self._draw_tooltip(screen, self.hovered_component)
