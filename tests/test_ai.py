@@ -162,8 +162,10 @@ class TestAIStrategyStates(unittest.TestCase):
         
         self.ai.update()
         
-        self.assertTrue(hasattr(self.ai, 'attack_state'))
-        self.assertEqual(self.ai.attack_state, 'approach')
+        self.assertTrue(self.ai.current_behavior is not None)
+        # Check if behavior has state
+        self.assertTrue(hasattr(self.ai.current_behavior, 'attack_state'))
+        self.assertEqual(self.ai.current_behavior.attack_state, 'approach')
     
     def test_attack_run_transitions_to_retreat(self):
         """Attack run should transition to retreat when close."""
@@ -173,7 +175,8 @@ class TestAIStrategyStates(unittest.TestCase):
         
         self.ai.update()
         # After being very close, should switch to retreat
-        self.assertEqual(self.ai.attack_state, 'retreat')
+        self.assertIsNotNone(self.ai.current_behavior)
+        self.assertEqual(self.ai.current_behavior.attack_state, 'retreat')
 
 
 if __name__ == '__main__':

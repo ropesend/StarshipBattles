@@ -178,336 +178,14 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         return None
 
     def recalculate_stats(self):
-        from components import LayerType, Engine, Thruster, Generator, Tank, Armor, Shield, ShieldRegenerator, ComponentStatus, Weapon
+        """
+        Recalculates derived stats. Delegates to ShipStatsCalculator.
+        """
+        if not hasattr(self, 'stats_calculator'):
+             from ship_stats import ShipStatsCalculator
+             self.stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)
         
-        # 1. Reset Base Calculations
-        self.current_mass = 0
-        self.layer_status = {}
-        self.mass_limits_ok = True
-        self.drag = 0.5 
-        
-        # Calculate Mass (Mass never changes due to damage/status in this model, dead weight remains)
-        for layer_type, layer_data in self.layers.items():
-            l_mass = sum(c.mass for c in layer_data['components'])
-            layer_data['mass'] = l_mass
-            self.current_mass += l_mass
-            
-        self.mass = self.current_mass + self.base_mass
-
-        # Base Stats Reset
-        self.total_thrust = 0
-        self.turn_speed = 0
-        self.max_fuel = 0
-        self.max_ammo = 0
-        self.max_energy = 0
-        self.energy_gen_rate = 0
-        self.max_shields = 0
-        self.shield_regen_rate = 0
-        self.shield_regen_cost = 0
-        self.layers[LayerType.ARMOR]['max_hp_pool'] = 0
-        
-        # 2. Phase 1: Damage Check & Resource Supply Gathering
-        # ----------------------------------------------------
-        available_crew = 0     # From Crew Quarters
-        available_life_support = 0 # From Life Support
-        
-        component_pool = [] # List of (comp, layer_type) for next phases
-        
-        for layer_type, layer_data in self.layers.items():
-            for comp in layer_data['components']:
-                # Reset Status Assumption
-                comp.is_active = True
-                comp.status = ComponentStatus.ACTIVE
-                
-                # Check Damage Threshold (ignore Armor)
-                if not isinstance(comp, Armor):
-                     if comp.max_hp > 0 and (comp.current_hp / comp.max_hp) <= 0.5:
-                         comp.is_active = False
-                         comp.status = ComponentStatus.DAMAGED
-                
-                # If armor is dead (0 hp), it's inactive (though armor usually works tll 0)
-                if isinstance(comp, Armor) and comp.current_hp <= 0:
-                    comp.is_active = False
-                    comp.status = ComponentStatus.DAMAGED
-                
-                # Gather Supply from FUNCTIONAL components
-                if comp.is_active:
-                    abilities = comp.abilities
-                    # Crew Provided (Positive CrewCapacity)
-                    c_cap = abilities.get('CrewCapacity', 0)
-                    if c_cap > 0:
-                        available_crew += c_cap
-                        
-                    # Life Support Provided
-                    ls_cap = abilities.get('LifeSupportCapacity', 0)
-                    if ls_cap > 0:
-                        available_life_support += ls_cap
-
-                component_pool.append(comp)
-
-        # 3. Phase 2: Resource Allocation (Crew & Life Support)
-        # -----------------------------------------------------
-        # Store for UI
-        self.crew_onboard = available_crew
-        self.crew_required = 0
-        self.max_targets = 1 # Reset to default
-
-        
-        # Effective Crew is limited by Life Support
-        effective_crew = min(available_crew, available_life_support)
-        
-        # Priority: Bridge > Engine > Weapon > Others
-        def priority_sort(c):
-            t = c.type_str
-            # Bridge (Command)
-            if t == "Bridge": return 0
-            # Engines (Movement)
-            if t == "Engine" or t == "Thruster": return 1
-            # Weapons (Offense)
-            if isinstance(c, Weapon): return 2
-            # Others
-            return 3
-            
-        component_pool.sort(key=priority_sort)
-        
-        for comp in component_pool:
-            if not comp.is_active: continue # Already damaged
-            
-            # Check Crew Requirement (Use positive CrewRequired)
-            req_crew = comp.abilities.get('CrewRequired', 0)
-            
-            # Satellite Exception: Satellites ignore crew requirements
-            if self.vehicle_type == "Satellite":
-                req_crew = 0
-            
-            # Legacy fallback: Check for negative CrewCapacity if CrewRequired missing
-            # (Though we updated JSON, this is safe for any custom mods)
-            if req_crew == 0:
-                 req_crew = abs(min(0, comp.abilities.get('CrewCapacity', 0)))
-
-            self.crew_required += req_crew
-            
-            if req_crew > 0:
-                if effective_crew >= req_crew:
-                    effective_crew -= req_crew
-                else:
-                    comp.is_active = False
-                    comp.status = ComponentStatus.NO_CREW
-        
-        # 4. Phase 3: Stats Aggregation (Active Components Only)
-        # ------------------------------------------------------
-        # Also check for runtime resource starvations (No Fuel/Energy) if we simulate them here.
-        # Note: Simulation of current_fuel vs max_fuel happens in update(), but we can flag stats here.
-        
-        for comp in component_pool:
-            if not comp.is_active: continue
-            
-            if isinstance(comp, Engine):
-                self.total_thrust += comp.thrust_force
-            elif isinstance(comp, Thruster):
-                self.turn_speed += comp.turn_speed
-            elif isinstance(comp, Generator):
-                self.energy_gen_rate += comp.energy_generation_rate
-            elif isinstance(comp, Tank):
-                if comp.resource_type == 'fuel':
-                    self.max_fuel += comp.capacity
-                elif comp.resource_type == 'ammo':
-                    self.max_ammo += comp.capacity
-                elif comp.resource_type == 'energy':
-                    self.max_energy += comp.capacity
-            elif isinstance(comp, Armor):
-                # Armor contributes to pool regardless of active status generally, 
-                # but we marked it inactive if 0 HP above.
-                self.layers[LayerType.ARMOR]['max_hp_pool'] += comp.max_hp
-            elif isinstance(comp, Shield):
-                self.max_shields += comp.shield_capacity
-            elif isinstance(comp, ShieldRegenerator):
-                self.shield_regen_rate += comp.regen_rate
-                self.shield_regen_cost += comp.energy_cost
-            
-            # Check for generic abilities that affect stats
-            # MultiplexTracking
-            mt = comp.abilities.get('MultiplexTracking', 0)
-            if mt > 0:
-                # We take the best tracking computer's val (or sum? implementation plan implied capability)
-                # Let's say it doesn't stack, or stacks?
-                # "Ability to target up to 10" implies replacing the default 1.
-                # If we have 2 computers (10 each), do we get 20? 
-                # Let's assume max(existing, new) or just overwrite if higher? 
-                # Let's simple sum for now or max. Let's use max to avoid 100 targets.
-                if mt > self.max_targets:
-                    self.max_targets = mt
-
-
-        # 5. Phase 4: Physics & Limits
-        # ----------------------------
-        
-        # Derelict Check
-        # Condition: No functional Bridge OR No functional Engines (Thrust <= 0)
-        has_active_bridge = False
-        for c in component_pool:
-            if isinstance(c, Bridge) and c.is_active:
-                has_active_bridge = True
-                break
-        
-        if self.vehicle_type == "Satellite":
-            if not has_active_bridge:
-                self.is_derelict = True
-            else:
-                self.is_derelict = False
-        else:
-            if (not has_active_bridge) or (self.total_thrust <= 0):
-                self.is_derelict = True
-                self.total_thrust = 0 # Ensure 0
-            else:
-                self.is_derelict = False
-        
-        # Physics Stats - INVERSE MASS SCALING
-        K_THRUST = 2500
-        K_TURN = 25000
-        
-        if self.mass > 0:
-            if self.is_derelict:
-                self.acceleration_rate = 2.0 # Allow deceleration to stop
-                self.turn_speed = 0
-                self.max_speed = 0
-            else:
-                self.acceleration_rate = (self.total_thrust * K_THRUST) / (self.mass * self.mass)
-                raw_turn_speed = self.turn_speed
-                self.turn_speed = (raw_turn_speed * K_TURN) / (self.mass ** 1.5)
-                
-                K_SPEED = 25
-                self.max_speed = (self.total_thrust * K_SPEED) / self.mass if self.total_thrust > 0 else 0
-        else:
-            self.acceleration_rate = 0
-            self.max_speed = 0
-            
-        # Limit Checks (Budget)
-        self.mass_limits_ok = True
-        self.layer_limits = {
-            LayerType.ARMOR: 0.30,
-            LayerType.CORE: 0.30,
-            LayerType.OUTER: 0.50,
-            LayerType.INNER: 0.50
-        }
-        
-        # Budget check (Max Mass)
-        self.max_mass_budget = 1000 # Default
-        from ship import SHIP_CLASSES
-        if self.ship_class in SHIP_CLASSES:
-             self.max_mass_budget = SHIP_CLASSES[self.ship_class]
-
-        for layer_type, layer_data in self.layers.items():
-            limit_ratio = self.layer_limits.get(layer_type, 1.0)
-            ratio = layer_data['mass'] / self.max_mass_budget
-            is_ok = ratio <= limit_ratio
-            self.layer_status[layer_type] = {
-                'mass': layer_data['mass'],
-                'ratio': ratio,
-                'limit': limit_ratio,
-                'ok': is_ok
-            }
-            if not is_ok: self.mass_limits_ok = False
-        
-        if self.mass > self.max_mass_budget:
-            self.mass_limits_ok = False
-    
-        # Radius Calculation
-        base_radius = 40
-        ref_mass = 1000
-        actual_mass = max(self.mass, 100)
-        ratio = actual_mass / ref_mass
-        self.radius = base_radius * (ratio ** (1/3.0))
-
-        # 6. Phase 5: To-Hit & Electronic Warfare Stats
-        # ---------------------------------------------
-        
-        # Defensive Profile (Odds of being hit)
-        # Factor 1: Size (Cross Section) - Diameter Squared
-        # Normalized to a standard frigate/destroyer size (~80 diameter)
-        diameter = self.radius * 2
-        size_factor = (diameter / 80.0) ** 2
-        
-        # Factor 2: Maneuverability
-        # Higher turn and acceleration reduces profile
-        # Turn Speed is deg/s (e.g., 30-60), Accel is units/s^2 (e.g., 2-5)
-        # Base denominator starts at 1.0
-        # Reference Values: 225.0 Turn Speed, 20.0 Acceleration
-        maneuver_bonus = 1.0 + (self.turn_speed / 225.0) + (self.acceleration_rate / 20.0)
-        maneuver_factor = 1.0 / maneuver_bonus
-        
-        # Factor 3: Electronic Defense (ECM)
-        # This is multiplicative divisor (e.g. 2.0 defense mod = 0.5 odds to hit)
-        defense_mods = self.get_ability_total('ToHitDefenseModifier')
-        # If no defensive mods, default to 1.0 (no effect). 
-        # get_ability_total returns 0 if not found for additive, but 1.0 for multiplicative? 
-        # _calculate_ability_totals logic for multiplicative starts at 1.0 if key exists?
-        # Let's check _calculate_ability_totals. It creates entry if it sees it.
-        # But if no component has it, it returns 0 from .get().
-        if defense_mods < 0.01: defense_mods = 1.0
-        
-        self.to_hit_profile = size_factor * maneuver_factor / defense_mods
-        
-        # Offensive Baseline (Sensor Strength)
-        attack_mods = self.get_ability_total('ToHitAttackModifier')
-        if attack_mods < 0.01: attack_mods = 1.0
-        
-        self.baseline_to_hit_offense = attack_mods
-
-        # Armor Pool Init (if starting)
-        if self.layers[LayerType.ARMOR]['hp_pool'] == 0:
-            self.layers[LayerType.ARMOR]['hp_pool'] = self.layers[LayerType.ARMOR]['max_hp_pool']
-            
-        # Derelict Check: 
-        # 1. Must have Bridge
-        has_bridge = any(c.type_str == "Bridge" and c.is_active for layer in self.layers.values() for c in layer['components'])
-        
-        # 2. Must have Propulsion (unless Satellite)
-        # Check active Engine or Thruster components directly or use calculated stats?
-        # Using calculated stats is safer as it respects fuel/damage logic already processed.
-        # However, fuel empty shouldn't necessarily make it 'derelict' (just out of fuel), 
-        # but for this test 'derelict' implies missing capability.
-        # Let's check for active components to be safe against fuel issues if that determines 'derelict'.
-        # Actually, test expects "Fighter without engine" -> derelict.
-        has_propulsion = any(c.is_active and (isinstance(c, Engine) or isinstance(c, Thruster)) for layer in self.layers.values() for c in layer['components'])
-        
-        requires_propulsion = self.vehicle_type != "Satellite"
-        
-        self.is_derelict = not has_bridge or (requires_propulsion and not has_propulsion)
-
-        # Resource Initialization (Auto-fill on first load only, or when capacity increases)
-        # Track previous max values to detect capacity increases
-        prev_max_fuel = getattr(self, '_prev_max_fuel', 0)
-        prev_max_ammo = getattr(self, '_prev_max_ammo', 0)
-        prev_max_energy = getattr(self, '_prev_max_energy', 0)
-        prev_max_shields = getattr(self, '_prev_max_shields', 0)
-        
-        if not self._resources_initialized:
-            if self.max_fuel > 0:
-                self.current_fuel = self.max_fuel
-            if self.max_ammo > 0:
-                self.current_ammo = self.max_ammo
-            if self.max_energy > 0:
-                self.current_energy = self.max_energy
-            if self.max_shields > 0:
-                self.current_shields = self.max_shields
-            self._resources_initialized = True
-        else:
-            # Handle capacity increases from new components
-            if self.max_fuel > prev_max_fuel:
-                self.current_fuel += (self.max_fuel - prev_max_fuel)
-            if self.max_ammo > prev_max_ammo:
-                self.current_ammo += (self.max_ammo - prev_max_ammo)
-            if self.max_energy > prev_max_energy:
-                self.current_energy += (self.max_energy - prev_max_energy)
-            if self.max_shields > prev_max_shields:
-                self.current_shields += (self.max_shields - prev_max_shields)
-        
-        # Remember current max for next recalculate
-        self._prev_max_fuel = self.max_fuel
-        self._prev_max_ammo = self.max_ammo
-        self._prev_max_energy = self.max_energy
-        self._prev_max_shields = self.max_shields
+        self.stats_calculator.calculate(self)
 
     def get_missing_requirements(self):
         """Check class requirements and return list of missing items based on abilities."""
@@ -519,7 +197,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         all_components = [c for layer in self.layers.values() for c in layer['components']]
         
         # Calculate ability totals from all components
-        ability_totals = self._calculate_ability_totals(all_components)
+        if not hasattr(self, 'stats_calculator'):
+             from ship_stats import ShipStatsCalculator
+             self.stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)
+        ability_totals = self.stats_calculator.calculate_ability_totals(all_components)
         
         # Check each requirement
         for req_name, req_def in requirements.items():
@@ -567,30 +248,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         
         return missing
     
-    def _calculate_ability_totals(self, components):
-        """Calculate total values for all abilities from components."""
-        totals = {}
-        
-        # Abilities that should multiply instead of sum
-        MULTIPLICATIVE_ABILITIES = {'ToHitAttackModifier', 'ToHitDefenseModifier'}
-        
-        for comp in components:
-            abilities = getattr(comp, 'abilities', {})
-            for ability_name, value in abilities.items():
-                if isinstance(value, bool):
-                    # Boolean abilities: any True makes total True
-                    if value:
-                        totals[ability_name] = True
-                elif isinstance(value, (int, float)):
-                    if ability_name in MULTIPLICATIVE_ABILITIES:
-                        # Multiplicative abilities: multiply values together
-                        totals[ability_name] = totals.get(ability_name, 1.0) * value
-                    else:
-                        # Additive abilities: sum values
-                        totals[ability_name] = totals.get(ability_name, 0) + value
-        
-        return totals
-    
     def _format_ability_name(self, ability_name):
         """Convert ability ID to readable name."""
         # Insert spaces before capitals and title case
@@ -600,7 +257,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     def get_ability_total(self, ability_name):
         """Get total value of a specific ability across all components."""
         all_components = [c for layer in self.layers.values() for c in layer['components']]
-        totals = self._calculate_ability_totals(all_components)
+        
+        if not hasattr(self, 'stats_calculator'):
+             from ship_stats import ShipStatsCalculator
+             self.stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)
+             
+        totals = self.stats_calculator.calculate_ability_totals(all_components)
         return totals.get(ability_name, 0)
 
     def check_validity(self):
@@ -765,6 +427,3 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                     print(f"  - {m}")
         
         return s
-
-
-

@@ -3,6 +3,7 @@ import json
 import pygame
 from components import LayerType
 from logger import log_info
+from ai_behaviors import RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior
 
 # Load combat strategies from JSON
 COMBAT_STRATEGIES = {}
@@ -41,14 +42,28 @@ class AIController:
         self.ship = ship
         self.grid = grid
         self.enemy_team_id = enemy_team_id
-        self.attack_state = 'approach'
-        self.attack_timer = 0
         self.last_strategy = None
+        
+        # Initialize behaviors
+        self.behaviors = {
+            'ram': RamBehavior(self),
+            'flee': FleeBehavior(self),
+            'kite': KiteBehavior(self),
+            'attack_run': AttackRunBehavior(self)
+        }
+        self.current_behavior = None
+        self.attack_state = 'approach' 
+        self.attack_timer = 0
         
     def get_current_strategy(self):
         """Get strategy definition for ship's current strategy."""
         strategy_id = getattr(self.ship, 'ai_strategy', 'max_weapons_range')
         return COMBAT_STRATEGIES.get(strategy_id, COMBAT_STRATEGIES.get('max_weapons_range', {}))
+    
+    def get_engage_distance_multiplier(self, strategy):
+        """Helper for behaviors to get engage distance multiplier."""
+        engage_key = strategy.get('engage_distance', 'max_range')
+        return ENGAGE_DISTANCES.get(engage_key, 1.0)
     
     def find_target(self):
         """Find target based on strategy's targeting priority."""
@@ -106,9 +121,34 @@ class AIController:
                 elif priority == 'least_armor':
                     armor_hp = getattr(enemy, 'layers', {}).get(LayerType.ARMOR, {}).get('hp_pool', 0)
                     score -= armor_hp * weight
+                elif priority == 'missiles_in_pdc_arc':
+                    # Only score high if it is a missile AND in arc
+                    if getattr(enemy, 'type', '') == 'missile':
+                        # Check strictly if it is in valid arc of any PDC
+                        if self._is_in_pdc_arc(enemy):
+                             score += weight * 2000 # High priority
+                        else:
+                             score -= 999999 # Hard filter: NEVER satisfy if not in arc?
+                             return -float('inf')
+                    else:
+                        pass # Ignore non-missiles for this specific priority
             return score
         
-        return max(enemies, key=score_target)
+        # Candidates expansion: If missile priority is active, we must include projectiles
+        if 'missiles_in_pdc_arc' in priorities:
+             missiles = [obj for obj in self.grid.query_radius(self.ship.position, 1500) 
+                         if getattr(obj, 'type', '') == 'missile' 
+                         and obj.is_alive 
+                         and getattr(obj, 'team_id', -1) != self.ship.team_id]
+             enemies.extend(missiles)
+        
+        # Sort by score info desc
+        enemies.sort(key=score_target, reverse=True)
+        
+        # Filter negative infinity (hard filter)
+        valid_enemies = [e for e in enemies if score_target(e) > -9999]
+        
+        return valid_enemies[:1][0] if valid_enemies else None
 
     def find_secondary_targets(self):
         """Find additional targets if ship has multiplex tracking."""
@@ -129,13 +169,6 @@ class AIController:
         if not enemies:
             return []
             
-        # Use same scoring logic as primary for consistency, or just nearest?
-        # User asked for "criteria for selecting targets should be that all weapons... should be able to fire".
-        # This implies we should prioritize targets we CAN hit.
-        # But for AI target selection (strategic), we usually stick to priorities.
-        # Let's blindly trust strategy priorities for now, or just distance.
-        # Re-using strategy logic:
-        
         strategy = self.get_current_strategy()
         priorities = strategy.get('targeting_priority', ['nearest'])
         
@@ -180,21 +213,13 @@ class AIController:
                     armor_hp = getattr(enemy, 'layers', {}).get(LayerType.ARMOR, {}).get('hp_pool', 0)
                     score -= armor_hp * weight
                 elif priority == 'missiles_in_pdc_arc':
-                    # Only score high if it is a missile AND in arc
                     if getattr(enemy, 'type', '') == 'missile':
-                        # Check strictly if it is in valid arc of any PDC
                         if self._is_in_pdc_arc(enemy):
-                             score += weight * 2000 # High priority
+                             score += weight * 2000
                         else:
-                             score -= 999999 # Hard filter: NEVER satisfy if not in arc?
-                             # Or just very low priority? User said "never be on the list".
                              return -float('inf')
-                    else:
-                        pass # Ignore non-missiles for this specific priority, but don't penalize?
-
             return score
             
-        # Candidates expansion: If missile priority is active, we must include projectiles
         if 'missiles_in_pdc_arc' in priorities:
              missiles = [obj for obj in self.grid.query_radius(self.ship.position, 1500) 
                          if getattr(obj, 'type', '') == 'missile' 
@@ -202,29 +227,21 @@ class AIController:
                          and getattr(obj, 'team_id', -1) != self.ship.team_id]
              enemies.extend(missiles)
         
-        # Sort by score info desc
         enemies.sort(key=score_target, reverse=True)
-        
-        # Filter negative infinity (hard filter)
         valid_enemies = [e for e in enemies if score_target(e) > -9999]
-        
         return valid_enemies[:count_needed]
 
     def _is_in_pdc_arc(self, target):
         """Check if target is within range and arc of at least one active PDC."""
-        # This requires iterating ship components.
         import math
         from components import Weapon
         
         for layer in self.ship.layers.values():
             for comp in layer['components']:
                 if isinstance(comp, Weapon) and comp.is_active and comp.abilities.get('PointDefense', False):
-                    # Check Range
                     dist = self.ship.position.distance_to(target.position)
                     if dist > comp.range: continue
                     
-                    # Check Arc
-                    # Simple angle check to target (not lead pos, to be fast)
                     vec_to_target = target.position - self.ship.position
                     if vec_to_target.length_squared() == 0: continue
                     
@@ -238,14 +255,11 @@ class AIController:
                         return True
         return False
 
-    
     def _get_hp_percent(self, ship):
         """Get ship's current HP as percentage."""
-        # Check armor layer HP pool
         total_max = sum(layer.get('max_hp_pool', 0) for layer in getattr(ship, 'layers', {}).values())
         total_current = sum(layer.get('hp_pool', 0) for layer in getattr(ship, 'layers', {}).values())
         
-        # If no armor HP pools, check individual component HP
         if total_max == 0:
             for layer in getattr(ship, 'layers', {}).values():
                 for comp in layer.get('components', []):
@@ -258,186 +272,80 @@ class AIController:
         if not self.ship.is_alive: 
             return
 
-        # Derelict Check - Stop all AI if derelict
+        # Derelict Check
         if getattr(self.ship, 'is_derelict', False):
             self.ship.comp_trigger_pulled = False
-            self.ship.target_speed = 0 # Ensure we stop
+            self.ship.target_speed = 0 
             return
 
         strategy = self.get_current_strategy()
         strategy_id = getattr(self.ship, 'ai_strategy', 'max_weapons_range')
         
-        # Target Acquisition (do this first so retreat can use target)
+        # Target Acquisition
         target = self.ship.current_target
-        
-        # Check if current target is invalid or derelict
         if target:
             if not target.is_alive or getattr(target, 'is_derelict', False):
                 target = None
                 self.ship.current_target = None
                 self.ship.secondary_targets = []
 
-                
         if not target:
             target = self.find_target()
             self.ship.current_target = target
             
-        # Update Secondary Targets if capable
         if self.ship.max_targets > 1:
             self.ship.secondary_targets = self.find_secondary_targets()
         else:
             self.ship.secondary_targets = []
 
-            
         if not target:
             self.ship.comp_trigger_pulled = False
             return
             
-        # Always attempt to fire if we have a target
         self.ship.comp_trigger_pulled = True
+        
+        # Satellite Exception: Satellites do NOT navigate.
+        if getattr(self.ship, 'vehicle_type', 'Ship') == 'Satellite':
+             return
+
+        # Determine Behavior
+        behavior_key = 'kite' # Default
         
         # Check retreat condition
         hp_pct = self._get_hp_percent(self.ship)
         retreat_threshold = strategy.get('retreat_hp_threshold', 0.1)
         
         if hp_pct <= retreat_threshold and retreat_threshold > 0:
-            # Retreat mode
-            self.update_flee(target, strategy.get('fire_while_retreating', False))
-            return
+            behavior_key = 'flee'
+        else:
+            # Check for explicit behavior defined in strategy (Extension Point)
+            behavior_key = strategy.get('behavior')
+            
+            if not behavior_key:
+                # Legacy Inference
+                engage_key = strategy.get('engage_distance', 'max_range')
+                if engage_key == 'ram':
+                    behavior_key = 'ram'
+                elif strategy.get('attack_run_behavior'):
+                    behavior_key = 'attack_run'
+                else:
+                    behavior_key = 'kite'
         
-        # Satellite Exception: Satellites do NOT navigate or maneuver.
-        # They are stationary platforms that just target and fire.
-        if getattr(self.ship, 'vehicle_type', 'Ship') == 'Satellite':
-            # Satellite AI: Just targeting and firing (comp_trigger already set above)
-            # No movement, no navigation. Skip all movement logic.
-            return
+        # Switch behavior if needed
+        behavior = self.behaviors.get(behavior_key)
         
-        # Reset state on strategy change
-        if self.last_strategy != strategy_id:
-            self.attack_state = 'approach'
-            self.attack_timer = 0
+        if self.current_behavior != behavior or strategy_id != self.last_strategy:
+            if behavior:
+                behavior.enter()
+            self.current_behavior = behavior
             self.last_strategy = strategy_id
-        
-        # Get engage distance multiplier
-        engage_key = strategy.get('engage_distance', 'max_range')
-        engage_mult = ENGAGE_DISTANCES.get(engage_key, 1.0)
-        
-        # Dispatch based on engage distance
-        if engage_key == 'ram':
-            self.update_ramming(target)
-        elif strategy.get('attack_run_behavior'):
-            self.update_attack_run(target, strategy)
-        else:
-            self.update_range_engagement(target, engage_mult, strategy)
-
-    def update_ramming(self, target):
-        """Ram target, no avoidance."""
-        self.navigate_to(target.position, stop_dist=0, precise=False)
-        
-    def update_flee(self, target, fire_while_fleeing=False):
-        """Run away from target."""
-        # Only fire while fleeing if strategy allows it
-        self.ship.comp_trigger_pulled = fire_while_fleeing
-        
-        vec = self.ship.position - target.position
-        if vec.length() == 0: 
-            vec = pygame.math.Vector2(1, 0)
-        
-        flee_pos = self.ship.position + vec.normalize() * 1000
-        self.navigate_to(flee_pos, stop_dist=0, precise=False)
-
-    def update_attack_run(self, target, strategy):
-        """Attack run: approach -> fire -> retreat -> repeat."""
-        behavior = strategy.get('attack_run_behavior', {})
-        approach_dist = self.ship.max_weapon_range * behavior.get('approach_distance', 0.3)
-        retreat_dist = self.ship.max_weapon_range * behavior.get('retreat_distance', 0.8)
-        retreat_duration = behavior.get('retreat_duration', 2.0)
-        
-        dist = self.ship.position.distance_to(target.position)
-        
-        if self.attack_state == 'approach':
-            self.navigate_to(target.position, stop_dist=approach_dist, precise=False)
             
-            if dist < approach_dist * 1.5:
-                self.attack_state = 'retreat'
-                self.attack_timer = retreat_duration
-                
-        elif self.attack_state == 'retreat':
-            # Cycle-Based: 1 tick = 0.01 seconds. Decrement timer by 0.01.
-            self.attack_timer -= 0.01
-            
-            vec = self.ship.position - target.position
-            if vec.length() == 0: 
-                vec = pygame.math.Vector2(1, 0)
-            flee_pos = self.ship.position + vec.normalize() * 1000
-            
-            self.navigate_to(flee_pos, stop_dist=0, precise=False)
-            
-            if self.attack_timer <= 0 and dist > retreat_dist:
-                self.attack_state = 'approach'
-
-    def update_range_engagement(self, target, engage_mult, strategy):
-        """Engage at specified range multiplier of max weapon range."""
-        
-        # Collision avoidance if enabled
-        if strategy.get('avoid_collisions', True):
-            override_pos = self.check_avoidance()
-            if override_pos:
-                self.navigate_to(override_pos, stop_dist=0, precise=False)
-                return
-        
-        # Calculate optimal distance based on engage multiplier
-        opt_dist = self.ship.max_weapon_range * engage_mult
-        if opt_dist < 150:
-            opt_dist = 150  # Minimum spacing
-        
-        dist = self.ship.position.distance_to(target.position)
-        
-        if dist > opt_dist:
-            # Close in
-            self.navigate_to(target.position, stop_dist=opt_dist, precise=True)
-        else:
-            # Kite - maintain distance
-            vec = self.ship.position - target.position
-            if vec.length() == 0: 
-                vec = pygame.math.Vector2(1, 0)
-            
-            kite_pos = target.position + vec.normalize() * opt_dist
-            self.navigate_to(kite_pos, stop_dist=0, precise=True)
-
-    def update_max_range(self, target):
-        # MAX RANGE (Kiting) - Original behavior + Coll Avoidance
-        
-        # Collision Avoidance (Only for subtle/smart strategies)
-        override_pos = self.check_avoidance()
-        if override_pos:
-            self.navigate_to(override_pos, stop_dist=0, precise=False)
-            return
-
-        # Optimal Distance
-        opt_dist = self.ship.max_weapon_range * 0.9
-        if opt_dist < 200: opt_dist = 200 # Minimum spacing
-        
-        dist = self.ship.position.distance_to(target.position)
-        
-        if dist > opt_dist:
-            # Close in
-            self.navigate_to(target.position, stop_dist=opt_dist, precise=True)
-        else:
-            # Too close, back off or circle?
-            # Back off logic similar to flee but keeping facing?
-            # Simple kiting: just stop thrusting if too close, maybe reverse?
-            # If we just stop, we drift.
-            # Let's try to maintain distance.
-            vec = self.ship.position - target.position
-            if vec.length() == 0: vec = pygame.math.Vector2(1,0)
-            
-            # Kite point
-            kite_pos = target.position + vec.normalize() * opt_dist
-            self.navigate_to(kite_pos, stop_dist=0, precise=True)
+        # Execute behavior
+        if self.current_behavior:
+            self.current_behavior.update(target, strategy)
 
     def check_avoidance(self):
-        # Extracted Collision Logic
+        """Check for nearby collisions and return evasion point."""
         nearby = self.grid.query_radius(self.ship.position, 1000)
         closest = None
         min_d = float('inf')
@@ -464,7 +372,7 @@ class AIController:
         return None
 
     def navigate_to(self, target_pos, stop_dist=0, precise=False):
-        # 1. Navigation
+        """Common navigation logic used by behaviors."""
         distance = self.ship.position.distance_to(target_pos)
         
         dx = target_pos.x - self.ship.position.x
@@ -481,12 +389,8 @@ class AIController:
             self.ship.rotate(direction)
         
         # Thrust
-        # If precise, we slow down earlier
         eff_stop_dist = stop_dist
         
         if abs(angle_diff) < 30 and distance > eff_stop_dist:
-            # Throttle if facing roughly right
              self.ship.thrust_forward()
-
-    # attempt_fire removed, logic moved to Ship update via trigger
 
