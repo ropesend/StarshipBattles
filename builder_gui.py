@@ -23,7 +23,7 @@ from preset_manager import PresetManager
 from ship_io import ShipIO
 from builder_components import ModifierEditorPanel
 from ship_theme import ShipThemeManager
-from ui.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel
+from ui.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel, LayerPanel
 
 # Initialize Tkinter root and hide it (for simpledialog)
 try:
@@ -281,23 +281,16 @@ class InteractionController:
                  self.hovered_component = found[2]
 
     def _handle_drop(self, pos):
-        cx, cy = self.view.cx, self.view.cy
-        max_r = self.view.max_r
+        # Check if dropped on LayerPanel
+        closest_layer = self.builder.layer_panel.get_target_layer_at(pos)
         
-        dist = math.hypot(pos[0] - cx, pos[1] - cy)
-        
-        closest_layer = None
-        min_diff = float('inf')
-        
-        for ltype, data in self.builder.ship.layers.items():
-            r = max_r * data['radius_pct']
-            diff = abs(dist - r)
-            if diff < min_diff:
-                min_diff = diff
-                closest_layer = ltype
-        
-        if min_diff > 40:
-             closest_layer = None
+        if not closest_layer:
+            # Fallback (optional?) or just ignore
+            # User request: "Instead of Adding them to the circles... drop them onto this new list"
+            # So we strictly enforce list dropping for component addition?
+            # Or should we keep the old logic as backup? 
+            # "Instead of" implies replacement.
+            return
         
         if closest_layer:
             comp = self.dragged_item
@@ -348,14 +341,17 @@ class BuilderSceneGUI:
         # Layout
         self.left_panel_width = 450
         self.right_panel_width = 380
+        self.layer_panel_width = 320 # New Column
         self.detail_panel_width = 550
         self.bottom_bar_height = 60
         self.weapons_report_height = 600
         
         # MVC Lite
+        # Schematic View shifted right
+        sch_x = self.left_panel_width + self.layer_panel_width
         rect = pygame.Rect(
-            self.left_panel_width, 0,
-            self.width - self.left_panel_width - self.right_panel_width,
+            sch_x, 0,
+            self.width - sch_x - self.right_panel_width,
             self.height - self.bottom_bar_height - self.weapons_report_height
         )
         self.view = SchematicView(rect, self.sprite_mgr, self.theme_manager)
@@ -374,6 +370,12 @@ class BuilderSceneGUI:
             pygame.Rect(0, 0, self.left_panel_width, self.height - self.bottom_bar_height)
         )
         
+        # New Layer Panel
+        self.layer_panel = LayerPanel(
+            self, self.ui_manager,
+            pygame.Rect(self.left_panel_width, 0, self.layer_panel_width, self.height - self.bottom_bar_height)
+        )
+        
         self.right_panel = BuilderRightPanel(
             self, self.ui_manager,
             pygame.Rect(self.width - self.right_panel_width, 0, 
@@ -381,10 +383,12 @@ class BuilderSceneGUI:
         )
         
         weapons_panel_y = self.height - self.bottom_bar_height - self.weapons_report_height
-        weapons_panel_width = self.width - self.left_panel_width
+        # Shifted weapons panel
+        weapons_panel_x = self.left_panel_width + self.layer_panel_width
+        weapons_panel_width = self.width - weapons_panel_x
         self.weapons_report_panel = WeaponsReportPanel(
             self, self.ui_manager,
-            pygame.Rect(self.left_panel_width, weapons_panel_y, weapons_panel_width, self.weapons_report_height),
+            pygame.Rect(weapons_panel_x, weapons_panel_y, weapons_panel_width, self.weapons_report_height),
             self.sprite_mgr
         )
 
@@ -431,6 +435,7 @@ class BuilderSceneGUI:
 
     def update_stats(self):
         self.right_panel.update_stats_display(self.ship)
+        self.layer_panel.rebuild()
         
     def on_selection_changed(self, component_tuple):
         # component_tuple is (layer, index, comp) or None
@@ -466,6 +471,12 @@ class BuilderSceneGUI:
         
          # Pass to modifier panel
         action = self.left_panel.handle_event(event)
+        if not action:
+            # Pass to layer panel (headers)
+            if self.layer_panel.handle_event(event):
+                # Layer panel consumed event
+                pass
+        
         if action:
             act_type, data = action
             if act_type == 'refresh_ui':
@@ -579,6 +590,7 @@ class BuilderSceneGUI:
             self.error_timer -= dt
             
         self.left_panel.update(dt)
+        self.layer_panel.update(dt)
         self.weapons_report_panel.update()
         self.controller.update()
 
@@ -642,6 +654,7 @@ class BuilderSceneGUI:
         self.view.draw(screen, self.ship, self.show_firing_arcs, self.controller.selected_component, hovered)
         
         self.left_panel.draw(screen)
+        self.layer_panel.draw(screen)
         self.ui_manager.draw_ui(screen)
         self.weapons_report_panel.draw(screen)
         
