@@ -414,7 +414,7 @@
             "base_accuracy": 1.0,
             "accuracy_falloff": 0.001,
             "firing_arc": 90,
-            "sprite_index": 66,
+            "sprite_index": 65,
             "abilities": {
                 "BeamWeapon": true,
                 "PointDefense": true,

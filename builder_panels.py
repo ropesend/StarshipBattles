@@ -195,21 +195,31 @@ class BuilderLeftPanel:
         
     def update(self, dt):
         """Update panel logic."""
-        # Check for expanded dropdowns
+        # Check for expanded dropdowns and track which one
         self._dropdown_expanded = False
+        self._expanded_dropdown = None
         dropdowns = [self.sort_dropdown, self.filter_type_dropdown, self.filter_layer_dropdown]
         for dd in dropdowns:
              if dd.current_state == dd.menu_states['expanded']:
                  self._dropdown_expanded = True
+                 self._expanded_dropdown = dd
                  break
         
-        # Hide list completely if dropdown is open to prevent visual overlap
+        # Hide list and OTHER dropdowns when one dropdown is open
         if self._dropdown_expanded:
              if self.scroll_container.visible:
                  self.scroll_container.hide()
+             # Hide the other dropdowns (not the expanded one)
+             for dd in dropdowns:
+                 if dd != self._expanded_dropdown and dd.visible:
+                     dd.hide()
         else:
              if not self.scroll_container.visible:
                  self.scroll_container.show()
+             # Show all dropdowns
+             for dd in dropdowns:
+                 if not dd.visible:
+                     dd.show()
                  
     def is_dropdown_expanded(self):
         """Check if any filter/sort dropdown is currently expanded."""
