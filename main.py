@@ -178,7 +178,7 @@ class Game:
             self._draw_menu()
         elif self.state == BUILDER:
             self.builder_scene.update(frame_time)
-            self.builder_scene.process_ui_time(frame_time)
+
             self.builder_scene.draw(self.screen)
         elif self.state == BATTLE_SETUP:
             self._update_battle_setup()
@@ -254,8 +254,17 @@ class Game:
                 if speed_mult > 10.0:
                     # Max Speed / Turbo mode: Just run fixed N ticks per frame
                     ticks_to_run = int(speed_mult) # e.g. 100 ticks per frame
+                    
+                    import time
+                    t0 = time.time()
                     for i in range(ticks_to_run):
                         self.battle_scene.update(events if i==0 else [])
+                    t1 = time.time()
+                    
+                    elapsed = t1 - t0
+                    if elapsed > 0.05: # Warn if taking > 50ms per frame
+                         print(f"Slow Frame: {ticks_to_run} ticks took {elapsed*1000:.1f}ms (Avg {elapsed/ticks_to_run*1000:.3f}ms/tick)")
+
                     
                     self.battle_scene.tick_rate_count += ticks_to_run
                 else:

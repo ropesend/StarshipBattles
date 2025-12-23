@@ -48,7 +48,7 @@ class BattleLogger:
         if self.enabled and self.file:
             try:
                 self.file.write(f"{message}\n")
-                self.file.flush()
+
             except IOError:
                 pass  # Silently ignore write errors
     
@@ -162,6 +162,29 @@ class BattleScene:
         
         if not headless:
             self.camera.fit_objects(self.ships)
+            
+        # DEBUG LOGGING: Check for initial derelict status
+        # DEBUG LOGGING: Check for initial derelict status
+        for s in self.ships:
+            status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={s.current_fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f} Derelict={s.is_derelict}"
+            BATTLE_LOG.log(status_msg)
+            print(status_msg) # Force console output
+            
+            if s.is_derelict:
+                warn_msg = f"WARNING: {s.name} is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)"
+                BATTLE_LOG.log(warn_msg)
+                print(warn_msg)
+            
+            if s.total_thrust <= 0:
+                warn_msg = f"WARNING: {s.name} has NO THRUST!"
+                BATTLE_LOG.log(warn_msg)
+                print(warn_msg)
+                
+            if s.turn_speed <= 0.01:
+                warn_msg = f"WARNING: {s.name} has LOW/NO TURN SPEED ({s.turn_speed:.4f})! Mass too high for thrusters?"
+                BATTLE_LOG.log(warn_msg)
+                print(warn_msg)
+        
     
     def update(self, events):
         """

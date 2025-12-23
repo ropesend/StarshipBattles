@@ -73,17 +73,22 @@ class AIController:
                    and obj.team_id == self.enemy_team_id
                    and not getattr(obj, 'is_derelict', False)]
         
+        # DEBUG: Log if we can't find target
+        # print(f"AI Search: {len(candidates)} candidates, {len(enemies)} enemies.") 
+        
         if not enemies:
             return None
             
         strategy = self.get_current_strategy()
         priorities = strategy.get('targeting_priority', ['nearest'])
         
+
+
         # Score each enemy based on priorities
         def score_target(enemy):
             score = 0
             for i, priority in enumerate(priorities):
-                weight = len(priorities) - i  # Higher weight for earlier priorities
+                weight = len(priorities) - i
                 
                 if priority == 'nearest':
                     dist = self.ship.position.distance_to(enemy.position)
@@ -103,7 +108,7 @@ class AIController:
                     score -= speed * weight
                 elif priority == 'most_damaged':
                     hp_pct = self._get_hp_percent(enemy)
-                    score -= hp_pct * weight * 100  # Prefer lower HP%
+                    score -= hp_pct * weight * 100
                 elif priority == 'least_damaged':
                     hp_pct = self._get_hp_percent(enemy)
                     score += hp_pct * weight * 100
@@ -122,17 +127,14 @@ class AIController:
                     armor_hp = getattr(enemy, 'layers', {}).get(LayerType.ARMOR, {}).get('hp_pool', 0)
                     score -= armor_hp * weight
                 elif priority == 'missiles_in_pdc_arc':
-                    # Only score high if it is a missile AND in arc
                     if getattr(enemy, 'type', '') == 'missile':
-                        # Check strictly if it is in valid arc of any PDC
                         if self._is_in_pdc_arc(enemy):
-                             score += weight * 2000 # High priority
+                             score += weight * 2000
                         else:
-                             score -= 999999 # Hard filter: NEVER satisfy if not in arc?
                              return -float('inf')
-                    else:
-                        pass # Ignore non-missiles for this specific priority
             return score
+        
+
         
         # Candidates expansion: If missile priority is active, we must include projectiles
         if 'missiles_in_pdc_arc' in priorities:
@@ -146,7 +148,7 @@ class AIController:
         enemies.sort(key=score_target, reverse=True)
         
         # Filter negative infinity (hard filter)
-        valid_enemies = [e for e in enemies if score_target(e) > -9999]
+        valid_enemies = [e for e in enemies if score_target(e) > -9000000]
         
         return valid_enemies[:1][0] if valid_enemies else None
 
