@@ -327,6 +327,10 @@ class TestFighterLogic(unittest.TestCase):
         load_modifiers()
         pygame.init()
 
+    @classmethod
+    def tearDownClass(cls):
+        pygame.quit()
+
     def test_fighter_requires_propulsion(self):
         """Fighter without propulsion is derelict."""
         fighter = Ship("Test", 0, 0, (255, 0, 0), ship_class="Fighter (Small)")

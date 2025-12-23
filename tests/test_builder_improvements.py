@@ -108,12 +108,14 @@ class TestBuilderImprovements(unittest.TestCase):
         comp1.type_str = "Weapon"
         comp1.name = "TestWeapon"
         comp1.hp = 10
+        comp1.sprite_index = 0
         # Configure data as a real dict so access works
         comp1.data = {
             'major_classification': 'Weapons', 
             'damage': 5, 
             'abilities': {'BeamWeapon': True}
         }
+        comp1.allowed_vehicle_types = ["Ship"]
         
         # Clone needs to return a NEW mock or object
         comp_clone = MagicMock()

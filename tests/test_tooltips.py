@@ -37,7 +37,8 @@ class TestTooltips(unittest.TestCase):
         comp = SimpleNamespace(
             name="Bridge", type_str="Bridge", mass=50.0, max_hp=200, 
             allowed_layers=[SimpleNamespace(name="CORE")],
-            sprite_index=0, modifiers=[], abilities={"CommandAndControl": True, "CrewCapacity": -5}
+            sprite_index=0, modifiers=[], abilities={"CommandAndControl": True, "CrewCapacity": -5},
+            data={'major_classification': 'Command'}
         )
         # Needed for image loading if sprite_index is used? Yes.
         
@@ -56,7 +57,8 @@ class TestTooltips(unittest.TestCase):
             name="Railgun", type_str="ProjectileWeapon", mass=100.0, max_hp=150,
             allowed_layers=[SimpleNamespace(name="OUTER")],
             sprite_index=0, modifiers=[], abilities={},
-            damage=40, range=2400, reload_time=2.0, ammo_cost=1, firing_arc=45
+            damage=40, range=2400, reload_time=2.0, ammo_cost=1, firing_arc=45,
+            data={'major_classification': 'Weapon'}
         )
         
         screen, font = self.call_draw_tooltip(comp)
@@ -73,7 +75,8 @@ class TestTooltips(unittest.TestCase):
         comp = SimpleNamespace(
             name="Shield Regen", type_str="ShieldRegenerator", mass=40.0, max_hp=80,
             allowed_layers=[], sprite_index=0, modifiers=[], abilities={},
-            shield_capacity=0, regen_rate=5.0, energy_cost=2.0
+            shield_capacity=0, regen_rate=5.0, energy_cost=2.0,
+            data={'major_classification': 'Defense'}
         )
         
         screen, font = self.call_draw_tooltip(comp)

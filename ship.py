@@ -457,6 +457,23 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Armor Pool Init (if starting)
         if self.layers[LayerType.ARMOR]['hp_pool'] == 0:
             self.layers[LayerType.ARMOR]['hp_pool'] = self.layers[LayerType.ARMOR]['max_hp_pool']
+            
+        # Derelict Check: 
+        # 1. Must have Bridge
+        has_bridge = any(c.type_str == "Bridge" and c.is_active for layer in self.layers.values() for c in layer['components'])
+        
+        # 2. Must have Propulsion (unless Satellite)
+        # Check active Engine or Thruster components directly or use calculated stats?
+        # Using calculated stats is safer as it respects fuel/damage logic already processed.
+        # However, fuel empty shouldn't necessarily make it 'derelict' (just out of fuel), 
+        # but for this test 'derelict' implies missing capability.
+        # Let's check for active components to be safe against fuel issues if that determines 'derelict'.
+        # Actually, test expects "Fighter without engine" -> derelict.
+        has_propulsion = any(c.is_active and (isinstance(c, Engine) or isinstance(c, Thruster)) for layer in self.layers.values() for c in layer['components'])
+        
+        requires_propulsion = self.vehicle_type != "Satellite"
+        
+        self.is_derelict = not has_bridge or (requires_propulsion and not has_propulsion)
 
         # Resource Initialization (Auto-fill on first load only, or when capacity increases)
         # Track previous max values to detect capacity increases

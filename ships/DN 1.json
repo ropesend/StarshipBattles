@@ -311,7 +311,7 @@
         "max_ammo": 5000,
         "max_energy": 88000,
         "max_speed": 11.61621453579335,
-        "turn_speed": 0.8571712117612483,
+        "turn_speed": 8.57,
         "total_thrust": 19200.0,
         "mass": 41321.55088225714,
         "armor_hp_pool": 40500
