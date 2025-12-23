@@ -143,6 +143,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.aim_point = None
         self.just_fired_projectiles = []
         self.total_shots_fired = 0
+        
+        # To-Hit Calculation Stats
+        self.to_hit_profile = 1.0       # Defensive Multiplier (Lower is better for defender)
+        self.baseline_to_hit_offense = 1.0 # Offensive Multiplier (Higher is better for attacker)
 
     def add_component(self, component: Component, layer_type: LayerType):
         if layer_type not in component.allowed_layers:
@@ -414,6 +418,40 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         actual_mass = max(self.mass, 100)
         ratio = actual_mass / ref_mass
         self.radius = base_radius * (ratio ** (1/3.0))
+
+        # 6. Phase 5: To-Hit & Electronic Warfare Stats
+        # ---------------------------------------------
+        
+        # Defensive Profile (Odds of being hit)
+        # Factor 1: Size (Cross Section) - Diameter Squared
+        # Normalized to a standard frigate/destroyer size (~80 diameter)
+        diameter = self.radius * 2
+        size_factor = (diameter / 80.0) ** 2
+        
+        # Factor 2: Maneuverability
+        # Higher turn and acceleration reduces profile
+        # Turn Speed is deg/s (e.g., 30-60), Accel is units/s^2 (e.g., 2-5)
+        # Base denominator starts at 1.0
+        maneuver_bonus = 1.0 + (self.turn_speed / 45.0) + (self.acceleration_rate / 4.0)
+        maneuver_factor = 1.0 / maneuver_bonus
+        
+        # Factor 3: Electronic Defense (ECM)
+        # This is multiplicative divisor (e.g. 2.0 defense mod = 0.5 odds to hit)
+        defense_mods = self.get_ability_total('ToHitDefenseModifier')
+        # If no defensive mods, default to 1.0 (no effect). 
+        # get_ability_total returns 0 if not found for additive, but 1.0 for multiplicative? 
+        # _calculate_ability_totals logic for multiplicative starts at 1.0 if key exists?
+        # Let's check _calculate_ability_totals. It creates entry if it sees it.
+        # But if no component has it, it returns 0 from .get().
+        if defense_mods < 0.01: defense_mods = 1.0
+        
+        self.to_hit_profile = size_factor * maneuver_factor / defense_mods
+        
+        # Offensive Baseline (Sensor Strength)
+        attack_mods = self.get_ability_total('ToHitAttackModifier')
+        if attack_mods < 0.01: attack_mods = 1.0
+        
+        self.baseline_to_hit_offense = attack_mods
 
         # Armor Pool Init (if starting)
         if self.layers[LayerType.ARMOR]['hp_pool'] == 0:

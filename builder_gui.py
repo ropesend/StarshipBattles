@@ -683,6 +683,10 @@ class BuilderSceneGUI:
         # Header
         lines.append((comp.name, (255, 255, 100)))
         
+        # Classification
+        classification = comp.data.get('major_classification', 'Unknown')
+        lines.append((classification, (150, 255, 150)))
+        
         # Basic Stats
         lines.append((f"Type: {comp.type_str}", (200, 200, 200)))
         lines.append((f"Mass: {comp.mass:.1f}t", (200, 200, 200)))

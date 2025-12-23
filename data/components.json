@@ -19,7 +19,8 @@
             "abilities": {
                 "CommandAndControl": true,
                 "CrewRequired": 5
-            }
+            },
+            "major_classification": "Crewsupport"
         },
         {
             "id": "railgun",
@@ -44,7 +45,8 @@
             "abilities": {
                 "ProjectileWeapon": true,
                 "CrewRequired": 5
-            }
+            },
+            "major_classification": "Weapons"
         },
         {
             "id": "standard_engine",
@@ -64,7 +66,8 @@
             "sprite_index": 9,
             "abilities": {
                 "CombatPropulsion": 150
-            }
+            },
+            "major_classification": "Engines"
         },
         {
             "id": "thruster",
@@ -85,7 +88,8 @@
             "sprite_index": 3,
             "abilities": {
                 "ManeuveringThruster": 30
-            }
+            },
+            "major_classification": "Engines"
         },
         {
             "id": "armor_plate",
@@ -103,7 +107,8 @@
             "sprite_index": 27,
             "abilities": {
                 "Armor": true
-            }
+            },
+            "major_classification": "Armor"
         },
         {
             "id": "fuel_tank",
@@ -125,7 +130,8 @@
             "sprite_index": 26,
             "abilities": {
                 "FuelStorage": 50000
-            }
+            },
+            "major_classification": "Infrastructure"
         },
         {
             "id": "ordnance_tank",
@@ -147,7 +153,8 @@
             "sprite_index": 34,
             "abilities": {
                 "AmmoStorage": 5000
-            }
+            },
+            "major_classification": "Infrastructure"
         },
         {
             "id": "battery",
@@ -169,7 +176,8 @@
             "sprite_index": 182,
             "abilities": {
                 "EnergyStorage": 2000
-            }
+            },
+            "major_classification": "Infrastructure"
         },
         {
             "id": "generator",
@@ -190,7 +198,8 @@
             "abilities": {
                 "EnergyGeneration": 25,
                 "CrewRequired": 1
-            }
+            },
+            "major_classification": "Infrastructure"
         },
         {
             "id": "laser_cannon",
@@ -216,7 +225,8 @@
             "abilities": {
                 "BeamWeapon": true,
                 "CrewRequired": 1
-            }
+            },
+            "major_classification": "Weapons"
         },
         {
             "id": "crew_quarters",
@@ -234,7 +244,8 @@
             "sprite_index": 0,
             "abilities": {
                 "CrewCapacity": 10
-            }
+            },
+            "major_classification": "Crewsupport"
         },
         {
             "id": "life_support",
@@ -252,7 +263,8 @@
             "sprite_index": 0,
             "abilities": {
                 "LifeSupportCapacity": 25
-            }
+            },
+            "major_classification": "Crewsupport"
         },
         {
             "id": "combat_sensor",
@@ -272,7 +284,8 @@
             "sprite_index": 11,
             "abilities": {
                 "ToHitAttackModifier": 2.0
-            }
+            },
+            "major_classification": "Sensors"
         },
         {
             "id": "ecm_suite",
@@ -291,7 +304,8 @@
             "sprite_index": 180,
             "abilities": {
                 "ToHitDefenseModifier": 2.0
-            }
+            },
+            "major_classification": "Sensors"
         },
         {
             "id": "multiplex_tracking",
@@ -311,7 +325,8 @@
             "abilities": {
                 "MultiplexTracking": 10,
                 "CrewRequired": 2
-            }
+            },
+            "major_classification": "Sensors"
         },
         {
             "id": "shield_generator",
@@ -330,7 +345,8 @@
             "sprite_index": 30,
             "abilities": {
                 "ShieldProjection": 500
-            }
+            },
+            "major_classification": "Shields"
         },
         {
             "id": "shield_regen",
@@ -350,7 +366,8 @@
             "abilities": {
                 "ShieldRegeneration": 5.0,
                 "EnergyConsumption": 2.0
-            }
+            },
+            "major_classification": "Shields"
         },
         {
             "id": "capital_missile",
@@ -376,7 +393,8 @@
             "abilities": {
                 "SeekerWeapon": true,
                 "CrewRequired": 3
-            }
+            },
+            "major_classification": "Weapons"
         },
         {
             "id": "point_defence_cannon",
@@ -403,7 +421,8 @@
                 "BeamWeapon": true,
                 "PointDefense": true,
                 "CrewRequired": 1
-            }
+            },
+            "major_classification": "Weapons"
         },
         {
             "id": "fighter_cockpit",
@@ -424,7 +443,8 @@
                 "CommandAndControl": true,
                 "LifeSupportCapacity": 1,
                 "CrewCapacity": 1
-            }
+            },
+            "major_classification": "Crewsupport"
         },
         {
             "id": "mini_engine",
@@ -444,7 +464,8 @@
             "sprite_index": 9,
             "abilities": {
                 "CombatPropulsion": 40
-            }
+            },
+            "major_classification": "Engines"
         },
         {
             "id": "mini_thruster",
@@ -465,7 +486,8 @@
             "sprite_index": 3,
             "abilities": {
                 "ManeuveringThruster": 50
-            }
+            },
+            "major_classification": "Engines"
         },
         {
             "id": "mini_battery",
@@ -486,7 +508,8 @@
             "sprite_index": 182,
             "abilities": {
                 "EnergyStorage": 200
-            }
+            },
+            "major_classification": "Infrastructure"
         },
         {
             "id": "mini_generator",
@@ -505,7 +528,8 @@
             "sprite_index": 217,
             "abilities": {
                 "EnergyGeneration": 10
-            }
+            },
+            "major_classification": "Infrastructure"
         },
         {
             "id": "mini_ordnance",
@@ -526,14 +550,15 @@
             "sprite_index": 34,
             "abilities": {
                 "AmmoStorage": 200
-            }
+            },
+            "major_classification": "Infrastructure"
         },
         {
             "id": "mini_fuel_tank",
             "name": "Mini Fuel Tank",
             "type": "Tank",
-            "mass": 4,
-            "hp": 4,
+            "mass": 2,
+            "hp": 2,
             "allowed_layers": [
                 "CORE",
                 "INNER",
@@ -547,7 +572,8 @@
             "sprite_index": 26,
             "abilities": {
                 "FuelStorage": 2000
-            }
+            },
+            "major_classification": "Infrastructure"
         },
         {
             "id": "mini_railgun",
@@ -571,7 +597,8 @@
             "sprite_index": 18,
             "abilities": {
                 "BeamWeapon": true
-            }
+            },
+            "major_classification": "Weapons"
         },
         {
             "id": "mini_laser_cannon",
@@ -595,7 +622,8 @@
             "sprite_index": 22,
             "abilities": {
                 "BeamWeapon": true
-            }
+            },
+            "major_classification": "Weapons"
         },
         {
             "id": "mini_capital_missile",
@@ -619,7 +647,8 @@
             "sprite_index": 21,
             "abilities": {
                 "BeamWeapon": true
-            }
+            },
+            "major_classification": "Weapons"
         },
         {
             "id": "mini_armor",
@@ -636,7 +665,8 @@
             "sprite_index": 27,
             "abilities": {
                 "Armor": true
-            }
+            },
+            "major_classification": "Armor"
         },
         {
             "id": "mini_sensor",
@@ -655,7 +685,8 @@
             "sprite_index": 11,
             "abilities": {
                 "ToHitAttackModifier": 1.2
-            }
+            },
+            "major_classification": "Sensors"
         },
         {
             "id": "mini_ecm",
@@ -673,7 +704,8 @@
             "sprite_index": 180,
             "abilities": {
                 "ToHitDefenseModifier": 1.2
-            }
+            },
+            "major_classification": "Sensors"
         },
         {
             "id": "mini_shield_generator",
@@ -691,7 +723,8 @@
             "sprite_index": 30,
             "abilities": {
                 "ShieldProjection": 50
-            }
+            },
+            "major_classification": "Shields"
         },
         {
             "id": "satellite_core",
@@ -709,7 +742,8 @@
             "sprite_index": 0,
             "abilities": {
                 "CommandAndControl": true
-            }
+            },
+            "major_classification": "Crewsupport"
         }
     ]
 }

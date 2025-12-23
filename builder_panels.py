@@ -20,6 +20,9 @@ class ComponentListItem:
             object_id='#component_item_panel',
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
         )
+
+        # Generate Tooltip
+        tooltip_text = self._generate_tooltip(component)
         
         # Button for interaction (covers the whole item)
         self.button = UIButton(
@@ -27,6 +30,7 @@ class ComponentListItem:
             text="",
             manager=manager,
             container=self.panel,
+            tool_tip_text=tooltip_text,
             # object_id='#component_item_bg', # Optional: custom theming
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
@@ -44,13 +48,38 @@ class ComponentListItem:
             )
 
         # Label
+        # Use component type if no pretty name
+        display_name = component.name
         UILabel(
             relative_rect=pygame.Rect(45, 0, width-50, self.height),
-            text=f"{component.name} ({component.mass}t)",
+            text=f"{display_name} ({component.mass}t)",
             manager=manager,
             container=self.panel,
             anchors={'left': 'left', 'right': 'right', 'centerY': 'center'}
         )
+
+    def _generate_tooltip(self, c):
+        lines = []
+        # Header: Name + Classification
+        classification = c.data.get('major_classification', 'Unknown')
+        lines.append(f"<b>{c.name}</b>")
+        lines.append(f"<i>{classification}</i>")
+        lines.append("----------------")
+        lines.append(f"Type: {c.type_str}")
+        lines.append(f"Mass: {c.mass}t  HP: {c.hp}")
+        
+        # Specific stats from data to be safe, or attributes if reliable
+        if 'damage' in c.data: lines.append(f"Damage: {c.data['damage']}")
+        if 'range' in c.data: lines.append(f"Range: {c.data['range']}")
+        if 'energy_generation' in c.data: lines.append(f"Gen: {c.data['energy_generation']}/s")
+        if 'capacity' in c.data: lines.append(f"Cap: {c.data['capacity']} {c.data.get('resource_type','')}")
+        if 'thrust_force' in c.data: lines.append(f"Thrust: {c.data['thrust_force']}")
+        if 'abilities' in c.data:
+            for k, v in c.data['abilities'].items():
+                if v is True: lines.append(f"Ab: {k}")
+                elif isinstance(v, (int, float)): lines.append(f"{k}: {v}")
+                
+        return "<br>".join(lines)
 
     def set_selected(self, selected):
         if selected:
@@ -69,6 +98,9 @@ class BuilderLeftPanel:
         self.items = []
         self.selected_item = None
         
+        # Store original order of components for sorting
+        self.component_order_map = {c.id: i for i, c in enumerate(builder.available_components)}
+        
         self.panel = UIPanel(
             relative_rect=rect,
             manager=manager,
@@ -83,9 +115,16 @@ class BuilderLeftPanel:
             container=self.panel
         )
         
-        # Sort Dropdown
-        self.sort_options = ["Mass (Low-High)", "Mass (High-Low)", "Name (A-Z)", "Type"]
-        self.current_sort = "Mass (Low-High)"
+        # Controls Row 1: Sort
+        self.sort_options = [
+            "Default (JSON Order)", 
+            "Name (A-Z)", 
+            "Classification", 
+            "Type", 
+            "Mass (Low-High)", 
+            "Mass (High-Low)"
+        ]
+        self.current_sort = "Default (JSON Order)"
         self.sort_dropdown = UIDropDownMenu(
             options_list=self.sort_options,
             starting_option=self.current_sort,
@@ -94,9 +133,37 @@ class BuilderLeftPanel:
             container=self.panel
         )
         
+        # Controls Row 2: Filters
+        y_filters = 40
+        
+        # Filter: Type
+        # Gather all types
+        all_types = sorted(list(set(c.type_str for c in builder.available_components)))
+        self.type_filter_options = ["All Types"] + all_types
+        self.current_type_filter = "All Types"
+        
+        self.filter_type_dropdown = UIDropDownMenu(
+            options_list=self.type_filter_options,
+            starting_option=self.current_type_filter,
+            relative_rect=pygame.Rect(5, y_filters, (rect.width//2)-10, 30),
+            manager=manager,
+            container=self.panel
+        )
+        
+        # Filter: Layer
+        self.layer_filter_options = ["All Layers", "CORE", "INNER", "OUTER", "ARMOR"]
+        self.current_layer_filter = "All Layers"
+        self.filter_layer_dropdown = UIDropDownMenu(
+            options_list=self.layer_filter_options,
+            starting_option=self.current_layer_filter,
+            relative_rect=pygame.Rect((rect.width//2)+5, y_filters, (rect.width//2)-10, 30),
+            manager=manager,
+            container=self.panel
+        )
+        
         # Scroll Container
-        self.list_y = 40
-        container_height = (rect.height // 2) - 45
+        self.list_y = 80
+        container_height = (rect.height // 2) - 85
         self.scroll_container = UIScrollingContainer(
             relative_rect=pygame.Rect(5, self.list_y, rect.width - 10, container_height),
             manager=manager,
@@ -120,12 +187,28 @@ class BuilderLeftPanel:
             item.kill()
         self.items = []
         
-        # Filter
+        # 1. Filter by Vehicle Type (Implicit)
         v_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
         filtered = [c for c in self.builder.available_components if v_type in c.allowed_vehicle_types]
         
-        # Sort
-        if self.current_sort == "Mass (Low-High)":
+        # 2. Filter by Component Type
+        if self.current_type_filter != "All Types":
+            filtered = [c for c in filtered if c.type_str == self.current_type_filter]
+            
+        # 3. Filter by Layer
+        if self.current_layer_filter != "All Layers":
+            # allowed_layers is list of LayerType enum. 
+            # We need to map string to enum for comparison or check enum name.
+            # Enum names are CORE, INNER, etc.
+            filtered = [c for c in filtered if any(l.name == self.current_layer_filter for l in c.allowed_layers)]
+        
+        # 4. Sort
+        if self.current_sort == "Default (JSON Order)":
+            filtered.sort(key=lambda c: self.component_order_map.get(c.id, 9999))
+        elif self.current_sort == "Classification":
+            # Sort by Classification, then Name
+            filtered.sort(key=lambda c: (c.data.get('major_classification', 'Unknown'), c.name))
+        elif self.current_sort == "Mass (Low-High)":
             filtered.sort(key=lambda c: c.mass)
         elif self.current_sort == "Mass (High-Low)":
             filtered.sort(key=lambda c: c.mass, reverse=True)
@@ -170,10 +253,19 @@ class BuilderLeftPanel:
 
     def handle_event(self, event):
         # Handle Sort Dropdown
-        if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED and event.ui_element == self.sort_dropdown:
-            self.current_sort = event.text
-            self.update_component_list()
-            return None
+        if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
+            if event.ui_element == self.sort_dropdown:
+                self.current_sort = event.text
+                self.update_component_list()
+                return None
+            elif event.ui_element == self.filter_type_dropdown:
+                self.current_type_filter = event.text
+                self.update_component_list()
+                return None
+            elif event.ui_element == self.filter_layer_dropdown:
+                self.current_layer_filter = event.text
+                self.update_component_list()
+                return None
             
         # Handle Item Clicks
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -289,7 +381,8 @@ class BuilderRightPanel:
         
         self.stat_labels = {}
         stat_names = ['mass', 'max_hp', 'max_shields', 'shield_regen', 'shield_cost', 'max_speed', 
-                      'turn_rate', 'acceleration', 'thrust', 'energy_gen', 'max_fuel', 'max_ammo', 'max_energy', 'targeting']
+                      'turn_rate', 'acceleration', 'thrust', 'energy_gen', 'max_fuel', 'max_ammo', 'max_energy', 'targeting',
+                      'target_profile', 'scan_strength']
 
         
         for stat in stat_names:
@@ -346,6 +439,10 @@ class BuilderRightPanel:
         t_count = getattr(s, 'max_targets', 1)
         t_text = "Single" if t_count == 1 else f"Multi ({t_count})"
         self.stat_labels['targeting'].set_text(f"Targeting: {t_text}")
+        
+        # To-Hit Stats
+        self.stat_labels['target_profile'].set_text(f"Target Profile: {s.to_hit_profile:.2f}x")
+        self.stat_labels['scan_strength'].set_text(f"Scan Strength: {s.baseline_to_hit_offense:.1f}x")
         
 
         
