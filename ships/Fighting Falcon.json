@@ -1,0 +1,89 @@
+{
+    "name": "Fighting Falcon",
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "team_id": 0,
+    "ship_class": "Fighter (Medium)",
+    "theme_id": "Federation",
+    "ai_strategy": "attack_run",
+    "layers": {
+        "CORE": [
+            {
+                "id": "mini_fuel_tank",
+                "modifiers": []
+            },
+            {
+                "id": "mini_generator",
+                "modifiers": []
+            },
+            {
+                "id": "mini_battery",
+                "modifiers": []
+            },
+            {
+                "id": "fighter_cockpit",
+                "modifiers": []
+            }
+        ],
+        "INNER": [
+            {
+                "id": "mini_engine",
+                "modifiers": []
+            },
+            {
+                "id": "mini_engine",
+                "modifiers": []
+            },
+            {
+                "id": "mini_engine",
+                "modifiers": []
+            },
+            {
+                "id": "mini_thruster",
+                "modifiers": []
+            }
+        ],
+        "OUTER": [
+            {
+                "id": "mini_laser_cannon",
+                "modifiers": []
+            },
+            {
+                "id": "mini_laser_cannon",
+                "modifiers": []
+            }
+        ],
+        "ARMOR": [
+            {
+                "id": "mini_armor",
+                "modifiers": []
+            },
+            {
+                "id": "mini_armor",
+                "modifiers": []
+            },
+            {
+                "id": "mini_armor",
+                "modifiers": []
+            },
+            {
+                "id": "mini_armor",
+                "modifiers": []
+            }
+        ]
+    },
+    "expected_stats": {
+        "max_hp": 380,
+        "max_fuel": 2000,
+        "max_ammo": 0,
+        "max_energy": 200,
+        "max_speed": 85.71428571428571,
+        "turn_speed": 6036.81610520369,
+        "total_thrust": 120,
+        "mass": 35,
+        "armor_hp_pool": 200
+    }
+}

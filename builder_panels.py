@@ -1,16 +1,73 @@
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIPanel, UILabel, UISelectionList, UIButton, UITextEntryLine, UIDropDownMenu, UITextBox
+from pygame_gui.elements import UIPanel, UILabel, UISelectionList, UIButton, UITextEntryLine, UIDropDownMenu, UITextBox, UIScrollingContainer, UIImage
 from builder_components import ModifierEditorPanel
 from ship import SHIP_CLASSES, VEHICLE_CLASSES
 from ai import COMBAT_STRATEGIES
 import logging
+
+class ComponentListItem:
+    def __init__(self, component, manager, container, y_pos, width, sprite_mgr):
+        self.component = component
+        self.height = 40
+        self.rect = pygame.Rect(0, y_pos, width, self.height)
+        
+        # Container panel for the item
+        self.panel = UIPanel(
+            relative_rect=self.rect,
+            manager=manager,
+            container=container,
+            object_id='#component_item_panel',
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
+        )
+        
+        # Button for interaction (covers the whole item)
+        self.button = UIButton(
+            relative_rect=pygame.Rect(0, 0, width, self.height),
+            text="",
+            manager=manager,
+            container=self.panel,
+            # object_id='#component_item_bg', # Optional: custom theming
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+        )
+        
+        # Icon
+        icon_size = 32
+        sprite = sprite_mgr.get_sprite(component.sprite_index)
+        if sprite:
+            scaled = pygame.transform.scale(sprite, (icon_size, icon_size))
+            UIImage(
+                relative_rect=pygame.Rect(5, (self.height - icon_size)//2, icon_size, icon_size),
+                image_surface=scaled,
+                manager=manager,
+                container=self.panel
+            )
+
+        # Label
+        UILabel(
+            relative_rect=pygame.Rect(45, 0, width-50, self.height),
+            text=f"{component.name} ({component.mass}t)",
+            manager=manager,
+            container=self.panel,
+            anchors={'left': 'left', 'right': 'right', 'centerY': 'center'}
+        )
+
+    def set_selected(self, selected):
+        if selected:
+            self.button.select()
+        else:
+            self.button.unselect()
+            
+    def kill(self):
+        self.panel.kill()
 
 class BuilderLeftPanel:
     def __init__(self, builder, manager, rect):
         self.builder = builder
         self.manager = manager
         self.rect = rect
+        self.items = []
+        self.selected_item = None
         
         self.panel = UIPanel(
             relative_rect=rect,
@@ -20,29 +77,31 @@ class BuilderLeftPanel:
         
         # Title
         UILabel(
-            relative_rect=pygame.Rect(10, 5, 200, 30),
+            relative_rect=pygame.Rect(10, 5, 100, 30),
             text="Components",
             manager=manager,
             container=self.panel
         )
         
-        # List
-        # Use exact metrics from builder_gui for hover compatibility
-        self.list_y = 35
-        self.item_height = 40 # Inferred from builder_gui logic
+        # Sort Dropdown
+        self.sort_options = ["Mass (Low-High)", "Mass (High-Low)", "Name (A-Z)", "Type"]
+        self.current_sort = "Mass (Low-High)"
+        self.sort_dropdown = UIDropDownMenu(
+            options_list=self.sort_options,
+            starting_option=self.current_sort,
+            relative_rect=pygame.Rect(rect.width - 160, 5, 150, 30),
+            manager=manager,
+            container=self.panel
+        )
         
-        half_page_y = rect.height // 2
-        list_height = half_page_y - 40
-        self.list_height = list_height
-        
-        component_names = [f"{c.name} ({c.mass}t)" for c in builder.available_components]
-        
-        self.component_list = UISelectionList(
-            relative_rect=pygame.Rect(5, self.list_y, rect.width - 10, list_height),
-            item_list=component_names,
+        # Scroll Container
+        self.list_y = 40
+        container_height = (rect.height // 2) - 45
+        self.scroll_container = UIScrollingContainer(
+            relative_rect=pygame.Rect(5, self.list_y, rect.width - 10, container_height),
             manager=manager,
             container=self.panel,
-            allow_multi_select=False
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
         )
         
         # Modifier Panel
@@ -55,80 +114,96 @@ class BuilderLeftPanel:
         )
         
     def update_component_list(self):
-        """Filter component list based on current ship vehicle type."""
-        # Get allowed vehicle type
+        """Filter, sort, and populate the component list."""
+        # Clear existing
+        for item in self.items:
+            item.kill()
+        self.items = []
+        
+        # Filter
         v_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
+        filtered = [c for c in self.builder.available_components if v_type in c.allowed_vehicle_types]
         
-        filtered_names = []
-        for c in self.builder.available_components:
-            if v_type in c.allowed_vehicle_types:
-                filtered_names.append(f"{c.name} ({c.mass}t)")
-        
-        self.component_list.set_item_list(filtered_names)
+        # Sort
+        if self.current_sort == "Mass (Low-High)":
+            filtered.sort(key=lambda c: c.mass)
+        elif self.current_sort == "Mass (High-Low)":
+            filtered.sort(key=lambda c: c.mass, reverse=True)
+        elif self.current_sort == "Name (A-Z)":
+            filtered.sort(key=lambda c: c.name)
+        elif self.current_sort == "Type":
+            filtered.sort(key=lambda c: (c.type_str, c.name))
+            
+        # Create Items
+        item_width = self.scroll_container.get_container().get_rect().width
+        y = 0
+        for comp in filtered:
+            item = ComponentListItem(
+                component=comp,
+                manager=self.manager,
+                container=self.scroll_container,
+                y_pos=y,
+                width=item_width,
+                sprite_mgr=self.builder.sprite_mgr
+            )
+            self.items.append(item)
+            y += item.height
+            
+        # Update Scroll Area
+        self.scroll_container.set_scrollable_area_dimensions((item_width, y))
         
     def draw(self, screen):
-        """Draw component icons to match list items."""
-        # Use exact metrics from builder_gui
-        list_x = self.rect.x + 8
-        list_y = self.rect.y + 40 # 35 (list start) + 5 padding/offset? Original was 40.
-        # In original: list_y = 40. self.list_y = 35. 
-        # The list itself starts at y=35.
-        
-        item_height = 40
-        icon_size = 32
-        
-        # We need to respect the panel position
-        # Note regarding scrolling: usage of UISelectionList without syncing scroll 
-        # means icons will desync if list scrolls. 
-        # Replicating original behavior which appeared to be linear drawing.
-        
-        # Clip to list area to avoid drawing outside panel if list is long
-        clip_rect = pygame.Rect(self.rect.x, self.list_y, self.rect.width, self.list_height)
-        prev_clip = screen.get_clip()
-        screen.set_clip(clip_rect)
-        
-        for i, comp in enumerate(self.builder.available_components):
-            sprite = self.builder.sprite_mgr.get_sprite(comp.sprite_index)
-            if sprite:
-                scaled = pygame.transform.scale(sprite, (icon_size, icon_size))
-                y_pos = list_y + i * item_height + (item_height - icon_size) // 2
-                
-                # Check visibility optimization
-                if self.rect.y <= y_pos <= self.rect.bottom:
-                     screen.blit(scaled, (list_x, y_pos))
-        
-        screen.set_clip(prev_clip)
+        # Icons are now drawn by UIImage widgets inside slots
+        pass
 
     def _on_modifier_change(self):
-        # Call back to builder to update stats
         if self.builder.selected_component:
             self.builder.selected_component[2].recalculate_stats()
         self.builder.ship.recalculate_stats()
         self.builder.right_panel.update_stats_display(self.builder.ship)
 
     def rebuild_modifier_ui(self):
-        # Delegate to internal modifier panel
         editing_component = self.builder.selected_component[2] if self.builder.selected_component else None
         half_page_y = self.rect.height // 2
-        
         self.modifier_panel.rebuild(editing_component, self.builder.template_modifiers)
         self.modifier_panel.layout(half_page_y)
 
     def handle_event(self, event):
-        # Check modifier panel events
+        # Handle Sort Dropdown
+        if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED and event.ui_element == self.sort_dropdown:
+            self.current_sort = event.text
+            self.update_component_list()
+            return None
+            
+        # Handle Item Clicks
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            for item in self.items:
+                if event.ui_element == item.button:
+                    # Deselect others
+                    for i in self.items: i.set_selected(False)
+                    item.set_selected(True)
+                    self.selected_item = item
+                    return ('select_component_type', item.component)
+
+        # Modifier Panel
         action = self.modifier_panel.handle_event(event)
         return action
         
     def get_hovered_component(self, mx, my):
-        # Translate screen coordinates to panel-local
-        panel_x, panel_y = self.rect.topleft
-        rel_x = mx - panel_x
-        rel_y = my - panel_y
+        # Check if mouse is over any item button
+        # Using pygame_gui check_hover logic might be tricky since button is internal
+        # But we can check if button.rect contains mouse
         
-        if 0 <= rel_x < self.rect.width and self.list_y <= rel_y < self.list_y + self.list_height:
-             idx = int((rel_y - self.list_y) // self.item_height)
-             if 0 <= idx < len(self.builder.available_components):
-                 return self.builder.available_components[idx]
+        # Simple check: iterate visible items?
+        # ComponentListItem is wrapper, self.button is the UI element
+        for item in self.items:
+            # We must use the absolute rect of the button
+            # But button.rect is relative to container? No, pygame_gui element.rect is usually absolute screen rect 
+            # OR relative depends on container. 
+            # In pygame_gui 0.6.x, .rect is usually absolute screen position for interaction.
+            # Let's trust button.rect.collidepoint
+            if item.button.rect.collidepoint(mx, my):
+                return item.component
         return None
 
 class BuilderRightPanel:

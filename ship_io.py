@@ -27,8 +27,13 @@ class ShipIO:
             if not os.path.exists(ships_folder):
                 os.makedirs(ships_folder)
                 
+            # Sanitize filename
+            safe_name = "".join([c for c in ship.name if c.isalpha() or c.isdigit() or c in (' ', '-', '_')]).strip()
+            if not safe_name: safe_name = "New Ship"
+            
             filename = filedialog.asksaveasfilename(
                 initialdir=ships_folder,
+                initialfile=safe_name,
                 defaultextension=".json",
                 filetypes=[("JSON Files", "*.json")],
                 title="Save Ship Design"

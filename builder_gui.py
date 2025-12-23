@@ -203,6 +203,22 @@ class BuilderSceneGUI:
             elif act_type == 'apply_preset':
                 self.template_modifiers = data
                 self.left_panel.rebuild_modifier_ui()
+            elif act_type == 'select_component_type':
+                c = data
+                self.dragged_item = c.clone()
+                # Apply template modifiers
+                for m_id, val in self.template_modifiers.items():
+                   if m_id in MODIFIER_REGISTRY:
+                       mod_def = MODIFIER_REGISTRY[m_id]
+                       allow = True
+                       if mod_def.restrictions:
+                           if 'allow_types' in mod_def.restrictions and c.type_str not in mod_def.restrictions['allow_types']:
+                               allow = False
+                       if allow:
+                           self.dragged_item.add_modifier(m_id)
+                           m = self.dragged_item.get_modifier(m_id)
+                           if m: m.value = val
+                self.dragged_item.recalculate_stats()
             return
 
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -273,31 +289,7 @@ class BuilderSceneGUI:
                 else:
                     self.ship.ai_strategy = event.text.lower().replace(' ', '_')
                 
-        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            if event.ui_element == self.left_panel.component_list:
-                idx = self.left_panel.component_list.get_single_selection()
-                if idx is not None:
-                    # Parse name to get component
-                    # format: "Name (Masst)"
-                    # We can iterate available_components and match
-                    real_name = idx.split(' (')[0]
-                    for c in self.available_components:
-                        if c.name == real_name:
-                            self.dragged_item = c.clone()
-                            # Apply template modifiers
-                            for m_id, val in self.template_modifiers.items():
-                                if m_id in MODIFIER_REGISTRY:
-                                    mod_def = MODIFIER_REGISTRY[m_id]
-                                    allow = True
-                                    if mod_def.restrictions:
-                                        if 'allow_types' in mod_def.restrictions and c.type_str not in mod_def.restrictions['allow_types']:
-                                            allow = False
-                                    if allow:
-                                        self.dragged_item.add_modifier(m_id)
-                                        m = self.dragged_item.get_modifier(m_id)
-                                        if m: m.value = val
-                            self.dragged_item.recalculate_stats()
-                            break
+
                             
         elif event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
             if event.ui_element == self.confirm_dialog:
