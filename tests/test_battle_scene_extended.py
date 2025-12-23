@@ -26,8 +26,8 @@ class TestBattleSceneExtended(unittest.TestCase):
         """Verify is_battle_over identifies when one team is eliminated."""
         scene = BattleScene(1000, 1000)
         
-        ship1 = Ship("T1", 0, 0, (255,0,0), team_id=0)
-        ship2 = Ship("T2", 1000, 1000, (0,0,255), team_id=1)
+        ship1 = Ship("T1", 0, 0, (255,0,0), team_id=0, ship_class="Cruiser")
+        ship2 = Ship("T2", 1000, 1000, (0,0,255), team_id=1, ship_class="Cruiser")
         
         # Ensure they have bridges, crew, AND ENGINES so they aren't derelict
         for s in [ship1, ship2]:
@@ -48,8 +48,8 @@ class TestBattleSceneExtended(unittest.TestCase):
     def test_update_loop_tick_counter(self):
         """Verify update loop increments sim_tick_counter."""
         scene = BattleScene(1000, 1000)
-        ship1 = Ship("T1", 0, 0, (255,0,0), team_id=0)
-        ship2 = Ship("T2", 1000, 1000, (0,0,255), team_id=1)
+        ship1 = Ship("T1", 0, 0, (255,0,0), team_id=0, ship_class="Cruiser")
+        ship2 = Ship("T2", 1000, 1000, (0,0,255), team_id=1, ship_class="Cruiser")
         for s in [ship1, ship2]:
             s.add_component(create_component('bridge'), LayerType.CORE)
             s.add_component(create_component('crew_quarters'), LayerType.CORE)

@@ -291,9 +291,10 @@ class ShipCombatMixin:
             self.current_shields -= absorbed
             remaining_damage -= absorbed
             
-        layer_order = [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]
+        # Dynamic Layer Order: Sort by radius_pct descending (Outermost first)
+        sorted_layers = sorted(self.layers.items(), key=lambda x: x[1]['radius_pct'], reverse=True)
         
-        for ltype in layer_order:
+        for ltype, layer_data in sorted_layers:
             if remaining_damage <= 0: break
             remaining_damage = self._damage_layer(ltype, remaining_damage)
             

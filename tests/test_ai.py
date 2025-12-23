@@ -22,7 +22,7 @@ class TestAIController(unittest.TestCase):
         self.grid = SpatialGrid(cell_size=2000)
         
         # Create two ships with full crew infrastructure
-        self.ship1 = Ship("Ally", 0, 0, (0, 255, 0), team_id=0)
+        self.ship1 = Ship("Ally", 0, 0, (0, 255, 0), team_id=0, ship_class="Cruiser")
         self.ship1.add_component(create_component('bridge'), LayerType.CORE)
         self.ship1.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship1.add_component(create_component('life_support'), LayerType.CORE)
@@ -30,7 +30,7 @@ class TestAIController(unittest.TestCase):
         self.ship1.add_component(create_component('thruster'), LayerType.INNER)
         self.ship1.recalculate_stats()
         
-        self.ship2 = Ship("Enemy", 1000, 0, (255, 0, 0), team_id=1)
+        self.ship2 = Ship("Enemy", 1000, 0, (255, 0, 0), team_id=1, ship_class="Cruiser")
         self.ship2.add_component(create_component('bridge'), LayerType.CORE)
         self.ship2.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship2.add_component(create_component('life_support'), LayerType.CORE)
@@ -134,7 +134,7 @@ class TestAIStrategyStates(unittest.TestCase):
         self.ship.add_component(create_component('railgun'), LayerType.OUTER)
         self.ship.recalculate_stats()
         
-        self.target = Ship("Target", 500, 0, (255, 0, 0), team_id=1)
+        self.target = Ship("Target", 500, 0, (255, 0, 0), team_id=1, ship_class="Cruiser")
         self.target.add_component(create_component('bridge'), LayerType.CORE)
         self.target.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.target.add_component(create_component('life_support'), LayerType.CORE)

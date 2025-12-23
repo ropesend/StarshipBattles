@@ -16,7 +16,7 @@ class TestArcadeMovement(unittest.TestCase):
         load_components("data/components.json")
 
     def setUp(self):
-        self.ship = Ship("TestShip", 100, 100, (255, 255, 255))
+        self.ship = Ship("TestShip", 100, 100, (255, 255, 255), ship_class="Cruiser")
         # Basic setup - need crew infrastructure for components to be active
         # Core: Bridge (requires 5 crew)
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
@@ -119,7 +119,7 @@ class TestArcadeMovement(unittest.TestCase):
             "Speed should decrease when above max_speed and thrusting")
         
         # Run multiple updates to reach max_speed
-        for _ in range(1000):  # Enough iterations to converge
+        for _ in range(3000):  # Enough iterations to converge
             self.ship.thrust_forward()
             self.ship.update_physics_movement()
         

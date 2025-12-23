@@ -50,10 +50,10 @@ class MockShip(ShipCombatMixin):
         self.is_alive = True
         self.name = "TestShip"
         self.layers = {
-            LayerType.ARMOR: {'components': []},
-            LayerType.OUTER: {'components': []},
-            LayerType.INNER: {'components': []},
-            LayerType.CORE: {'components': []}
+            LayerType.ARMOR: {'components': [], 'radius_pct': 1.0},
+            LayerType.OUTER: {'components': [], 'radius_pct': 0.8},
+            LayerType.INNER: {'components': [], 'radius_pct': 0.5},
+            LayerType.CORE: {'components': [], 'radius_pct': 0.3}
         }
 
     def die(self):

@@ -65,11 +65,7 @@ class SchematicView:
         hit_radius = 25
         
         for ltype, data in ship.layers.items():
-            if ltype == LayerType.CORE: radius = max_r * 0.1
-            elif ltype == LayerType.INNER: radius = max_r * 0.35
-            elif ltype == LayerType.OUTER: radius = max_r * 0.65
-            elif ltype == LayerType.ARMOR: radius = max_r * 0.9
-            else: continue
+            radius = max_r * data['radius_pct']
                 
             comps = data['components']
             if not comps: continue
@@ -110,30 +106,28 @@ class SchematicView:
             screen.blit(scaled_img, rect)
             
         # Draw structure rings
-        pygame.draw.circle(screen, (100, 100, 100), (cx, cy), max_r, 2)
-        pygame.draw.circle(screen, (200, 50, 50), (cx, cy), int(max_r * 0.8), 2)
-        pygame.draw.circle(screen, (50, 50, 200), (cx, cy), int(max_r * 0.5), 2)
-        pygame.draw.circle(screen, (200, 200, 200), (cx, cy), int(max_r * 0.2), 2)
-        
         font = pygame.font.SysFont("Arial", 10)
-        labels = [
-            (max_r * 0.95, "ARMOR"),
-            (max_r * 0.72, "OUTER"),
-            (max_r * 0.42, "INNER"),
-            (max_r * 0.1, "CORE")
-        ]
-        for r, text in labels:
-            surf = font.render(text, True, (80, 80, 80))
+        sorted_layers = sorted(ship.layers.items(), key=lambda x: x[1]['radius_pct'], reverse=True)
+        
+        for ltype, data in sorted_layers:
+            pct = data['radius_pct']
+            r = int(max_r * pct)
+            color = (100, 100, 100)
+            if ltype.name == "ARMOR": color = (100, 100, 100)
+            elif ltype.name == "OUTER": color = (200, 50, 50)
+            elif ltype.name == "INNER": color = (50, 50, 200)
+            elif ltype.name == "CORE": color = (200, 200, 200)
+            
+            pygame.draw.circle(screen, color, (cx, cy), r, 2)
+
+            # Label
+            surf = font.render(ltype.name, True, (80, 80, 80))
             screen.blit(surf, (cx - surf.get_width() // 2, cy - r - 12))
 
         # Draw Components
         for ltype, data in ship.layers.items():
-            if ltype == LayerType.CORE: radius = max_r * 0.1
-            elif ltype == LayerType.INNER: radius = max_r * 0.35
-            elif ltype == LayerType.OUTER: radius = max_r * 0.65
-            elif ltype == LayerType.ARMOR: radius = max_r * 0.9
-            else: continue
-                
+            radius = max_r * data['radius_pct']
+            
             comps = data['components']
             if not comps: continue
                 
@@ -290,22 +284,36 @@ class InteractionController:
         max_r = self.view.max_r
         
         dist = math.hypot(pos[0] - cx, pos[1] - cy)
-        layer = None
-        if dist < max_r * 0.2: layer = LayerType.CORE
-        elif dist < max_r * 0.5: layer = LayerType.INNER
-        elif dist < max_r * 0.8: layer = LayerType.OUTER
-        elif dist < max_r * 1.0: layer = LayerType.ARMOR
         
-        if layer:
+        closest_layer = None
+        min_diff = float('inf')
+        
+        for ltype, data in self.builder.ship.layers.items():
+            r = max_r * data['radius_pct']
+            diff = abs(dist - r)
+            if diff < min_diff:
+                min_diff = diff
+                closest_layer = ltype
+        
+        if min_diff > 40:
+             closest_layer = None
+        
+        if closest_layer:
             comp = self.dragged_item
-            if layer in comp.allowed_layers:
-                if self.builder.ship.current_mass + comp.mass <= self.builder.ship.max_mass_budget:
-                    self.builder.ship.add_component(comp, layer)
+            if closest_layer in comp.allowed_layers:
+                 # Check specific restrictions
+                 reason = self.builder.ship._check_restrictions(comp, self.builder.ship.layers[closest_layer]['restrictions'])
+                 if reason:
+                      self.builder.show_error(f"Cannot place: {reason}")
+                      return
+
+                 if self.builder.ship.current_mass + comp.mass <= self.builder.ship.max_mass_budget:
+                    self.builder.ship.add_component(comp, closest_layer)
                     self.builder.update_stats()
-                else:
+                 else:
                     self.builder.show_error("Mass Limit!")
             else:
-                self.builder.show_error(f"Cannot place {comp.name} in {layer.name}")
+                self.builder.show_error(f"Cannot place {comp.name} in {closest_layer.name}")
 
 
 class BuilderSceneGUI:
@@ -574,7 +582,7 @@ class BuilderSceneGUI:
                      for m_id, val in self.template_modifiers.items():
                         if m_id in MODIFIER_REGISTRY:
                             mod_def = MODIFIER_REGISTRY[m_id]
-                            if 'allow_types' in mod_def.restrictions and preview_comp.type_str not in mod_def.restrictions['allow_types']:
+                            if mod_def.restrictions and 'allow_types' in mod_def.restrictions and preview_comp.type_str not in mod_def.restrictions['allow_types']:
                                 continue
                             preview_comp.add_modifier(m_id)
                             m = preview_comp.get_modifier(m_id)

@@ -5,6 +5,23 @@
             "code": "ES",
             "hull_mass": 50,
             "max_mass": 1000,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.3,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -25,6 +42,23 @@
             "code": "FR",
             "hull_mass": 100,
             "max_mass": 2000,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.3,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -45,6 +79,23 @@
             "code": "DS",
             "hull_mass": 200,
             "max_mass": 4000,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.3,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -65,6 +116,23 @@
             "code": "LC",
             "hull_mass": 300,
             "max_mass": 8000,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.3,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -85,6 +153,28 @@
             "code": "CR",
             "hull_mass": 400,
             "max_mass": 16000,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.2,
+                    "restrictions": []
+                },
+                {
+                    "type": "INNER",
+                    "radius_pct": 0.5,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -105,6 +195,28 @@
             "code": "HC",
             "hull_mass": 600,
             "max_mass": 32000,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.2,
+                    "restrictions": []
+                },
+                {
+                    "type": "INNER",
+                    "radius_pct": 0.5,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -125,6 +237,28 @@
             "code": "BC",
             "hull_mass": 800,
             "max_mass": 64000,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.2,
+                    "restrictions": []
+                },
+                {
+                    "type": "INNER",
+                    "radius_pct": 0.5,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -145,6 +279,28 @@
             "code": "BS",
             "hull_mass": 1600,
             "max_mass": 128000,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.2,
+                    "restrictions": []
+                },
+                {
+                    "type": "INNER",
+                    "radius_pct": 0.5,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -165,6 +321,28 @@
             "code": "DN",
             "hull_mass": 3200,
             "max_mass": 256000,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.2,
+                    "restrictions": []
+                },
+                {
+                    "type": "INNER",
+                    "radius_pct": 0.5,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -185,6 +363,28 @@
             "code": "SD",
             "hull_mass": 6400,
             "max_mass": 512000,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.2,
+                    "restrictions": []
+                },
+                {
+                    "type": "INNER",
+                    "radius_pct": 0.5,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -205,6 +405,28 @@
             "code": "MO",
             "hull_mass": 12800,
             "max_mass": 1024000,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.2,
+                    "restrictions": []
+                },
+                {
+                    "type": "INNER",
+                    "radius_pct": 0.5,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -225,6 +447,18 @@
             "code": "SF",
             "hull_mass": 5,
             "max_mass": 25,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.5,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -245,6 +479,18 @@
             "code": "MF",
             "hull_mass": 10,
             "max_mass": 35,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.5,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -265,6 +511,18 @@
             "code": "LF",
             "hull_mass": 15,
             "max_mass": 50,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.5,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -285,6 +543,18 @@
             "code": "HF",
             "hull_mass": 20,
             "max_mass": 70,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.5,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -305,6 +575,23 @@
             "code": "SS",
             "hull_mass": 50,
             "max_mass": 250,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.3,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -317,6 +604,23 @@
             "code": "MS",
             "hull_mass": 100,
             "max_mass": 500,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.3,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -329,6 +633,23 @@
             "code": "LS",
             "hull_mass": 200,
             "max_mass": 1000,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.3,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",
@@ -341,6 +662,23 @@
             "code": "HS",
             "hull_mass": 400,
             "max_mass": 2000,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.3,
+                    "restrictions": []
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.8,
+                    "restrictions": []
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "restrictions": []
+                }
+            ],
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",

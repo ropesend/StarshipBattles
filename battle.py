@@ -56,7 +56,7 @@ class BattleScene:
 
     @property
     def stats_panel_width(self):
-        return self.ui.stats_panel_width
+        return self.ui.stats_panel.rect.width
 
     @property
     def ships(self):
@@ -140,6 +140,17 @@ class BattleScene:
                      self.ui.show_overlay = not self.ui.show_overlay
 
     
+    def update_visuals(self, dt, events):
+        """Update visual effects like beams and camera."""
+        # Update Beams
+        for b in self.beams:
+            b['timer'] -= dt
+        self.beams = [b for b in self.beams if b['timer'] > 0]
+        
+        # Update Camera
+        self.camera.update(dt)
+        self.camera.update_input(dt, events)
+
     def is_battle_over(self):
         """Check if the battle has ended."""
         return self.engine.is_battle_over()
@@ -185,13 +196,13 @@ class BattleScene:
             self.ui.draw_debug_overlay(screen)
         
         # Seeker panel (Left)
-        self.ui.draw_seeker_panel(screen)
+        self.ui.seeker_panel.draw(screen)
         
         # Stats panel (Right)
-        self.ui.draw_ship_stats_panel(screen)
+        self.ui.stats_panel.draw(screen)
         
-        # Battle end UI
-        self.ui.draw_battle_end_ui(screen)
+        # Battle end UI / Controls
+        self.ui.control_panel.draw(screen)
     
     def handle_click(self, mx, my, button, screen_size):
         """Handle mouse clicks. Returns True if click was handled."""

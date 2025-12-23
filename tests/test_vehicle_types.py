@@ -122,7 +122,7 @@ class TestComponentRestrictions(unittest.TestCase):
         sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="Satellite (Small)")
         
         engine = COMPONENT_REGISTRY["standard_engine"].clone()
-        result = sat.add_component(engine, LayerType.INNER)
+        result = sat.add_component(engine, LayerType.OUTER)
         self.assertFalse(result, "Satellite should reject Engine")
         
         thruster = COMPONENT_REGISTRY["thruster"].clone()
@@ -349,7 +349,7 @@ class TestFighterLogic(unittest.TestCase):
         engine = COMPONENT_REGISTRY["mini_engine"].clone()
         
         fighter.add_component(cockpit, LayerType.CORE)
-        fighter.add_component(engine, LayerType.INNER)
+        fighter.add_component(engine, LayerType.CORE)
         fighter.recalculate_stats()
         
         self.assertFalse(fighter.is_derelict)

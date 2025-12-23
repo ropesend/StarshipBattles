@@ -24,7 +24,7 @@ class TestShipPhysicsThrust(unittest.TestCase):
         pygame.quit()
     
     def setUp(self):
-        self.ship = Ship("TestShip", 0, 0, (255, 255, 255))
+        self.ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship.add_component(create_component('life_support'), LayerType.CORE)
@@ -100,7 +100,7 @@ class TestShipPhysicsRotation(unittest.TestCase):
         pygame.quit()
     
     def setUp(self):
-        self.ship = Ship("TestShip", 0, 0, (255, 255, 255))
+        self.ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship.add_component(create_component('life_support'), LayerType.CORE)
@@ -163,7 +163,7 @@ class TestShipPhysicsMovement(unittest.TestCase):
         pygame.quit()
     
     def setUp(self):
-        self.ship = Ship("TestShip", 0, 0, (255, 255, 255))
+        self.ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship.add_component(create_component('life_support'), LayerType.CORE)

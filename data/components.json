@@ -451,6 +451,7 @@
             "mass": 3,
             "hp": 3,
             "allowed_layers": [
+                "CORE",
                 "INNER",
                 "OUTER"
             ],

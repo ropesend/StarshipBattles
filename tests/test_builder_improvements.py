@@ -32,9 +32,9 @@ class TestBuilderImprovements(unittest.TestCase):
         
         # Test Draw
         try:
-            builder._draw_schematic(self.window)
+            builder.draw(self.window)
         except Exception as e:
-            self.fail(f"_draw_schematic crashed: {e}")
+            self.fail(f"draw crashed: {e}")
 
     def test_loading_sync(self):
         """
@@ -140,14 +140,18 @@ class TestBuilderImprovements(unittest.TestCase):
             # Mock mouse position
             with patch('pygame.mouse.get_pos', return_value=(20, 100)): # Y=100 so it hits the item (list starts at Y=80)
                 # Logic is in update(dt)
-                builder.update(0.016)
-                
-                # Verify hovered_component is set
-                self.assertIsNotNone(builder.hovered_component)
-                self.assertEqual(builder.hovered_component, comp_clone)
-                
-                # Verify modifier was added to the CLONE
-                comp_clone.add_modifier.assert_called_with('simple_size_mount')
+                # Need to call draw() to trigger the hover logic which is now in draw()
+                # and verify _draw_tooltip is called with modified component
+                with patch.object(builder, '_draw_tooltip') as mock_tooltip:
+                    builder.draw(self.window)
+                    
+                    self.assertTrue(mock_tooltip.called)
+                    # Get the component passed to tooltip
+                    args, _ = mock_tooltip.call_args
+                    tooltip_comp = args[1]
+                    
+                    # Verify modifier was added to the CLONE (passed to tooltip)
+                    tooltip_comp.add_modifier.assert_called_with('simple_size_mount')
 
 if __name__ == '__main__':
     unittest.main()

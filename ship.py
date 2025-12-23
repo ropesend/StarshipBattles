@@ -77,18 +77,37 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.ship_class = ship_class
         self.theme_id = theme_id
         
-        # Layers
-        self.layers = {
-            LayerType.CORE:  {'components': [], 'radius_pct': 0.2, 'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0},
-            LayerType.INNER: {'components': [], 'radius_pct': 0.5, 'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0},
-            LayerType.OUTER: {'components': [], 'radius_pct': 0.8, 'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0},
-            LayerType.ARMOR: {'components': [], 'radius_pct': 1.0, 'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0}
-        }
+        # Get class definition
+        class_def = VEHICLE_CLASSES.get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
+
+        # Initialize Layers dynamically from class definition
+        self.layers = {}
+        layer_defs = class_def.get('layers', [])
+        
+        # Fallback if no layers defined (Legacy compatibility)
+        if not layer_defs:
+            layer_defs = [
+                { "type": "CORE", "radius_pct": 0.2, "restrictions": [] },
+                { "type": "INNER", "radius_pct": 0.5, "restrictions": [] },
+                { "type": "OUTER", "radius_pct": 0.8, "restrictions": [] },
+                { "type": "ARMOR", "radius_pct": 1.0, "restrictions": [] }
+            ]
+            
+        for l_def in layer_defs:
+            l_type_str = l_def.get('type')
+            try:
+                l_type = LayerType[l_type_str]
+                self.layers[l_type] = {
+                    'components': [],
+                    'radius_pct': l_def.get('radius_pct', 0.5),
+                    'restrictions': l_def.get('restrictions', []),
+                    'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0
+                }
+            except KeyError:
+                print(f"Warning: Unknown LayerType {l_type_str} in class {ship_class}")
         
         # Stats
         self.mass = 0
-        # Get hull mass from vehicle class definition
-        class_def = VEHICLE_CLASSES.get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
         self.base_mass = class_def.get('hull_mass', 50)  # Hull/Structure mass from class
         self.vehicle_type = class_def.get('type', "Ship")
         self.total_thrust = 0
@@ -149,13 +168,25 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.baseline_to_hit_offense = 1.0 # Offensive Multiplier (Higher is better for attacker)
 
     def add_component(self, component: Component, layer_type: LayerType):
+        if layer_type not in self.layers:
+             print(f"Error: Layer {layer_type.name} does not exist on {self.ship_class}")
+             return False
+
         if layer_type not in component.allowed_layers:
-            print(f"Error: {component.name} not allowed in {layer_type}")
+            # Special case: If the vehicle class has restricted layers, maybe we should allow it if valid?
+            # But component.allowed_layers is strict.
+            print(f"Error: {component.name} not allowed in {layer_type.name} (Component restriction)")
             return False
 
         if self.vehicle_type not in component.allowed_vehicle_types:
             print(f"Error: {component.name} not allowed on {self.vehicle_type}")
             return False
+
+        # Check Restrictions from Vehicle Class
+        reason = self._check_restrictions(component, self.layers[layer_type]['restrictions'])
+        if reason:
+             print(f"Error: Restriction: {reason}")
+             return False
 
         if self.current_mass + component.mass > self.max_mass_budget:
             print(f"Error: Mass budget exceeded for {self.name}")
@@ -168,6 +199,26 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Update Stats
         self.recalculate_stats()
         return True
+        
+    def _check_restrictions(self, component, restrictions):
+        """
+        Check if component is blocked by any restriction strings.
+        Returns failure reason string or None if allowed.
+        """
+        for r in restrictions:
+            if r.startswith("block_classification:"):
+                blocked_class = r.split(":")[1]
+                if component.data.get('major_classification') == blocked_class:
+                    return f"Classification '{blocked_class}' blocked in this layer"
+            elif r.startswith("block_type:"):
+                blocked_type = r.split(":")[1]
+                if component.type_str == blocked_type:
+                     return f"Type '{blocked_type}' blocked in this layer"
+            elif r.startswith("block_id:"):
+                blocked_id = r.split(":")[1]
+                if component.id == blocked_id:
+                     return f"Component '{blocked_id}' blocked in this layer"
+        return None
         
     def remove_component(self, layer_type: LayerType, index: int):
         if 0 <= index < len(self.layers[layer_type]['components']):
@@ -362,12 +413,14 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         
         for l_name, comps_list in data.get("layers", {}).items():
             layer_type = None
-            for l in LayerType:
-                if l.name == l_name:
-                    layer_type = l
-                    break
-            
-            if not layer_type: continue
+            try:
+                layer_type = LayerType[l_name]
+            except KeyError:
+                continue
+                
+            # If ship definition doesn't have this layer, skip it (maybe legacy import)
+            if layer_type not in s.layers:
+                 continue
             
             for c_entry in comps_list:
                 comp_id = ""
@@ -392,7 +445,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                     if isinstance(new_comp, Weapon):
                         # Use logger if needed, but avoid circular import if possible or lazy import
                         pass
-                            
+                             
+                    # Use add_component to validate and add
+                    # But suppress errors if loading? No, we might want to know if invalid load.
+                    # But for now, direct add might be cleaner IF we trust save data?
+                    # No, use add_component to ensure consistency with new restrictions
                     s.add_component(new_comp, layer_type)
         
         s.recalculate_stats()
@@ -417,7 +474,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 mismatches.append(f"total_thrust: got {s.total_thrust}, expected {expected['total_thrust']}")
             if expected.get('mass') and abs(s.mass - expected['mass']) > 1:
                 mismatches.append(f"mass: got {s.mass}, expected {expected['mass']}")
-            armor_hp = s.layers[LayerType.ARMOR]['max_hp_pool']  
+            armor_hp = s.layers[LayerType.ARMOR]['max_hp_pool'] if LayerType.ARMOR in s.layers else 0
             if expected.get('armor_hp_pool') and abs(armor_hp - expected['armor_hp_pool']) > 1:
                 mismatches.append(f"armor_hp_pool: got {armor_hp}, expected {expected['armor_hp_pool']}")
             

@@ -31,8 +31,7 @@ class TestMovementAndAI(unittest.TestCase):
             load_modifiers(mod_path)
 
     def setUp(self):
-        self.ship = Ship("TestShip", 0, 0, (255, 255, 255), 0)
-        self.ship.ship_class = "Escort"
+        self.ship = Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser")
 
     def get_component_clone(self, id):
         if id in COMPONENT_REGISTRY:

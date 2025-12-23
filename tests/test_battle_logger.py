@@ -6,7 +6,7 @@ import warnings
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from battle import BattleLogger
+from battle_engine import BattleLogger
 
 
 class TestBattleLogger(unittest.TestCase):

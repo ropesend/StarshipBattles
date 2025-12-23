@@ -169,7 +169,7 @@ class Game:
         if self.state == BATTLE:
             mx, my = pygame.mouse.get_pos()
             sw = self.screen.get_size()[0]
-            if mx >= sw - self.battle_scene.stats_panel_width or mx < self.battle_scene.ui.seeker_panel_width:
+            if mx >= sw - self.battle_scene.stats_panel_width or mx < self.battle_scene.ui.seeker_panel.rect.width:
                 self.battle_scene.handle_scroll(event.y, self.screen.get_size()[1])
     
     def _update_and_draw(self, frame_time, events):
@@ -304,7 +304,7 @@ class Game:
             zoom_text = f"Zoom: {self.battle_scene.camera.zoom:.3f}x"
             
             # Draw to the right of seeker panel (panel is 300px wide)
-            panel_offset = self.battle_scene.ui.seeker_panel_width + 10
+            panel_offset = self.battle_scene.ui.seeker_panel.rect.width + 10
             self.screen.blit(font_med.render(tick_text, True, (180, 180, 180)), (panel_offset, 10))
             self.screen.blit(font_med.render(rate_text, True, (180, 180, 180)), (panel_offset, 35))
             self.screen.blit(font_med.render(zoom_text, True, (150, 200, 255)), (panel_offset, 60))

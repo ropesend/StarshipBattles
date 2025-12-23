@@ -25,7 +25,7 @@ class TestShipResources(unittest.TestCase):
         pygame.quit()
         
     def setUp(self):
-        self.ship = Ship("ResourceTest", 0, 0, (255, 255, 255))
+        self.ship = Ship("ResourceTest", 0, 0, (255, 255, 255), ship_class="Cruiser")
         # Add minimal functional core
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
