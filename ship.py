@@ -432,7 +432,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Higher turn and acceleration reduces profile
         # Turn Speed is deg/s (e.g., 30-60), Accel is units/s^2 (e.g., 2-5)
         # Base denominator starts at 1.0
-        maneuver_bonus = 1.0 + (self.turn_speed / 45.0) + (self.acceleration_rate / 4.0)
+        # Reference Values: 225.0 Turn Speed, 20.0 Acceleration
+        maneuver_bonus = 1.0 + (self.turn_speed / 225.0) + (self.acceleration_rate / 20.0)
         maneuver_factor = 1.0 / maneuver_bonus
         
         # Factor 3: Electronic Defense (ECM)

@@ -411,8 +411,8 @@
             "range": 800,
             "reload": 0.04,
             "energy_cost": 2,
-            "base_accuracy": 10.0,
-            "accuracy_falloff": 0.0001,
+            "base_accuracy": 20.0,
+            "accuracy_falloff": 0.0003,
             "firing_arc": 90,
             "sprite_index": 65,
             "abilities": {

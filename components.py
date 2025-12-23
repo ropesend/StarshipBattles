@@ -295,8 +295,10 @@ class BeamWeapon(Weapon):
         return BeamWeapon(self.data)
     
     def calculate_hit_chance(self, distance):
-        """Calculate hit chance based on distance with linear falloff."""
-        chance = self.base_accuracy - (distance * self.accuracy_falloff)
+        """Calculate hit chance based on distance with multiplicative falloff."""
+        factor = 1.0 - (distance * self.accuracy_falloff)
+        factor = max(0.0, factor)
+        chance = self.base_accuracy * factor
         return max(0.0, min(1.0, chance))
 
 class SeekerWeapon(Weapon):

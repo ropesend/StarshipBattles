@@ -654,11 +654,20 @@ class WeaponsReportPanel:
         for threshold in self.THRESHOLDS:
             # Calculate range needed for this hit chance
             if falloff > 0:
-                # effective_hit = (base_acc - range * falloff) * ship_offense * target_defense
-                # threshold = effective_hit
-                # range = (base_acc - threshold / (ship_offense * target_defense)) / falloff
-                effective_threshold = threshold / (ship_offense * target_defense)
-                range_for_threshold = (base_acc - effective_threshold) / falloff
+                # New Formula: Hit = Base * (1 - Range*Falloff) * ShipMod * TargetMod
+                # Hit / (Base * ShipMod * TargetMod) = 1 - Range*Falloff
+                # Range*Falloff = 1 - (Hit / Denom)
+                # Range = (1 - (Hit / Denom)) / Falloff
+                
+                denom = base_acc * ship_offense * target_defense
+                if denom == 0:
+                    range_for_threshold = None
+                else:
+                    ratio = threshold / denom
+                    if ratio > 1.0:
+                        range_for_threshold = None # Impossible to reach this accuracy
+                    else:
+                        range_for_threshold = (1.0 - ratio) / falloff
             else:
                 # No falloff - either always or never hits at this threshold
                 effective_base = base_acc * ship_offense * target_defense
@@ -781,8 +790,11 @@ class WeaponsReportPanel:
                     ship_mod = getattr(ship, 'baseline_to_hit_offense', 1.0)
                     target_mod = self.target_defense_mod
                     
-                    chance_at_0 = max(0.0, min(1.0, base_acc * ship_mod * target_mod))
-                    chance_at_max = max(0.0, min(1.0, (base_acc - weapon_range * falloff) * ship_mod * target_mod))
+                    factor_at_0 = max(0.0, 1.0 - (0 * falloff))
+                    factor_at_max = max(0.0, 1.0 - (weapon_range * falloff))
+                    
+                    chance_at_0 = max(0.0, min(1.0, base_acc * factor_at_0 * ship_mod * target_mod))
+                    chance_at_max = max(0.0, min(1.0, base_acc * factor_at_max * ship_mod * target_mod))
                     
                     # Draw Start Label (0 range)
                     start_label_color = (0, 200, 0) if chance_at_0 > 0.5 else (200, 100, 0)
@@ -875,19 +887,18 @@ class WeaponsReportPanel:
                 damage = getattr(weapon, 'damage', 0)
                 
                 if isinstance(weapon, BeamWeapon):
-                    range_penalty = hover_range * falloff
-                    base_hit = base_acc - range_penalty
-                    hit_chance = base_hit * ship_mod * target_mod
+                    # Multiplicative logic
+                    range_factor = max(0.0, 1.0 - (hover_range * falloff))
+                    hit_chance = base_acc * range_factor * ship_mod * target_mod
                     hit_chance = max(0.0, min(1.0, hit_chance))
                     acc_text = f"{int(hit_chance * 100)}%"
                     
                     verbose_info = {
                         'base_acc': base_acc,
                         'falloff': falloff, 
-                        'range_penalty': range_penalty,
+                        'range_factor': range_factor,
                         'ship_mod': ship_mod,
-                        'target_mod': target_mod,
-                        'base_hit': base_hit
+                        'target_mod': target_mod
                     }
                 else:
                     acc_text = "N/A"
@@ -911,7 +922,7 @@ class WeaponsReportPanel:
                 lines = [
                     f"Range: {self._tooltip_data['range']}",
                     f"Base Accuracy: {v['base_acc']:.2f}",
-                    f"Range Penalty: -{v['range_penalty']:.3f} ({self._tooltip_data['range']} * {v['falloff']})",
+                    f"Range Factor: x{v['range_factor']:.3f} (1 - {self._tooltip_data['range']} * {v['falloff']})",
                     f"Ship Offense Mod: x{v['ship_mod']:.2f}",
                     f"Target Defense Mod: x{v['target_mod']:.2f}",
                     f"----------------",
