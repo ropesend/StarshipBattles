@@ -35,6 +35,7 @@ class BattleLogger:
     def start_session(self):
         """Start a new logging session."""
         if self.enabled:
+            self.close() # Ensure existing file is closed before opening new one
             try:
                 self.file = open(self.filename, 'w', encoding='utf-8')
                 self.log("=== BATTLE LOG STARTED ===")

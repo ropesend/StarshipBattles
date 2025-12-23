@@ -87,21 +87,16 @@ class ShipCombatMixin:
                         for candidate in potential_targets:
                             if not candidate: continue
                             
-                            # SAFETY: Non-PDC weapons should NOT fire at missiles (unless desperate?)
-                            # User implied specialization.
-                            # Also generic projectiles can't hit missiles well.
+                            # Safety: don't target dead things or friendlies
+                            if not getattr(candidate, 'is_alive', True): continue
+                            if getattr(candidate, 'team_id', -1) == self.team_id: continue
+
+                            # Specialization check: Non-PDC weapons should NOT fire at missiles
                             is_pdc = comp.abilities.get('PointDefense', False)
                             t_type = getattr(candidate, 'type', 'ship')
-                            
                             if t_type == 'missile' and not is_pdc:
                                 continue # Standard guns ignore missiles
                                 
-                            # Distance Check
-                        
-                        # Iterate through potential targets to find the first one we can hit
-                        for candidate in potential_targets:
-                            if not candidate: continue
-                            
                             # Distance Check
                             dist = self.position.distance_to(candidate.position)
                             max_range = comp.range
