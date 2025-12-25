@@ -336,6 +336,7 @@ class BattleSetupScreen:
                 world_x = (dx / GRID_UNIT) * diameter
                 world_y = (dy / GRID_UNIT) * diameter
                 
+                target_team_list.append({
                     'design': design_entry,
                     'strategy': design_entry.get('ai_strategy', 'optimal_firing_range'),
                     'relative_position': (world_x, world_y),

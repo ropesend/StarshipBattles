@@ -788,7 +788,6 @@ class FormationEditorScene:
         )
         if filename:
             try:
-            try:
                 # Serialize to new format (List of Dicts) if mixed, or just Dicts
                 out_arrows = []
                 for i, pos in enumerate(self.arrows):
@@ -812,7 +811,6 @@ class FormationEditorScene:
             try:
                 with open(filename, 'r') as f:
                     data = json.load(f)
-                    if 'arrows' in data:
                     if 'arrows' in data:
                         raw_arrows = data['arrows']
                         self.arrows = []
