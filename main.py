@@ -14,7 +14,9 @@ from battle_setup import BattleSetupScreen
 
 
 # Constants
-WIDTH, HEIGHT = 3840, 2160
+# WIDTH, HEIGHT are now determined at runtime, but we set defaults here
+DEFAULT_WIDTH, DEFAULT_HEIGHT = 2560, 1600
+WIDTH, HEIGHT = DEFAULT_WIDTH, DEFAULT_HEIGHT
 FPS = 60
 BG_COLOR = (10, 10, 20)
 
@@ -36,8 +38,26 @@ class Game:
     
     def __init__(self):
         pygame.init()
+        
+        # Monitor detection
+        info = pygame.display.Info()
+        monitor_w = info.current_w
+        monitor_h = info.current_h
+        
+        global WIDTH, HEIGHT
+        
+        # Logic: Use 4K if available, else 2560x1600, else smaller?
+        if monitor_w >= 3840 and monitor_h >= 2160:
+            WIDTH, HEIGHT = 3840, 2160
+        elif monitor_w >= 2560 and monitor_h >= 1600:
+            WIDTH, HEIGHT = 2560, 1600
+        else:
+             # Fallback for smaller screens (e.g. 1920x1080)
+             WIDTH, HEIGHT = int(monitor_w * 0.9), int(monitor_h * 0.9)
+
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-        pygame.display.set_caption("Starship Battles")
+        pygame.display.set_caption(f"Starship Battles ({WIDTH}x{HEIGHT})")
+        
         self.clock = pygame.time.Clock()
         self.running = True
         self.state = MENU
@@ -56,16 +76,19 @@ class Game:
         sprite_mgr.load_sprites(base_path)
         
         # Menu UI
-        self.menu_buttons = [
-            Button(WIDTH//2 - 100, HEIGHT//2 - 50, 200, 50, "Ship Builder", self.start_builder),
-            Button(WIDTH//2 - 100, HEIGHT//2 + 20, 200, 50, "Battle Setup", self.start_battle_setup)
-        ]
+        self.update_menu_buttons()
         
         # Scene objects
         self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return)
         self.battle_setup = BattleSetupScreen()
         self.battle_scene = BattleScene(WIDTH, HEIGHT)
     
+    def update_menu_buttons(self):
+        self.menu_buttons = [
+            Button(WIDTH//2 - 100, HEIGHT//2 - 50, 200, 50, "Ship Builder", self.start_builder),
+            Button(WIDTH//2 - 100, HEIGHT//2 + 20, 200, 50, "Battle Setup", self.start_battle_setup)
+        ]
+
     def start_builder(self):
         """Enter ship builder."""
         self.state = BUILDER
@@ -83,6 +106,8 @@ class Game:
     def start_battle(self, team1_ships, team2_ships, headless=False):
         """Start a battle with the given ships."""
         self.state = BATTLE
+        if self.battle_scene.screen_width != WIDTH or self.battle_scene.screen_height != HEIGHT:
+             self.battle_scene.handle_resize(WIDTH, HEIGHT)
         self.battle_scene.start(team1_ships, team2_ships, headless=headless)
     
     def run(self):
@@ -132,11 +157,17 @@ class Game:
     
     def _handle_resize(self, w, h):
         """Handle window resize."""
-        self.battle_scene.camera.width = w
-        self.battle_scene.camera.height = h
+        global WIDTH, HEIGHT
+        WIDTH, HEIGHT = w, h
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+        
         if self.state == MENU:
-            self.menu_buttons[0].rect.center = (w//2, h//2 - 50)
-            self.menu_buttons[1].rect.center = (w//2, h//2 + 20)
+            self.update_menu_buttons()
+        elif self.state == BATTLE:
+            self.battle_scene.handle_resize(w, h)
+        elif self.state == BUILDER:
+             if hasattr(self.builder_scene, 'handle_resize'):
+                 self.builder_scene.handle_resize(w, h)
     
     def _handle_keydown(self, event):
         """Handle key press events."""

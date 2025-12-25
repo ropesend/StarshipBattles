@@ -34,6 +34,27 @@ class BattleInterface:
         if getattr(proj, 'type', '') == 'missile':
             self.seeker_panel.add_seeker(proj)
 
+    def handle_resize(self, width, height):
+        """Update UI elements for new resolution."""
+        self.width = width
+        self.height = height
+        
+        # Stats Panel (Right)
+        stats_w = self.stats_panel.rect.width
+        self.stats_panel.rect.x = width - stats_w
+        self.stats_panel.rect.height = height
+        # Invalidate surface cache
+        self.stats_panel.surface = None
+        
+        # Seeker Panel (Left)
+        self.seeker_panel.rect.height = height
+        self.seeker_panel.surface = None
+        
+        # Control Panel (Overlay)
+        self.control_panel.rect.width = width
+        self.control_panel.rect.height = height
+        self.control_panel.surface = None
+
     def draw(self, screen):
         """Draw the battle scene UI elements (excluding ships/projectiles)."""
         # Draw grid
