@@ -3,7 +3,7 @@ import json
 import pygame
 from components import LayerType
 from logger import log_info
-from ai_behaviors import RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior
+from ai_behaviors import RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior, FormationBehavior
 
 # Load combat strategies from JSON
 COMBAT_STRATEGIES = {}
@@ -49,7 +49,8 @@ class AIController:
             'ram': RamBehavior(self),
             'flee': FleeBehavior(self),
             'kite': KiteBehavior(self),
-            'attack_run': AttackRunBehavior(self)
+            'attack_run': AttackRunBehavior(self),
+            'formation': FormationBehavior(self)
         }
         self.current_behavior = None
         self.attack_state = 'approach' 
@@ -274,6 +275,27 @@ class AIController:
         if not self.ship.is_alive: 
             return
 
+        # 0. Formation Damage Check (Dropout)
+        if self.ship.in_formation and self.ship.formation_master:
+             from components import Engine, Thruster
+             dmg = False
+             for layer in self.ship.layers.values():
+                 for comp in layer['components']:
+                     if isinstance(comp, (Engine, Thruster)):
+                         if getattr(comp, 'current_hp', 1) < getattr(comp, 'max_hp', 1):
+                             dmg = True
+                             break
+                 if dmg: break
+             
+             if dmg:
+                 self.ship.in_formation = False
+                 try:
+                     self.ship.formation_master.formation_members.remove(self.ship)
+                 except ValueError: pass
+                 self.ship.formation_master = None
+                 # Reset turn throttle just in case
+                 self.ship.turn_throttle = 1.0
+
         # Derelict Check
         if getattr(self.ship, 'is_derelict', False):
             self.ship.comp_trigger_pulled = False
@@ -283,7 +305,13 @@ class AIController:
         strategy = self.get_current_strategy()
         strategy_id = getattr(self.ship, 'ai_strategy', 'max_weapons_range')
         
-        # Target Acquisition
+        # Formation Targeting Sync
+        if self.ship.in_formation and self.ship.formation_master:
+             master_target = self.ship.formation_master.current_target
+             if master_target and master_target.is_alive and not getattr(master_target, 'is_derelict', False):
+                 self.ship.current_target = master_target
+
+        # Target Acquisition (Standard)
         target = self.ship.current_target
         if target:
             if not target.is_alive or getattr(target, 'is_derelict', False):
@@ -291,7 +319,7 @@ class AIController:
                 self.ship.current_target = None
                 self.ship.secondary_targets = []
 
-        if not target:
+        if not target and not (self.ship.in_formation and self.ship.formation_master):
             target = self.find_target()
             self.ship.current_target = target
             
@@ -300,10 +328,18 @@ class AIController:
         else:
             self.ship.secondary_targets = []
 
-        if not target:
+        if not target and not (self.ship.in_formation and self.ship.formation_master):
             self.ship.comp_trigger_pulled = False
-            return
+            # If formation follower has no target but is in formation, it should still move!
+            # So we check formation status before returning.
+            # But behavior.update expects a target.
+            # FormationBehavior uses master as target (implicitly).
+            pass
             
+        if not target and not self.ship.in_formation:
+             self.ship.comp_trigger_pulled = False
+             return
+
         self.ship.comp_trigger_pulled = True
         
         # Satellite Exception: Satellites do NOT navigate.
@@ -311,40 +347,65 @@ class AIController:
              return
 
         # Determine Behavior
-        behavior_key = 'kite' # Default
-        
-        # Check retreat condition
-        hp_pct = self._get_hp_percent(self.ship)
-        retreat_threshold = strategy.get('retreat_hp_threshold', 0.1)
-        
-        if hp_pct <= retreat_threshold and retreat_threshold > 0:
-            behavior_key = 'flee'
+        if self.ship.in_formation and self.ship.formation_master:
+            behavior_key = 'formation'
         else:
-            # Check for explicit behavior defined in strategy (Extension Point)
-            behavior_key = strategy.get('behavior')
+            behavior_key = 'kite' # Default
             
-            if not behavior_key:
-                # Legacy Inference
-                engage_key = strategy.get('engage_distance', 'max_range')
-                if engage_key == 'ram':
-                    behavior_key = 'ram'
-                elif strategy.get('attack_run_behavior'):
-                    behavior_key = 'attack_run'
-                else:
-                    behavior_key = 'kite'
+            # Check retreat condition
+            hp_pct = self._get_hp_percent(self.ship)
+            retreat_threshold = strategy.get('retreat_hp_threshold', 0.1)
+            
+            if hp_pct <= retreat_threshold and retreat_threshold > 0:
+                behavior_key = 'flee'
+            else:
+                # Check for explicit behavior defined in strategy (Extension Point)
+                behavior_key = strategy.get('behavior')
+                
+                if not behavior_key:
+                    # Legacy Inference
+                    engage_key = strategy.get('engage_distance', 'max_range')
+                    if engage_key == 'ram':
+                        behavior_key = 'ram'
+                    elif strategy.get('attack_run_behavior'):
+                        behavior_key = 'attack_run'
+                    else:
+                        behavior_key = 'kite'
         
         # Switch behavior if needed
         behavior = self.behaviors.get(behavior_key)
         
-        if self.current_behavior != behavior or strategy_id != self.last_strategy:
+        if self.current_behavior != behavior:
+            # Note: We don't check strategy change for formation switch
             if behavior:
                 behavior.enter()
             self.current_behavior = behavior
-            self.last_strategy = strategy_id
+            # self.last_strategy = strategy_id cannot be relied on if we switch back and forth
             
         # Execute behavior
         if self.current_behavior:
             self.current_behavior.update(target, strategy)
+
+        # Master Slowdown Logic
+        self.ship.turn_throttle = 1.0 # Default
+        if self.ship.formation_members:
+             diam = self.ship.radius * 2
+             slow_down = False
+             for member in self.ship.formation_members:
+                 if not member.is_alive or not member.in_formation: continue
+                 
+                 # Calculate where member SHOULD be
+                 rotated_offset = member.formation_offset.rotate(self.ship.angle)
+                 target_pos = self.ship.position + rotated_offset
+                 
+                 d = member.position.distance_to(target_pos)
+                 if d > 1.5 * diam:
+                     slow_down = True
+                     break
+             
+             if slow_down:
+                 self.ship.target_speed *= 0.75
+                 self.ship.turn_throttle = 0.75
 
     def check_avoidance(self):
         """Check for nearby collisions and return evasion point."""

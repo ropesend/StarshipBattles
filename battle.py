@@ -148,6 +148,23 @@ class BattleScene:
             if event.type == pygame.KEYDOWN:
                  if event.key == pygame.K_F3:
                      self.ui.show_overlay = not self.ui.show_overlay
+                 elif event.key == pygame.K_LEFTBRACKET:
+                     self._cycle_focus_ship(-1)
+                 elif event.key == pygame.K_RIGHTBRACKET:
+                     self._cycle_focus_ship(1)
+
+    def _cycle_focus_ship(self, direction):
+        """Cycle camera focus through alive ships."""
+        alive_ships = [s for s in self.engine.ships if s.is_alive]
+        if not alive_ships:
+            return
+
+        current_idx = -1
+        if self.camera.target in alive_ships:
+            current_idx = alive_ships.index(self.camera.target)
+        
+        new_idx = (current_idx + direction) % len(alive_ships)
+        self.camera.target = alive_ships[new_idx]
 
     
     def update_visuals(self, dt, events):

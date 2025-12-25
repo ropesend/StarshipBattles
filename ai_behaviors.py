@@ -110,3 +110,50 @@ class AttackRunBehavior(AIBehavior):
             
             if self.attack_timer <= 0 and dist > retreat_dist:
                 self.attack_state = 'approach'
+
+class FormationBehavior(AIBehavior):
+    def update(self, target, strategy):
+        ship = self.controller.ship
+        master = ship.formation_master
+        
+        if not master or not master.is_alive or getattr(master, 'is_derelict', False):
+            ship.in_formation = False
+            return
+
+        # Calculate target position
+        rotated_offset = ship.formation_offset.rotate(master.angle)
+        target_pos = master.position + rotated_offset
+        
+        dist = ship.position.distance_to(target_pos)
+        diameter = ship.radius * 2
+        
+        # Match Master's rotation
+        angle_diff = (master.angle - ship.angle + 180) % 360 - 180
+        
+        # Decision: Drift or Turn
+        if dist <= diameter:
+            # Drift / Fudge Factor Zone
+            
+            # 1. Rotation: Try to match master's heading
+            if abs(angle_diff) > 0.5:
+                direction = 1 if angle_diff > 0 else -1
+                ship.rotate(direction)
+            
+            # 2. Translation: Drift
+            drift_amount = ship.acceleration_rate
+            vec_to_spot = target_pos - ship.position
+            
+            if vec_to_spot.length() > 0:
+                if vec_to_spot.length() > drift_amount:
+                    vec_to_spot.scale_to_length(drift_amount)
+                
+                # Apply position change (Drift)
+                ship.position += vec_to_spot
+                
+                # Maintain Master's speed
+                ship.target_speed = master.current_speed
+                
+        else:
+            # Out of position > 1 Diameter
+            # Navigate to spot (Turn and Burn)
+            self.controller.navigate_to(target_pos, stop_dist=10, precise=True)

@@ -41,6 +41,7 @@ def scan_ship_designs():
 def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angle=0):
     """Load ships from team entry list. Returns list of Ship objects."""
     ships = []
+    formation_masters = {}
     
     for i, entry in enumerate(team_entries):
         with open(entry['design']['path'], 'r') as f:
@@ -62,6 +63,25 @@ def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angl
         ship.source_file = os.path.basename(entry['design']['path'])
         ship.team_id = team_id
         ship.recalculate_stats()
+        
+        # Formation Linking
+        if 'formation_id' in entry:
+            f_id = entry['formation_id']
+            if f_id not in formation_masters:
+                # First ship encountered with this ID is the Master
+                formation_masters[f_id] = ship
+            else:
+                # Subsequent ships are Followers
+                master = formation_masters[f_id]
+                ship.formation_master = master
+                master.formation_members.append(ship)
+                
+                # Calculate Offset: Vector from Master to Follower, in Master's local space
+                # Global Diff = Follower - Master
+                # Local Diff = Global Diff rotated by -MasterAngle
+                diff = ship.position - master.position
+                ship.formation_offset = diff.rotate(-master.angle)
+        
         ships.append(ship)
     return ships
 
@@ -283,6 +303,9 @@ class BattleSetupScreen:
             center_x = (min_x + max_x) / 2
             center_y = (min_y + max_y) / 2
             
+            import uuid
+            formation_id = str(uuid.uuid4())
+            
             for ax, ay in arrows:
                 dx = ax - center_x
                 dy = ay - center_y
@@ -293,7 +316,8 @@ class BattleSetupScreen:
                 target_team_list.append({
                     'design': design_entry,
                     'strategy': design_entry.get('ai_strategy', 'optimal_firing_range'),
-                    'relative_position': (world_x, world_y)
+                    'relative_position': (world_x, world_y),
+                    'formation_id': formation_id
                 })
                 
             print(f"Added formation with {len(arrows)} ships to Team {team_choice}.")

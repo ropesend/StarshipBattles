@@ -73,5 +73,5 @@ class ShipPhysicsMixin:
         Rotate the ship.
         direction: -1 for left, 1 for right
         """
-        turn_per_tick = self.turn_speed / 100.0
+        turn_per_tick = (self.turn_speed * getattr(self, 'turn_throttle', 1.0)) / 100.0
         self.angle += direction * turn_per_tick

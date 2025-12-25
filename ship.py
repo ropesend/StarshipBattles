@@ -178,10 +178,17 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.ai_strategy = "optimal_firing_range"  # See combatstrategies.json for options
         self.source_file = None  # Path to the JSON file this ship was loaded from
         
+        # Formation Attributes
+        self.formation_master = None      # Reference to master ship object
+        self.formation_offset = None      # Vector2 offset relative to master
+        self.formation_members = []       # List of followers (if this is master)
+        self.in_formation = True          # Flag to track if ship is currently holding formation
+        
         # Arcade Physics
         self.current_speed = 0
         self.acceleration_rate = 0
         self.is_thrusting = False
+        self.turn_throttle = 1.0 # Multiplier for turn speed (formations)
         
         # Aiming
         self.aim_point = None
