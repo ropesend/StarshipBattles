@@ -74,8 +74,6 @@ class AIController:
                    and obj.team_id == self.enemy_team_id
                    and not getattr(obj, 'is_derelict', False)]
         
-        # DEBUG: Log if we can't find target
-        # print(f"AI Search: {len(candidates)} candidates, {len(enemies)} enemies.") 
         
         if not enemies:
             return None
@@ -277,7 +275,10 @@ class AIController:
 
         # Master Turn Limiting & Slowdown (Run Always)
         self.ship.turn_throttle = 1.0 # Default
-        self.ship.engine_throttle = 1.0 # Default
+        
+        # Reserve some engine power so followers can catch up (Simulated Formation Speed Cap)
+        # If we run at 100%, followers behind us physically cannot catch up.
+        self.ship.engine_throttle = 0.9 if self.ship.formation_members else 1.0 
         
         if self.ship.formation_members:
              diam = self.ship.radius * 2
@@ -313,7 +314,8 @@ class AIController:
                  target_pos = self.ship.position + rotated_offset
                  
                  d = member.position.distance_to(target_pos)
-                 if d > 1.5 * diam:
+                 # Tighten tolerance: if followers are > 0.5 diameter out, slow down
+                 if d > 0.5 * diam:
                      slow_down = True
                      break
              

@@ -138,32 +138,78 @@ class FormationBehavior(AIBehavior):
         if dist <= drift_threshold:
             # Drift / Fudge Factor Zone
             
-            # 1. Rotation: Try to match master's heading
-            # DAMPENING: Only turn if angle difference is significant relative to turn speed is high
+            # 1. Rotation: Feed-Forward + Correction
+            # Feed-Forward: Match Master's angle exactly if we are already close
+            # Correction: Close the gap
+            
             turn_speed_per_tick = (ship.turn_speed * getattr(ship, 'turn_throttle', 1.0)) / 100.0
             
-            # If we are very close to target angle, just snap to it to avoid oscillation
-            if abs(angle_diff) < turn_speed_per_tick:
-                ship.angle = master.angle
-            elif abs(angle_diff) > 0.5:
-                direction = 1 if angle_diff > 0 else -1
-                ship.rotate(direction)
+            # Snap to master's future angle? 
+            # If master is rotating, we should be too (Feed Forward)
+            # We don't have explicit 'master.is_turning' flag easily accessible, 
+            # but we can infer from master.current_speed/angle change or just match angle.
             
-            # 2. Translation: Drift
-            drift_amount = ship.acceleration_rate
-            vec_to_spot = target_pos - ship.position
+            if abs(angle_diff) < turn_speed_per_tick * 1.5:
+                 ship.angle = master.angle
+            else:
+                 direction = 1 if angle_diff > 0 else -1
+                 ship.rotate(direction)
             
-            if vec_to_spot.length() > 0:
-                if vec_to_spot.length() > drift_amount:
-                    vec_to_spot.scale_to_length(drift_amount)
-                
-                # Apply position change (Drift)
-                ship.position += vec_to_spot
-                
-                # Maintain Master's speed
-                ship.target_speed = master.current_speed
+            # 2. Translation Logic
+            # Goal: Match Velocity + Correct Position Error
+            
+            # A) Velocity Sync (Physics Feed-Forward)
+            # Match master's target speed setting so Physics updates us by the same amount.
+            master_target_speed = 0
+            if getattr(master, 'is_thrusting', False):
+                 # Calculate what speed the master is trying to reach
+                 master_target_speed = getattr(master, 'max_speed', 0) * getattr(master, 'engine_throttle', 1.0)
+            
+            # Apply to self
+            if ship.max_speed > 0:
+                 # Calculate required throttle to match master speed
+                 req_throttle = master_target_speed / ship.max_speed
+                 ship.engine_throttle = min(req_throttle, 1.0)
+                 
+                 # Activate Engines if needed
+                 if req_throttle > 0:
+                     ship.thrust_forward() # Consumes fuel, sets is_thrusting=True
+                     # Physics will now result in velocity ~= master.velocity
+            
+            # B) Positional Correction (Drift)
+            # Since velocity handles the bulk movement, Drift only needs to correct the current offset error.
+            # Prediction Factor = 0.0 (Target current master position)
+            
+            # Calculate where we SHOULD be right now
+            future_master_pos = master.position # No prediction needed if velocity matched
+            future_target_pos = future_master_pos + ship.formation_offset.rotate(master.angle)
+            
+            vec_to_spot = future_target_pos - ship.position
+            dist_error = vec_to_spot.length()
+            
+            # DEADBAND & SMOOTHING:
+            # - Ignore micro-errors (< 2.0) to prevent jitter/oscillation.
+            # - Smooth correction (0.2 factor) to act as a spring rather than a hard snap.
+            # - Velocity Sync already handles 99% of the movement.
+            
+            if dist_error > 2.0:
+                 # Spring force: Correct 20% of error per tick
+                 # This eliminates bi-stable oscillation while ensuring convergence.
+                 correction = vec_to_spot * 0.2
+                 
+                 # Cap correction to avoid wild jumps if something goes wrong (e.g. 500px limit)
+                 if correction.length() > 500: 
+                     correction.scale_to_length(500)
+                 
+                 ship.position += correction
                 
         else:
-            # Out of position > 1 Diameter
-            # Navigate to spot (Turn and Burn)
+            # Out of position > Threshold
+            # Navigate to FUTURE spot (Anticipation)
+            # Predict where master will be in X ticks based on current speed
+            prediction_ticks = 10
+            predicted_master_pos = master.position + (pygame.math.Vector2(0, -1).rotate(-master.angle) * master.current_speed * prediction_ticks * 0.01)
+            # Re-calculate offset based on master's current angle (assuming constant bearing for short duration)
+            target_pos = predicted_master_pos + rotated_offset
+            
             self.controller.navigate_to(target_pos, stop_dist=10, precise=True)
