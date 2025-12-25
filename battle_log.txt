@@ -1,5 +1,5 @@
 === BATTLE LOG STARTED ===
-Battle started: 1 vs 15 ships
+Battle started: 1 vs 29 ships
 Ship 'Devastator' (Team 0): HP=2527914/2527914 Mass=1003939.9190226517 Thrust=364800.0 Fuel=6400000 TurnSpeed=2.00 MaxSpeed=9.08 Derelict=False
 Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
 Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
@@ -16,6 +16,20 @@ Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 Turn
 Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
 Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
 Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
 Ship 'Devastator' (Team 0): HP=2527914/2527914 Mass=1003939.9190226517 Thrust=364800.0 Fuel=6400000 TurnSpeed=2.00 MaxSpeed=9.08 Derelict=False
 Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
 Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
@@ -32,134 +46,385 @@ Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 Turn
 Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
 Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
 Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
 Projectile fired at [20000, 30000]
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
 Projectile fired at [20000, 30000]
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
 Projectile fired at [20000, 30000]
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
 Projectile fired at [20000, 30000]
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
 Projectile fired at [20000, 30000]
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
 Projectile fired at [20000, 30000]
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
 Projectile fired at [20000, 30000]
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
 Projectile fired at [20000, 30000]
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
 Projectile fired at [20000, 30000]
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
-Projectile fired at [20000, 30000]
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
+Missile fired at <ship.Ship object at 0x0000019216D360D0>
 === BATTLE LOG ENDED ===

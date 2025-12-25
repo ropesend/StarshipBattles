@@ -4,7 +4,7 @@ import json
 import os
 import glob
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, simpledialog
 
 from ship import Ship
 from ai import COMBAT_STRATEGIES
@@ -41,11 +41,22 @@ def scan_ship_designs():
 def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angle=0):
     """Load ships from team entry list. Returns list of Ship objects."""
     ships = []
+    
     for i, entry in enumerate(team_entries):
         with open(entry['design']['path'], 'r') as f:
             data = json.load(f)
         ship = Ship.from_dict(data)
-        ship.position = pygame.math.Vector2(start_x, start_y + i * 5000)
+        
+        # Position Logic
+        if 'relative_position' in entry:
+            # Formation-based or custom position
+            rx, ry = entry['relative_position']
+            # Coordinates are relative to team start center
+            ship.position = pygame.math.Vector2(start_x + rx, start_y + ry)
+        else:
+            # Default linear spacing
+            ship.position = pygame.math.Vector2(start_x, start_y + i * 5000)
+            
         ship.angle = facing_angle
         ship.ai_strategy = entry['strategy']
         ship.source_file = os.path.basename(entry['design']['path'])
@@ -60,7 +71,7 @@ class BattleSetupScreen:
     
     def __init__(self):
         self.available_ship_designs = []
-        self.team1 = []  # List of {'design': design_dict, 'strategy': str}
+        self.team1 = []  # List of {'design': design_dict, 'strategy': str, 'relative_position': (x,y)}
         self.team2 = []
         self.scroll_offset = 0
         self.ai_dropdown_open = None  # (team_idx, ship_idx) or None
@@ -119,17 +130,18 @@ class BattleSetupScreen:
             "team2": []
         }
         
-        for entry in self.team1:
-            data["team1"].append({
-                "design_file": os.path.basename(entry['design']['path']),
-                "strategy": entry['strategy']
-            })
-            
-        for entry in self.team2:
-            data["team2"].append({
-                "design_file": os.path.basename(entry['design']['path']),
-                "strategy": entry['strategy']
-            })
+        def serialize_team(team_list, out_list):
+            for entry in team_list:
+                item = {
+                    "design_file": os.path.basename(entry['design']['path']),
+                    "strategy": entry['strategy']
+                }
+                if 'relative_position' in entry:
+                    item['relative_position'] = entry['relative_position']
+                out_list.append(item)
+        
+        serialize_team(self.team1, data["team1"])
+        serialize_team(self.team2, data["team2"])
             
         try:
             with open(filepath, 'w') as f:
@@ -141,7 +153,6 @@ class BattleSetupScreen:
     def load_setup(self):
         """Open dialog to load a battle setup."""
         if self.team1 or self.team2:
-             # Maybe confirm overwrite? For now just do it.
              pass
              
         root = tk.Tk()
@@ -173,25 +184,22 @@ class BattleSetupScreen:
             new_team1 = []
             new_team2 = []
             
-            for item in data.get('team1', []):
-                d = find_design(item['design_file'])
-                if d:
-                    new_team1.append({
-                        'design': d,
-                        'strategy': item['strategy']
-                    })
-                else:
-                    print(f"Warning: Design {item['design_file']} not found")
+            def load_team(in_list, out_list):
+                for item in in_list:
+                    d = find_design(item['design_file'])
+                    if d:
+                        entry = {
+                            'design': d,
+                            'strategy': item['strategy']
+                        }
+                        if 'relative_position' in item:
+                             entry['relative_position'] = item['relative_position']
+                        out_list.append(entry)
+                    else:
+                        print(f"Warning: Design {item['design_file']} not found")
 
-            for item in data.get('team2', []):
-                d = find_design(item['design_file'])
-                if d:
-                    new_team2.append({
-                        'design': d,
-                        'strategy': item['strategy']
-                    })
-                else:
-                    print(f"Warning: Design {item['design_file']} not found")
+            load_team(data.get('team1', []), new_team1)
+            load_team(data.get('team2', []), new_team2)
             
             self.team1 = new_team1
             self.team2 = new_team2
@@ -201,7 +209,100 @@ class BattleSetupScreen:
         except Exception as e:
             print(f"Error loading setup: {e}")
 
-    
+    def add_formation_dialog(self):
+        """Handle adding a formation."""
+        root = tk.Tk()
+        root.withdraw()
+        
+        team_choice = simpledialog.askinteger("Select Team", "Enter Team Number (1 or 2):", minvalue=1, maxvalue=2)
+        if not team_choice:
+            root.destroy()
+            return
+            
+        target_team_list = self.team1 if team_choice == 1 else self.team2
+        
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        
+        formation_path = filedialog.askopenfilename(
+            initialdir=base_path,
+            title="Select Formation JSON",
+            filetypes=(("JSON files", "*.json"), ("All files", "*.*"))
+        )
+        if not formation_path:
+            root.destroy()
+            return
+
+        ships_dir = os.path.join(base_path, "ships")
+        ship_path = filedialog.askopenfilename(
+            initialdir=ships_dir,
+            title="Select Ship Design for Formation",
+            filetypes=(("JSON files", "*.json"), ("All files", "*.*"))
+        )
+        root.destroy()
+        
+        if not ship_path:
+            return
+
+        try:
+            with open(formation_path, 'r') as f:
+                form_data = json.load(f)
+            arrows = form_data.get('arrows', [])
+            if not arrows:
+                print("Formation has no arrows.")
+                return
+                
+            with open(ship_path, 'r') as f:
+                ship_data = json.load(f)
+            
+            temp_ship = Ship.from_dict(ship_data)
+            temp_ship.recalculate_stats()
+            diameter = temp_ship.radius * 2
+            
+            design_entry = None
+            for d in self.available_ship_designs:
+                if os.path.normpath(d['path']) == os.path.normpath(ship_path):
+                    design_entry = d
+                    break
+            
+            if not design_entry:
+                design_entry = {
+                    'path': ship_path,
+                    'name': ship_data.get('name', 'Unknown'),
+                    'ship_class': ship_data.get('ship_class', 'Unknown'),
+                    'ai_strategy': ship_data.get('ai_strategy', 'optimal_firing_range')
+                }
+
+            # 4. Calculate Positions
+            GRID_UNIT = 50.0 # From Editor
+            
+            min_x = min(p[0] for p in arrows)
+            max_x = max(p[0] for p in arrows)
+            min_y = min(p[1] for p in arrows)
+            max_y = max(p[1] for p in arrows)
+            
+            center_x = (min_x + max_x) / 2
+            center_y = (min_y + max_y) / 2
+            
+            for ax, ay in arrows:
+                dx = ax - center_x
+                dy = ay - center_y
+                
+                world_x = (dx / GRID_UNIT) * diameter
+                world_y = (dy / GRID_UNIT) * diameter
+                
+                target_team_list.append({
+                    'design': design_entry,
+                    'strategy': design_entry.get('ai_strategy', 'optimal_firing_range'),
+                    'relative_position': (world_x, world_y)
+                })
+                
+            print(f"Added formation with {len(arrows)} ships to Team {team_choice}.")
+            
+        except Exception as e:
+            print(f"Error adding formation: {e}")
+            import traceback
+            traceback.print_exc()
+
     def update(self, events, screen_size):
         """Handle input events. Returns action string or None."""
         sw, sh = screen_size
@@ -210,55 +311,43 @@ class BattleSetupScreen:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mx, my = event.pos
                 
-                col1_x = 50  # Available ships
-                col2_x = sw // 3 + 50  # Team 1
-                col3_x = 2 * sw // 3 + 50  # Team 2
+                col1_x = 50 
+                col2_x = sw // 3 + 50
+                col3_x = 2 * sw // 3 + 50
                 
-                # Check available ships list (left column)
                 if col1_x <= mx < col1_x + 250:
                     for i, design in enumerate(self.available_ship_designs):
                         y = 150 + i * 40
                         if y <= my < y + 35:
-                            if event.button == 1:  # Left click - add to team 1
+                            if event.button == 1:
                                 self.team1.append({
                                     'design': design,
                                     'strategy': design.get('ai_strategy', 'optimal_firing_range')
                                 })
-                            elif event.button == 3:  # Right click - add to team 2
+                            elif event.button == 3:
                                 self.team2.append({
                                     'design': design,
                                     'strategy': design.get('ai_strategy', 'optimal_firing_range')
                                 })
                             break
                 
-                # Check Save/Load Buttons (Top Right area? Or near Clear All?)
-                # Let's put them near Clear All.
-                
-                # Save: sw/2 - 300 (Clear is -300 to -180). Let's put Save/Load to the left of Clear?
-                # Or below the team lists?
-                # Setup buttons row: [Clear] [Begin] [Return] [Quick]
-                # Let's add [Load] [Save] to the far left or far right.
-                
-                # Let's put them under the "Available Ships" list?
-                # Available ships list ends at logic ??? it renders infinite list?
-                # No, we don't have scrolling yet, assumes fits.
-                
-                # Let's put small keys near the bottom left:
-                # [Load Setup] [Save Setup]
-                
-                btn_load_rect = pygame.Rect(50, sh - 80, 120, 50)
-                btn_save_rect = pygame.Rect(180, sh - 80, 120, 50)
+                btn_y = sh - 80
+                btn_load_rect = pygame.Rect(50, btn_y, 120, 50)
+                btn_save_rect = pygame.Rect(180, btn_y, 120, 50)
+                btn_form_rect = pygame.Rect(310, btn_y, 160, 50)
                 
                 if btn_load_rect.collidepoint(mx, my):
                     self.load_setup()
-                    return # Dialog blocks, so return after
+                    return 
                     
                 if btn_save_rect.collidepoint(mx, my):
                     self.save_setup()
                     return
 
+                if btn_form_rect.collidepoint(mx, my):
+                    self.add_formation_dialog()
+                    return
                 
-                # Check team 1 ships
                 if col2_x <= mx < col2_x + 350:
                     for i, entry in enumerate(self.team1):
                         y = 150 + i * 35
@@ -271,7 +360,6 @@ class BattleSetupScreen:
                                 self.ai_dropdown_open = (1, i)
                                 return
                 
-                # Check team 2 ships
                 if col3_x <= mx < col3_x + 350:
                     for i, entry in enumerate(self.team2):
                         y = 150 + i * 35
@@ -284,30 +372,22 @@ class BattleSetupScreen:
                                 self.ai_dropdown_open = (2, i)
                                 return
                 
-                # Buttons at bottom
-                btn_y = sh - 80
-                
-                # Begin Battle button
                 if sw // 2 - 100 <= mx < sw // 2 + 100 and btn_y <= my < btn_y + 50:
                     if self.team1 and self.team2:
                         self.action_start_battle = True
                 
-                # Return button
                 if sw // 2 + 120 <= mx < sw // 2 + 240 and btn_y <= my < btn_y + 50:
                     self.action_return_to_menu = True
                 
-                # Clear All button
                 if sw // 2 - 300 <= mx < sw // 2 - 180 and btn_y <= my < btn_y + 50:
                     self.team1 = []
                     self.team2 = []
                     self.ai_dropdown_open = None
                 
-                # Quick Battle (Headless) button
                 if sw // 2 + 260 <= mx < sw // 2 + 400 and btn_y <= my < btn_y + 50:
                     if self.team1 and self.team2:
                         self.action_start_headless = True
                 
-                # Check for dropdown clicks
                 if self.ai_dropdown_open is not None:
                     team_idx, ship_idx = self.ai_dropdown_open
                     team_list = self.team1 if team_idx == 1 else self.team2
@@ -329,7 +409,6 @@ class BattleSetupScreen:
         screen.fill((20, 25, 35))
         sw, sh = screen.get_size()
         
-        # Title
         title_font = pygame.font.Font(None, 64)
         title = title_font.render("BATTLE SETUP", True, (200, 200, 255))
         screen.blit(title, (sw // 2 - title.get_width() // 2, 30))
@@ -341,7 +420,6 @@ class BattleSetupScreen:
         col2_x = sw // 3 + 50
         col3_x = 2 * sw // 3 + 50
         
-        # Available Ships (left column)
         lbl = label_font.render("Available Ships (L/R click to add)", True, (150, 150, 200))
         screen.blit(lbl, (col1_x, 110))
         
@@ -352,23 +430,23 @@ class BattleSetupScreen:
             pygame.draw.rect(screen, (80, 80, 100), (col1_x, y, 250, 35), 1)
             screen.blit(text, (col1_x + 10, y + 8))
             
-        # Save/Load Buttons (Bottom Left)
         btn_y = sh - 80
         
-        # Load Button
         pygame.draw.rect(screen, (60, 60, 80), (50, btn_y, 120, 50))
         pygame.draw.rect(screen, (100, 100, 150), (50, btn_y, 120, 50), 2)
         lid_text = label_font.render("LOAD", True, (200, 200, 255))
         screen.blit(lid_text, (50 + 60 - lid_text.get_width()//2, btn_y + 12))
         
-        # Save Button
         pygame.draw.rect(screen, (60, 60, 80), (180, btn_y, 120, 50))
         pygame.draw.rect(screen, (100, 100, 150), (180, btn_y, 120, 50), 2)
         sav_text = label_font.render("SAVE", True, (200, 200, 255))
         screen.blit(sav_text, (180 + 60 - sav_text.get_width()//2, btn_y + 12))
 
-        
-        # Team 1 (middle column)
+        pygame.draw.rect(screen, (60, 80, 60), (310, btn_y, 160, 50))
+        pygame.draw.rect(screen, (100, 150, 100), (310, btn_y, 160, 50), 2)
+        form_text = label_font.render("+ FORMAT", True, (200, 255, 200))
+        screen.blit(form_text, (310 + 80 - form_text.get_width()//2, btn_y + 12))
+
         lbl = label_font.render("Team 1", True, (100, 200, 255))
         screen.blit(lbl, (col2_x, 110))
         
@@ -393,7 +471,6 @@ class BattleSetupScreen:
             x_text = item_font.render("[X]", True, (255, 100, 100))
             screen.blit(x_text, (col2_x + 315, y + 5))
         
-        # Team 2 (right column)
         lbl = label_font.render("Team 2", True, (255, 100, 100))
         screen.blit(lbl, (col3_x, 110))
         
@@ -418,36 +495,28 @@ class BattleSetupScreen:
             x_text = item_font.render("[X]", True, (255, 100, 100))
             screen.blit(x_text, (col3_x + 315, y + 5))
         
-        # Buttons at bottom
-        btn_y = sh - 80
-        
-        # Begin Battle button
         btn_color = (50, 150, 50) if (self.team1 and self.team2) else (50, 50, 50)
         pygame.draw.rect(screen, btn_color, (sw // 2 - 100, btn_y, 200, 50))
         pygame.draw.rect(screen, (100, 200, 100), (sw // 2 - 100, btn_y, 200, 50), 2)
         btn_text = label_font.render("BEGIN BATTLE", True, (255, 255, 255))
         screen.blit(btn_text, (sw // 2 - btn_text.get_width() // 2, btn_y + 12))
         
-        # Return button
         pygame.draw.rect(screen, (80, 80, 80), (sw // 2 + 120, btn_y, 120, 50))
         pygame.draw.rect(screen, (150, 150, 150), (sw // 2 + 120, btn_y, 120, 50), 2)
         ret_text = label_font.render("RETURN", True, (200, 200, 200))
         screen.blit(ret_text, (sw // 2 + 180 - ret_text.get_width() // 2, btn_y + 12))
         
-        # Clear All button
         pygame.draw.rect(screen, (120, 50, 50), (sw // 2 - 300, btn_y, 120, 50))
         pygame.draw.rect(screen, (200, 100, 100), (sw // 2 - 300, btn_y, 120, 50), 2)
         clr_text = label_font.render("CLEAR ALL", True, (255, 200, 200))
         screen.blit(clr_text, (sw // 2 - 240 - clr_text.get_width() // 2, btn_y + 12))
         
-        # Quick Battle (Headless) button
         quick_color = (80, 50, 120) if (self.team1 and self.team2) else (40, 40, 40)
         pygame.draw.rect(screen, quick_color, (sw // 2 + 260, btn_y, 140, 50))
         pygame.draw.rect(screen, (150, 100, 200), (sw // 2 + 260, btn_y, 140, 50), 2)
         quick_text = label_font.render("QUICK BATTLE", True, (220, 200, 255))
         screen.blit(quick_text, (sw // 2 + 330 - quick_text.get_width() // 2, btn_y + 12))
         
-        # Draw AI dropdown if open
         if self.ai_dropdown_open is not None:
             team_idx, ship_idx = self.ai_dropdown_open
             col_x = col2_x if team_idx == 1 else col3_x
