@@ -1,0 +1,99 @@
+{
+  "name": "Missle Frigate VS Circle fighters",
+  "team1": [
+    {
+      "design_file": "Missle Escort.json",
+      "strategy": "attack_run"
+    }
+  ],
+  "team2": [
+    {
+      "design_file": "Fighting Falcon.json",
+      "strategy": "attack_run",
+      "relative_position": [
+        0.0,
+        -18.566355334451117
+      ]
+    },
+    {
+      "design_file": "Fighting Falcon.json",
+      "strategy": "attack_run",
+      "relative_position": [
+        0.0,
+        -352.7607513545712
+      ]
+    },
+    {
+      "design_file": "Fighting Falcon.json",
+      "strategy": "attack_run",
+      "relative_position": [
+        208.87149751257508,
+        -308.66565743524984
+      ]
+    },
+    {
+      "design_file": "Fighting Falcon.json",
+      "strategy": "attack_run",
+      "relative_position": [
+        334.1943960201201,
+        -132.2852817579642
+      ]
+    },
+    {
+      "design_file": "Fighting Falcon.json",
+      "strategy": "attack_run",
+      "relative_position": [
+        334.1943960201201,
+        88.1901878386428
+      ]
+    },
+    {
+      "design_file": "Fighting Falcon.json",
+      "strategy": "attack_run",
+      "relative_position": [
+        208.87149751257508,
+        264.5705635159284
+      ]
+    },
+    {
+      "design_file": "Fighting Falcon.json",
+      "strategy": "attack_run",
+      "relative_position": [
+        0.0,
+        352.7607513545712
+      ]
+    },
+    {
+      "design_file": "Fighting Falcon.json",
+      "strategy": "attack_run",
+      "relative_position": [
+        -208.87149751257508,
+        264.5705635159284
+      ]
+    },
+    {
+      "design_file": "Fighting Falcon.json",
+      "strategy": "attack_run",
+      "relative_position": [
+        -334.1943960201201,
+        88.1901878386428
+      ]
+    },
+    {
+      "design_file": "Fighting Falcon.json",
+      "strategy": "attack_run",
+      "relative_position": [
+        -334.1943960201201,
+        -132.2852817579642
+      ]
+    },
+    {
+      "design_file": "Fighting Falcon.json",
+      "strategy": "attack_run",
+      "relative_position": [
+        -208.87149751257508,
+        -308.66565743524984
+      ]
+    }
+  ]
+}
