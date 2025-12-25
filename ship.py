@@ -181,9 +181,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Formation Attributes
         self.formation_master = None      # Reference to master ship object
         self.formation_offset = None      # Vector2 offset relative to master
+        self.formation_rotation_mode = 'relative' # 'relative' or 'fixed'
         self.formation_members = []       # List of followers (if this is master)
         self.in_formation = True          # Flag to track if ship is currently holding formation
-        self.turn_throttle = 1.0          # Multiplier for turn speed (0.0 to 1.0)
+        self.turn_throttle = 1.0          # Multiplier for max speed (0.0 to 1.0)
         self.engine_throttle = 1.0        # Multiplier for max speed (0.0 to 1.0)
         
         # Arcade Physics

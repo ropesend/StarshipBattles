@@ -23,6 +23,8 @@ class FormationEditorScene:
         # Data
         # list of [x, y] coordinates (World Space)
         self.arrows = [] 
+        # Parallel list of attributes: [{'rotation_mode': 'relative'}, ...]
+        self.arrow_attrs = []
         # Multi-selection: set of indices
         self.selected_indices = set()
         
@@ -120,6 +122,13 @@ class FormationEditorScene:
             manager=self.ui_manager
         )
         current_x += btn_w + spacing
+        
+        self.rotation_mode_btn = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(current_x, btn_y, 140, btn_h),
+            text="Rot: Relative",
+            manager=self.ui_manager
+        )
+        current_x += 140 + spacing
         
         self.info_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(current_x, btn_y, 250, btn_h),
@@ -219,6 +228,8 @@ class FormationEditorScene:
         
         item = self.arrows.pop(from_idx)
         self.arrows.insert(to_idx, item)
+        attr = self.arrow_attrs.pop(from_idx)
+        self.arrow_attrs.insert(to_idx, attr)
         # Update selection to follow the item
         self.selected_indices = {to_idx}
         self.update_info()
@@ -291,6 +302,8 @@ class FormationEditorScene:
                 self.save_formation()
             elif event.ui_element == self.load_btn:
                 self.load_formation()
+            elif event.ui_element == self.rotation_mode_btn:
+                self._toggle_rotation_mode()
             elif event.ui_element == self.return_btn:
                 self.on_return_menu()
             elif event.ui_element == self.clear_btn:
@@ -497,6 +510,22 @@ class FormationEditorScene:
                 keys = pygame.key.get_pressed()
                 if not (keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]):
                      self.selected_indices = set()
+                     
+    def _toggle_rotation_mode(self):
+        if not self.selected_indices: return
+        
+        # Check current state of selection
+        any_relative = False
+        for idx in self.selected_indices:
+            if self.arrow_attrs[idx].get('rotation_mode', 'relative') == 'relative':
+                any_relative = True
+                break
+        
+        new_mode = 'fixed' if any_relative else 'relative'
+        for idx in self.selected_indices:
+            self.arrow_attrs[idx]['rotation_mode'] = new_mode
+            
+        self.update_info()
 
     def _update_group_resize(self, screen_pos):
         if not self.initial_group_bounds: return
@@ -665,6 +694,7 @@ class FormationEditorScene:
 
     def add_arrow(self, pos):
         self.arrows.append(list(pos))
+        self.arrow_attrs.append({'rotation_mode': 'relative'})
         self.selected_indices = {len(self.arrows) - 1}
         self.update_info()
 
@@ -674,6 +704,7 @@ class FormationEditorScene:
         for idx in to_delete:
             if 0 <= idx < len(self.arrows):
                 self.arrows.pop(idx)
+                self.arrow_attrs.pop(idx)
         self.selected_indices = set()
         self.update_info()
 
@@ -685,12 +716,14 @@ class FormationEditorScene:
         for idx in sorted_indices:
             ax, ay = self.arrows[idx]
             self.arrows.append([ax + offset, ay + offset])
+            self.arrow_attrs.append(self.arrow_attrs[idx].copy())
             new_indices.add(len(self.arrows) - 1)
         self.selected_indices = new_indices
         self.update_info()
 
     def clear_all(self):
         self.arrows = []
+        self.arrow_attrs = []
         self.selected_indices = set()
         self.update_info()
 
@@ -755,7 +788,18 @@ class FormationEditorScene:
         )
         if filename:
             try:
-                data = {'arrows': self.arrows}
+            try:
+                # Serialize to new format (List of Dicts) if mixed, or just Dicts
+                out_arrows = []
+                for i, pos in enumerate(self.arrows):
+                    attr = self.arrow_attrs[i]
+                    # Format: {"pos": [x, y], "rotation_mode": "relative"}
+                    out_arrows.append({
+                        "pos": pos,
+                        "rotation_mode": attr.get('rotation_mode', 'relative')
+                    })
+                
+                data = {'arrows': out_arrows}
                 with open(filename, 'w') as f: json.dump(data, f, indent=4)
             except Exception as e: print(f"Error saving: {e}")
 
@@ -769,7 +813,18 @@ class FormationEditorScene:
                 with open(filename, 'r') as f:
                     data = json.load(f)
                     if 'arrows' in data:
-                        self.arrows = data['arrows']
+                    if 'arrows' in data:
+                        raw_arrows = data['arrows']
+                        self.arrows = []
+                        self.arrow_attrs = []
+                        for item in raw_arrows:
+                            if isinstance(item, list): # Legacy
+                                self.arrows.append(item)
+                                self.arrow_attrs.append({'rotation_mode': 'relative'})
+                            elif isinstance(item, dict):
+                                self.arrows.append(item.get('pos', [0,0]))
+                                self.arrow_attrs.append({'rotation_mode': item.get('rotation_mode', 'relative')})
+                        
                         self.selected_indices = set()
                         self.update_info()
             except Exception as e: print(f"Error loading: {e}")
@@ -779,6 +834,25 @@ class FormationEditorScene:
         sel_count = len(self.selected_indices)
         sel_str = f" | Selected: {sel_count}" if sel_count > 0 else ""
         self.info_label.set_text(f"Arrows: {count}{sel_str}")
+        
+        # Update Rotation Btn text based on selection
+        if hasattr(self, 'rotation_mode_btn'):
+            if not self.selected_indices:
+                self.rotation_mode_btn.set_text("Rot: -")
+                self.rotation_mode_btn.disable()
+            else:
+                self.rotation_mode_btn.enable()
+                # Check consistency
+                modes = set()
+                for idx in self.selected_indices:
+                    modes.add(self.arrow_attrs[idx].get('rotation_mode', 'relative'))
+                
+                if len(modes) > 1:
+                    self.rotation_mode_btn.set_text("Rot: Mixed")
+                elif 'fixed' in modes:
+                    self.rotation_mode_btn.set_text("Rot: Fixed")
+                else:
+                    self.rotation_mode_btn.set_text("Rot: Relative")
         
         # Manually update slider range if possible, or just clamp input
         if hasattr(self, 'renumber_slider'):
@@ -813,6 +887,12 @@ class FormationEditorScene:
                 
             color = self.col_arrow_sel if i in self.selected_indices else self.col_arrow
             border_col = (255,255,255) if i in self.selected_indices else (0,0,0)
+            
+            # Check attribute
+            attr = self.arrow_attrs[i]
+            is_fixed = attr.get('rotation_mode', 'relative') == 'fixed'
+            if is_fixed:
+                color = (100, 255, 100) if i not in self.selected_indices else (200, 255, 200)
             
             # Draw Triangle
             # Point Up

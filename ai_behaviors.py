@@ -121,8 +121,13 @@ class FormationBehavior(AIBehavior):
             return
 
         # Calculate target position
-        rotated_offset = ship.formation_offset.rotate(master.angle)
-        target_pos = master.position + rotated_offset
+        # Calculate target position
+        if getattr(ship, 'formation_rotation_mode', 'relative') == 'fixed':
+             current_rel_offset = ship.formation_offset
+        else:
+             current_rel_offset = ship.formation_offset.rotate(master.angle)
+             
+        target_pos = master.position + current_rel_offset
         
         dist = ship.position.distance_to(target_pos)
         diameter = ship.radius * 2
@@ -182,7 +187,13 @@ class FormationBehavior(AIBehavior):
             
             # Calculate where we SHOULD be right now
             future_master_pos = master.position # No prediction needed if velocity matched
-            future_target_pos = future_master_pos + ship.formation_offset.rotate(master.angle)
+            
+            if getattr(ship, 'formation_rotation_mode', 'relative') == 'fixed':
+                 future_offset = ship.formation_offset
+            else:
+                 future_offset = ship.formation_offset.rotate(master.angle)
+                 
+            future_target_pos = future_master_pos + future_offset
             
             vec_to_spot = future_target_pos - ship.position
             dist_error = vec_to_spot.length()
@@ -209,7 +220,12 @@ class FormationBehavior(AIBehavior):
             # Predict where master will be in X ticks based on current speed
             prediction_ticks = 10
             predicted_master_pos = master.position + (pygame.math.Vector2(0, -1).rotate(-master.angle) * master.current_speed * prediction_ticks * 0.01)
-            # Re-calculate offset based on master's current angle (assuming constant bearing for short duration)
-            target_pos = predicted_master_pos + rotated_offset
+            # Re-calculate offset based on master's current angle 
+            if getattr(ship, 'formation_rotation_mode', 'relative') == 'fixed':
+                 pred_offset = ship.formation_offset
+            else:
+                 pred_offset = ship.formation_offset.rotate(master.angle)
+            
+            target_pos = predicted_master_pos + pred_offset
             
             self.controller.navigate_to(target_pos, stop_dist=10, precise=True)

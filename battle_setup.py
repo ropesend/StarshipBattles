@@ -80,7 +80,14 @@ def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angl
                 # Global Diff = Follower - Master
                 # Local Diff = Global Diff rotated by -MasterAngle
                 diff = ship.position - master.position
-                ship.formation_offset = diff.rotate(-master.angle)
+                
+                rot_mode = entry.get('rotation_mode', 'relative')
+                ship.formation_rotation_mode = rot_mode
+                
+                if rot_mode == 'fixed':
+                     ship.formation_offset = diff
+                else:
+                     ship.formation_offset = diff.rotate(-master.angle)
         
         ships.append(ship)
     return ships
@@ -158,6 +165,10 @@ class BattleSetupScreen:
                 }
                 if 'relative_position' in entry:
                     item['relative_position'] = entry['relative_position']
+                if 'formation_id' in entry:
+                    item['formation_id'] = entry['formation_id']
+                if 'rotation_mode' in entry:
+                    item['rotation_mode'] = entry['rotation_mode']
                 out_list.append(item)
         
         serialize_team(self.team1, data["team1"])
@@ -214,6 +225,10 @@ class BattleSetupScreen:
                         }
                         if 'relative_position' in item:
                              entry['relative_position'] = item['relative_position']
+                        if 'formation_id' in item:
+                             entry['formation_id'] = item['formation_id']
+                        if 'rotation_mode' in item:
+                             entry['rotation_mode'] = item['rotation_mode']
                         out_list.append(entry)
                     else:
                         print(f"Warning: Design {item['design_file']} not found")
@@ -306,18 +321,26 @@ class BattleSetupScreen:
             import uuid
             formation_id = str(uuid.uuid4())
             
-            for ax, ay in arrows:
+            for item in arrows:
+                # Handle both legacy list format [x,y] and new dict format
+                if isinstance(item, dict):
+                    ax, ay = item['pos']
+                    rot_mode = item.get('rotation_mode', 'relative')
+                else:
+                    ax, ay = item
+                    rot_mode = 'relative'
+
                 dx = ax - center_x
                 dy = ay - center_y
                 
                 world_x = (dx / GRID_UNIT) * diameter
                 world_y = (dy / GRID_UNIT) * diameter
                 
-                target_team_list.append({
                     'design': design_entry,
                     'strategy': design_entry.get('ai_strategy', 'optimal_firing_range'),
                     'relative_position': (world_x, world_y),
-                    'formation_id': formation_id
+                    'formation_id': formation_id,
+                    'rotation_mode': rot_mode
                 })
                 
             print(f"Added formation with {len(arrows)} ships to Team {team_choice}.")
