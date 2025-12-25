@@ -12,6 +12,11 @@
                     "max_mass_pct": 0.5
                 },
                 {
+                    "type": "INNER",
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
+                },
+                {
                     "type": "OUTER",
                     "restrictions": [],
                     "max_mass_pct": 0.7
@@ -45,6 +50,11 @@
             "layers": [
                 {
                     "type": "CORE",
+                    "restrictions": [],
+                    "max_mass_pct": 0.5
+                },
+                {
+                    "type": "INNER",
                     "restrictions": [],
                     "max_mass_pct": 0.5
                 },
@@ -482,6 +492,16 @@
             "layers": [
                 {
                     "type": "CORE",
+                    "restrictions": [],
+                    "max_mass_pct": 1.0
+                },
+                {
+                    "type": "INNER",
+                    "restrictions": [],
+                    "max_mass_pct": 1.0
+                },
+                {
+                    "type": "OUTER",
                     "restrictions": [],
                     "max_mass_pct": 1.0
                 },

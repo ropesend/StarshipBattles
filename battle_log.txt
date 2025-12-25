@@ -1,229 +1,165 @@
 === BATTLE LOG STARTED ===
-Battle started: 1 vs 28 ships
+Battle started: 1 vs 15 ships
 Ship 'Devastator' (Team 0): HP=2527914/2527914 Mass=1003939.9190226517 Thrust=364800.0 Fuel=6400000 TurnSpeed=2.00 MaxSpeed=9.08 Derelict=False
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start!
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)!
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
 Ship 'Devastator' (Team 0): HP=2527914/2527914 Mass=1003939.9190226517 Thrust=364800.0 Fuel=6400000 TurnSpeed=2.00 MaxSpeed=9.08 Derelict=False
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'Missle Frigate' (Team 1): HP=1540/1540 Mass=500 Thrust=0 Fuel=50000 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=True
-WARNING: Missle Frigate is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)
-WARNING: Missle Frigate has NO THRUST!
-WARNING: Missle Frigate has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Ship 'Missle Frigate' (Team 1): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Projectile fired at [20000, 30000]
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Projectile fired at [20000, 30000]
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Projectile fired at [20000, 30000]
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Projectile fired at [20000, 30000]
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Projectile fired at [20000, 30000]
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Projectile fired at [20000, 30000]
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Projectile fired at [20000, 30000]
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Projectile fired at [20000, 30000]
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Projectile fired at [20000, 30000]
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Missile fired at <ship.Ship object at 0x000001E28D8BDE50>
+Projectile fired at [20000, 30000]
 === BATTLE LOG ENDED ===

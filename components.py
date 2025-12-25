@@ -308,7 +308,34 @@ class SeekerWeapon(Weapon):
         self.turn_rate = data.get('turn_rate', 30)
         self.endurance = data.get('endurance', 5.0)
         self.hp = data.get('hp', 1)
-        self.range = self.projectile_speed * self.endurance
+        self.range = int(self.projectile_speed * self.endurance * 0.8)
+
+    def recalculate_stats(self):
+        super().recalculate_stats()
+        from component_modifiers import apply_modifier_effects
+
+        # Recalculate range mult locally since super() uses data['range'] which is invalid for Seeker
+        stats = {
+            'mass_mult': 1.0,
+            'hp_mult': 1.0,
+            'damage_mult': 1.0,
+            'range_mult': 1.0,
+            'cost_mult': 1.0,
+            'thrust_mult': 1.0,
+            'turn_mult': 1.0,
+            'energy_gen_mult': 1.0,
+            'capacity_mult': 1.0,
+            'mass_add': 0.0,
+            'arc_add': 0.0,
+            'arc_set': None,
+            'properties': {}
+        }
+        
+        for m in self.modifiers:
+            apply_modifier_effects(m.definition, m.value, stats)
+
+        # Apply 80% rule to the calculated range (Straight Line * 0.8 * Multipliers)
+        self.range = int((self.projectile_speed * self.endurance) * 0.8 * stats['range_mult'])
         
     def clone(self):
         return SeekerWeapon(self.data)
