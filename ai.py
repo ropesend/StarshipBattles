@@ -275,6 +275,53 @@ class AIController:
         if not self.ship.is_alive: 
             return
 
+        # Master Turn Limiting & Slowdown (Run Always)
+        self.ship.turn_throttle = 1.0 # Default
+        self.ship.engine_throttle = 1.0 # Default
+        
+        if self.ship.formation_members:
+             diam = self.ship.radius * 2
+             
+             # 1. Calculate Max Formation Radius for Turn Limit
+             max_radius = 0
+             
+             # ... (keep radius search) ...
+             for member in self.ship.formation_members:
+                 if member.formation_offset:
+                     r = member.formation_offset.length()
+                     if r > max_radius:
+                         max_radius = r
+             
+             # Limit turn rate
+             if max_radius > 0:
+                 max_speed = getattr(self.ship, 'max_speed', 10) 
+                 max_w_rad = max_speed / max_radius
+                 max_w_deg = math.degrees(max_w_rad)
+                 
+                 base_turn_per_tick = self.ship.turn_speed / 100.0
+                 if base_turn_per_tick > 0:
+                     turn_limit_throttle = max_w_deg / base_turn_per_tick
+                     self.ship.turn_throttle = min(self.ship.turn_throttle, turn_limit_throttle)
+
+             # 2. Existing Slowdown for Out-of-Position ships
+             slow_down = False
+             for member in self.ship.formation_members:
+                 if not member.is_alive or not member.in_formation: continue
+                 
+                 # Calculate where member SHOULD be
+                 rotated_offset = member.formation_offset.rotate(self.ship.angle)
+                 target_pos = self.ship.position + rotated_offset
+                 
+                 d = member.position.distance_to(target_pos)
+                 if d > 1.5 * diam:
+                     slow_down = True
+                     break
+             
+             if slow_down:
+                 self.ship.engine_throttle = 0.75
+                 self.ship.turn_throttle = min(self.ship.turn_throttle, 0.75)
+
+
         # 0. Formation Damage Check (Dropout)
         if self.ship.in_formation and self.ship.formation_master:
              from components import Engine, Thruster
@@ -293,8 +340,9 @@ class AIController:
                      self.ship.formation_master.formation_members.remove(self.ship)
                  except ValueError: pass
                  self.ship.formation_master = None
-                 # Reset turn throttle just in case
+                 # Reset throttles
                  self.ship.turn_throttle = 1.0
+                 self.ship.engine_throttle = 1.0
 
         # Derelict Check
         if getattr(self.ship, 'is_derelict', False):
@@ -384,28 +432,10 @@ class AIController:
             
         # Execute behavior
         if self.current_behavior:
-            self.current_behavior.update(target, strategy)
-
-        # Master Slowdown Logic
-        self.ship.turn_throttle = 1.0 # Default
-        if self.ship.formation_members:
-             diam = self.ship.radius * 2
-             slow_down = False
-             for member in self.ship.formation_members:
-                 if not member.is_alive or not member.in_formation: continue
-                 
-                 # Calculate where member SHOULD be
-                 rotated_offset = member.formation_offset.rotate(self.ship.angle)
-                 target_pos = self.ship.position + rotated_offset
-                 
-                 d = member.position.distance_to(target_pos)
-                 if d > 1.5 * diam:
-                     slow_down = True
-                     break
-             
-             if slow_down:
-                 self.ship.target_speed *= 0.75
-                 self.ship.turn_throttle = 0.75
+            # Only execute combat behaviors if we have a target
+            # FormationBehavior handles its own internal targeting (positioning)
+            if target or self.current_behavior == self.behaviors.get('formation'):
+                self.current_behavior.update(target, strategy)
 
     def check_avoidance(self):
         """Check for nearby collisions and return evasion point."""

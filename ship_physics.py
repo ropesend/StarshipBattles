@@ -12,12 +12,10 @@ class ShipPhysicsMixin:
     
     def update_physics_movement(self):
         """
-        Update ship position and rotation based on cycle-based physics.
-        Target Speed Logic: Accelerate/Decelerate linearly to match target_speed.
         """
         # Determine target speed based on input state
         if getattr(self, 'is_thrusting', False):
-            self.target_speed = self.max_speed
+            self.target_speed = self.max_speed * getattr(self, 'engine_throttle', 1.0)
         else:
             self.target_speed = 0
             

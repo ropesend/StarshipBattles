@@ -131,11 +131,21 @@ class FormationBehavior(AIBehavior):
         angle_diff = (master.angle - ship.angle + 180) % 360 - 180
         
         # Decision: Drift or Turn
-        if dist <= diameter:
+        # Use a larger threshold for drift to allow agile ships to snap into position
+        # Using acceleration_rate ensures we can cover the gap in one tick if needed
+        drift_threshold = max(diameter * 2, ship.acceleration_rate * 1.2)
+        
+        if dist <= drift_threshold:
             # Drift / Fudge Factor Zone
             
             # 1. Rotation: Try to match master's heading
-            if abs(angle_diff) > 0.5:
+            # DAMPENING: Only turn if angle difference is significant relative to turn speed is high
+            turn_speed_per_tick = (ship.turn_speed * getattr(ship, 'turn_throttle', 1.0)) / 100.0
+            
+            # If we are very close to target angle, just snap to it to avoid oscillation
+            if abs(angle_diff) < turn_speed_per_tick:
+                ship.angle = master.angle
+            elif abs(angle_diff) > 0.5:
                 direction = 1 if angle_diff > 0 else -1
                 ship.rotate(direction)
             
