@@ -11,6 +11,7 @@ from sprites import SpriteManager
 from camera import Camera
 from battle import BattleScene, BATTLE_LOG
 from battle_setup import BattleSetupScreen
+from formation_editor import FormationEditorScene
 
 
 # Constants
@@ -25,6 +26,7 @@ MENU = 0
 BUILDER = 1
 BATTLE = 2
 BATTLE_SETUP = 3
+FORMATION = 4
 
 # Initialize fonts
 pygame.font.init()
@@ -83,11 +85,13 @@ class Game:
         self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return)
         self.battle_setup = BattleSetupScreen()
         self.battle_scene = BattleScene(WIDTH, HEIGHT)
+        self.formation_scene = FormationEditorScene(WIDTH, HEIGHT, self.on_formation_return)
     
     def update_menu_buttons(self):
         self.menu_buttons = [
-            Button(WIDTH//2 - 100, HEIGHT//2 - 50, 200, 50, "Ship Builder", self.start_builder),
-            Button(WIDTH//2 - 100, HEIGHT//2 + 20, 200, 50, "Battle Setup", self.start_battle_setup)
+            Button(WIDTH//2 - 100, HEIGHT//2 - 80, 200, 50, "Ship Builder", self.start_builder),
+            Button(WIDTH//2 - 100, HEIGHT//2 - 10, 200, 50, "Battle Setup", self.start_battle_setup),
+            Button(WIDTH//2 - 100, HEIGHT//2 + 60, 200, 50, "Formation Editor", self.start_formation_editor)
         ]
 
     def start_builder(self):
@@ -103,6 +107,15 @@ class Game:
         """Enter battle setup screen."""
         self.state = BATTLE_SETUP
         self.battle_setup.start(preserve_teams=preserve_teams)
+
+    def start_formation_editor(self):
+        """Enter formation editor."""
+        self.state = FORMATION
+        self.formation_scene.handle_resize(WIDTH, HEIGHT)
+
+    def on_formation_return(self):
+        """Return from formation editor."""
+        self.state = MENU
     
     def start_battle(self, team1_ships, team2_ships, headless=False):
         """Start a battle with the given ships."""
@@ -168,6 +181,8 @@ class Game:
                         self.builder_scene.handle_event(event)
                     elif self.state == BATTLE_SETUP:
                         self.battle_setup.update([event], self.screen.get_size())
+                    elif self.state == FORMATION:
+                        self.formation_scene.handle_event(event)
             
             self._update_and_draw(frame_time, events)
             
@@ -188,6 +203,8 @@ class Game:
         elif self.state == BUILDER:
              if hasattr(self.builder_scene, 'handle_resize'):
                  self.builder_scene.handle_resize(w, h)
+        elif self.state == FORMATION:
+             self.formation_scene.handle_resize(w, h)
     
     def _handle_keydown(self, event):
         """Handle key press events."""
@@ -235,6 +252,9 @@ class Game:
             self._update_battle_setup()
         elif self.state == BATTLE:
             self._update_battle(frame_time, events)
+        elif self.state == FORMATION:
+            self.formation_scene.update(frame_time)
+            self.formation_scene.draw(self.screen)
 
         if self.show_exit_dialog:
              self._draw_exit_dialog()
