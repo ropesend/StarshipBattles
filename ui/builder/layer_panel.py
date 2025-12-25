@@ -210,7 +210,7 @@ class LayerComponentItem:
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if self.expand_button and event.ui_element == self.expand_button:
                 self.callback_expand(self.group_key)
-                return True
+                return ('refresh_ui', None)
             elif event.ui_element == self.remove_button:
                 return self.callback_remove(self.group_key)
             elif event.ui_element == self.select_button:
@@ -288,7 +288,7 @@ class LayerHeaderItem:
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.button:
             self.callback(self.layer_type)
-            return True
+            return ('refresh_ui', None)
         return False
         
     def kill(self):
