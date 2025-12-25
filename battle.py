@@ -46,6 +46,16 @@ class BattleScene:
         # Actions for Game class
         self.action_return_to_setup = False
 
+    def handle_resize(self, width, height):
+        """Handle window resize."""
+        self.screen_width = width
+        self.screen_height = height
+        self.camera.width = width
+        self.camera.height = height
+        
+        # Update UI
+        self.ui.handle_resize(width, height)
+
     @property
     def show_overlay(self):
         return self.ui.show_overlay
