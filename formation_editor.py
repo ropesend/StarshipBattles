@@ -47,6 +47,10 @@ class FormationEditorScene:
         self.current_selection_rect = None # For marquee
         self.resize_aspect_ratio = None # To maintain aspect ratio
         
+        # Renumbering
+        self.renumber_mode = False
+        self.renumber_target = 1
+        
         # UI Manager
         self.ui_manager = pygame_gui.UIManager((screen_width, screen_height))
         
@@ -170,6 +174,29 @@ class FormationEditorScene:
         )
         current_x += 80 + spacing
 
+        # Renumber Controls
+        self.renumber_mode_btn = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(current_x, btn_y, 110, btn_h),
+            text="Renumber: OFF",
+            manager=self.ui_manager
+        )
+        current_x += 110 + spacing
+
+        self.renumber_slider = pygame_gui.elements.UIHorizontalSlider(
+            relative_rect=pygame.Rect(current_x, btn_y, 100, btn_h),
+            start_value=1,
+            value_range=(1, 50),
+            manager=self.ui_manager
+        )
+        current_x += 100 + spacing
+        
+        self.renumber_entry = pygame_gui.elements.UITextEntryLine(
+            relative_rect=pygame.Rect(current_x, btn_y, 40, btn_h),
+            manager=self.ui_manager
+        )
+        self.renumber_entry.set_text("1")
+        current_x += 40 + spacing
+
         self.return_btn = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(self.width - 120, btn_y, 110, btn_h),
             text="Return",
@@ -183,6 +210,19 @@ class FormationEditorScene:
         sy = (wy * self.camera_zoom) + self.camera_pan[1] + cy
         return sx, sy
 
+    def move_arrow(self, from_idx, to_idx):
+        if from_idx == to_idx: return
+        # Adjust indices if needed to prevent OOB
+        if from_idx < 0 or from_idx >= len(self.arrows): return
+        if to_idx < 0: to_idx = 0
+        if to_idx >= len(self.arrows): to_idx = len(self.arrows) - 1
+        
+        item = self.arrows.pop(from_idx)
+        self.arrows.insert(to_idx, item)
+        # Update selection to follow the item
+        self.selected_indices = {to_idx}
+        self.update_info()
+
     def screen_to_world(self, sx, sy):
         cx, cy = self.width / 2, (self.height - self.toolbar_height) / 2
         wx = (sx - self.camera_pan[0] - cx) / self.camera_zoom
@@ -195,15 +235,22 @@ class FormationEditorScene:
 
     def get_selection_bounds(self):
         if not self.selected_indices: return None
-        xs = [self.arrows[i][0] for i in self.selected_indices]
-        ys = [self.arrows[i][1] for i in self.selected_indices]
+        xs = []
+        ys = []
+        for i in self.selected_indices:
+            ax, ay = self.arrows[i]
+            if self.snap_enabled:
+                ax = self.snap(ax)
+                ay = self.snap(ay)
+            xs.append(ax)
+            ys.append(ay)
         return pygame.Rect(min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
 
     def get_resize_handles(self, bounds_rect):
         if not bounds_rect: return {}
         
-        # Inflate bounds by 1 grid unit (50 units) for drawing box
-        padding = 50
+        # Inflate bounds by 1 grid unit for drawing box
+        padding = self.grid_size
         inflated = bounds_rect.inflate(padding*2, padding*2)
         
         l, t = self.world_to_screen(inflated.left, inflated.top)
@@ -254,12 +301,21 @@ class FormationEditorScene:
                 self.generate_shape('x')
             elif event.ui_element == self.line_btn:
                 self.generate_shape('line')
-                
+            elif event.ui_element == self.renumber_mode_btn:
+                self.renumber_mode = not self.renumber_mode
+                self.renumber_mode_btn.set_text(f"Renumber: {'ON' if self.renumber_mode else 'OFF'}")
+                if self.renumber_mode:
+                    self.state = 'IDLE' 
+                    
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
             if event.ui_element == self.count_slider:
                 val = int(event.value)
                 self.shape_count = val
                 self.count_entry.set_text(str(val))
+            elif event.ui_element == self.renumber_slider:
+                val = int(event.value)
+                self.renumber_target = val
+                self.renumber_entry.set_text(str(val))
         
         elif event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
             if event.ui_element == self.count_entry:
@@ -270,6 +326,14 @@ class FormationEditorScene:
                     self.count_slider.set_current_value(val)
                 except:
                     self.count_entry.set_text(str(self.shape_count))
+            elif event.ui_element == self.renumber_entry:
+                try:
+                    val = int(event.text)
+                    val = max(1, min(len(self.arrows), val))
+                    self.renumber_target = val
+                    self.renumber_slider.set_current_value(val)
+                except:
+                    self.renumber_entry.set_text(str(self.renumber_target))
 
         elif event.type == pygame.MOUSEWHEEL:
             if event.y > 0: self.camera_zoom *= 1.1
@@ -277,6 +341,18 @@ class FormationEditorScene:
                 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if not self.canvas_rect.collidepoint(event.pos): return
+            
+            # Check Up/Down Arrow Clicks first (Screen Space UI)
+            if len(self.selected_indices) == 1:
+                idx = list(self.selected_indices)[0]
+                res = self._check_renumber_arrows(event.pos, idx)
+                if res == 'up': # Decrease Index (Move to 1)
+                     self.move_arrow(idx, max(0, idx - 1))
+                     return
+                elif res == 'down': # Increment Index (Move to End)
+                     self.move_arrow(idx, min(len(self.arrows) - 1, idx + 1))
+                     return
+
             if event.button == 3: # Right click -> Pan
                 self.state = 'PANNING'
                 self.drag_start_screen = event.pos
@@ -295,6 +371,18 @@ class FormationEditorScene:
             self._handle_mouse_motion(event.pos)
 
     def _handle_left_down(self, screen_pos):
+        wx, wy = self.screen_to_world(screen_pos[0], screen_pos[1])
+        clicked_idx = self._get_arrow_at(wx, wy)
+        
+        # Renumber Mode Handling
+        if self.renumber_mode and clicked_idx is not None:
+             # Move clicked arrow to target position
+             target_idx = self.renumber_target - 1 # 1-based to 0-based
+             # Clamp target
+             target_idx = max(0, min(len(self.arrows)-1, target_idx))
+             self.move_arrow(clicked_idx, target_idx)
+             return # Swallow event
+             
         keys = pygame.key.get_pressed()
         shift = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
         
@@ -310,17 +398,22 @@ class FormationEditorScene:
                     self.drag_start_screen = screen_pos
                     
                     # Store Aspect Ratio if resizing corner
+                    # Aspect Ratio should be of the BOX (bounds + padding) or the CONTENT?
+                    # Visually, the user resizes the BOX.
+                    # Padded box dimensions:
+                    w = max(1, bounds.width + self.grid_size*2)
+                    h = max(1, bounds.height + self.grid_size*2)
+                    
                     if len(name) == 2: # TL, TR, BL, BR
-                        w = max(1, bounds.width)
-                        h = max(1, bounds.height)
                         self.resize_aspect_ratio = w / h
                     else:
                         self.resize_aspect_ratio = None
                         
                     return
-
-        wx, wy = self.screen_to_world(screen_pos[0], screen_pos[1])
-        clicked_idx = self._get_arrow_at(wx, wy)
+        
+        # Re-fetch index if handle check failed (it might have been cleared by early return above, but safe to fetch again)
+        # Actually logic flow: if handle clicked, we return. 
+        # So hereafter, either we clicked arrow or blank.
         
         if clicked_idx is not None:
             if shift:
@@ -347,6 +440,25 @@ class FormationEditorScene:
         self.state = 'POTENTIAL_CLICK'
         self.drag_start_screen = screen_pos
         self.drag_start_world = (wx, wy)
+
+    def _check_renumber_arrows(self, screen_pos, idx):
+        # Calculate arrow positions identical to draw()
+        ax, ay = self.arrows[idx]
+        if self.snap_enabled:
+            ax = self.snap(ax)
+            ay = self.snap(ay)
+            
+        sx, sy = self.world_to_screen(ax, ay)
+        scale = 20 * self.camera_zoom 
+        
+        # Up Arrow Rect (Approximate hit box)
+        up_rect = pygame.Rect(sx - 15, sy - scale - 30, 30, 30)
+        # Down Arrow Rect
+        down_rect = pygame.Rect(sx - 15, sy + scale - 5, 30, 30)
+        
+        if up_rect.collidepoint(screen_pos): return 'up'
+        if down_rect.collidepoint(screen_pos): return 'down'
+        return None
 
     def _handle_mouse_motion(self, screen_pos):
         if self.state == 'PANNING':
@@ -393,15 +505,7 @@ class FormationEditorScene:
             wx = self.snap(wx)
             wy = self.snap(wy)
 
-        # Inflate logic? No, handle calculations were based on inflated visual, but resize math should use actual bounds
-        # But we need to use the visual handle position to determine the new edge.
-        # This is tricky because the handle is offset.
-        # Let's just assume the user drags the mouse to where they want the EDGE to be, plus padding maybe?
-        # Actually user drags handle. Handle is at bounds + padding.
-        # So Mouse World Pos = New Bounds Edge + Padding.
-        # New Bounds Edge = Mouse World Pos - Padding.
-        
-        padding = 50
+        padding = self.grid_size
         
         b = self.initial_group_bounds
         # Bounds used for math
@@ -423,18 +527,42 @@ class FormationEditorScene:
         
         # Aspect Ratio Lock for Corners
         if self.resize_aspect_ratio:
-            current_w = nr - nl
-            current_h = nb - nt
+            # Padded dimensions logic
+            current_padded_w = (nr - nl) + padding*2
+            current_padded_h = (nb - nt) + padding*2
             
-            # Width is master? Height is master? Depends on drag direction.
-            # Simple approach: set H based on W
-            target_h = current_w / self.resize_aspect_ratio
+            # Maintain ratio of padded box
+            # ratio = w / h -> w = ratio * h
             
-            # Reposition bottom or top?
-            if 'B' in h:
-                nb = nt + target_h
-            else:
-                nt = nb - target_h
+            # If changing Width (L/R driven), adjust Height
+            if 'L' in h or 'R' in h:
+                target_padded_h = current_padded_w / self.resize_aspect_ratio
+                target_h_content = target_padded_h - padding*2
+                
+                # Center vertical expansion or from opposite side?
+                # Usually Aspect Scale is from opposite corner.
+                # If dragging TR, Bottom Left is anchor.
+                
+                # If T/B not in handle, we need to decide which way to expand.
+                # If top-row (TL, TR), B is anchor.
+                if 'T' in h: # dragging corner
+                     nt = nb - target_h_content
+                elif 'B' in h:
+                     nb = nt + target_h_content
+                else: # Just side drag? Aspect ratio usually only for corners.
+                     # If handle is just 'L', we don't aspect restrict?
+                     # Code in handle_left_down sets ratio only for corners.
+                     # So we are essentially guaranteed T or B is present if ratio is set.
+                     pass
+
+            elif 'T' in h or 'B' in h:
+                target_padded_w = current_padded_h * self.resize_aspect_ratio
+                target_w_content = target_padded_w - padding*2
+                
+                if 'L' in h:
+                    nl = nr - target_w_content
+                elif 'R' in h:
+                    nr = nl + target_w_content
         
         old_w = max(1, r - l)
         old_h = max(1, bot - t)
@@ -450,9 +578,14 @@ class FormationEditorScene:
             rel_y = orig_y - t
             new_x = nl + rel_x * scale_x
             new_y = nt + rel_y * scale_y
-            if self.snap_enabled:
-                new_x = self.snap(new_x)
-                new_y = self.snap(new_y)
+        for idx in self.selected_indices:
+            orig_x, orig_y = self.initial_arrow_positions[idx]
+            rel_x = orig_x - l
+            rel_y = orig_y - t
+            new_x = nl + rel_x * scale_x
+            new_y = nt + rel_y * scale_y
+            # Do NOT snap here to preserve floating point relative positions during scaling
+            # Visual snapping happens in draw()
             self.arrows[idx] = [new_x, new_y]
 
     def _handle_left_up(self, screen_pos):
@@ -472,37 +605,27 @@ class FormationEditorScene:
                  if not shift: # If we processed the deselect above, we shouldn't be here if indices were > 0
                      # But self.selected_indices is now empty.
                      # We need to know if we deslected something.
-                     # Actually, if we had items and didn't shift, we cleared them.
-                     # The request implies we stop there. "Don't draw another".
+                     # Actually, we can check if we cleared selection in _handle_left_down?
+                     # No, Left Down sets POTENTIAL_CLICK.
+                     # Let's rely on checking if we *had* selection at Mouse Down?
+                     # We didn't store that.
                      
-                     # Wait, if I start with 0 selected, clicking blank ADDS arrow.
-                     # If I start with >0 selected, clicking blank DESELECTS and DOES NOT ADD arrow.
-                     pass 
-                 
-                 wx, wy = self.screen_to_world(screen_pos[0], screen_pos[1])
-                 if self.snap_enabled:
-                     wx = self.snap(wx)
-                     wy = self.snap(wy)
-                 
-                 # Logic check re-implemented:
-                 # We need to know previous state. But we can't easily.
-                 # Actually, we can check if we cleared selection in _handle_left_down?
-                 # No, Left Down sets POTENTIAL_CLICK.
-                 # Let's rely on checking if we *had* selection at Mouse Down?
-                 # We didn't store that.
-                 
-                 # Let's check: Did we act on selection?
-                 # If we are here, we clicked blank space.
-                 # If self.selected_indices is NOT empty, we definitely deselect and stop.
-                 if self.selected_indices and not shift:
-                     self.selected_indices = set()
-                 else:
-                     # Empty selection or Shift held.
-                     # If empty, add arrow.
-                     # If Shift held, usually adds arrow to selection... wait, adding arrow object?
-                     # "Add arrows by simply left clicking on a blank spot"
-                     if not self.selected_indices: # Only add if nothing selected (or cleared)
-                         self.add_arrow((wx, wy))
+                     # Let's check: Did we act on selection?
+                     # If we are here, we clicked blank space.
+                     # If self.selected_indices is NOT empty, we definitely deselect and stop.
+                     if self.selected_indices and not shift:
+                         self.selected_indices = set()
+                     else:
+                         # Empty selection or Shift held.
+                         # If empty, add arrow.
+                         # If Shift held, usually adds arrow to selection... wait, adding arrow object?
+                         # "Add arrows by simply left clicking on a blank spot"
+                         if not self.selected_indices: # Only add if nothing selected (or cleared)
+                             wx, wy = self.screen_to_world(screen_pos[0], screen_pos[1])
+                             if self.snap_enabled:
+                                 wx = self.snap(wx)
+                                 wy = self.snap(wy)
+                             self.add_arrow((wx, wy))
              
              self.state = 'IDLE'
              
@@ -554,11 +677,6 @@ class FormationEditorScene:
         self.selected_indices = set()
         self.update_info()
 
-    def clear_all(self):
-        self.arrows = []
-        self.selected_indices = set()
-        self.update_info()
-
     def clone_selection(self):
         if not self.selected_indices: return
         sorted_indices = sorted(list(self.selected_indices))
@@ -569,6 +687,11 @@ class FormationEditorScene:
             self.arrows.append([ax + offset, ay + offset])
             new_indices.add(len(self.arrows) - 1)
         self.selected_indices = new_indices
+        self.update_info()
+
+    def clear_all(self):
+        self.arrows = []
+        self.selected_indices = set()
         self.update_info()
 
     def generate_shape(self, shape_type):
@@ -589,9 +712,7 @@ class FormationEditorScene:
                 angle -= math.pi / 2
                 ax = cx + math.cos(angle) * radius
                 ay = cy + math.sin(angle) * radius
-                if self.snap_enabled:
-                    ax = self.snap(ax)
-                    ay = self.snap(ay)
+                # Don't snap here, keep float precision
                 self.arrows.append([ax, ay])
                 new_indices.add(start_idx + i)
                 
@@ -602,18 +723,14 @@ class FormationEditorScene:
                 t = i / max(1, arm1_count - 1)
                 ax = cx - radius + (2*radius * t)
                 ay = cy - radius + (2*radius * t)
-                if self.snap_enabled:
-                    ax = self.snap(ax)
-                    ay = self.snap(ay)
+                # Don't snap here
                 self.arrows.append([ax, ay])
                 new_indices.add(start_idx + i)
             for i in range(arm2_count):
                 t = i / max(1, arm2_count - 1)
                 ax = cx + radius - (2*radius * t)
                 ay = cy - radius + (2*radius * t)
-                if self.snap_enabled:
-                    ax = self.snap(ax)
-                    ay = self.snap(ay)
+                # Don't snap here
                 self.arrows.append([ax, ay])
                 new_indices.add(start_idx + arm1_count + i)
                 
@@ -623,9 +740,7 @@ class FormationEditorScene:
                 t = i / max(1, count - 1)
                 ax = cx - radius + (width * t)
                 ay = cy
-                if self.snap_enabled:
-                    ax = self.snap(ax)
-                    ay = self.snap(ay)
+                # Don't snap here
                 self.arrows.append([ax, ay])
                 new_indices.add(start_idx + i)
 
@@ -664,6 +779,14 @@ class FormationEditorScene:
         sel_count = len(self.selected_indices)
         sel_str = f" | Selected: {sel_count}" if sel_count > 0 else ""
         self.info_label.set_text(f"Arrows: {count}{sel_str}")
+        
+        # Manually update slider range if possible, or just clamp input
+        if hasattr(self, 'renumber_slider'):
+             # Pygame_gui doesn't easy exposure of range adjustment without rebuilding, 
+             # but we can try setting the value range directly if accessible, or rebuild.
+             # Rebuilding is expensive in update loop.
+             # Let's just assume 50 is enough or create it with dynamic max if we rebuild whole UI.
+             pass
 
     def update(self, dt):
         self.ui_manager.update(dt)
@@ -681,6 +804,10 @@ class FormationEditorScene:
         scale = 20 * self.camera_zoom # increased size
         
         for i, (ax, ay) in enumerate(self.arrows):
+            if self.snap_enabled:
+                ax = self.snap(ax)
+                ay = self.snap(ay)
+            
             sx, sy = self.world_to_screen(ax, ay)
             if not self.canvas_rect.inflate(100,100).collidepoint(sx, sy): continue
                 
@@ -704,11 +831,29 @@ class FormationEditorScene:
                 # rough center
                 screen.blit(txt, (int(sx) - txt.get_width()//2, int(sy)))
 
+        # Draw Single Selection Extras (Renumber arrows)
+        if len(self.selected_indices) == 1:
+            idx = list(self.selected_indices)[0]
+            ax, ay = self.arrows[idx]
+            if self.snap_enabled:
+                ax = self.snap(ax)
+                ay = self.snap(ay)
+                
+            sx, sy = self.world_to_screen(ax, ay)
+            
+            # Up Arrow (Decrease Number)
+            up_poly = [(sx, sy - scale - 25), (sx - 10, sy - scale - 10), (sx + 10, sy - scale - 10)]
+            pygame.draw.polygon(screen, (200, 200, 200), up_poly)
+            
+            # Down Arrow (Increase Number)
+            down_poly = [(sx, sy + scale + 25), (sx - 10, sy + scale + 10), (sx + 10, sy + scale + 10)]
+            pygame.draw.polygon(screen, (200, 200, 200), down_poly)
+
         if self.selected_indices:
             bounds = self.get_selection_bounds()
             if bounds:
                 # Inflate Visual bounds for handles (+ padding)
-                padding = 50
+                padding = self.grid_size
                 inflated = bounds.inflate(padding*2, padding*2)
                 
                 l, t = self.world_to_screen(inflated.left, inflated.top)
