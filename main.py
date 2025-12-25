@@ -60,6 +60,7 @@ class Game:
         
         self.clock = pygame.time.Clock()
         self.running = True
+        self.show_exit_dialog = False
         self.state = MENU
         
         # Load game data
@@ -128,26 +129,45 @@ class Game:
             accumulator += frame_time
             
             events = pygame.event.get()
-            for event in events:
-                if event.type == pygame.QUIT:
-                    self.running = False
-                elif event.type == pygame.VIDEORESIZE:
-                    self._handle_resize(event.w, event.h)
-                elif event.type == pygame.KEYDOWN:
-                    self._handle_keydown(event)
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    self._handle_click(event)
-                elif event.type == pygame.MOUSEWHEEL:
-                    self._handle_scroll(event)
-                
-                # Forward events to current scene
-                if self.state == MENU:
-                    for btn in self.menu_buttons:
-                        btn.handle_event(event)
-                elif self.state == BUILDER:
-                    self.builder_scene.handle_event(event)
-                elif self.state == BATTLE_SETUP:
-                    self.battle_setup.update([event], self.screen.get_size())
+            
+            # Global Exit Handling
+            if self.show_exit_dialog:
+                for event in events:
+                    if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                        self.show_exit_dialog = False
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                         # Use global mouse handling for the dialog
+                         if self._handle_exit_dialog_click(event.pos):
+                             self.running = False
+                         elif self._handle_exit_dialog_cancel(event.pos):
+                             self.show_exit_dialog = False
+            else:
+                 # Normal handling
+                 for event in events:
+                    if event.type == pygame.QUIT:
+                        self.running = False
+                        
+                    # Universal Exit Command
+                    elif event.type == pygame.KEYDOWN and event.key == pygame.K_x and (event.mod & pygame.KMOD_ALT):
+                        self.show_exit_dialog = True
+                        
+                    elif event.type == pygame.VIDEORESIZE:
+                        self._handle_resize(event.w, event.h)
+                    elif event.type == pygame.KEYDOWN:
+                        self._handle_keydown(event)
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        self._handle_click(event)
+                    elif event.type == pygame.MOUSEWHEEL:
+                        self._handle_scroll(event)
+                    
+                    # Forward events to current scene
+                    if self.state == MENU:
+                        for btn in self.menu_buttons:
+                            btn.handle_event(event)
+                    elif self.state == BUILDER:
+                        self.builder_scene.handle_event(event)
+                    elif self.state == BATTLE_SETUP:
+                        self.battle_setup.update([event], self.screen.get_size())
             
             self._update_and_draw(frame_time, events)
             
@@ -215,6 +235,70 @@ class Game:
             self._update_battle_setup()
         elif self.state == BATTLE:
             self._update_battle(frame_time, events)
+
+        if self.show_exit_dialog:
+             self._draw_exit_dialog()
+
+    def _draw_exit_dialog(self):
+        """Draw the exit confirmation dialog."""
+        s = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        s.fill((0, 0, 0, 180)) # Darken background
+        self.screen.blit(s, (0,0))
+        
+        # Box
+        box_w, box_h = 400, 200
+        box_x = (WIDTH - box_w) // 2
+        box_y = (HEIGHT - box_h) // 2
+        box_rect = pygame.Rect(box_x, box_y, box_w, box_h)
+        
+        pygame.draw.rect(self.screen, (40, 40, 50), box_rect)
+        pygame.draw.rect(self.screen, (100, 100, 120), box_rect, 2)
+        
+        # Text
+        title = font_large.render("Exit Application?", True, (255, 255, 255))
+        self.screen.blit(title, (box_x + (box_w - title.get_width())//2, box_y + 40))
+        
+        # Buttons
+        global exit_yes_rect, exit_no_rect
+        btn_w, btn_h = 100, 40
+        spacing = 40
+        
+        # Yes
+        yes_x = box_x + box_w//2 - btn_w - spacing//2
+        yes_y = box_y + 120
+        exit_yes_rect = pygame.Rect(yes_x, yes_y, btn_w, btn_h)
+        
+        mx, my = pygame.mouse.get_pos()
+        yes_col = (180, 60, 60) if exit_yes_rect.collidepoint(mx, my) else (150, 50, 50)
+        
+        pygame.draw.rect(self.screen, yes_col, exit_yes_rect)
+        pygame.draw.rect(self.screen, (200, 100, 100), exit_yes_rect, 1)
+        yes_txt = font_med.render("Yes", True, (255, 255, 255))
+        self.screen.blit(yes_txt, (yes_x + (btn_w - yes_txt.get_width())//2, yes_y + 8))
+        
+        # No
+        no_x = box_x + box_w//2 + spacing//2
+        no_y = box_y + 120
+        exit_no_rect = pygame.Rect(no_x, no_y, btn_w, btn_h)
+        
+        no_col = (60, 60, 80) if exit_no_rect.collidepoint(mx, my) else (50, 50, 60)
+        
+        pygame.draw.rect(self.screen, no_col, exit_no_rect)
+        pygame.draw.rect(self.screen, (100, 100, 150), exit_no_rect, 1)
+        no_txt = font_med.render("No", True, (255, 255, 255))
+        self.screen.blit(no_txt, (no_x + (btn_w - no_txt.get_width())//2, no_y + 8))
+
+    def _handle_exit_dialog_click(self, pos):
+        global exit_yes_rect
+        if 'exit_yes_rect' in globals() and exit_yes_rect and exit_yes_rect.collidepoint(pos):
+            return True
+        return False
+        
+    def _handle_exit_dialog_cancel(self, pos):
+        global exit_no_rect
+        if 'exit_no_rect' in globals() and exit_no_rect and exit_no_rect.collidepoint(pos):
+             return True
+        return False
     
     def _draw_menu(self):
         """Draw main menu."""
