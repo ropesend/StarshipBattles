@@ -1,6 +1,6 @@
 === BATTLE LOG STARTED ===
 Battle started: 1 vs 11 ships
-Ship 'DN 1' (Team 0): HP=82400/82400 Mass=41321.55088225714 Thrust=19200.0 Fuel=1600000 TurnSpeed=8.57 MaxSpeed=11.62 Derelict=False
+Ship 'Missle Frigate' (Team 0): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
@@ -12,7 +12,7 @@ Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'DN 1' (Team 0): HP=82400/82400 Mass=41321.55088225714 Thrust=19200.0 Fuel=1600000 TurnSpeed=8.57 MaxSpeed=11.62 Derelict=False
+Ship 'Missle Frigate' (Team 0): HP=2120/2120 Mass=940 Thrust=750 Fuel=50000 TurnSpeed=52.05 MaxSpeed=19.95 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
@@ -24,4 +24,16 @@ Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Missile fired at <ship.Ship object at 0x000001D662167390>
+Missile fired at <ship.Ship object at 0x000001D662167390>
+Missile fired at <ship.Ship object at 0x000001D662167750>
+Missile fired at <ship.Ship object at 0x000001D662167750>
+Missile fired at <ship.Ship object at 0x000001D662167750>
+Missile fired at <ship.Ship object at 0x000001D662167750>
+Missile fired at <ship.Ship object at 0x000001D662167750>
+Missile fired at <ship.Ship object at 0x000001D662167750>
+Missile fired at <ship.Ship object at 0x000001D662167750>
+Missile fired at <ship.Ship object at 0x000001D662167750>
+Missile fired at <ship.Ship object at 0x000001D662167750>
+Missile fired at <ship.Ship object at 0x000001D662167750>
 === BATTLE LOG ENDED ===

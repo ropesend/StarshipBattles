@@ -143,7 +143,11 @@ class BattleScene:
                 b_visual['timer'] = 0.15
                 self.beams.append(b_visual)
             
-        # Process Events (Input)
+
+    
+    def update_visuals(self, dt, events):
+        """Update visual effects like beams and camera."""
+        # Process Visual-related Inputs (Keys)
         for event in events:
             if event.type == pygame.KEYDOWN:
                  if event.key == pygame.K_F3:
@@ -152,6 +156,15 @@ class BattleScene:
                      self._cycle_focus_ship(-1)
                  elif event.key == pygame.K_RIGHTBRACKET:
                      self._cycle_focus_ship(1)
+
+        # Update Beams
+        for b in self.beams:
+            b['timer'] -= dt
+        self.beams = [b for b in self.beams if b['timer'] > 0]
+        
+        # Update Camera
+        self.camera.update(dt)
+        self.camera.update_input(dt, events)
 
     def _cycle_focus_ship(self, direction):
         """Cycle camera focus through alive ships."""
