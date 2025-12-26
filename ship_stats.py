@@ -38,6 +38,8 @@ class ShipStatsCalculator:
         ship.shield_regen_cost = 0
         if LayerType.ARMOR in ship.layers:
             ship.layers[LayerType.ARMOR]['max_hp_pool'] = 0
+            
+        ship.emissive_armor = 0
         
         # 2. Phase 1: Damage Check & Resource Supply Gathering
         # ----------------------------------------------------
@@ -148,6 +150,11 @@ class ShipStatsCalculator:
             if mt > 0:
                 if mt > ship.max_targets:
                     ship.max_targets = mt 
+                    
+            # Emissive Armor
+            ea = comp.abilities.get('EmissiveArmor', 0)
+            if ea > 0:
+                ship.emissive_armor += ea 
 
         # 5. Phase 4: Physics & Limits
         # ----------------------------

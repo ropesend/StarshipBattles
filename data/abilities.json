@@ -21,6 +21,12 @@
             "description": "Physical damage absorption",
             "value_type": "boolean"
         },
+        "EmissiveArmor": {
+            "description": "Ignores a fixed amount of damage from every hit",
+            "value_type": "numeric",
+            "unit": "damage_points",
+            "aggregation": "sum"
+        },
         "FuelStorage": {
             "description": "Fuel storage capacity",
             "value_type": "numeric",

@@ -31,6 +31,7 @@ class Modifier:
         self.min_val = data.get('min_val', 0)
         self.max_val = data.get('max_val', 100)
         self.default_val = data.get('default_val', self.min_val)
+        self.readonly = data.get('readonly', False)
 
     def create_modifier(self, value=None):
         return ApplicationModifier(self, value)
@@ -64,9 +65,26 @@ class Component:
         
         # Parse abilities from data
         self.abilities = data.get('abilities', {})
+        self.base_abilities = self.abilities.copy()
+        self.ship = None # Container reference
         
         self.modifiers = [] # list of ApplicationModifier
-        # If cloning, data might have modifiers? Not yet supported in save/load but structure ready
+        
+        # Load default modifiers from data definition
+        if 'modifiers' in data:
+            for mod_data in data['modifiers']:
+                mod_id = mod_data['id']
+                val = mod_data.get('value', None)
+                # We need to access registry. BUT registry might not be fully loaded if simple import.
+                # Assuming MODIFIER_REGISTRY is populated by load_modifiers globally.
+                from components import MODIFIER_REGISTRY
+                if mod_id in MODIFIER_REGISTRY:
+                    mod_def = MODIFIER_REGISTRY[mod_id]
+                    self.modifiers.append(mod_def.create_modifier(val))
+                else:
+                    # If modifiers loaded later, this might fail. 
+                    # Ideally modifiers are loaded before components.
+                    pass
 
     def take_damage(self, amount):
         self.current_hp -= amount
@@ -142,9 +160,12 @@ class Component:
             'properties': {}
         }
         
+        # Reset abilities to base
+        self.abilities = self.base_abilities.copy()
+
         # Process all modifiers
         for m in self.modifiers:
-            apply_modifier_effects(m.definition, m.value, stats)
+            apply_modifier_effects(m.definition, m.value, stats, component=self)
 
         # Apply specific property overrides (like facing)
         for prop, val in stats['properties'].items():
@@ -344,7 +365,7 @@ class SeekerWeapon(Weapon):
         }
         
         for m in self.modifiers:
-            apply_modifier_effects(m.definition, m.value, stats)
+            apply_modifier_effects(m.definition, m.value, stats, component=self)
 
         # Apply 80% rule to the calculated range (Straight Line * 0.8 * Multipliers)
         self.range = int((self.projectile_speed * self.endurance) * 0.8 * stats['range_mult'])
@@ -423,7 +444,7 @@ class Shield(Component):
              eff = m.definition.effects
              # We only care about capacity_mult here or simple_size which sets it
              # Re-using apply_modifier_effects is safest
-             apply_modifier_effects(m.definition, m.value, stats)
+             apply_modifier_effects(m.definition, m.value, stats, component=self)
         return stats
 
     def clone(self):
@@ -449,7 +470,7 @@ class ShieldRegenerator(Component):
         from component_modifiers import apply_modifier_effects
         stats = {'energy_gen_mult': 1.0}
         for m in self.modifiers:
-             apply_modifier_effects(m.definition, m.value, stats)
+             apply_modifier_effects(m.definition, m.value, stats, component=self)
         return stats
 
     def clone(self):

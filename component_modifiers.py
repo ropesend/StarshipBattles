@@ -80,6 +80,26 @@ class ModifierEffects:
         mass_increase_factor = 1.0 + (reduction ** 2) 
         stats['mass_mult'] *= mass_increase_factor
 
+    @staticmethod
+    def mass_scaling(val, stats, component=None):
+        """
+        Scales mass based on ship class Max Mass (ref 1000t).
+        Scales EmissiveArmor ability by cube root of mass ratio.
+        """
+        if component and component.ship:
+            max_mass = component.ship.max_mass_budget
+            # Ref mass 1000
+            ratio = max_mass / 1000.0
+            
+            # Apply Mass Multiplier
+            stats['mass_mult'] *= ratio
+            
+            # Apply Emissive Value Multiplier (Cube Root of Ratio)
+            emissive_mult = ratio ** (1.0/3.0)
+            
+            if 'EmissiveArmor' in component.abilities:
+                 component.abilities['EmissiveArmor'] *= emissive_mult
+
 # Registry mapping 'special' string to handler function
 SPECIAL_EFFECT_HANDLERS = {
     'simple_size': ModifierEffects.simple_size,
@@ -87,9 +107,10 @@ SPECIAL_EFFECT_HANDLERS = {
     'turret_mount': ModifierEffects.turret_mount,
     'facing': ModifierEffects.facing,
     'precision_mount': ModifierEffects.precision_mount,
+    'mass_scaling': ModifierEffects.mass_scaling,
 }
 
-def apply_modifier_effects(modifier_def, value, stats):
+def apply_modifier_effects(modifier_def, value, stats, component=None):
     """
     Applies the effects of a single modifier to the stats dictionary.
     
@@ -97,6 +118,7 @@ def apply_modifier_effects(modifier_def, value, stats):
         modifier_def: The definition object of the modifier.
         value: The current value of the modifier application.
         stats: Dictionary containing accumulated multipliers and properties.
+        component: Optional reference to the component applying this modifier (for context).
     """
     eff = modifier_def.effects
     val = value
@@ -122,4 +144,11 @@ def apply_modifier_effects(modifier_def, value, stats):
     if 'special' in eff:
         special_type = eff['special']
         if special_type in SPECIAL_EFFECT_HANDLERS:
-            SPECIAL_EFFECT_HANDLERS[special_type](val, stats)
+            handler = SPECIAL_EFFECT_HANDLERS[special_type]
+            # Inspect argument count to see if it accepts component
+            import inspect
+            sig = inspect.signature(handler)
+            if 'component' in sig.parameters:
+                handler(val, stats, component=component)
+            else:
+                handler(val, stats)

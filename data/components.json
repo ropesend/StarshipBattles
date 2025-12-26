@@ -109,6 +109,32 @@
             "major_classification": "Armor"
         },
         {
+            "id": "emissive_armor",
+            "name": "Emissive Armor",
+            "type": "Armor",
+            "mass": 40,
+            "hp": 200,
+            "allowed_layers": [
+                "ARMOR"
+            ],
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite"
+            ],
+            "sprite_index": 14,
+            "abilities": {
+                "Armor": true,
+                "EmissiveArmor": 15
+            },
+            "modifiers": [
+                {
+                    "id": "mass_scaling",
+                    "value": 1
+                }
+            ],
+            "major_classification": "Armor"
+        },
+        {
             "id": "fuel_tank",
             "name": "Fuel Tank",
             "type": "Tank",

@@ -116,6 +116,14 @@ class ModifierEditorPanel:
             safe_mod_id = mod_id.replace(' ', '_').replace('.', '_')
             
             text = f"[{'x' if is_active else ' '}] {mod_def.name}"
+            is_readonly = getattr(mod_def, 'readonly', False)
+            if is_readonly:
+                # If readonly, we still show it but maybe different text?
+                # User requested "show on the left side... but it should not be clickacble"
+                if is_active:
+                     text = f"[AUTO] {mod_def.name}"
+                else: 
+                     text = f"[   ] {mod_def.name}" # Should not happen if auto-applied from template
             
             btn = UIButton(
                 relative_rect=pygame.Rect(10, y, 170, 28),
@@ -124,6 +132,8 @@ class ModifierEditorPanel:
                 container=self.container,
                 object_id=f'#mod_{safe_mod_id}'
             )
+            if is_readonly: 
+                btn.disable()
             self.modifier_buttons.append(btn)
             
             if mod_def.type_str == 'linear':

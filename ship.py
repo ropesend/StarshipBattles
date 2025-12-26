@@ -233,6 +233,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             
         self.layers[layer_type]['components'].append(component)
         component.layer_assigned = layer_type
+        component.ship = self
+        component.recalculate_stats()
         self.current_mass += component.mass
         
         # Update Stats
@@ -281,6 +283,18 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         """
         Recalculates derived stats. Delegates to ShipStatsCalculator.
         """
+        # 1. Update Base Class Specs (ensure budget is fresh for scaling modifiers)
+        if self.ship_class in VEHICLE_CLASSES:
+             cdef = VEHICLE_CLASSES[self.ship_class]
+             self.max_mass_budget = cdef.get('max_mass', 1000)
+
+        # 2. Update components with current ship context
+        for layer_data in self.layers.values():
+            for comp in layer_data['components']:
+                # Ensure ship ref is set (legacy check)
+                if not getattr(comp, 'ship', None): comp.ship = self
+                comp.recalculate_stats()
+
         if not hasattr(self, 'stats_calculator'):
              from ship_stats import ShipStatsCalculator
              self.stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)

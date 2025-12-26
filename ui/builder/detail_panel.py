@@ -137,6 +137,8 @@ class ComponentDetailPanel:
                     add_line(f"• Targeting: x{v}", '#FF6464')
                 elif k == "ToHitDefenseModifier":
                     add_line(f"• ECM: x{v}", '#64FFFF')
+                elif k == "EmissiveArmor":
+                    add_line(f"• Damage Ignore: {v}", '#FFFF00')
                 # Skip stats already shown above
                 elif k not in ["ShieldProjection", "ShieldRegeneration", "EnergyConsumption", "EnergyGeneration", 
                                "FuelStorage", "AmmoStorage", "EnergyStorage", "CombatPropulsion", "ManeuveringThruster",
