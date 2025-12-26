@@ -65,14 +65,20 @@ class ModifierEffects:
     def precision_mount(val, stats):
         """
         Reduces accuracy falloff (makes beam stay accurate longer).
-        Each level reduces falloff by 10%.
+        val is percentage (0-99).
         """
-        level = val
-        # reduction = 0.1 * level
-        # mult = 1.0 - reduction
-        # Example: Level 5 -> 0.5 mult -> Falloff is 50% of original (Better)
-        mult = max(0.0, 1.0 - (0.1 * level))
+        pct = val
+        reduction = pct / 100.0
+        # Clamp to 0.99 to prevent total removal of falloff
+        reduction = max(0.0, min(0.99, reduction))
+        
+        mult = 1.0 - reduction
         stats['properties']['accuracy_falloff_mult'] = mult
+        
+        # Mass increase proportional to square of amount of reduction
+        # Using factor 1.0 for proportionality constant implies doubling mass at 100% reduction
+        mass_increase_factor = 1.0 + (reduction ** 2) 
+        stats['mass_mult'] *= mass_increase_factor
 
 # Registry mapping 'special' string to handler function
 SPECIAL_EFFECT_HANDLERS = {

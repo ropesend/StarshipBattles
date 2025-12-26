@@ -138,6 +138,15 @@ class ModifierEditorPanel:
                 if not is_active: entry.disable()
                 self.modifier_entries.append(entry)
                 
+                # Determine appropriate step
+                step = 0.01
+                if mod_id == 'range_mount':
+                    step = 0.1
+                elif mod_def.max_val - mod_def.min_val > 50:
+                    step = 1.0
+                elif mod_def.max_val - mod_def.min_val > 10:
+                     step = 0.1
+                
                 # Slider
                 slider = UIHorizontalSlider(
                     relative_rect=pygame.Rect(260, y, 165, 28),
@@ -146,7 +155,7 @@ class ModifierEditorPanel:
                     manager=self.manager,
                     container=self.container,
                     object_id=f'#slider_{safe_mod_id}',
-                    click_increment=0.01
+                    click_increment=step
                 )
                 if not is_active: slider.disable()
                 self.modifier_sliders.append(slider)
@@ -285,9 +294,14 @@ class ModifierEditorPanel:
                          m = self.editing_component.get_modifier(mod_id)
                          if m:
                              m.value = val
-                             # Defer recalculate_stats to update() on mouse release
                              if i < len(self.modifier_entries) and self.modifier_entries[i]:
                                  self.modifier_entries[i].set_text(f"{val:.2f}")
+                                 
+                             # Immediate update (User requested immediate vs throttled)
+                             if self.editing_component:
+                                 self.editing_component.recalculate_stats()
+                                 self.on_change_callback()
+
                      else:
                          if mod_id in self.template_modifiers:
                              self.template_modifiers[mod_id] = val
@@ -325,16 +339,3 @@ class ModifierEditorPanel:
                     break
         
         return None
-
-    def update(self, dt):
-        """Check for dropped slider drags to commit changes."""
-        if self.active_slider_mod_id:
-            # Check if mouse is released
-            if not pygame.mouse.get_pressed()[0]:
-                self.active_slider_mod_id = None
-                if self.editing_component:
-                    self.editing_component.recalculate_stats()
-                    self.on_change_callback()
-                else:
-                    # For templates, we might not need a callback, but good to have
-                    pass

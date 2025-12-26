@@ -91,11 +91,11 @@
         {
             "id": "precision mount",
             "name": "Precision Mount",
-            "description": "Each level reduces the accuracy falloff with range by 10%.",
+            "description": "Reduces accuracy falloff rate by N% (0-99). Mass increases with square of reduction.",
             "type": "linear",
             "min_val": 0,
-            "max_val": 5,
-            "param_name": "Level",
+            "max_val": 99,
+            "param_name": "Percent",
             "effects": {
                 "special": "precision_mount"
             },

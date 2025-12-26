@@ -28,6 +28,8 @@ class Modifier:
         self.effects = data.get('effects', {})
         self.restrictions = data.get('restrictions', {})
         self.param_name = data.get('param_name', 'value')
+        self.min_val = data.get('min_val', 0)
+        self.max_val = data.get('max_val', 100)
         self.default_val = data.get('default_val', self.min_val)
 
     def create_modifier(self, value=None):
@@ -391,7 +393,39 @@ class Shield(Component):
         super().__init__(data)
         # We might parse 'ShieldProjection' from abilities as a direct property
         self.shield_capacity = self.abilities.get('ShieldProjection', 0)
+        self.base_shield_capacity = self.shield_capacity
     
+    def recalculate_stats(self):
+        super().recalculate_stats()
+        from component_modifiers import apply_modifier_effects
+        
+        # Recalc local
+        stats = {
+            'capacity_mult': 1.0,
+            # Other stats calculated in super, but we need capacity_mult explicitly if not stored on self
+            # But super uses local 'stats' dict which is lost. 
+            # We need to re-run modifiers for local properties not covered by super.
+            # OR better: Add 'shield_capacity' to the generic recalculate loop if possible?
+            # Creating a lightweight re-calc for now.
+        }
+        # Wait, if super() ran, we lost the 'stats' dict. 
+        # But 'stats' in super handles 'capacity_mult' -> 'self.capacity'.
+        # Shield uses 'self.shield_capacity'.
+        # So we must manually apply modifiers here.
+        
+        current_stats = self._get_modifier_stats()
+        self.shield_capacity = int(self.base_shield_capacity * current_stats['capacity_mult'])
+
+    def _get_modifier_stats(self):
+        from component_modifiers import apply_modifier_effects
+        stats = {'capacity_mult': 1.0}
+        for m in self.modifiers:
+             eff = m.definition.effects
+             # We only care about capacity_mult here or simple_size which sets it
+             # Re-using apply_modifier_effects is safest
+             apply_modifier_effects(m.definition, m.value, stats)
+        return stats
+
     def clone(self):
         return Shield(self.data)
 
@@ -399,8 +433,25 @@ class ShieldRegenerator(Component):
     def __init__(self, data):
         super().__init__(data)
         self.regen_rate = self.abilities.get('ShieldRegeneration', 0)
+        self.base_regen_rate = self.regen_rate
         self.energy_cost = self.abilities.get('EnergyConsumption', 0)
     
+    def recalculate_stats(self):
+        super().recalculate_stats()
+        # Scale regen using energy_gen_mult (logical fit for simple_size) or capacity_mult?
+        # simple_size scales energy_gen_mult. Regen is generation.
+        
+        current_stats = self._get_modifier_stats()
+        # Use energy_gen_mult for regeneration rate scaling as simple_size affects it
+        self.regen_rate = self.base_regen_rate * current_stats.get('energy_gen_mult', 1.0)
+        
+    def _get_modifier_stats(self):
+        from component_modifiers import apply_modifier_effects
+        stats = {'energy_gen_mult': 1.0}
+        for m in self.modifiers:
+             apply_modifier_effects(m.definition, m.value, stats)
+        return stats
+
     def clone(self):
         return ShieldRegenerator(self.data)
 

@@ -49,7 +49,6 @@ class SchematicView:
         self.rect = rect
         self.sprite_mgr = sprite_manager
         self.theme_manager = theme_manager
-        self.max_r = 250
         self.cx = rect.centerx
         self.cy = rect.centery
 
@@ -58,31 +57,19 @@ class SchematicView:
         self.cx = rect.centerx
         self.cy = rect.centery
 
+    def _calculate_max_r(self, ship):
+        class_def = VEHICLE_CLASSES.get(ship.ship_class, {})
+        ref_mass = class_def.get('max_mass', 1000)
+        # Scale: Dreadnought(64000)->40->280px. Escort(1000)->10->70px.
+        PIXELS_PER_MASS_ROOT = 7.0 
+        return int((ref_mass ** (1/3.0)) * PIXELS_PER_MASS_ROOT)
+
     def get_component_at(self, pos, ship):
-        """Returns (layer_type, index, component) or None."""
-        mx, my = pos
-        cx, cy = self.cx, self.cy
-        max_r = self.max_r
-        hit_radius = 25
+        """Returns (layer_type, index, component) or None.
         
-        for ltype, data in ship.layers.items():
-            radius = max_r * data['radius_pct']
-                
-            comps = data['components']
-            if not comps: continue
-                
-            angle_step = 360 / len(comps)
-            current_angle = 0
-            
-            for i, comp in enumerate(comps):
-                rad = math.radians(current_angle)
-                px = cx + math.cos(rad) * radius
-                py = cy + math.sin(rad) * radius
-                
-                d = math.hypot(mx - px, my - py)
-                if d < hit_radius:
-                    return (ltype, i, comp)
-                current_angle += angle_step
+        DISABLED: User requested to stop allowing interaction with components 
+        when clicking on the image of the ship.
+        """
         return None
 
     def draw(self, screen, ship, show_firing_arcs, selected_component, hovered_component):
@@ -90,7 +77,7 @@ class SchematicView:
         pygame.draw.rect(screen, SHIP_VIEW_BG, self.rect)
         
         cx, cy = self.cx, self.cy
-        max_r = self.max_r
+        max_r = self._calculate_max_r(ship)
         
         # Draw Theme Image
         theme_id = getattr(ship, 'theme_id', 'Federation')
@@ -98,13 +85,32 @@ class SchematicView:
         
         if ship_img:
             img_w, img_h = ship_img.get_size()
-            target_size = max_r * 2 * 2.5
-            scale = target_size / max(img_w, img_h)
-            new_w = int(img_w * scale)
-            new_h = int(img_h * scale)
-            scaled_img = pygame.transform.scale(ship_img, (new_w, new_h))
-            rect = scaled_img.get_rect(center=(cx, cy))
-            screen.blit(scaled_img, rect)
+            
+            # Robust scaling using metrics if available
+            metrics = self.theme_manager.get_image_metrics(theme_id, ship.ship_class)
+            visible_size = max(img_w, img_h)
+            if metrics:
+                visible_size = max(metrics.width, metrics.height)
+                
+            manual_scale = self.theme_manager.get_manual_scale(theme_id, ship.ship_class)
+            if manual_scale <= 0: manual_scale = 1.0
+            
+            # Target size is diameter of the armor ring (2 * max_r)
+            target_diameter = max_r * 2.0
+            
+            # Prevent div by zero
+            if visible_size < 1: visible_size = 1
+            
+            scale_factor = (target_diameter / visible_size) * manual_scale
+            
+            new_w = int(img_w * scale_factor)
+            new_h = int(img_h * scale_factor)
+            
+            if new_w > 0 and new_h > 0:
+                scaled_img = pygame.transform.scale(ship_img, (new_w, new_h))
+                # Center image
+                rect = scaled_img.get_rect(center=(cx, cy))
+                screen.blit(scaled_img, rect)
             
         # Draw structure rings
         font = pygame.font.SysFont("Arial", 10)
@@ -125,39 +131,9 @@ class SchematicView:
             surf = font.render(ltype.name, True, (80, 80, 80))
             screen.blit(surf, (cx - surf.get_width() // 2, cy - r - 12))
 
-        # Draw Components
-        for ltype, data in ship.layers.items():
-            radius = max_r * data['radius_pct']
-            
-            comps = data['components']
-            if not comps: continue
-                
-            angle_step = 360 / len(comps)
-            current_angle = 0
-            
-            for comp in comps:
-                rad = math.radians(current_angle)
-                px = cx + math.cos(rad) * radius
-                py = cy + math.sin(rad) * radius
-                
-                sprite = self.sprite_mgr.get_sprite(comp.sprite_index)
-                if sprite:
-                    has_facing = any(m.definition.id == 'facing' for m in comp.modifiers)
-                    if has_facing and hasattr(comp, 'facing_angle'):
-                        rotation_angle = -comp.facing_angle
-                    else:
-                        rotation_angle = -current_angle - 90
-                        
-                    rotated = pygame.transform.rotate(sprite, rotation_angle)
-                    rect = rotated.get_rect(center=(int(px), int(py)))
-                    screen.blit(rotated, rect)
-                    
-                    if selected_component and selected_component[2] == comp:
-                        pygame.draw.circle(screen, (255, 255, 0), (int(px), int(py)), 20, 2)
-                else:
-                    pygame.draw.rect(screen, (0, 255, 0), (px - 10, py - 10, 20, 20))
-                    
-                current_angle += angle_step
+        # Draw Components - DISABLED
+        # (User requested to stop showing component icons on the ship structure rings)
+        pass
 
         # Draw Arcs
         if show_firing_arcs:
