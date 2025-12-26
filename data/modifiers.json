@@ -40,10 +40,10 @@
         {
             "id": "simple_size_mount",
             "name": "Size Mount",
-            "description": "Multiplies Size/Stats (1x-128x)",
+            "description": "Multiplies Size/Stats (1x-512x)",
             "type": "linear",
             "min_val": 1,
-            "max_val": 128,
+            "max_val": 512,
             "param_name": "Scale",
             "effects": {
                 "special": "simple_size"
@@ -55,7 +55,7 @@
             "description": "Each level doubles range. Mass/HP/Cost increase 3.5x per doubling.",
             "type": "linear",
             "min_val": 0,
-            "max_val": 8,
+            "max_val": 3,
             "param_name": "Level",
             "effects": {
                 "special": "range_mount"
@@ -64,7 +64,6 @@
                 "allow_types": [
                     "ProjectileWeapon",
                     "BeamWeapon",
-                    "SeekerWeapon"
                 ]
             }
         },
@@ -81,13 +80,28 @@
                 "allow_types": [
                     "ProjectileWeapon",
                     "BeamWeapon",
-                    "Thruster",
-                    "Engine",
                     "SeekerWeapon"
                 ]
             },
             "effects": {
                 "special": "facing"
+            }
+        },
+        {
+            "id": "precision mount",
+            "name": "Precision Mount",
+            "description": "Each level reduces the accuracy falloff with range by 10%.",
+            "type": "linear",
+            "min_val": 0,
+            "max_val": 5,
+            "param_name": "Level",
+            "effects": {
+                "special": "precision_mount"
+            },
+            "restrictions": {
+                "allow_types": [
+                    "BeamWeapon"
+                ]
             }
         }
     ]

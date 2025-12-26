@@ -27,10 +27,8 @@ class ModifierEditorPanel:
         self.preset_delete_buttons = []
         
         # State
-        self.modifier_id_list = []
-        self.editing_component = None
-        self.template_modifiers = {}
-        
+        self.active_slider_mod_id = None
+
     def rebuild(self, editing_component, template_modifiers):
         """Rebuild the modifier UI based on current state."""
         self.editing_component = editing_component
@@ -39,20 +37,6 @@ class ModifierEditorPanel:
         # Clear existing
         self._clear_ui()
         
-        # Position logic (relative to container top-left presumed)
-        # We assume the container is the left panel or scrolling container
-        # Let's start y at 0 if container is exclusive, or pass start_y?
-        # The original code started at half_page_y.
-        # We'll expect the caller to place a container at the right spot, OR we just render into the provided container.
-        # If container is the whole left panel, we need start_y.
-        # Let's assume container is a UIPanel or similar that we fill. 
-        # But in builder_gui, it was sharing the left panel.
-        # Let's take `start_y` as param or method arg?
-        # Better: The caller gives a specific container (e.g. a panel) just for this.
-        # But standard Builder has one big panel.
-        # Let's take `start_y` in rebuild.
-        pass
-
     def _clear_ui(self):
         for btn in self.modifier_buttons: btn.kill()
         self.modifier_buttons = []
@@ -235,20 +219,26 @@ class ModifierEditorPanel:
                 if event.ui_element == btn:
                     preset = self.preset_manager.get_preset(preset_name)
                     if preset:
-                        # Update template modifiers - Caller must handle the state update?
-                        # No, we can return the new state.
                         return ('apply_preset', dict(preset))
             
             # Modifier Toggles
             for i, btn in enumerate(self.modifier_buttons):
                 if event.ui_element == btn and i < len(self.modifier_id_list):
                     mod_id = self.modifier_id_list[i]
+                    mod_def = MODIFIER_REGISTRY[mod_id]
+
                     if self.editing_component:
                          # Update component directly
                          if self.editing_component.get_modifier(mod_id):
                              self.editing_component.remove_modifier(mod_id)
+                             is_active = False
                          else:
                              self.editing_component.add_modifier(mod_id)
+                             is_active = True
+                         
+                         # Immediate UI feedback
+                         btn.set_text(f"[{'x' if is_active else ' '}] {mod_def.name}")
+                         
                          self.editing_component.recalculate_stats()
                          self.on_change_callback() # Notify ship Update
                          return ('refresh_ui', None)
@@ -256,8 +246,13 @@ class ModifierEditorPanel:
                         # Update template
                         if mod_id in self.template_modifiers:
                             del self.template_modifiers[mod_id]
+                            is_active = False
                         else:
                             self.template_modifiers[mod_id] = MODIFIER_REGISTRY[mod_id].min_val
+                            is_active = True
+                            
+                        # Immediate UI feedback
+                        btn.set_text(f"[{'x' if is_active else ' '}] {mod_def.name}")
                         return ('refresh_ui', None)
 
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
@@ -265,13 +260,13 @@ class ModifierEditorPanel:
                  if slider and event.ui_element == slider and i < len(self.modifier_id_list):
                      mod_id = self.modifier_id_list[i]
                      val = event.value
+                     self.active_slider_mod_id = mod_id
                      
                      if self.editing_component:
                          m = self.editing_component.get_modifier(mod_id)
                          if m:
                              m.value = val
-                             self.editing_component.recalculate_stats()
-                             self.on_change_callback()
+                             # Defer recalculate_stats to update() on mouse release
                              if i < len(self.modifier_entries) and self.modifier_entries[i]:
                                  self.modifier_entries[i].set_text(f"{val:.2f}")
                      else:
@@ -311,3 +306,16 @@ class ModifierEditorPanel:
                     break
         
         return None
+
+    def update(self, dt):
+        """Check for dropped slider drags to commit changes."""
+        if self.active_slider_mod_id:
+            # Check if mouse is released
+            if not pygame.mouse.get_pressed()[0]:
+                self.active_slider_mod_id = None
+                if self.editing_component:
+                    self.editing_component.recalculate_stats()
+                    self.on_change_callback()
+                else:
+                    # For templates, we might not need a callback, but good to have
+                    pass

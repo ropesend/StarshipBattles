@@ -126,6 +126,10 @@ class BuilderLeftPanel:
              for dd in dropdowns:
                  if not dd.visible:
                      dd.show()
+
+        # Update Modifier Panel
+        if hasattr(self.modifier_panel, 'update'):
+            self.modifier_panel.update(dt)
                  
     def is_dropdown_expanded(self):
         """Check if any filter/sort dropdown is currently expanded."""

@@ -38,6 +38,34 @@ def scan_ship_designs():
     return designs
 
 
+def scan_formations():
+    """Scan for available formation JSON files in root directory."""
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    json_files = glob.glob(os.path.join(base_path, "*.json"))
+    
+    formations = []
+    for filepath in json_files:
+        filename = os.path.basename(filepath)
+        # Skip known non-formation files
+        if filename in ['builder_theme.json', 'component_presets.json']:
+            continue
+            
+        try:
+            with open(filepath, 'r') as f:
+                data = json.load(f)
+            
+            # Check for formation data (arrows list)
+            if 'arrows' in data:
+                formations.append({
+                    'path': filepath,
+                    'name': filename.replace('.json', ''),
+                    'arrows': data['arrows']
+                })
+        except Exception:
+            pass
+    return formations
+
+
 def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angle=0):
     """Load ships from team entry list. Returns list of Ship objects."""
     ships = []
@@ -98,6 +126,7 @@ class BattleSetupScreen:
     
     def __init__(self):
         self.available_ship_designs = []
+        self.available_formations = []
         self.team1 = []  # List of {'design': design_dict, 'strategy': str, 'relative_position': (x,y)}
         self.team2 = []
         self.scroll_offset = 0
@@ -112,6 +141,7 @@ class BattleSetupScreen:
     def start(self, preserve_teams=False):
         """Initialize or reset the setup screen."""
         self.available_ship_designs = scan_ship_designs()
+        self.available_formations = scan_formations()
         
         if not preserve_teams:
             self.team1 = []
@@ -244,48 +274,29 @@ class BattleSetupScreen:
         except Exception as e:
             print(f"Error loading setup: {e}")
 
-    def add_formation_dialog(self):
-        """Handle adding a formation."""
+    def add_formation_to_team(self, formation, team_idx):
+        """Add a formation to a specific team with a selected ship design."""
         root = tk.Tk()
         root.withdraw()
         
-        team_choice = simpledialog.askinteger("Select Team", "Enter Team Number (1 or 2):", minvalue=1, maxvalue=2)
-        if not team_choice:
-            root.destroy()
-            return
-            
-        target_team_list = self.team1 if team_choice == 1 else self.team2
-        
         base_path = os.path.dirname(os.path.abspath(__file__))
-        
-        formation_path = filedialog.askopenfilename(
-            initialdir=base_path,
-            title="Select Formation JSON",
-            filetypes=(("JSON files", "*.json"), ("All files", "*.*"))
-        )
-        if not formation_path:
-            root.destroy()
-            return
-
         ships_dir = os.path.join(base_path, "ships")
+        
         ship_path = filedialog.askopenfilename(
             initialdir=ships_dir,
-            title="Select Ship Design for Formation",
+            title=f"Select Ship for {formation['name']}",
             filetypes=(("JSON files", "*.json"), ("All files", "*.*"))
         )
         root.destroy()
         
         if not ship_path:
             return
-
+            
         try:
-            with open(formation_path, 'r') as f:
-                form_data = json.load(f)
-            arrows = form_data.get('arrows', [])
+            arrows = formation['arrows']
             if not arrows:
-                print("Formation has no arrows.")
                 return
-                
+
             with open(ship_path, 'r') as f:
                 ship_data = json.load(f)
             
@@ -293,6 +304,7 @@ class BattleSetupScreen:
             temp_ship.recalculate_stats()
             diameter = temp_ship.radius * 2
             
+            # Find existing design entry or create new one
             design_entry = None
             for d in self.available_ship_designs:
                 if os.path.normpath(d['path']) == os.path.normpath(ship_path):
@@ -307,10 +319,7 @@ class BattleSetupScreen:
                     'ai_strategy': ship_data.get('ai_strategy', 'optimal_firing_range')
                 }
 
-            # 4. Calculate Positions
-            GRID_UNIT = 50.0 # From Editor
-            
-            # Extract positions safely to handle both list and dict formats
+            # Calculate Center
             positions = []
             for item in arrows:
                 if isinstance(item, dict):
@@ -328,9 +337,11 @@ class BattleSetupScreen:
             
             import uuid
             formation_id = str(uuid.uuid4())
+            GRID_UNIT = 50.0 
+            
+            target_list = self.team1 if team_idx == 1 else self.team2
             
             for item in arrows:
-                # Handle both legacy list format [x,y] and new dict format
                 if isinstance(item, dict):
                     ax, ay = item['pos']
                     rot_mode = item.get('rotation_mode', 'relative')
@@ -344,20 +355,52 @@ class BattleSetupScreen:
                 world_x = (dx / GRID_UNIT) * diameter
                 world_y = (dy / GRID_UNIT) * diameter
                 
-                target_team_list.append({
+                target_list.append({
                     'design': design_entry,
                     'strategy': design_entry.get('ai_strategy', 'optimal_firing_range'),
                     'relative_position': (world_x, world_y),
                     'formation_id': formation_id,
+                    'formation_name': formation['name'],
                     'rotation_mode': rot_mode
                 })
-                
-            print(f"Added formation with {len(arrows)} ships to Team {team_choice}.")
-            
         except Exception as e:
             print(f"Error adding formation: {e}")
-            import traceback
-            traceback.print_exc()
+
+    def get_team_display_groups(self, team_list):
+        """Group team entries for display."""
+        display_items = []
+        processed_formation_ids = set()
+        
+        for i, entry in enumerate(team_list):
+            f_id = entry.get('formation_id')
+            if f_id:
+                if f_id in processed_formation_ids:
+                    continue
+                
+                # Find all members
+                member_indices = [idx for idx, e in enumerate(team_list) if e.get('formation_id') == f_id]
+                count = len(member_indices)
+                design_name = entry['design']['name']
+                form_name = entry.get('formation_name', 'Formation')
+                
+                display_items.append({
+                    'type': 'formation',
+                    'name': f"{form_name}: {design_name}",
+                    'count': count,
+                    'indices': member_indices,
+                    'strategy': entry['strategy'],
+                    'entry_ref': entry 
+                })
+                processed_formation_ids.add(f_id)
+            else:
+                display_items.append({
+                    'type': 'ship',
+                    'name': entry['design']['name'],
+                    'index': i,
+                    'strategy': entry['strategy'],
+                    'entry_ref': entry
+                })
+        return display_items
 
     def update(self, events, screen_size):
         """Handle input events. Returns action string or None."""
@@ -371,9 +414,14 @@ class BattleSetupScreen:
                 col2_x = sw // 3 + 50
                 col3_x = 2 * sw // 3 + 50
                 
+                ships_end_y = 150
+                # 1. Available Ships
                 if col1_x <= mx < col1_x + 250:
+                    # Check Ships
+                    found_click = False
                     for i, design in enumerate(self.available_ship_designs):
                         y = 150 + i * 40
+                        ships_end_y = y + 40
                         if y <= my < y + 35:
                             if event.button == 1:
                                 self.team1.append({
@@ -385,12 +433,24 @@ class BattleSetupScreen:
                                     'design': design,
                                     'strategy': design.get('ai_strategy', 'optimal_firing_range')
                                 })
-                            break
+                            found_click = True
+                            return
+                    
+                    # Check Formations
+                    if not found_click:
+                        form_start_y = ships_end_y + 40
+                        for i, form in enumerate(self.available_formations):
+                            y = form_start_y + i * 40
+                            if y <= my < y + 35:
+                                if event.button == 1:
+                                    self.add_formation_to_team(form, 1)
+                                elif event.button == 3:
+                                    self.add_formation_to_team(form, 2)
+                                return
                 
                 btn_y = sh - 80
                 btn_load_rect = pygame.Rect(50, btn_y, 120, 50)
                 btn_save_rect = pygame.Rect(180, btn_y, 120, 50)
-                btn_form_rect = pygame.Rect(310, btn_y, 160, 50)
                 
                 if btn_load_rect.collidepoint(mx, my):
                     self.load_setup()
@@ -399,32 +459,42 @@ class BattleSetupScreen:
                 if btn_save_rect.collidepoint(mx, my):
                     self.save_setup()
                     return
-
-                if btn_form_rect.collidepoint(mx, my):
-                    self.add_formation_dialog()
-                    return
                 
+                # Team 1 Clicks
                 if col2_x <= mx < col2_x + 350:
-                    for i, entry in enumerate(self.team1):
+                    display_list = self.get_team_display_groups(self.team1)
+                    for i, item in enumerate(display_list):
                         y = 150 + i * 35
                         if y <= my < y + 30:
                             ai_btn_x = col2_x + 150
-                            if mx >= col2_x + 300:
-                                self.team1.pop(i)
+                            if mx >= col2_x + 300: # X Button
+                                if item['type'] == 'ship':
+                                    self.team1.pop(item['index'])
+                                else:
+                                    indices = sorted(item['indices'], reverse=True)
+                                    for idx in indices:
+                                        self.team1.pop(idx)
                                 return
-                            elif ai_btn_x <= mx < ai_btn_x + 130:
+                            elif ai_btn_x <= mx < ai_btn_x + 130: # AI
                                 self.ai_dropdown_open = (1, i)
                                 return
                 
+                # Team 2 Clicks
                 if col3_x <= mx < col3_x + 350:
-                    for i, entry in enumerate(self.team2):
+                    display_list = self.get_team_display_groups(self.team2)
+                    for i, item in enumerate(display_list):
                         y = 150 + i * 35
                         if y <= my < y + 30:
                             ai_btn_x = col3_x + 150
-                            if mx >= col3_x + 300:
-                                self.team2.pop(i)
+                            if mx >= col3_x + 300: # X Button
+                                if item['type'] == 'ship':
+                                    self.team2.pop(item['index'])
+                                else:
+                                    indices = sorted(item['indices'], reverse=True)
+                                    for idx in indices:
+                                        self.team2.pop(idx)
                                 return
-                            elif ai_btn_x <= mx < ai_btn_x + 130:
+                            elif ai_btn_x <= mx < ai_btn_x + 130: # AI
                                 self.ai_dropdown_open = (2, i)
                                 return
                 
@@ -445,18 +515,26 @@ class BattleSetupScreen:
                         self.action_start_headless = True
                 
                 if self.ai_dropdown_open is not None:
-                    team_idx, ship_idx = self.ai_dropdown_open
+                    team_idx, display_idx = self.ai_dropdown_open
                     team_list = self.team1 if team_idx == 1 else self.team2
                     base_col_x = col2_x if team_idx == 1 else col3_x
                     
-                    dropdown_x = base_col_x + 150
-                    ship_y = 150 + ship_idx * 35 + 30
-                    dropdown_height = len(self.ai_strategies) * 22
-                    
-                    if dropdown_x <= mx < dropdown_x + 180 and ship_y <= my < ship_y + dropdown_height:
-                        option_idx = (my - ship_y) // 22
-                        if 0 <= option_idx < len(self.ai_strategies):
-                            team_list[ship_idx]['strategy'] = self.ai_strategies[option_idx]
+                    display_list = self.get_team_display_groups(team_list)
+                    if display_idx < len(display_list):
+                        item = display_list[display_idx]
+                        dropdown_x = base_col_x + 150
+                        ship_y = 150 + display_idx * 35 + 30
+                        dropdown_height = len(self.ai_strategies) * 22
+                        
+                        if dropdown_x <= mx < dropdown_x + 180 and ship_y <= my < ship_y + dropdown_height:
+                            option_idx = (my - ship_y) // 22
+                            if 0 <= option_idx < len(self.ai_strategies):
+                                new_strat = self.ai_strategies[option_idx]
+                                if item['type'] == 'ship':
+                                    team_list[item['index']]['strategy'] = new_strat
+                                else:
+                                    for idx in item['indices']:
+                                        team_list[idx]['strategy'] = new_strat
                     
                     self.ai_dropdown_open = None
     
@@ -476,14 +554,30 @@ class BattleSetupScreen:
         col2_x = sw // 3 + 50
         col3_x = 2 * sw // 3 + 50
         
-        lbl = label_font.render("Available Ships (L/R click to add)", True, (150, 150, 200))
+        # Available Ships
+        lbl = label_font.render("Ships (L/R click)", True, (150, 150, 200))
         screen.blit(lbl, (col1_x, 110))
         
+        ships_end_y = 150
         for i, design in enumerate(self.available_ship_designs):
             y = 150 + i * 40
+            ships_end_y = y + 40
             text = item_font.render(f"{design['name']} ({design['ship_class']})", True, (200, 200, 200))
             pygame.draw.rect(screen, (40, 45, 55), (col1_x, y, 250, 35))
             pygame.draw.rect(screen, (80, 80, 100), (col1_x, y, 250, 35), 1)
+            screen.blit(text, (col1_x + 10, y + 8))
+            
+        # Available Formations
+        form_header_y = ships_end_y + 10
+        lbl_form = label_font.render("Formations", True, (150, 200, 150))
+        screen.blit(lbl_form, (col1_x, form_header_y))
+        
+        form_start_y = form_header_y + 35
+        for i, form in enumerate(self.available_formations):
+            y = form_start_y + i * 40
+            text = item_font.render(f"{form['name']}", True, (200, 255, 200))
+            pygame.draw.rect(screen, (35, 50, 35), (col1_x, y, 250, 35))
+            pygame.draw.rect(screen, (80, 120, 80), (col1_x, y, 250, 35), 1)
             screen.blit(text, (col1_x + 10, y + 8))
             
         btn_y = sh - 80
@@ -497,59 +591,42 @@ class BattleSetupScreen:
         pygame.draw.rect(screen, (100, 100, 150), (180, btn_y, 120, 50), 2)
         sav_text = label_font.render("SAVE", True, (200, 200, 255))
         screen.blit(sav_text, (180 + 60 - sav_text.get_width()//2, btn_y + 12))
+        
+        # Team Lists Logic
+        def draw_team(team_list, col_x, title_text, color):
+            lbl = label_font.render(title_text, True, color)
+            screen.blit(lbl, (col_x, 110))
+            
+            display_list = self.get_team_display_groups(team_list)
+            
+            for i, item in enumerate(display_list):
+                y = 150 + i * 35
+                name = item['name']
+                strategy = item['strategy']
+                strat_name = COMBAT_STRATEGIES.get(strategy, {}).get('name', strategy)[:12]
+                
+                is_formation = (item['type'] == 'formation')
+                
+                bg_color = (30, 60, 50) if is_formation else ((30, 50, 70) if "Team 1" in title_text else (70, 30, 30))
+                border_color = (100, 200, 150) if is_formation else ((100, 150, 200) if "Team 1" in title_text else (200, 100, 100))
+                
+                pygame.draw.rect(screen, bg_color, (col_x, y, 350, 30))
+                pygame.draw.rect(screen, border_color, (col_x, y, 350, 30), 1)
+                
+                name_text = item_font.render(name[:25], True, (255, 255, 255))
+                screen.blit(name_text, (col_x + 5, y + 5))
+                
+                ai_btn_x = col_x + 150
+                pygame.draw.rect(screen, (40, 60, 90), (ai_btn_x, y + 2, 130, 26))
+                pygame.draw.rect(screen, (80, 120, 180), (ai_btn_x, y + 2, 130, 26), 1)
+                ai_text = item_font.render(strat_name + " ▼", True, (150, 200, 255))
+                screen.blit(ai_text, (ai_btn_x + 5, y + 5))
+                
+                x_text = item_font.render("[X]", True, (255, 100, 100))
+                screen.blit(x_text, (col_x + 315, y + 5))
 
-        pygame.draw.rect(screen, (60, 80, 60), (310, btn_y, 160, 50))
-        pygame.draw.rect(screen, (100, 150, 100), (310, btn_y, 160, 50), 2)
-        form_text = label_font.render("+ FORMAT", True, (200, 255, 200))
-        screen.blit(form_text, (310 + 80 - form_text.get_width()//2, btn_y + 12))
-
-        lbl = label_font.render("Team 1", True, (100, 200, 255))
-        screen.blit(lbl, (col2_x, 110))
-        
-        for i, entry in enumerate(self.team1):
-            y = 150 + i * 35
-            design = entry['design']
-            strategy = entry['strategy']
-            strat_name = COMBAT_STRATEGIES.get(strategy, {}).get('name', strategy)[:12]
-            
-            pygame.draw.rect(screen, (30, 50, 70), (col2_x, y, 350, 30))
-            pygame.draw.rect(screen, (100, 150, 200), (col2_x, y, 350, 30), 1)
-            
-            name_text = item_font.render(design['name'][:15], True, (255, 255, 255))
-            screen.blit(name_text, (col2_x + 5, y + 5))
-            
-            ai_btn_x = col2_x + 150
-            pygame.draw.rect(screen, (40, 60, 90), (ai_btn_x, y + 2, 130, 26))
-            pygame.draw.rect(screen, (80, 120, 180), (ai_btn_x, y + 2, 130, 26), 1)
-            ai_text = item_font.render(strat_name + " ▼", True, (150, 200, 255))
-            screen.blit(ai_text, (ai_btn_x + 5, y + 5))
-            
-            x_text = item_font.render("[X]", True, (255, 100, 100))
-            screen.blit(x_text, (col2_x + 315, y + 5))
-        
-        lbl = label_font.render("Team 2", True, (255, 100, 100))
-        screen.blit(lbl, (col3_x, 110))
-        
-        for i, entry in enumerate(self.team2):
-            y = 150 + i * 35
-            design = entry['design']
-            strategy = entry['strategy']
-            strat_name = COMBAT_STRATEGIES.get(strategy, {}).get('name', strategy)[:12]
-            
-            pygame.draw.rect(screen, (70, 30, 30), (col3_x, y, 350, 30))
-            pygame.draw.rect(screen, (200, 100, 100), (col3_x, y, 350, 30), 1)
-            
-            name_text = item_font.render(design['name'][:15], True, (255, 255, 255))
-            screen.blit(name_text, (col3_x + 5, y + 5))
-            
-            ai_btn_x = col3_x + 150
-            pygame.draw.rect(screen, (90, 40, 40), (ai_btn_x, y + 2, 130, 26))
-            pygame.draw.rect(screen, (180, 80, 80), (ai_btn_x, y + 2, 130, 26), 1)
-            ai_text = item_font.render(strat_name + " ▼", True, (255, 150, 150))
-            screen.blit(ai_text, (ai_btn_x + 5, y + 5))
-            
-            x_text = item_font.render("[X]", True, (255, 100, 100))
-            screen.blit(x_text, (col3_x + 315, y + 5))
+        draw_team(self.team1, col2_x, "Team 1", (100, 200, 255))
+        draw_team(self.team2, col3_x, "Team 2", (255, 100, 100))
         
         btn_color = (50, 150, 50) if (self.team1 and self.team2) else (50, 50, 50)
         pygame.draw.rect(screen, btn_color, (sw // 2 - 100, btn_y, 200, 50))
@@ -574,9 +651,9 @@ class BattleSetupScreen:
         screen.blit(quick_text, (sw // 2 + 330 - quick_text.get_width() // 2, btn_y + 12))
         
         if self.ai_dropdown_open is not None:
-            team_idx, ship_idx = self.ai_dropdown_open
+            team_idx, display_idx = self.ai_dropdown_open
             col_x = col2_x if team_idx == 1 else col3_x
-            ship_y = 150 + ship_idx * 35 + 30
+            ship_y = 150 + display_idx * 35 + 30
             col_x = col_x + 150
             
             dropdown_w = 180
