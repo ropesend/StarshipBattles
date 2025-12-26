@@ -61,12 +61,26 @@ class ModifierEffects:
         # Alternatively, we can return specific property overrides.
         stats['properties']['facing_angle'] = val
 
+    @staticmethod
+    def precision_mount(val, stats):
+        """
+        Reduces accuracy falloff (makes beam stay accurate longer).
+        Each level reduces falloff by 10%.
+        """
+        level = val
+        # reduction = 0.1 * level
+        # mult = 1.0 - reduction
+        # Example: Level 5 -> 0.5 mult -> Falloff is 50% of original (Better)
+        mult = max(0.0, 1.0 - (0.1 * level))
+        stats['properties']['accuracy_falloff_mult'] = mult
+
 # Registry mapping 'special' string to handler function
 SPECIAL_EFFECT_HANDLERS = {
     'simple_size': ModifierEffects.simple_size,
     'range_mount': ModifierEffects.range_mount,
     'turret_mount': ModifierEffects.turret_mount,
     'facing': ModifierEffects.facing,
+    'precision_mount': ModifierEffects.precision_mount,
 }
 
 def apply_modifier_effects(modifier_def, value, stats):

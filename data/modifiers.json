@@ -63,7 +63,7 @@
             "restrictions": {
                 "allow_types": [
                     "ProjectileWeapon",
-                    "BeamWeapon",
+                    "BeamWeapon"
                 ]
             }
         },

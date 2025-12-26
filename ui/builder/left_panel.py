@@ -98,6 +98,7 @@ class BuilderLeftPanel:
             preset_manager=builder.preset_manager,
             on_change_callback=self._on_modifier_change
         )
+        self.rebuild_modifier_ui()
         
     def update(self, dt):
         """Update panel logic."""

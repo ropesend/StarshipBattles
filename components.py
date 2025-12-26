@@ -291,6 +291,18 @@ class BeamWeapon(Weapon):
         self.base_accuracy = data.get('base_accuracy', 1.0)
         self.accuracy_falloff = data.get('accuracy_falloff', 0.001)
 
+    def recalculate_stats(self):
+        # Reset specific modifiers before parent calc (which might set them if modifier exists)
+        self.accuracy_falloff_mult = 1.0
+        
+        super().recalculate_stats()
+        
+        # Apply accuracy falloff multiplier
+        # If modifier exists, self.accuracy_falloff_mult was updated by stats['properties'] logic in super
+        base = self.data.get('accuracy_falloff', 0.001)
+        self.accuracy_falloff = base * getattr(self, 'accuracy_falloff_mult', 1.0)
+
+
     def clone(self):
         return BeamWeapon(self.data)
     

@@ -112,6 +112,9 @@ class ModifierEditorPanel:
                 
             self.modifier_id_list.append(mod_id)
             
+            # Sanitize ID for UI (pygame_gui doesn't allow spaces/dots in IDs)
+            safe_mod_id = mod_id.replace(' ', '_').replace('.', '_')
+            
             text = f"[{'x' if is_active else ' '}] {mod_def.name}"
             
             btn = UIButton(
@@ -119,7 +122,7 @@ class ModifierEditorPanel:
                 text=text,
                 manager=self.manager,
                 container=self.container,
-                object_id=f'#mod_{mod_id}'
+                object_id=f'#mod_{safe_mod_id}'
             )
             self.modifier_buttons.append(btn)
             
@@ -129,7 +132,7 @@ class ModifierEditorPanel:
                     relative_rect=pygame.Rect(185, y, 70, 28),
                     manager=self.manager,
                     container=self.container,
-                    object_id=f'#entry_{mod_id}'
+                    object_id=f'#entry_{safe_mod_id}'
                 )
                 entry.set_text(f"{current_val:.2f}")
                 if not is_active: entry.disable()
@@ -142,7 +145,7 @@ class ModifierEditorPanel:
                     value_range=(mod_def.min_val, mod_def.max_val),
                     manager=self.manager,
                     container=self.container,
-                    object_id=f'#slider_{mod_id}',
+                    object_id=f'#slider_{safe_mod_id}',
                     click_increment=0.01
                 )
                 if not is_active: slider.disable()
