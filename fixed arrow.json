@@ -1,0 +1,53 @@
+{
+    "arrows": [
+        {
+            "pos": [
+                0,
+                -150
+            ],
+            "rotation_mode": "fixed"
+        },
+        {
+            "pos": [
+                -100,
+                -50
+            ],
+            "rotation_mode": "fixed"
+        },
+        {
+            "pos": [
+                100,
+                -50
+            ],
+            "rotation_mode": "fixed"
+        },
+        {
+            "pos": [
+                -200,
+                50
+            ],
+            "rotation_mode": "fixed"
+        },
+        {
+            "pos": [
+                200,
+                50
+            ],
+            "rotation_mode": "fixed"
+        },
+        {
+            "pos": [
+                300,
+                150
+            ],
+            "rotation_mode": "fixed"
+        },
+        {
+            "pos": [
+                -300,
+                150
+            ],
+            "rotation_mode": "fixed"
+        }
+    ]
+}

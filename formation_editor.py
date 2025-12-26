@@ -352,6 +352,16 @@ class FormationEditorScene:
             if event.y > 0: self.camera_zoom *= 1.1
             elif event.y < 0: self.camera_zoom /= 1.1
                 
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                mx, my = pygame.mouse.get_pos()
+                if self.canvas_rect.collidepoint((mx, my)):
+                    wx, wy = self.screen_to_world(mx, my)
+                    if self.snap_enabled:
+                        wx = self.snap(wx)
+                        wy = self.snap(wy)
+                    self.add_arrow((wx, wy))
+
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if not self.canvas_rect.collidepoint(event.pos): return
             
@@ -623,38 +633,9 @@ class FormationEditorScene:
              keys = pygame.key.get_pressed()
              shift = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
              
-             # User Request: "When there are a group of selected arrows, clicking on a blank portion... should simply unselect... don't draw another."
              if self.selected_indices and not shift:
                  self.selected_indices = set()
-                 # Do NOT add arrow
-             else:
-                 # Standard logic: Add arrow if nothing selected (or if user wants to add while holding shift?)
-                 # If we just deselected, we are done.
-                 # If we had nothing selected, we add an arrow.
-                 if not shift: # If we processed the deselect above, we shouldn't be here if indices were > 0
-                     # But self.selected_indices is now empty.
-                     # We need to know if we deslected something.
-                     # Actually, we can check if we cleared selection in _handle_left_down?
-                     # No, Left Down sets POTENTIAL_CLICK.
-                     # Let's rely on checking if we *had* selection at Mouse Down?
-                     # We didn't store that.
-                     
-                     # Let's check: Did we act on selection?
-                     # If we are here, we clicked blank space.
-                     # If self.selected_indices is NOT empty, we definitely deselect and stop.
-                     if self.selected_indices and not shift:
-                         self.selected_indices = set()
-                     else:
-                         # Empty selection or Shift held.
-                         # If empty, add arrow.
-                         # If Shift held, usually adds arrow to selection... wait, adding arrow object?
-                         # "Add arrows by simply left clicking on a blank spot"
-                         if not self.selected_indices: # Only add if nothing selected (or cleared)
-                             wx, wy = self.screen_to_world(screen_pos[0], screen_pos[1])
-                             if self.snap_enabled:
-                                 wx = self.snap(wx)
-                                 wy = self.snap(wy)
-                             self.add_arrow((wx, wy))
+
              
              self.state = 'IDLE'
              

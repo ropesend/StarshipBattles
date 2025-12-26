@@ -1,16 +1,12 @@
 === BATTLE LOG STARTED ===
-Battle started: 11 vs 17 ships
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
+Battle started: 7 vs 7 ships
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
@@ -18,6 +14,13 @@ Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
@@ -25,77 +28,4 @@ Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
 Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Escort 1' (Team 0): HP=2660/2660 Mass=900 Thrust=450 Fuel=50000 TurnSpeed=27.78 MaxSpeed=12.50 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33 Thrust=120 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Projectile fired at [27002.5, 29961.4]
-Projectile fired at [27002.5, 29961.4]
-Projectile fired at [26448.6, 30182.9]
-Projectile fired at [26448.6, 30182.9]
-Projectile fired at [27838.9, 30182.9]
-Projectile fired at [27838.9, 30182.9]
-Projectile fired at [26448.6, 29724.2]
-Projectile fired at [26448.6, 29724.2]
-Projectile fired at [26709.3, 30549.7]
-Projectile fired at [26709.3, 30549.7]
-Projectile fired at [27143.7, 30733.2]
-Projectile fired at [27143.7, 30733.2]
-Projectile fired at [-26941.2, -12982]
-Projectile fired at [-26941.2, -12982]
-Projectile fired at [-27201.9, -12156.6]
-Projectile fired at [-27201.9, -12156.6]
-Projectile fired at [-26630, -12911.1]
-Projectile fired at [-26630, -12911.1]
-Projectile fired at [-26508.2, -12831]
-Projectile fired at [-26508.2, -12831]
-Projectile fired at [-26128.7, -12108.5]
-Projectile fired at [-26128.7, -12108.5]
-Projectile fired at [-26572.1, -11503]
-Projectile fired at [-26572.1, -11503]
-Projectile fired at [-26142.2, -12778.9]
-Projectile fired at [-26142.2, -12778.9]
-Projectile fired at [-26908.7, -11740.5]
-Projectile fired at [-26908.7, -11740.5]
-Projectile fired at [-25574.2, -12112.5]
-Projectile fired at [-25574.2, -12112.5]
-Projectile fired at [-26339.4, -11701.6]
-Projectile fired at [-26339.4, -11701.6]
-Projectile fired at [-27208.4, -11701.6]
-Projectile fired at [-27208.4, -11701.6]
-Projectile fired at [-27469, -10876.1]
-Projectile fired at [-27469, -10876.1]
-Projectile fired at [-27535.8, -10851.5]
-Projectile fired at [-27535.8, -10851.5]
-Projectile fired at [-26946.2, -10970.1]
-Projectile fired at [-26946.2, -10970.1]
-Projectile fired at [-27384.1, -9677.3]
-Projectile fired at [-27384.1, -9677.3]
 === BATTLE LOG ENDED ===

@@ -242,21 +242,37 @@ class ModifierEditorPanel:
                          # Immediate UI feedback
                          btn.set_text(f"[{'x' if is_active else ' '}] {mod_def.name}")
                          
-                         self.editing_component.recalculate_stats()
-                         self.on_change_callback() # Notify ship Update
+                         # Enable/Disable slider/entry
+                         if i < len(self.modifier_sliders) and self.modifier_sliders[i]:
+                             if is_active:
+                                 self.modifier_sliders[i].enable()
+                                 # Ensure value is synced
+                                 if self.editing_component:
+                                     m = self.editing_component.get_modifier(mod_id)
+                                     val = m.value if m else mod_def.min_val
+                                 else:
+                                     val = self.template_modifiers.get(mod_id, mod_def.min_val)
+                                 self.modifier_sliders[i].set_current_value(val)
+                             else:
+                                 self.modifier_sliders[i].disable()
+
+                         if i < len(self.modifier_entries) and self.modifier_entries[i]:
+                             if is_active:
+                                 self.modifier_entries[i].enable()
+                                 if self.editing_component:
+                                     m = self.editing_component.get_modifier(mod_id)
+                                     val = m.value if m else mod_def.min_val
+                                 else:
+                                     val = self.template_modifiers.get(mod_id, mod_def.min_val)
+                                 self.modifier_entries[i].set_text(f"{val:.2f}")
+                             else:
+                                 self.modifier_entries[i].disable()
+
+                         if self.editing_component:
+                             self.editing_component.recalculate_stats()
+                             self.on_change_callback() # Notify ship Update
+                         
                          return ('refresh_ui', None)
-                    else:
-                        # Update template
-                        if mod_id in self.template_modifiers:
-                            del self.template_modifiers[mod_id]
-                            is_active = False
-                        else:
-                            self.template_modifiers[mod_id] = MODIFIER_REGISTRY[mod_id].min_val
-                            is_active = True
-                            
-                        # Immediate UI feedback
-                        btn.set_text(f"[{'x' if is_active else ' '}] {mod_def.name}")
-                        return ('refresh_ui', None)
 
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
              for i, slider in enumerate(self.modifier_sliders):

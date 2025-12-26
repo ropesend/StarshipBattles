@@ -251,6 +251,10 @@ class BuilderLeftPanel:
 
     def _on_modifier_change(self):
         if self.builder.selected_component:
+            # Propagate modifications to the entire selected group
+            if self.builder.selected_component_group:
+                self.builder.propagate_group_modifiers(self.builder.selected_component[2])
+            
             self.builder.selected_component[2].recalculate_stats()
         self.builder.ship.recalculate_stats()
         self.builder.right_panel.update_stats_display(self.builder.ship)

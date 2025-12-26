@@ -28,9 +28,7 @@ class Modifier:
         self.effects = data.get('effects', {})
         self.restrictions = data.get('restrictions', {})
         self.param_name = data.get('param_name', 'value')
-        self.min_val = data.get('min_val', 0)
-        self.max_val = data.get('max_val', 100)
-        self.default_val = data.get('default_val', 0)
+        self.default_val = data.get('default_val', self.min_val)
 
     def create_modifier(self, value=None):
         return ApplicationModifier(self, value)
