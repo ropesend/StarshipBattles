@@ -310,10 +310,18 @@ class BattleSetupScreen:
             # 4. Calculate Positions
             GRID_UNIT = 50.0 # From Editor
             
-            min_x = min(p[0] for p in arrows)
-            max_x = max(p[0] for p in arrows)
-            min_y = min(p[1] for p in arrows)
-            max_y = max(p[1] for p in arrows)
+            # Extract positions safely to handle both list and dict formats
+            positions = []
+            for item in arrows:
+                if isinstance(item, dict):
+                    positions.append(item['pos'])
+                else:
+                    positions.append(item)
+
+            min_x = min(p[0] for p in positions)
+            max_x = max(p[0] for p in positions)
+            min_y = min(p[1] for p in positions)
+            max_y = max(p[1] for p in positions)
             
             center_x = (min_x + max_x) / 2
             center_y = (min_y + max_y) / 2
