@@ -166,6 +166,8 @@ class TestAllShipDesigns(unittest.TestCase):
     def setUpClass(cls):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
+        from ship import load_vehicle_classes
+        load_vehicle_classes("data/vehicleclasses.json")
         
         # Find all ship JSON files
         ships_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ships")

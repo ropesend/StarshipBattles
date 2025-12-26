@@ -439,7 +439,21 @@ class Shield(Component):
 
     def _get_modifier_stats(self):
         from component_modifiers import apply_modifier_effects
-        stats = {'capacity_mult': 1.0}
+        stats = {
+            'mass_mult': 1.0,
+            'hp_mult': 1.0,
+            'damage_mult': 1.0,
+            'range_mult': 1.0,
+            'cost_mult': 1.0,
+            'thrust_mult': 1.0,
+            'turn_mult': 1.0,
+            'energy_gen_mult': 1.0,
+            'capacity_mult': 1.0,
+            'mass_add': 0.0,
+            'arc_add': 0.0,
+            'arc_set': None,
+            'properties': {}
+        }
         for m in self.modifiers:
              eff = m.definition.effects
              # We only care about capacity_mult here or simple_size which sets it
@@ -468,7 +482,21 @@ class ShieldRegenerator(Component):
         
     def _get_modifier_stats(self):
         from component_modifiers import apply_modifier_effects
-        stats = {'energy_gen_mult': 1.0}
+        stats = {
+            'mass_mult': 1.0,
+            'hp_mult': 1.0,
+            'damage_mult': 1.0,
+            'range_mult': 1.0,
+            'cost_mult': 1.0,
+            'thrust_mult': 1.0,
+            'turn_mult': 1.0,
+            'energy_gen_mult': 1.0,
+            'capacity_mult': 1.0,
+            'mass_add': 0.0,
+            'arc_add': 0.0,
+            'arc_set': None,
+            'properties': {}
+        }
         for m in self.modifiers:
              apply_modifier_effects(m.definition, m.value, stats, component=self)
         return stats

@@ -30,9 +30,25 @@ class MockPDC(BeamWeapon):
         self.type_str = "BeamWeapon"
         self.major_classification = "Weapons"
         self.mass = 10
+        self.base_mass = 10
+        self.max_hp = 10
+        self.base_max_hp = 10
+        self.abilities = {'PointDefense': True}
+        self.base_abilities = {'PointDefense': True}
         self.modifiers = []
         self.shots_fired = 0
         self.shots_hit = 0
+        self.data = {
+            'damage': 10,
+            'range': 1000,
+            'cost': 0,
+            'thrust_force': 0,
+            'turn_speed': 0,
+            'energy_generation': 0,
+            'capacity': 0,
+            'firing_arc': 360,
+            'reload': 0.1
+        }
 
     def update(self):
         dt = 0.01
@@ -101,13 +117,13 @@ class TestPDC(unittest.TestCase):
         )
         self.missile.team_id = 1
         
-        self.scene.ships = [self.ship]
-        self.scene.projectiles = [self.missile]
-        self.scene.grid.insert(self.ship) # Needed for queries if any
+        self.scene.engine.ships = [self.ship]
+        self.scene.engine.projectiles = [self.missile]
+        self.scene.engine.grid.insert(self.ship) # Needed for queries if any
         
     def test_pdc_targets_missile(self):
         # Context must be passed
-        context = {'projectiles': self.scene.projectiles, 'grid': self.scene.grid}
+        context = {'projectiles': self.scene.projectiles, 'grid': self.scene.engine.grid}
         
         # Ensure it is type 'missile' for ship_combat.py check
         self.missile.type = 'missile'
@@ -133,7 +149,7 @@ class TestPDC(unittest.TestCase):
         
     def test_pdc_ignores_friendly_missile(self):
         self.missile.team_id = 0 # Friendly
-        context = {'projectiles': self.scene.projectiles, 'grid': self.scene.grid}
+        context = {'projectiles': self.scene.projectiles, 'grid': self.scene.engine.grid}
         self.ship.recalculate_stats()
         self.ship.current_target = self.missile
         self.ship.secondary_targets = [self.missile]

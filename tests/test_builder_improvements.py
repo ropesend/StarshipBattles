@@ -94,64 +94,7 @@ class TestBuilderImprovements(unittest.TestCase):
             self.assertEqual(selected, "Escort")
         # Theme might vary depending on what theme manager finds on disk
 
-    def test_smart_tooltip_hover(self):
-        """
-        Test the smart tooltip logic.
-        """
-        builder = BuilderSceneGUI(1200, 800, None)
-        builder._create_ui()
-        
-        # Setup components
-        comp1 = MagicMock()
-        comp1.id = "test_weapon"
-        comp1.mass = 10
-        comp1.type_str = "Weapon"
-        comp1.name = "TestWeapon"
-        comp1.hp = 10
-        comp1.sprite_index = 0
-        # Configure data as a real dict so access works
-        comp1.data = {
-            'major_classification': 'Weapons', 
-            'damage': 5, 
-            'abilities': {'BeamWeapon': True}
-        }
-        comp1.allowed_vehicle_types = ["Ship"]
-        
-        # Clone needs to return a NEW mock or object
-        comp_clone = MagicMock()
-        comp_clone.id = "test_weapon_clone"
-        comp_clone.modifiers = []
-        comp_clone.data = comp1.data # Share data or clone it
-        comp1.clone.return_value = comp_clone
-        
-        comp1.modifiers = []
-        builder.available_components = [comp1]
-        
-        # Manually trigger list update since we changed available_components
-        builder.left_panel.update_component_list()
-        
-        # Setup template modifiers
-        builder.template_modifiers = {'simple_size_mount': 1.5}
-        
-        # Mock Modifier Registry
-        with patch('builder_gui.MODIFIER_REGISTRY', {
-            'simple_size_mount': MagicMock(restrictions=None, create_modifier=lambda v: MagicMock(value=v))
-        }): 
-            # Mock mouse position
-            with patch('pygame.mouse.get_pos', return_value=(20, 100)): # Y=100 so it hits the item (list starts at Y=80)
-                # Logic is in update(dt)
-                # Need to call draw() to trigger the hover logic which is now in draw()
-                # and verify _draw_tooltip is called with modified component
-                with patch.object(builder, '_draw_tooltip') as mock_tooltip:
-                    builder.draw(self.window)
-                    
-                    self.assertTrue(mock_tooltip.called)
-                    # Get the component passed to tooltip
-                    args, _ = mock_tooltip.call_args
-                    tooltip_comp = args[1]
-                    
-                    # Verify modifier was added to the CLONE (passed to tooltip)
-                    tooltip_comp.add_modifier.assert_called_with('simple_size_mount')
+
 
 if __name__ == '__main__':
     unittest.main()

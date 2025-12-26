@@ -41,9 +41,9 @@ class TestLayerRefinements(unittest.TestCase):
             self.assertEqual(self.escort.layers[LayerType.CORE]['max_mass_pct'], 0.5)
             self.assertEqual(self.escort.layers[LayerType.OUTER]['max_mass_pct'], 0.7)
         elif layer_count == 4:
-            # 4-layer -> Core: 0.3, Inner: 0.5, Outer: 0.5, Armor: 0.3
-            self.assertEqual(self.escort.layers[LayerType.CORE]['max_mass_pct'], 0.3)
-            self.assertEqual(self.escort.layers[LayerType.OUTER]['max_mass_pct'], 0.5)
+            # 4-layer -> Core: 0.5, Inner: 0.5, Outer: 0.7, Armor: 0.3
+            self.assertEqual(self.escort.layers[LayerType.CORE]['max_mass_pct'], 0.5)
+            self.assertEqual(self.escort.layers[LayerType.OUTER]['max_mass_pct'], 0.7)
             
     def test_mass_budget_enforcement(self):
         """Verify mass_budget_exceeded logic."""

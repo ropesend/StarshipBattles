@@ -160,8 +160,8 @@ class ModifierEditorPanel:
                 # Slider
                 slider = UIHorizontalSlider(
                     relative_rect=pygame.Rect(260, y, 165, 28),
-                    start_value=current_val,
-                    value_range=(mod_def.min_val, mod_def.max_val),
+                    start_value=float(current_val),
+                    value_range=(float(mod_def.min_val), float(mod_def.max_val)),
                     manager=self.manager,
                     container=self.container,
                     object_id=f'#slider_{safe_mod_id}',
@@ -169,6 +169,27 @@ class ModifierEditorPanel:
                 )
                 if not is_active: slider.disable()
                 self.modifier_sliders.append(slider)
+            elif mod_id == 'mass_scaling':
+                 # Special handling for mass_scaling: Show read-only value based on ship
+                 entry = UITextEntryLine(
+                    relative_rect=pygame.Rect(185, y, 70, 28),
+                    manager=self.manager,
+                    container=self.container,
+                    object_id=f'#entry_{safe_mod_id}'
+                 )
+                 
+                 val_text = "Auto"
+                 if self.editing_component and getattr(self.editing_component, 'ship', None):
+                      # Calculate ratio based on logic in component_modifiers.mass_scaling
+                      m_mass = self.editing_component.ship.max_mass_budget
+                      ratio = m_mass / 1000.0
+                      val_text = f"{ratio:.2f}"
+                 
+                 entry.set_text(val_text)
+                 entry.disable()
+                 
+                 self.modifier_entries.append(entry)
+                 self.modifier_sliders.append(None) # No slider
             else:
                 self.modifier_entries.append(None)
                 self.modifier_sliders.append(None)

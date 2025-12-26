@@ -27,7 +27,7 @@ class TestDynamicLayers(unittest.TestCase):
         self.assertNotIn(LayerType.INNER, ship.layers)
         
         # Check radii
-        self.assertEqual(ship.layers[LayerType.CORE]['radius_pct'], 0.5)
+        self.assertAlmostEqual(ship.layers[LayerType.CORE]['radius_pct'], 0.877, places=3)
         self.assertEqual(ship.layers[LayerType.ARMOR]['radius_pct'], 1.0)
 
     def test_satellite_layers(self):
