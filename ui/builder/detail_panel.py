@@ -170,9 +170,9 @@ class ComponentDetailPanel:
             
         index = comp.sprite_index
         file_index = index + 1
-        filename = f"largeportrait_comp_{file_index:03d}.jpg"
+        filename = f"2048Portrait_Comp_{file_index:03d}.jpg"
         
-        full_path = os.path.join(self.image_base_path, filename)
+        full_path = os.path.join(self.image_base_path, "Components 2048", filename)
         
         surf = None
         if os.path.exists(full_path):

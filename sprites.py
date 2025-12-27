@@ -23,11 +23,15 @@ class SpriteManager:
     def load_sprites(self, base_path):
         """
         Loads sprites from Resources/Images/Components if available.
+        Checks for 'Tiles' subdirectory first (new system), then base directory (legacy BMPs).
         Falls back to loading atlas from older path if not.
         """
         components_dir = os.path.join(base_path, "Resources", "Images", "Components")
+        tiles_dir = os.path.join(components_dir, "Tiles")
         
-        if os.path.exists(components_dir):
+        if os.path.exists(tiles_dir):
+            self._load_from_directory(tiles_dir)
+        elif os.path.exists(components_dir):
             self._load_from_directory(components_dir)
         else:
              # Fallback to old atlas
@@ -44,34 +48,42 @@ class SpriteManager:
         max_index = -1
         
         for f in files:
-            if f.startswith("Comp_") and f.endswith(".bmp"):
-                try:
-                    # Extract index: Comp_001.bmp -> 1 -> index 0
-                    prefix_removed = f[5:] # remove Comp_
+            lower_name = f.lower()
+            if not lower_name.endswith(('.bmp', '.jpg', '.png')):
+                continue
+                
+            index = -1
+            try:
+                # Parsing logic for different naming conventions
+                if f.startswith("Comp_"):
+                    # Comp_001.bmp
+                    prefix_removed = f[5:] 
                     number_part = prefix_removed.split('.')[0]
-                    index_1based = int(number_part)
-                    index = index_1based - 1
+                    index = int(number_part) - 1
+                elif f.startswith("2048Portrait_Comp_"):
+                    # 2048Portrait_Comp_001.jpg
+                    prefix_removed = f[18:]
+                    number_part = prefix_removed.split('.')[0]
+                    index = int(number_part) - 1
+                
+                if index < 0: continue
+                
+                full_path = os.path.join(directory, f)
+                image = pygame.image.load(full_path).convert()
+                image.set_colorkey((0, 0, 0))
+                
+                loaded_sprites[index] = image
+                if index > max_index:
+                    max_index = index
                     
-                    if index < 0: continue
-                    
-                    full_path = os.path.join(directory, f)
-                    image = pygame.image.load(full_path).convert()
-                    image.set_colorkey((0, 0, 0))
-                    
-                    loaded_sprites[index] = image
-                    if index > max_index:
-                        max_index = index
-                        
-                except ValueError:
-                    print(f"WARNING: Skipping invalid file format {f}")
-                    continue
-                except Exception as e:
-                    print(f"ERROR loading {f}: {e}")
-                    continue
+            except ValueError:
+                # print(f"WARNING: Skipping file with invalid number format {f}")
+                continue
+            except Exception as e:
+                print(f"ERROR loading {f}: {e}")
+                continue
         
         # Populate self.sprites list
-        # We need a list that handles sparse indices (fill with None?)
-        # Or just extend up to max_index
         if max_index >= 0:
             self.sprites = [None] * (max_index + 1)
             for idx, img in loaded_sprites.items():
