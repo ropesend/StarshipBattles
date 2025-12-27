@@ -1,7 +1,7 @@
 
 import unittest
 import pygame
-from battle import BattleScene, BATTLE_LOG
+from battle import BattleScene
 from ship import Ship, initialize_ship_data
 from components import load_components, create_component, LayerType
 import os

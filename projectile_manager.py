@@ -1,5 +1,6 @@
 import pygame
 from typing import List, Set, Any, TYPE_CHECKING
+from game_constants import AttackType
 
 if TYPE_CHECKING:
     from spatial import SpatialGrid
@@ -85,7 +86,10 @@ class ProjectileManager:
                     break
             
             # Check against Projectiles (Missile Interception)
-            if not hit_occurred and p.type == 'missile' and p.target and isinstance(p.target, type(p)):
+            # Use strict type check or equality to Enum member
+            is_missile = (p.type == AttackType.MISSILE) or (p.type == 'missile')
+            
+            if not hit_occurred and is_missile and p.target and isinstance(p.target, type(p)):
                  t_missile = p.target
                  if t_missile.is_alive:
                      dist = p.position.distance_to(t_missile.position)

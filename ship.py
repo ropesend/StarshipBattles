@@ -3,19 +3,35 @@ import random
 import math
 import json
 import os
+import typing
+from typing import List, Dict, Tuple, Optional, Any, Union, Set, TYPE_CHECKING
+
 from physics import PhysicsBody
-from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon, ProjectileWeapon, CrewQuarters, LifeSupport, Sensor, Electronics, Shield, ShieldRegenerator
+from components import (
+    Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, 
+    Generator, BeamWeapon, ProjectileWeapon, CrewQuarters, LifeSupport, 
+    Sensor, Electronics, Shield, ShieldRegenerator,
+    COMPONENT_REGISTRY, MODIFIER_REGISTRY
+)
 from logger import log_debug
-from ship_validator import ShipDesignValidator
+from ship_validator import ShipDesignValidator, ValidationResult
+from ship_stats import ShipStatsCalculator
+from ship_physics import ShipPhysicsMixin
+from ship_combat import ShipCombatMixin
 
-VALIDATOR = ShipDesignValidator()
+if TYPE_CHECKING:
+    pass
 
+# Module-level validator constant
+_VALIDATOR = ShipDesignValidator()
+# Deprecated global access for backward compatibility (lazy usage preferred)
+VALIDATOR = _VALIDATOR 
 
 # Load Vehicle Classes from JSON
-VEHICLE_CLASSES = {}
-SHIP_CLASSES = {}  # Legacy compatibility - maps class name to max_mass
+VEHICLE_CLASSES: Dict[str, Any] = {}
+SHIP_CLASSES: Dict[str, float] = {}  # Legacy compatibility - maps class name to max_mass
 
-def load_vehicle_classes(filepath="data/vehicleclasses.json"):
+def load_vehicle_classes(filepath: str = "data/vehicleclasses.json") -> None:
     """
     Load vehicle class definitions from JSON.
     This should be called explicitly during game initialization.
@@ -57,7 +73,7 @@ def load_vehicle_classes(filepath="data/vehicleclasses.json"):
         SHIP_CLASSES.clear()
         SHIP_CLASSES.update({name: cls['max_mass'] for name, cls in VEHICLE_CLASSES.items()})
 
-def initialize_ship_data(base_path=None):
+def initialize_ship_data(base_path: Optional[str] = None) -> None:
     """Facade for initializing all ship-related data."""
     if base_path:
         path = os.path.join(base_path, "data", "vehicleclasses.json")
@@ -65,26 +81,24 @@ def initialize_ship_data(base_path=None):
     else:
         load_vehicle_classes()
 
-from ship_physics import ShipPhysicsMixin
-from ship_combat import ShipCombatMixin
-
 class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
-    def __init__(self, name, x, y, color, team_id=0, ship_class="Escort", theme_id="Federation"):
+    def __init__(self, name: str, x: float, y: float, color: Union[Tuple[int, int, int], List[int]], 
+                 team_id: int = 0, ship_class: str = "Escort", theme_id: str = "Federation"):
         super().__init__(x, y)
-        self.name = name
-        self.color = color
-        self.team_id = team_id
-        self.current_target = None
-        self.secondary_targets = []  # List of additional targets
-        self.max_targets = 1         # Default 1 target (primary only)
-        self.ship_class = ship_class
-        self.theme_id = theme_id
+        self.name: str = name
+        self.color: Union[Tuple[int, int, int], List[int]] = color
+        self.team_id: int = team_id
+        self.current_target: Optional[Any] = None
+        self.secondary_targets: List[Any] = []  # List of additional targets
+        self.max_targets: int = 1         # Default 1 target (primary only)
+        self.ship_class: str = ship_class
+        self.theme_id: str = theme_id
         
         # Get class definition
         class_def = VEHICLE_CLASSES.get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
 
         # Initialize Layers dynamically from class definition
-        self.layers = {}
+        self.layers: Dict[LayerType, Dict[str, Any]] = {}
         layer_defs = class_def.get('layers', [])
         
         # Fallback if no layers defined (Legacy compatibility)
@@ -130,83 +144,84 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 self.layers[l_type]['radius_pct'] = math.sqrt(cumulative_mass_pct / total_capacity_pct)
         else:
             # Fallback if no mass limits defined (shouldn't happen with new data)
-            # Distribute evenly? Or keep json defaults? 
-            # If total is 0, we can't do math. Let's trust JSON defaults if they exist, or linear.
             pass
         
         # Stats
-        self.mass = 0
-        self.base_mass = class_def.get('hull_mass', 50)  # Hull/Structure mass from class
-        self.vehicle_type = class_def.get('type', "Ship")
-        self.total_thrust = 0
-        self.max_speed = 0
-        self.turn_speed = 0
-        self.target_speed = 0 # New Target Speed Control
+        self.mass: float = 0.0
+        self.base_mass: float = class_def.get('hull_mass', 50)  # Hull/Structure mass from class
+        self.vehicle_type: str = class_def.get('type', "Ship")
+        self.total_thrust: float = 0.0
+        self.max_speed: float = 0.0
+        self.turn_speed: float = 0.0
+        self.target_speed: float = 0.0 # New Target Speed Control
         
         # Budget
-        self.max_mass_budget = SHIP_CLASSES.get(self.ship_class, 1000)
+        self.max_mass_budget: float = SHIP_CLASSES.get(self.ship_class, 1000)
         
-        self.radius = 40 # Will be recalculated
+        self.radius: float = 40.0 # Will be recalculated
         
         # Resources (Capacities and Current) - start at 0, recalculate_stats sets them
-        self.max_energy = 0
-        self.current_energy = 0
-        self.max_fuel = 0
-        self.current_fuel = 0
-        self.max_ammo = 0
-        self.current_ammo = 0
-        self.energy_gen_rate = 0
+        self.max_energy: int = 0
+        self.current_energy: float = 0.0
+        self.max_fuel: int = 0
+        self.current_fuel: float = 0.0
+        self.max_ammo: int = 0
+        self.current_ammo: int = 0
+        self.energy_gen_rate: float = 0.0
         
         # Shield Stats
-        self.max_shields = 0
-        self.current_shields = 0
-        self.shield_regen_rate = 0
-        self.shield_regen_cost = 0
+        self.max_shields: int = 0
+        self.current_shields: float = 0.0
+        self.shield_regen_rate: float = 0.0
+        self.shield_regen_cost: float = 0.0
         
-        # Resource initialization tracking (distinguish between "never set" and "depleted to 0")
-        self._resources_initialized = False
+        # Resource initialization tracking
+        self._resources_initialized: bool = False
         
-        # New Stats (from old init, but now calculated or managed differently)
-        self.mass_limits_ok = True
-        self.layer_status = {}
+        # New Stats
+        self.mass_limits_ok: bool = True
+        self.layer_status: Dict[LayerType, Dict[str, Any]] = {}
         
-        # Old init values, now calculated or managed differently
-        self.current_mass = 0 # Replaced by self.mass and self.base_mass
+        # Old init values
+        self.current_mass: float = 0.0 
         
-        self.is_alive = True
-        self.is_derelict = False
-        self.bridge_destroyed = False
+        self.is_alive: bool = True
+        self.is_derelict: bool = False
+        self.bridge_destroyed: bool = False
         
         # AI Strategy
-        self.ai_strategy = "optimal_firing_range"  # See combatstrategies.json for options
-        self.source_file = None  # Path to the JSON file this ship was loaded from
+        self.ai_strategy: str = "optimal_firing_range"
+        self.source_file: Optional[str] = None
         
         # Formation Attributes
-        self.formation_master = None      # Reference to master ship object
-        self.formation_offset = None      # Vector2 offset relative to master
-        self.formation_rotation_mode = 'relative' # 'relative' or 'fixed'
-        self.formation_members = []       # List of followers (if this is master)
-        self.in_formation = True          # Flag to track if ship is currently holding formation
-        self.turn_throttle = 1.0          # Multiplier for max speed (0.0 to 1.0)
-        self.engine_throttle = 1.0        # Multiplier for max speed (0.0 to 1.0)
+        self.formation_master: Optional[Any] = None      # Reference to master ship object
+        self.formation_offset: Optional[Any] = None      # Vector2 offset relative to master
+        self.formation_rotation_mode: str = 'relative' # 'relative' or 'fixed'
+        self.formation_members: List[Any] = []       # List of followers (if this is master)
+        self.in_formation: bool = True          # Flag to track if ship is currently holding formation
+        self.turn_throttle: float = 1.0          # Multiplier for max speed (0.0 to 1.0)
+        self.engine_throttle: float = 1.0        # Multiplier for max speed (0.0 to 1.0)
         
         # Arcade Physics
-        self.current_speed = 0
-        self.acceleration_rate = 0
-        self.is_thrusting = False
-        self.turn_throttle = 1.0 # Multiplier for turn speed (formations)
+        self.current_speed: float = 0.0
+        self.acceleration_rate: float = 0.0
+        self.is_thrusting: bool = False
         
         # Aiming
-        self.aim_point = None
-        self.just_fired_projectiles = []
-        self.total_shots_fired = 0
+        self.aim_point: Optional[Any] = None
+        self.just_fired_projectiles: List[Any] = []
+        self.total_shots_fired: int = 0
         
         # To-Hit Calculation Stats
-        self.to_hit_profile = 1.0       # Defensive Multiplier (Lower is better for defender)
-        self.baseline_to_hit_offense = 1.0 # Offensive Multiplier (Higher is better for attacker)
+        self.to_hit_profile: float = 1.0       # Defensive Multiplier
+        self.baseline_to_hit_offense: float = 1.0 # Offensive Multiplier
+        
+        # Initialize helper (lazy or eager)
+        self.stats_calculator: Optional[ShipStatsCalculator] = None
 
-    def add_component(self, component: Component, layer_type: LayerType):
-        result = VALIDATOR.validate_addition(self, component, layer_type)
+    def add_component(self, component: Component, layer_type: LayerType) -> bool:
+        """Validate and add a component to the specified layer."""
+        result = _VALIDATOR.validate_addition(self, component, layer_type)
         
         if not result.is_valid:
              for err in result.errors:
@@ -222,11 +237,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Update Stats
         self.recalculate_stats()
         return True
-        
 
-
-
-    def remove_component(self, layer_type: LayerType, index: int):
+    def remove_component(self, layer_type: LayerType, index: int) -> Optional[Component]:
+        """Remove a component from the specified layer by index."""
         if 0 <= index < len(self.layers[layer_type]['components']):
             comp = self.layers[layer_type]['components'].pop(index)
             self.current_mass -= comp.mass
@@ -234,7 +247,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             return comp
         return None
 
-    def recalculate_stats(self):
+    def recalculate_stats(self) -> None:
         """
         Recalculates derived stats. Delegates to ShipStatsCalculator.
         """
@@ -250,59 +263,53 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 if not getattr(comp, 'ship', None): comp.ship = self
                 comp.recalculate_stats()
 
-        if not hasattr(self, 'stats_calculator'):
-             from ship_stats import ShipStatsCalculator
+        if not self.stats_calculator:
              self.stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)
         
         self.stats_calculator.calculate(self)
 
-    def get_missing_requirements(self):
+    def get_missing_requirements(self) -> List[str]:
         """Check class requirements and return list of missing items based on abilities."""
         # Use centralized validator
-        result = VALIDATOR.validate_design(self)
+        result = _VALIDATOR.validate_design(self)
         if result.is_valid:
             return []
         # Return all errors as list of strings
-        # Currently the UI expects a list of strings like "⚠ Needs X"
-        # The validator messages are "Needs X". 
-        # I'll prepend warning symbol if missing?
-        # Or just return raw strings. Builder expects string list.
         return [f"⚠ {err}" for err in result.errors]
     
-    def _format_ability_name(self, ability_name):
+    def _format_ability_name(self, ability_name: str) -> str:
         """Convert ability ID to readable name."""
-        # Insert spaces before capitals and title case
         import re
         return re.sub(r'(?<!^)(?=[A-Z])', ' ', ability_name)
     
-    def get_ability_total(self, ability_name):
+    def get_ability_total(self, ability_name: str) -> Union[float, int, bool]:
         """Get total value of a specific ability across all components."""
         all_components = [c for layer in self.layers.values() for c in layer['components']]
         
-        if not hasattr(self, 'stats_calculator'):
-             from ship_stats import ShipStatsCalculator
+        if not self.stats_calculator:
              self.stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)
              
         totals = self.stats_calculator.calculate_ability_totals(all_components)
         return totals.get(ability_name, 0)
 
-    def check_validity(self):
+    def check_validity(self) -> bool:
+        """Check if the current ship design is valid."""
         self.recalculate_stats()
-        result = VALIDATOR.validate_design(self)
+        result = _VALIDATOR.validate_design(self)
         # Check for mass errors specifically for UI feedback flag
         self.mass_limits_ok = not any("Mass budget exceeded" in e for e in result.errors)
         return result.is_valid
 
     @property
-    def hp(self):
+    def hp(self) -> int:
         return sum(c.current_hp for layer in self.layers.values() for c in layer['components'])
 
     @property
-    def max_hp(self):
+    def max_hp(self) -> int:
         return sum(c.max_hp for layer in self.layers.values() for c in layer['components'])
 
     @property
-    def max_weapon_range(self):
+    def max_weapon_range(self) -> int:
         max_rng = 0
         for layer in self.layers.values():
             for comp in layer['components']:
@@ -311,7 +318,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                         max_rng = comp.range
         return max_rng
 
-    def update(self, context=None):
+    def update(self, context: Optional[Dict[str, Any]] = None) -> None:
         if not self.is_alive: return
 
         # Delegate to Mixins
@@ -323,7 +330,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         if getattr(self, 'comp_trigger_pulled', False):
              self.just_fired_projectiles = self.fire_weapons(context=context)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Serialize ship to dictionary."""
         # Recalculate stats to ensure they're current
         self.recalculate_stats()
@@ -346,7 +353,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 "turn_speed": self.turn_speed,
                 "total_thrust": self.total_thrust,
                 "mass": self.mass,
-                "armor_hp_pool": self.layers[LayerType.ARMOR]['max_hp_pool']
+                "armor_hp_pool": self.layers[LayerType.ARMOR]['max_hp_pool'] if LayerType.ARMOR in self.layers else 0
             }
         }
         
@@ -369,17 +376,19 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         return data
 
     @staticmethod
-    def from_dict(data):
+    def from_dict(data: Dict[str, Any]) -> 'Ship':
         """Create ship from dictionary."""
         name = data.get("name", "Unnamed")
-        color = data.get("color", (200, 200, 200))
+        color_val = data.get("color", (200, 200, 200))
         # Ensure color is tuple
-        if isinstance(color, list): color = tuple(color)
+        color: tuple
+        if isinstance(color_val, list): 
+            color = tuple(color_val)
+        else:
+            color = color_val # type: ignore
         
         s = Ship(name, 0, 0, color, data.get("team_id", 0), ship_class=data.get("ship_class", "Escort"), theme_id=data.get("theme_id", "Federation"))
         s.ai_strategy = data.get("ai_strategy", "optimal_firing_range")
-        
-        from components import COMPONENT_REGISTRY, MODIFIER_REGISTRY
         
         for l_name, comps_list in data.get("layers", {}).items():
             layer_type = None
@@ -399,7 +408,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 if isinstance(c_entry, str):
                     comp_id = c_entry
                 elif isinstance(c_entry, dict):
-                    comp_id = c_entry.get("id")
+                    comp_id = c_entry.get("id", "")
                     modifiers_data = c_entry.get("modifiers", [])
                 
                 if comp_id in COMPONENT_REGISTRY:
@@ -411,15 +420,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                         mval = m_dat['value']
                         if mid in MODIFIER_REGISTRY:
                             new_comp.add_modifier(mid, mval)
-                            
-                    if isinstance(new_comp, Weapon):
-                        # Use logger if needed, but avoid circular import if possible or lazy import
-                        pass
-                             
-                    # Use add_component to validate and add
-                    # But suppress errors if loading? No, we might want to know if invalid load.
-                    # But for now, direct add might be cleaner IF we trust save data?
-                    # No, use add_component to ensure consistency with new restrictions
+
                     s.add_component(new_comp, layer_type)
         
         s.recalculate_stats()

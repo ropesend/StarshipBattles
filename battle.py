@@ -8,7 +8,7 @@ from ai import AIController
 from rendering import draw_ship
 from camera import Camera
 from battle_ui import BattleInterface
-from battle_engine import BattleEngine, BATTLE_LOG
+from battle_engine import BattleEngine
 
 
 
@@ -16,6 +16,7 @@ class BattleScene:
     """Manages battle simulation, rendering, and UI."""
     
     def __init__(self, screen_width, screen_height):
+        # ... (rest of init)
         self.screen_width = screen_width
         self.screen_height = screen_height
         
@@ -109,22 +110,22 @@ class BattleScene:
         # DEBUG LOGGING: Check for initial derelict status
         for s in self.ships:
             status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={s.current_fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f} Derelict={s.is_derelict}"
-            BATTLE_LOG.log(status_msg)
+            self.engine.logger.log(status_msg)
             print(status_msg) # Force console output
             
             if s.is_derelict:
                 warn_msg = f"WARNING: {s.name} is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)"
-                BATTLE_LOG.log(warn_msg)
+                self.engine.logger.log(warn_msg)
                 print(warn_msg)
             
             if s.total_thrust <= 0:
                 warn_msg = f"WARNING: {s.name} has NO THRUST!"
-                BATTLE_LOG.log(warn_msg)
+                self.engine.logger.log(warn_msg)
                 print(warn_msg)
                 
             if s.turn_speed <= 0.01:
                 warn_msg = f"WARNING: {s.name} has LOW/NO TURN SPEED ({s.turn_speed:.4f})! Mass too high for thrusters?"
-                BATTLE_LOG.log(warn_msg)
+                self.engine.logger.log(warn_msg)
                 print(warn_msg)
         
     
@@ -179,17 +180,7 @@ class BattleScene:
         new_idx = (current_idx + direction) % len(alive_ships)
         self.camera.target = alive_ships[new_idx]
 
-    
-    def update_visuals(self, dt, events):
-        """Update visual effects like beams and camera."""
-        # Update Beams
-        for b in self.beams:
-            b['timer'] -= dt
-        self.beams = [b for b in self.beams if b['timer'] > 0]
-        
-        # Update Camera
-        self.camera.update(dt)
-        self.camera.update_input(dt, events)
+    # Note: method removed duplicate update_visuals here (it was in orig file twice?)
 
     def is_battle_over(self):
         """Check if the battle has ended."""
@@ -253,7 +244,7 @@ class BattleScene:
             return True
             
         if result == "end_battle":
-            BATTLE_LOG.close()
+            self.engine.shutdown()
             self.action_return_to_setup = True
             return True
         

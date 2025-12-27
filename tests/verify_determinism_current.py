@@ -11,7 +11,7 @@ import pygame
 # Set dummy video driver for headless
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
-from battle import BattleScene, BATTLE_LOG
+from battle import BattleScene
 from ship import Ship
 from designs import create_interceptor, create_brick
 from components import load_components, load_modifiers
@@ -29,19 +29,19 @@ def run_battle(seed, log_filename):
     t1 = [create_interceptor(x=i*100, y=100) for i in range(2)]
     t2 = [create_interceptor(x=i*100, y=900) for i in range(2)]
     
-    # Configure Logger
-    BATTLE_LOG.filename = log_filename
-    BATTLE_LOG.enabled = True
-    
     # Run Battle
     scene = BattleScene(1000, 1000)
+    
+    # Configure Logger
+    scene.engine.logger.filename = log_filename
+    scene.engine.logger.enabled = True
     scene.start(t1, t2, seed=seed, headless=True)
     
     # Run for fixed ticks
     for _ in range(500):
         scene.update([])
         
-    BATTLE_LOG.close()
+    scene.engine.logger.close()
     return log_filename
 
 def compare_files(f1, f2):

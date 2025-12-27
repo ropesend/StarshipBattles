@@ -22,6 +22,7 @@ try:
     from ship import Ship
     from projectiles import Projectile
     from spatial import SpatialGrid
+    from game_constants import AttackType
 except ImportError:
     # If running directly from tests folder, might need adjustment
     sys.path.append(os.path.join(os.getcwd(), '..'))
@@ -29,11 +30,13 @@ except ImportError:
     from ship import Ship
     from projectiles import Projectile
     from spatial import SpatialGrid
+    from game_constants import AttackType
 
 class TestBattleEngineCore(unittest.TestCase):
     def setUp(self):
-        # Initialize BattleEngine
-        self.engine = BattleEngine()
+        # Initialize BattleEngine with mocked logger
+        self.mock_logger = MagicMock()
+        self.engine = BattleEngine(logger=self.mock_logger)
         
         # Create dummy ships
         self.ship1 = Ship("TestShip1", 0, 0, (255, 0, 0), team_id=0)
@@ -91,7 +94,7 @@ class TestBattleEngineCore(unittest.TestCase):
         proj.position = Vector2(50, 50)
         proj.velocity = Vector2(10, 0)
         proj.is_alive = True
-        proj.type = 'projectile' # Just in case
+        proj.type = AttackType.PROJECTILE # Ensure clean Enum usage
         
         # Add via manager or engine method?
         # Engine update expects projectiles in manager
@@ -130,7 +133,7 @@ class TestBattleEngineCore(unittest.TestCase):
             
             # 2. Check Beam Attack delegation
             # Simulate a ship firing a beam during update
-            beam_attack = {'type': 'beam', 'damage': 10}
+            beam_attack = {'type': AttackType.BEAM, 'damage': 10}
             
             self.ship1.comp_trigger_pulled = True
             with patch.object(self.ship1, 'fire_weapons', return_value=[beam_attack]):

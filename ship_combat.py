@@ -3,6 +3,7 @@ import math
 import random
 from components import LayerType, Weapon, BeamWeapon, ProjectileWeapon, Bridge, SeekerWeapon
 from logger import log_debug
+from game_constants import AttackType
 
 class ShipCombatMixin:
     """
@@ -139,7 +140,7 @@ class ShipCombatMixin:
                                 # So yes, increment hits.
                                 
                                 attacks.append({
-                                    'type': 'beam',
+                                    'type': AttackType.BEAM,
                                     'source': self,
                                     'target': target,
                                     'damage': comp.damage,
@@ -173,7 +174,7 @@ class ShipCombatMixin:
                                         damage=comp.damage,
                                         range_val=comp.projectile_speed * comp.endurance,
                                         endurance=comp.endurance,
-                                        proj_type='missile',
+                                        proj_type=AttackType.MISSILE,
                                         turn_rate=comp.turn_rate,
                                         max_speed=speed,
                                         target=target,
@@ -195,7 +196,7 @@ class ShipCombatMixin:
                                         damage=comp.damage,
                                         range_val=comp.range,
                                         endurance=None, # Range limited
-                                        proj_type='projectile',
+                                        proj_type=AttackType.PROJECTILE,
                                         color=(255, 200, 50),
                                         source_weapon=comp,
                                         target=target

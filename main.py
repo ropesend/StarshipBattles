@@ -9,7 +9,7 @@ from ui import Button
 from builder_gui import BuilderSceneGUI
 from sprites import SpriteManager
 from camera import Camera
-from battle import BattleScene, BATTLE_LOG
+from battle import BattleScene
 from battle_setup import BattleSetupScreen
 from formation_editor import FormationEditorScene
 
@@ -358,7 +358,7 @@ class Game:
                 
                 if self.battle_scene.is_battle_over() or tick_limit_reached:
                     self.battle_scene.print_headless_summary()
-                    BATTLE_LOG.close()
+                    self.battle_scene.engine.shutdown()
                     self.battle_scene.headless_mode = False
                     self.start_battle_setup(preserve_teams=True)
                     break

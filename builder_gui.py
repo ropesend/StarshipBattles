@@ -272,17 +272,20 @@ class InteractionController:
         if closest_layer:
             comp = self.dragged_item
             if closest_layer in comp.allowed_layers:
-                 # Check specific restrictions
-                 reason = self.builder.ship._check_restrictions(comp, self.builder.ship.layers[closest_layer]['restrictions'])
-                 if reason:
+                 # Check restrictions using the centralized validator
+                 from ship import VALIDATOR
+                 validation = VALIDATOR.validate_addition(self.builder.ship, comp, closest_layer)
+                 
+                 if not validation.is_valid:
+                      reason = ", ".join(validation.errors)
                       self.builder.show_error(f"Cannot place: {reason}")
                       return
 
-                 if self.builder.ship.current_mass + comp.mass <= self.builder.ship.max_mass_budget:
-                    self.builder.ship.add_component(comp, closest_layer)
+                 # Add component (re-validates internally, but that's fine)
+                 if self.builder.ship.add_component(comp, closest_layer):
                     self.builder.update_stats()
                  else:
-                    self.builder.show_error("Mass Limit!")
+                    self.builder.show_error("Could not add component")
             else:
                 self.builder.show_error(f"Cannot place {comp.name} in {closest_layer.name}")
 

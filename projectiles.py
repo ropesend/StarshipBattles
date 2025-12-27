@@ -1,6 +1,7 @@
 import pygame
 from physics import PhysicsBody
 from logger import log_debug
+from game_constants import AttackType
 
 class Projectile(PhysicsBody):
     def __init__(self, owner, position, velocity, damage, range_val, endurance, proj_type, source_weapon=None, **kwargs):
@@ -12,7 +13,19 @@ class Projectile(PhysicsBody):
         self.max_range = range_val
         self.endurance = endurance # in seconds
         self.max_endurance = endurance  # Store initial value for UI
-        self.type = proj_type # 'projectile', 'missile', 'beam' (beams usually separate but maybe unified later)
+        
+        # Ensure type is AttackType
+        if isinstance(proj_type, str):
+            try:
+                self.type = AttackType(proj_type)
+            except ValueError:
+                # Fallback if unknown string, though ideally we strictly define valid types
+                # Assuming 'missile' and 'projectile' match AttackType values
+                self.type = proj_type 
+        else:
+            self.type = proj_type
+        
+        # 'projectile', 'missile', 'beam' (beams usually separate but maybe unified later)
         
         # Optional args
         self.turn_rate = kwargs.get('turn_rate', 0)

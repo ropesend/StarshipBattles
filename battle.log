@@ -1,101 +1,13 @@
-2025-12-27 07:36:21,563 - INFO - Loaded 12 combat strategies
-2025-12-27 07:36:22,460 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
-2025-12-27 07:36:22,903 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
-2025-12-27 07:36:23,060 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
-2025-12-27 07:36:26,239 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
-2025-12-27 07:36:26,954 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
-2025-12-27 07:36:27,396 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
-2025-12-27 07:36:27,552 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
-2025-12-27 07:36:30,739 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
-2025-12-27 07:36:32,129 - DEBUG - Test debug message
-2025-12-27 07:36:32,130 - ERROR - Test error message
-2025-12-27 07:36:32,130 - INFO - Test info message
-2025-12-27 07:36:32,417 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
-2025-12-27 07:36:32,863 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
-2025-12-27 07:36:33,022 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
-2025-12-27 07:36:36,226 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
-2025-12-27 07:36:37,225 - DEBUG - Projectile <projectiles.Projectile object at 0x000001E61E9BB8E0> destroyed by point defense!
-2025-12-27 07:36:37,225 - DEBUG - Projectile <projectiles.Projectile object at 0x000001E61E9BB520> destroyed by point defense!
-2025-12-27 07:36:37,973 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Escort.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,006 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Frigate.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,041 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Destroyer.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,042 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
-2025-12-27 07:36:38,078 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,119 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\heavey cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,157 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Battlecruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,197 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Battleship.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,243 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,290 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\super dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,336 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\monitor.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,372 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\small fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,372 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
-2025-12-27 07:36:38,412 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\large fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,455 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\heavy fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,487 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\small satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,487 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
-2025-12-27 07:36:38,524 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\large satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,562 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Atlantians\heavy satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,600 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\escort.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,634 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\Frigate.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,668 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\Destroyer.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,705 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\light cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,740 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,782 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\heavy cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,820 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\battlecruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,861 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\battleship.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,904 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:38,950 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\super dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,000 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\monitor.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,034 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\small fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,071 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\medium fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,111 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\large fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,157 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\heavy fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,191 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\light satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,225 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\medium satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,261 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\large satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,300 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Federation\heavy satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,337 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\escort.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,372 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\frigate.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,406 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\destroyer.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,444 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\lightcruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,481 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,521 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\heavycruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,559 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\battlecruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,599 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\battleship.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,646 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,692 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\superdreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,740 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\monitor.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,776 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\small fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,813 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\medium fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,854 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\large fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,898 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\heavy Fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,933 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\small satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:39,967 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\medium satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,001 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\large satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,041 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Klingons\heavy satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,079 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\escort.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,112 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\frigate.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,146 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\Destroyer.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,187 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\light cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,224 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,267 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\heavy cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,306 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\Battlecruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,345 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\battleship.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,390 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\Dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,436 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\super dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,484 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\monitor.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,518 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\small fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,554 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\medium fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,592 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\large fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,635 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\heavy fighter.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,666 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\small satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,701 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\medium satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,737 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\large satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,777 - ERROR - Failed to load image C:\Dev\Starship Battles\resources\ShipThemes\Romulans\Heavy Satellite.png: No convert format has been set, try display.set_mode() or Window.get_surface().
-2025-12-27 07:36:40,777 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
-2025-12-27 07:36:42,014 - INFO - Loaded 1 ship themes: ['MetricsTheme']
-2025-12-27 07:36:42,136 - INFO - Loaded 0 ship themes: []
-2025-12-27 07:36:42,260 - INFO - Loaded 1 ship themes: ['ScaledTheme']
-2025-12-27 07:36:43,631 - INFO - Loaded 12 combat strategies
-2025-12-27 07:36:43,697 - INFO - Loaded 12 combat strategies
-2025-12-27 07:36:43,698 - INFO - Loaded 12 combat strategies
+2025-12-27 09:11:58,504 - INFO - Loaded 12 combat strategies
+2025-12-27 09:11:59,007 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
+2025-12-27 09:11:59,450 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
+2025-12-27 09:11:59,607 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
+2025-12-27 09:12:02,849 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+2025-12-27 09:12:22,918 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
+2025-12-27 09:12:23,363 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
+2025-12-27 09:12:23,519 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
+2025-12-27 09:12:26,722 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+2025-12-27 09:44:32,182 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
+2025-12-27 09:44:32,633 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
+2025-12-27 09:44:32,790 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
+2025-12-27 09:44:35,996 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
