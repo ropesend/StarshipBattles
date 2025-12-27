@@ -12,6 +12,12 @@ def get_component_group_key(component):
     """
     mod_list = []
     for m in component.modifiers:
+        # Ignore readonly modifiers (like Mass Scaling) for grouping keys
+        # This prevents stable application of modifiers from auto-ungrouping components
+        # or causing key mismatch errors if values float slightly.
+        if getattr(m.definition, 'readonly', False):
+            continue
+            
         # Value might be float, round for stability? Or keep precise?
         # Assuming exact match required for "identical".
         mod_list.append((m.definition.id, m.value))
@@ -24,11 +30,12 @@ class IndividualComponentItem:
         self.component = component
         self.callback_remove = callback_remove
         self.callback_select = callback_select
+        self.is_selected = is_selected  # Track selection state
         self.height = 30
         self.rect = pygame.Rect(0, y_pos, width, self.height)
         
-        # Highlight if selected
-        bg_color = "#333344" if is_selected else "#151515"
+        # Use default color - highlight drawn as overlay
+        bg_color = "#151515"
         
         self.panel = UIPanel(
             relative_rect=self.rect,
@@ -96,6 +103,10 @@ class IndividualComponentItem:
             anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
         
+    def get_abs_rect(self):
+        """Get the absolute screen rect of this item's panel."""
+        return self.panel.get_abs_rect()
+        
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.remove_button:
@@ -117,10 +128,11 @@ class LayerComponentItem:
         self.callback_select = callback_select
         self.callback_remove = callback_remove
         self.count = count
+        self.is_selected = is_selected  # Track selection state
         self.height = 40
         self.rect = pygame.Rect(0, y_pos, width, self.height)
         
-        bg_color = "#444455" if is_selected else "#202020"
+        bg_color = "#202020"  # Always use default - highlight drawn as overlay
 
         self.panel = UIPanel(
             relative_rect=self.rect,
@@ -216,6 +228,10 @@ class LayerComponentItem:
             elif event.ui_element == self.select_button:
                 return self.callback_select(self.group_key)
         return False
+    
+    def get_abs_rect(self):
+        """Get the absolute screen rect of this item's panel."""
+        return self.panel.get_abs_rect()
 
     def kill(self):
         self.panel.kill()
@@ -347,13 +363,13 @@ class LayerPanel:
     def on_select_group(self, group_key):
         self.selected_group_key = group_key
         self.selected_component_id = None
-        self.rebuild()
+        # self.rebuild() # Defer to builder_gui after state update
         return ('select_group', group_key)
         
     def on_select_individual(self, component):
         self.selected_group_key = None
         self.selected_component_id = component
-        self.rebuild()
+        # self.rebuild() # Defer to builder_gui after state update
         return ('select_individual', component)
         
     def on_remove_group(self, group_key):
@@ -402,8 +418,15 @@ class LayerPanel:
                 for comp_list, count, mass_total, group_key in groups:
                     pct_val = (mass_total / max_mass * 100) if max_mass > 0 else 0
                     is_expanded = self.expanded_groups.get(group_key, False)
-                    is_selected_group = (self.selected_group_key == group_key)
                     
+                    # Use builder state for selection source of truth
+                    is_selected_group = False
+                    if self.builder.selected_component_group:
+                        # Check if the first component (template) is in the selected group
+                        # Uses object identity which is stable even if modifiers change
+                        if comp_list[0] in self.builder.selected_component_group:
+                           is_selected_group = True
+
                     # Use first component as template
                     comp_template = comp_list[0]
                     
@@ -429,7 +452,15 @@ class LayerPanel:
                     
                     if is_expanded:
                         for comp in comp_list:
-                             is_sel_ind = (self.selected_component_id == comp)
+                             # Highlight if: 1) this specific individual is selected, OR
+                             # 2) the parent group is selected (and no specific individual override)
+                             is_sel_ind = False
+                             if self.builder.selected_component and self.builder.selected_component[2] is comp:
+                                 is_sel_ind = True
+                             elif is_selected_group:
+                                 # Parent group is selected, so highlight all children
+                                 is_sel_ind = True
+                                 
                              ind_item = IndividualComponentItem(
                                 self.manager,
                                 self.scroll_container,
@@ -483,7 +514,21 @@ class LayerPanel:
         pass
         
     def draw(self, screen):
-        pass
+        # Draw selection highlight overlays for selected items
+        container_rect = self.scroll_container.get_abs_rect()
+        for item in self.items:
+            if isinstance(item, (LayerComponentItem, IndividualComponentItem)):
+                if getattr(item, 'is_selected', False):
+                    # Get the absolute rect of the item
+                    abs_rect = item.get_abs_rect()
+                    # Check if it's visible in the scroll container
+                    if container_rect.colliderect(abs_rect):
+                        # Clip to container bounds
+                        clipped = abs_rect.clip(container_rect)
+                        # Draw semi-transparent highlight
+                        highlight_surf = pygame.Surface((clipped.width, clipped.height), pygame.SRCALPHA)
+                        highlight_surf.fill((80, 100, 130, 120))  # Semi-transparent blue selection
+                        screen.blit(highlight_surf, clipped.topleft)
 
     def get_target_layer_at(self, pos):
         """

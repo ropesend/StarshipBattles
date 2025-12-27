@@ -246,7 +246,8 @@ class InteractionController:
                         if new_m: new_m.value = m.value
                      self.dragged_item.recalculate_stats()
                  else:
-                     self.dragged_item = None
+                      self.dragged_item = None
+                      self.builder.left_panel.deselect_all()  # Clear selection when no longer carrying
 
     def update(self):
         mx, my = pygame.mouse.get_pos()
@@ -509,6 +510,7 @@ class BuilderSceneGUI:
                 # Clear Layer Panel Selection (avoid confusion)
                 self.layer_panel.selected_group_key = None
                 self.layer_panel.selected_component_id = None
+                self.selected_component_group = None  # Clear builder's group selection state
                 self.layer_panel.rebuild()
                 
                 self.controller.dragged_item = c.clone()
@@ -530,6 +532,7 @@ class BuilderSceneGUI:
                 self.on_selection_changed(self.controller.dragged_item)
                 
             elif act_type == 'select_group':
+                self.left_panel.deselect_all()
                 # data is group_key
                 comps = []
                 from ui.builder.layer_panel import get_component_group_key
@@ -542,9 +545,16 @@ class BuilderSceneGUI:
                 if comps:
                     self.on_selection_changed(comps[0]) # Set leader
                 
+                # Rebuild layer panel now that builder state is updated
+                self.layer_panel.rebuild()
+                
             elif act_type == 'select_individual':
+                self.left_panel.deselect_all()
                 self.selected_component_group = None
                 self.on_selection_changed(data)
+                
+                # Rebuild layer panel now that builder state is updated
+                self.layer_panel.rebuild()
                 
             elif act_type == 'remove_group':
                  # data is group_key
@@ -732,9 +742,9 @@ class BuilderSceneGUI:
                      
         self.view.draw(screen, self.ship, self.show_firing_arcs, self.controller.selected_component, hovered)
         
-        self.left_panel.draw(screen)
-        self.layer_panel.draw(screen)
         self.ui_manager.draw_ui(screen)
+        self.left_panel.draw(screen)  # Draw hover highlights AFTER UI manager
+        self.layer_panel.draw(screen)  # Draw selection highlights AFTER UI manager
         self.weapons_report_panel.draw(screen)
         
         if hovered and not self.controller.dragged_item:

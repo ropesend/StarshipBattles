@@ -169,6 +169,13 @@ class FormationEditorScene:
         )
         current_x += 80 + spacing
         
+        self.disc_btn = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(current_x, btn_y, 80, btn_h),
+            text="Disc",
+            manager=self.ui_manager
+        )
+        current_x += 80 + spacing
+        
         self.x_btn = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(current_x, btn_y, 80, btn_h),
             text="X Shape",
@@ -310,6 +317,8 @@ class FormationEditorScene:
                 self.clear_all()
             elif event.ui_element == self.circle_btn:
                 self.generate_shape('circle')
+            elif event.ui_element == self.disc_btn:
+                self.generate_shape('disc')
             elif event.ui_element == self.x_btn:
                 self.generate_shape('x')
             elif event.ui_element == self.line_btn:
@@ -728,6 +737,27 @@ class FormationEditorScene:
                 ay = cy + math.sin(angle) * radius
                 # Don't snap here, keep float precision
                 self.arrows.append([ax, ay])
+                self.arrow_attrs.append({'rotation_mode': 'relative'})
+                new_indices.add(start_idx + i)
+
+        elif shape_type == 'disc':
+            # Use Phyllotaxis Spiral (Sunflower pattern) for even packing
+            golden_angle = math.pi * (3 - math.sqrt(5))
+            for i in range(count):
+                if count > 1:
+                    t = i / (count - 1)
+                else: 
+                    t = 0
+                
+                # Sqrt for area preservation (uniform density)
+                r_dist = math.sqrt(t) * radius
+                theta = i * golden_angle
+                
+                ax = cx + math.cos(theta) * r_dist
+                ay = cy + math.sin(theta) * r_dist
+                
+                self.arrows.append([ax, ay])
+                self.arrow_attrs.append({'rotation_mode': 'relative'})
                 new_indices.add(start_idx + i)
                 
         elif shape_type == 'x':
@@ -739,6 +769,7 @@ class FormationEditorScene:
                 ay = cy - radius + (2*radius * t)
                 # Don't snap here
                 self.arrows.append([ax, ay])
+                self.arrow_attrs.append({'rotation_mode': 'relative'})
                 new_indices.add(start_idx + i)
             for i in range(arm2_count):
                 t = i / max(1, arm2_count - 1)
@@ -746,6 +777,7 @@ class FormationEditorScene:
                 ay = cy - radius + (2*radius * t)
                 # Don't snap here
                 self.arrows.append([ax, ay])
+                self.arrow_attrs.append({'rotation_mode': 'relative'})
                 new_indices.add(start_idx + arm1_count + i)
                 
         elif shape_type == 'line':
@@ -756,6 +788,7 @@ class FormationEditorScene:
                 ay = cy
                 # Don't snap here
                 self.arrows.append([ax, ay])
+                self.arrow_attrs.append({'rotation_mode': 'relative'})
                 new_indices.add(start_idx + i)
 
         self.selected_indices = new_indices

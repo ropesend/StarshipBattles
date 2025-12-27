@@ -131,6 +131,14 @@ class BuilderLeftPanel:
         # Update Modifier Panel
         if hasattr(self.modifier_panel, 'update'):
             self.modifier_panel.update(dt)
+        
+        # Update hover state for component list items
+        mx, my = pygame.mouse.get_pos()
+        hovered_item = self.get_hovered_list_item(mx, my)
+        for item in self.items:
+            # Don't override selected state with hover
+            if item != self.selected_item:
+                item.set_hovered(item == hovered_item)
                  
     def is_dropdown_expanded(self):
         """Check if any filter/sort dropdown is currently expanded."""
@@ -159,6 +167,12 @@ class BuilderLeftPanel:
                 if container_rect.contains(item_abs_rect) or container_rect.colliderect(item_abs_rect):
                     return item
         return None
+        
+    def deselect_all(self):
+        """Deselect all items in the list."""
+        for item in self.items:
+            item.set_selected(False)
+        self.selected_item = None
         
     def update_component_list(self):
         """Filter, sort, and populate the component list."""
@@ -246,8 +260,20 @@ class BuilderLeftPanel:
         self.scroll_container.set_scrollable_area_dimensions((item_width, y))
         
     def draw(self, screen):
-        # Icons are now drawn by UIImage widgets inside slots
-        pass
+        # Draw hover highlight overlay for hovered items
+        for item in self.items:
+            if getattr(item, 'is_hovered', False) and item != self.selected_item:
+                # Get the absolute rect of the item
+                abs_rect = item.get_abs_rect()
+                # Check if it's visible in the scroll container
+                container_rect = self.scroll_container.get_abs_rect()
+                if container_rect.colliderect(abs_rect):
+                    # Clip to container bounds
+                    clipped = abs_rect.clip(container_rect)
+                    # Draw semi-transparent highlight
+                    highlight_surf = pygame.Surface((clipped.width, clipped.height), pygame.SRCALPHA)
+                    highlight_surf.fill((80, 80, 120, 100))  # Semi-transparent blue-ish
+                    screen.blit(highlight_surf, clipped.topleft)
 
     def _on_modifier_change(self):
         if self.builder.selected_component:
@@ -285,7 +311,7 @@ class BuilderLeftPanel:
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             for item in self.items:
                 if event.ui_element == item.button:
-                    # Deselect others
+                    # Deselect others, select clicked item while it's being carried
                     for i in self.items: i.set_selected(False)
                     item.set_selected(True)
                     self.selected_item = item

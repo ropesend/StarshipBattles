@@ -80,6 +80,14 @@ class ComponentListItem:
             self.button.select()
         else:
             self.button.unselect()
+    
+    def set_hovered(self, hovered):
+        """Set hover state flag (visual drawing handled by parent panel)."""
+        self.is_hovered = hovered
+        
+    def get_abs_rect(self):
+        """Get the absolute screen rect of this item's panel."""
+        return self.panel.get_abs_rect()
             
     def kill(self):
         self.panel.kill()
