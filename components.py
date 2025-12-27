@@ -85,6 +85,23 @@ class Component:
                     # If modifiers loaded later, this might fail. 
                     # Ideally modifiers are loaded before components.
                     pass
+                    
+        # Parse Formulas
+        self.formulas = {}
+        for key, value in data.items():
+            if isinstance(value, str) and value.startswith("="):
+                # It's a formula!
+                self.formulas[key] = value[1:] # Store without '='
+                # Initialize base value to something safe? Or keep it as is?
+                # Probably keep undefined or 0 until recalculated? 
+                # Better to set a default if possible, but hard to guess.
+                # If it's mass/hp, 0 is safer than crashing.
+                if key in ['mass', 'hp', 'damage', 'range', 'cost']:
+                     setattr(self, f"base_{key}" if key in ['mass', 'hp'] else key, 0)
+                     if key == 'mass': self.mass = 0
+                     if key == 'hp': 
+                         self.max_hp = 0
+                         self.current_hp = 0
 
     def take_damage(self, amount):
         self.current_hp -= amount
@@ -128,6 +145,21 @@ class Component:
             if m.definition.id == mod_id:
                 return m
         return None
+        
+    def _evaluate_math_formula(self, formula, context):
+        """Safely evaluate math formula."""
+        import math
+        # Sandbox / Validation could go here.
+        # ALLOWED NAMES: math members + context keys
+        
+        names = {k: v for k, v in math.__dict__.items() if not k.startswith("__")}
+        names.update(context)
+        
+        try:
+            return eval(formula, {"__builtins__": {}}, names)
+        except Exception as e:
+            # print(f"Error evaluating formula '{formula}': {e}")
+            return 0
 
     def recalculate_stats(self):
         """Recalculate component stats with multiplicative modifier stacking.
@@ -136,6 +168,41 @@ class Component:
         Logic is now delegated to component_modifiers.py registry.
         """
         from component_modifiers import apply_modifier_effects
+        
+        # 0. Evaluate Formulas (Base Stats)
+        # Context building
+        context = {
+            'ship_class_mass': 1000 # Default fallback
+        }
+        
+        if self.ship:
+            # Try to get max mass budget from ship
+            # If ship is attached to a vehicle class, use that.
+            context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
+            
+        for attr, formula in self.formulas.items():
+            val = self._evaluate_math_formula(formula, context)
+            
+            # Map back to appropriate attributes
+            if attr == 'mass':
+                self.base_mass = float(val)
+                self.mass = self.base_mass
+            elif attr == 'hp':
+                self.base_max_hp = int(val)
+                self.max_hp = self.base_max_hp
+            else:
+                 # Generic attribute (damage, range, etc)
+                 # Update ONLY the data dict? Or the attribute?
+                 # Most attributes are read from data[] during init or recalc
+                 # For safety, let's update data[] AND set the attribute if it exists
+                 self.data[attr] = val
+                 if hasattr(self, attr):
+                     # Type conversion if necessary?
+                     # Ideally schema dependent, but int is safe for most
+                     if isinstance(getattr(self, attr), int):
+                         setattr(self, attr, int(val))
+                     else:
+                         setattr(self, attr, val)
 
         # Start with base values
         self.mass = self.base_mass
