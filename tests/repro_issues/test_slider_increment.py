@@ -8,19 +8,37 @@ import os
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-# Mock pygame and pygame_gui
-sys.modules['pygame'] = MagicMock()
-sys.modules['pygame_gui'] = MagicMock()
-sys.modules['pygame_gui.elements'] = MagicMock()
-
-from builder_components import ModifierEditorPanel
-
 class TestSliderIncrement(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.modules_patcher = patch.dict(sys.modules, {
+            'pygame': MagicMock(),
+            'pygame_gui': MagicMock(),
+            'pygame_gui.elements': MagicMock()
+        })
+        cls.modules_patcher.start()
+        
+        # Import module
+        if 'builder_components' in sys.modules:
+            del sys.modules['builder_components']
+            
+        import builder_components
+        cls.module = builder_components
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.modules_patcher.stop()
+        if 'builder_components' in sys.modules:
+            del sys.modules['builder_components']
+
     def test_range_mount_increment(self):
         """Test that the Range Mount slider is initialized with 0.1 increment."""
         manager = MagicMock()
         container = MagicMock()
         preset_manager = MagicMock()
+        
+        # Access class from imported module
+        ModifierEditorPanel = self.module.ModifierEditorPanel
         
         panel = ModifierEditorPanel(manager, container, 400, preset_manager, None)
         

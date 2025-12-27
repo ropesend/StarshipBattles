@@ -3,16 +3,6 @@ from unittest.mock import MagicMock, patch
 import sys
 import os
 
-# --- Scaffolding & Mocks ---
-# We must mock pygame before importing battle_panels
-mock_pygame = MagicMock()
-sys.modules['pygame'] = mock_pygame
-
-# Define basic constants used
-mock_pygame.K_LSHIFT = 1
-mock_pygame.K_RSHIFT = 2
-mock_pygame.SRCALPHA = 0
-
 # Mock Rect to allow logic validation
 class MockRect:
     def __init__(self, x, y, w, h):
@@ -37,26 +27,49 @@ class MockRect:
     def inflate(self, *args):
         return self
 
-mock_pygame.Rect = MockRect
-
-# Ensure valid import of logic
-try:
-    import battle_panels
-    from battle_panels import ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel, BattlePanel
-except ImportError:
-    # If explicit import fails, try adding CWD
-    sys.path.append(os.getcwd())
-    import battle_panels
-    from battle_panels import ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel, BattlePanel
-
 class TestBattlePanels(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Create the mock pygame
+        cls.mock_pygame = MagicMock()
+        cls.mock_pygame.K_LSHIFT = 1
+        cls.mock_pygame.K_RSHIFT = 2
+        cls.mock_pygame.SRCALPHA = 0
+        cls.mock_pygame.Rect = MockRect
+        
+        # Patch sys.modules
+        cls.modules_patcher = patch.dict(sys.modules, {'pygame': cls.mock_pygame})
+        cls.modules_patcher.start()
+        
+        # Prepare sys.path
+        sys.path.append(os.getcwd())
+        
+        # Import module under test
+        # Handle reload if needed
+        if 'battle_panels' in sys.modules:
+             del sys.modules['battle_panels']
+             
+        try:
+            import battle_panels
+            cls.module = battle_panels
+        except ImportError:
+            sys.path.append(os.path.dirname(os.getcwd()))
+            import battle_panels
+            cls.module = battle_panels
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.modules_patcher.stop()
+        if 'battle_panels' in sys.modules:
+            del sys.modules['battle_panels']
+
     def setUp(self):
         self.mock_scene = MagicMock()
         self.mock_scene.ships = []
         
         # Default key state: Not pressing shift
-        self.mock_keys = {mock_pygame.K_LSHIFT: False, mock_pygame.K_RSHIFT: False}
-        mock_pygame.key.get_pressed.return_value = self.mock_keys
+        self.mock_keys = {self.mock_pygame.K_LSHIFT: False, self.mock_pygame.K_RSHIFT: False}
+        self.mock_pygame.key.get_pressed.return_value = self.mock_keys
 
     def create_mock_ship(self, team_id, name="Ship"):
         ship = MagicMock()
@@ -84,7 +97,7 @@ class TestBattlePanels(unittest.TestCase):
 
     def test_stats_panel_expansion(self):
         """Test toggling ship expansion in stats panel."""
-        panel = ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
+        panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
         
         ship1 = self.create_mock_ship(0, "Hero")
         self.mock_scene.ships = [ship1]
@@ -106,7 +119,7 @@ class TestBattlePanels(unittest.TestCase):
 
     def test_stats_panel_scroll_offset(self):
         """Test that scroll offset shifts the click targets."""
-        panel = ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
+        panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
         ship1 = self.create_mock_ship(0, "Hero")
         
         # Add a second ship to Team 2 to ensure we test deep list items
@@ -146,7 +159,7 @@ class TestBattlePanels(unittest.TestCase):
 
     def test_seeker_monitor_state(self):
         """Test seeker add and clear inactive logic."""
-        panel = SeekerMonitorPanel(self.mock_scene, 0, 0, 300, 600)
+        panel = self.module.SeekerMonitorPanel(self.mock_scene, 0, 0, 300, 600)
         
         # Mock seekers
         s1 = MagicMock()
@@ -169,7 +182,7 @@ class TestBattlePanels(unittest.TestCase):
     def test_seeker_panel_coordinate_logic(self):
         """Test relative coordinate logic in Seeker Panel."""
         # Panel at x=100, y=100.
-        panel = SeekerMonitorPanel(self.mock_scene, 100, 100, 300, 600)
+        panel = self.module.SeekerMonitorPanel(self.mock_scene, 100, 100, 300, 600)
         
         s1 = MagicMock()
         s1.status = 'active'
@@ -204,11 +217,11 @@ class TestBattlePanels(unittest.TestCase):
 
     def test_battle_end_control(self):
         """Test BattleControlPanel end battle button."""
-        panel = BattleControlPanel(self.mock_scene, 0, 0, 800, 600)
+        panel = self.module.BattleControlPanel(self.mock_scene, 0, 0, 800, 600)
         
         # Manually set rects as if draw() was called, or just test logic if rects exist
         # draw() sets self.end_battle_early_rect
-        btn_rect = mock_pygame.Rect(10, 70, 120, 30)
+        btn_rect = self.mock_pygame.Rect(10, 70, 120, 30)
         panel.end_battle_early_rect = btn_rect
         
         # Click inside

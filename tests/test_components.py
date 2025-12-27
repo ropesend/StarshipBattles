@@ -22,6 +22,8 @@ class TestComponents(unittest.TestCase):
         
         bridge = create_component('bridge')
         self.assertIsNotNone(bridge)
+        # Recalculate stats to resolve formulas (uses default context k=1000)
+        bridge.recalculate_stats()
         self.assertEqual(bridge.name, "Bridge")
         self.assertEqual(bridge.mass, 50)
 

@@ -4,7 +4,7 @@ import pygame
 from tkinter import filedialog
 from tkinter import filedialog
 from ui import Button, Label, Slider
-from ship import Ship, LayerType, SHIP_CLASSES
+from ship import Ship, LayerType, SHIP_CLASSES, VALIDATOR
 from components import get_all_components, MODIFIER_REGISTRY, Bridge, Weapon, Engine, Thruster, Armor, Tank
 from sprites import SpriteManager
 
@@ -85,14 +85,12 @@ class BuilderScene:
 
     def try_start(self):
         # Validation
-        if not self.ship.check_validity():
-            self.show_error("Ship Invalid (Check Stats)")
-            return
-            
-        has_bridge = any(isinstance(c, Bridge) for l in self.ship.layers.values() for c in l['components'])
+        self.ship.recalculate_stats()
+        result = VALIDATOR.validate_design(self.ship)
         
-        if not has_bridge:
-            self.show_error("Ship needs a Bridge!")
+        if not result.is_valid:
+            # Show first error
+            self.show_error(result.errors[0])
             return
             
         self.on_start_battle(self.ship)
@@ -342,13 +340,11 @@ class BuilderScene:
             
         if layer:
             comp = self.dragged_item # Already cloned
-            if layer in comp.allowed_layers:
-                if self.ship.current_mass + comp.mass <= self.ship.max_mass_budget:
-                    self.ship.add_component(comp, layer)
-                else:
-                    self.show_error("Mass Limit!")
+            res = VALIDATOR.validate_addition(self.ship, comp, layer)
+            if res.is_valid:
+                self.ship.add_component(comp, layer)
             else:
-                self.show_error(f"Cannot place {comp.name} in {layer.name}")
+                self.show_error(res.errors[0])
 
     def draw(self, screen):
         # Draw Backgrounds

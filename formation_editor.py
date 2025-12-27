@@ -14,12 +14,8 @@ try:
 except:
     tk_root = None
 
-class FormationEditorScene:
-    def __init__(self, screen_width, screen_height, on_return_menu):
-        self.width = screen_width
-        self.height = screen_height
-        self.on_return_menu = on_return_menu
-        
+class FormationCore:
+    def __init__(self):
         # Data
         # list of [x, y] coordinates (World Space)
         self.arrows = [] 
@@ -27,6 +23,183 @@ class FormationEditorScene:
         self.arrow_attrs = []
         # Multi-selection: set of indices
         self.selected_indices = set()
+        self.shape_count = 5
+
+    def add_arrow(self, pos):
+        self.arrows.append(list(pos))
+        self.arrow_attrs.append({'rotation_mode': 'relative'})
+        self.selected_indices = {len(self.arrows) - 1}
+
+    def move_arrow(self, from_idx, to_idx):
+        if from_idx == to_idx: return
+        # Adjust indices if needed to prevent OOB
+        if from_idx < 0 or from_idx >= len(self.arrows): return
+        if to_idx < 0: to_idx = 0
+        if to_idx >= len(self.arrows): to_idx = len(self.arrows) - 1
+        
+        item = self.arrows.pop(from_idx)
+        self.arrows.insert(to_idx, item)
+        attr = self.arrow_attrs.pop(from_idx)
+        self.arrow_attrs.insert(to_idx, attr)
+        # Update selection to follow the item
+        self.selected_indices = {to_idx}
+
+    def delete_selected(self):
+        if not self.selected_indices: return
+        to_delete = sorted(list(self.selected_indices), reverse=True)
+        for idx in to_delete:
+            if 0 <= idx < len(self.arrows):
+                self.arrows.pop(idx)
+                self.arrow_attrs.pop(idx)
+        self.selected_indices = set()
+
+    def clone_selection(self, offset):
+        if not self.selected_indices: return
+        sorted_indices = sorted(list(self.selected_indices))
+        new_indices = set()
+        for idx in sorted_indices:
+            ax, ay = self.arrows[idx]
+            self.arrows.append([ax + offset, ay + offset])
+            self.arrow_attrs.append(self.arrow_attrs[idx].copy())
+            new_indices.add(len(self.arrows) - 1)
+        self.selected_indices = new_indices
+
+    def clear_all(self):
+        self.arrows = []
+        self.arrow_attrs = []
+        self.selected_indices = set()
+
+    def generate_shape(self, shape_type, center_pos, radius=200):
+        # Use Core's shape_count
+        count = self.shape_count
+        cx, cy = center_pos
+             
+        new_indices = set()
+        start_idx = len(self.arrows)
+        
+        if shape_type == 'circle':
+            for i in range(count):
+                angle = (2 * math.pi * i) / count
+                angle -= math.pi / 2
+                ax = cx + math.cos(angle) * radius
+                ay = cy + math.sin(angle) * radius
+                # Don't snap here, keep float precision
+                self.arrows.append([ax, ay])
+                self.arrow_attrs.append({'rotation_mode': 'relative'})
+                new_indices.add(start_idx + i)
+
+        elif shape_type == 'disc':
+            # Use Phyllotaxis Spiral (Sunflower pattern) for even packing
+            golden_angle = math.pi * (3 - math.sqrt(5))
+            for i in range(count):
+                if count > 1:
+                    t = i / (count - 1)
+                else: 
+                    t = 0
+                
+                # Sqrt for area preservation (uniform density)
+                r_dist = math.sqrt(t) * radius
+                theta = i * golden_angle
+                
+                ax = cx + math.cos(theta) * r_dist
+                ay = cy + math.sin(theta) * r_dist
+                
+                self.arrows.append([ax, ay])
+                self.arrow_attrs.append({'rotation_mode': 'relative'})
+                new_indices.add(start_idx + i)
+                
+        elif shape_type == 'x':
+            arm1_count = count // 2
+            arm2_count = count - arm1_count
+            for i in range(arm1_count):
+                t = i / max(1, arm1_count - 1)
+                ax = cx - radius + (2*radius * t)
+                ay = cy - radius + (2*radius * t)
+                # Don't snap here
+                self.arrows.append([ax, ay])
+                self.arrow_attrs.append({'rotation_mode': 'relative'})
+                new_indices.add(start_idx + i)
+            for i in range(arm2_count):
+                t = i / max(1, arm2_count - 1)
+                ax = cx + radius - (2*radius * t)
+                ay = cy - radius + (2*radius * t)
+                # Don't snap here
+                self.arrows.append([ax, ay])
+                self.arrow_attrs.append({'rotation_mode': 'relative'})
+                new_indices.add(start_idx + arm1_count + i)
+                
+        elif shape_type == 'line':
+            width = radius * 2
+            for i in range(count):
+                t = i / max(1, count - 1)
+                ax = cx - radius + (width * t)
+                ay = cy
+                # Don't snap here
+                self.arrows.append([ax, ay])
+                self.arrow_attrs.append({'rotation_mode': 'relative'})
+                new_indices.add(start_idx + i)
+
+        self.selected_indices = new_indices
+
+    def toggle_rotation_mode(self):
+        if not self.selected_indices: return
+        
+        # Check current state of selection
+        any_relative = False
+        for idx in self.selected_indices:
+            if self.arrow_attrs[idx].get('rotation_mode', 'relative') == 'relative':
+                any_relative = True
+                break
+        
+        new_mode = 'fixed' if any_relative else 'relative'
+        for idx in self.selected_indices:
+            self.arrow_attrs[idx]['rotation_mode'] = new_mode
+
+    def save_to_file(self, filename):
+        try:
+            # Serialize to new format (List of Dicts) if mixed, or just Dicts
+            out_arrows = []
+            for i, pos in enumerate(self.arrows):
+                attr = self.arrow_attrs[i]
+                # Format: {"pos": [x, y], "rotation_mode": "relative"}
+                out_arrows.append({
+                    "pos": pos,
+                    "rotation_mode": attr.get('rotation_mode', 'relative')
+                })
+            
+            data = {'arrows': out_arrows}
+            with open(filename, 'w') as f: json.dump(data, f, indent=4)
+        except Exception as e: print(f"Error saving: {e}")
+
+    def load_from_file(self, filename):
+        try:
+            with open(filename, 'r') as f:
+                data = json.load(f)
+                if 'arrows' in data:
+                    raw_arrows = data['arrows']
+                    self.arrows = []
+                    self.arrow_attrs = []
+                    for item in raw_arrows:
+                        if isinstance(item, list): # Legacy
+                            self.arrows.append(item)
+                            self.arrow_attrs.append({'rotation_mode': 'relative'})
+                        elif isinstance(item, dict):
+                            self.arrows.append(item.get('pos', [0,0]))
+                            self.arrow_attrs.append({'rotation_mode': item.get('rotation_mode', 'relative')})
+                    
+                    self.selected_indices = set()
+        except Exception as e: print(f"Error loading: {e}")
+
+class FormationEditorScene:
+    def __init__(self, screen_width, screen_height, on_return_menu):
+        self.width = screen_width
+        self.height = screen_height
+        self.on_return_menu = on_return_menu
+        
+        # Instantiate Core Model
+        self.core = FormationCore()
+        
+        # Camera
         
         # Camera
         self.camera_zoom = 1.0
@@ -219,6 +392,18 @@ class FormationEditorScene:
             manager=self.ui_manager
         )
 
+    @property
+    def arrows(self): return self.core.arrows
+
+    @property
+    def arrow_attrs(self): return self.core.arrow_attrs
+    
+    @property
+    def selected_indices(self): return self.core.selected_indices
+    
+    @selected_indices.setter
+    def selected_indices(self, val): self.core.selected_indices = val
+    
     # --- Coordinate Transforms ---
     def world_to_screen(self, wx, wy):
         cx, cy = self.width / 2, (self.height - self.toolbar_height) / 2
@@ -227,18 +412,7 @@ class FormationEditorScene:
         return sx, sy
 
     def move_arrow(self, from_idx, to_idx):
-        if from_idx == to_idx: return
-        # Adjust indices if needed to prevent OOB
-        if from_idx < 0 or from_idx >= len(self.arrows): return
-        if to_idx < 0: to_idx = 0
-        if to_idx >= len(self.arrows): to_idx = len(self.arrows) - 1
-        
-        item = self.arrows.pop(from_idx)
-        self.arrows.insert(to_idx, item)
-        attr = self.arrow_attrs.pop(from_idx)
-        self.arrow_attrs.insert(to_idx, attr)
-        # Update selection to follow the item
-        self.selected_indices = {to_idx}
+        self.core.move_arrow(from_idx, to_idx)
         self.update_info()
 
     def screen_to_world(self, sx, sy):
@@ -333,6 +507,7 @@ class FormationEditorScene:
             if event.ui_element == self.count_slider:
                 val = int(event.value)
                 self.shape_count = val
+                self.core.shape_count = val
                 self.count_entry.set_text(str(val))
             elif event.ui_element == self.renumber_slider:
                 val = int(event.value)
@@ -345,6 +520,7 @@ class FormationEditorScene:
                     val = int(event.text)
                     val = max(2, min(100, val))
                     self.shape_count = val
+                    self.core.shape_count = val
                     self.count_slider.set_current_value(val)
                 except:
                     self.count_entry.set_text(str(self.shape_count))
@@ -531,19 +707,7 @@ class FormationEditorScene:
                      self.selected_indices = set()
                      
     def _toggle_rotation_mode(self):
-        if not self.selected_indices: return
-        
-        # Check current state of selection
-        any_relative = False
-        for idx in self.selected_indices:
-            if self.arrow_attrs[idx].get('rotation_mode', 'relative') == 'relative':
-                any_relative = True
-                break
-        
-        new_mode = 'fixed' if any_relative else 'relative'
-        for idx in self.selected_indices:
-            self.arrow_attrs[idx]['rotation_mode'] = new_mode
-            
+        self.core.toggle_rotation_mode()
         self.update_info()
 
     def _update_group_resize(self, screen_pos):
@@ -683,115 +847,30 @@ class FormationEditorScene:
         return None
 
     def add_arrow(self, pos):
-        self.arrows.append(list(pos))
-        self.arrow_attrs.append({'rotation_mode': 'relative'})
-        self.selected_indices = {len(self.arrows) - 1}
+        self.core.add_arrow(pos)
         self.update_info()
 
     def delete_selected(self):
-        if not self.selected_indices: return
-        to_delete = sorted(list(self.selected_indices), reverse=True)
-        for idx in to_delete:
-            if 0 <= idx < len(self.arrows):
-                self.arrows.pop(idx)
-                self.arrow_attrs.pop(idx)
-        self.selected_indices = set()
+        self.core.delete_selected()
         self.update_info()
 
     def clone_selection(self):
-        if not self.selected_indices: return
-        sorted_indices = sorted(list(self.selected_indices))
-        new_indices = set()
         offset = self.grid_size if self.snap_enabled else 20
-        for idx in sorted_indices:
-            ax, ay = self.arrows[idx]
-            self.arrows.append([ax + offset, ay + offset])
-            self.arrow_attrs.append(self.arrow_attrs[idx].copy())
-            new_indices.add(len(self.arrows) - 1)
-        self.selected_indices = new_indices
+        self.core.clone_selection(offset)
         self.update_info()
 
     def clear_all(self):
-        self.arrows = []
-        self.arrow_attrs = []
-        self.selected_indices = set()
+        self.core.clear_all()
         self.update_info()
 
     def generate_shape(self, shape_type):
-        count = self.shape_count
-        radius = 200
-        
         cx, cy = self.screen_to_world(self.width/2, (self.height - self.toolbar_height)/2)
         if self.snap_enabled:
              cx = self.snap(cx)
              cy = self.snap(cy)
-             
-        new_indices = set()
-        start_idx = len(self.arrows)
         
-        if shape_type == 'circle':
-            for i in range(count):
-                angle = (2 * math.pi * i) / count
-                angle -= math.pi / 2
-                ax = cx + math.cos(angle) * radius
-                ay = cy + math.sin(angle) * radius
-                # Don't snap here, keep float precision
-                self.arrows.append([ax, ay])
-                self.arrow_attrs.append({'rotation_mode': 'relative'})
-                new_indices.add(start_idx + i)
-
-        elif shape_type == 'disc':
-            # Use Phyllotaxis Spiral (Sunflower pattern) for even packing
-            golden_angle = math.pi * (3 - math.sqrt(5))
-            for i in range(count):
-                if count > 1:
-                    t = i / (count - 1)
-                else: 
-                    t = 0
-                
-                # Sqrt for area preservation (uniform density)
-                r_dist = math.sqrt(t) * radius
-                theta = i * golden_angle
-                
-                ax = cx + math.cos(theta) * r_dist
-                ay = cy + math.sin(theta) * r_dist
-                
-                self.arrows.append([ax, ay])
-                self.arrow_attrs.append({'rotation_mode': 'relative'})
-                new_indices.add(start_idx + i)
-                
-        elif shape_type == 'x':
-            arm1_count = count // 2
-            arm2_count = count - arm1_count
-            for i in range(arm1_count):
-                t = i / max(1, arm1_count - 1)
-                ax = cx - radius + (2*radius * t)
-                ay = cy - radius + (2*radius * t)
-                # Don't snap here
-                self.arrows.append([ax, ay])
-                self.arrow_attrs.append({'rotation_mode': 'relative'})
-                new_indices.add(start_idx + i)
-            for i in range(arm2_count):
-                t = i / max(1, arm2_count - 1)
-                ax = cx + radius - (2*radius * t)
-                ay = cy - radius + (2*radius * t)
-                # Don't snap here
-                self.arrows.append([ax, ay])
-                self.arrow_attrs.append({'rotation_mode': 'relative'})
-                new_indices.add(start_idx + arm1_count + i)
-                
-        elif shape_type == 'line':
-            width = radius * 2
-            for i in range(count):
-                t = i / max(1, count - 1)
-                ax = cx - radius + (width * t)
-                ay = cy
-                # Don't snap here
-                self.arrows.append([ax, ay])
-                self.arrow_attrs.append({'rotation_mode': 'relative'})
-                new_indices.add(start_idx + i)
-
-        self.selected_indices = new_indices
+        self.core.shape_count = self.shape_count
+        self.core.generate_shape(shape_type, (cx, cy))
         self.update_info()
 
     def save_formation(self):
@@ -801,20 +880,7 @@ class FormationEditorScene:
             defaultextension=".json", filetypes=[("JSON Files", "*.json")], title="Save Formation"
         )
         if filename:
-            try:
-                # Serialize to new format (List of Dicts) if mixed, or just Dicts
-                out_arrows = []
-                for i, pos in enumerate(self.arrows):
-                    attr = self.arrow_attrs[i]
-                    # Format: {"pos": [x, y], "rotation_mode": "relative"}
-                    out_arrows.append({
-                        "pos": pos,
-                        "rotation_mode": attr.get('rotation_mode', 'relative')
-                    })
-                
-                data = {'arrows': out_arrows}
-                with open(filename, 'w') as f: json.dump(data, f, indent=4)
-            except Exception as e: print(f"Error saving: {e}")
+            self.core.save_to_file(filename)
 
     def load_formation(self):
         if not tk_root: return
@@ -822,24 +888,8 @@ class FormationEditorScene:
             initialdir=os.getcwd(), filetypes=[("JSON Files", "*.json")], title="Load Formation"
         )
         if filename:
-            try:
-                with open(filename, 'r') as f:
-                    data = json.load(f)
-                    if 'arrows' in data:
-                        raw_arrows = data['arrows']
-                        self.arrows = []
-                        self.arrow_attrs = []
-                        for item in raw_arrows:
-                            if isinstance(item, list): # Legacy
-                                self.arrows.append(item)
-                                self.arrow_attrs.append({'rotation_mode': 'relative'})
-                            elif isinstance(item, dict):
-                                self.arrows.append(item.get('pos', [0,0]))
-                                self.arrow_attrs.append({'rotation_mode': item.get('rotation_mode', 'relative')})
-                        
-                        self.selected_indices = set()
-                        self.update_info()
-            except Exception as e: print(f"Error loading: {e}")
+            self.core.load_from_file(filename)
+            self.update_info()
 
     def update_info(self):
         count = len(self.arrows)

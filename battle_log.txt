@@ -1,47 +1,15 @@
 === BATTLE LOG STARTED ===
-Battle started: 11 vs 11 ships
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 0): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
-Ship 'Fighting Falcon' (Team 1): HP=39/39 Mass=33.0 Thrust=120.0 Fuel=2000 TurnSpeed=6593.85 MaxSpeed=90.91 Derelict=False
+Battle started: 1 vs 1 ships
+Ship 'T1-1' (Team 0): HP=0/0 Mass=0 Thrust=0 Fuel=0 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=False
+WARNING: T1-1 has NO THRUST!
+WARNING: T1-1 has LOW/NO TURN SPEED (0.0000)!
+Ship 'T2-1' (Team 1): HP=0/0 Mass=0 Thrust=0 Fuel=0 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=False
+WARNING: T2-1 has NO THRUST!
+WARNING: T2-1 has LOW/NO TURN SPEED (0.0000)!
+Ship 'T1-1' (Team 0): HP=0/0 Mass=0 Thrust=0 Fuel=0 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=False
+WARNING: T1-1 has NO THRUST!
+WARNING: T1-1 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'T2-1' (Team 1): HP=0/0 Mass=0 Thrust=0 Fuel=0 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=False
+WARNING: T2-1 has NO THRUST!
+WARNING: T2-1 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
 === BATTLE LOG ENDED ===

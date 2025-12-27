@@ -6,6 +6,9 @@ import os
 from physics import PhysicsBody
 from components import Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, Generator, BeamWeapon, ProjectileWeapon, CrewQuarters, LifeSupport, Sensor, Electronics, Shield, ShieldRegenerator
 from logger import log_debug
+from ship_validator import ShipDesignValidator
+
+VALIDATOR = ShipDesignValidator()
 
 
 # Load Vehicle Classes from JSON
@@ -203,34 +206,13 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.baseline_to_hit_offense = 1.0 # Offensive Multiplier (Higher is better for attacker)
 
     def add_component(self, component: Component, layer_type: LayerType):
-        if layer_type not in self.layers:
-             print(f"Error: Layer {layer_type.name} does not exist on {self.ship_class}")
+        result = VALIDATOR.validate_addition(self, component, layer_type)
+        
+        if not result.is_valid:
+             for err in result.errors:
+                 print(f"Error: {err}")
              return False
 
-        if layer_type not in component.allowed_layers:
-            # Special case: If the vehicle class has restricted layers, maybe we should allow it if valid?
-            # But component.allowed_layers is strict.
-            print(f"Error: {component.name} not allowed in {layer_type.name} (Component restriction)")
-            return False
-
-        if self.vehicle_type not in component.allowed_vehicle_types:
-            print(f"Error: {component.name} not allowed on {self.vehicle_type}")
-            return False
-
-        # Check Restrictions from Vehicle Class
-        reason = self._check_restrictions(component, self.layers[layer_type]['restrictions'])
-        if reason:
-             print(f"Error: Restriction: {reason}")
-             return False
-
-        if self.mass_budget_exceeded(component.mass, layer_type):
-            print(f"Error: Mass budget exceeded for {layer_type.name}")
-            return False
-
-        if self.current_mass + component.mass > self.max_mass_budget:
-            print(f"Error: Mass budget exceeded for {self.name}")
-            return False
-            
         self.layers[layer_type]['components'].append(component)
         component.layer_assigned = layer_type
         component.ship = self
@@ -241,26 +223,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.recalculate_stats()
         return True
         
-    def _check_restrictions(self, component, restrictions):
-        """
-        Check if component is blocked by any restriction strings.
-        Returns failure reason string or None if allowed.
-        """
-        for r in restrictions:
-            if r.startswith("block_classification:"):
-                blocked_class = r.split(":")[1]
-                if component.data.get('major_classification') == blocked_class:
-                    return f"Classification '{blocked_class}' blocked in this layer"
-            elif r.startswith("block_type:"):
-                blocked_type = r.split(":")[1]
-                if component.type_str == blocked_type:
-                     return f"Type '{blocked_type}' blocked in this layer"
-            elif r.startswith("block_id:"):
-                blocked_id = r.split(":")[1]
-                if component.id == blocked_id:
-                     return f"Component '{blocked_id}' blocked in this layer"
-        return None
-        
+
+
+
     def remove_component(self, layer_type: LayerType, index: int):
         if 0 <= index < len(self.layers[layer_type]['components']):
             comp = self.layers[layer_type]['components'].pop(index)
@@ -268,16 +233,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             self.recalculate_stats()
             return comp
         return None
-
-    def mass_budget_exceeded(self, component_mass, layer_type):
-        if layer_type in self.layers:
-            layer_data = self.layers[layer_type]
-            current_layer_mass = sum(c.mass for c in layer_data['components'])
-            max_layer_mass = self.max_mass_budget * layer_data.get('max_mass_pct', 1.0)
-            
-            if current_layer_mass + component_mass > max_layer_mass:
-                return True
-        return False
 
     def recalculate_stats(self):
         """
@@ -303,64 +258,16 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
     def get_missing_requirements(self):
         """Check class requirements and return list of missing items based on abilities."""
-        missing = []
-        class_def = VEHICLE_CLASSES.get(self.ship_class, {})
-        requirements = class_def.get('requirements', {})
-        
-        # Gather all components
-        all_components = [c for layer in self.layers.values() for c in layer['components']]
-        
-        # Calculate ability totals from all components
-        if not hasattr(self, 'stats_calculator'):
-             from ship_stats import ShipStatsCalculator
-             self.stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)
-        ability_totals = self.stats_calculator.calculate_ability_totals(all_components)
-        
-        # Check each requirement
-        for req_name, req_def in requirements.items():
-            ability_name = req_def.get('ability', '')
-            min_value = req_def.get('min_value', 0)
-            
-            if not ability_name:
-                continue
-            
-            current_value = ability_totals.get(ability_name, 0)
-            
-            # Handle boolean abilities
-            if isinstance(min_value, bool):
-                if min_value and not current_value:
-                    nice_name = self._format_ability_name(ability_name)
-                    missing.append(f"⚠ Needs {nice_name}")
-            # Handle numeric abilities
-            elif isinstance(min_value, (int, float)):
-                if current_value < min_value:
-                    nice_name = self._format_ability_name(ability_name)
-                    # Generic missing ability check
-                    missing.append(f"⚠ Needs {nice_name}")
-        
-        # Additional crew/life support validation
-        # CrewRequired is now explicit
-        crew_capacity = ability_totals.get('CrewCapacity', 0)
-        # Handle case where CrewCapacity might still be negative in some legacy data (safety)
-        if crew_capacity < 0:
-             crew_capacity = 0
-             
-        life_support = ability_totals.get('LifeSupportCapacity', 0)
-        crew_required = ability_totals.get('CrewRequired', 0)
-        
-        # Add legacy negative capacity to required if present
-        legacy_req = abs(min(0, ability_totals.get('CrewCapacity', 0)))
-        crew_required += legacy_req
-        
-        # Check if we have enough housing for the required crew
-        if crew_capacity < crew_required:
-             missing.append(f"⚠ Need {crew_required - crew_capacity} more crew housing")
-
-        # If we have crew requiring components but not enough life support
-        if crew_required > 0 and life_support < crew_required:
-            missing.append(f"⚠ Need {crew_required - life_support} more life support")
-        
-        return missing
+        # Use centralized validator
+        result = VALIDATOR.validate_design(self)
+        if result.is_valid:
+            return []
+        # Return all errors as list of strings
+        # Currently the UI expects a list of strings like "⚠ Needs X"
+        # The validator messages are "Needs X". 
+        # I'll prepend warning symbol if missing?
+        # Or just return raw strings. Builder expects string list.
+        return [f"⚠ {err}" for err in result.errors]
     
     def _format_ability_name(self, ability_name):
         """Convert ability ID to readable name."""
@@ -381,10 +288,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
     def check_validity(self):
         self.recalculate_stats()
-        # Check requirements too
-        if self.get_missing_requirements():
-            return False
-        return self.mass_limits_ok
+        result = VALIDATOR.validate_design(self)
+        # Check for mass errors specifically for UI feedback flag
+        self.mass_limits_ok = not any("Mass budget exceeded" in e for e in result.errors)
+        return result.is_valid
 
     @property
     def hp(self):

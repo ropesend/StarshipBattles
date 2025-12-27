@@ -12,6 +12,7 @@ from projectiles import Projectile
 class MockPDC(BeamWeapon):
     def __init__(self):
         # Mimic Point Defence Cannon
+        self.formulas = {}
         self.name = "PDC"
         self.range = 1000
         self.damage = 10
@@ -118,7 +119,7 @@ class TestPDC(unittest.TestCase):
         self.missile.team_id = 1
         
         self.scene.engine.ships = [self.ship]
-        self.scene.engine.projectiles = [self.missile]
+        self.scene.engine.projectile_manager.projectiles = [self.missile]
         self.scene.engine.grid.insert(self.ship) # Needed for queries if any
         
     def test_pdc_targets_missile(self):

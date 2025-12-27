@@ -46,7 +46,7 @@ class TestLayerRefinements(unittest.TestCase):
             self.assertEqual(self.escort.layers[LayerType.OUTER]['max_mass_pct'], 0.7)
             
     def test_mass_budget_enforcement(self):
-        """Verify mass_budget_exceeded logic."""
+        """Verify mass_budget_exceeded logic via VALIDATOR."""
         # Fighter Max Mass = 250 (from JSON usually)
         max_mass = self.fighter.max_mass_budget
         
@@ -59,11 +59,18 @@ class TestLayerRefinements(unittest.TestCase):
         heavy_armor.allowed_layers = [LayerType.ARMOR]
         heavy_armor.allowed_vehicle_types = ["Fighter"]
         heavy_armor.data = {'major_classification': 'Armor'}
+        # Specific attributes needed for checks
         heavy_armor.type_str = "Armor"
         heavy_armor.id = "heavy_armor"
+        # Since we use validate_addition, we need to ensure other checks pass or we focus on mass
+        from ship_validator import MassBudgetRule
         
-        # Check budget check directly
-        self.assertTrue(self.fighter.mass_budget_exceeded(heavy_armor.mass, LayerType.ARMOR))
+        rule = MassBudgetRule()
+        
+        # Check budget check directly using strict rule check to Isolate test
+        res = rule.validate(self.fighter, heavy_armor, LayerType.ARMOR)
+        self.assertFalse(res.is_valid, "Should fail mass budget")
+        self.assertTrue(any("Mass budget exceeded" in e for e in res.errors))
         
         # Check allowed mass
         light_armor = MagicMock(spec=Component)
@@ -74,8 +81,9 @@ class TestLayerRefinements(unittest.TestCase):
         light_armor.type_str = "Armor"
         light_armor.id = "light_armor"
         
-        self.assertFalse(self.fighter.mass_budget_exceeded(light_armor.mass, LayerType.ARMOR))
-        
+        res = rule.validate(self.fighter, light_armor, LayerType.ARMOR)
+        self.assertTrue(res.is_valid, "Should allow mass within budget")
+
     def test_all_layers_filter_logic(self):
         """Verify the logic for 'All Layers' filter."""
         # Simulation of the logic in left_panel.py

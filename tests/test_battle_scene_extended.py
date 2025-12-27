@@ -97,7 +97,7 @@ class TestBattleSceneExtended(unittest.TestCase):
             'component': mock_comp
         }
         
-        scene.engine._process_beam_attack(beam)
+        scene.engine.collision_system.process_beam_attack(beam, scene.engine.recent_beams)
         ship.take_damage.assert_called_with(25)
 
 if __name__ == '__main__':

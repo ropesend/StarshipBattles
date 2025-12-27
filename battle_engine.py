@@ -68,12 +68,21 @@ class BattleEngine:
     def __init__(self):
         self.ships = []
         self.ai_controllers = []
-        self.projectiles = []
-        # We don't store beams persistently for simulation, but we return them as events
+        # Projectiles are now managed by ProjectileManager
+        from projectile_manager import ProjectileManager
+        from collision_system import CollisionSystem
+        
+        self.projectile_manager = ProjectileManager()
+        self.collision_system = CollisionSystem()
+        
         self.recent_beams = [] 
         self.grid = SpatialGrid(cell_size=2000)
         self.tick_counter = 0
         self.winner = None
+
+    @property
+    def projectiles(self):
+        return self.projectile_manager.projectiles
 
     def start(self, team1_ships, team2_ships, seed=None):
         """Initialize battle state."""
@@ -82,7 +91,7 @@ class BattleEngine:
         
         self.ships = []
         self.ai_controllers = []
-        self.projectiles = []
+        self.projectile_manager.clear()
         self.recent_beams = []
         self.tick_counter = 0
         self.winner = None
@@ -164,167 +173,19 @@ class BattleEngine:
             
             if attack_type == 'projectile' or attack_type == 'missile':
                 if not is_dict:
-                    self.projectiles.append(attack)
+                    self.projectile_manager.add_projectile(attack)
                     if attack_type == 'projectile':
                         BATTLE_LOG.log(f"Projectile fired at {attack.position}")
                     else:
                         BATTLE_LOG.log(f"Missile fired at {getattr(attack, 'target', 'unknown')}")
             elif attack_type == 'beam':
-                self._process_beam_attack(attack)
+                self.collision_system.process_beam_attack(attack, self.recent_beams)
 
         # 4. Ship-to-Ship Collisions
-        self._process_ramming()
+        self.collision_system.process_ramming(self.ships, BATTLE_LOG)
         
         # 5. Update Projectiles
-        self._update_projectiles()
-
-    def _process_beam_attack(self, attack):
-        """Process a beam weapon attack."""
-        start_pos = attack['origin']
-        direction = attack['direction']
-        max_range = attack['range']
-        target = attack.get('target')
-        
-        end_pos = start_pos + direction * max_range
-        
-        if target and target.is_alive:
-            f = start_pos - target.position
-            a = direction.dot(direction)
-            b = 2 * f.dot(direction)
-            c = f.dot(f) - target.radius**2
-            
-            discriminant = b*b - 4*a*c
-            
-            if discriminant >= 0:
-                t1 = (-b - math.sqrt(discriminant)) / (2*a)
-                t2 = (-b + math.sqrt(discriminant)) / (2*a)
-                
-                valid_t = []
-                if 0 <= t1 <= max_range: valid_t.append(t1)
-                if 0 <= t2 <= max_range: valid_t.append(t2)
-                
-                if valid_t:
-                    hit_dist = min(valid_t)
-                    beam_comp = attack['component']
-                    chance = beam_comp.calculate_hit_chance(hit_dist)
-                    
-                    if random.random() < chance:
-                        target.take_damage(attack['damage'])
-                        end_pos = start_pos + direction * hit_dist
-        
-        # Store for visualization
-        self.recent_beams.append({
-            'start': start_pos,
-            'end': end_pos,
-            'color': (100, 255, 255) # Could be derived from weapon type
-        })
-
-    def _process_ramming(self):
-        """Process ship-to-ship ramming collisions."""
-        for s in self.ships:
-            if not s.is_alive: continue
-            if getattr(s, 'ai_strategy', '') != 'kamikaze': continue
-            
-            target = s.current_target
-            if not target or not target.is_alive: continue
-            
-            collision_radius = s.radius + target.radius
-            
-            if s.position.distance_to(target.position) < collision_radius:
-                hp_rammer = s.hp
-                hp_target = target.hp
-                
-                if hp_rammer < hp_target:
-                    s.take_damage(hp_rammer + 9999)
-                    target.take_damage(hp_rammer * 0.5)
-                    BATTLE_LOG.log(f"Ramming: {s.name} destroyed by {target.name}!")
-                elif hp_target < hp_rammer:
-                    target.take_damage(hp_target + 9999)
-                    s.take_damage(hp_target * 0.5)
-                    BATTLE_LOG.log(f"Ramming: {target.name} destroyed by {s.name}!")
-                else:
-                    s.take_damage(hp_rammer + 9999)
-                    target.take_damage(hp_target + 9999)
-                    BATTLE_LOG.log(f"Ramming: Mutual destruction!")
-
-    def _update_projectiles(self):
-        """Update projectile positions and check collisions."""
-        projectiles_to_remove = set()
-        
-        for idx, p in enumerate(self.projectiles):
-            if idx in projectiles_to_remove:
-                continue
-            
-            p.update() 
-            
-            if not p.is_alive:
-                projectiles_to_remove.add(idx)
-                continue
-                
-            p_pos = p.position 
-            
-            query_radius = p.velocity.length() + 100
-            nearby_ships = self.grid.query_radius(p_pos, query_radius)
-            
-            hit_occurred = False
-            
-            p_start = p_pos - p.velocity
-            
-            # Check against Ships
-            for s in nearby_ships:
-                if not s.is_alive: continue
-                if s.team_id == p.team_id: continue
-                
-                s_vel = s.velocity
-                s_pos = s.position
-                s_prev_pos = s_pos - s_vel
-                
-                D0 = p_start - s_prev_pos
-                DV = p.velocity - s_vel
-                
-                dv_sq = DV.dot(DV)
-                collision_radius = s.radius + 5
-                
-                hit = False
-                
-                if dv_sq == 0:
-                    if D0.length() < collision_radius:
-                        hit = True
-                else:
-                    t = -D0.dot(DV) / dv_sq
-                    t_clamped = max(0, min(t, 1.0))
-                    
-                    p_at_t = p_start + p.velocity * t_clamped
-                    s_at_t = s_prev_pos + s_vel * t_clamped
-                    
-                    if p_at_t.distance_to(s_at_t) < collision_radius:
-                        hit = True
-                
-                if hit:
-                    s.take_damage(p.damage)
-                    hit_occurred = True
-                    break
-            
-            # Check against Projectiles (Missile Interception)
-            if not hit_occurred and p.type == 'missile' and p.target and isinstance(p.target, type(p)):
-                 t_missile = p.target
-                 if t_missile.is_alive:
-                     dist = p.position.distance_to(t_missile.position)
-                     if dist < (p.radius + t_missile.radius + 10):
-                         t_missile.take_damage(p.damage)
-                         hit_occurred = True
-                         if not t_missile.is_alive:
-                             t_missile.status = 'destroyed'
-            
-            if hit_occurred:
-                p.is_alive = False
-                p.status = 'hit'
-                if hasattr(p, 'source_weapon') and p.source_weapon:
-                    p.source_weapon.shots_hit += 1
-                projectiles_to_remove.add(idx)
-        
-        if projectiles_to_remove:
-            self.projectiles = [p for i, p in enumerate(self.projectiles) if i not in projectiles_to_remove]
+        self.projectile_manager.update(self.grid)
 
     def is_battle_over(self):
         team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive and not getattr(s, 'is_derelict', False))
