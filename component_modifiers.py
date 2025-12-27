@@ -94,6 +94,9 @@ class ModifierEffects:
             # Apply Mass Multiplier
             stats['mass_mult'] *= ratio
             
+            # Apply HP Multiplier (linear scaling with mass ratio)
+            stats['hp_mult'] *= ratio
+            
             # Apply Emissive Value Multiplier (Cube Root of Ratio)
             emissive_mult = ratio ** (1.0/3.0)
             

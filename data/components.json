@@ -135,6 +135,32 @@
             "major_classification": "Armor"
         },
         {
+            "id": "reactive_armor",
+            "name": "Reactive Armor",
+            "type": "Armor",
+            "mass": 45,
+            "hp": 220,
+            "allowed_layers": [
+                "ARMOR"
+            ],
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite"
+            ],
+            "sprite_index": 14,
+            "abilities": {
+                "Armor": true,
+                "ToHitDefenseModifier": 1.15
+            },
+            "modifiers": [
+                {
+                    "id": "mass_scaling",
+                    "value": 1
+                }
+            ],
+            "major_classification": "Armor"
+        },
+        {
             "id": "fuel_tank",
             "name": "Fuel Tank",
             "type": "Tank",
