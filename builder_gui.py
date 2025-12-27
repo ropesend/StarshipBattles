@@ -320,7 +320,7 @@ class BuilderSceneGUI:
         
         # Layout
         self.left_panel_width = 450
-        self.right_panel_width = 380
+        self.right_panel_width = 600 # Widened for ship portrait
         self.layer_panel_width = 450 # Widened
         self.detail_panel_width = 550
         self.bottom_bar_height = 60
@@ -630,6 +630,7 @@ class BuilderSceneGUI:
                 self.ship.vehicle_type = c_def.get('type', 'Ship')
                 self.ship.recalculate_stats()
                 self.update_stats()
+                self.right_panel.update_portrait_image()
                 self.left_panel.update_component_list()
             elif hasattr(self.right_panel, 'vehicle_type_dropdown') and event.ui_element == self.right_panel.vehicle_type_dropdown:
                 new_type = event.text
@@ -654,6 +655,7 @@ class BuilderSceneGUI:
                      self.left_panel.update_component_list()
             elif hasattr(self.right_panel, 'theme_dropdown') and event.ui_element == self.right_panel.theme_dropdown:
                 self.ship.theme_id = event.text
+                self.right_panel.update_portrait_image()
                 logger.info(f"Changed theme to {event.text}")
             elif event.ui_element == self.right_panel.ai_dropdown:
                 from ai import COMBAT_STRATEGIES

@@ -1,6 +1,6 @@
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMenu, UITextBox
+from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMenu, UITextBox, UIImage
 
 from ship import VEHICLE_CLASSES
 from ai import COMBAT_STRATEGIES
@@ -77,8 +77,89 @@ class BuilderRightPanel:
                 break
                 
         self.ai_dropdown = UIDropDownMenu(ai_options, ai_display, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
+        y += 40
+
+        # Portrait Image
+        self.portrait_image = None
+        self.portrait_rect = pygame.Rect(10, y, self.rect.width - 20, 300) # Placeholder rect
+        y += 310
         
-        self.last_y = y + 50
+        self.update_portrait_image()
+        
+        self.last_y = y + 10
+
+    def update_portrait_image(self):
+        """Update the ship portrait based on current theme and class."""
+        import os
+        
+        # Determine paths
+        theme = getattr(self.builder.ship, 'theme_id', 'Federation')
+        ship_class = self.builder.ship.ship_class
+        
+        # Map theme ID to folder name if necessary (simple map for now, or trust ID)
+        # Theme IDs are usually "Federation", "Klingons", etc.
+        # But let's check if we need mapping. The script used:
+        # fed -> Federation, etc. But the game uses full names likely.
+        # Let's assume theme_id matches directory name for now as per `ShipThemeManager`.
+        
+        # Filename: {Class}_Portrait.jpg
+        # Remove spaces from class name if any? generated files have e.g. BattleCruiser_Portrait.jpg
+        # But class name in game might be "Battle Cruiser"
+        
+        class_clean = ship_class.replace(" ", "")
+        filename = f"{class_clean}_Portrait.jpg"
+        
+        base_path = "resources/Portraits"
+        # We need absolute path or relative to CWD
+        # Assuming CWD is project root
+        full_path = os.path.join(base_path, theme, filename)
+        
+        if not os.path.exists(full_path):
+            # Try with spaces?
+            full_path_space = os.path.join(base_path, theme, f"{ship_class}_Portrait.jpg")
+            if os.path.exists(full_path_space):
+                full_path = full_path_space
+            else:
+                 # Fallback or None
+                 if self.portrait_image:
+                     self.portrait_image.kill()
+                     self.portrait_image = None
+                 return
+
+        try:
+            image_surf = pygame.image.load(full_path).convert_alpha()
+            
+            # Scale to fit width, maintaining aspect
+            max_w = self.rect.width - 20
+            # Let's say max height is 300
+            max_h = 300
+            
+            img_w, img_h = image_surf.get_size()
+            scale = min(max_w / img_w, max_h / img_h)
+            
+            if scale < 1.0:
+                new_w = int(img_w * scale)
+                new_h = int(img_h * scale)
+                image_surf = pygame.transform.smoothscale(image_surf, (new_w, new_h))
+            
+            # Center it
+            final_w, final_h = image_surf.get_size()
+            center_x = 10 + (max_w - final_w) // 2
+            
+            self.portrait_rect = pygame.Rect(center_x, self.portrait_rect.y, final_w, final_h)
+            
+            if self.portrait_image:
+                self.portrait_image.kill()
+                
+            self.portrait_image = UIImage(
+                relative_rect=self.portrait_rect,
+                image_surface=image_surf,
+                manager=self.manager,
+                container=self.panel
+            )
+            
+        except Exception as e:
+            print(f"Failed to load portrait {full_path}: {e}")
 
     def setup_stats(self):
         y = self.last_y

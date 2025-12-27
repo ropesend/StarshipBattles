@@ -1,13 +1,9 @@
-2025-12-27 09:11:58,504 - INFO - Loaded 12 combat strategies
-2025-12-27 09:11:59,007 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
-2025-12-27 09:11:59,450 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
-2025-12-27 09:11:59,607 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
-2025-12-27 09:12:02,849 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
-2025-12-27 09:12:22,918 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
-2025-12-27 09:12:23,363 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
-2025-12-27 09:12:23,519 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
-2025-12-27 09:12:26,722 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
-2025-12-27 09:44:32,182 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
-2025-12-27 09:44:32,633 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
-2025-12-27 09:44:32,790 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
-2025-12-27 09:44:35,996 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+2025-12-27 14:08:16,975 - INFO - Loaded 12 combat strategies
+2025-12-27 14:08:17,329 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
+2025-12-27 14:08:17,771 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
+2025-12-27 14:08:17,929 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
+2025-12-27 14:08:21,059 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+2025-12-27 14:08:22,720 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
+2025-12-27 14:08:23,161 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
+2025-12-27 14:08:23,317 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
+2025-12-27 14:08:26,480 - INFO - Loaded 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
