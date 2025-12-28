@@ -64,7 +64,7 @@ class Projectile(PhysicsBody):
                  return
 
         # Guidance Logic (if missile)
-        if self.type == 'missile' and self.target and self.target.is_alive:
+        if (self.type == AttackType.MISSILE or self.type == 'missile') and self.target and self.target.is_alive:
             self._update_guidance(dt)
             
         # Physics Update (from PhysicsBody)

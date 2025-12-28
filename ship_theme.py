@@ -2,6 +2,7 @@ import os
 import json
 import pygame
 from logger import log_info, log_error
+from profiling import profile_block
 
 class ShipThemeManager:
     _instance = None
@@ -16,15 +17,22 @@ class ShipThemeManager:
         if ShipThemeManager._instance is not None:
              raise Exception("This class is a singleton!")
              
-        self.themes = {}  # {theme_name: {class_name: surface}}
+        # self.themes acts as the image cache: {theme_name: {class_name: surface}}
+        self.themes = {}  
+        
+        # New: Store paths and metadata for lazy loading
+        # {theme_name: {class_name: {'path': str, 'scale': float}}}
+        self.theme_data = {}
+        
+        # Cache for metrics
         self.image_metrics = {} # {theme_name: {class_name: rect}}
-        self.manual_scales = {} # {theme_name: {class_name: float}}
+        
         self.base_path = None
         self.default_theme = "Federation"
-        self.loaded = False
+        self.discovery_complete = False
         
     def initialize(self, base_path):
-        """Load all themes from resources/ShipThemes."""
+        """Discover all themes from resources/ShipThemes without loading images."""
         self.base_path = base_path
         themes_dir = os.path.join(base_path, "resources", "ShipThemes")
         
@@ -32,19 +40,20 @@ class ShipThemeManager:
             log_error(f"ShipThemes directory not found: {themes_dir}")
             return
             
-        # Walk directories
-        for entry in os.scandir(themes_dir):
-            if entry.is_dir():
-                self._load_theme(entry.path)
+        # Walk directories (Fast discovery)
+        with profile_block("Theme: Discover All"):
+            for entry in os.scandir(themes_dir):
+                if entry.is_dir():
+                    self._discover_theme(entry.path)
                 
-        self.loaded = True
-        log_info(f"Loaded {len(self.themes)} ship themes: {list(self.themes.keys())}")
+        self.discovery_complete = True
+        log_info(f"Discovered {len(self.theme_data)} ship themes: {list(self.theme_data.keys())}")
 
-    def _load_theme(self, theme_dir):
-        """Load a specific theme directory using theme.json."""
+    def _discover_theme(self, theme_dir):
+        """Read theme.json and store paths/metadata."""
         json_path = os.path.join(theme_dir, "theme.json")
         if not os.path.exists(json_path):
-            return # Skip directories without theme.json
+            return 
             
         try:
             with open(json_path, 'r') as f:
@@ -53,7 +62,7 @@ class ShipThemeManager:
             theme_name = data.get('name', os.path.basename(theme_dir))
             image_map = data.get('images', {})
             
-            self.themes[theme_name] = {}
+            self.theme_data[theme_name] = {}
             
             for ship_class, data_entry in image_map.items():
                 filename = ""
@@ -68,67 +77,86 @@ class ShipThemeManager:
                 if not filename: continue
                 
                 img_path = os.path.join(theme_dir, filename)
+                # We verify existence now to avoid errors later, but don't load
                 if os.path.exists(img_path):
-                    try:
-                        surf = pygame.image.load(img_path).convert_alpha()
-                        self.themes[theme_name][ship_class] = surf
-                        
-                        # Store manual scale
-                        if theme_name not in self.manual_scales:
-                            self.manual_scales[theme_name] = {}
-                        self.manual_scales[theme_name][ship_class] = manual_scale
-                        
-                        # Calculate visible metrics
-                        # Use get_bounding_rect to find non-transparent area
-                        rect = surf.get_bounding_rect(min_alpha=20)
-                        
-                        # Store as (rect, visible_max_dim)
-                        if theme_name not in self.image_metrics:
-                            self.image_metrics[theme_name] = {}
-                        self.image_metrics[theme_name][ship_class] = rect
-                        
-                    except Exception as e:
-                        log_error(f"Failed to load image {img_path}: {e}")
+                    self.theme_data[theme_name][ship_class] = {
+                        'path': img_path,
+                        'scale': manual_scale
+                    }
                 else:
                     log_error(f"Image not found for {theme_name}/{ship_class}: {filename}")
                     
         except Exception as e:
-            log_error(f"Failed to load theme {theme_dir}: {e}")
+            log_error(f"Failed to discover theme {theme_dir}: {e}")
 
     def get_image(self, theme_name, ship_class):
         """Get the image surface for a specific theme and class."""
-        if not self.loaded:
+        if not self.discovery_complete:
             return self._create_fallback_image(ship_class)
             
         # Fallback to default if theme missing
-        if theme_name not in self.themes:
+        if theme_name not in self.theme_data:
             theme_name = self.default_theme
             
-        if theme_name in self.themes:
-            if ship_class in self.themes[theme_name]:
-                return self.themes[theme_name][ship_class]
+        # Check Cache
+        if theme_name in self.themes and ship_class in self.themes[theme_name]:
+            return self.themes[theme_name][ship_class]
+            
+        # Load on demand
+        if theme_name in self.theme_data and ship_class in self.theme_data[theme_name]:
+            return self._load_single_image(theme_name, ship_class)
             
         return self._create_fallback_image(ship_class)
 
+    def _load_single_image(self, theme_name, ship_class):
+        """Load a single image from disk and cache it."""
+        data = self.theme_data[theme_name][ship_class]
+        path = data['path']
+        
+        try:
+            with profile_block(f"Theme: Lazy Load ({ship_class})"):
+                surf = pygame.image.load(path).convert_alpha()
+                
+                # Update Cache
+                if theme_name not in self.themes: self.themes[theme_name] = {}
+                self.themes[theme_name][ship_class] = surf
+                
+                # Update Metrics
+                rect = surf.get_bounding_rect(min_alpha=20)
+                if theme_name not in self.image_metrics: self.image_metrics[theme_name] = {}
+                self.image_metrics[theme_name][ship_class] = rect
+                
+                return surf
+        except Exception as e:
+            log_error(f"Lazy load failed for {path}: {e}")
+            return self._create_fallback_image(ship_class)
+
     def get_image_metrics(self, theme_name, ship_class):
         """Get the visible bounding rect for the image."""
-        if not self.loaded: return None
+        if not self.discovery_complete: return None
         
-        if theme_name not in self.themes: theme_name = self.default_theme
+        if theme_name not in self.theme_data: theme_name = self.default_theme
         
-        if theme_name in self.image_metrics:
-             if ship_class in self.image_metrics[theme_name]:
-                 return self.image_metrics[theme_name][ship_class]
+        # Check cache
+        if theme_name in self.image_metrics and ship_class in self.image_metrics[theme_name]:
+            return self.image_metrics[theme_name][ship_class]
+            
+        # If not cached, trigger load (which calculates metrics)
+        self.get_image(theme_name, ship_class)
+        
+        # Re-check cache
+        if theme_name in self.image_metrics and ship_class in self.image_metrics[theme_name]:
+             return self.image_metrics[theme_name][ship_class]
         
         return None
 
     def get_manual_scale(self, theme_name, ship_class):
         """Get manual scale factor for a ship (default 1.0)."""
-        if not self.loaded: return 1.0
-        if theme_name not in self.themes: theme_name = self.default_theme
+        if not self.discovery_complete: return 1.0
+        if theme_name not in self.theme_data: theme_name = self.default_theme
         
-        if theme_name in self.manual_scales:
-            return self.manual_scales[theme_name].get(ship_class, 1.0)
+        if theme_name in self.theme_data and ship_class in self.theme_data[theme_name]:
+            return self.theme_data[theme_name][ship_class].get('scale', 1.0)
         return 1.0
 
     def _create_fallback_image(self, ship_class):
@@ -142,4 +170,4 @@ class ShipThemeManager:
 
     def get_available_themes(self):
         """Return list of available theme names."""
-        return list(self.themes.keys())
+        return list(self.theme_data.keys())

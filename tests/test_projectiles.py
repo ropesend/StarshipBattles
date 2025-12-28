@@ -46,7 +46,7 @@ class TestProjectileBasics(unittest.TestCase):
         self.assertEqual(proj.max_range, 1000)
         self.assertEqual(proj.endurance, 5.0)
         from ship_combat import AttackType
-        self.assertEqual(proj.type, AttackType.PROJECTILE.value)
+        self.assertEqual(proj.type, AttackType.PROJECTILE)
         self.assertEqual(proj.team_id, 0)
         self.assertTrue(proj.is_alive)
         self.assertEqual(proj.status, 'active')

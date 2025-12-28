@@ -256,5 +256,119 @@
         "metadata": {}
       }
     ]
+  },
+  {
+    "session_id": "69aae5c5-198f-4c7a-bcac-469a13223ed7",
+    "timestamp": "2025-12-27T20:44:50.998122",
+    "records": [
+      {
+        "name": "Builder: Init UIManager",
+        "duration_ms": 4.482699965592474,
+        "timestamp": 1766897078.5738647,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Init Managers",
+        "duration_ms": 3874.922399991192,
+        "timestamp": 1766897082.4491656,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Init Panels (Left/Right/Layer)",
+        "duration_ms": 117.9709000280127,
+        "timestamp": 1766897082.5673997,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Init Weapons Panel",
+        "duration_ms": 3.872100031003356,
+        "timestamp": 1766897082.5704992,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Init Detail Panel",
+        "duration_ms": 4.6110000112093985,
+        "timestamp": 1766897082.5756218,
+        "metadata": {}
+      },
+      {
+        "name": "App: Start Builder",
+        "duration_ms": 4162.1483999770135,
+        "timestamp": 1766897082.7307441,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "4570ea29-d024-4ad2-b3a6-2daa806476e6",
+    "timestamp": "2025-12-27T20:51:27.989185",
+    "records": [
+      {
+        "name": "Builder: Init UIManager",
+        "duration_ms": 4.712599969934672,
+        "timestamp": 1766897469.6594057,
+        "metadata": {}
+      },
+      {
+        "name": "Theme: Load Images (Atlantians)",
+        "duration_ms": 864.6637999918312,
+        "timestamp": 1766897470.5302815,
+        "metadata": {}
+      },
+      {
+        "name": "Theme: Load Images (Federation)",
+        "duration_ms": 1007.7618999639526,
+        "timestamp": 1766897471.5453026,
+        "metadata": {}
+      },
+      {
+        "name": "Theme: Load Images (Klingons)",
+        "duration_ms": 999.8464999953285,
+        "timestamp": 1766897472.552282,
+        "metadata": {}
+      },
+      {
+        "name": "Theme: Load Images (Romulans)",
+        "duration_ms": 1007.1173000033014,
+        "timestamp": 1766897473.5670114,
+        "metadata": {}
+      },
+      {
+        "name": "Theme: Load All",
+        "duration_ms": 3907.030400005169,
+        "timestamp": 1766897473.5670114,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Init Managers",
+        "duration_ms": 3907.3098999797367,
+        "timestamp": 1766897473.5670114,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Init Panels (Left/Right/Layer)",
+        "duration_ms": 118.00250003580004,
+        "timestamp": 1766897473.6847365,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Init Weapons Panel",
+        "duration_ms": 3.7952999700792134,
+        "timestamp": 1766897473.6888294,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Init Detail Panel",
+        "duration_ms": 4.56919998396188,
+        "timestamp": 1766897473.6934276,
+        "metadata": {}
+      },
+      {
+        "name": "App: Start Builder",
+        "duration_ms": 4194.834999972954,
+        "timestamp": 1766897473.8490534,
+        "metadata": {}
+      }
+    ]
   }
 ]

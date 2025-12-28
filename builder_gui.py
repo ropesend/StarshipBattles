@@ -302,10 +302,11 @@ class BuilderSceneGUI:
         # UI Manager
         import os
         theme_path = os.path.join(os.path.dirname(__file__), 'builder_theme.json')
-        self.ui_manager = pygame_gui.UIManager(
-            (screen_width, screen_height),
-            theme_path=theme_path if os.path.exists(theme_path) else None
-        )
+        with profile_block("Builder: Init UIManager"):
+            self.ui_manager = pygame_gui.UIManager(
+                (screen_width, screen_height),
+                theme_path=theme_path if os.path.exists(theme_path) else None
+            )
         
         # Ship
         self.ship = Ship("Custom Ship", screen_width // 2, screen_height // 2, (100, 100, 255))
@@ -317,9 +318,10 @@ class BuilderSceneGUI:
         self.sprite_mgr = SpriteManager.get_instance()
         
         base_path = os.path.dirname(os.path.abspath(__file__))
-        self.preset_manager = PresetManager(os.path.join(base_path, "data", "presets.json"))
-        self.theme_manager = ShipThemeManager.get_instance()
-        self.theme_manager.initialize(base_path)
+        with profile_block("Builder: Init Managers"):
+            self.preset_manager = PresetManager(os.path.join(base_path, "data", "presets.json"))
+            self.theme_manager = ShipThemeManager.get_instance()
+            self.theme_manager.initialize(base_path)
         
         # Layout
         self.left_panel_width = 450
@@ -350,41 +352,44 @@ class BuilderSceneGUI:
         
     def _create_ui(self):
         base_path = os.path.dirname(os.path.abspath(__file__))
-        self.left_panel = BuilderLeftPanel(
-            self, self.ui_manager,
-            pygame.Rect(0, 0, self.left_panel_width, self.height - self.bottom_bar_height)
-        )
-        
-        # New Layer Panel
-        self.layer_panel = LayerPanel(
-            self, self.ui_manager,
-            pygame.Rect(self.left_panel_width, 0, self.layer_panel_width, self.height - self.bottom_bar_height)
-        )
-        
-        self.right_panel = BuilderRightPanel(
-            self, self.ui_manager,
-            pygame.Rect(self.width - self.right_panel_width, 0, 
-                        self.right_panel_width, self.height - self.bottom_bar_height - self.weapons_report_height)
-        )
+        with profile_block("Builder: Init Panels (Left/Right/Layer)"):
+            self.left_panel = BuilderLeftPanel(
+                self, self.ui_manager,
+                pygame.Rect(0, 0, self.left_panel_width, self.height - self.bottom_bar_height)
+            )
+            
+            # New Layer Panel
+            self.layer_panel = LayerPanel(
+                self, self.ui_manager,
+                pygame.Rect(self.left_panel_width, 0, self.layer_panel_width, self.height - self.bottom_bar_height)
+            )
+            
+            self.right_panel = BuilderRightPanel(
+                self, self.ui_manager,
+                pygame.Rect(self.width - self.right_panel_width, 0, 
+                            self.right_panel_width, self.height - self.bottom_bar_height - self.weapons_report_height)
+            )
         
         weapons_panel_y = self.height - self.bottom_bar_height - self.weapons_report_height
         # Shifted weapons panel
         weapons_panel_x = self.left_panel_width + self.layer_panel_width
         weapons_panel_width = self.width - weapons_panel_x
-        self.weapons_report_panel = WeaponsReportPanel(
-            self, self.ui_manager,
-            pygame.Rect(weapons_panel_x, weapons_panel_y, weapons_panel_width, self.weapons_report_height),
-            self.sprite_mgr
-        )
+        with profile_block("Builder: Init Weapons Panel"):
+            self.weapons_report_panel = WeaponsReportPanel(
+                self, self.ui_manager,
+                pygame.Rect(weapons_panel_x, weapons_panel_y, weapons_panel_width, self.weapons_report_height),
+                self.sprite_mgr
+            )
 
         # Detail Panel
         detail_x = self.width - self.right_panel_width - self.detail_panel_width
         avail_height = self.height - self.bottom_bar_height - self.weapons_report_height
-        self.detail_panel = ComponentDetailPanel(
-            self.ui_manager,
-            pygame.Rect(detail_x, 0, self.detail_panel_width, avail_height),
-            os.path.join(base_path, "Resources", "Images", "Components")
-        )
+        with profile_block("Builder: Init Detail Panel"):
+            self.detail_panel = ComponentDetailPanel(
+                self.ui_manager,
+                pygame.Rect(detail_x, 0, self.detail_panel_width, avail_height),
+                os.path.join(base_path, "Resources", "Images", "Components")
+            )
         
         # Bottom Bar Buttons
         btn_y = self.height - self.bottom_bar_height + 10
