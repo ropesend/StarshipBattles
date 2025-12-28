@@ -145,7 +145,8 @@ class TestPDC(unittest.TestCase):
         
         self.assertTrue(len(attacks) > 0, f"PDC should have fired. Ship Derelict: {self.ship.is_derelict}")
         attack = attacks[0]
-        self.assertEqual(attack['type'], 'beam')
+        from ship_combat import AttackType
+        self.assertEqual(attack['type'], AttackType.BEAM.value)
         self.assertEqual(attack['target'], self.missile)
         
     def test_pdc_ignores_friendly_missile(self):

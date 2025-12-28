@@ -45,7 +45,8 @@ class TestProjectileBasics(unittest.TestCase):
         self.assertEqual(proj.damage, 50)
         self.assertEqual(proj.max_range, 1000)
         self.assertEqual(proj.endurance, 5.0)
-        self.assertEqual(proj.type, 'projectile')
+        from ship_combat import AttackType
+        self.assertEqual(proj.type, AttackType.PROJECTILE.value)
         self.assertEqual(proj.team_id, 0)
         self.assertTrue(proj.is_alive)
         self.assertEqual(proj.status, 'active')
@@ -260,6 +261,15 @@ class TestMissileGuidance(unittest.TestCase):
             proj.update()
         
         # Velocity x-component should have increased (turning right toward target)
+        # Velocity x-component should have increased (turning right toward target)
+        # Note: If turn_speed is low or dt is simulated internal to update, check mechanics.
+        # Projectile.update() uses global dt or clock.
+        
+        # Manually force some turning logic check if strictly unit testing internal logic
+        # Or verify 'target' is actually set on the projectile instance created above.
+        
+        # We need to simulate time passing for the missile to turn.
+        # Check if proj velocity x has moved positively from 0.
         self.assertGreater(proj.velocity.x, initial_vel.x)
     
     def test_missile_stops_tracking_dead_target(self):
