@@ -1,0 +1,260 @@
+[
+  {
+    "session_id": "25b10753-487f-49d4-b597-ecf2b98d62c6",
+    "timestamp": "2025-12-27T20:35:43.918638",
+    "records": [
+      {
+        "name": "App: Start Builder",
+        "duration_ms": 4209.23599996604,
+        "timestamp": 1766896319.0734162,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Select Component Type",
+        "duration_ms": 37.805099971592426,
+        "timestamp": 1766896324.199397,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Drop Component",
+        "duration_ms": 43.7546000466682,
+        "timestamp": 1766896326.8721163,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Select Component Type",
+        "duration_ms": 62.29370000073686,
+        "timestamp": 1766896334.950353,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Drop Component",
+        "duration_ms": 56.25910003436729,
+        "timestamp": 1766896336.8595278,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Select Component Type",
+        "duration_ms": 86.51170000666752,
+        "timestamp": 1766896337.863865,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Drop Component",
+        "duration_ms": 58.848600019700825,
+        "timestamp": 1766896339.2321236,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Select Component Type",
+        "duration_ms": 74.86530003370717,
+        "timestamp": 1766896340.347171,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Drop Component",
+        "duration_ms": 56.61470000632107,
+        "timestamp": 1766896341.6031408,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Select Group",
+        "duration_ms": 74.9476999626495,
+        "timestamp": 1766896343.090932,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Select Component Type",
+        "duration_ms": 95.3184999525547,
+        "timestamp": 1766896448.579064,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Drop Component",
+        "duration_ms": 0.04610000178217888,
+        "timestamp": 1766896450.96094,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Select Component Type",
+        "duration_ms": 95.5928000039421,
+        "timestamp": 1766896452.686074,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Drop Component",
+        "duration_ms": 0.04600000102072954,
+        "timestamp": 1766896454.4581292,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Select Component Type",
+        "duration_ms": 93.27919996576384,
+        "timestamp": 1766896466.6929166,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Drop Component",
+        "duration_ms": 89.553999947384,
+        "timestamp": 1766896468.6515503,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Select Component Type",
+        "duration_ms": 93.36190001340583,
+        "timestamp": 1766896469.9718175,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Drop Component",
+        "duration_ms": 90.97420005127788,
+        "timestamp": 1766896473.147934,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Save Ship",
+        "duration_ms": 17079.139399982523,
+        "timestamp": 1766896495.8354304,
+        "metadata": {}
+      },
+      {
+        "name": "Builder: Load Ship",
+        "duration_ms": 2409.7638999810442,
+        "timestamp": 1766896504.4053152,
+        "metadata": {}
+      },
+      {
+        "name": "App: Start Battle Setup",
+        "duration_ms": 2.4397000088356435,
+        "timestamp": 1766896511.8481169,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.0012999516911804676,
+        "timestamp": 1766896524.513504,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.001400010660290718,
+        "timestamp": 1766896524.5345132,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.001100008375942707,
+        "timestamp": 1766896524.5449986,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.001200009137392044,
+        "timestamp": 1766896524.555397,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.001100008375942707,
+        "timestamp": 1766896524.5661814,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.0012999516911804676,
+        "timestamp": 1766896524.5762239,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.001700012944638729,
+        "timestamp": 1766896524.5964882,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.0016999547369778156,
+        "timestamp": 1766896524.6070046,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.001400010660290718,
+        "timestamp": 1766896524.627795,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.001900014467537403,
+        "timestamp": 1766896525.7390637,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.002200016751885414,
+        "timestamp": 1766896525.7715182,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.001200009137392044,
+        "timestamp": 1766896525.782854,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.00100000761449337,
+        "timestamp": 1766896525.802757,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.00100000761449337,
+        "timestamp": 1766896525.8221433,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.001400010660290718,
+        "timestamp": 1766896525.8508382,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.00100000761449337,
+        "timestamp": 1766896525.8888435,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.001900014467537403,
+        "timestamp": 1766896526.7345476,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.001200009137392044,
+        "timestamp": 1766896527.9247296,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.001700012944638729,
+        "timestamp": 1766896527.9941266,
+        "metadata": {}
+      },
+      {
+        "name": "Battle: ControlPanel Click",
+        "duration_ms": 0.0030999653972685337,
+        "timestamp": 1766896535.309216,
+        "metadata": {}
+      },
+      {
+        "name": "App: Start Battle Setup",
+        "duration_ms": 1.527199987322092,
+        "timestamp": 1766896535.3108413,
+        "metadata": {}
+      }
+    ]
+  }
+]

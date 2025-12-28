@@ -3,6 +3,7 @@ import math
 from components import Weapon, ComponentStatus
 from ship import LayerType
 from ai import COMBAT_STRATEGIES
+from profiling import profile_action, profile_block
 
 class BattlePanel:
     """Base class for battle UI panels."""
@@ -328,6 +329,7 @@ class ShipStatsPanel(BattlePanel):
         comp_height = comp_count * 14
         return base_height + comp_height + 5
 
+    @profile_action("Battle: ShipStats Click")
     def handle_click(self, mx, my):
         # Convert absolute mx to relative (my is already absolute, but we need relative for layout)
         # But wait, logic in battle_ui passed relative coordinates.
@@ -542,6 +544,7 @@ class SeekerMonitorPanel(BattlePanel):
         
         return y
     
+    @profile_action("Battle: SeekerPanel Click")
     def handle_click(self, mx, my):
         # Check Clear Inactive - this is in absolute screen coords because we draw it to screen
         # So we should check it first before relative logic?
@@ -655,6 +658,7 @@ class BattleControlPanel(BattlePanel):
             self.end_battle_early_rect = pygame.Rect(btn_x, btn_y, btn_w, btn_h)
             self.battle_end_button_rect = None
     
+    @profile_action("Battle: ControlPanel Click")
     def handle_click(self, mx, my):
         if self.battle_end_button_rect and self.battle_end_button_rect.collidepoint(mx, my):
             return "end_battle"

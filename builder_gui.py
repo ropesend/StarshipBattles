@@ -12,6 +12,8 @@ from pygame_gui.elements import (
 )
 from pygame_gui.windows import UIConfirmationDialog
 
+from profiling import profile_action, profile_block
+
 from ship import Ship, LayerType, SHIP_CLASSES, VEHICLE_CLASSES
 from components import (
     get_all_components, MODIFIER_REGISTRY, Bridge, Weapon, 
@@ -257,6 +259,7 @@ class InteractionController:
              if found:
                  self.hovered_component = found[2]
 
+    @profile_action("Builder: Drop Component")
     def _handle_drop(self, pos):
         # Check if dropped on LayerPanel
         closest_layer = self.builder.layer_panel.get_target_layer_at(pos)
@@ -509,55 +512,58 @@ class BuilderSceneGUI:
                 self.update_stats()
                 
             elif act_type == 'select_component_type':
-                c = data
-                # Clear Layer Panel Selection (avoid confusion)
-                self.layer_panel.selected_group_key = None
-                self.layer_panel.selected_component_id = None
-                self.selected_component_group = None  # Clear builder's group selection state
-                self.layer_panel.rebuild()
-                
-                self.controller.dragged_item = c.clone()
-                # Apply template modifiers
-                for m_id, val in self.template_modifiers.items():
-                   if m_id in MODIFIER_REGISTRY:
-                       mod_def = MODIFIER_REGISTRY[m_id]
-                       allow = True
-                       if mod_def.restrictions:
-                           if 'allow_types' in mod_def.restrictions and c.type_str not in mod_def.restrictions['allow_types']:
-                               allow = False
-                       if allow:
-                           self.controller.dragged_item.add_modifier(m_id)
-                           m = self.controller.dragged_item.get_modifier(m_id)
-                           if m: m.value = val
-                self.controller.dragged_item.recalculate_stats()
-                
-                # Set as selected so modifiers panel updates
-                self.on_selection_changed(self.controller.dragged_item)
+                with profile_block("Builder: Select Component Type"):
+                    c = data
+                    # Clear Layer Panel Selection (avoid confusion)
+                    self.layer_panel.selected_group_key = None
+                    self.layer_panel.selected_component_id = None
+                    self.selected_component_group = None  # Clear builder's group selection state
+                    self.layer_panel.rebuild()
+                    
+                    self.controller.dragged_item = c.clone()
+                    # Apply template modifiers
+                    for m_id, val in self.template_modifiers.items():
+                       if m_id in MODIFIER_REGISTRY:
+                           mod_def = MODIFIER_REGISTRY[m_id]
+                           allow = True
+                           if mod_def.restrictions:
+                               if 'allow_types' in mod_def.restrictions and c.type_str not in mod_def.restrictions['allow_types']:
+                                   allow = False
+                           if allow:
+                               self.controller.dragged_item.add_modifier(m_id)
+                               m = self.controller.dragged_item.get_modifier(m_id)
+                               if m: m.value = val
+                    self.controller.dragged_item.recalculate_stats()
+                    
+                    # Set as selected so modifiers panel updates
+                    self.on_selection_changed(self.controller.dragged_item)
                 
             elif act_type == 'select_group':
-                self.left_panel.deselect_all()
-                # data is group_key
-                comps = []
-                from ui.builder.layer_panel import get_component_group_key
-                for layers in self.ship.layers.values():
-                    for c in layers['components']:
-                         if get_component_group_key(c) == data:
-                             comps.append(c)
-                
-                self.selected_component_group = comps
-                if comps:
-                    self.on_selection_changed(comps[0]) # Set leader
-                
-                # Rebuild layer panel now that builder state is updated
-                self.layer_panel.rebuild()
+                with profile_block("Builder: Select Group"):
+                    self.left_panel.deselect_all()
+                    # data is group_key
+                    comps = []
+                    from ui.builder.layer_panel import get_component_group_key
+                    for layers in self.ship.layers.values():
+                        for c in layers['components']:
+                             if get_component_group_key(c) == data:
+                                 comps.append(c)
+                    
+                    self.selected_component_group = comps
+                    if comps:
+                        self.on_selection_changed(comps[0]) # Set leader
+                    
+                    # Rebuild layer panel now that builder state is updated
+                    self.layer_panel.rebuild()
                 
             elif act_type == 'select_individual':
-                self.left_panel.deselect_all()
-                self.selected_component_group = None
-                self.on_selection_changed(data)
-                
-                # Rebuild layer panel now that builder state is updated
-                self.layer_panel.rebuild()
+                with profile_block("Builder: Select Individual"):
+                    self.left_panel.deselect_all()
+                    self.selected_component_group = None
+                    self.on_selection_changed(data)
+                    
+                    # Rebuild layer panel now that builder state is updated
+                    self.layer_panel.rebuild()
                 
             elif act_type == 'remove_group':
                  # data is group_key
@@ -593,11 +599,12 @@ class BuilderSceneGUI:
                 self.template_modifiers = data
                 self.left_panel.rebuild_modifier_ui()
             elif act_type == 'clear_settings':
-                self.controller.selected_component = None
-                self.template_modifiers = {}
-                self.on_selection_changed(None)
-                self.left_panel.rebuild_modifier_ui()
-                logger.debug("Cleared settings or deselected component")
+                with profile_block("Builder: Clear Settings"):
+                    self.controller.selected_component = None
+                    self.template_modifiers = {}
+                    self.on_selection_changed(None)
+                    self.left_panel.rebuild_modifier_ui()
+                    logger.debug("Cleared settings or deselected component")
             elif act_type == 'toggle_layer':
                 # Layer header toggle - already handled by callback
                 pass
@@ -771,11 +778,13 @@ class BuilderSceneGUI:
     
     # Tooltip method removed
 
+    @profile_action("Builder: Save Ship")
     def _save_ship(self):
         success, message = ShipIO.save_ship(self.ship)
         if success: print(message)
         elif message: self.show_error(message)
 
+    @profile_action("Builder: Load Ship")
     def _load_ship(self):
         new_ship, message = ShipIO.load_ship(self.width, self.height)
         if new_ship:

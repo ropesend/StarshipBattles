@@ -12,6 +12,7 @@ from camera import Camera
 from battle import BattleScene
 from battle_setup import BattleSetupScreen
 from formation_editor import FormationEditorScene
+from profiling import PROFILER, profile_action
 
 
 # Constants
@@ -94,6 +95,7 @@ class Game:
             Button(WIDTH//2 - 100, HEIGHT//2 + 60, 200, 50, "Formation Editor", self.start_formation_editor)
         ]
 
+    @profile_action("App: Start Builder")
     def start_builder(self):
         """Enter ship builder."""
         self.state = BUILDER
@@ -103,11 +105,13 @@ class Game:
         """Return from builder to main menu."""
         self.state = MENU
     
+    @profile_action("App: Start Battle Setup")
     def start_battle_setup(self, preserve_teams=False):
         """Enter battle setup screen."""
         self.state = BATTLE_SETUP
         self.battle_setup.start(preserve_teams=preserve_teams)
 
+    @profile_action("App: Start Formation Editor")
     def start_formation_editor(self):
         """Enter formation editor."""
         self.state = FORMATION
@@ -163,6 +167,11 @@ class Game:
                     # Universal Exit Command
                     elif event.type == pygame.KEYDOWN and event.key == pygame.K_x and (event.mod & pygame.KMOD_ALT):
                         self.show_exit_dialog = True
+                    
+                    # Profiling Toggle
+                    elif event.type == pygame.KEYDOWN and event.key == pygame.K_F9:
+                        active = PROFILER.toggle()
+                        print(f"Profiling {'ENABLED' if active else 'DISABLED'}")
                         
                     elif event.type == pygame.VIDEORESIZE:
                         self._handle_resize(event.w, event.h)
@@ -464,6 +473,12 @@ class Game:
             self.screen.blit(font_med.render(speed_text, True, speed_color), (WIDTH//2 - 50, 10))
 
 
+            if PROFILER.is_active():
+                prof_text = font_med.render("PROFILING ACTIVE", True, (255, 50, 50))
+                self.screen.blit(prof_text, (WIDTH - 180, 10))
+
 if __name__ == "__main__":
     game = Game()
     game.run()
+    # Save profiling data
+    PROFILER.save_history()
