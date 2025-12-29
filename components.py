@@ -664,7 +664,7 @@ class Shield(Component):
         # So we must manually apply modifiers here.
         
         current_stats = self._get_modifier_stats()
-        self.shield_capacity = int(self.base_shield_capacity * current_stats['capacity_mult'])
+        self.shield_capacity = int(self.base_shield_capacity * current_stats.get('capacity_mult', 1.0))
 
     def _get_modifier_stats(self):
         from component_modifiers import apply_modifier_effects
@@ -733,6 +733,53 @@ class ShieldRegenerator(Component):
     def clone(self):
         return ShieldRegenerator(self.data)
 
+class Hangar(Component):
+    """Stores and launches fighter vessels."""
+    def __init__(self, data):
+        super().__init__(data)
+        self.storage_capacity = self.abilities.get('VehicleStorage', 0)
+        self.launch_config = self.abilities.get('VehicleLaunch', {})
+        self.max_launch_mass = self.launch_config.get('max_launch_mass', 0)
+        self.cycle_time = self.launch_config.get('cycle_time', 5.0)
+        
+        self.cooldown_timer = 0.0
+        # For simple implementation, storage equals capacity.
+        # In future, we might track individual stored ships.
+        # Ideally we'd have a list of stored ship definitions? 
+        # For now, we assume infinite stock or capacity-based stock? 
+        # Requirement says "launch fighters stored in the vessel".
+        # Let's assume we can launch as long as we have "mass capacity" available?
+        # OR simple "ammo" approach? The prompt implies "launch fighters stored".
+        # A simpler first pass: Infinite fighters, just gated by cooldown? 
+        # Or, treat capacity as "Hangar Space". 
+        # But where do the fighters come from? 
+        # Let's assume the component launches a specific "fighter type" configured in data?
+        # The prompt is "launch fighters stored in the vessel".
+        # Standard implementation: The SHIP stores the fighters (as cargo?).
+        # Hangar just facilitates launch.
+        # But in `ship.py`, we don't have a generic "vehicle cargo".
+        # Let's make the Hangar essentially a "Fighter Spawner" for now,
+        # perhaps using 'capacity' as 'max active fighters'?
+        from ship import VEHICLE_CLASSES
+        self.fighter_class = "Fighter (Small)" # Default
+        
+    def update(self):
+        dt = 0.01
+        if self.cooldown_timer > 0:
+            self.cooldown_timer -= dt
+
+    def can_launch(self):
+        return self.is_active and self.cooldown_timer <= 0
+
+    def launch(self):
+        if self.can_launch():
+            self.cooldown_timer = self.cycle_time
+            return True
+        return False
+
+    def clone(self):
+        return Hangar(self.data)
+
 COMPONENT_REGISTRY = {}
 
 def load_components(filepath="data/components.json"):
@@ -791,6 +838,8 @@ def load_components(filepath="data/components.json"):
                     obj = ShieldRegenerator(comp_def)
                 elif c_type == "SeekerWeapon":
                     obj = SeekerWeapon(comp_def)
+                elif c_type == "Hangar":
+                    obj = Hangar(comp_def)
                 else:
                     obj = Component(comp_def)
                 

@@ -1,0 +1,9 @@
+2025-12-29 06:34:03,115 - INFO - Loaded 12 combat strategies
+2025-12-29 06:34:03,315 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
+2025-12-29 06:34:03,315 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
+2025-12-29 06:34:03,315 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
+2025-12-29 06:34:03,317 - INFO - Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+2025-12-29 06:34:05,177 - ERROR - Image not found for Atlantians/Light Cruiser: light cruiser.png
+2025-12-29 06:34:05,177 - ERROR - Image not found for Atlantians/Fighter (Medium): medium fighter.png
+2025-12-29 06:34:05,177 - ERROR - Image not found for Atlantians/Satellite (Medium): medium satellite.png
+2025-12-29 06:34:05,178 - INFO - Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']

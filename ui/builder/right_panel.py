@@ -171,8 +171,9 @@ class BuilderRightPanel:
         
         self.stat_labels = {}
         stat_names = ['mass', 'max_hp', 'emissive_armor', 'max_shields', 'shield_regen', 'shield_cost', 'max_speed', 
-                      'turn_rate', 'acceleration', 'thrust', 'energy_gen', 'max_fuel', 'max_ammo', 'max_energy', 'targeting',
-                      'target_profile', 'scan_strength']
+                      'turn_rate', 'acceleration', 'thrust', 'energy_gen', 'max_fuel', 'max_ammo', 'max_energy', 
+                      'fighter_capacity', 'launch_mass', 'launch_cycle',
+                      'targeting', 'target_profile', 'scan_strength']
 
         
         for stat in stat_names:
@@ -231,6 +232,16 @@ class BuilderRightPanel:
         self.stat_labels['max_fuel'].set_text(f"Max Fuel: {s.max_fuel:.0f}")
         self.stat_labels['max_ammo'].set_text(f"Max Ammo: {s.max_ammo:.0f}")
         self.stat_labels['max_energy'].set_text(f"Max Energy: {s.max_energy:.0f}")
+        
+        # Fighter Stats
+        f_cap = getattr(s, 'fighter_capacity', 0)
+        self.stat_labels['fighter_capacity'].set_text(f"Fighter Cap: {f_cap:.0f} tons")
+        
+        l_mass = getattr(s, 'launch_mass', 0)
+        self.stat_labels['launch_mass'].set_text(f"Wave Mass: {l_mass:.0f} tons")
+        
+        l_cycle = getattr(s, 'launch_cycle', 0)
+        self.stat_labels['launch_cycle'].set_text(f"Cycle Time: {l_cycle:.1f}s")
         
         # Targeting
         t_count = getattr(s, 'max_targets', 1)

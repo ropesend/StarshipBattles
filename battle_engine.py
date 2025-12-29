@@ -10,9 +10,10 @@ from game_constants import AttackType
 from projectile_manager import ProjectileManager
 from collision_system import CollisionSystem
 
-if TYPE_CHECKING:
-    from ship_combat import Projectile
-    from ship import Ship
+from collision_system import CollisionSystem
+
+from projectiles import Projectile
+from ship import Ship
 
 class BattleLogger:
     """Toggleable logger that writes battle events to file."""
@@ -193,6 +194,50 @@ class BattleEngine:
                         self.logger.log(f"Missile fired at {getattr(attack, 'target', 'unknown')}")
             elif attack_type == AttackType.BEAM:
                 self.collision_system.process_beam_attack(attack, self.recent_beams)
+            elif attack_type == AttackType.LAUNCH:
+                # Handle Fighter Launch
+                source_ship = attack.get('source')
+                hangar = attack.get('hangar')
+                fighter_class = attack.get('fighter_class', 'Fighter (Small)')
+                origin = attack.get('origin', pygame.math.Vector2(0,0))
+                
+                # Create the new ship
+                # We need a unique name
+                count = len([s for s in self.ships if s.team_id == source_ship.team_id])
+                new_name = f"{source_ship.name} Wing {count+1}"
+                
+                # Offset position slightly
+                offset = pygame.math.Vector2(random.uniform(-10, 10), random.uniform(-10, 10))
+                spawn_pos = origin + offset
+                
+                new_ship = Ship(
+                    name=new_name,
+                    x=spawn_pos.x,
+                    y=spawn_pos.y,
+                    color=source_ship.color,
+                    team_id=source_ship.team_id,
+                    ship_class=fighter_class,
+                    theme_id=source_ship.theme_id
+                )
+                
+                # Inherit some properties or init velocity
+                new_ship.velocity = pygame.math.Vector2(source_ship.velocity)
+                # Maybe boost it forward?
+                launch_dir = pygame.math.Vector2(1, 0).rotate(source_ship.angle)
+                new_ship.velocity += launch_dir * 100 # Initial push
+                new_ship.angle = source_ship.angle
+                
+                # Add to battle
+                self.ships.append(new_ship)
+                # Create AI
+                # Fighters use 'attack_run' usually? Defined in class?
+                # Using 1-source.team_id as enemy team logic from start()
+                # Should be dynamic based on teams?
+                # Assuming 2 teams: 0 and 1. Enemy is 1 - team_id.
+                enemy_team = 1 - new_ship.team_id
+                self.ai_controllers.append(AIController(new_ship, self.grid, enemy_team))
+                
+                self.logger.log(f"LAUNCH: {new_name} launched from {source_ship.name}")
 
         # 4. Ship-to-Ship Collisions
         self.collision_system.process_ramming(self.ships, self.logger)

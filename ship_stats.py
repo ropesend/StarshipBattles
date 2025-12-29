@@ -1,4 +1,4 @@
-from components import ComponentStatus, LayerType, Engine, Thruster, Generator, Tank, Armor, Shield, ShieldRegenerator, Weapon, Bridge
+from components import ComponentStatus, LayerType, Engine, Thruster, Generator, Tank, Armor, Shield, ShieldRegenerator, Weapon, Bridge, Hangar
 import math
 
 class ShipStatsCalculator:
@@ -40,6 +40,11 @@ class ShipStatsCalculator:
             ship.layers[LayerType.ARMOR]['max_hp_pool'] = 0
             
         ship.emissive_armor = 0
+        
+        # Hangar Stats
+        ship.fighter_capacity = 0
+        ship.launch_mass = 0
+        ship.launch_cycle = 0
         
         # 2. Phase 1: Damage Check & Resource Supply Gathering
         # ----------------------------------------------------
@@ -143,6 +148,11 @@ class ShipStatsCalculator:
             elif isinstance(comp, ShieldRegenerator):
                 ship.shield_regen_rate += comp.regen_rate
                 ship.shield_regen_cost += comp.energy_cost
+            elif isinstance(comp, Hangar):
+                ship.fighter_capacity += comp.storage_capacity
+                ship.launch_mass += comp.max_launch_mass
+                if comp.cycle_time > ship.launch_cycle:
+                    ship.launch_cycle = comp.cycle_time
             
             # Check for generic abilities that affect stats
             # MultiplexTracking

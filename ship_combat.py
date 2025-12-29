@@ -1,7 +1,7 @@
 import pygame
 import math
 import random
-from components import LayerType, Weapon, BeamWeapon, ProjectileWeapon, Bridge, SeekerWeapon
+from components import LayerType, Weapon, BeamWeapon, ProjectileWeapon, Bridge, SeekerWeapon, Hangar
 from logger import log_debug
 from game_constants import AttackType
 
@@ -55,6 +55,21 @@ class ShipCombatMixin:
 
         for layer in self.layers.values():
             for comp in layer['components']:
+                # Handle Hangar Launch
+                if isinstance(comp, Hangar) and comp.is_active:
+                    # Auto-launch if we have a target (or maybe strategy dictates?)
+                    # For now, if we have a target, we launch.
+                    if self.current_target and comp.can_launch():
+                        if comp.launch():
+                            attacks.append({
+                                'type': AttackType.LAUNCH,
+                                'source': self,
+                                'origin': self.position,
+                                'hangar': comp,
+                                'fighter_class': comp.fighter_class
+                            })
+                    continue
+
                 if isinstance(comp, Weapon) and comp.is_active:
                     # Determine cost and resource type
                     cost = 0

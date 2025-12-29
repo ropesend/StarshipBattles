@@ -851,6 +851,30 @@
                 "CommandAndControl": true
             },
             "major_classification": "Crewsupport"
+        },
+        {
+            "id": "fighter_launch_bay",
+            "name": "Fighter Launch Bay",
+            "type": "Hangar",
+            "mass": 200,
+            "hp": 200,
+            "allowed_layers": [
+                "INNER",
+                "OUTER"
+            ],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 21,
+            "abilities": {
+                "VehicleStorage": 50,
+                "VehicleLaunch": {
+                    "max_launch_mass": 50,
+                    "cycle_time": 5.0
+                },
+                "CrewRequired": 5
+            },
+            "major_classification": "Infrastructure"
         }
     ]
 }

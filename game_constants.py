@@ -4,3 +4,4 @@ class AttackType(Enum):
     PROJECTILE = "projectile"
     MISSILE = "missile"
     BEAM = "beam"
+    LAUNCH = "launch"
