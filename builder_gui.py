@@ -203,6 +203,10 @@ class InteractionController:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 # Left Click
+                # Ignore clicks if over detail panel (which sits inside/over the view)
+                if self.builder.detail_panel.rect.collidepoint(event.pos):
+                    return
+
                 if self.view.rect.collidepoint(event.pos) and not self.dragged_item:
                     found = self.view.get_component_at(event.pos, self.builder.ship)
                     if found:
@@ -339,7 +343,7 @@ class BuilderSceneGUI:
         
         # Layout
         self.left_panel_width = 450
-        self.right_panel_width = 600 # Widened for ship portrait
+        self.right_panel_width = 750 # Widened for ship portrait and 2-column stats
         self.layer_panel_width = 450 # Widened
         self.detail_panel_width = 550
         self.bottom_bar_height = 60
@@ -647,6 +651,8 @@ class BuilderSceneGUI:
                 self._on_select_target_pressed()
             elif event.ui_element == self.verbose_btn:
                  self.weapons_report_panel.verbose_tooltip = not self.weapons_report_panel.verbose_tooltip
+            elif event.ui_element == self.detail_panel.details_btn:
+                self.detail_panel.show_details_popup()
                  
         elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
             if event.ui_element == self.right_panel.class_dropdown:
@@ -654,13 +660,20 @@ class BuilderSceneGUI:
                 if new_class == self.ship.ship_class: return
                 
                 self.pending_action = ('change_class', new_class)
-                msg = f"Change class to {new_class}?<br><br>Warning: This will attempt to refit existing components.<br>Some items may be resized or lost if they don't fit."
-                self.confirm_dialog = UIConfirmationDialog(pygame.Rect((self.width-400)//2, (self.height-200)//2, 400, 200),
-                                                          manager=self.ui_manager,
-                                                          action_long_desc=msg,
-                                                          window_title="Confirm Refit")
+                
+                # Check if ship has components
+                has_components = sum(len(l['components']) for l in self.ship.layers.values()) > 0
+                
+                if has_components:
+                    msg = f"Change class to {new_class}?<br><br>Warning: This will attempt to refit existing components.<br>Some items may be resized or lost if they don't fit."
+                    self.confirm_dialog = UIConfirmationDialog(pygame.Rect((self.width-400)//2, (self.height-200)//2, 400, 200),
+                                                              manager=self.ui_manager,
+                                                              action_long_desc=msg,
+                                                              window_title="Confirm Refit")
+                else:
+                    self._execute_pending_action()
                                                           
-            elif hasattr(self.right_panel, 'vehicle_type_dropdown') and event.ui_element == self.right_panel.vehicle_type_dropdown:
+            elif hasattr(self, 'right_panel') and hasattr(self.right_panel, 'vehicle_type_dropdown') and event.ui_element == self.right_panel.vehicle_type_dropdown:
                 new_type = event.text
                 if new_type == getattr(self.ship, 'vehicle_type', "Ship"): return
                 
@@ -670,11 +683,18 @@ class BuilderSceneGUI:
                 target_class = valid_classes[0][0] if valid_classes else "Escort"
                 
                 self.pending_action = ('change_type', target_class)
-                msg = f"Change type to {new_type}?<br><br><b>WARNING: This will CLEAR the current design.</b>"
-                self.confirm_dialog = UIConfirmationDialog(pygame.Rect((self.width-400)//2, (self.height-200)//2, 400, 200),
-                                                          manager=self.ui_manager,
-                                                          action_long_desc=msg,
-                                                          window_title="Confirm Type Change")
+                
+                # Check if ship has components
+                has_components = sum(len(l['components']) for l in self.ship.layers.values()) > 0
+                
+                if has_components:
+                    msg = f"Change type to {new_type}?<br><br><b>WARNING: This will CLEAR the current design.</b>"
+                    self.confirm_dialog = UIConfirmationDialog(pygame.Rect((self.width-400)//2, (self.height-200)//2, 400, 200),
+                                                              manager=self.ui_manager,
+                                                              action_long_desc=msg,
+                                                              window_title="Confirm Type Change")
+                else:
+                    self._execute_pending_action()
 
             elif hasattr(self.right_panel, 'theme_dropdown') and event.ui_element == self.right_panel.theme_dropdown:
                 self.ship.theme_id = event.text
@@ -692,40 +712,7 @@ class BuilderSceneGUI:
                     
         elif event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
             if event.ui_element == self.confirm_dialog:
-                if hasattr(self, 'pending_action') and self.pending_action:
-                    act, data = self.pending_action
-                    if act == 'clear_design':
-                        self._clear_design()
-                    elif act == 'change_class':
-                        # Refit
-                        self.ship.change_class(data, migrate_components=True)
-                        self.update_stats()
-                        self.right_panel.update_portrait_image()
-                        self.left_panel.update_component_list()
-                    elif act == 'change_type':
-                        # Clear and Change
-                        self.ship.change_class(data, migrate_components=False)
-                        
-                        # We also need to update the Class Dropdown options
-                        new_type = VEHICLE_CLASSES[data].get('type', 'Ship')
-                        valid_classes = [(n, VEHICLE_CLASSES[n].get('max_mass', 0)) for n, c in VEHICLE_CLASSES.items() if c.get('type', 'Ship') == new_type]
-                        valid_classes.sort(key=lambda x: x[1])
-                        valid_class_names = [n for n, m in valid_classes]
-                        if not valid_class_names: valid_class_names = ["Escort"]
-                        
-                        self.right_panel.class_dropdown.kill()
-                        self.right_panel.class_dropdown = UIDropDownMenu(valid_class_names, data, 
-                                                           pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30), 
-                                                           manager=self.ui_manager, container=self.right_panel.panel)
-                        
-                        self.update_stats()
-                        self.right_panel.update_portrait_image()
-                        self.left_panel.update_component_list()
-                    
-                    self.pending_action = None
-                else:
-                    # Fallback for simple clear if pending_action not set (legacy support)
-                    self._clear_design()
+                self._execute_pending_action()
                 
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             for preset_name, btn in getattr(self, 'preset_buttons', []):
@@ -734,6 +721,43 @@ class BuilderSceneGUI:
                     self.left_panel.rebuild_modifier_ui()
                     logger.info(f"Deleted preset: {preset_name}")
                     break
+
+    def _execute_pending_action(self):
+        """Execute the action stored in self.pending_action."""
+        if hasattr(self, 'pending_action') and self.pending_action:
+            act, data = self.pending_action
+            if act == 'clear_design':
+                self._clear_design()
+            elif act == 'change_class':
+                # Refit
+                self.ship.change_class(data, migrate_components=True)
+                self.update_stats()
+                self.right_panel.update_portrait_image()
+                self.left_panel.update_component_list()
+            elif act == 'change_type':
+                # Clear and Change
+                self.ship.change_class(data, migrate_components=False)
+                
+                # We also need to update the Class Dropdown options
+                new_type = VEHICLE_CLASSES[data].get('type', 'Ship')
+                valid_classes = [(n, VEHICLE_CLASSES[n].get('max_mass', 0)) for n, c in VEHICLE_CLASSES.items() if c.get('type', 'Ship') == new_type]
+                valid_classes.sort(key=lambda x: x[1])
+                valid_class_names = [n for n, m in valid_classes]
+                if not valid_class_names: valid_class_names = ["Escort"]
+                
+                self.right_panel.class_dropdown.kill()
+                self.right_panel.class_dropdown = UIDropDownMenu(valid_class_names, data, 
+                                                   pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30), 
+                                                   manager=self.ui_manager, container=self.right_panel.panel)
+                
+                self.update_stats()
+                self.right_panel.update_portrait_image()
+                self.left_panel.update_component_list()
+            
+            self.pending_action = None
+        else:
+            # Fallback for simple clear if pending_action not set (legacy support)
+            self._clear_design()
 
     def update(self, dt):
         if self.error_timer > 0:

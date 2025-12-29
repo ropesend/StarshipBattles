@@ -1,11 +1,12 @@
 import pygame
 import pygame_gui
 import os
-from pygame_gui.elements import UIPanel, UILabel, UIImage
+from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
 from components import (
     Weapon, BeamWeapon, ProjectileWeapon, SeekerWeapon, 
     Engine, Thruster, Armor, Tank, Generator, CrewQuarters, LifeSupport
 )
+import json
 
 class ComponentDetailPanel:
     def __init__(self, manager, rect, image_base_path):
@@ -19,7 +20,7 @@ class ComponentDetailPanel:
             object_id='#detail_panel'
         )
         
-        self.current_component_name = None
+        self.current_component = None
         self.portrait_cache = {}
         
         # Image Element
@@ -29,9 +30,20 @@ class ComponentDetailPanel:
         self.image_rect = pygame.Rect(10, 10, img_size, img_size)
         self.image_element = None
         
+        # Button Area
+        button_height = 40
+        button_y = rect.height - button_height - 10
+        self.details_btn = UIButton(
+            relative_rect=pygame.Rect(10, button_y, rect.width - 20, button_height),
+            text='Component Details',
+            manager=manager,
+            container=self.panel
+        )
+        self.details_btn.hide()
+
         # Stats Text Box
         self.start_y = self.image_rect.bottom + 10
-        stats_height = rect.height - self.start_y - 10
+        stats_height = button_y - self.start_y - 10
         
         from pygame_gui.elements import UITextBox
         self.stats_text_box = UITextBox(
@@ -50,14 +62,17 @@ class ComponentDetailPanel:
         )
         
     def show_component(self, comp):
+        self.current_component = comp
         if not comp:
             self._clear_display()
             self.placeholder_label.show()
             self.stats_text_box.hide()
+            self.details_btn.hide()
             return
             
         self.placeholder_label.hide()
         self.stats_text_box.show()
+        self.details_btn.show()
         
         # 1. Update Image
         self._update_image(comp)
@@ -154,6 +169,37 @@ class ComponentDetailPanel:
         full_html = "<br>".join(lines)
         self.stats_text_box.html_text = full_html
         self.stats_text_box.rebuild()
+
+    def show_details_popup(self):
+        if not self.current_component:
+            return
+
+        json_str = json.dumps(self.current_component.data, indent=4)
+        # Simple HTML formatting for text box
+        html_str = json_str.replace("\n", "<br>").replace("    ", "&nbsp;&nbsp;&nbsp;&nbsp;")
+        
+        win_size = (500, 600)
+        start_pos = (
+            (self.rect.width - win_size[0]) // 2 + self.rect.x,
+            (self.rect.height - win_size[1]) // 2 + self.rect.y
+        )
+        # Center on screen or panel? Let's center on screen if possible, but we only have Manager.
+        # Use simple centering logic or fixed pos.
+        
+        window = UIWindow(
+            rect=pygame.Rect((100, 100), win_size),
+            manager=self.manager,
+            window_display_title=f"Details: {self.current_component.name}",
+            resizable=True
+        )
+        
+        text_box = UITextBox(
+            html_text=f"<font face='consolas, monospace' size=4 color='#E0E0E0'>{html_str}</font>",
+            relative_rect=pygame.Rect(10, 10, win_size[0]-20, win_size[1]-50),
+            manager=self.manager,
+            container=window,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+        )
 
     def _clear_display(self):
         self.stats_text_box.html_text = ""

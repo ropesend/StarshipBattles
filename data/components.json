@@ -895,8 +895,8 @@
             "id": "fighter_launch_bay",
             "name": "Fighter Launch Bay",
             "type": "Hangar",
-            "mass": 200,
-            "hp": 200,
+            "mass": 500,
+            "hp": 500,
             "allowed_layers": [
                 "INNER",
                 "OUTER"
