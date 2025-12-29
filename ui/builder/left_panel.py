@@ -40,32 +40,47 @@ class BuilderLeftPanel:
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
         )
         
-        # Bulk Add UI (y=80 to 110)
+        # Bulk Add UI (y=80)
+        # Layout: Label "Count:" | Entry | << | <<< | Slider | >>> | >>
+        # Widths: 40 | 45 | 30 | 30 | Slider | 30 | 30
         u_y = 80
-        # Row 1: Label, Entry, Slider
-        UILabel(pygame.Rect(5, u_y, 40, 25), "Count:", manager=manager, container=self.panel)
+        
+        # Label
+        UILabel(pygame.Rect(5, u_y, 45, 25), "Count:", manager=manager, container=self.panel)
+        
         from pygame_gui.elements import UITextEntryLine, UIHorizontalSlider, UIButton
-        self.count_entry = UITextEntryLine(pygame.Rect(50, u_y, 50, 25), manager=manager, container=self.panel)
+        
+        # Entry
+        self.count_entry = UITextEntryLine(pygame.Rect(50, u_y, 45, 25), manager=manager, container=self.panel)
         self.count_entry.set_text("1")
         self.count_entry.set_allowed_characters('numbers')
         
-        self.count_slider = UIHorizontalSlider(pygame.Rect(110, u_y, rect.width - 120, 25), 1, (1, 1000), manager=manager, container=self.panel)
+        # Buttons Left
+        self.btn_m100 = UIButton(pygame.Rect(100, u_y, 30, 25), "<<", manager=manager, container=self.panel)
+        self.btn_m10  = UIButton(pygame.Rect(132, u_y, 30, 25), "<", manager=manager, container=self.panel)
         
-        u_y += 30
-        # Row 2: Buttons <<< << < > >> >>>
-        # Total width avail approx 450
-        # We have 6 buttons.
-        btn_w = 40
-        spacing = 5
-        start_x = (rect.width - (6 * btn_w + 5 * spacing)) // 2
+        # Slider
+        # Total width avail approx 450. Used 162 so far.
+        # Right buttons need 64 width (30+30+4).
+        # max x = rect.width (450)
+        # right side starts at 450 - 64 = 386
+        # slider width = 386 - 165 = 221
+        slider_x = 165
+        right_btns_start = rect.width - 65
+        slider_w = right_btns_start - slider_x - 5
         
-        self.btn_m100 = UIButton(pygame.Rect(start_x, u_y, btn_w, 25), "<<<", manager=manager, container=self.panel)
-        self.btn_m10 = UIButton(pygame.Rect(start_x + btn_w + spacing, u_y, btn_w, 25), "<<", manager=manager, container=self.panel)
-        self.btn_m1 = UIButton(pygame.Rect(start_x + 2*(btn_w + spacing), u_y, btn_w, 25), "<", manager=manager, container=self.panel)
+        self.count_slider = UIHorizontalSlider(pygame.Rect(slider_x, u_y, slider_w, 25), 1, (1, 1000), manager=manager, container=self.panel)
         
-        self.btn_p1 = UIButton(pygame.Rect(start_x + 3*(btn_w + spacing), u_y, btn_w, 25), ">", manager=manager, container=self.panel)
-        self.btn_p10 = UIButton(pygame.Rect(start_x + 4*(btn_w + spacing), u_y, btn_w, 25), ">>", manager=manager, container=self.panel)
-        self.btn_p100 = UIButton(pygame.Rect(start_x + 5*(btn_w + spacing), u_y, btn_w, 25), ">>>", manager=manager, container=self.panel)
+        # Buttons Right
+        self.btn_p10  = UIButton(pygame.Rect(right_btns_start, u_y, 30, 25), ">", manager=manager, container=self.panel)
+        self.btn_p100 = UIButton(pygame.Rect(right_btns_start + 32, u_y, 30, 25), ">>", manager=manager, container=self.panel)
+        
+        # Row 2 (Removed, single line now)
+        u_y += 35
+        
+        # Remove old button definitions if any references remain (not needed for replace)
+        # Update event handler to respect new button names/logic
+
 
         # Controls Row 1: Sort
         self.sort_options = [
@@ -371,8 +386,6 @@ class BuilderLeftPanel:
             delta = 0
             if event.ui_element == self.btn_m100: delta = -100
             elif event.ui_element == self.btn_m10: delta = -10
-            elif event.ui_element == self.btn_m1: delta = -1
-            elif event.ui_element == self.btn_p1: delta = 1
             elif event.ui_element == self.btn_p10: delta = 10
             elif event.ui_element == self.btn_p100: delta = 100
             

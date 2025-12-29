@@ -137,9 +137,19 @@ class ModifierEditorPanel:
             self.modifier_buttons.append(btn)
             
             if mod_def.type_str == 'linear':
+                # Layout: Label (Already created as btn) | Entry | << | < | Slider | > | >>
+                # Label Button Width: 170 (Existing)
+                # Available Width = Self.width - 20 - 170 = ~230 (Assuming panel is 450?)
+                # Wait, panel width passed to init.
+                # Left Panel width is 450.
+                # Label: 170. Entry: 50. <<: 25. < 25. > 25. >> 25.
+                # Slider gets remainder.
+                
                 # Entry
+                entry_x = 185
+                entry_w = 60
                 entry = UITextEntryLine(
-                    relative_rect=pygame.Rect(185, y, 70, 28),
+                    relative_rect=pygame.Rect(entry_x, y, entry_w, 28),
                     manager=self.manager,
                     container=self.container,
                     object_id=f'#entry_{safe_mod_id}'
@@ -148,18 +158,36 @@ class ModifierEditorPanel:
                 if not is_active: entry.disable()
                 self.modifier_entries.append(entry)
                 
-                # Determine appropriate step
-                step = 0.01
-                if mod_id == 'range_mount':
-                    step = 0.1
-                elif mod_def.max_val - mod_def.min_val > 50:
-                    step = 1.0
-                elif mod_def.max_val - mod_def.min_val > 10:
-                     step = 0.1
+                # Define buttons if range allows large steps
+                show_buttons = (mod_def.max_val - mod_def.min_val) >= 20
                 
+                current_x = entry_x + entry_w + 5
+                
+                slider_btns = []
+                if show_buttons:
+                    # << (-100)
+                    btn_m100 = UIButton(pygame.Rect(current_x, y, 25, 28), "<<", manager=self.manager, container=self.container)
+                    slider_btns.append(btn_m100)
+                    current_x += 27
+                    
+                    # < (-10)
+                    btn_m10 = UIButton(pygame.Rect(current_x, y, 25, 28), "<", manager=self.manager, container=self.container)
+                    slider_btns.append(btn_m10)
+                    current_x += 27
+                    
                 # Slider
+                # Calculate remaining width for slider
+                # Need space for right buttons if showing
+                right_btns_w = 54 if show_buttons else 0
+                slider_w = (self.width - 20) - current_x - right_btns_w - 5
+                
+                step = 0.01
+                if mod_id == 'range_mount': step = 0.1
+                elif mod_def.max_val - mod_def.min_val > 50: step = 1.0
+                elif mod_def.max_val - mod_def.min_val > 10: step = 0.1
+                
                 slider = UIHorizontalSlider(
-                    relative_rect=pygame.Rect(260, y, 165, 28),
+                    relative_rect=pygame.Rect(current_x, y, slider_w, 28),
                     start_value=float(current_val),
                     value_range=(float(mod_def.min_val), float(mod_def.max_val)),
                     manager=self.manager,
@@ -169,13 +197,32 @@ class ModifierEditorPanel:
                 )
                 if not is_active: slider.disable()
                 self.modifier_sliders.append(slider)
-            # elif mod_id == 'mass_scaling':
-            #      # DEPRECATED
-            #      self.modifier_entries.append(None)
-            #      self.modifier_sliders.append(None)
+                current_x += slider_w + 2
+                
+                if show_buttons:
+                     # > (+10)
+                    btn_p10 = UIButton(pygame.Rect(current_x, y, 25, 28), ">", manager=self.manager, container=self.container)
+                    slider_btns.append(btn_p10)
+                    current_x += 27
+                    
+                    # >> (+100)
+                    btn_p100 = UIButton(pygame.Rect(current_x, y, 25, 28), ">>", manager=self.manager, container=self.container)
+                    slider_btns.append(btn_p100)
+                    
+                # Store buttons for event handling (list of dicts or tuples?)
+                # Store related to this modifier index
+                if show_buttons:
+                    # m100, m10, p10, p100
+                    self.modifier_extra_ui.append({'type': 'step_btns', 'mod_id': mod_id, 'btns': slider_btns})
+                    for b in slider_btns:
+                        if not is_active: b.disable()
+                else:
+                    self.modifier_extra_ui.append(None)
+                    
             else:
                 self.modifier_entries.append(None)
                 self.modifier_sliders.append(None)
+                self.modifier_extra_ui.append(None)
                 
             y += 32
             
@@ -265,7 +312,7 @@ class ModifierEditorPanel:
                          # Immediate UI feedback
                          btn.set_text(f"[{'x' if is_active else ' '}] {mod_def.name}")
                          
-                         # Enable/Disable slider/entry
+                         # Enable/Disable slider/entry and extra UI
                          if i < len(self.modifier_sliders) and self.modifier_sliders[i]:
                              if is_active:
                                  self.modifier_sliders[i].enable()
@@ -290,19 +337,83 @@ class ModifierEditorPanel:
                                  self.modifier_entries[i].set_text(f"{val:.2f}")
                              else:
                                  self.modifier_entries[i].disable()
+                        
+                         # Enable/Disable Step Buttons
+                         extra = self.modifier_extra_ui[i] if i < len(self.modifier_extra_ui) else None
+                         if isinstance(extra, dict) and extra.get('type') == 'step_btns':
+                             for b in extra['btns']:
+                                 if is_active: b.enable()
+                                 else: b.disable()
 
                          if self.editing_component:
                              self.editing_component.recalculate_stats()
                              self.on_change_callback() # Notify ship Update
                          
                          return ('refresh_ui', None)
+            
+            # Additional check: Step Buttons Pressed
+            # Loop through buttons?
+            # modifier_extra_ui maps 1:1 with modifier index (mostly)
+            # Actually extra UI for label/button is separate list?
+            # Wait, self.modifier_extra_ui has mixed content (Labels, Buttons, and None/Dicts for rows)
+            # My logic in layout:
+            # 0: Label
+            # 1: Clear Btn
+            # Then loop modifiers: append dict or None.
+            # So indices align with self.modifier_id_list IF we account for the first 2.
+            # No, I appended to modifier_extra_ui INSIDE the loop. 
+            # I must be careful. 
+            # Review layout:
+            # self.modifier_extra_ui.append(settings_label) -> Index 0
+            # self.modifier_extra_ui.append(self.clear_settings_btn) -> Index 1
+            # Loop: self.modifier_extra_ui.append(...) -> Index 2+i
+            
+            # Start loop at 0 for modifiers, check index + 2 in extra_ui
+            for i, extra in enumerate(self.modifier_extra_ui):
+                 if isinstance(extra, dict) and extra.get('type') == 'step_btns':
+                     btns = extra['btns']
+                     # [m100, m10, p10, p100]
+                     delta = 0
+                     if event.ui_element == btns[0]: delta = -100
+                     elif event.ui_element == btns[1]: delta = -10
+                     elif event.ui_element == btns[2]: delta = 10
+                     elif event.ui_element == btns[3]: delta = 100
+                     
+                     if delta != 0:
+                         # Find which modifier this is
+                         # extra_ui index i corresponds to modifier index i - 2
+                         mod_index = i - 2
+                         if 0 <= mod_index < len(self.modifier_id_list):
+                             mod_id = self.modifier_id_list[mod_index]
+                             slider = self.modifier_sliders[mod_index]
+                             entry = self.modifier_entries[mod_index]
+                             
+                             if slider:
+                                 current = slider.get_current_value()
+                                 mod_def = MODIFIER_REGISTRY[mod_id]
+                                 new_val = max(mod_def.min_val, min(mod_def.max_val, current + delta))
+                                 
+                                 slider.set_current_value(new_val)
+                                 if entry: entry.set_text(f"{new_val:.2f}")
+                                 
+                                 # Update model
+                                 if self.editing_component:
+                                     m = self.editing_component.get_modifier(mod_id)
+                                     if m:
+                                         m.value = new_val
+                                         self.editing_component.recalculate_stats()
+                                         self.on_change_callback()
+                                 else:
+                                     if mod_id in self.template_modifiers:
+                                         self.template_modifiers[mod_id] = new_val
 
+                                 return ('refresh_ui', None)
+                         
+             
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
              for i, slider in enumerate(self.modifier_sliders):
                  if slider and event.ui_element == slider and i < len(self.modifier_id_list):
                      mod_id = self.modifier_id_list[i]
-                     val = event.value
-                     self.active_slider_mod_id = mod_id
                      
                      if self.editing_component:
                          m = self.editing_component.get_modifier(mod_id)
