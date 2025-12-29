@@ -98,6 +98,7 @@ class BuilderRightPanel:
     def update_portrait_image(self):
         """Update the ship portrait based on current theme and class."""
         import os
+        import re
         
         # Determine paths
         theme = getattr(self.builder.ship, 'theme_id', 'Federation')
@@ -109,11 +110,18 @@ class BuilderRightPanel:
         # fed -> Federation, etc. But the game uses full names likely.
         # Let's assume theme_id matches directory name for now as per `ShipThemeManager`.
         
-        # Filename: {Class}_Portrait.jpg
-        # Remove spaces from class name if any? generated files have e.g. BattleCruiser_Portrait.jpg
-        # But class name in game might be "Battle Cruiser"
+        # Filename Logic:
+        # Standard: "Battle Cruiser" -> "BattleCruiser_Portrait.jpg"
+        # Subtypes: "Fighter (Small)" -> "SmallFighter_Portrait.jpg"
         
-        class_clean = ship_class.replace(" ", "")
+        match = re.match(r"(.*)\s+\((.*)\)", ship_class)
+        if match:
+             base = match.group(1).strip().replace(" ", "")
+             sub = match.group(2).strip().replace(" ", "")
+             class_clean = f"{sub}{base}"
+        else:
+             class_clean = ship_class.replace(" ", "")
+
         filename = f"{class_clean}_Portrait.jpg"
         
         base_path = "resources/Portraits"
@@ -122,7 +130,7 @@ class BuilderRightPanel:
         full_path = os.path.join(base_path, theme, filename)
         
         # Check for new location: Resources/ShipThemes/{theme}/Portraits
-        new_loc = os.path.join("Resources/ShipThemes", theme, "Portraits", filename)
+        new_loc = os.path.join("Resources", "ShipThemes", theme, "Portraits", filename)
         if os.path.exists(new_loc):
             full_path = new_loc
             
