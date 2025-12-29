@@ -170,15 +170,22 @@ class BuilderRightPanel:
         except Exception as e:
             print(f"Failed to load portrait {full_path}: {e}")
 
-    def _add_stat_row(self, key, label_text, y):
+    def _add_stat_row(self, key, label_text, x, width, y):
         """Helper to create a left-aligned label and right-aligned value row."""
-        # Left Label
-        l = UILabel(pygame.Rect(10, y, 170, 20), f"{label_text}:", manager=self.manager, container=self.panel)
-        # Right Value (aligned to right edge with some padding, or just a label that we align text via spaces? 
-        # pygame_gui default alignment is center or left usually. 
-        # Better: Create a label at x=180 width=160.
-        v = UILabel(pygame.Rect(180, y, 160, 20), "--", manager=self.manager, container=self.panel)
-        # We can try to set text alignment if the theme supports it, or just rely on the rect.
+        # Label: Left aligned (approx by pos)
+        # Value: Right aligned (approx by pos)
+        
+        # Determine label width (approx 60% of col) and value width (40%)
+        # But for 'Right Justified' value, we want the value label to be on the right.
+        
+        lbl_w = int(width * 0.55)
+        val_w = width - lbl_w
+        
+        # Label
+        l = UILabel(pygame.Rect(x, y, lbl_w, 20), f"{label_text}:", manager=self.manager, container=self.panel, object_id="#stat_label")
+        
+        # Value
+        v = UILabel(pygame.Rect(x + lbl_w, y, val_w, 20), "--", manager=self.manager, container=self.panel, object_id="#stat_value")
         
         self.stat_rows[key] = {'label': l, 'value': v}
         return y + 20
@@ -186,8 +193,22 @@ class BuilderRightPanel:
     def setup_stats(self):
         y = self.last_y
         
-        # Stats Header
-        UILabel(pygame.Rect(10, y, 150, 25), "── Ship Stats ──", manager=self.manager, container=self.panel)
+        # Columns
+        # Width available
+        full_w = self.rect.width
+        col_gap = 10
+        margin = 10
+        avail_w = full_w - (2 * margin) - col_gap
+        col_w = avail_w // 2
+        
+        col1_x = margin
+        col2_x = margin + col_w + col_gap
+        
+        start_y = y
+        
+        # === Column 1: Ship Stats ===
+        y = start_y
+        UILabel(pygame.Rect(col1_x, y, col_w, 25), "── Ship Stats ──", manager=self.manager, container=self.panel)
         y += 30
         
         self.stat_rows = {}
@@ -203,12 +224,15 @@ class BuilderRightPanel:
         ]
         
         for key, text in general_stats:
-            y = self._add_stat_row(key, text, y)
+            y = self._add_stat_row(key, text, col1_x, col_w, y)
             
-        y += 10
+        col1_max_y = y + 10
         
-        # Fighter Ops Header
-        UILabel(pygame.Rect(10, y, 150, 25), "── Fighter Ops ──", manager=self.manager, container=self.panel)
+        # === Column 2: Fighter, Layers, Crew ===
+        y = start_y
+        
+        # Fighter Ops
+        UILabel(pygame.Rect(col2_x, y, col_w, 25), "── Fighter Ops ──", manager=self.manager, container=self.panel)
         y += 30
         
         fighter_stats = [
@@ -219,40 +243,66 @@ class BuilderRightPanel:
         ]
         
         for key, text in fighter_stats:
-            y = self._add_stat_row(key, text, y)
+            y = self._add_stat_row(key, text, col2_x, col_w, y)
             
-        y += 5
+        y += 10
         
         # Layer Usage
-        UILabel(pygame.Rect(10, y, 150, 20), "── Layer Usage ──", manager=self.manager, container=self.panel)
+        UILabel(pygame.Rect(col2_x, y, col_w, 20), "── Layer Usage ──", manager=self.manager, container=self.panel)
         y += 22
-        self.layer_labels = {}
-        # Create FIXED slots for layers to prevent overlap
-        self.layer_label_slots = []
-        for i in range(4): # Max 4 layers likely
-            lbl = UILabel(pygame.Rect(10, y, 350, 22), f"Slot {i}: --%", manager=self.manager, container=self.panel)
-            lbl.hide()
-            self.layer_label_slots.append(lbl)
-            y += 22 
-
-
+        self.layer_rows = []
+        for i in range(4):
+            # Split slots into Label ("Slot 0") and Value ("--%")
+            # This allows us to reuse the alignment logic
+            # Using _add_stat_row style manual init because we need to update them dynamically
+            
+            lbl_w = int(col_w * 0.4) # Slightly smaller label for layers "Slot X"
+            val_w = col_w - lbl_w
+            
+            l = UILabel(pygame.Rect(col2_x, y, lbl_w, 20), f"Slot {i}:", manager=self.manager, container=self.panel, object_id="#stat_label")
+            v = UILabel(pygame.Rect(col2_x + lbl_w, y, val_w, 20), "--%", manager=self.manager, container=self.panel, object_id="#stat_value")
+            
+            l.hide()
+            v.hide()
+            
+            self.layer_rows.append({'label': l, 'value': v})
+            y += 22
+            
         y += 10
         
-         # Crew
-        UILabel(pygame.Rect(10, y, 150, 20), "── Crew ──", manager=self.manager, container=self.panel)
+        # Crew
+        UILabel(pygame.Rect(col2_x, y, col_w, 20), "── Crew ──", manager=self.manager, container=self.panel)
         y += 22
         self.crew_labels = {}
-        for c in ['crew_required', 'crew_housed', 'life_support']:
-            self.crew_labels[c] = UILabel(pygame.Rect(10, y, 350, 22), f"{c}: --", manager=self.manager, container=self.panel)
-            y += 22
-        y += 10
-
-        # Requirements
-        UILabel(pygame.Rect(10, y, 150, 20), "── Requirements ──", manager=self.manager, container=self.panel)
-        y += 22
+        
+        # Use _add_stat_row logic for consistent alignment
+        crew_keys = [('crew_required', 'Crew Required'), ('crew_housed', 'Crew On Board'), ('life_support', 'Life Support')]
+        
+        for k, text in crew_keys:
+             lbl_w = int(col_w * 0.55)
+             val_w = col_w - lbl_w
+             
+             l = UILabel(pygame.Rect(col2_x, y, lbl_w, 20), f"{text}:", manager=self.manager, container=self.panel, object_id="#stat_label")
+             v = UILabel(pygame.Rect(col2_x + lbl_w, y, val_w, 20), "--", manager=self.manager, container=self.panel, object_id="#stat_value")
+             
+             self.crew_labels[k] = {'label': l, 'value': v}
+             y += 22 
+             
+        col2_max_y = y + 10
+        
+        # === Requirements (Bottom, Split) ===
+        y = max(col1_max_y, col2_max_y) + 10
+        
+        # Split Headers
+        UILabel(pygame.Rect(col1_x, y, col_w, 20), "── Requirements ──", manager=self.manager, container=self.panel)
+        UILabel(pygame.Rect(col2_x, y, col_w, 20), "── Recommendations ──", manager=self.manager, container=self.panel)
+        y += 25
         
         rem_h = self.rect.height - y - 10
-        self.requirements_text_box = UITextBox("✓ All requirements met", pygame.Rect(10, y, self.rect.width - 25, rem_h), manager=self.manager, container=self.panel)
+        if rem_h < 50: rem_h = 50 # Minimum height
+        
+        self.req_box_left = UITextBox("✓ All requirements met", pygame.Rect(col1_x, y, col_w, rem_h), manager=self.manager, container=self.panel)
+        self.req_box_right = UITextBox("", pygame.Rect(col2_x, y, col_w, rem_h), manager=self.manager, container=self.panel)
 
     def update_stats_display(self, s):
         """Update ship stats labels."""
@@ -314,31 +364,33 @@ class BuilderRightPanel:
         
         # Hide all first
         # Hide all slots first
-        for slot in self.layer_label_slots:
-            slot.hide()
+        # Hide all first
+        for row in self.layer_rows:
+            row['label'].hide()
+            row['value'].hide()
             
-        # Show and update present layers
-        # sort by order if possible? default dict order should be fine or LayerType value
-        # Sort by radius_pct descending (Outer first) or ascending (Core first)? 
-        # Usually Core first is better list? 
-        # Actually logic uses radius_pct. Let's stick to consistent sorting: Core -> Inner -> Outer -> Armor or similar.
-        # LayerType enum values usually are 0,1,2,3 etc.
         sorted_layers = sorted(s.layers.items(), key=lambda x: x[0].value) 
         
         slot_idx = 0
         for layer_type, layer_data in sorted_layers:
-            if slot_idx < len(self.layer_label_slots):
+            if slot_idx < len(self.layer_rows):
                 status = s.layer_status.get(layer_type, {})
                 ratio = status.get('ratio', 0) * 100
                 limit = status.get('limit', 1.0) * 100
                 is_ok = status.get('ok', True)
                 mass = status.get('mass', 0)
                 
-                status_icon = "✓" if is_ok else "✗ OVER"
+                status_icon = "✓" if is_ok else "✗"
                 
-                lbl = self.layer_label_slots[slot_idx]
-                lbl.set_text(f"{layer_type.name}: {ratio:.0f}% / {limit:.0f}% ({mass:.0f}t) {status_icon}")
-                lbl.show()
+                row = self.layer_rows[slot_idx]
+                
+                row['label'].set_text(f"{layer_type.name}:")
+                # Value: "50% / 100% (120t) ✓"
+                row['value'].set_text(f"{ratio:.0f}% / {limit:.0f}% ({mass:.0f}t) {status_icon}")
+                
+                row['label'].show()
+                row['value'].show()
+                
                 slot_idx += 1
         
         # Update crew stats
@@ -353,34 +405,45 @@ class BuilderRightPanel:
         
         crew_ok = crew_capacity >= crew_required
         crew_status = "✓" if crew_ok else f"✗ Missing {crew_required - crew_capacity}"
-        self.crew_labels['crew_required'].set_text(f"Crew Required: {crew_required}")
-        self.crew_labels['crew_housed'].set_text(f"Crew On Board: {crew_housed} {crew_status}")
+        crew_ok = crew_capacity >= crew_required
+        crew_status = "✓" if crew_ok else f"✗ Miss {crew_required - crew_capacity}"
+        
+        self.crew_labels['crew_required']['value'].set_text(f"{crew_required}")
+        self.crew_labels['crew_housed']['value'].set_text(f"{crew_housed} {crew_status}")
         
         life_support = s.get_ability_total('LifeSupportCapacity')
         ls_ok = life_support >= crew_required
         ls_status = "✓" if ls_ok else f"✗ -{crew_required - life_support}"
-        self.crew_labels['life_support'].set_text(f"Life Support: {life_support} {ls_status}")
         
-        # Update requirements
+        self.crew_labels['life_support']['value'].set_text(f"{life_support} {ls_status}")
+        
+        # Update requirements (Left)
         missing_reqs = s.get_missing_requirements()
         if not s.mass_limits_ok:
             missing_reqs.append("⚠ Over mass limit")
             
-        warnings = s.get_validation_warnings()
-        
-        full_list = []
-        # Errors first
+        full_list_req = []
         for req in missing_reqs:
-            full_list.append(f"<font color='#ffaa55'>{req}</font>")
-            
-        # Then warnings
-        for warn in warnings:
-            full_list.append(f"<font color='#ffff88'>⚠ {warn}</font>")
+            full_list_req.append(f"<font color='#ffaa55'>{req}</font>")
         
-        if not full_list:
-            html = "<font color='#88ff88'>✓ All requirements met</font>"
+        if not full_list_req:
+            html_left = "<font color='#88ff88'>✓ All met</font>"
         else:
-            html = "<br>".join(full_list)
+            html_left = "<br>".join(full_list_req)
         
-        self.requirements_text_box.html_text = html
-        self.requirements_text_box.rebuild()
+        self.req_box_left.html_text = html_left
+        self.req_box_left.rebuild()
+
+        # Update warnings (Right)
+        warnings = s.get_validation_warnings()
+        full_list_warn = []
+        for warn in warnings:
+            full_list_warn.append(f"<font color='#ffff88'>⚠ {warn}</font>")
+            
+        if not full_list_warn:
+            html_right = "<font color='#888888'>No recommendations</font>"
+        else:
+            html_right = "<br>".join(full_list_warn)
+            
+        self.req_box_right.html_text = html_right
+        self.req_box_right.rebuild()

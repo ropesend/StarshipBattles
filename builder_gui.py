@@ -339,7 +339,7 @@ class BuilderSceneGUI:
         
         # Layout
         self.left_panel_width = 450
-        self.right_panel_width = 600 # Widened for ship portrait
+        self.right_panel_width = 750 # Widened for ship portrait and 2-column stats
         self.layer_panel_width = 450 # Widened
         self.detail_panel_width = 550
         self.bottom_bar_height = 60
