@@ -1,14 +1,14 @@
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIPanel, UILabel
+from pygame_gui.elements import UIPanel, UILabel, UIButton, UIVerticalScrollBar
 from components import Weapon, BeamWeapon, SeekerWeapon, ProjectileWeapon
 
 class WeaponsReportPanel:
     """Panel displaying weapon range and hit probability visualization."""
     
     THRESHOLDS = [0.99, 0.90, 0.80, 0.70, 0.60, 0.50, 0.40, 0.30, 0.20, 0.10, 0.01]
-    WEAPON_ROW_HEIGHT = 45  # Increased for larger text
-    WEAPON_NAME_WIDTH = 250  # Increased for readability
+    WEAPON_ROW_HEIGHT = 45
+    WEAPON_NAME_WIDTH = 250
     RANGE_BAR_LEFT_MARGIN = 15
     
     def __init__(self, builder, manager, rect, sprite_mgr):
@@ -37,11 +37,54 @@ class WeaponsReportPanel:
             container=self.panel
         )
         
+        # Filter Buttons
+        btn_y = 2
+        btn_h = 24
+        start_x = 220
+        spacing = 5
+        
+        self.filter_states = {
+            'projectile': True, 
+            'beam': True, 
+            'seeker': True
+        }
+        
+        self.btn_proj = UIButton(pygame.Rect(start_x, btn_y, 80, btn_h), "Projectiles", manager=manager, container=self.panel)
+        self.btn_beam = UIButton(pygame.Rect(start_x + 80 + spacing, btn_y, 60, btn_h), "Beams", manager=manager, container=self.panel)
+        self.btn_seek = UIButton(pygame.Rect(start_x + 140 + spacing * 2, btn_y, 70, btn_h), "Seekers", manager=manager, container=self.panel)
+        self.btn_all = UIButton(pygame.Rect(start_x + 210 + spacing * 3, btn_y, 50, btn_h), "All", manager=manager, container=self.panel)
+        
+        self._update_button_colors()
+        
+        # Scrollbar
+        self.scroll_bar_width = 18
+        self.scroll_bar = UIVerticalScrollBar(
+            relative_rect=pygame.Rect(rect.width - self.scroll_bar_width - 2, 35, self.scroll_bar_width, rect.height - 40),
+            visible_percentage=1.0,
+            manager=manager,
+            container=self.panel
+        )
+        self.scroll_offset = 0
+        
         # Cache for drawn content
         self._weapons_cache = []
         self._max_range = 0
         self._tooltip_data = None  # Store tooltip data for rendering on top
         self.verbose_tooltip = False  # Toggle for detailed stats
+    def _update_button_colors(self):
+        # Update button text/colours to reflect state
+        # Note: PygameGUI doesn't make changing specific button colors easy without State, 
+        # but we can toggle text or select state if supported. 
+        # For now, let's just use text indicators or rely on the UI theme highlighting selected.
+        
+        # Simpler approach: Prepend/Append based on state
+        def set_text(btn, text, state):
+            prefix = "[x] " if state else "[ ] "
+            btn.set_text(prefix + text)
+            
+        set_text(self.btn_proj, "Projs", self.filter_states['projectile'])
+        set_text(self.btn_beam, "Beams", self.filter_states['beam'])
+        set_text(self.btn_seek, "Seekers", self.filter_states['seeker'])
         
     def set_target(self, ship):
         """Set a specific target ship for calculations."""
@@ -57,11 +100,16 @@ class WeaponsReportPanel:
         self.target_defense_mod = 1.0
         
     def _get_all_weapons(self, ship):
-        """Get list of all weapon components from ship."""
+        """Get list of all weapon components from ship, filtered."""
         weapons = []
         for layer_data in ship.layers.values():
             for comp in layer_data['components']:
                 if isinstance(comp, Weapon):
+                    # Filter
+                    if isinstance(comp, ProjectileWeapon) and not self.filter_states['projectile']: continue
+                    if isinstance(comp, BeamWeapon) and not self.filter_states['beam']: continue
+                    if isinstance(comp, SeekerWeapon) and not self.filter_states['seeker']: continue
+                    
                     weapons.append(comp)
         return weapons
     
@@ -122,13 +170,45 @@ class WeaponsReportPanel:
         """Update weapon list and calculations."""
         ship = self.builder.ship
         self._weapons_cache = self._get_all_weapons(ship)
-        
         # Find max range across all weapons
         self._max_range = 0
         for weapon in self._weapons_cache:
             weapon_range = getattr(weapon, 'range', 0)
             if weapon_range > self._max_range:
                 self._max_range = weapon_range
+        # Update Scrollbar
+        total_height = len(self._weapons_cache) * self.WEAPON_ROW_HEIGHT
+        visible_height = self.rect.height - 50 # minus header/padding
+        
+        if total_height > visible_height:
+            self.scroll_bar.show()
+            self.scroll_bar.set_visible_percentage(visible_height / total_height)
+        else:
+            self.scroll_bar.hide()
+            self.scroll_bar.set_visible_percentage(1.0)
+            self.scroll_bar.set_scroll_from_start_percentage(0.0) # Reset if not needed
+            
+        self.scroll_offset = self.scroll_bar.scroll_position * (total_height - visible_height) if total_height > visible_height else 0
+
+    def handle_event(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.btn_proj:
+                self.filter_states['projectile'] = not self.filter_states['projectile']
+                self._update_button_colors()
+            elif event.ui_element == self.btn_beam:
+                self.filter_states['beam'] = not self.filter_states['beam']
+                self._update_button_colors()
+            elif event.ui_element == self.btn_seek:
+                self.filter_states['seeker'] = not self.filter_states['seeker']
+                self._update_button_colors()
+            elif event.ui_element == self.btn_all:
+                self.filter_states['projectile'] = True
+                self.filter_states['beam'] = True
+                self.filter_states['seeker'] = True
+                self._update_button_colors()
+
+
+
     
     def draw(self, screen):
         """Draw the weapons report visualization."""
@@ -150,29 +230,37 @@ class WeaponsReportPanel:
         
         # Drawing area
         start_x = self.rect.x + self.WEAPON_NAME_WIDTH + self.RANGE_BAR_LEFT_MARGIN
-        bar_width = self.rect.width - self.WEAPON_NAME_WIDTH - self.RANGE_BAR_LEFT_MARGIN - 60
+        bar_width = self.rect.width - self.WEAPON_NAME_WIDTH - self.RANGE_BAR_LEFT_MARGIN - 60 - self.scroll_bar_width
         start_y = self.rect.y + 40
+        
+        # Define clip rect for content
+        content_rect = pygame.Rect(self.rect.x, start_y, self.rect.width - self.scroll_bar_width, self.rect.height - 50)
+        old_clip = screen.get_clip()
+        screen.set_clip(content_rect.clip(old_clip))
         
         font = pygame.font.SysFont("Arial", 16)  # Larger font 11->16
         small_font = pygame.font.SysFont("Arial", 14)  # Larger font 9->14
+        
+        # Adjust start_y by scroll offset
+        draw_start_y = start_y - int(self.scroll_offset)
         
         # Draw max range reference line and scale
         if self._max_range > 0:
             max_range_x = start_x + bar_width
             pygame.draw.line(screen, (100, 100, 150), 
-                           (max_range_x, start_y - 5), 
-                           (max_range_x, start_y + len(self._weapons_cache) * self.WEAPON_ROW_HEIGHT + 5), 2)
+                           (max_range_x, draw_start_y - 5), 
+                           (max_range_x, draw_start_y + len(self._weapons_cache) * self.WEAPON_ROW_HEIGHT + 5), 2)
             # Label max range
             range_label = small_font.render(f"{int(self._max_range)}", True, (150, 150, 200))
-            screen.blit(range_label, (max_range_x - range_label.get_width()//2, start_y - 16))
+            screen.blit(range_label, (max_range_x - range_label.get_width()//2, draw_start_y - 16))
             
             # Draw scale markers at 25%, 50%, 75%
             for pct in [0.25, 0.5, 0.75]:
                 scale_x = start_x + int(pct * bar_width)
-                pygame.draw.line(screen, (50, 50, 70), (scale_x, start_y - 3), 
-                               (scale_x, start_y + len(self._weapons_cache) * self.WEAPON_ROW_HEIGHT), 1)
+                pygame.draw.line(screen, (50, 50, 70), (scale_x, draw_start_y - 3), 
+                               (scale_x, draw_start_y + len(self._weapons_cache) * self.WEAPON_ROW_HEIGHT), 1)
                 scale_label = small_font.render(f"{int(self._max_range * pct)}", True, (80, 80, 100))
-                screen.blit(scale_label, (scale_x - scale_label.get_width()//2, start_y - 16))
+                screen.blit(scale_label, (scale_x - scale_label.get_width()//2, draw_start_y - 16))
         
         # Reset tooltip data
         self._tooltip_data = None
@@ -180,7 +268,11 @@ class WeaponsReportPanel:
         
         # Draw each weapon row
         for i, weapon in enumerate(self._weapons_cache):
-            row_y = start_y + i * self.WEAPON_ROW_HEIGHT
+            row_y = draw_start_y + i * self.WEAPON_ROW_HEIGHT
+            
+            # Optimization: Skip if outside visible area
+            if row_y + self.WEAPON_ROW_HEIGHT < content_rect.top or row_y > content_rect.bottom:
+                continue
             
             # Draw weapon icon - larger
             sprite = self.sprite_mgr.get_sprite(weapon.sprite_index)
@@ -296,51 +388,54 @@ class WeaponsReportPanel:
                     range_label = small_font.render(f"{int(weapon_range)}", True, (180, 180, 180))
                     screen.blit(range_label, (end_x - range_label.get_width()//2, bar_y + 10))
             
-            # Check for tooltip hover
-            # Hit area: the horizontal line itself with some padding
-            hit_rect = pygame.Rect(start_x, bar_y - 10, weapon_bar_width, window_bar_height + 20)
-            if hit_rect.collidepoint(current_mouse_pos):
-                # Calculate range at cursor
-                dist_px = current_mouse_pos[0] - start_x
-                dist_ratio = dist_px / bar_width
-                hover_range = dist_ratio * self._max_range
-                
-                # Clamp range
-                if hover_range < 0: hover_range = 0
-                if hover_range > weapon_range: hover_range = weapon_range
-                
-                # Calculate stats
-                base_acc = getattr(weapon, 'base_accuracy', 1.0)
-                falloff = getattr(weapon, 'accuracy_falloff', 0.0)
-                ship_mod = getattr(ship, 'baseline_to_hit_offense', 1.0)
-                target_mod = self.target_defense_mod
-                damage = getattr(weapon, 'damage', 0)
-                
-                if isinstance(weapon, BeamWeapon):
-                    # Multiplicative logic
-                    range_factor = max(0.0, 1.0 - (hover_range * falloff))
-                    hit_chance = base_acc * range_factor * ship_mod * target_mod
-                    hit_chance = max(0.0, min(1.0, hit_chance))
-                    acc_text = f"{int(hit_chance * 100)}%"
+            # Check for tooltip hover (use content_rect to ensure we don't hover hidden items)
+            if content_rect.collidepoint(current_mouse_pos):
+                hit_rect = pygame.Rect(start_x, bar_y - 10, weapon_bar_width, window_bar_height + 20)
+                if hit_rect.collidepoint(current_mouse_pos):
+                    # Calculate range at cursor
+                    dist_px = current_mouse_pos[0] - start_x
+                    dist_ratio = dist_px / bar_width
+                    hover_range = dist_ratio * self._max_range
                     
-                    verbose_info = {
-                        'base_acc': base_acc,
-                        'falloff': falloff, 
-                        'range_factor': range_factor,
-                        'ship_mod': ship_mod,
-                        'target_mod': target_mod
+                    # Clamp range
+                    if hover_range < 0: hover_range = 0
+                    if hover_range > weapon_range: hover_range = weapon_range
+                    
+                    # Calculate stats
+                    base_acc = getattr(weapon, 'base_accuracy', 1.0)
+                    falloff = getattr(weapon, 'accuracy_falloff', 0.0)
+                    ship_mod = getattr(ship, 'baseline_to_hit_offense', 1.0)
+                    target_mod = self.target_defense_mod
+                    damage = getattr(weapon, 'damage', 0)
+                    
+                    if isinstance(weapon, BeamWeapon):
+                        # Multiplicative logic
+                        range_factor = max(0.0, 1.0 - (hover_range * falloff))
+                        hit_chance = base_acc * range_factor * ship_mod * target_mod
+                        hit_chance = max(0.0, min(1.0, hit_chance))
+                        acc_text = f"{int(hit_chance * 100)}%"
+                        
+                        verbose_info = {
+                            'base_acc': base_acc,
+                            'falloff': falloff, 
+                            'range_factor': range_factor,
+                            'ship_mod': ship_mod,
+                            'target_mod': target_mod
+                        }
+                    else:
+                        acc_text = "N/A"
+                        verbose_info = None
+                        
+                    self._tooltip_data = {
+                        'pos': current_mouse_pos,
+                        'range': int(hover_range),
+                        'accuracy': acc_text,
+                        'damage': int(damage),
+                        'verbose': verbose_info
                     }
-                else:
-                    acc_text = "N/A"
-                    verbose_info = None
-                    
-                self._tooltip_data = {
-                    'pos': current_mouse_pos,
-                    'range': int(hover_range),
-                    'accuracy': acc_text,
-                    'damage': int(damage),
-                    'verbose': verbose_info
-                }
+
+        # Restore clipping
+        screen.set_clip(old_clip)
 
         # Draw tooltip LAST so it's on top of everything
         if self._tooltip_data:

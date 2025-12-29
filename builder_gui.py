@@ -633,6 +633,9 @@ class BuilderSceneGUI:
                 pass
             return
         
+        # Pass to weapons panel
+        self.weapons_report_panel.handle_event(event)
+        
         self.controller.handle_event(event)
         
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
