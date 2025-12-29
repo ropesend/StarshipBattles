@@ -38,5 +38,10 @@
         "misc": {
             "text_horiz_alignment": "right"
         }
+    },
+    "#stat_unit": {
+        "misc": {
+            "text_horiz_alignment": "left"
+        }
     }
 }
