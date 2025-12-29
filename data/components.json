@@ -22,6 +22,27 @@
             "major_classification": "Crewsupport"
         },
         {
+            "id": "central_complex_command",
+            "name": "Central Complex Command",
+            "type": "Bridge",
+            "mass": "=50 * sqrt(ship_class_mass / 1000)",
+            "hp": "=500 * sqrt(ship_class_mass / 1000)",
+            "allowed_layers": [
+                "CORE",
+                "INNER",
+                "OUTER"
+            ],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 3,
+            "abilities": {
+                "CommandAndControl": true,
+                "CrewRequired": "=ceil(10 * sqrt(ship_class_mass / 1000))"
+            },
+            "major_classification": "Crewsupport"
+        },
+        {
             "id": "railgun",
             "name": "Railgun",
             "type": "ProjectileWeapon",
@@ -32,7 +53,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "damage": 40,
             "range": 2400,
@@ -100,7 +122,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "sprite_index": 14,
             "abilities": {
@@ -120,7 +143,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "sprite_index": 15,
             "abilities": {
@@ -145,7 +169,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "sprite_index": 50,
             "abilities": {
@@ -171,7 +196,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "capacity": 50000,
             "resource_type": "fuel",
@@ -194,7 +220,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "capacity": 5000,
             "resource_type": "ammo",
@@ -217,7 +244,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "capacity": 2000,
             "resource_type": "energy",
@@ -239,7 +267,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "energy_generation": 25,
             "sprite_index": 81,
@@ -260,7 +289,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "damage": 15,
             "range": 2000,
@@ -287,7 +317,8 @@
                 "INNER"
             ],
             "allowed_vehicle_types": [
-                "Ship"
+                "Ship",
+                "Planetary Complex"
             ],
             "sprite_index": 5,
             "abilities": {
@@ -306,7 +337,8 @@
                 "INNER"
             ],
             "allowed_vehicle_types": [
-                "Ship"
+                "Ship",
+                "Planetary Complex"
             ],
             "sprite_index": 4,
             "abilities": {
@@ -327,7 +359,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "sprite_index": 25,
             "abilities": {
@@ -350,7 +383,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "sprite_index": 26,
             "abilities": {
@@ -373,7 +407,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "sprite_index": 27,
             "abilities": {
@@ -394,7 +429,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "sprite_index": 16,
             "abilities": {
@@ -414,7 +450,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "sprite_index": 18,
             "abilities": {
@@ -434,7 +471,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "damage": 100,
             "projectile_speed": 6000,
@@ -461,7 +499,8 @@
             ],
             "allowed_vehicle_types": [
                 "Ship",
-                "Satellite"
+                "Satellite",
+                "Planetary Complex"
             ],
             "damage": 4,
             "range": 800,
@@ -863,7 +902,8 @@
                 "OUTER"
             ],
             "allowed_vehicle_types": [
-                "Ship"
+                "Ship",
+                "Planetary Complex"
             ],
             "sprite_index": 21,
             "abilities": {
