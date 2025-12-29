@@ -21,6 +21,8 @@ class ComponentDetailPanel:
         )
         
         self.current_component = None
+        self.last_html = ""
+        self.last_img_comp = None
         self.portrait_cache = {}
         
         # Image Element
@@ -62,8 +64,10 @@ class ComponentDetailPanel:
         )
         
     def show_component(self, comp):
-        self.current_component = comp
         if not comp:
+            self.current_component = None
+            self.last_img_comp = None
+            self.last_html = ""
             self._clear_display()
             self.placeholder_label.show()
             self.stats_text_box.hide()
@@ -74,8 +78,12 @@ class ComponentDetailPanel:
         self.stats_text_box.show()
         self.details_btn.show()
         
-        # 1. Update Image
-        self._update_image(comp)
+        # 1. Update Image (only if changed)
+        if comp != self.last_img_comp:
+            self._update_image(comp)
+            self.last_img_comp = comp
+            
+        self.current_component = comp
         
         # 2. Update Stats
         lines = []
@@ -167,8 +175,10 @@ class ComponentDetailPanel:
                 add_line(f"• {m.definition.name}: {m.value:.0f}", '#96FF96')
         
         full_html = "<br>".join(lines)
-        self.stats_text_box.html_text = full_html
-        self.stats_text_box.rebuild()
+        if full_html != self.last_html:
+            self.stats_text_box.html_text = full_html
+            self.stats_text_box.rebuild()
+            self.last_html = full_html
 
     def show_details_popup(self):
         if not self.current_component:

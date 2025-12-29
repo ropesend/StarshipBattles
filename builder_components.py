@@ -222,7 +222,7 @@ class ModifierEditorPanel:
                 # Store related to this modifier index
                 if show_buttons:
                     # m100, m10, p10, p100
-                    self.modifier_extra_ui.append({'type': 'step_btns', 'mod_id': mod_id, 'btns': slider_btns})
+                    self.modifier_extra_ui.append({'type': 'step_btns', 'mod_id': mod_id, 'btns': slider_btns, 'step': step})
                     for b in slider_btns:
                         if not is_active: b.disable()
                 else:
@@ -382,11 +382,12 @@ class ModifierEditorPanel:
                  if isinstance(extra, dict) and extra.get('type') == 'step_btns':
                      btns = extra['btns']
                      # [m100, m10, p10, p100]
+                     step = extra.get('step', 1.0)
                      delta = 0
-                     if event.ui_element == btns[0]: delta = -100
-                     elif event.ui_element == btns[1]: delta = -10
-                     elif event.ui_element == btns[2]: delta = 10
-                     elif event.ui_element == btns[3]: delta = 100
+                     if event.ui_element == btns[0]: delta = -step * 10
+                     elif event.ui_element == btns[1]: delta = -step
+                     elif event.ui_element == btns[2]: delta = step
+                     elif event.ui_element == btns[3]: delta = step * 10
                      
                      if delta != 0:
                          # Find which modifier this is
