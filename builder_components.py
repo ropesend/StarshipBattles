@@ -423,6 +423,7 @@ class ModifierEditorPanel:
              for i, slider in enumerate(self.modifier_sliders):
                  if slider and event.ui_element == slider and i < len(self.modifier_id_list):
                      mod_id = self.modifier_id_list[i]
+                     val = slider.get_current_value()
                      
                      if self.editing_component:
                          m = self.editing_component.get_modifier(mod_id)
