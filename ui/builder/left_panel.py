@@ -29,15 +29,43 @@ class BuilderLeftPanel:
             container=self.panel
         )
         
-        # Scroll Container - Created FIRST to ensure Dropdowns draw on top (Z-order)
-        self.list_y = 80
-        container_height = (rect.height // 2) - 85
+        # Scroll Container 
+        # Shifted down to room for Bulk Add UI
+        self.list_y = 125 # Was 80
+        container_height = (rect.height // 2) - 130 # Adjusted for shift
         self.scroll_container = UIScrollingContainer(
             relative_rect=pygame.Rect(5, self.list_y, rect.width - 10, container_height),
             manager=manager,
             container=self.panel,
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
         )
+        
+        # Bulk Add UI (y=80 to 110)
+        u_y = 80
+        # Row 1: Label, Entry, Slider
+        UILabel(pygame.Rect(5, u_y, 40, 25), "Count:", manager=manager, container=self.panel)
+        from pygame_gui.elements import UITextEntryLine, UIHorizontalSlider, UIButton
+        self.count_entry = UITextEntryLine(pygame.Rect(50, u_y, 50, 25), manager=manager, container=self.panel)
+        self.count_entry.set_text("1")
+        self.count_entry.set_allowed_characters('numbers')
+        
+        self.count_slider = UIHorizontalSlider(pygame.Rect(110, u_y, rect.width - 120, 25), 1, (1, 1000), manager=manager, container=self.panel)
+        
+        u_y += 30
+        # Row 2: Buttons <<< << < > >> >>>
+        # Total width avail approx 450
+        # We have 6 buttons.
+        btn_w = 40
+        spacing = 5
+        start_x = (rect.width - (6 * btn_w + 5 * spacing)) // 2
+        
+        self.btn_m100 = UIButton(pygame.Rect(start_x, u_y, btn_w, 25), "<<<", manager=manager, container=self.panel)
+        self.btn_m10 = UIButton(pygame.Rect(start_x + btn_w + spacing, u_y, btn_w, 25), "<<", manager=manager, container=self.panel)
+        self.btn_m1 = UIButton(pygame.Rect(start_x + 2*(btn_w + spacing), u_y, btn_w, 25), "<", manager=manager, container=self.panel)
+        
+        self.btn_p1 = UIButton(pygame.Rect(start_x + 3*(btn_w + spacing), u_y, btn_w, 25), ">", manager=manager, container=self.panel)
+        self.btn_p10 = UIButton(pygame.Rect(start_x + 4*(btn_w + spacing), u_y, btn_w, 25), ">>", manager=manager, container=self.panel)
+        self.btn_p100 = UIButton(pygame.Rect(start_x + 5*(btn_w + spacing), u_y, btn_w, 25), ">>>", manager=manager, container=self.panel)
 
         # Controls Row 1: Sort
         self.sort_options = [
@@ -320,7 +348,50 @@ class BuilderLeftPanel:
 
         # Modifier Panel
         action = self.modifier_panel.handle_event(event)
-        return action
+        if action: return action
+
+        # Handle Bulk Add UI
+        if event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
+            if event.ui_element == self.count_slider:
+                val = int(event.value)
+                self.count_entry.set_text(str(val))
+                return None
+                
+        elif event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED:
+            if event.ui_element == self.count_entry:
+                try:
+                    val = int(event.text)
+                    val = max(1, min(1000, val))
+                    self.count_slider.set_current_value(val)
+                except ValueError:
+                    pass
+                return None
+                
+        elif event.type == pygame_gui.UI_BUTTON_PRESSED:
+            delta = 0
+            if event.ui_element == self.btn_m100: delta = -100
+            elif event.ui_element == self.btn_m10: delta = -10
+            elif event.ui_element == self.btn_m1: delta = -1
+            elif event.ui_element == self.btn_p1: delta = 1
+            elif event.ui_element == self.btn_p10: delta = 10
+            elif event.ui_element == self.btn_p100: delta = 100
+            
+            if delta != 0:
+                current = int(self.count_slider.get_current_value())
+                new_val = max(1, min(1000, current + delta))
+                self.count_slider.set_current_value(new_val)
+                self.count_entry.set_text(str(new_val))
+                return None
+        
+        return None
+
+    def get_add_count(self):
+        """Return the current value of the bulk add counter."""
+        try:
+            val = int(self.count_entry.get_text())
+            return max(1, min(1000, val))
+        except ValueError:
+            return 1
         
     def get_hovered_component(self, mx, my):
         # Check if mouse is over any item button

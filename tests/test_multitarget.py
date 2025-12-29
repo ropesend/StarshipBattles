@@ -19,7 +19,7 @@ class TestMultitarget(unittest.TestCase):
         # Initialize pygame for vectors
         pygame.init()
         self.grid = SpatialGrid(2000)
-        self.ship = Ship("Hero", 1000, 1000, (0, 255, 0), team_id=0, ship_class="Cruiser")
+        self.ship = Ship("Hero", 1000, 1000, (0, 255, 0), team_id=0, ship_class="Escort")
         self.ai = AIController(self.ship, self.grid, enemy_team_id=1)
         self.ship.ai_controller = self.ai
         

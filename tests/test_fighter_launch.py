@@ -142,10 +142,9 @@ class TestFighterLaunch(unittest.TestCase):
         # Verify stats
         self.assertEqual(getattr(ship, 'fighter_capacity', 0), 50) # Updated to 50 based on user edit
         
-        # Let's check logic:
-        # ship.fighter_capacity += comp.storage_capacity
-        self.assertGreater(getattr(ship, 'fighter_capacity', 0), 0)
-        self.assertGreater(getattr(ship, 'launch_mass', 0), 0)
+        # New Stats
+        self.assertEqual(getattr(ship, 'fighters_per_wave', 0), 1)
+        self.assertEqual(getattr(ship, 'fighter_size_cap', 0), 50)
         self.assertEqual(getattr(ship, 'launch_cycle', 0), 5.0)
 
 if __name__ == '__main__':

@@ -110,113 +110,7 @@ class Component:
                          self.max_hp = 0
                          self.current_hp = 0
 
-    def take_damage(self, amount):
-        self.current_hp -= amount
-        if self.current_hp <= 0:
-            self.current_hp = 0
-            self.is_active = False
-            return True # Destroyed
-        return False
 
-    def reset_hp(self):
-        self.current_hp = self.max_hp
-        self.is_active = True
-        self.status = ComponentStatus.ACTIVE
-
-    def add_modifier(self, mod_id, value=None):
-        if mod_id not in MODIFIER_REGISTRY: return False
-        
-        # Check restrictions
-        mod_def = MODIFIER_REGISTRY[mod_id]
-        if 'deny_types' in mod_def.restrictions:
-            if self.type_str in mod_def.restrictions['deny_types']:
-                return False
-        if 'allow_types' in mod_def.restrictions:
-            if self.type_str not in mod_def.restrictions['allow_types']:
-                return False
-                
-        # Remove existing if any (replace)
-        self.remove_modifier(mod_id)
-            
-        app_mod = ApplicationModifier(mod_def, value)
-        self.modifiers.append(app_mod)
-        self.recalculate_stats()
-        return True
-
-    def remove_modifier(self, mod_id):
-        self.modifiers = [m for m in self.modifiers if m.definition.id != mod_id]
-        self.recalculate_stats()
-
-    def get_modifier(self, mod_id):
-        for m in self.modifiers:
-            if m.definition.id == mod_id:
-                return m
-        return None
-        
-    def _evaluate_math_formula(self, formula, context):
-        """Safely evaluate math formula."""
-        import math
-        # Sandbox / Validation could go here.
-        # ALLOWED NAMES: math members + context keys
-        
-        names = {k: v for k, v in math.__dict__.items() if not k.startswith("__")}
-        names.update(context)
-        
-        try:
-            return eval(formula, {"__builtins__": {}}, names)
-        except Exception as e:
-            # print(f"Error evaluating formula '{formula}': {e}")
-            return 0
-
-    def recalculate_stats(self):
-        """Recalculate component stats with multiplicative modifier stacking.
-        
-        Modifiers stack multiplicatively.
-        Logic is now delegated to component_modifiers.py registry.
-        """
-        from component_modifiers import apply_modifier_effects
-        import copy
-        
-        # Reset abilities from raw data (deep copy to preserve structure for formula evaluation)
-        self.abilities = copy.deepcopy(self.data.get('abilities', {}))
-
-        # 0. Evaluate Formulas (Base Stats)
-        # Context building
-        context = {
-            'ship_class_mass': 1000 # Default fallback
-        }
-        
-        if self.ship:
-            # Try to get max mass budget from ship
-            # If ship is attached to a vehicle class, use that.
-            context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
-        
-        if self.id == 'bridge':
-             print(f"DEBUG: Context Mass: {context['ship_class_mass']}")
-            
-        for attr, formula in self.formulas.items():
-            val = self._evaluate_math_formula(formula, context)
-            
-            # Map back to appropriate attributes
-            if attr == 'mass':
-                self.base_mass = float(val)
-                self.mass = self.base_mass
-            elif attr == 'hp':
-                self.base_max_hp = int(val)
-                self.max_hp = self.base_max_hp
-            else:
-                 # Generic attribute (damage, range, etc)
-                 # Update ONLY the data dict? Or the attribute?
-                 # Most attributes are read from data[] during init or recalc
-                 # For safety, let's update data[] AND set the attribute if it exists
-                 # self.data[attr] = val # DO NOT modify shared data!
-                 if hasattr(self, attr):
-                     # Type conversion if necessary?
-                     # Ideally schema dependent, but int is safe for most
-                     if isinstance(getattr(self, attr), int):
-                         setattr(self, attr, int(val))
-                     else:
-                         setattr(self, attr, val)
 
 
     def take_damage(self, amount):
@@ -288,6 +182,8 @@ class Component:
         
         # Reset abilities from raw data (deep copy to preserve structure for formula evaluation)
         self.abilities = copy.deepcopy(self.data.get('abilities', {}))
+        
+        old_max_hp = self.max_hp
 
         # 0. Evaluate Formulas (Base Stats)
         # Context building
@@ -342,12 +238,7 @@ class Component:
         # Start with base values
         self.mass = self.base_mass
         self.max_hp = self.base_max_hp
-        
-        old_max_hp = self.max_hp
-        if self.id == 'bridge':
-             print(f"DEBUG: Bridge Recalc start. max_hp reset to {self.max_hp}. old_max was captured as {old_max_hp}. current_hp={self.current_hp}")
-             print(f"DEBUG: Formulas: {self.formulas}")
-             print(f"DEBUG: Data HP: {self.data.get('hp')}")
+
         
         # Initialize stat multipliers and accumulators
         stats = {
@@ -432,9 +323,11 @@ class Component:
              self.life_support_capacity = int(base * stats['life_support_capacity_mult'])
             
         # If component was at full HP before calculation, or is new (current>=old_max), update to new max
-        if self.current_hp >= old_max_hp:
+        # Special case: If old_max_hp was 0 (uninitialized formula), treat as new component
+        if old_max_hp == 0:
             self.current_hp = self.max_hp
-        else:
+        elif self.current_hp >= old_max_hp:
+            self.current_hp = self.max_hp
             # Otherwise keep damage but cap at new max
             self.current_hp = min(self.current_hp, self.max_hp)
 
@@ -585,6 +478,8 @@ class SeekerWeapon(Weapon):
             'turn_mult': 1.0,
             'energy_gen_mult': 1.0,
             'capacity_mult': 1.0,
+            'crew_capacity_mult': 1.0,
+            'life_support_capacity_mult': 1.0,
             'mass_add': 0.0,
             'arc_add': 0.0,
             'arc_set': None,
@@ -678,6 +573,8 @@ class Shield(Component):
             'turn_mult': 1.0,
             'energy_gen_mult': 1.0,
             'capacity_mult': 1.0,
+            'crew_capacity_mult': 1.0,
+            'life_support_capacity_mult': 1.0,
             'mass_add': 0.0,
             'arc_add': 0.0,
             'arc_set': None,
@@ -721,6 +618,8 @@ class ShieldRegenerator(Component):
             'turn_mult': 1.0,
             'energy_gen_mult': 1.0,
             'capacity_mult': 1.0,
+            'crew_capacity_mult': 1.0,
+            'life_support_capacity_mult': 1.0,
             'mass_add': 0.0,
             'arc_add': 0.0,
             'arc_set': None,

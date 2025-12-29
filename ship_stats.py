@@ -43,7 +43,8 @@ class ShipStatsCalculator:
         
         # Hangar Stats
         ship.fighter_capacity = 0
-        ship.launch_mass = 0
+        ship.fighters_per_wave = 0
+        ship.fighter_size_cap = 0
         ship.launch_cycle = 0
         
         # 2. Phase 1: Damage Check & Resource Supply Gathering
@@ -150,7 +151,11 @@ class ShipStatsCalculator:
                 ship.shield_regen_cost += comp.energy_cost
             elif isinstance(comp, Hangar):
                 ship.fighter_capacity += comp.storage_capacity
-                ship.launch_mass += comp.max_launch_mass
+                # ship.launch_mass is replaced by granular stats
+                ship.fighters_per_wave += 1
+                if comp.max_launch_mass > ship.fighter_size_cap:
+                    ship.fighter_size_cap = comp.max_launch_mass
+                    
                 if comp.cycle_time > ship.launch_cycle:
                     ship.launch_cycle = comp.cycle_time
             
@@ -297,6 +302,7 @@ class ShipStatsCalculator:
         
         if not getattr(ship, '_resources_initialized', False):
             if ship.max_fuel > 0:
+
                 ship.current_fuel = ship.max_fuel
             if ship.max_ammo > 0:
                 ship.current_ammo = ship.max_ammo

@@ -94,10 +94,10 @@
         "max_fuel": 50000,
         "max_ammo": 5000,
         "max_energy": 0,
-        "max_speed": 11.479128415853094,
-        "turn_speed": 24.4,
-        "total_thrust": 450,
-        "mass": 980.0395633228862,
+        "max_speed": 11.48,
+        "turn_speed": 24.45,
+        "total_thrust": 450.0,
+        "mass": 980.04,
         "armor_hp_pool": 500
     }
 }

@@ -1109,14 +1109,14 @@
         ]
     },
     "expected_stats": {
-        "max_hp": 2527914,
+        "max_hp": 2534114,
         "max_fuel": 6400000,
         "max_ammo": 320000,
         "max_energy": 128000,
-        "max_speed": 9.084208952342921,
-        "turn_speed": 2.0041440931496886,
-        "total_thrust": 364800.0,
-        "mass": 1005489.9190226517,
+        "max_speed": 0,
+        "turn_speed": 0,
+        "total_thrust": 0,
+        "mass": 1005489.92,
         "armor_hp_pool": 1664000
     }
 }

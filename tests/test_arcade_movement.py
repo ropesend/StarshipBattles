@@ -16,7 +16,7 @@ class TestArcadeMovement(unittest.TestCase):
         load_components("data/components.json")
 
     def setUp(self):
-        self.ship = Ship("TestShip", 100, 100, (255, 255, 255), ship_class="Cruiser")
+        self.ship = Ship("TestShip", 100, 100, (255, 255, 255), ship_class="Escort")
         # Basic setup - need crew infrastructure for components to be active
         # Core: Bridge (requires 5 crew)
         self.ship.add_component(create_component('bridge'), LayerType.CORE)

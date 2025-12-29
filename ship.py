@@ -301,6 +301,50 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.recalculate_stats()
         return True
 
+    def add_components_bulk(self, component: Component, layer_type: LayerType, count: int) -> int:
+        """
+        Add multiple copies of a component to the specified layer.
+        Performs validation for each addition but defers full ship stat recalculation until the end.
+        Returns the number of components successfully added.
+        """
+        added_count = 0
+        
+        # Loop to add
+        for _ in range(count):
+            # Must clone for each new instance
+            # Note: For the first one, we might utilize the passed 'component' if it's already a fresh clone intended for use,
+            # but to be safe and consistent, we clone.
+            # If the caller passed a 'template', we clone. 
+            # However, if the caller dragged a specific instance, they expect that instance to be added.
+            # But for bulk, we imply copies.
+            
+            # Optimization: If adding 1000 items, validation might be slow if it iterates all components.
+            # But we must validate to respect mass limits etc.
+            
+            new_comp = component.clone()
+            
+            # Use the global validator
+            result = _VALIDATOR.validate_addition(self, new_comp, layer_type)
+            if not result.is_valid:
+                # Stop adding if we hit a limit
+                if added_count == 0:
+                    # If the very first one fails, print errors
+                    for err in result.errors:
+                        print(f"Error: {err}")
+                break
+                
+            self.layers[layer_type]['components'].append(new_comp)
+            new_comp.layer_assigned = layer_type
+            new_comp.ship = self
+            new_comp.recalculate_stats()
+            self.current_mass += new_comp.mass
+            added_count += 1
+            
+        if added_count > 0:
+            self.recalculate_stats()
+            
+        return added_count
+
     def remove_component(self, layer_type: LayerType, index: int) -> Optional[Component]:
         """Remove a component from the specified layer by index."""
         if 0 <= index < len(self.layers[layer_type]['components']):

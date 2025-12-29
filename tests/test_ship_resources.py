@@ -99,6 +99,7 @@ class TestShipResources(unittest.TestCase):
         
         # Reset ship
         self.ship = Ship("LSTest", 0, 0, (255, 255, 255))
+        print(f"DEBUG: Created Ship LSTest. Class: {self.ship.ship_class} MassBudget: {self.ship.max_mass_budget}")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
         

@@ -32,6 +32,10 @@ class TestBuilderGUIFix(unittest.TestCase):
         
         # Setup layer panel mock
         self.mock_builder.layer_panel = MagicMock()
+        
+        # Setup left panel mock
+        self.mock_builder.left_panel = MagicMock()
+        self.mock_builder.left_panel.get_add_count.return_value = 1
 
     def test_handle_drop_valid(self):
         """Test _handle_drop with valid component and layer."""
