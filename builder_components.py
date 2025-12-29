@@ -187,8 +187,17 @@ class ModifierEditorPanel:
                 # Slider
                 # Calculate remaining width for slider
                 # Need space for right buttons if showing
+                # Increase safety margin to prevent clipping (e.g. scrollbars)
+                safe_width = self.width - 40 
                 right_btns_w = 54 if show_buttons else 0
-                slider_w = (self.width - 20) - current_x - right_btns_w - 5
+                slider_w = safe_width - current_x - right_btns_w - 5
+                
+                # Ensure minimum slider width
+                if slider_w < 50:
+                    slider_w = 50
+                    # If we force width, we might push right buttons off. 
+                    # But better to overlap slightly than have 0 width slider.
+                    # Or we could shrink buttons?
                 
                 step = 0.01
                 if mod_id == 'range_mount': step = 0.1
@@ -206,7 +215,7 @@ class ModifierEditorPanel:
                 )
                 if not is_active: slider.disable()
                 self.modifier_sliders.append(slider)
-                current_x += slider_w + 2
+                current_x += slider_w + 5
                 
                 if show_buttons:
                      # > (+10)
