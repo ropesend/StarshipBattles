@@ -121,6 +121,11 @@ class BuilderRightPanel:
         # Assuming CWD is project root
         full_path = os.path.join(base_path, theme, filename)
         
+        # Check for new location: Resources/ShipThemes/{theme}/Portraits
+        new_loc = os.path.join("Resources/ShipThemes", theme, "Portraits", filename)
+        if os.path.exists(new_loc):
+            full_path = new_loc
+            
         if not os.path.exists(full_path):
             # Try with spaces?
             full_path_space = os.path.join(base_path, theme, f"{ship_class}_Portrait.jpg")
