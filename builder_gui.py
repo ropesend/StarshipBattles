@@ -920,12 +920,13 @@ class BuilderSceneGUI:
         new_ship, message = ShipIO.load_ship(self.width, self.height)
         if new_ship:
             self.ship = new_ship
-            self.right_panel.name_entry.set_text(self.ship.name)
-            if self.ship.ship_class in self.right_panel.class_dropdown.options_list:
-                self.right_panel.class_dropdown.selected_option = self.ship.ship_class
-            # Sync AI
-            # ...
+            # Fully refresh UI controls to match new ship state
+            self.right_panel.refresh_controls()
+            
             self.update_stats()
+            # Also update the layers panel in case components changed
+            self.layer_panel.rebuild()
+            self.rebuild_modifier_ui()
             print(message)
         elif message:
             self.show_error(message)
@@ -951,7 +952,13 @@ class BuilderSceneGUI:
         self.template_modifiers = {}
         self.ship.ai_strategy = "optimal_firing_range"
         
+        # Reset Name
+        self.ship.name = "Custom Ship"
+        
         self.ship.recalculate_stats()
+        
+        # Refresh UI
+        self.right_panel.refresh_controls()
         self.update_stats()
         self.rebuild_modifier_ui()
         self.controller.selected_component = None
