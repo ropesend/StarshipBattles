@@ -29,12 +29,12 @@
             "text_horiz_alignment": "center"
         }
     },
-    "label.#stat_label": {
+    "#stat_label": {
         "misc": {
-            "text_horiz_alignment": "left"
+            "text_horiz_alignment": "right"
         }
     },
-    "label.#stat_value": {
+    "#stat_value": {
         "misc": {
             "text_horiz_alignment": "right"
         }

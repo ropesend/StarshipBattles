@@ -46,7 +46,16 @@ class ModifierEditorPanel:
         for entry in self.modifier_entries:
             if entry: entry.kill()
         self.modifier_entries = []
-        for el in self.modifier_extra_ui: el.kill()
+        for el in self.modifier_extra_ui:
+            if el is None:
+                continue
+            if isinstance(el, dict):
+                 # Handle special dict objects like step buttons
+                 if el.get('type') == 'step_btns':
+                     for btn in el.get('btns', []):
+                         if btn: btn.kill()
+            elif hasattr(el, 'kill'):
+                el.kill()
         self.modifier_extra_ui = []
         for _, btn in self.preset_buttons: btn.kill()
         self.preset_buttons = []

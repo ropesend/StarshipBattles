@@ -203,6 +203,10 @@ class InteractionController:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 # Left Click
+                # Ignore clicks if over detail panel (which sits inside/over the view)
+                if self.builder.detail_panel.rect.collidepoint(event.pos):
+                    return
+
                 if self.view.rect.collidepoint(event.pos) and not self.dragged_item:
                     found = self.view.get_component_at(event.pos, self.builder.ship)
                     if found:
@@ -647,6 +651,8 @@ class BuilderSceneGUI:
                 self._on_select_target_pressed()
             elif event.ui_element == self.verbose_btn:
                  self.weapons_report_panel.verbose_tooltip = not self.weapons_report_panel.verbose_tooltip
+            elif event.ui_element == self.detail_panel.details_btn:
+                self.detail_panel.show_details_popup()
                  
         elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
             if event.ui_element == self.right_panel.class_dropdown:
