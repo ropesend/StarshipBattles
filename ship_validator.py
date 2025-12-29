@@ -209,6 +209,69 @@ class BridgeExistenceRule(ValidationRule):
             result.add_error("Ship needs a Bridge!")
         return result
 
+class ResourceDependencyRule(ValidationRule):
+    def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
+        result = ValidationResult(True)
+        # Scan all components to determine needs vs sources
+        needs_fuel = False
+        needs_ammo = False
+        needs_energy_storage = False 
+        
+        has_fuel_storage = False
+        has_ammo_storage = False
+        has_energy_storage = False # Battery
+        
+        all_components = []
+        for l in ship.layers.values():
+            all_components.extend(l['components'])
+            
+        for c in all_components:
+            # Check Needs
+            # Check attributes first (runtime values), then data (definition values)
+            # Fuel
+            if getattr(c, 'fuel_cost', 0) > 0 or getattr(c, 'fuel_cost_per_sec', 0) > 0 or c.data.get('fuel_cost', 0) > 0:
+                needs_fuel = True
+                
+            # Ammo
+            if getattr(c, 'ammo_cost', 0) > 0 or c.data.get('ammo_cost', 0) > 0:
+                needs_ammo = True
+                
+            # Energy
+            if getattr(c, 'energy_cost', 0) > 0 or c.data.get('energy_cost', 0) > 0:
+                needs_energy_storage = True
+            
+            # Check Abilities for invisible costs
+            abilities = getattr(c, 'abilities', {})
+            if 'EnergyConsumption' in abilities:
+                 val = abilities['EnergyConsumption']
+                 if isinstance(val, (int, float)) and val > 0:
+                     needs_energy_storage = True
+            
+            # Check Sources (by type or capability)
+            # resource_type might be an attribute on Tank, or just in data for others
+            resource_type = getattr(c, 'resource_type', None)
+            if not resource_type:
+                resource_type = c.data.get('resource_type')
+            
+            # Fuel
+            if resource_type == 'fuel': has_fuel_storage = True
+            # Ammo
+            if resource_type == 'ammo': has_ammo_storage = True
+            # Energy
+            if resource_type == 'energy': has_energy_storage = True
+            
+        # Warnings
+        if needs_fuel and not has_fuel_storage:
+             result.add_warning("Needs Fuel Storage")
+             
+        if needs_ammo and not has_ammo_storage:
+             result.add_warning("Needs Ammo Storage")
+             
+        if needs_energy_storage and not has_energy_storage:
+             result.add_warning("Needs Energy Storage")
+             
+        return result
+
 class ShipDesignValidator:
     def __init__(self):
         self.addition_rules: List[ValidationRule] = [
@@ -222,6 +285,7 @@ class ShipDesignValidator:
         self.design_rules: List[ValidationRule] = [
              ClassRequirementsRule(),
              BridgeExistenceRule(),
+             ResourceDependencyRule(),
              # MassBudgetRule() could also apply here for final check
              MassBudgetRule() 
         ]
@@ -244,5 +308,6 @@ class ShipDesignValidator:
             if not res.is_valid:
                 final_result.is_valid = False
                 final_result.errors.extend(res.errors)
+            final_result.warnings.extend(res.warnings)
         return final_result
 

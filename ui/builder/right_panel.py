@@ -81,8 +81,9 @@ class BuilderRightPanel:
 
         # Portrait Image
         self.portrait_image = None
-        self.portrait_rect = pygame.Rect(10, y, self.rect.width - 20, 300) # Placeholder rect
-        y += 310
+        dim = self.rect.width - 20
+        self.portrait_rect = pygame.Rect(10, y, dim, dim) # Square placeholder
+        y += dim + 10
         
         self.update_portrait_image()
         
@@ -131,8 +132,8 @@ class BuilderRightPanel:
             
             # Scale to fit width, maintaining aspect
             max_w = self.rect.width - 20
-            # Let's say max height is 300
-            max_h = 300
+            # Allow height to match width (square)
+            max_h = max_w
             
             img_w, img_h = image_surf.get_size()
             scale = min(max_w / img_w, max_h / img_h)
@@ -303,11 +304,22 @@ class BuilderRightPanel:
         missing_reqs = s.get_missing_requirements()
         if not s.mass_limits_ok:
             missing_reqs.append("⚠ Over mass limit")
+            
+        warnings = s.get_validation_warnings()
         
-        if not missing_reqs:
+        full_list = []
+        # Errors first
+        for req in missing_reqs:
+            full_list.append(f"<font color='#ffaa55'>{req}</font>")
+            
+        # Then warnings
+        for warn in warnings:
+            full_list.append(f"<font color='#ffff88'>⚠ {warn}</font>")
+        
+        if not full_list:
             html = "<font color='#88ff88'>✓ All requirements met</font>"
         else:
-            html = "<br>".join([f"<font color='#ffaa55'>{req}</font>" for req in missing_reqs])
+            html = "<br>".join(full_list)
         
         self.requirements_text_box.html_text = html
         self.requirements_text_box.rebuild()

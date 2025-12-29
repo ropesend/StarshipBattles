@@ -21,24 +21,29 @@ class TestEmissiveArmor(unittest.TestCase):
             "id": "emissive_armor",
             "name": "Emissive Armor",
             "type": "Armor",
-            "mass": 10,
-            "hp": 50,
+            "mass": "=40 * (ship_class_mass / 1000)",
+            "hp": 200,
+            "hp_formula": "=200 * (ship_class_mass / 1000)**(1/3)",
             "allowed_layers": ["ARMOR"],
             "allowed_vehicle_types": ["Ship"],
             "abilities": {
                 "Armor": True,
-                "EmissiveArmor": 15
+                "EmissiveArmor": { "value": "=15 * (ship_class_mass / 1000)**(1/3)", "stack_group": "Emissive" }
             }
         }
         # Register it so it can be cloned if needed, or just use it directly
         from components import COMPONENT_REGISTRY, Component
+        
+        # Ensure ship has mass budget for formula eval when added
+        self.ship.max_mass_budget = 1000
+        
         c = Component(self.armor_data)
         COMPONENT_REGISTRY["emissive_armor"] = c
         
         # Add to ship
         self.emissive_comp = c.clone()
         if LayerType.ARMOR not in self.ship.layers:
-             self.ship.layers[LayerType.ARMOR] = {'components': [], 'radius_pct': 1.0, 'restrictions': [], 'max_mass_pct': 1.0, 'max_hp_pool': 100}
+             self.ship.layers[LayerType.ARMOR] = {'components': [], 'radius_pct': 1.0, 'restrictions': [], 'max_mass_pct': 1.0, 'max_hp_pool': 100, 'hp_pool': 100}
 
         self.ship.layers[LayerType.ARMOR]['components'].append(self.emissive_comp)
         self.ship.recalculate_stats()
@@ -62,13 +67,16 @@ class TestEmissiveArmor(unittest.TestCase):
         self.ship.layers[LayerType.ARMOR]['components'].append(comp2)
         self.ship.recalculate_stats()
         
-        # Total reduction should be 30
+        # Total reduction should still be 15 (MAX of 15, 15)
         initial_hp = self.ship.hp
-        self.ship.take_damage(25)
-        self.assertEqual(self.ship.hp, initial_hp, "Damage 25 < 30 should be ignored")
         
-        self.ship.take_damage(35)
-        self.assertEqual(self.ship.hp, initial_hp - 5, "Damage 35 > 30 should take 5")
+        # Damage 10 < 15 -> Ignored
+        self.ship.take_damage(10)
+        self.assertEqual(self.ship.hp, initial_hp, "Damage 10 < 15 should be ignored")
+        
+        # Damage 25 > 15 -> Take 10
+        self.ship.take_damage(25)
+        self.assertEqual(self.ship.hp, initial_hp - 10, "Damage 25 > 15 should take 10")
 
 if __name__ == '__main__':
     unittest.main()

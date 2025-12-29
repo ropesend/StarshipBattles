@@ -73,33 +73,23 @@
         "ARMOR": [
             {
                 "id": "emissive_armor",
-                "modifiers": [
-                    {
-                        "id": "mass_scaling",
-                        "value": 1
-                    }
-                ]
+                "modifiers": []
             },
             {
                 "id": "reactive_armor",
-                "modifiers": [
-                    {
-                        "id": "mass_scaling",
-                        "value": 1
-                    }
-                ]
+                "modifiers": []
             }
         ]
     },
     "expected_stats": {
-        "max_hp": 10067,
+        "max_hp": 3547,
         "max_fuel": 0,
         "max_ammo": 0,
         "max_energy": 0,
         "max_speed": 0,
         "turn_speed": 0,
         "total_thrust": 0,
-        "mass": 6160.415414890304,
-        "armor_hp_pool": 6720
+        "mass": 5440.415414890304,
+        "armor_hp_pool": 200
     }
 }

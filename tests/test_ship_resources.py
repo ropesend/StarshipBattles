@@ -110,6 +110,7 @@ class TestShipResources(unittest.TestCase):
         # Wait, if no LS provided, available_life_support=0.
         
         bridge = [c for c in self.ship.layers[LayerType.CORE]['components'] if c.id == 'bridge'][0]
+        print(f"DEBUG: Bridge HP: {bridge.current_hp}/{bridge.max_hp} Status: {bridge.status}")
         self.assertFalse(bridge.is_active)
         self.assertEqual(bridge.status, ComponentStatus.NO_CREW)
 

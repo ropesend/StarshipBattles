@@ -105,16 +105,6 @@
                     "BeamWeapon"
                 ]
             }
-        },
-        {
-            "id": "mass_scaling",
-            "name": "Class Scaling",
-            "description": "Scales mass and capabilities based on ship class size. (Auto-Applied)",
-            "type": "boolean",
-            "readonly": true,
-            "effects": {
-                "special": "mass_scaling"
-            }
         }
     ]
 }

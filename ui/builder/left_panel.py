@@ -251,7 +251,8 @@ class BuilderLeftPanel:
                 container=self.scroll_container,
                 y_pos=y,
                 width=item_width,
-                sprite_mgr=self.builder.sprite_mgr
+                sprite_mgr=self.builder.sprite_mgr,
+                ship_context=self.builder.ship
             )
             self.items.append(item)
             y += item.height

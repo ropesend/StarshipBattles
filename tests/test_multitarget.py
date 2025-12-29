@@ -12,6 +12,7 @@ from components import Component, LayerType, COMPONENT_REGISTRY, Weapon
 from ai import AIController, COMBAT_STRATEGIES
 from spatial import SpatialGrid
 from projectiles import Projectile
+from game_constants import AttackType
 
 class TestMultitarget(unittest.TestCase):
     def setUp(self):
@@ -116,12 +117,12 @@ class TestMultitarget(unittest.TestCase):
         
         # Scenario 1: Missile in Front (In Arc)
         # 1200, 1000 is 200 units to RIGHT of 1000,1000. Angle 0.
-        m1 = Projectile(None, pygame.math.Vector2(1200, 1000), pygame.math.Vector2(0,0), 10, 1000, 5, 'missile')
+        m1 = Projectile(None, pygame.math.Vector2(1200, 1000), pygame.math.Vector2(0,0), 10, 1000, 5, AttackType.MISSILE)
         m1.team_id = 1
         
         # Scenario 2: Missile Behind (Out of Arc)
         # 800, 1000 is 200 units to LEFT of 1000,1000. Angle 180.
-        m2 = Projectile(None, pygame.math.Vector2(800, 1000), pygame.math.Vector2(0,0), 10, 1000, 5, 'missile')
+        m2 = Projectile(None, pygame.math.Vector2(800, 1000), pygame.math.Vector2(0,0), 10, 1000, 5, AttackType.MISSILE)
         m2.team_id = 1
         
         # Add to grid so AI can find them

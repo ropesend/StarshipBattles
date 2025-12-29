@@ -5,7 +5,7 @@
             "name": "Bridge",
             "type": "Bridge",
             "mass": "=50 * sqrt(ship_class_mass / 1000)",
-            "hp": 200,
+            "hp": "=200 * sqrt(ship_class_mass / 1000)",
             "allowed_layers": [
                 "CORE",
                 "INNER",
@@ -17,7 +17,7 @@
             "sprite_index": 3,
             "abilities": {
                 "CommandAndControl": true,
-                "CrewRequired": 5
+                "CrewRequired": "=ceil(5 * sqrt(ship_class_mass / 1000))"
             },
             "major_classification": "Crewsupport"
         },
@@ -112,8 +112,9 @@
             "id": "emissive_armor",
             "name": "Emissive Armor",
             "type": "Armor",
-            "mass": 40,
+            "mass": "=40 * (ship_class_mass / 1000)",
             "hp": 200,
+            "hp_formula": "=200 * (ship_class_mass / 1000)",
             "allowed_layers": [
                 "ARMOR"
             ],
@@ -121,25 +122,24 @@
                 "Ship",
                 "Satellite"
             ],
-            "sprite_index": 14,
+            "sprite_index": 15,
             "abilities": {
                 "Armor": true,
-                "EmissiveArmor": 15
-            },
-            "modifiers": [
-                {
-                    "id": "mass_scaling",
-                    "value": 1
+                "EmissiveArmor": {
+                    "value": "=15 * (ship_class_mass / 1000)**(1/3)",
+                    "stack_group": "Emissive"
                 }
-            ],
+            },
+            "modifiers": [],
             "major_classification": "Armor"
         },
         {
-            "id": "reactive_armor",
-            "name": "Reactive Armor",
+            "id": "scattering_armor",
+            "name": "Scattering Armor",
             "type": "Armor",
-            "mass": 45,
-            "hp": 220,
+            "mass": "=40 * (ship_class_mass / 1000)",
+            "hp": 150,
+            "hp_formula": "=150 * (ship_class_mass / 1000)",
             "allowed_layers": [
                 "ARMOR"
             ],
@@ -147,17 +147,15 @@
                 "Ship",
                 "Satellite"
             ],
-            "sprite_index": 14,
+            "sprite_index": 50,
             "abilities": {
                 "Armor": true,
-                "ToHitDefenseModifier": 1.15
-            },
-            "modifiers": [
-                {
-                    "id": "mass_scaling",
-                    "value": 1
+                "ToHitDefenseModifier": {
+                    "value": 1.15,
+                    "stack_group": "Scattering"
                 }
-            ],
+            },
+            "modifiers": [],
             "major_classification": "Armor"
         },
         {
@@ -333,7 +331,10 @@
             ],
             "sprite_index": 25,
             "abilities": {
-                "ToHitAttackModifier": 2.0
+                "ToHitAttackModifier": {
+                    "value": 2.0,
+                    "stack_group": "Sensor"
+                }
             },
             "major_classification": "Sensors"
         },
@@ -353,7 +354,10 @@
             ],
             "sprite_index": 26,
             "abilities": {
-                "ToHitDefenseModifier": 2.0
+                "ToHitDefenseModifier": {
+                    "value": 2.0,
+                    "stack_group": "ECM"
+                }
             },
             "major_classification": "Sensors"
         },
@@ -735,7 +739,10 @@
             ],
             "sprite_index": 25,
             "abilities": {
-                "ToHitAttackModifier": 1.2
+                "ToHitAttackModifier": {
+                    "value": 1.2,
+                    "stack_group": "Sensor"
+                }
             },
             "major_classification": "Sensors"
         },
@@ -754,7 +761,10 @@
             ],
             "sprite_index": 26,
             "abilities": {
-                "ToHitDefenseModifier": 1.2
+                "ToHitDefenseModifier": {
+                    "value": 1.2,
+                    "stack_group": "ECM"
+                }
             },
             "major_classification": "Sensors"
         },
@@ -776,6 +786,52 @@
                 "ShieldProjection": 50
             },
             "major_classification": "Shields"
+        },
+        {
+            "id": "mini_emissive_armor",
+            "name": "Mini Emissive Armor",
+            "type": "Armor",
+            "mass": 1,
+            "hp": 5,
+            "allowed_layers": [
+                "ARMOR",
+                "OUTER"
+            ],
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 62,
+            "abilities": {
+                "Armor": true,
+                "EmissiveArmor": {
+                    "value": 3,
+                    "stack_group": "Emissive"
+                }
+            },
+            "major_classification": "Armor"
+        },
+        {
+            "id": "mini_scattering_armor",
+            "name": "Mini Scattering Armor",
+            "type": "Armor",
+            "mass": 1,
+            "hp": 5,
+            "allowed_layers": [
+                "ARMOR",
+                "OUTER"
+            ],
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 63,
+            "abilities": {
+                "Armor": true,
+                "ToHitDefenseModifier": {
+                    "value": 1.15,
+                    "stack_group": "Scattering"
+                }
+            },
+            "major_classification": "Armor"
         },
         {
             "id": "satellite_core",

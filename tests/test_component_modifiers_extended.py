@@ -29,6 +29,8 @@ class TestModifierEffectsFunctions(unittest.TestCase):
             'turn_mult': 1.0,
             'energy_gen_mult': 1.0,
             'capacity_mult': 1.0,
+            'crew_capacity_mult': 1.0,
+            'life_support_capacity_mult': 1.0,
             'range_mult': 1.0,
             'mass_add': 0,
             'arc_add': 0,

@@ -1,0 +1,322 @@
+﻿python : ............................................................................................F.............
+.....................................................................................F...F.........................
+...............................................F........................F..........................................
+........................................
+At line:1 char:1
++ python -m unittest discover tests 2>&1 | Out-File -Encoding utf8 test ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (.................................:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+======================================================================
+FAIL: test_seeker_ignores_arc (test_combat_targeting.TestCombatTargeting)
+Verify SeekerWeapon fires even if target is outside arc.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\test_combat_targeting.py", line 168, in test_seeker_ignores_arc
+    self.assertEqual(attacks[0].type, "missile")
+AssertionError: <AttackType.MISSILE: 'missile'> != 'missile'
+
+======================================================================
+FAIL: test_pdc_missile_logic (test_multitarget.TestMultitarget)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\test_multitarget.py", line 147, in test_pdc_missile_logic
+    self.assertNotIn(m2, sec)
+AssertionError: <projectiles.Projectile object at 0x000001C8F70F2A70> unexpectedly found in 
+[<projectiles.Projectile object at 0x000001C8F7107FA0>, <projectiles.Projectile object at 0x000001C8F70F2A70>]
+
+======================================================================
+FAIL: test_pdc_targets_missile (test_pdc.TestPDC)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\test_pdc.py", line 146, in test_pdc_targets_missile
+    self.assertTrue(len(attacks) > 0, f"PDC should have fired. Ship Derelict: {self.ship.is_derelict}")
+AssertionError: False is not true : PDC should have fired. Ship Derelict: False
+
+======================================================================
+FAIL: test_all_ships_match_expected_stats (test_ship_loading.TestAllShipDesigns)
+All ships should match their expected_stats if present.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\test_ship_loading.py", line 218, in test_all_ships_match_expected_stats
+    self.fail("Ships with stat mismatches:\n" + "\n".join(failures))
+AssertionError: Ships with stat mismatches:
+Federation test ship.json: Error loading - unsupported operand type(s) for *=: 'dict' and 'float'
+
+======================================================================
+FAIL: test_malformed_theme_json (test_ship_theme_logic.TestShipThemeLogic)
+Test handling of malformed JSON in theme file.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py", line 1379, in patched
+    return func(*newargs, **newkeywargs)
+  File "C:\Dev\Starship Battles\tests\test_ship_theme_logic.py", line 190, in test_malformed_theme_json
+    self.assertIn("Failed to load theme", args[0])
+AssertionError: 'Failed to load theme' not found in 'Failed to discover theme /themes/BadTheme: Expecting value: 
+line 1 column 1 (char 0)'
+
+----------------------------------------------------------------------
+Ran 376 tests in 8.513s
+
+FAILED (failures=5)
+pygame-ce 2.5.6 (SDL 2.32.10, Python 3.10.11)
+Tunneling Test: Hit=True, Time=0.00500
+Miss Test: Hit=False, Time=0.00500
+--- Test Case ---
+Ship Angle: 0 (0=Right, 90=Down)
+Weapon Facing: 0 (Relative)
+Arc: 45
+Ship Pos: (0, 0)
+Target Pos: (100, 0)
+Global Comp Facing: 0
+Aim Vec: (100, 0)
+Aim Angle: 0.0
+Diff: 0.00
+Result: PASS
+--- Test Case ---
+Ship Angle: 180 (0=Right, 90=Down)
+Weapon Facing: 90 (Relative)
+Arc: 45
+Ship Pos: (0, 0)
+Target Pos: (0, -100)
+Global Comp Facing: 270
+Aim Vec: (0, -100)
+Aim Angle: 270.0
+Diff: 0.00
+Result: PASS
+--- Test Case ---
+Ship Angle: 180 (0=Right, 90=Down)
+Weapon Facing: 90 (Relative)
+Arc: 45
+Ship Pos: (0, 0)
+Target Pos: (0, 100)
+Global Comp Facing: 270
+Aim Vec: (0, 100)
+Aim Angle: 90.0
+Diff: -180.00
+Result: FAIL
+--- Test Case ---
+Ship Angle: 0 (0=Right, 90=Down)
+Weapon Facing: 90 (Relative)
+Arc: 45
+Ship Pos: (0, 0)
+Target Pos: (100, 0)
+Global Comp Facing: 90
+Aim Vec: (100, 0)
+Aim Angle: 0.0
+Diff: -90.00
+Result: FAIL
+Static Target: 1.0 (Expected 1.0)
+Moving Target 90deg: 0
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+
+=== STARTING HEADLESS BATTLE ===
+Ship 'Hero' (Team 0): HP=400/400 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Hero has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'Villain' (Team 1): HP=400/400 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Villain has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+
+=== STARTING HEADLESS BATTLE ===
+Ship 'Hero' (Team 0): HP=400/400 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Hero has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'Villain' (Team 1): HP=400/400 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Villain has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+
+=== STARTING HEADLESS BATTLE ===
+Ship 'Hero' (Team 0): HP=400/400 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Hero has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'Villain' (Team 1): HP=400/400 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Villain has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+
+=== STARTING HEADLESS BATTLE ===
+Ship 'Hero' (Team 0): HP=400/400 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Hero has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'Villain' (Team 1): HP=400/400 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Villain has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+
+=== STARTING HEADLESS BATTLE ===
+Ship 'Hero' (Team 0): HP=400/400 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Hero has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'Villain' (Team 1): HP=400/400 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Villain has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Loaded 19 vehicle classes.
+
+=== STARTING HEADLESS BATTLE ===
+Ship 'T1' (Team 0): HP=400/400 Mass=730.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=5.14 Derelict=False
+WARNING: T1 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'T2' (Team 1): HP=400/400 Mass=730.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=5.14 Derelict=False
+WARNING: T2 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'T1' (Team 0): HP=400/400 Mass=730.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=5.14 Derelict=False
+WARNING: T1 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'T2' (Team 1): HP=400/400 Mass=730.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=5.14 Derelict=False
+WARNING: T2 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Loaded 19 vehicle classes.
+Ship 'S1' (Team 0): HP=0/0 Mass=0.0 Thrust=0.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=False
+WARNING: S1 has NO THRUST!
+WARNING: S1 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'S2' (Team 0): HP=0/0 Mass=0.0 Thrust=0.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=False
+WARNING: S2 has NO THRUST!
+WARNING: S2 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'T1-1' (Team 0): HP=0/0 Mass=0.0 Thrust=0.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=False
+WARNING: T1-1 has NO THRUST!
+WARNING: T1-1 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'T2-1' (Team 1): HP=0/0 Mass=0.0 Thrust=0.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00 Derelict=False
+WARNING: T2-1 has NO THRUST!
+WARNING: T2-1 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Success
+Loaded 19 vehicle classes.
+Error: Component Engine not allowed in ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Missing required mount: Heavy in OUTER
+Error: Key component conflict: GroupA
+Error: Component Test Component not allowed in OUTER
+Error: Component Test Component not allowed in ARMOR
+Error: Mass budget exceeded for Test Ship
+Error: Mass budget exceeded for INNER
+Error: Usage limit exceeded for unique component Test Component
+Loaded 19 vehicle classes.
+TestShip EXPLODED!
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Error: Mass budget exceeded for ARMOR
+Loaded 19 vehicle classes.
+Error: Classification 'Weapons' blocked in this layer
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loading sprites from C:\Dev\Starship Battles\Resources\Images\Components\Tiles
+SUCCESS: Loaded 242 sprites from directory (max index 241)
+Loaded 19 vehicle classes.
+Loading sprites from C:\Dev\Starship Battles\Resources\Images\Components\Tiles
+SUCCESS: Loaded 242 sprites from directory (max index 241)
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Error: Component Railgun not allowed in CORE
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+WARNING: Ship 'Devastator' stats mismatch after loading!
+  - mass: got 1005489.9190226517, expected 1003939.9190226517
+WARNING: Ship 'DN 1' stats mismatch after loading!
+  - max_speed: got 11.4, expected 11.6
+  - turn_speed: got 8.3, expected 8.6
+  - mass: got 42071.55088225714, expected 41321.55088225714
+WARNING: Ship 'PDC Escort' stats mismatch after loading!
+  - max_speed: got 19.6, expected 19.9
+  - turn_speed: got 19.2, expected 19.7
+  - mass: got 1150.7304597800978, expected 1130.0197816614432
+WARNING: Ship 'DN 1' stats mismatch after loading!
+  - max_speed: got 11.4, expected 11.6
+  - turn_speed: got 8.3, expected 8.6
+  - mass: got 42071.55088225714, expected 41321.55088225714
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+ERROR: Atlas file not found at c:\fake\path\Resources\Images\Components.bmp
+Loading sprites from c:\fake\path\Resources\Images\Components\Tiles
+SUCCESS: Loaded 3 sprites from directory (max index 9)
+Loading sprites from C:\Dev\Starship Battles\Resources\Images\Components\Tiles
+SUCCESS: Loaded 242 sprites from directory (max index 241)
+Loaded 19 vehicle classes.
+Error: Component Bridge not allowed on Fighter
+Error: Component Engine not allowed on Satellite
+Error: Component Thruster not allowed on Satellite
+Error: Component Fighter Cockpit not allowed on Ship
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.
+Loaded 19 vehicle classes.

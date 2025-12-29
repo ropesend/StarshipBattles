@@ -417,7 +417,12 @@ class LayerPanel:
                 groups = self._group_components(components)
                 for comp_list, count, mass_total, group_key in groups:
                     pct_val = (mass_total / max_mass * 100) if max_mass > 0 else 0
-                    is_expanded = self.expanded_groups.get(group_key, False)
+                    
+                    # Force collapse if not a stack (prevent single item expanding)
+                    if count <= 1:
+                        is_expanded = False
+                    else:
+                        is_expanded = self.expanded_groups.get(group_key, False)
                     
                     # Use builder state for selection source of truth
                     is_selected_group = False

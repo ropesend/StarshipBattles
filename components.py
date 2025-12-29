@@ -46,7 +46,8 @@ class ApplicationModifier:
 
 class Component:
     def __init__(self, data):
-        self.data = data # Store raw data for reference/cloning
+        import copy
+        self.data = copy.deepcopy(data) # Store raw data for reference/cloning
         self.id = data['id']
         self.name = data['name']
         self.base_mass = data['mass']
@@ -64,15 +65,21 @@ class Component:
         self.cost = data.get('cost', 0)
         
         # Parse abilities from data
-        self.abilities = data.get('abilities', {})
-        self.base_abilities = self.abilities.copy()
+        self.abilities = data.get('abilities', {}) # This is already a copy from self.data deepcopy? No, data passed in.
+        # self.data is safe. But we used `data` arg.
+        self.data = copy.deepcopy(data)
+        
+        # Re-source from deepcopy to be sure? Use self.data
+        self.abilities = self.data.get('abilities', {})
+        self.base_abilities = copy.deepcopy(self.abilities)
+        
         self.ship = None # Container reference
         
         self.modifiers = [] # list of ApplicationModifier
         
         # Load default modifiers from data definition
-        if 'modifiers' in data:
-            for mod_data in data['modifiers']:
+        if 'modifiers' in self.data:
+            for mod_data in self.data['modifiers']:
                 mod_id = mod_data['id']
                 val = mod_data.get('value', None)
                 # We need to access registry. BUT registry might not be fully loaded if simple import.
@@ -88,7 +95,7 @@ class Component:
                     
         # Parse Formulas
         self.formulas = {}
-        for key, value in data.items():
+        for key, value in self.data.items():
             if isinstance(value, str) and value.startswith("="):
                 # It's a formula!
                 self.formulas[key] = value[1:] # Store without '='
@@ -168,7 +175,120 @@ class Component:
         Logic is now delegated to component_modifiers.py registry.
         """
         from component_modifiers import apply_modifier_effects
+        import copy
         
+        # Reset abilities from raw data (deep copy to preserve structure for formula evaluation)
+        self.abilities = copy.deepcopy(self.data.get('abilities', {}))
+
+        # 0. Evaluate Formulas (Base Stats)
+        # Context building
+        context = {
+            'ship_class_mass': 1000 # Default fallback
+        }
+        
+        if self.ship:
+            # Try to get max mass budget from ship
+            # If ship is attached to a vehicle class, use that.
+            context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
+        
+        if self.id == 'bridge':
+             print(f"DEBUG: Context Mass: {context['ship_class_mass']}")
+            
+        for attr, formula in self.formulas.items():
+            val = self._evaluate_math_formula(formula, context)
+            
+            # Map back to appropriate attributes
+            if attr == 'mass':
+                self.base_mass = float(val)
+                self.mass = self.base_mass
+            elif attr == 'hp':
+                self.base_max_hp = int(val)
+                self.max_hp = self.base_max_hp
+            else:
+                 # Generic attribute (damage, range, etc)
+                 # Update ONLY the data dict? Or the attribute?
+                 # Most attributes are read from data[] during init or recalc
+                 # For safety, let's update data[] AND set the attribute if it exists
+                 # self.data[attr] = val # DO NOT modify shared data!
+                 if hasattr(self, attr):
+                     # Type conversion if necessary?
+                     # Ideally schema dependent, but int is safe for most
+                     if isinstance(getattr(self, attr), int):
+                         setattr(self, attr, int(val))
+                     else:
+                         setattr(self, attr, val)
+
+
+    def take_damage(self, amount):
+        self.current_hp -= amount
+        if self.current_hp <= 0:
+            self.current_hp = 0
+            self.is_active = False
+            return True # Destroyed
+        return False
+
+    def reset_hp(self):
+        self.current_hp = self.max_hp
+        self.is_active = True
+        self.status = ComponentStatus.ACTIVE
+
+    def add_modifier(self, mod_id, value=None):
+        if mod_id not in MODIFIER_REGISTRY: return False
+        
+        # Check restrictions
+        mod_def = MODIFIER_REGISTRY[mod_id]
+        if 'deny_types' in mod_def.restrictions:
+            if self.type_str in mod_def.restrictions['deny_types']:
+                return False
+        if 'allow_types' in mod_def.restrictions:
+            if self.type_str not in mod_def.restrictions['allow_types']:
+                return False
+                
+        # Remove existing if any (replace)
+        self.remove_modifier(mod_id)
+            
+        app_mod = ApplicationModifier(mod_def, value)
+        self.modifiers.append(app_mod)
+        self.recalculate_stats()
+        return True
+
+    def remove_modifier(self, mod_id):
+        self.modifiers = [m for m in self.modifiers if m.definition.id != mod_id]
+        self.recalculate_stats()
+
+    def get_modifier(self, mod_id):
+        for m in self.modifiers:
+            if m.definition.id == mod_id:
+                return m
+        return None
+        
+    def _evaluate_math_formula(self, formula, context):
+        """Safely evaluate math formula."""
+        import math
+        # Sandbox / Validation could go here.
+        # ALLOWED NAMES: math members + context keys
+        
+        names = {k: v for k, v in math.__dict__.items() if not k.startswith("__")}
+        names.update(context)
+        
+        try:
+            return eval(formula, {"__builtins__": {}}, names)
+        except Exception as e:
+            # print(f"Error evaluating formula '{formula}': {e}")
+            return 0
+
+    def recalculate_stats(self):
+        """Recalculate component stats with multiplicative modifier stacking.
+        
+        Modifiers stack multiplicatively.
+        Logic is now delegated to component_modifiers.py registry.
+        """
+        from component_modifiers import apply_modifier_effects
+        import copy
+        
+        # Reset abilities from raw data (deep copy to preserve structure for formula evaluation)
+        self.abilities = copy.deepcopy(self.data.get('abilities', {}))
+
         # 0. Evaluate Formulas (Base Stats)
         # Context building
         context = {
@@ -195,7 +315,7 @@ class Component:
                  # Update ONLY the data dict? Or the attribute?
                  # Most attributes are read from data[] during init or recalc
                  # For safety, let's update data[] AND set the attribute if it exists
-                 self.data[attr] = val
+                 # self.data[attr] = val # DO NOT modify shared data!
                  if hasattr(self, attr):
                      # Type conversion if necessary?
                      # Ideally schema dependent, but int is safe for most
@@ -204,11 +324,30 @@ class Component:
                      else:
                          setattr(self, attr, val)
 
+        # Evaluate formulas in abilities
+        # We need to process self.abilities (which is a copy of data['abilities'])
+        # Iterate and evaluate
+        for ability_name, val in self.abilities.items():
+            if isinstance(val, str) and val.startswith("="):
+                # Standard Key-Value formula
+                new_val = self._evaluate_math_formula(val[1:], context)
+                self.abilities[ability_name] = new_val
+            elif isinstance(val, dict):
+                 # Complex object: check 'value' field
+                 if 'value' in val and isinstance(val['value'], str) and val['value'].startswith("="):
+                     new_val = self._evaluate_math_formula(val['value'][1:], context)
+                     val['value'] = new_val # Update in place within the dict
+
+
         # Start with base values
         self.mass = self.base_mass
         self.max_hp = self.base_max_hp
         
         old_max_hp = self.max_hp
+        if self.id == 'bridge':
+             print(f"DEBUG: Bridge Recalc start. max_hp reset to {self.max_hp}. old_max was captured as {old_max_hp}. current_hp={self.current_hp}")
+             print(f"DEBUG: Formulas: {self.formulas}")
+             print(f"DEBUG: Data HP: {self.data.get('hp')}")
         
         # Initialize stat multipliers and accumulators
         stats = {
@@ -221,15 +360,15 @@ class Component:
             'turn_mult': 1.0,
             'energy_gen_mult': 1.0,
             'capacity_mult': 1.0,
+            'crew_capacity_mult': 1.0,
+            'life_support_capacity_mult': 1.0,
             'mass_add': 0.0,
             'arc_add': 0.0,
             'arc_set': None,
             'properties': {}
         }
         
-        # Reset abilities to base
-        self.abilities = self.base_abilities.copy()
-
+        
         # Process all modifiers
         for m in self.modifiers:
             apply_modifier_effects(m.definition, m.value, stats, component=self)
@@ -270,6 +409,27 @@ class Component:
             self.energy_generation_rate = self.data.get('energy_generation', 0) * stats['energy_gen_mult']
         if hasattr(self, 'capacity'):
             self.capacity = int(self.data.get('capacity', 0) * stats['capacity_mult'])
+
+        # Apply specific scaling to Crew/LifeSupport abilities and attributes
+        if 'CrewCapacity' in self.abilities:
+            val = self.abilities['CrewCapacity']
+            if isinstance(val, (int, float)):
+                self.abilities['CrewCapacity'] = int(val * stats['crew_capacity_mult'])
+        
+        if hasattr(self, 'crew_capacity'):
+             # Use the value from abilities if possible, or data default
+             base = self.data.get('crew_capacity', 10)
+             # Better to use base from abilities if consistent, but preserving legacy behavior:
+             self.crew_capacity = int(base * stats['crew_capacity_mult'])
+
+        if 'LifeSupportCapacity' in self.abilities:
+            val = self.abilities['LifeSupportCapacity']
+            if isinstance(val, (int, float)):
+                self.abilities['LifeSupportCapacity'] = int(val * stats['life_support_capacity_mult'])
+        
+        if hasattr(self, 'life_support_capacity'):
+             base = self.data.get('life_support_capacity', 10)
+             self.life_support_capacity = int(base * stats['life_support_capacity_mult'])
             
         # If component was at full HP before calculation, or is new (current>=old_max), update to new max
         if self.current_hp >= old_max_hp:
@@ -462,7 +622,8 @@ class Sensor(Component):
     """Provides sensor capabilities like attack modifiers."""
     def __init__(self, data):
         super().__init__(data)
-        self.attack_modifier = self.abilities.get('ToHitAttackModifier', 1.0)
+        val = self.abilities.get('ToHitAttackModifier', 1.0)
+        self.attack_modifier = val.get('value', 1.0) if isinstance(val, dict) else val
     
     def clone(self):
         return Sensor(self.data)
@@ -471,7 +632,8 @@ class Electronics(Component):
     """Provides electronic warfare capabilities like defense modifiers."""
     def __init__(self, data):
         super().__init__(data)
-        self.defense_modifier = self.abilities.get('ToHitDefenseModifier', 1.0)
+        val = self.abilities.get('ToHitDefenseModifier', 1.0)
+        self.defense_modifier = val.get('value', 1.0) if isinstance(val, dict) else val
     
     def clone(self):
         return Electronics(self.data)

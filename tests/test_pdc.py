@@ -5,6 +5,7 @@ from ship import Ship, LayerType
 from components import Component, Weapon, SeekerWeapon, BeamWeapon
 from battle import BattleScene
 from projectiles import Projectile
+from game_constants import AttackType
 
 # Mock definitions to avoid loading full game data if possible, 
 # or we just rely on class structure.
@@ -127,7 +128,7 @@ class TestPDC(unittest.TestCase):
         context = {'projectiles': self.scene.projectiles, 'grid': self.scene.engine.grid}
         
         # Ensure it is type 'missile' for ship_combat.py check
-        self.missile.type = 'missile'
+        self.missile.type = AttackType.MISSILE
         self.missile.is_alive = True
         
         self.ship.recalculate_stats()
@@ -145,7 +146,6 @@ class TestPDC(unittest.TestCase):
         
         self.assertTrue(len(attacks) > 0, f"PDC should have fired. Ship Derelict: {self.ship.is_derelict}")
         attack = attacks[0]
-        from ship_combat import AttackType
         self.assertEqual(attack['type'], AttackType.BEAM)
         self.assertEqual(attack['target'], self.missile)
         

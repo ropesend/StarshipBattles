@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ship import Ship, LayerType, initialize_ship_data
 from components import Weapon, BeamWeapon, ProjectileWeapon, SeekerWeapon, create_component, load_components
 from ship_combat import ShipCombatMixin
+from game_constants import AttackType
 
 class TestCombatTargeting(unittest.TestCase):
     """
@@ -165,7 +166,7 @@ class TestCombatTargeting(unittest.TestCase):
         
         attacks = self.attacker.fire_weapons()
         self.assertEqual(len(attacks), 1, "Seeker weapon should fire regardless of arc")
-        self.assertEqual(attacks[0].type, "missile")
+        self.assertEqual(attacks[0].type, AttackType.MISSILE)
 
     # --- Target Prioritization Tests ---
 

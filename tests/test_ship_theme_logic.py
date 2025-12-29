@@ -187,4 +187,4 @@ class TestShipThemeLogic(unittest.TestCase):
         # Verify log_error was called
         mock_log.assert_called()
         args, _ = mock_log.call_args
-        self.assertIn("Failed to load theme", args[0])
+        self.assertIn("Failed to discover theme", args[0])

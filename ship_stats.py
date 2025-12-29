@@ -151,10 +151,11 @@ class ShipStatsCalculator:
                 if mt > ship.max_targets:
                     ship.max_targets = mt 
                     
-            # Emissive Armor
-            ea = comp.abilities.get('EmissiveArmor', 0)
-            if ea > 0:
-                ship.emissive_armor += ea 
+            # Emissive Armor - NOW HANDLED IN calculate_ability_totals
+            # ea = comp.abilities.get('EmissiveArmor', 0)
+            # if ea > 0:
+            #     ship.emissive_armor += ea 
+            pass  # Removed manual summation 
 
         # 5. Phase 4: Physics & Limits
         # ----------------------------
@@ -231,6 +232,9 @@ class ShipStatsCalculator:
         if attack_mods < 0.01: attack_mods = 1.0
         
         ship.baseline_to_hit_offense = attack_mods
+
+        # Emissive Armor (Max Stacking)
+        ship.emissive_armor = self._get_ability_total(component_pool, 'EmissiveArmor')
 
         # Armor Pool Init (if starting)
         if LayerType.ARMOR in ship.layers:
@@ -309,25 +313,74 @@ class ShipStatsCalculator:
         ship._prev_max_shields = ship.max_shields
 
     def calculate_ability_totals(self, components):
-        """Calculate total values for all abilities from components."""
+        """
+        Calculate total values for all abilities from components.
+        Supports 'stack_group' in ability definition for redundancy (MAX) vs stacking (SUM/MULT).
+        """
         totals = {}
         
         # Abilities that should multiply instead of sum
         MULTIPLICATIVE_ABILITIES = {'ToHitAttackModifier', 'ToHitDefenseModifier'}
         
+        # Intermediate structure: ability -> { group_key -> [values] }
+        ability_groups = {}
+
         for comp in components:
             abilities = getattr(comp, 'abilities', {})
-            for ability_name, value in abilities.items():
-                if isinstance(value, bool):
-                    if value:
-                        totals[ability_name] = True
-                elif isinstance(value, (int, float)):
-                    if ability_name in MULTIPLICATIVE_ABILITIES:
-                        if ability_name not in totals:
-                             totals[ability_name] = 1.0
-                        totals[ability_name] *= value
-                    else:
-                        totals[ability_name] = totals.get(ability_name, 0) + value
+            for ability_name, raw_value in abilities.items():
+                
+                # Parse Value & Group
+                value = raw_value
+                stack_group = None
+                
+                if isinstance(raw_value, dict) and 'value' in raw_value:
+                    value = raw_value['value']
+                    stack_group = raw_value.get('stack_group')
+                
+                # Determine Group Key
+                # If no stack_group, use component instance (unique) so it behaves as individual item (stacking with everything)
+                group_key = stack_group if stack_group else comp
+
+                if ability_name not in ability_groups:
+                    ability_groups[ability_name] = {}
+                if group_key not in ability_groups[ability_name]:
+                    ability_groups[ability_name][group_key] = []
+                
+                ability_groups[ability_name][group_key].append(value)
+
+        # Aggregate
+        for ability_name, groups in ability_groups.items():
+            # 1. Intra-Group Aggregation (MAX / Redundancy)
+            # All items in a Named Group provide redundancy -> Take MAX
+            group_contributions = []
+            
+            for key, values in groups.items():
+                # Filter for numeric
+                nums = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
+                if nums:
+                    group_contributions.append(max(nums))
+                elif any(v is True for v in values):
+                     # Boolean support (if any is True, the group is True)
+                     group_contributions.append(True)
+
+            if not group_contributions:
+                continue
+
+            # 2. Inter-Group Aggregation (Sum or Multiply)
+            first = group_contributions[0]
+            
+            if isinstance(first, bool):
+                # If any group contributes True, result is True
+                totals[ability_name] = True
+            else:
+                if ability_name in MULTIPLICATIVE_ABILITIES:
+                    val = 1.0
+                    for v in group_contributions:
+                         if isinstance(v, (int, float)): val *= v
+                    totals[ability_name] = val
+                else:
+                    val = sum(v for v in group_contributions if isinstance(v, (int, float)))
+                    totals[ability_name] = val
         
         return totals
 

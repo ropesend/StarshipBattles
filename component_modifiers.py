@@ -19,6 +19,8 @@ class ModifierEffects:
         stats['turn_mult'] *= scale
         stats['energy_gen_mult'] *= scale
         stats['capacity_mult'] *= scale
+        stats['crew_capacity_mult'] *= scale
+        stats['life_support_capacity_mult'] *= scale
 
     @staticmethod
     def range_mount(val, stats):
@@ -80,28 +82,7 @@ class ModifierEffects:
         mass_increase_factor = 1.0 + (reduction ** 2) 
         stats['mass_mult'] *= mass_increase_factor
 
-    @staticmethod
-    def mass_scaling(val, stats, component=None):
-        """
-        Scales mass based on ship class Max Mass (ref 1000t).
-        Scales EmissiveArmor ability by cube root of mass ratio.
-        """
-        if component and component.ship:
-            max_mass = component.ship.max_mass_budget
-            # Ref mass 1000
-            ratio = max_mass / 1000.0
-            
-            # Apply Mass Multiplier
-            stats['mass_mult'] *= ratio
-            
-            # Apply HP Multiplier (linear scaling with mass ratio)
-            stats['hp_mult'] *= ratio
-            
-            # Apply Emissive Value Multiplier (Cube Root of Ratio)
-            emissive_mult = ratio ** (1.0/3.0)
-            
-            if 'EmissiveArmor' in component.abilities:
-                 component.abilities['EmissiveArmor'] *= emissive_mult
+
 
 # Registry mapping 'special' string to handler function
 SPECIAL_EFFECT_HANDLERS = {
@@ -110,7 +91,7 @@ SPECIAL_EFFECT_HANDLERS = {
     'turret_mount': ModifierEffects.turret_mount,
     'facing': ModifierEffects.facing,
     'precision_mount': ModifierEffects.precision_mount,
-    'mass_scaling': ModifierEffects.mass_scaling,
+
 }
 
 def apply_modifier_effects(modifier_def, value, stats, component=None):

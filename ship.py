@@ -98,53 +98,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         class_def = VEHICLE_CLASSES.get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
 
         # Initialize Layers dynamically from class definition
-        self.layers: Dict[LayerType, Dict[str, Any]] = {}
-        layer_defs = class_def.get('layers', [])
-        
-        # Fallback if no layers defined (Legacy compatibility)
-        if not layer_defs:
-            layer_defs = [
-                { "type": "CORE", "radius_pct": 0.2, "restrictions": [] },
-                { "type": "INNER", "radius_pct": 0.5, "restrictions": [] },
-                { "type": "OUTER", "radius_pct": 0.8, "restrictions": [] },
-                { "type": "ARMOR", "radius_pct": 1.0, "restrictions": [] }
-            ]
-            
-        for l_def in layer_defs:
-            l_type_str = l_def.get('type')
-            try:
-                l_type = LayerType[l_type_str]
-                self.layers[l_type] = {
-                    'components': [],
-                    'radius_pct': l_def.get('radius_pct', 0.5),
-                    'restrictions': l_def.get('restrictions', []),
-                    'max_mass_pct': l_def.get('max_mass_pct', 1.0),
-                    'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0
-                }
-            except KeyError:
-                print(f"Warning: Unknown LayerType {l_type_str} in class {ship_class}")
-
-        # Recalculate layer radii based on max_mass_pct (Area proportional to mass capacity)
-        # Sort layers: CORE -> INNER -> OUTER -> ARMOR
-        layer_order = [LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR]
-        
-        # Filter layers present in this ship
-        present_layers = [l for l in layer_order if l in self.layers]
-        
-        # Calculate total mass capacity (sum of max_mass_pct)
-        total_capacity_pct = sum(self.layers[l]['max_mass_pct'] for l in present_layers)
-        
-        if total_capacity_pct > 0:
-            cumulative_mass_pct = 0.0
-            for l_type in present_layers:
-                cumulative_mass_pct += self.layers[l_type]['max_mass_pct']
-                # Area = pi * r^2. Mass proportional to Area.
-                # Mass_ratio = Current_Cumulative / Total
-                # Radius_ratio = sqrt(Mass_ratio)
-                self.layers[l_type]['radius_pct'] = math.sqrt(cumulative_mass_pct / total_capacity_pct)
-        else:
-            # Fallback if no mass limits defined (shouldn't happen with new data)
-            pass
+        self._initialize_layers()
         
         # Stats
         self.mass: float = 0.0
@@ -219,6 +173,115 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Initialize helper (lazy or eager)
         self.stats_calculator: Optional[ShipStatsCalculator] = None
 
+    def _initialize_layers(self) -> None:
+        """Initialize or Re-initialize layers based on current ship_class."""
+        class_def = VEHICLE_CLASSES.get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
+        self.layers = {}
+        layer_defs = class_def.get('layers', [])
+        
+        # Fallback if no layers defined (Legacy compatibility)
+        if not layer_defs:
+            layer_defs = [
+                { "type": "CORE", "radius_pct": 0.2, "restrictions": [] },
+                { "type": "INNER", "radius_pct": 0.5, "restrictions": [] },
+                { "type": "OUTER", "radius_pct": 0.8, "restrictions": [] },
+                { "type": "ARMOR", "radius_pct": 1.0, "restrictions": [] }
+            ]
+            
+        for l_def in layer_defs:
+            l_type_str = l_def.get('type')
+            try:
+                l_type = LayerType[l_type_str]
+                self.layers[l_type] = {
+                    'components': [],
+                    'radius_pct': l_def.get('radius_pct', 0.5),
+                    'restrictions': l_def.get('restrictions', []),
+                    'max_mass_pct': l_def.get('max_mass_pct', 1.0),
+                    'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0
+                }
+            except KeyError:
+                print(f"Warning: Unknown LayerType {l_type_str} in class {self.ship_class}")
+
+        # Recalculate layer radii based on max_mass_pct (Area proportional to mass capacity)
+        # Sort layers: CORE -> INNER -> OUTER -> ARMOR
+        layer_order = [LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR]
+        
+        # Filter layers present in this ship
+        present_layers = [l for l in layer_order if l in self.layers]
+        
+        # Calculate total mass capacity (sum of max_mass_pct)
+        total_capacity_pct = sum(self.layers[l]['max_mass_pct'] for l in present_layers)
+        
+        if total_capacity_pct > 0:
+            cumulative_mass_pct = 0.0
+            for l_type in present_layers:
+                cumulative_mass_pct += self.layers[l_type]['max_mass_pct']
+                # Area = pi * r^2. Mass proportional to Area.
+                # Mass_ratio = Current_Cumulative / Total
+                # Radius_ratio = sqrt(Mass_ratio)
+                self.layers[l_type]['radius_pct'] = math.sqrt(cumulative_mass_pct / total_capacity_pct)
+        else:
+            # Fallback if no mass limits defined (shouldn't happen with new data)
+            pass
+
+    def change_class(self, new_class: str, migrate_components: bool = False) -> None:
+        """
+        Change the ship class and optionally migrate components.
+        
+        Args:
+            new_class: The new class name (e.g. "Cruiser")
+            migrate_components: If True, attempts to keep components and fit them into new layers.
+                                If False, clears all components.
+        """
+        if new_class not in VEHICLE_CLASSES:
+            print(f"Error: Unknown class {new_class}")
+            return
+
+        old_components = []
+        if migrate_components:
+            # Flatten all components with their original layer
+            for l_type, data in self.layers.items():
+                for comp in data['components']:
+                    old_components.append((comp, l_type))
+        
+        # Update Class
+        self.ship_class = new_class
+        class_def = VEHICLE_CLASSES[self.ship_class]
+        self.base_mass = class_def.get('hull_mass', 50)
+        self.vehicle_type = class_def.get('type', "Ship")
+        self.max_mass_budget = class_def.get('max_mass', 1000)
+        
+        # Re-initialize Layers (clears self.layers)
+        self._initialize_layers()
+        self.current_mass = 0.0 # Reset mass accumulator
+        
+        if migrate_components:
+            # Attempt to restore components
+            for comp, old_layer in old_components:
+                added = False
+                
+                # 1. Try original layer
+                if old_layer in self.layers:
+                    if self.add_component(comp, old_layer):
+                         added = True
+                
+                # 2. If failed, try allowed layers for this component
+                if not added:
+                    # Sort allowed layers by preference? (e.g. Core -> Inner -> Outer)
+                    # Just try all allowed that are present in ship
+                    for allowed in comp.allowed_layers:
+                        if allowed == old_layer: continue # Already tried
+                        if allowed in self.layers:
+                            if self.add_component(comp, allowed):
+                                added = True
+                                break
+                
+                if not added:
+                    print(f"Warning: Could not fit component {comp.name} during refit to {new_class}")
+        
+        # Finally recalculate stats
+        self.recalculate_stats()
+
     def add_component(self, component: Component, layer_type: LayerType) -> bool:
         """Validate and add a component to the specified layer."""
         result = _VALIDATOR.validate_addition(self, component, layer_type)
@@ -276,6 +339,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             return []
         # Return all errors as list of strings
         return [f"⚠ {err}" for err in result.errors]
+
+    def get_validation_warnings(self) -> List[str]:
+        """Check class requirements and return list of warnings (soft requirements)."""
+        result = _VALIDATOR.validate_design(self)
+        return result.warnings
     
     def _format_ability_name(self, ability_name: str) -> str:
         """Convert ability ID to readable name."""

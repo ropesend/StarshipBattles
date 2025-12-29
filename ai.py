@@ -4,6 +4,7 @@ import pygame
 from components import LayerType
 from logger import log_info
 from ai_behaviors import RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior, FormationBehavior
+from game_constants import AttackType
 
 # Load combat strategies from JSON
 COMBAT_STRATEGIES = {}
@@ -126,7 +127,9 @@ class AIController:
                     armor_hp = getattr(enemy, 'layers', {}).get(LayerType.ARMOR, {}).get('hp_pool', 0)
                     score -= armor_hp * weight
                 elif priority == 'missiles_in_pdc_arc':
-                    if getattr(enemy, 'type', '') == 'missile':
+                    e_type = getattr(enemy, 'type', '')
+                    is_missile = e_type == 'missile' or e_type == AttackType.MISSILE
+                    if is_missile:
                         if self._is_in_pdc_arc(enemy):
                              score += weight * 2000
                         else:
@@ -138,7 +141,7 @@ class AIController:
         # Candidates expansion: If missile priority is active, we must include projectiles
         if 'missiles_in_pdc_arc' in priorities:
              missiles = [obj for obj in self.grid.query_radius(self.ship.position, 1500) 
-                         if getattr(obj, 'type', '') == 'missile' 
+                         if (getattr(obj, 'type', '') == 'missile' or getattr(obj, 'type', '') == AttackType.MISSILE)
                          and obj.is_alive 
                          and getattr(obj, 'team_id', -1) != self.ship.team_id]
              enemies.extend(missiles)
@@ -214,7 +217,9 @@ class AIController:
                     armor_hp = getattr(enemy, 'layers', {}).get(LayerType.ARMOR, {}).get('hp_pool', 0)
                     score -= armor_hp * weight
                 elif priority == 'missiles_in_pdc_arc':
-                    if getattr(enemy, 'type', '') == 'missile':
+                    e_type = getattr(enemy, 'type', '')
+                    is_missile = e_type == 'missile' or e_type == AttackType.MISSILE
+                    if is_missile:
                         if self._is_in_pdc_arc(enemy):
                              score += weight * 2000
                         else:
@@ -223,7 +228,7 @@ class AIController:
             
         if 'missiles_in_pdc_arc' in priorities:
              missiles = [obj for obj in self.grid.query_radius(self.ship.position, 1500) 
-                         if getattr(obj, 'type', '') == 'missile' 
+                         if (getattr(obj, 'type', '') == 'missile' or getattr(obj, 'type', '') == AttackType.MISSILE)
                          and obj.is_alive 
                          and getattr(obj, 'team_id', -1) != self.ship.team_id]
              enemies.extend(missiles)
