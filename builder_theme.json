@@ -31,7 +31,7 @@
     },
     "#stat_label": {
         "misc": {
-            "text_horiz_alignment": "right"
+            "text_horiz_alignment": "left"
         }
     },
     "#stat_value": {
