@@ -40,6 +40,7 @@ class ShipStatsCalculator:
             ship.layers[LayerType.ARMOR]['max_hp_pool'] = 0
             
         ship.emissive_armor = 0
+        ship.crystalline_armor = 0
         
         # Hangar Stats
         ship.fighter_capacity = 0
@@ -250,6 +251,9 @@ class ShipStatsCalculator:
 
         # Emissive Armor (Max Stacking)
         ship.emissive_armor = self._get_ability_total(component_pool, 'EmissiveArmor')
+        
+        # Crystalline Armor (Max Stacking)
+        ship.crystalline_armor = self._get_ability_total(component_pool, 'CrystallineArmor')
 
         # Armor Pool Init (if starting)
         if LayerType.ARMOR in ship.layers:
