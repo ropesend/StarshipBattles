@@ -1,0 +1,99 @@
+{
+    "definitions": {
+        "Capital_Standard": [
+            {
+                "type": "CORE",
+                "restrictions": [],
+                "max_mass_pct": 0.3
+            },
+            {
+                "type": "INNER",
+                "restrictions": [],
+                "max_mass_pct": 0.5
+            },
+            {
+                "type": "OUTER",
+                "restrictions": [],
+                "max_mass_pct": 0.5
+            },
+            {
+                "type": "ARMOR",
+                "restrictions": [],
+                "max_mass_pct": 0.3
+            }
+        ],
+        "Capital_Escort": [
+            {
+                "type": "CORE",
+                "restrictions": [],
+                "max_mass_pct": 0.5
+            },
+            {
+                "type": "INNER",
+                "restrictions": [],
+                "max_mass_pct": 0.5
+            },
+            {
+                "type": "OUTER",
+                "restrictions": [],
+                "max_mass_pct": 0.7
+            },
+            {
+                "type": "ARMOR",
+                "restrictions": [],
+                "max_mass_pct": 0.3
+            }
+        ],
+        "Fighter_Standard": [
+            {
+                "type": "CORE",
+                "restrictions": [],
+                "max_mass_pct": 1.0
+            },
+            {
+                "type": "ARMOR",
+                "restrictions": [],
+                "max_mass_pct": 0.3
+            }
+        ],
+        "Satellite_Standard": [
+            {
+                "type": "CORE",
+                "restrictions": [],
+                "max_mass_pct": 0.5
+            },
+            {
+                "type": "OUTER",
+                "restrictions": [],
+                "max_mass_pct": 0.7
+            },
+            {
+                "type": "ARMOR",
+                "restrictions": [],
+                "max_mass_pct": 0.3
+            }
+        ],
+        "Planetary_Complex": [
+            {
+                "type": "CORE",
+                "restrictions": [],
+                "max_mass_pct": 0.5
+            },
+            {
+                "type": "INNER",
+                "restrictions": [],
+                "max_mass_pct": 0.5
+            },
+            {
+                "type": "OUTER",
+                "restrictions": [],
+                "max_mass_pct": 0.7
+            },
+            {
+                "type": "ARMOR",
+                "restrictions": [],
+                "max_mass_pct": 0.3
+            }
+        ]
+    }
+}
