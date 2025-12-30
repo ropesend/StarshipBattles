@@ -676,7 +676,9 @@
             "mass": 2,
             "hp": 2,
             "allowed_layers": [
-                "CORE"
+                "CORE",
+                "INNER",
+                "OUTER"
             ],
             "allowed_vehicle_types": [
                 "Fighter"
@@ -701,7 +703,9 @@
             "mass": 1,
             "hp": 1,
             "allowed_layers": [
-                "CORE"
+                "CORE",
+                "INNER",
+                "OUTER"
             ],
             "allowed_vehicle_types": [
                 "Fighter"
@@ -726,7 +730,9 @@
             "mass": 3,
             "hp": 3,
             "allowed_layers": [
-                "CORE"
+                "CORE",
+                "INNER",
+                "OUTER"
             ],
             "allowed_vehicle_types": [
                 "Fighter"

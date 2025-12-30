@@ -39,10 +39,15 @@ class TestBuilderWarningLogic(unittest.TestCase):
         self.builder.right_panel.class_dropdown = MagicMock()
         self.builder.right_panel.vehicle_type_dropdown = MagicMock()
         self.builder.layer_panel = MagicMock()
+        self.builder.modifier_panel = MagicMock()
+        self.builder.weapons_report_panel = MagicMock()
+        self.builder.detail_panel = MagicMock()
         
         self.builder.left_panel.get_add_count.return_value = 1
         self.builder.left_panel.handle_event.return_value = None
         self.builder.layer_panel.handle_event.return_value = None
+        self.builder.modifier_panel.handle_event.return_value = None
+        self.builder.weapons_report_panel.handle_event.return_value = None
         
         # Reset pending action
         self.builder.pending_action = None

@@ -25,7 +25,7 @@ class TestFighterLaunch(unittest.TestCase):
 
     def test_launch_logic(self):
         """Test launching mechanism on a ship."""
-        ship = Ship("Carrier", 0, 0, (255, 0, 0))
+        ship = Ship("Carrier", 0, 0, (255, 0, 0), ship_class="Cruiser")
         hangar = COMPONENT_REGISTRY["fighter_launch_bay"].clone()
         # Add Bridge to prevent derelict status
         bridge = COMPONENT_REGISTRY["bridge"].clone()
@@ -75,7 +75,7 @@ class TestFighterLaunch(unittest.TestCase):
         """Test BattleEngine processes launch events and creates ships."""
         engine = BattleEngine()
         
-        carrier = Ship("Carrier", 0, 0, (255, 0, 0), team_id=0)
+        carrier = Ship("Carrier", 0, 0, (255, 0, 0), team_id=0, ship_class="Cruiser")
         
         # Add Bridge
         bridge = COMPONENT_REGISTRY["bridge"].clone()
@@ -121,7 +121,7 @@ class TestFighterLaunch(unittest.TestCase):
 
     def test_stats_aggregation(self):
         """Test ShipStatsCalculator aggregates Hangar stats."""
-        ship = Ship("Carrier", 0, 0, (255, 0, 0))
+        ship = Ship("Carrier", 0, 0, (255, 0, 0), ship_class="Cruiser")
         hangar = COMPONENT_REGISTRY["fighter_launch_bay"].clone()
         ship.add_component(hangar, LayerType.INNER)
         
