@@ -287,6 +287,9 @@ class Component:
         
         self.max_hp = int(self.base_max_hp * stats['hp_mult'])
         
+        # Persist damage multiplier for dynamic calculations (get_damage)
+        self.damage_multiplier = stats['damage_mult']
+        
         if hasattr(self, 'damage'):
             raw_damage = self.data.get('damage', 0)
             if isinstance(raw_damage, str) and raw_damage.startswith("="):
@@ -375,7 +378,9 @@ class Weapon(Component):
         """Evaluate damage at a specific range. Returns base damage if no formula."""
         if self.damage_formula:
             context = {'range_to_target': range_to_target}
-            return int(max(0, self._evaluate_math_formula(self.damage_formula, context)))
+            base_val = max(0, self._evaluate_math_formula(self.damage_formula, context))
+            mult = getattr(self, 'damage_multiplier', 1.0)
+            return int(base_val * mult)
         return int(self.damage)
 
     def update(self):
