@@ -29,7 +29,7 @@ class TestShipPhysicsThrust(unittest.TestCase):
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship.add_component(create_component('life_support'), LayerType.CORE)
         self.ship.add_component(create_component('standard_engine'), LayerType.OUTER)
-        self.ship.add_component(create_component('fuel_tank'), LayerType.INNER)
+        self.ship.add_component(create_component('fuel_tank'), LayerType.CORE)
         self.ship.recalculate_stats()
     
     def test_thrust_forward_sets_flag(self):
@@ -105,7 +105,7 @@ class TestShipPhysicsRotation(unittest.TestCase):
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship.add_component(create_component('life_support'), LayerType.CORE)
         self.ship.add_component(create_component('standard_engine'), LayerType.OUTER)
-        self.ship.add_component(create_component('thruster'), LayerType.INNER)
+        self.ship.add_component(create_component('thruster'), LayerType.OUTER)
         self.ship.recalculate_stats()
     
     def test_rotate_left(self):
@@ -168,7 +168,7 @@ class TestShipPhysicsMovement(unittest.TestCase):
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship.add_component(create_component('life_support'), LayerType.CORE)
         self.ship.add_component(create_component('standard_engine'), LayerType.OUTER)
-        self.ship.add_component(create_component('fuel_tank'), LayerType.INNER)
+        self.ship.add_component(create_component('fuel_tank'), LayerType.CORE)
         self.ship.recalculate_stats()
     
     def test_position_updates_with_velocity(self):

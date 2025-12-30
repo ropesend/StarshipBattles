@@ -85,7 +85,7 @@ class TestWeaponFiring(unittest.TestCase):
     
     def setUp(self):
         # Create ship with weapons
-        self.ship = Ship("Gunship", 0, 0, (255, 255, 255), team_id=0, ship_class="Escort")
+        self.ship = Ship("Gunship", 0, 0, (255, 255, 255), team_id=0, ship_class="Cruiser")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('railgun'), LayerType.OUTER)
         self.ship.add_component(create_component('ordnance_tank'), LayerType.INNER)

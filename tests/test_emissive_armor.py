@@ -11,7 +11,7 @@ import unittest
 class TestEmissiveArmor(unittest.TestCase):
     def setUp(self):
         # Create a dummy ship
-        self.ship = Ship("Test Ship", 0, 0, (255, 0, 0))
+        self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Escort")
         # Create an Emissive Armor component
         # We need to mock the component definition since we haven't loaded json yet in this test context,
         # or we rely on the registry. simpler to mock.

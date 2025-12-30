@@ -18,7 +18,9 @@ class TestBulkAdd(unittest.TestCase):
             "type": "Armor",
             "mass": 10,
             "hp": 100,
-            "allowed_layers": ["ARMOR", "OUTER", "INNER", "CORE"]
+            "hp": 100,
+            # allowed_layers removed
+            "major_classification": "Armor"
         }
         self.comp = Component(self.comp_data)
         

@@ -15,11 +15,11 @@ class TestValidationWarnings(unittest.TestCase):
     def setUp(self):
         if not pygame.get_init():
             pygame.init()
-        # Ensure 'Frigate' exists
-        if "Frigate" not in VEHICLE_CLASSES:
-             VEHICLE_CLASSES["Frigate"] = {"max_mass": 2000, "hull_mass": 100}
+        # Ensure 'Cruiser' exists
+        if "Cruiser" not in VEHICLE_CLASSES:
+             VEHICLE_CLASSES["Cruiser"] = {"max_mass": 16000, "hull_mass": 400}
 
-        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Frigate")
+        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
         
         self.base_data = {
             "id": "test_comp",
