@@ -288,7 +288,13 @@ class Component:
         self.max_hp = int(self.base_max_hp * stats['hp_mult'])
         
         if hasattr(self, 'damage'):
-            self.damage = int(self.data.get('damage', 0) * stats['damage_mult'])
+            raw_damage = self.data.get('damage', 0)
+            if isinstance(raw_damage, str) and raw_damage.startswith("="):
+                # Re-evaluate formula at range 0 and apply multiplier
+                base_damage = self._evaluate_math_formula(raw_damage[1:], {'range_to_target': 0})
+                self.damage = int(base_damage * stats['damage_mult'])
+            else:
+                self.damage = int(raw_damage * stats['damage_mult'])
         if hasattr(self, 'range'):
             self.range = int(self.data.get('range', 0) * stats['range_mult'])
         if hasattr(self, 'cost'):
@@ -345,7 +351,16 @@ class Bridge(Component):
 class Weapon(Component):
     def __init__(self, data):
         super().__init__(data)
-        self.damage = data.get('damage', 0)
+        # Store raw damage value/formula
+        raw_damage = data.get('damage', 0)
+        if isinstance(raw_damage, str) and raw_damage.startswith("="):
+            self.damage_formula = raw_damage[1:]  # Store formula without '='
+            # Evaluate at range 0 for base display value
+            self.damage = int(max(0, self._evaluate_math_formula(self.damage_formula, {'range_to_target': 0})))
+        else:
+            self.damage_formula = None
+            self.damage = int(raw_damage) if raw_damage else 0
+        
         self.range = data.get('range', 0)
         self.reload_time = data.get('reload', 1.0)
         self.ammo_cost = data.get('ammo_cost', 0)
@@ -355,6 +370,13 @@ class Weapon(Component):
         self.fire_count = 0  # Track how many times weapon has fired
         self.shots_fired = 0
         self.shots_hit = 0
+
+    def get_damage(self, range_to_target: float) -> int:
+        """Evaluate damage at a specific range. Returns base damage if no formula."""
+        if self.damage_formula:
+            context = {'range_to_target': range_to_target}
+            return int(max(0, self._evaluate_math_formula(self.damage_formula, context)))
+        return int(self.damage)
 
     def update(self):
         # Cycle-Based: 1 tick = 0.01 seconds. Decrement timer by dt.

@@ -43,7 +43,7 @@
                 "Satellite",
                 "Planetary Complex"
             ],
-            "damage": 40,
+            "damage": "=40 - (0.01 * range_to_target)",
             "range": 2400,
             "reload": 2.0,
             "projectile_speed": 20000,
@@ -262,7 +262,7 @@
                 "Satellite",
                 "Planetary Complex"
             ],
-            "damage": 15,
+            "damage": "=15 * (1 - 0.00005 * range_to_target)",
             "range": 2000,
             "reload": 0.2,
             "energy_cost": 5,

@@ -29,9 +29,10 @@ class TestCollisionSystem(unittest.TestCase):
         target.radius = 20
         target.is_alive = True
         
-        # Mock component for hit chance (always hit)
+        # Mock component for hit chance (always hit) and damage formula
         mock_component = MagicMock()
         mock_component.calculate_hit_chance.return_value = 1.0
+        mock_component.get_damage.return_value = 10  # Return static damage value
         
         recent_beams = []
         

@@ -81,7 +81,16 @@ class ProjectileManager:
                         hit = True
                 
                 if hit:
-                    s.take_damage(p.damage)
+                    # Calculate hit distance from projectile origin
+                    hit_dist = p.distance_traveled
+                    
+                    # Evaluate damage at hit distance if source weapon has formula
+                    if hasattr(p, 'source_weapon') and p.source_weapon and hasattr(p.source_weapon, 'get_damage'):
+                        damage = p.source_weapon.get_damage(hit_dist)
+                    else:
+                        damage = p.damage
+                    
+                    s.take_damage(damage)
                     hit_occurred = True
                     break
             

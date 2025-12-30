@@ -86,6 +86,7 @@ class TestBattleSceneExtended(unittest.TestCase):
         mock_comp = mock.MagicMock()
         mock_comp.shots_hit = 0
         mock_comp.calculate_hit_chance.return_value = 1.0
+        mock_comp.get_damage.return_value = 25  # Return expected damage value
         
         beam = {
             'type': 'beam',

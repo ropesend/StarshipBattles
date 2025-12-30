@@ -67,7 +67,9 @@ class TestProjectileManager(unittest.TestCase):
         proj.velocity = Vector2(10, 0)
         proj.damage = 20
         proj.is_alive = True
-        proj.type = 'projectile' 
+        proj.type = 'projectile'
+        proj.source_weapon = None  # No source weapon, use static damage
+        proj.distance_traveled = 5  # Projectile has traveled some distance
         
         self.manager.add_projectile(proj)
         

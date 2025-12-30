@@ -52,7 +52,9 @@ class CollisionSystem:
                     chance = beam_comp.calculate_hit_chance(hit_dist)
                     
                     if random.random() < chance:
-                        target.take_damage(attack['damage'])
+                        # Evaluate damage at hit distance
+                        damage = beam_comp.get_damage(hit_dist)
+                        target.take_damage(damage)
                         end_pos = start_pos + direction * hit_dist
         
         # Store for visualization
