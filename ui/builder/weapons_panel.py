@@ -71,6 +71,7 @@ class WeaponsReportPanel:
         self._max_range = 0
         self._tooltip_data = None  # Store tooltip data for rendering on top
         self.verbose_tooltip = False  # Toggle for detailed stats
+        self.hovered_weapon = None  # Track weapon being hovered for firing arc display
     def _update_button_colors(self):
         # Update button text/colours to reflect state
         # Note: PygameGUI doesn't make changing specific button colors easy without State, 
@@ -188,7 +189,14 @@ class WeaponsReportPanel:
             self.scroll_bar.set_visible_percentage(1.0)
             self.scroll_bar.set_scroll_from_start_percentage(0.0) # Reset if not needed
             
-        self.scroll_offset = self.scroll_bar.scroll_position * (total_height - visible_height) if total_height > visible_height else 0
+        # Update scroll offset with normalized calculation
+        if total_height > visible_height:
+            visible_pct = visible_height / total_height
+            max_start_pct = max(0.001, 1.0 - visible_pct)
+            normalized_scroll = self.scroll_bar.start_percentage / max_start_pct
+            self.scroll_offset = normalized_scroll * (total_height - visible_height)
+        else:
+            self.scroll_offset = 0
 
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -206,7 +214,21 @@ class WeaponsReportPanel:
                 self.filter_states['beam'] = True
                 self.filter_states['seeker'] = True
                 self._update_button_colors()
-
+        
+        # Handle mouse wheel scrolling when cursor is over the panel
+        if event.type == pygame.MOUSEWHEEL:
+            mx, my = pygame.mouse.get_pos()
+            if self.rect.collidepoint(mx, my):
+                # Calculate scroll step (3 rows per wheel notch)
+                total_height = len(self._weapons_cache) * self.WEAPON_ROW_HEIGHT
+                visible_height = self.rect.height - 50
+                if total_height > visible_height:
+                    # Scroll amount as percentage of scrollable content
+                    scroll_step = (self.WEAPON_ROW_HEIGHT * 3) / (total_height - visible_height)
+                    # Adjust current position (event.y is positive for scroll up, negative for scroll down)
+                    new_pct = self.scroll_bar.start_percentage - (event.y * scroll_step * (1.0 - visible_height / total_height))
+                    new_pct = max(0.0, min(1.0, new_pct))
+                    self.scroll_bar.set_scroll_from_start_percentage(new_pct)
 
 
     
@@ -241,15 +263,29 @@ class WeaponsReportPanel:
         font = pygame.font.SysFont("Arial", 16)  # Larger font 11->16
         small_font = pygame.font.SysFont("Arial", 14)  # Larger font 9->14
         
+        # Recalculate scroll offset dynamically (scrollbar position may have changed)
+        total_height = len(self._weapons_cache) * self.WEAPON_ROW_HEIGHT
+        visible_height = self.rect.height - 50
+        if total_height > visible_height:
+            # start_percentage goes from 0 to (1 - visible_percentage)
+            # Normalize to get full scroll range
+            visible_pct = visible_height / total_height
+            max_start_pct = max(0.001, 1.0 - visible_pct)  # Avoid division by zero
+            normalized_scroll = self.scroll_bar.start_percentage / max_start_pct
+            self.scroll_offset = normalized_scroll * (total_height - visible_height)
+        else:
+            self.scroll_offset = 0
+        
         # Adjust start_y by scroll offset
         draw_start_y = start_y - int(self.scroll_offset)
         
         # Draw max range reference line and scale
         if self._max_range > 0:
             max_range_x = start_x + bar_width
-            pygame.draw.line(screen, (100, 100, 150), 
+            # Make max range line fainter to match scale markers
+            pygame.draw.line(screen, (50, 50, 70), 
                            (max_range_x, draw_start_y - 5), 
-                           (max_range_x, draw_start_y + len(self._weapons_cache) * self.WEAPON_ROW_HEIGHT + 5), 2)
+                           (max_range_x, draw_start_y + len(self._weapons_cache) * self.WEAPON_ROW_HEIGHT + 5), 1)
             # Label max range
             range_label = small_font.render(f"{int(self._max_range)}", True, (150, 150, 200))
             screen.blit(range_label, (max_range_x - range_label.get_width()//2, draw_start_y - 16))
@@ -262,8 +298,9 @@ class WeaponsReportPanel:
                 scale_label = small_font.render(f"{int(self._max_range * pct)}", True, (80, 80, 100))
                 screen.blit(scale_label, (scale_x - scale_label.get_width()//2, draw_start_y - 16))
         
-        # Reset tooltip data
+        # Reset tooltip data and hovered weapon
         self._tooltip_data = None
+        self.hovered_weapon = None
         current_mouse_pos = pygame.mouse.get_pos()
         
         # Draw each weapon row
@@ -302,7 +339,7 @@ class WeaponsReportPanel:
                 is_projectile = isinstance(weapon, ProjectileWeapon)
                 
                 if is_beam:
-                    # Beam weapons: Show hit probability at start and end + thresholds
+                    # Beam weapons: Show hit probability (ABOVE) and damage (BELOW)
                     base_color = (40, 80, 40)
                     pygame.draw.line(screen, base_color, (start_x, bar_y), (start_x + weapon_bar_width, bar_y), window_bar_height)
                     
@@ -318,25 +355,41 @@ class WeaponsReportPanel:
                     chance_at_0 = max(0.0, min(1.0, base_acc * factor_at_0 * ship_mod * target_mod))
                     chance_at_max = max(0.0, min(1.0, base_acc * factor_at_max * ship_mod * target_mod))
                     
-                    # Draw Start Label (0 range)
+                    # Calculate damage at start/end using get_damage
+                    if hasattr(weapon, 'get_damage'):
+                        dmg_at_0 = weapon.get_damage(0)
+                        dmg_at_max = weapon.get_damage(weapon_range)
+                    else:
+                        dmg_at_0 = dmg_at_max = damage
+                    
+                    # Draw Start: Accuracy ABOVE, Damage BELOW
                     start_label_color = (0, 200, 0) if chance_at_0 > 0.5 else (200, 100, 0)
                     if chance_at_0 < 0.2: start_label_color = (200, 50, 50)
                     
-                    s_label = small_font.render(f"{int(chance_at_0 * 100)}%", True, start_label_color)
-                    screen.blit(s_label, (start_x - s_label.get_width() - 5, bar_y - 8)) # Left of bar
+                    s_acc_label = small_font.render(f"{int(chance_at_0 * 100)}%", True, start_label_color)
+                    screen.blit(s_acc_label, (start_x - s_acc_label.get_width() - 5, bar_y - 10))  # ABOVE - left of bar
                     
-                    # Draw End Label (Max range)
-                    end_text = f"{int(chance_at_max * 100)}%"
+                    s_dmg_label = small_font.render(f"D:{int(dmg_at_0)}", True, (200, 200, 100))
+                    screen.blit(s_dmg_label, (start_x + 2, bar_y + 8))  # BELOW
+                    
+                    # Draw End: Accuracy ABOVE, Damage BELOW, Range indicator
                     end_label_color = (0, 200, 0) if chance_at_max > 0.5 else (200, 100, 0)
                     if chance_at_max < 0.2: end_label_color = (200, 50, 50)
                     
-                    e_label = small_font.render(end_text, True, end_label_color)
-                    screen.blit(e_label, (start_x + weapon_bar_width + 5, bar_y - 8)) # Right of bar
+                    end_x = start_x + weapon_bar_width
+                    e_acc_label = small_font.render(f"{int(chance_at_max * 100)}%", True, end_label_color)
+                    screen.blit(e_acc_label, (end_x + 5, bar_y - 10))  # ABOVE - right of bar
                     
-                    # Normal threshold display (intermediate points)
+                    e_dmg_label = small_font.render(f"D:{int(dmg_at_max)}", True, (200, 200, 100))
+                    screen.blit(e_dmg_label, (end_x - e_dmg_label.get_width() - 2, bar_y + 8))  # BELOW
+                    
+                    # Range indicator at max range
+                    range_label = small_font.render(f"R:{int(weapon_range)}", True, (180, 180, 180))
+                    screen.blit(range_label, (end_x + 5, bar_y + 8))
+                    
+                    # Intermediate threshold markers: Accuracy ABOVE only
                     threshold_data = self._calculate_threshold_ranges(weapon, ship)
                     
-                    # Colors for thresholds (green to red gradient)
                     colors = [
                         (0, 255, 0),    # 99%
                         (50, 230, 0),   # 90%
@@ -353,24 +406,45 @@ class WeaponsReportPanel:
                     
                     for j, (threshold, range_val, dmg) in enumerate(threshold_data):
                         # Don't draw if too close to start or end (avoid overlap)
-                        if range_val is not None and range_val > (weapon_range * 0.05) and range_val < (weapon_range * 0.95):
+                        if range_val is not None and range_val > (weapon_range * 0.10) and range_val < (weapon_range * 0.90):
                             marker_x = start_x + int((range_val / self._max_range) * bar_width)
                             color = colors[j] if j < len(colors) else (150, 150, 150)
                             
                             # Draw marker
-                            pygame.draw.circle(screen, color, (marker_x, bar_y), 7)
+                            pygame.draw.circle(screen, color, (marker_x, bar_y), 5)
                             
-                            # Draw percentage label
+                            # Accuracy label ABOVE
                             pct_text = f"{int(threshold * 100)}%"
                             pct_label = small_font.render(pct_text, True, color)
-                            
-                            # Alternate label position
-                            if j % 2 == 0:
-                                screen.blit(pct_label, (marker_x - pct_label.get_width()//2, bar_y - 20))
-                            else:
-                                screen.blit(pct_label, (marker_x - pct_label.get_width()//2, bar_y + 10))
+                            screen.blit(pct_label, (marker_x - pct_label.get_width()//2, bar_y - 18))
+                    
+                    # Draw range and damage labels at 20/40/60/80% breakpoints for beams
+                    dmg_breakpoint_colors = [
+                        (100, 220, 50),  # 20%
+                        (150, 180, 50),  # 40%
+                        (200, 140, 50),  # 60%
+                        (230, 100, 50),  # 80%
+                    ]
+                    for bp_idx, bp_pct in enumerate([0.2, 0.4, 0.6, 0.8]):
+                        bp_range = int(weapon_range * bp_pct)
+                        bp_x = start_x + int(bp_pct * weapon_bar_width)
+                        
+                        # Range label
+                        range_text = f"{int(bp_range)}"
+                        range_surf = small_font.render(range_text, True, (120, 120, 140))
+                        screen.blit(range_surf, (bp_x - range_surf.get_width()//2, bar_y + 20))
+                        
+                        # Damage label at this breakpoint
+                        if hasattr(weapon, 'get_damage'):
+                            bp_damage = weapon.get_damage(bp_range)
+                        else:
+                            bp_damage = damage
+                        dmg_color = dmg_breakpoint_colors[bp_idx]
+                        dmg_text = f"D:{int(bp_damage)}"
+                        dmg_surf = small_font.render(dmg_text, True, dmg_color)
+                        screen.blit(dmg_surf, (bp_x - dmg_surf.get_width()//2, bar_y + 8))
                 else:
-                    # Projectile/Seeker weapons: Show damage at range endpoints only (no hit probability)
+                    # Projectile/Seeker weapons: Show damage at range breakpoints
                     if is_seeker:
                         base_color = (80, 40, 80)  # Purple for missiles
                     else:
@@ -378,15 +452,52 @@ class WeaponsReportPanel:
                     
                     pygame.draw.line(screen, base_color, (start_x, bar_y), (start_x + weapon_bar_width, bar_y), window_bar_height)
                     
-                    # Draw damage at start and end of range
-                    dmg_label = small_font.render(f"Dmg: {int(damage)}", True, (200, 200, 100))
-                    screen.blit(dmg_label, (start_x + 5, bar_y - 18))
+                    # Draw damage at range breakpoints (0%, 20%, 40%, 60%, 80%, 100%)
+                    # ALL damage labels go BELOW the line with D: prefix
+                    breakpoints = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+                    dmg_colors = [
+                        (50, 255, 50),   # 0% (max damage - bright green)
+                        (100, 220, 50),  # 20%
+                        (150, 180, 50),  # 40%
+                        (200, 140, 50),  # 60%
+                        (230, 100, 50),  # 80%
+                        (255, 60, 50),   # 100% (min damage - red)
+                    ]
                     
-                    # Mark the range end
+                    for bp_idx, bp_pct in enumerate(breakpoints):
+                        bp_range = int(weapon_range * bp_pct)
+                        # Use get_damage if available, else fall back to static damage
+                        if hasattr(weapon, 'get_damage'):
+                            bp_damage = weapon.get_damage(bp_range)
+                        else:
+                            bp_damage = damage
+                        
+                        bp_x = start_x + int(bp_pct * weapon_bar_width)
+                        bp_color = dmg_colors[bp_idx]
+                        
+                        # Draw marker
+                        pygame.draw.circle(screen, bp_color, (bp_x, bar_y), 5)
+                        
+                        # Draw damage label BELOW the line with D: prefix
+                        dmg_text = f"D:{int(bp_damage)}"
+                        dmg_surf = small_font.render(dmg_text, True, bp_color)
+                        screen.blit(dmg_surf, (bp_x - dmg_surf.get_width()//2, bar_y + 8))
+                        
+                        # Draw range label ABOVE at each breakpoint (except 0%)
+                        if bp_pct > 0:
+                            range_text = f"{int(bp_range)}"
+                            range_surf = small_font.render(range_text, True, (120, 120, 140))
+                            screen.blit(range_surf, (bp_x - range_surf.get_width()//2, bar_y - 16))
+                    
+                    # Mark the range end (to the right of bar)
                     end_x = start_x + weapon_bar_width
-                    pygame.draw.circle(screen, (200, 150, 100), (end_x, bar_y), 6)
-                    range_label = small_font.render(f"{int(weapon_range)}", True, (180, 180, 180))
-                    screen.blit(range_label, (end_x - range_label.get_width()//2, bar_y + 10))
+                    range_label = small_font.render(f"R:{int(weapon_range)}", True, (180, 180, 180))
+                    screen.blit(range_label, (end_x + 5, bar_y - 4))
+            
+            # Check for weapon row hover (for firing arc display)
+            weapon_row_rect = pygame.Rect(self.rect.x, row_y, self.rect.width - self.scroll_bar_width, self.WEAPON_ROW_HEIGHT)
+            if weapon_row_rect.collidepoint(current_mouse_pos) and content_rect.collidepoint(current_mouse_pos):
+                self.hovered_weapon = weapon
             
             # Check for tooltip hover (use content_rect to ensure we don't hover hidden items)
             if content_rect.collidepoint(current_mouse_pos):
@@ -425,12 +536,18 @@ class WeaponsReportPanel:
                     else:
                         acc_text = "N/A"
                         verbose_info = None
+                    
+                    # Calculate damage at this range using get_damage if available
+                    if hasattr(weapon, 'get_damage'):
+                        hover_damage = weapon.get_damage(hover_range)
+                    else:
+                        hover_damage = damage
                         
                     self._tooltip_data = {
                         'pos': current_mouse_pos,
                         'range': int(hover_range),
                         'accuracy': acc_text,
-                        'damage': int(damage),
+                        'damage': int(hover_damage),
                         'verbose': verbose_info
                     }
 

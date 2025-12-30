@@ -878,6 +878,11 @@ class BuilderSceneGUI:
                             if m: m.value = val
                      preview_comp.recalculate_stats()
                      hovered = preview_comp
+        
+        # Also check if hovering a weapon in the weapons report panel
+        if not hovered and hasattr(self, 'weapons_report_panel'):
+            if self.weapons_report_panel.hovered_weapon:
+                hovered = self.weapons_report_panel.hovered_weapon
                      
         self.view.draw(screen, self.ship, self.show_firing_arcs, self.controller.selected_component, hovered)
         

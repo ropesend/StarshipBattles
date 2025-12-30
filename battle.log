@@ -1,3 +1,60 @@
-2025-12-30 08:25:24,918 - INFO - Loaded 12 combat strategies
-2025-12-30 08:25:25,118 - INFO - Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
-2025-12-30 08:25:27,563 - INFO - Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+2025-12-30 09:39:46,667 - INFO - Loaded 12 combat strategies
+2025-12-30 09:39:47,379 - INFO - Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+2025-12-30 09:39:48,043 - INFO - Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+2025-12-30 09:39:49,923 - DEBUG - Test debug message
+2025-12-30 09:39:49,923 - ERROR - Test error message
+2025-12-30 09:39:49,923 - INFO - Test info message
+2025-12-30 09:39:50,018 - INFO - Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+2025-12-30 09:39:50,468 - INFO - Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+2025-12-30 09:39:51,569 - DEBUG - Projectile <projectiles.Projectile object at 0x0000027236254700> destroyed by point defense!
+2025-12-30 09:39:51,569 - DEBUG - Projectile <projectiles.Projectile object at 0x0000027237FB2110> destroyed by point defense!
+2025-12-30 09:39:52,253 - INFO - Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+2025-12-30 09:39:52,287 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Federation\Skins/Frigate.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,321 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Federation\Skins/Destroyer.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,358 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Federation\Skins/light cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,392 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Federation\Skins/cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,435 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Federation\Skins/heavy cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,472 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Federation\Skins/battlecruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,513 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Federation\Skins/battleship.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,556 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Federation\Skins/dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,602 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Federation\Skins/super dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,652 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Federation\Skins/monitor.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,684 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Skins/Escort.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,718 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Skins/Frigate.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,753 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Skins/Destroyer.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,791 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Skins/light cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,828 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Skins/Cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,869 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Skins/heavey cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,907 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Skins/Battlecruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,947 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Skins/Battleship.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:52,991 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Skins/Dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,036 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Skins/super dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,083 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Atlantians\Skins/monitor.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,115 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Klingons\Skins/escort.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,148 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Klingons\Skins/frigate.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,183 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Klingons\Skins/destroyer.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,223 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Klingons\Skins/lightcruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,258 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Klingons\Skins/cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,300 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Klingons\Skins/heavycruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,338 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Klingons\Skins/battlecruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,378 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Klingons\Skins/battleship.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,421 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Klingons\Skins/dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,466 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Klingons\Skins/superdreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,513 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Klingons\Skins/monitor.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,546 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Romulans\Skins/escort.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,578 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Romulans\Skins/frigate.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,613 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Romulans\Skins/Destroyer.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,653 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Romulans\Skins/light cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,689 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Romulans\Skins/cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,732 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Romulans\Skins/heavy cruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,771 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Romulans\Skins/Battlecruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,810 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Romulans\Skins/battleship.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,854 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Romulans\Skins/Dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,900 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Romulans\Skins/super dreadnaught.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:53,948 - ERROR - Lazy load failed for c:\Dev\Starship Battles\resources\ShipThemes\Romulans\Skins/monitor.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+2025-12-30 09:39:55,137 - INFO - Discovered 1 ship themes: ['MetricsTheme']
+2025-12-30 09:39:55,233 - INFO - Discovered 0 ship themes: []
+2025-12-30 09:39:55,328 - INFO - Discovered 1 ship themes: ['ScaledTheme']
+2025-12-30 09:39:56,532 - INFO - Loaded 12 combat strategies
+2025-12-30 09:39:56,596 - INFO - Loaded 12 combat strategies
+2025-12-30 09:39:56,597 - INFO - Loaded 12 combat strategies
