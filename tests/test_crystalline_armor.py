@@ -4,21 +4,23 @@ import os
 import unittest
 from unittest.mock import MagicMock
 
-# Mock pygame before imports that use it
-mock_pygame = MagicMock()
-mock_pygame.math.Vector2 = MagicMock
-sys.modules['pygame'] = mock_pygame
+# Use real pygame instead of mocking it - mocking at module level pollutes other tests
+import pygame
+pygame.init()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from components import Component
-from ship import Ship, LayerType
+from ship import Ship, LayerType, initialize_ship_data
 from ship_combat import ShipCombatMixin
 
 class TestCrystallineArmor(unittest.TestCase):
     def setUp(self):
-        # Create a dummy ship
-        self.ship = Ship("Test Ship", 0, 0, (255, 0, 0))
+        # Initialize ship data (VEHICLE_CLASSES, etc.)
+        initialize_ship_data()
+        
+        # Create a dummy ship (use Cruiser for sufficient layers)
+        self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser")
         
         # Define Crystalline Armor Data
         self.armor_data = {
@@ -82,12 +84,14 @@ class TestCrystallineArmor(unittest.TestCase):
         self.ship.layers[LayerType.ARMOR]['components'].append(s_comp)
         
         self.ship.recalculate_stats()
-        # Reset current shields to 50 for predictable testing
+        # Reset shields for predictable testing (recalculate_stats overwrites these)
+        self.ship.max_shields = 100
         self.ship.current_shields = 50
         return c
 
     def test_damage_absorption_and_regen(self):
         self.add_armor()
+        initial_hp = self.ship.hp  # Save initial HP after setup
         # Armor Value = 10
         # Shields = 50
         
@@ -100,10 +104,11 @@ class TestCrystallineArmor(unittest.TestCase):
         self.ship.take_damage(20)
         
         self.assertEqual(self.ship.current_shields, 50, "Shields should net same (50 + 10 - 10)")
-        self.assertEqual(self.ship.hp, 100, "HP should be untouched")
+        self.assertEqual(self.ship.hp, initial_hp, "HP should be untouched")
 
     def test_damage_absorption_and_regen_low_damage(self):
         self.add_armor()
+        initial_hp = self.ship.hp  # Save initial HP after setup
         # Armor Value = 10
         # Shields = 50
         
@@ -115,7 +120,7 @@ class TestCrystallineArmor(unittest.TestCase):
         self.ship.take_damage(5)
         
         self.assertEqual(self.ship.current_shields, 55, "Shields should increase by 5")
-        self.assertEqual(self.ship.hp, 100, "HP should be untouched")
+        self.assertEqual(self.ship.hp, initial_hp, "HP should be untouched")
 
     def test_stacking_behavior(self):
         # Add TWO armor plates
