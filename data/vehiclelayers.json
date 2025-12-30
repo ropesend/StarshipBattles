@@ -3,12 +3,17 @@
         "Capital_Standard": [
             {
                 "type": "CORE",
-                "restrictions": [],
+                "restrictions": [
+                    "block_classification:Weapons",
+                    "block_classification:Engines"
+                ],
                 "max_mass_pct": 0.3
             },
             {
                 "type": "INNER",
-                "restrictions": [],
+                "restrictions": [
+                    "block_classification:Weapons"
+                ],
                 "max_mass_pct": 0.5
             },
             {
@@ -18,19 +23,26 @@
             },
             {
                 "type": "ARMOR",
-                "restrictions": [],
+                "restrictions": [
+                    "allow_classification:Armor"
+                ],
                 "max_mass_pct": 0.3
             }
         ],
         "Capital_Escort": [
             {
                 "type": "CORE",
-                "restrictions": [],
+                "restrictions": [
+                    "block_classification:Weapons",
+                    "block_classification:Engines"
+                ],
                 "max_mass_pct": 0.3
             },
             {
                 "type": "INNER",
-                "restrictions": [],
+                "restrictions": [
+                    "block_classification:Weapons"
+                ],
                 "max_mass_pct": 0.5
             },
             {
@@ -40,7 +52,9 @@
             },
             {
                 "type": "ARMOR",
-                "restrictions": [],
+                "restrictions": [
+                    "allow_classification:Armor"
+                ],
                 "max_mass_pct": 0.3
             }
         ],
@@ -52,7 +66,9 @@
             },
             {
                 "type": "ARMOR",
-                "restrictions": [],
+                "restrictions": [
+                    "allow_classification:Armor"
+                ],
                 "max_mass_pct": 0.3
             }
         ],
@@ -69,7 +85,9 @@
             },
             {
                 "type": "ARMOR",
-                "restrictions": [],
+                "restrictions": [
+                    "allow_classification:Armor"
+                ],
                 "max_mass_pct": 0.3
             }
         ],
@@ -91,7 +109,9 @@
             },
             {
                 "type": "ARMOR",
-                "restrictions": [],
+                "restrictions": [
+                    "allow_classification:Armor"
+                ],
                 "max_mass_pct": 0.3
             }
         ]

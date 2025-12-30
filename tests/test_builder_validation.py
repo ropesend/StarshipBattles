@@ -17,6 +17,12 @@ class TestBuilderValidation(unittest.TestCase):
         if not pygame.get_init():
             pygame.init()
             
+        # Ensure data is loaded
+        from ship import initialize_ship_data
+        # Resolve path to project root
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        initialize_ship_data(root_dir)
+            
         # Create a standard ship for testing
         self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Frigate")
         
@@ -41,26 +47,40 @@ class TestBuilderValidation(unittest.TestCase):
     def test_layer_restrictions(self):
         """Step 2: Verify layer restrictions are enforced."""
         
-        # 1. Test Component allowed only in INNER
-        inner_only_data = self.base_component_data.copy()
-        inner_only_data["allowed_layers"] = ["INNER"]
-        comp = Component(inner_only_data)
+        # 1. Test Restriction: Block specific classification
+        comp_data = self.base_component_data.copy()
+        comp_data["major_classification"] = "Weapons"
+        comp = Component(comp_data)
         
-        # Try adding to OUTER (Should fail)
-        result = self.ship.add_component(comp, LayerType.OUTER)
-        self.assertFalse(result, "Should not allow INNER component in OUTER layer")
+        # Inject restriction into INNER layer for this test
+        self.ship.layers[LayerType.INNER]['restrictions'].append("block_classification:Weapons")
         
-        # Try adding to INNER (Should succeed)
+        # Try adding to INNER (Should fail)
         result = self.ship.add_component(comp, LayerType.INNER)
-        self.assertTrue(result, "Should allow INNER component in INNER layer")
+        self.assertFalse(result, "Should not allow Weapons in restricted INNER layer")
         
-        # 2. Test CORE components rejected from ARMOR
-        core_comp_data = self.base_component_data.copy()
-        core_comp_data["allowed_layers"] = ["CORE"]
-        core_comp = Component(core_comp_data)
+        # Try adding to OUTER (Should succeed, no restriction)
+        result = self.ship.add_component(comp, LayerType.OUTER)
+        self.assertTrue(result, "Should allow Weapons in unrestricted OUTER layer")
         
-        result = self.ship.add_component(core_comp, LayerType.ARMOR)
-        self.assertFalse(result, "Should not allow CORE component in ARMOR layer")
+        # 2. Test Allow only restriction (Armor layer)
+        armor_comp_data = self.base_component_data.copy()
+        armor_comp_data["major_classification"] = "Armor"
+        armor_comp = Component(armor_comp_data)
+        
+        generic_comp = Component(self.base_component_data) # Classification is None or default?
+        generic_comp.data['major_classification'] = "Generic"
+        
+        # Verify ARMOR layer usually has restriction (from ship init)
+        # But our ship uses "Frigate" -> "Capital_Escort" which SHOULD have [allow_classification:Armor] now
+        
+        # Add Armor to ARMOR (Succeed)
+        result = self.ship.add_component(armor_comp, LayerType.ARMOR)
+        self.assertTrue(result, "Should allow Armor in ARMOR layer")
+        
+        # Add Generic to ARMOR (Fail)
+        result = self.ship.add_component(generic_comp, LayerType.ARMOR)
+        self.assertFalse(result, "Should not allow Non-Armor in ARMOR layer")
 
     def test_unique_flag(self):
         """Step 3a: Test is_unique flag validation."""

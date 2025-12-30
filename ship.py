@@ -291,15 +291,14 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                          added = True
                 
                 # 2. If failed, try allowed layers for this component
+                # 2. If failed, try all other layers in the new ship
                 if not added:
-                    # Sort allowed layers by preference? (e.g. Core -> Inner -> Outer)
-                    # Just try all allowed that are present in ship
-                    for allowed in comp.allowed_layers:
-                        if allowed == old_layer: continue # Already tried
-                        if allowed in self.layers:
-                            if self.add_component(comp, allowed):
-                                added = True
-                                break
+                    for layer_type in self.layers.keys():
+                        if layer_type == old_layer: continue 
+                        
+                        if self.add_component(comp, layer_type):
+                            added = True
+                            break
                 
                 if not added:
                     print(f"Warning: Could not fit component {comp.name} during refit to {new_class}")

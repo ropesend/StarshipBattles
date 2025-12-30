@@ -36,9 +36,6 @@ class LayerConstraintRule(ValidationRule):
              result.add_error(f"Layer {layer_type.name} does not exist on {ship.ship_class}")
              return result
 
-        if layer_type not in component.allowed_layers:
-            result.add_error(f"Component {component.name} not allowed in {layer_type.name}")
-
         if ship.vehicle_type not in component.allowed_vehicle_types:
             result.add_error(f"Component {component.name} not allowed on {ship.vehicle_type}")
             
@@ -104,6 +101,8 @@ class LayerRestrictionDefinitionRule(ValidationRule):
             return result
 
         restrictions = ship.layers[layer_type]['restrictions']
+        
+        # 1. Process "Block" Rules (Blacklist)
         for r in restrictions:
             if r.startswith("block_classification:"):
                 blocked_class = r.split(":")[1]
@@ -117,7 +116,35 @@ class LayerRestrictionDefinitionRule(ValidationRule):
                 blocked_id = r.split(":")[1]
                 if component.id == blocked_id:
                      result.add_error(f"Component '{blocked_id}' blocked in this layer")
+
+        # 2. Process "Allow" Rules (Whitelist)
+        # Logic: If ANY allow rule exists, the component MUST match at least one of them.
+        # If NO allow rules exist, everything is allowed (unless blocked above).
         
+        allow_rules = [r for r in restrictions if r.startswith("allow_")]
+        
+        if allow_rules:
+            allowed = False
+            for r in allow_rules:
+                if r.startswith("allow_classification:"):
+                    target = r.split(":")[1]
+                    if component.data.get('major_classification') == target:
+                        allowed = True
+                        break
+                elif r.startswith("allow_type:"):
+                    target = r.split(":")[1]
+                    if component.type_str == target:
+                        allowed = True
+                        break
+                elif r.startswith("allow_id:"):
+                    target = r.split(":")[1]
+                    if component.id == target:
+                        allowed = True
+                        break
+            
+            if not allowed:
+                 result.add_error(f"Layer restricts components to specific types/classes only.")
+
         return result
 
 class MassBudgetRule(ValidationRule):

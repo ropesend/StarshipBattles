@@ -250,15 +250,30 @@ class BuilderLeftPanel:
             )
             self.filter_layer_dropdown.change_layer(5)
 
+        
+        from ship_validator import LayerRestrictionDefinitionRule
+        from ship import LayerType
+        # Create a temporary rule instance for filtering
+        restriction_rule = LayerRestrictionDefinitionRule()
+
         if self.current_layer_filter != "All Layers":
-             # Filter by specific layer
-             filtered = [c for c in filtered if any(l.name == self.current_layer_filter for l in c.allowed_layers)]
+             # Filter by specific layer (find the LayerType enum from name)
+             # self.builder.ship.layers keys are LayerType enums
+             target_layer = None
+             for l_key in self.builder.ship.layers.keys():
+                 if l_key.name == self.current_layer_filter:
+                     target_layer = l_key
+                     break
+             
+             if target_layer:
+                 filtered = [c for c in filtered if restriction_rule.validate(self.builder.ship, c, target_layer).is_valid]
         else:
-             # "All Layers": Only show components compatible with AT LEAST ONE of the CURRENT ship's layers
-             # Access ship layers via builder
-             valid_layer_types = set(self.builder.ship.layers.keys())
-             # Filter items that have at least one allowed layer that is present on this ship
-             filtered = [c for c in filtered if any(l in valid_layer_types for l in c.allowed_layers)]
+             # "All Layers": Show if compatible with AT LEAST ONE of the CURRENT ship's layers
+             valid_layer_types = list(self.builder.ship.layers.keys())
+             filtered = [
+                 c for c in filtered 
+                 if any(restriction_rule.validate(self.builder.ship, c, l_type).is_valid for l_type in valid_layer_types)
+             ]
         
         # 4. Sort
         if self.current_sort == "Default (JSON Order)":
