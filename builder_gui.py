@@ -370,22 +370,52 @@ class BuilderSceneGUI:
         
     def _create_ui(self):
         base_path = os.path.dirname(os.path.abspath(__file__))
+        
+        # New Layout Dimensions
+        self.modifier_panel_height = 360
+        avail_height = self.height - self.bottom_bar_height
+        panels_height = avail_height - self.modifier_panel_height
+        
         with profile_block("Builder: Init Panels (Left/Right/Layer)"):
             self.left_panel = BuilderLeftPanel(
                 self, self.ui_manager,
-                pygame.Rect(0, 0, self.left_panel_width, self.height - self.bottom_bar_height)
+                pygame.Rect(0, 0, self.left_panel_width, panels_height)
             )
             
             # New Layer Panel
             self.layer_panel = LayerPanel(
                 self, self.ui_manager,
-                pygame.Rect(self.left_panel_width, 0, self.layer_panel_width, self.height - self.bottom_bar_height)
+                pygame.Rect(self.left_panel_width, 0, self.layer_panel_width, panels_height)
             )
             
             self.right_panel = BuilderRightPanel(
                 self, self.ui_manager,
                 pygame.Rect(self.width - self.right_panel_width, 0, 
                             self.right_panel_width, self.height - self.bottom_bar_height - self.weapons_report_height)
+            )
+            
+            # Modifier Panel (Bottom Spanning Left+Layer)
+            mod_panel_rect = pygame.Rect(
+                0, panels_height,
+                self.left_panel_width + self.layer_panel_width,
+                self.modifier_panel_height
+            )
+            
+            # We need a wrapper panel for the modifier editor to draw into? 
+            # ModifierEditorPanel expects a 'container' (UIPanel). 
+            # Let's create one.
+            self.modifier_container_panel = UIPanel(
+                relative_rect=mod_panel_rect,
+                manager=self.ui_manager,
+                object_id='#modifier_panel_container'
+            )
+            
+            self.modifier_panel = ModifierEditorPanel(
+                manager=self.ui_manager,
+                container=self.modifier_container_panel,
+                width=mod_panel_rect.width,
+                preset_manager=self.preset_manager,
+                on_change_callback=self._on_modifier_change
             )
         
         weapons_panel_y = self.height - self.bottom_bar_height - self.weapons_report_height
@@ -440,6 +470,23 @@ class BuilderSceneGUI:
         
         self.update_stats()
         self.left_panel.update_component_list()
+        self.rebuild_modifier_ui()
+
+    def _on_modifier_change(self):
+        if self.selected_component:
+            # Propagate modifications to the entire selected group
+            if self.selected_component_group:
+                self.propagate_group_modifiers(self.selected_component[2])
+            
+            self.selected_component[2].recalculate_stats()
+        self.ship.recalculate_stats()
+        self.right_panel.update_stats_display(self.ship)
+
+    def rebuild_modifier_ui(self):
+        editing_component = self.selected_component[2] if self.selected_component else None
+        # Start Y is 0 relative to the modifier container panel
+        self.modifier_panel.rebuild(editing_component, self.template_modifiers)
+        self.modifier_panel.layout(0)
 
     def update_stats(self):
         self.right_panel.update_stats_display(self.ship)
@@ -462,7 +509,7 @@ class BuilderSceneGUI:
             self.selected_component = None
             self.selected_component_group = None
             
-        self.left_panel.rebuild_modifier_ui()
+        self.rebuild_modifier_ui()
             
     def propagate_group_modifiers(self, leader_comp):
         """
@@ -520,6 +567,10 @@ class BuilderSceneGUI:
         if not action:
             # Pass to layer panel (headers and items)
             action = self.layer_panel.handle_event(event)
+            
+        if not action:
+            # Pass to relocated modifier panel
+            action = self.modifier_panel.handle_event(event)
 
         if action:
             if isinstance(action, bool):
@@ -620,18 +671,21 @@ class BuilderSceneGUI:
                  self.update_stats()
             elif act_type == 'apply_preset':
                 self.template_modifiers = data
-                self.left_panel.rebuild_modifier_ui()
+                self.rebuild_modifier_ui()
             elif act_type == 'clear_settings':
                 with profile_block("Builder: Clear Settings"):
                     self.controller.selected_component = None
                     self.template_modifiers = {}
                     self.on_selection_changed(None)
-                    self.left_panel.rebuild_modifier_ui()
+                    self.rebuild_modifier_ui()
                     logger.debug("Cleared settings or deselected component")
             elif act_type == 'toggle_layer':
                 # Layer header toggle - already handled by callback
                 pass
             return
+        
+        # Pass to weapons panel
+        self.weapons_report_panel.handle_event(event)
         
         self.controller.handle_event(event)
         
@@ -765,6 +819,9 @@ class BuilderSceneGUI:
             
         self.left_panel.update(dt)
         self.layer_panel.update(dt)
+        if hasattr(self.modifier_panel, 'update'):
+            self.modifier_panel.update(dt)
+            
         self.weapons_report_panel.update()
         self.controller.update()
 
@@ -829,6 +886,7 @@ class BuilderSceneGUI:
         
         self.ui_manager.draw_ui(screen)
         self.left_panel.draw(screen)  # Draw hover highlights AFTER UI manager
+        # Layer panel drawing removed (it's handled by UI manager + overlay highlights handled by panel.draw if any)
         self.layer_panel.draw(screen)  # Draw selection highlights AFTER UI manager
         self.weapons_report_panel.draw(screen)
         
@@ -862,12 +920,13 @@ class BuilderSceneGUI:
         new_ship, message = ShipIO.load_ship(self.width, self.height)
         if new_ship:
             self.ship = new_ship
-            self.right_panel.name_entry.set_text(self.ship.name)
-            if self.ship.ship_class in self.right_panel.class_dropdown.options_list:
-                self.right_panel.class_dropdown.selected_option = self.ship.ship_class
-            # Sync AI
-            # ...
+            # Fully refresh UI controls to match new ship state
+            self.right_panel.refresh_controls()
+            
             self.update_stats()
+            # Also update the layers panel in case components changed
+            self.layer_panel.rebuild()
+            self.rebuild_modifier_ui()
             print(message)
         elif message:
             self.show_error(message)
@@ -893,9 +952,15 @@ class BuilderSceneGUI:
         self.template_modifiers = {}
         self.ship.ai_strategy = "optimal_firing_range"
         
+        # Reset Name
+        self.ship.name = "Custom Ship"
+        
         self.ship.recalculate_stats()
+        
+        # Refresh UI
+        self.right_panel.refresh_controls()
         self.update_stats()
-        self.left_panel.rebuild_modifier_ui()
+        self.rebuild_modifier_ui()
         self.controller.selected_component = None
         self.on_selection_changed(None)
         

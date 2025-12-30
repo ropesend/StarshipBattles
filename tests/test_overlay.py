@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Mock pygame_gui before importing battle_ui or main
 # This is tricky because imports happen at top level.
 # We will trust that initializing display works.
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 from main import Game
 
@@ -24,6 +25,12 @@ class TestOverlay(unittest.TestCase):
         pygame.quit()
         
     def setUp(self):
+        # Patch display info to ensure valid resolution
+        self.patcher = patch('pygame.display.Info')
+        self.mock_info = self.patcher.start()
+        self.mock_info.return_value.current_w = 1920
+        self.mock_info.return_value.current_h = 1080
+        
         self.game = Game()
         # Mock the builder scene to avoid complex setup
         self.game.builder_scene = MagicMock()
@@ -32,6 +39,8 @@ class TestOverlay(unittest.TestCase):
         self.game.builder_scene.draw = MagicMock()
 
     def tearDown(self):
+        if hasattr(self, 'patcher'):
+            self.patcher.stop()
         if hasattr(self, 'game'):
             if self.game.battle_scene:
                 self.game.battle_scene.sim_paused = False

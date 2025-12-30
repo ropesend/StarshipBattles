@@ -6,11 +6,6 @@
             "type": "Bridge",
             "mass": "=50 * sqrt(ship_class_mass / 1000)",
             "hp": "=200 * sqrt(ship_class_mass / 1000)",
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Ship"
             ],
@@ -27,11 +22,6 @@
             "type": "Bridge",
             "mass": "=50 * sqrt(ship_class_mass / 1000)",
             "hp": "=500 * sqrt(ship_class_mass / 1000)",
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Planetary Complex"
             ],
@@ -48,9 +38,6 @@
             "type": "ProjectileWeapon",
             "mass": 100,
             "hp": 150,
-            "allowed_layers": [
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -75,10 +62,6 @@
             "type": "Engine",
             "mass": 80,
             "hp": 100,
-            "allowed_layers": [
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Ship"
             ],
@@ -96,11 +79,6 @@
             "type": "Thruster",
             "mass": 20,
             "hp": 40,
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Ship"
             ],
@@ -117,9 +95,6 @@
             "type": "Armor",
             "mass": 30,
             "hp": 250,
-            "allowed_layers": [
-                "ARMOR"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -138,9 +113,6 @@
             "mass": "=40 * (ship_class_mass / 1000)",
             "hp": 200,
             "hp_formula": "=200 * (ship_class_mass / 1000)",
-            "allowed_layers": [
-                "ARMOR"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -164,9 +136,6 @@
             "mass": "=40 * (ship_class_mass / 1000)",
             "hp": 150,
             "hp_formula": "=150 * (ship_class_mass / 1000)",
-            "allowed_layers": [
-                "ARMOR"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -189,11 +158,6 @@
             "type": "Tank",
             "mass": 40,
             "hp": 80,
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -213,11 +177,6 @@
             "type": "Tank",
             "mass": 40,
             "hp": 80,
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -237,11 +196,6 @@
             "type": "Tank",
             "mass": 30,
             "hp": 50,
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -261,10 +215,6 @@
             "type": "Generator",
             "mass": 50,
             "hp": 80,
-            "allowed_layers": [
-                "CORE",
-                "INNER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -284,9 +234,6 @@
             "type": "BeamWeapon",
             "mass": 20,
             "hp": 40,
-            "allowed_layers": [
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -312,10 +259,6 @@
             "type": "CrewQuarters",
             "mass": 30,
             "hp": 60,
-            "allowed_layers": [
-                "CORE",
-                "INNER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Planetary Complex"
@@ -332,10 +275,6 @@
             "type": "LifeSupport",
             "mass": 20,
             "hp": 40,
-            "allowed_layers": [
-                "CORE",
-                "INNER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Planetary Complex"
@@ -352,11 +291,6 @@
             "type": "Sensor",
             "mass": 30,
             "hp": 50,
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -377,10 +311,6 @@
             "type": "Electronics",
             "mass": 40,
             "hp": 40,
-            "allowed_layers": [
-                "CORE",
-                "INNER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -401,10 +331,6 @@
             "type": "Electronics",
             "mass": 40,
             "hp": 60,
-            "allowed_layers": [
-                "CORE",
-                "INNER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -423,10 +349,6 @@
             "type": "Shield",
             "mass": 50,
             "hp": 100,
-            "allowed_layers": [
-                "INNER",
-                "CORE"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -444,10 +366,6 @@
             "type": "ShieldRegenerator",
             "mass": 40,
             "hp": 80,
-            "allowed_layers": [
-                "INNER",
-                "CORE"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -466,9 +384,6 @@
             "type": "SeekerWeapon",
             "mass": 60,
             "hp": 10,
-            "allowed_layers": [
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -494,9 +409,6 @@
             "type": "BeamWeapon",
             "mass": 10,
             "hp": 30,
-            "allowed_layers": [
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Satellite",
@@ -523,11 +435,6 @@
             "type": "Bridge",
             "mass": 2,
             "hp": 2,
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -545,11 +452,6 @@
             "type": "Engine",
             "mass": 3,
             "hp": 3,
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -567,12 +469,6 @@
             "type": "Thruster",
             "mass": 1,
             "hp": 1,
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER",
-                "ARMOR"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -589,11 +485,6 @@
             "type": "Tank",
             "mass": 1,
             "hp": 1,
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -611,10 +502,6 @@
             "type": "Generator",
             "mass": 2,
             "hp": 2,
-            "allowed_layers": [
-                "CORE",
-                "INNER"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -631,11 +518,6 @@
             "type": "Tank",
             "mass": 2,
             "hp": 2,
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -653,11 +535,6 @@
             "type": "Tank",
             "mass": 2,
             "hp": 2,
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -675,9 +552,6 @@
             "type": "BeamWeapon",
             "mass": 2,
             "hp": 2,
-            "allowed_layers": [
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -700,9 +574,6 @@
             "type": "BeamWeapon",
             "mass": 1,
             "hp": 1,
-            "allowed_layers": [
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -725,9 +596,6 @@
             "type": "BeamWeapon",
             "mass": 3,
             "hp": 3,
-            "allowed_layers": [
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -750,9 +618,6 @@
             "type": "Armor",
             "mass": 1,
             "hp": 5,
-            "allowed_layers": [
-                "ARMOR"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -768,11 +633,6 @@
             "type": "Sensor",
             "mass": 1,
             "hp": 1,
-            "allowed_layers": [
-                "CORE",
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -791,10 +651,6 @@
             "type": "Electronics",
             "mass": 2,
             "hp": 10,
-            "allowed_layers": [
-                "CORE",
-                "INNER"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -813,10 +669,6 @@
             "type": "Shield",
             "mass": 2,
             "hp": 15,
-            "allowed_layers": [
-                "INNER",
-                "CORE"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -832,10 +684,6 @@
             "type": "Armor",
             "mass": 1,
             "hp": 5,
-            "allowed_layers": [
-                "ARMOR",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -855,10 +703,6 @@
             "type": "Armor",
             "mass": 1,
             "hp": 5,
-            "allowed_layers": [
-                "ARMOR",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Fighter"
             ],
@@ -878,10 +722,6 @@
             "type": "Bridge",
             "mass": 10,
             "hp": 50,
-            "allowed_layers": [
-                "CORE",
-                "INNER"
-            ],
             "allowed_vehicle_types": [
                 "Satellite"
             ],
@@ -897,10 +737,6 @@
             "type": "Hangar",
             "mass": 500,
             "hp": 500,
-            "allowed_layers": [
-                "INNER",
-                "OUTER"
-            ],
             "allowed_vehicle_types": [
                 "Ship",
                 "Planetary Complex"

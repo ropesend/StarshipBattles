@@ -56,6 +56,8 @@ class TestDynamicLayers(unittest.TestCase):
         ship = Ship("Restricted Ship", 0, 0, (255, 0, 0), ship_class="Escort")
         # Add a fake restriction to OUTER layer
         ship.layers[LayerType.OUTER]['restrictions'].append("block_classification:Weapons")
+        # Clear restrictions on CORE to ensure test isolation (since Escort now has default blocks)
+        ship.layers[LayerType.CORE]['restrictions'] = []
         
         # Create a mock Weapon component
         # We can simulate a component nicely
@@ -64,7 +66,7 @@ class TestDynamicLayers(unittest.TestCase):
             "name": "Test Weapon", 
             "type": "Weapon", 
             "mass": 10, "hp": 10, 
-            "allowed_layers": ["OUTER", "CORE"],
+            # allowed_layers removed
             "allowed_vehicle_types": ["Ship"],
             "major_classification": "Weapons"
         }

@@ -22,12 +22,14 @@ class ModifierEditorPanel:
         self.modifier_buttons = []
         self.modifier_sliders = []
         self.modifier_entries = []
-        self.modifier_extra_ui = []
+        self.step_btn_map = {} # btn_element -> (mod_id, step, direction)
+        
         self.preset_buttons = []
         self.preset_delete_buttons = []
         
         # State
         self.active_slider_mod_id = None
+        self.extra_ui_elements = [] # Generic storage for labels/etc to kill
 
     def rebuild(self, editing_component, template_modifiers):
         """Rebuild the modifier UI based on current state."""
@@ -46,17 +48,16 @@ class ModifierEditorPanel:
         for entry in self.modifier_entries:
             if entry: entry.kill()
         self.modifier_entries = []
-        for el in self.modifier_extra_ui:
-            if el is None:
-                continue
-            if isinstance(el, dict):
-                 # Handle special dict objects like step buttons
-                 if el.get('type') == 'step_btns':
-                     for btn in el.get('btns', []):
-                         if btn: btn.kill()
-            elif hasattr(el, 'kill'):
-                el.kill()
-        self.modifier_extra_ui = []
+        
+        for el in self.extra_ui_elements:
+            el.kill()
+        self.extra_ui_elements = []
+        
+        # Step buttons are stored in map keys
+        for btn in self.step_btn_map.keys():
+             if btn.alive(): btn.kill()
+        self.step_btn_map = {}
+            
         for _, btn in self.preset_buttons: btn.kill()
         self.preset_buttons = []
         for _, btn in self.preset_delete_buttons: btn.kill()
@@ -78,7 +79,7 @@ class ModifierEditorPanel:
             manager=self.manager,
             container=self.container
         )
-        self.modifier_extra_ui.append(settings_label)
+        self.extra_ui_elements.append(settings_label)
         y += 32
         
         # Clear/Deselect Button
@@ -93,7 +94,7 @@ class ModifierEditorPanel:
             manager=self.manager,
             container=self.container
         )
-        self.modifier_extra_ui.append(self.clear_settings_btn)
+        self.extra_ui_elements.append(self.clear_settings_btn)
         y += 35
         
         # Modifiers List
@@ -172,28 +173,33 @@ class ModifierEditorPanel:
                 
                 current_x = entry_x + entry_w + 5
                 
-                slider_btns = []
-                if show_buttons:
-                    # << (-100)
-                    btn_m100 = UIButton(pygame.Rect(current_x, y, 25, 28), "<<", manager=self.manager, container=self.container)
-                    slider_btns.append(btn_m100)
-                    current_x += 27
-                    
-                    # < (-10)
-                    btn_m10 = UIButton(pygame.Rect(current_x, y, 25, 28), "<", manager=self.manager, container=self.container)
-                    slider_btns.append(btn_m10)
-                    current_x += 27
-                    
-                # Slider
-                # Calculate remaining width for slider
-                # Need space for right buttons if showing
-                right_btns_w = 54 if show_buttons else 0
-                slider_w = (self.width - 20) - current_x - right_btns_w - 5
-                
                 step = 0.01
                 if mod_id == 'range_mount': step = 0.1
                 elif mod_def.max_val - mod_def.min_val > 50: step = 1.0
                 elif mod_def.max_val - mod_def.min_val > 10: step = 0.1
+                
+                if show_buttons:
+                    # << (-100)
+                    btn = UIButton(pygame.Rect(current_x, y, 25, 28), "<<", manager=self.manager, container=self.container)
+                    self.step_btn_map[btn] = (mod_id, step * 10, -1)
+                    if not is_active: btn.disable()
+                    current_x += 27
+                    
+                    # < (-10)
+                    btn = UIButton(pygame.Rect(current_x, y, 25, 28), "<", manager=self.manager, container=self.container)
+                    self.step_btn_map[btn] = (mod_id, step, -1)
+                    if not is_active: btn.disable()
+                    current_x += 27
+                    
+                # Slider (No specific changes other than ensure it uses the available space)
+                # Calculate remaining width for slider
+                
+                safe_width = self.width - 40 
+                right_btns_w = 54 if show_buttons else 0
+                slider_w = safe_width - current_x - right_btns_w - 5
+                
+                if slider_w < 50:
+                    slider_w = 50
                 
                 slider = UIHorizontalSlider(
                     relative_rect=pygame.Rect(current_x, y, slider_w, 28),
@@ -206,32 +212,23 @@ class ModifierEditorPanel:
                 )
                 if not is_active: slider.disable()
                 self.modifier_sliders.append(slider)
-                current_x += slider_w + 2
+                current_x += slider_w + 5
                 
                 if show_buttons:
                      # > (+10)
-                    btn_p10 = UIButton(pygame.Rect(current_x, y, 25, 28), ">", manager=self.manager, container=self.container)
-                    slider_btns.append(btn_p10)
+                    btn = UIButton(pygame.Rect(current_x, y, 25, 28), ">", manager=self.manager, container=self.container)
+                    self.step_btn_map[btn] = (mod_id, step, 1)
+                    if not is_active: btn.disable()
                     current_x += 27
                     
                     # >> (+100)
-                    btn_p100 = UIButton(pygame.Rect(current_x, y, 25, 28), ">>", manager=self.manager, container=self.container)
-                    slider_btns.append(btn_p100)
-                    
-                # Store buttons for event handling (list of dicts or tuples?)
-                # Store related to this modifier index
-                if show_buttons:
-                    # m100, m10, p10, p100
-                    self.modifier_extra_ui.append({'type': 'step_btns', 'mod_id': mod_id, 'btns': slider_btns})
-                    for b in slider_btns:
-                        if not is_active: b.disable()
-                else:
-                    self.modifier_extra_ui.append(None)
+                    btn = UIButton(pygame.Rect(current_x, y, 25, 28), ">>", manager=self.manager, container=self.container)
+                    self.step_btn_map[btn] = (mod_id, step * 10, 1)
+                    if not is_active: btn.disable()
                     
             else:
                 self.modifier_entries.append(None)
                 self.modifier_sliders.append(None)
-                self.modifier_extra_ui.append(None)
                 
             y += 32
             
@@ -244,7 +241,7 @@ class ModifierEditorPanel:
                 manager=self.manager,
                 container=self.container
             )
-            self.modifier_extra_ui.append(self.save_preset_btn)
+            self.extra_ui_elements.append(self.save_preset_btn)
             y += 35
             
             presets = self.preset_manager.get_all_presets()
@@ -255,7 +252,7 @@ class ModifierEditorPanel:
                     manager=self.manager,
                     container=self.container
                 )
-                self.modifier_extra_ui.append(preset_label)
+                self.extra_ui_elements.append(preset_label)
                 y += 22
                 
             for preset_name in presets.keys():
@@ -347,10 +344,9 @@ class ModifierEditorPanel:
                              else:
                                  self.modifier_entries[i].disable()
                         
-                         # Enable/Disable Step Buttons
-                         extra = self.modifier_extra_ui[i] if i < len(self.modifier_extra_ui) else None
-                         if isinstance(extra, dict) and extra.get('type') == 'step_btns':
-                             for b in extra['btns']:
+                         # Enable/Disable Step Buttons linked to this mod
+                         for b, (m_id, _, _) in self.step_btn_map.items():
+                             if m_id == mod_id:
                                  if is_active: b.enable()
                                  else: b.disable()
 
@@ -360,69 +356,47 @@ class ModifierEditorPanel:
                          
                          return ('refresh_ui', None)
             
-            # Additional check: Step Buttons Pressed
-            # Loop through buttons?
-            # modifier_extra_ui maps 1:1 with modifier index (mostly)
-            # Actually extra UI for label/button is separate list?
-            # Wait, self.modifier_extra_ui has mixed content (Labels, Buttons, and None/Dicts for rows)
-            # My logic in layout:
-            # 0: Label
-            # 1: Clear Btn
-            # Then loop modifiers: append dict or None.
-            # So indices align with self.modifier_id_list IF we account for the first 2.
-            # No, I appended to modifier_extra_ui INSIDE the loop. 
-            # I must be careful. 
-            # Review layout:
-            # self.modifier_extra_ui.append(settings_label) -> Index 0
-            # self.modifier_extra_ui.append(self.clear_settings_btn) -> Index 1
-            # Loop: self.modifier_extra_ui.append(...) -> Index 2+i
-            
-            # Start loop at 0 for modifiers, check index + 2 in extra_ui
-            for i, extra in enumerate(self.modifier_extra_ui):
-                 if isinstance(extra, dict) and extra.get('type') == 'step_btns':
-                     btns = extra['btns']
-                     # [m100, m10, p10, p100]
-                     delta = 0
-                     if event.ui_element == btns[0]: delta = -100
-                     elif event.ui_element == btns[1]: delta = -10
-                     elif event.ui_element == btns[2]: delta = 10
-                     elif event.ui_element == btns[3]: delta = 100
+            # Step Buttons
+            if event.ui_element in self.step_btn_map:
+                mod_id, step, direction = self.step_btn_map[event.ui_element]
+                
+                # Find slider/entry indices
+                try:
+                    idx = self.modifier_id_list.index(mod_id)
+                except ValueError:
+                    return None
+                    
+                slider = self.modifier_sliders[idx]
+                entry = self.modifier_entries[idx]
+                
+                if slider:
+                     current = slider.get_current_value()
+                     mod_def = MODIFIER_REGISTRY[mod_id]
+                     delta = step * direction
+                     new_val = max(mod_def.min_val, min(mod_def.max_val, current + delta))
                      
-                     if delta != 0:
-                         # Find which modifier this is
-                         # extra_ui index i corresponds to modifier index i - 2
-                         mod_index = i - 2
-                         if 0 <= mod_index < len(self.modifier_id_list):
-                             mod_id = self.modifier_id_list[mod_index]
-                             slider = self.modifier_sliders[mod_index]
-                             entry = self.modifier_entries[mod_index]
-                             
-                             if slider:
-                                 current = slider.get_current_value()
-                                 mod_def = MODIFIER_REGISTRY[mod_id]
-                                 new_val = max(mod_def.min_val, min(mod_def.max_val, current + delta))
-                                 
-                                 slider.set_current_value(new_val)
-                                 if entry: entry.set_text(f"{new_val:.2f}")
-                                 
-                                 # Update model
-                                 if self.editing_component:
-                                     m = self.editing_component.get_modifier(mod_id)
-                                     if m:
-                                         m.value = new_val
-                                         self.editing_component.recalculate_stats()
-                                         self.on_change_callback()
-                                 else:
-                                     if mod_id in self.template_modifiers:
-                                         self.template_modifiers[mod_id] = new_val
+                     slider.set_current_value(new_val)
+                     if entry: entry.set_text(f"{new_val:.2f}")
+                     
+                     # Update model
+                     if self.editing_component:
+                         m = self.editing_component.get_modifier(mod_id)
+                         if m:
+                             m.value = new_val
+                             self.editing_component.recalculate_stats()
+                             self.on_change_callback()
+                     else:
+                         if mod_id in self.template_modifiers:
+                             self.template_modifiers[mod_id] = new_val
 
-                                 return ('refresh_ui', None)
+                     return ('refresh_ui', None)
                          
              
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
              for i, slider in enumerate(self.modifier_sliders):
                  if slider and event.ui_element == slider and i < len(self.modifier_id_list):
                      mod_id = self.modifier_id_list[i]
+                     val = slider.get_current_value()
                      
                      if self.editing_component:
                          m = self.editing_component.get_modifier(mod_id)

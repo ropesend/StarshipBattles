@@ -26,9 +26,7 @@
             {
                 "id": "fighter_cockpit",
                 "modifiers": []
-            }
-        ],
-        "INNER": [
+            },
             {
                 "id": "mini_engine",
                 "modifiers": []
@@ -44,9 +42,7 @@
             {
                 "id": "mini_thruster",
                 "modifiers": []
-            }
-        ],
-        "OUTER": [
+            },
             {
                 "id": "mini_laser_cannon",
                 "modifiers": []

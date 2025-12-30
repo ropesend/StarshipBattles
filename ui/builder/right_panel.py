@@ -95,9 +95,86 @@ class BuilderRightPanel:
         
         self.last_y = max(y, 10 + img_size) + 10
 
+    def refresh_controls(self):
+        """Update all UI controls to match the current ship state."""
+        import pygame
+        from pygame_gui.elements import UIDropDownMenu
+        
+        s = self.builder.ship
+        
+        # 1. Name
+        self.name_entry.set_text(s.name)
+        
+        # Preservation of Rects
+        theme_rect = self.theme_dropdown.relative_rect
+        type_rect = self.vehicle_type_dropdown.relative_rect
+        class_rect = self.class_dropdown.relative_rect
+        ai_rect = self.ai_dropdown.relative_rect
+        
+        # Kill old dropdowns
+        self.theme_dropdown.kill()
+        self.vehicle_type_dropdown.kill()
+        self.class_dropdown.kill()
+        self.ai_dropdown.kill()
+        
+        # 2. Recreate Theme
+        theme_options = self.builder.theme_manager.get_available_themes()
+        curr_theme = getattr(s, 'theme_id', 'Federation')
+        if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
+        
+        self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, theme_rect, manager=self.manager, container=self.panel)
+        
+        # 3. Recreate Type
+        # Get unique types
+        types = sorted(list(set(c.get('type', 'Ship') for c in VEHICLE_CLASSES.values())))
+        if not types: types = ["Ship"]
+        
+        curr_type = getattr(s, 'vehicle_type', "Ship")
+        # Ensure consistency from class if vehicle_type not set or mismatched
+        class_def = VEHICLE_CLASSES.get(s.ship_class, {})
+        if class_def:
+             curr_type = class_def.get('type', curr_type)
+        
+        if curr_type not in types: curr_type = types[0]
+        
+        self.vehicle_type_dropdown = UIDropDownMenu(types, curr_type, type_rect, manager=self.manager, container=self.panel)
+        
+        # 4. Recreate Class
+        class_options = [(name, cls.get('max_mass', 0)) for name, cls in VEHICLE_CLASSES.items() if cls.get('type', 'Ship') == curr_type]
+        class_options.sort(key=lambda x: x[1])  # Sort by max_mass
+        class_options = [name for name, _ in class_options]  # Extract just names
+        if not class_options: class_options = ["Escort"]
+
+        curr_class = s.ship_class
+        if curr_class not in class_options: 
+            # If current class is not in the list (e.g. type changed implicitly), force it or pick first?
+            # Ideally we keep the class if valid.
+            if curr_class in VEHICLE_CLASSES:
+                 # It exists but wasn't in list? Means type mismatch in logic above.
+                 # Just default to first option if we can't find it.
+                 curr_class = class_options[0]
+        
+        self.class_dropdown = UIDropDownMenu(class_options, curr_class, class_rect, manager=self.manager, container=self.panel)
+        
+        # 5. Recreate AI
+        ai_options = [strat.get('name', sid.replace('_', ' ').title()) for sid, strat in COMBAT_STRATEGIES.items()]
+        
+        ai_display = s.ai_strategy.replace('_', ' ').title()
+        for sid, strat in COMBAT_STRATEGIES.items():
+            if sid == s.ai_strategy:
+                ai_display = strat.get('name', ai_display)
+                break
+                
+        self.ai_dropdown = UIDropDownMenu(ai_options, ai_display, ai_rect, manager=self.manager, container=self.panel)
+
+        # 6. Update Portrait
+        self.update_portrait_image()
+
+
     def update_portrait_image(self):
         """Update the ship portrait based on current theme and class."""
         import os
+        import re
         
         # Determine paths
         theme = getattr(self.builder.ship, 'theme_id', 'Federation')
@@ -109,11 +186,18 @@ class BuilderRightPanel:
         # fed -> Federation, etc. But the game uses full names likely.
         # Let's assume theme_id matches directory name for now as per `ShipThemeManager`.
         
-        # Filename: {Class}_Portrait.jpg
-        # Remove spaces from class name if any? generated files have e.g. BattleCruiser_Portrait.jpg
-        # But class name in game might be "Battle Cruiser"
+        # Filename Logic:
+        # Standard: "Battle Cruiser" -> "BattleCruiser_Portrait.jpg"
+        # Subtypes: "Fighter (Small)" -> "SmallFighter_Portrait.jpg"
         
-        class_clean = ship_class.replace(" ", "")
+        match = re.match(r"(.*)\s+\((.*)\)", ship_class)
+        if match:
+             base = match.group(1).strip().replace(" ", "")
+             sub = match.group(2).strip().replace(" ", "")
+             class_clean = f"{sub}{base}"
+        else:
+             class_clean = ship_class.replace(" ", "")
+
         filename = f"{class_clean}_Portrait.jpg"
         
         base_path = "resources/Portraits"
@@ -122,7 +206,7 @@ class BuilderRightPanel:
         full_path = os.path.join(base_path, theme, filename)
         
         # Check for new location: Resources/ShipThemes/{theme}/Portraits
-        new_loc = os.path.join("Resources/ShipThemes", theme, "Portraits", filename)
+        new_loc = os.path.join("Resources", "ShipThemes", theme, "Portraits", filename)
         if os.path.exists(new_loc):
             full_path = new_loc
             

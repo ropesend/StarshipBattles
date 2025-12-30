@@ -37,6 +37,7 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json") -> None:
     This should be called explicitly during game initialization.
     """
     global VEHICLE_CLASSES, SHIP_CLASSES
+    
     # Check if we need to resolve path relative to this file
     if not os.path.exists(filepath):
         # Try finding it relative to module
@@ -44,13 +45,37 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json") -> None:
         abs_path = os.path.join(base_dir, filepath)
         if os.path.exists(abs_path):
             filepath = abs_path
+
+    # Try to load layer definitions
+    layer_definitions = {}
+    layers_path = os.path.join(os.path.dirname(filepath), "vehiclelayers.json")
+    if os.path.exists(layers_path):
+        try:
+            with open(layers_path, 'r') as f:
+                layer_data = json.load(f)
+                layer_definitions = layer_data.get('definitions', {})
+                print(f"Loaded {len(layer_definitions)} layer configurations.")
+        except Exception as e:
+            print(f"Error loading vehiclelayers.json: {e}")
             
     try:
         with open(filepath, 'r') as f:
             data = json.load(f)
             # Update in place to preserve references
             VEHICLE_CLASSES.clear()
-            VEHICLE_CLASSES.update(data.get('classes', {}))
+            
+            raw_classes = data.get('classes', {})
+            
+            # Post-process to resolve layer configurations
+            for cls_name, cls_def in raw_classes.items():
+                if 'layer_config' in cls_def:
+                     config_id = cls_def['layer_config']
+                     if config_id in layer_definitions:
+                         cls_def['layers'] = layer_definitions[config_id]
+                     else:
+                         print(f"Warning: Class {cls_name} references unknown layer config {config_id}")
+            
+            VEHICLE_CLASSES.update(raw_classes)
             
             # Build legacy SHIP_CLASSES dict for backward compatibility
             SHIP_CLASSES.clear()
@@ -266,15 +291,14 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                          added = True
                 
                 # 2. If failed, try allowed layers for this component
+                # 2. If failed, try all other layers in the new ship
                 if not added:
-                    # Sort allowed layers by preference? (e.g. Core -> Inner -> Outer)
-                    # Just try all allowed that are present in ship
-                    for allowed in comp.allowed_layers:
-                        if allowed == old_layer: continue # Already tried
-                        if allowed in self.layers:
-                            if self.add_component(comp, allowed):
-                                added = True
-                                break
+                    for layer_type in self.layers.keys():
+                        if layer_type == old_layer: continue 
+                        
+                        if self.add_component(comp, layer_type):
+                            added = True
+                            break
                 
                 if not added:
                     print(f"Warning: Could not fit component {comp.name} during refit to {new_class}")

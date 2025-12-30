@@ -1,7 +1,6 @@
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIScrollingContainer, UIDropDownMenu
-from builder_components import ModifierEditorPanel
 from ui.builder.components import ComponentListItem
 
 class BuilderLeftPanel:
@@ -32,7 +31,8 @@ class BuilderLeftPanel:
         # Scroll Container 
         # Shifted down to room for Bulk Add UI
         self.list_y = 125 # Was 80
-        container_height = (rect.height // 2) - 130 # Adjusted for shift
+        self.list_y = 125 # Was 80
+        container_height = rect.height - 130 # Full height minus offsets
         self.scroll_container = UIScrollingContainer(
             relative_rect=pygame.Rect(5, self.list_y, rect.width - 10, container_height),
             manager=manager,
@@ -134,14 +134,7 @@ class BuilderLeftPanel:
 
         
         # Modifier Panel
-        self.modifier_panel = ModifierEditorPanel(
-            manager=manager,
-            container=self.panel,
-            width=rect.width,
-            preset_manager=builder.preset_manager,
-            on_change_callback=self._on_modifier_change
-        )
-        self.rebuild_modifier_ui()
+
         
     def update(self, dt):
         """Update panel logic."""
@@ -171,9 +164,7 @@ class BuilderLeftPanel:
                  if not dd.visible:
                      dd.show()
 
-        # Update Modifier Panel
-        if hasattr(self.modifier_panel, 'update'):
-            self.modifier_panel.update(dt)
+
         
         # Update hover state for component list items
         mx, my = pygame.mouse.get_pos()
@@ -259,15 +250,30 @@ class BuilderLeftPanel:
             )
             self.filter_layer_dropdown.change_layer(5)
 
+        
+        from ship_validator import LayerRestrictionDefinitionRule
+        from ship import LayerType
+        # Create a temporary rule instance for filtering
+        restriction_rule = LayerRestrictionDefinitionRule()
+
         if self.current_layer_filter != "All Layers":
-             # Filter by specific layer
-             filtered = [c for c in filtered if any(l.name == self.current_layer_filter for l in c.allowed_layers)]
+             # Filter by specific layer (find the LayerType enum from name)
+             # self.builder.ship.layers keys are LayerType enums
+             target_layer = None
+             for l_key in self.builder.ship.layers.keys():
+                 if l_key.name == self.current_layer_filter:
+                     target_layer = l_key
+                     break
+             
+             if target_layer:
+                 filtered = [c for c in filtered if restriction_rule.validate(self.builder.ship, c, target_layer).is_valid]
         else:
-             # "All Layers": Only show components compatible with AT LEAST ONE of the CURRENT ship's layers
-             # Access ship layers via builder
-             valid_layer_types = set(self.builder.ship.layers.keys())
-             # Filter items that have at least one allowed layer that is present on this ship
-             filtered = [c for c in filtered if any(l in valid_layer_types for l in c.allowed_layers)]
+             # "All Layers": Show if compatible with AT LEAST ONE of the CURRENT ship's layers
+             valid_layer_types = list(self.builder.ship.layers.keys())
+             filtered = [
+                 c for c in filtered 
+                 if any(restriction_rule.validate(self.builder.ship, c, l_type).is_valid for l_type in valid_layer_types)
+             ]
         
         # 4. Sort
         if self.current_sort == "Default (JSON Order)":
@@ -319,21 +325,7 @@ class BuilderLeftPanel:
                     highlight_surf.fill((80, 80, 120, 100))  # Semi-transparent blue-ish
                     screen.blit(highlight_surf, clipped.topleft)
 
-    def _on_modifier_change(self):
-        if self.builder.selected_component:
-            # Propagate modifications to the entire selected group
-            if self.builder.selected_component_group:
-                self.builder.propagate_group_modifiers(self.builder.selected_component[2])
-            
-            self.builder.selected_component[2].recalculate_stats()
-        self.builder.ship.recalculate_stats()
-        self.builder.right_panel.update_stats_display(self.builder.ship)
 
-    def rebuild_modifier_ui(self):
-        editing_component = self.builder.selected_component[2] if self.builder.selected_component else None
-        half_page_y = self.rect.height // 2
-        self.modifier_panel.rebuild(editing_component, self.builder.template_modifiers)
-        self.modifier_panel.layout(half_page_y)
 
     def handle_event(self, event):
         # Handle Sort Dropdown
@@ -361,9 +353,7 @@ class BuilderLeftPanel:
                     self.selected_item = item
                     return ('select_component_type', item.component)
 
-        # Modifier Panel
-        action = self.modifier_panel.handle_event(event)
-        if action: return action
+
 
         # Handle Bulk Add UI
         if event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:

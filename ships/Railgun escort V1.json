@@ -1,0 +1,121 @@
+{
+    "name": "Railgun escort V1",
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "team_id": 0,
+    "ship_class": "Escort",
+    "theme_id": "Federation",
+    "ai_strategy": "attack_run",
+    "layers": {
+        "CORE": [
+            {
+                "id": "bridge",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.5
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": []
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": []
+            },
+            {
+                "id": "ordnance_tank",
+                "modifiers": []
+            }
+        ],
+        "INNER": [
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": []
+            },
+            {
+                "id": "thruster",
+                "modifiers": []
+            },
+            {
+                "id": "shield_generator",
+                "modifiers": []
+            },
+            {
+                "id": "battery",
+                "modifiers": []
+            }
+        ],
+        "OUTER": [
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.35
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": []
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    }
+                ]
+            }
+        ],
+        "ARMOR": [
+            {
+                "id": "emissive_armor",
+                "modifiers": []
+            }
+        ]
+    },
+    "expected_stats": {
+        "max_hp": 1542,
+        "max_fuel": 50000,
+        "max_ammo": 5000,
+        "max_energy": 2000,
+        "max_speed": 15.07,
+        "turn_speed": 23.9,
+        "total_thrust": 600.0,
+        "mass": 995.03,
+        "armor_hp_pool": 200
+    }
+}
