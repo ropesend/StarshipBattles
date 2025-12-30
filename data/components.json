@@ -130,6 +130,29 @@
             "major_classification": "Armor"
         },
         {
+            "id": "crystalline_armor",
+            "name": "Crystalline Armor",
+            "type": "Armor",
+            "mass": "=40 * (ship_class_mass / 1000)",
+            "hp": 200,
+            "hp_formula": "=200 * (ship_class_mass / 1000)",
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 15,
+            "abilities": {
+                "Armor": true,
+                "CrystallineArmor": {
+                    "value": "=10 * (ship_class_mass / 1000)**(1/3)",
+                    "stack_group": "Crystalline"
+                }
+            },
+            "modifiers": [],
+            "major_classification": "Armor"
+        },
+        {
             "id": "scattering_armor",
             "name": "Scattering Armor",
             "type": "Armor",

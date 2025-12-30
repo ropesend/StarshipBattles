@@ -306,6 +306,22 @@ class ShipCombatMixin:
             if damage_amount <= 0:
                 return
 
+        # Apply Crystalline Armor (Absorb and Recharge Shields)
+        ca = getattr(self, 'crystalline_armor', 0)
+        if ca > 0 and damage_amount > 0:
+            absorption = min(ca, damage_amount)
+            
+            # Reduce Damage
+            damage_amount -= absorption
+            
+            # Recharge Shields
+            # Only recharge if shields are active (max_shields > 0)
+            if self.max_shields > 0:
+                self.current_shields = min(self.max_shields, self.current_shields + absorption)
+                
+            if damage_amount <= 0:
+                return
+
         remaining_damage = damage_amount
         
         # Shield Absorption
