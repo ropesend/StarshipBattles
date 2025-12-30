@@ -278,37 +278,34 @@ class InteractionController:
         
         if closest_layer:
             comp = self.dragged_item
-            if closest_layer in comp.allowed_layers:
-                 # Check restrictions using the centralized validator
-                 from ship import VALIDATOR
-                 validation = VALIDATOR.validate_addition(self.builder.ship, comp, closest_layer)
-                 
-                 if not validation.is_valid:
-                      reason = ", ".join(validation.errors)
-                      self.builder.show_error(f"Cannot place: {reason}")
-                      return
+            # Check restrictions using the centralized validator (allowed_layers removed from components)
+            from ship import VALIDATOR
+            validation = VALIDATOR.validate_addition(self.builder.ship, comp, closest_layer)
+            
+            if not validation.is_valid:
+                 reason = ", ".join(validation.errors)
+                 self.builder.show_error(f"Cannot place: {reason}")
+                 return
 
-                 # Add component (re-validates internally, but that's fine)
-                 # Check bulk add count
-                 count = 1
-                 if hasattr(self.builder.left_panel, 'get_add_count'):
-                     count = self.builder.left_panel.get_add_count()
-                     
-                 if count > 1:
-                     added = self.builder.ship.add_components_bulk(comp, closest_layer, count)
-                     if added > 0:
-                         self.builder.update_stats()
-                         if added < count:
-                             self.builder.show_error(f"Added only {added}/{count} (Check limits)")
-                     else:
-                        self.builder.show_error("Could not add components")
-                 else:
-                     if self.builder.ship.add_component(comp, closest_layer):
-                        self.builder.update_stats()
-                     else:
-                        self.builder.show_error("Could not add component")
+            # Add component (re-validates internally, but that's fine)
+            # Check bulk add count
+            count = 1
+            if hasattr(self.builder.left_panel, 'get_add_count'):
+                count = self.builder.left_panel.get_add_count()
+                
+            if count > 1:
+                added = self.builder.ship.add_components_bulk(comp, closest_layer, count)
+                if added > 0:
+                    self.builder.update_stats()
+                    if added < count:
+                        self.builder.show_error(f"Added only {added}/{count} (Check limits)")
+                else:
+                   self.builder.show_error("Could not add components")
             else:
-                self.builder.show_error(f"Cannot place {comp.name} in {closest_layer.name}")
+                if self.builder.ship.add_component(comp, closest_layer):
+                   self.builder.update_stats()
+                else:
+                   self.builder.show_error("Could not add component")
 
 
 class BuilderSceneGUI:
