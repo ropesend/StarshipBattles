@@ -2,7 +2,8 @@ from ship import Ship
 from components import create_component, LayerType
 
 def create_brick(x, y):
-    ship = Ship("The Brick", x, y, (150, 150, 150))
+    # Use Cruiser class which has INNER layer (Capital_Standard config)
+    ship = Ship("The Brick", x, y, (150, 150, 150), ship_class="Cruiser")
     
     ship.add_component(create_component("bridge"), LayerType.CORE)
     
@@ -22,7 +23,8 @@ def create_brick(x, y):
     return ship
 
 def create_interceptor(x, y):
-    ship = Ship("The Interceptor", x, y, (50, 200, 50))
+    # Use Cruiser class which has INNER layer (Capital_Standard config)
+    ship = Ship("The Interceptor", x, y, (50, 200, 50), ship_class="Cruiser")
     
     ship.add_component(create_component("bridge"), LayerType.CORE)
     

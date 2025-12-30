@@ -34,7 +34,7 @@ class TestBattleSceneExtended(unittest.TestCase):
             s.add_component(create_component('bridge'), LayerType.CORE)
             s.add_component(create_component('crew_quarters'), LayerType.CORE)
             s.add_component(create_component('life_support'), LayerType.CORE)
-            s.add_component(create_component('standard_engine'), LayerType.INNER)
+            s.add_component(create_component('standard_engine'), LayerType.OUTER)
             s.recalculate_stats()
         
         scene.start([ship1], [ship2])
@@ -54,7 +54,7 @@ class TestBattleSceneExtended(unittest.TestCase):
             s.add_component(create_component('bridge'), LayerType.CORE)
             s.add_component(create_component('crew_quarters'), LayerType.CORE)
             s.add_component(create_component('life_support'), LayerType.CORE)
-            s.add_component(create_component('standard_engine'), LayerType.INNER)
+            s.add_component(create_component('standard_engine'), LayerType.OUTER)
             s.recalculate_stats()
         
         scene.start([ship1], [ship2])

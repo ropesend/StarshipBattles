@@ -1,4 +1,5 @@
 import unittest
+import unittest.mock
 import pygame
 import sys
 import os
@@ -7,8 +8,8 @@ import math
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from ship import Ship
-from components import Component, LayerType, COMPONENT_REGISTRY, Weapon
+from ship import Ship, initialize_ship_data
+from components import Component, LayerType, COMPONENT_REGISTRY, Weapon, load_components
 from ai import AIController, COMBAT_STRATEGIES
 from spatial import SpatialGrid
 from projectiles import Projectile
@@ -18,8 +19,10 @@ class TestMultitarget(unittest.TestCase):
     def setUp(self):
         # Initialize pygame for vectors
         pygame.init()
+        initialize_ship_data()
+        load_components()
         self.grid = SpatialGrid(2000)
-        self.ship = Ship("Hero", 1000, 1000, (0, 255, 0), team_id=0, ship_class="Escort")
+        self.ship = Ship("TestShip", 1000, 1000, (255, 0, 0), team_id=0, ship_class="Cruiser")
         self.ai = AIController(self.ship, self.grid, enemy_team_id=1)
         self.ship.ai_controller = self.ai
         
@@ -68,7 +71,7 @@ class TestMultitarget(unittest.TestCase):
             return # Skip if not defined
             
         comp = COMPONENT_REGISTRY['multiplex_tracking'].clone()
-        self.ship.add_component(comp, LayerType.CORE)
+        self.ship.add_component(comp, LayerType.OUTER)
         self.ship.recalculate_stats()
         
         self.assertEqual(self.ship.max_targets, 10)
@@ -79,7 +82,7 @@ class TestMultitarget(unittest.TestCase):
 
         # Add Multiplex
         comp = COMPONENT_REGISTRY['multiplex_tracking'].clone()
-        self.ship.add_component(comp, LayerType.CORE)
+        self.ship.add_component(comp, LayerType.OUTER)
         self.ship.recalculate_stats()
         
         # Create Enemies
@@ -105,14 +108,20 @@ class TestMultitarget(unittest.TestCase):
             
         # Add Multiplex
         comp = COMPONENT_REGISTRY['multiplex_tracking'].clone()
-        self.ship.add_component(comp, LayerType.CORE)
+        res = self.ship.add_component(comp, LayerType.OUTER)
+        # self.assertTrue(res.is_valid if hasattr(res, 'is_valid') else res) # Handle boolean return
+        if not res:
+            self.fail("Multiplex add failed")
         
         # Add PDC: Facing 0 (Right), Arc 45
         pdc = COMPONENT_REGISTRY['point_defence_cannon'].clone()
         pdc.facing_angle = 0
         pdc.firing_arc = 45
         pdc.range = 800
-        self.ship.add_component(pdc, LayerType.OUTER)
+        res = self.ship.add_component(pdc, LayerType.OUTER)
+        if not res:
+            self.fail("PDC add failed")
+        
         self.ship.recalculate_stats()
         
         # Scenario 1: Missile in Front (In Arc)
@@ -130,14 +139,14 @@ class TestMultitarget(unittest.TestCase):
         self.grid.insert(m2)
         
         # Inject Strategy
-        COMBAT_STRATEGIES['test_strat'] = {
-            'targeting_priority': ['missiles_in_pdc_arc', 'nearest']
-        }
-        self.ship.ai_strategy = 'test_strat'
-        
-        # Force AI update to use this strategy
-        # AIController.find_secondary_targets uses self.ship.ai_strategy to lookup
-        sec = self.ai.find_secondary_targets()
+        with unittest.mock.patch.dict(COMBAT_STRATEGIES, {
+            'test_strat': {'targeting_priority': ['missiles_in_pdc_arc', 'nearest']}
+        }):
+            self.ship.ai_strategy = 'test_strat'
+            
+            # Force AI update to use this strategy
+            # AIController.find_secondary_targets uses self.ship.ai_strategy to lookup
+            sec = self.ai.find_secondary_targets()
         
         # Diagnostic print
         # print([t for t in sec])

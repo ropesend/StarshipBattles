@@ -16,15 +16,20 @@ class TestArcadeMovement(unittest.TestCase):
         load_components("data/components.json")
 
     def setUp(self):
-        self.ship = Ship("TestShip", 100, 100, (255, 255, 255), ship_class="Escort")
+        # Use Cruiser class which has INNER layer (Capital_Standard config)
+        self.ship = Ship("TestShip", 100, 100, (255, 255, 255), ship_class="Cruiser")
         # Basic setup - need crew infrastructure for components to be active
-        # Core: Bridge (requires 5 crew)
+        # Core: Bridge (requires crew to function)
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
-        # Core: Crew quarters (provides 10 crew capacity)
-        self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        # Core: Life support (provides 25 life support)
-        self.ship.add_component(create_component('life_support'), LayerType.CORE)
-        # Inner: Tank
+        # Core: Generator
+        self.ship.add_component(create_component('generator'), LayerType.CORE)
+        
+        # INNER: Multiple crew quarters and life support (Cruiser needs more crew than Escort)
+        for _ in range(3):
+            self.ship.add_component(create_component('crew_quarters'), LayerType.INNER)
+            self.ship.add_component(create_component('life_support'), LayerType.INNER)
+        
+        # Inner: Fuel Tank
         self.ship.add_component(create_component('fuel_tank'), LayerType.INNER)
         # Outer: Engine (requires crew to be active)
         self.ship.add_component(create_component('standard_engine'), LayerType.OUTER)

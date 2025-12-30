@@ -12,7 +12,7 @@ from ship_stats import ShipStatsCalculator
 
 class TestStackingRules(unittest.TestCase):
     def setUp(self):
-        self.ship = Ship("Test Ship", 0, 0, (0, 0, 0))
+        self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser")
         # Mock layers
         self.ship.layers[LayerType.OUTER] = {'components': [], 'radius_pct': 1.0, 'restrictions': [], 'max_mass_pct': 1.0, 'max_hp_pool': 100, 'hp_pool': 100}
         self.ship.layers[LayerType.ARMOR] = {'components': [], 'radius_pct': 1.0, 'restrictions': [], 'max_mass_pct': 1.0, 'max_hp_pool': 100, 'hp_pool': 100}

@@ -24,7 +24,8 @@ class TestBuilderValidation(unittest.TestCase):
         initialize_ship_data(root_dir)
             
         # Create a standard ship for testing
-        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Frigate")
+        # Use Cruiser because it uses Capital_Standard which has INNER layer (Frigate/Escort no longer does)
+        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
         
         # Helper to create component data
         self.base_component_data = {
@@ -167,10 +168,10 @@ class TestBuilderValidation(unittest.TestCase):
         
     def test_mass_validation(self):
         """Step 5a: Test complex mass addition boundary condition."""
-        # Patch VEHICLE_CLASSES to enforce a small limit for the 'Frigate' class
-        with patch('ship.VEHICLE_CLASSES', {"Frigate": {"max_mass": 100, "hull_mass": 0, "layers": []}}):
+        # Patch VEHICLE_CLASSES to enforce a small limit for the 'Cruiser' class
+        with patch('ship.VEHICLE_CLASSES', {"Cruiser": {"max_mass": 100, "hull_mass": 0, "layers": []}}):
             # Re-init ship to pick up new class limit
-            self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Frigate")
+            self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
             # Force explicit override just in case update overwrites it with 100
             self.ship.max_mass_budget = 100
              
