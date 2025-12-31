@@ -97,42 +97,52 @@ def fmt_targeting(val):
 
 # --- Config Groups ---
 
-STATS_GENERAL = [
+
+# --- Config Groups ---
+
+STATS_MAIN = [
     StatDefinition('mass', 'Mass', getter=get_mass_display, unit=lambda s, v: f"/ {s.max_mass_budget}", validator=mass_validator),
     StatDefinition('max_hp', 'Max HP'),
-    StatDefinition('emissive_armor', 'Dmg Ignore'),
-    StatDefinition('max_shields', 'Shields'),
-    StatDefinition('shield_regen', 'Shield Regen', key='shield_regen_rate', formatter=fmt_decimal, unit="/s"),
-    StatDefinition('shield_cost', 'Regen Cost', key='shield_regen_cost', formatter=fmt_decimal, unit=" E/t"),
+    StatDefinition('energy_gen', 'Energy Gen', key='energy_gen_rate', formatter=fmt_decimal, unit="/s"),
+    StatDefinition('max_energy', 'Max Energy'),
+]
+
+STATS_MANEUVERING = [
     StatDefinition('max_speed', 'Max Speed'),
     StatDefinition('turn_rate', 'Turn Rate', key='turn_speed', unit=" deg/s"),
     StatDefinition('acceleration', 'Acceleration', key='acceleration_rate', formatter="{:.2f}"),
     StatDefinition('thrust', 'Total Thrust', key='total_thrust'),
-    StatDefinition('energy_gen', 'Energy Gen', key='energy_gen_rate', formatter=fmt_decimal, unit="/s"),
-    StatDefinition('max_fuel', 'Max Fuel'),
-    StatDefinition('max_ammo', 'Max Ammo'),
-    StatDefinition('max_energy', 'Max Energy'),
-    StatDefinition('targeting', 'Targeting', getter=get_max_targets, formatter=fmt_targeting),
+]
+
+STATS_SHIELDS = [
+    StatDefinition('max_shields', 'Max Shields'),
+    StatDefinition('shield_regen', 'Shield Regen', key='shield_regen_rate', formatter=fmt_decimal, unit="/s"),
+    StatDefinition('shield_cost', 'Regen Cost', key='shield_regen_cost', formatter=fmt_decimal, unit=" E/t"),
+]
+
+STATS_ARMOR = [
+    StatDefinition('emissive_armor', 'Dmg Ignore'),
+]
+
+STATS_TARGETING = [
+    StatDefinition('targeting', 'Max Targets', getter=get_max_targets, formatter=fmt_targeting),
     StatDefinition('target_profile', 'Defensive Odds', key='to_hit_profile', formatter=fmt_multiply, unit="x"),
     StatDefinition('scan_strength', 'Offensive Odds', key='baseline_to_hit_offense', formatter=fmt_decimal, unit="x"),
 ]
 
-STATS_FIGHTER = [
-    StatDefinition('fighter_capacity', 'Total Storage', unit="t"),
-    StatDefinition('fighter_size_cap', 'Max Size Cap', unit="t"),
-    StatDefinition('fighters_per_wave', 'Per Wave'),
-    StatDefinition('launch_cycle', 'Cycle Time', formatter=fmt_decimal, unit="s"),
-]
-
-STATS_CREW = [
+STATS_LOGISTICS = [
+    # Resources
+    StatDefinition('max_fuel', 'Max Fuel'),
+    StatDefinition('max_ammo', 'Max Ammo'),
+    # Crew
     StatDefinition('crew_required', 'Crew Required', getter=get_crew_required),
     StatDefinition('crew_housed', 'Crew On Board', getter=get_crew_capacity, validator=crew_validator),
     StatDefinition('life_support', 'Life Support', getter=get_life_support, validator=life_support_validator),
-]
-
-STATS_ENDURANCE = [
+    # Fighters
+    StatDefinition('fighter_capacity', 'Fighter Cap', unit="t"),
+    StatDefinition('fighters_per_wave', 'Launch/Wave'),
+    # Endurance
     StatDefinition('fuel_time', 'Fuel Time', key='fuel_endurance', formatter=fmt_time),
-    StatDefinition('ammo_time', 'Ordnance Time', key='ammo_endurance', formatter=fmt_time),
+    StatDefinition('ammo_time', 'Ammo Time', key='ammo_endurance', formatter=fmt_time),
     StatDefinition('energy_time', 'Energy Time', key='energy_endurance', formatter=fmt_time),
-    StatDefinition('recharge_time', 'Recharge Time', key='energy_recharge', formatter=fmt_time),
 ]

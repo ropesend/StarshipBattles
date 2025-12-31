@@ -385,3 +385,69 @@ class LayerPanel(DropTarget):
             return current_checking_layer
             
         return None
+
+    def get_range_selection(self, start_comp, end_comp):
+        """
+        Returns a list of components corresponding to the UI items between start_comp and end_comp (inclusive).
+        Handles both individual items and collapsed groups in the range.
+        
+        Args:
+            start_comp: The component object starting the range (or None).
+            end_comp: The component object ending the range (from user click).
+            
+        Returns:
+            List of Component objects.
+        """
+        if not start_comp or not end_comp:
+            return [end_comp]
+            
+        start_idx = -1
+        end_idx = -1
+        
+        # Locate indices in the UI list
+        for idx, item in enumerate(self.items):
+            # Check Individual Items
+            if isinstance(item, IndividualComponentItem):
+                if item.component is start_comp:
+                    start_idx = idx
+                if item.component is end_comp:
+                    end_idx = idx
+            
+            # Check Group Items (if start/end comp is inside a collapsed group?)
+            # Usually range selection starts from a visible selection. 
+            # If the component is inside a group, it wouldn't be 'selected' in the single context 
+            # unless the group was expanded. 
+            # But let's check just in case.
+            elif isinstance(item, LayerComponentItem):
+                # If the group key matches the 'start_comp's group? 
+                # Ideally we rely on the object identity match for individuals.
+                pass
+                
+        if start_idx == -1 or end_idx == -1:
+            # If we couldn't find one of the endpoints in the visible list (e.g. scrolled out? No, self.items has all),
+            # Fallback to just the end item.
+            return [end_comp]
+            
+        # Determine range
+        low = min(start_idx, end_idx)
+        high = max(start_idx, end_idx)
+        
+        subset = self.items[low : high + 1]
+        result_components = []
+        
+        from ui.builder.grouping_strategies import get_component_group_key
+        
+        for item in subset:
+            if isinstance(item, IndividualComponentItem):
+                result_components.append(item.component)
+            elif isinstance(item, LayerComponentItem):
+                # Resolve group to components
+                # We can't access 'ship' easily to find them all efficiently without strategy,
+                # but we can iterate ship layers like BuilderSceneGUI does.
+                g_key = item.group_key
+                for layers in self.builder.ship.layers.values():
+                    for c in layers['components']:
+                        if get_component_group_key(c) == g_key:
+                            result_components.append(c)
+                            
+        return result_components

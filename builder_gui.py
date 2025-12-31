@@ -231,11 +231,12 @@ class BuilderSceneGUI:
         self.layer_panel.rebuild()
         self.event_bus.emit('SHIP_UPDATED', self.ship)
         
-    def on_selection_changed(self, new_selection, append=False):
+    def on_selection_changed(self, new_selection, append=False, toggle=False):
         """
         Handle selection changes.
         new_selection: can be a single component tuple (layer, idx, comp), a list of them, or None.
         append: If True, add to existing selection instead of replacing.
+        toggle: If True, toggles selection state of existing items (Ctrl+Click behavior).
         """
         if new_selection is None:
             if not append:
@@ -287,7 +288,14 @@ class BuilderSceneGUI:
                         # Add unique items (Uniqueness based on OBJECT IDENTITY, not Def ID)
                         current_objs = {c[2] for c in self.selected_components}
                         for item in norm_selection:
-                            if item[2] not in current_objs:
+                            if item[2] in current_objs:
+                                if toggle:
+                                    # Toggle OFF
+                                    self.selected_components = [x for x in self.selected_components if x[2] is not item[2]]
+                                else:
+                                    # Ensure selected (do nothing if already there)
+                                    pass
+                            else:
                                 self.selected_components.append(item)
                 else:
                     # Nothing currently selected, just append (which effectively is a set)
@@ -438,12 +446,21 @@ class BuilderSceneGUI:
             elif act_type == 'select_individual':
                 with profile_block("Builder: Select Individual"):
                     keys = pygame.key.get_pressed()
-                    append = keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
+                    is_ctrl = keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]
+                    is_shift = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
                     
-                    if not append:
+                    if not (is_ctrl or is_shift):
                         self.left_panel.deselect_all()
                         
-                    self.on_selection_changed(data, append=append)
+                    if is_shift and self.selected_component:
+                        # Range Selection
+                        start_comp = self.selected_component[2]
+                        end_comp = data
+                        range_comps = self.layer_panel.get_range_selection(start_comp, end_comp)
+                        self.on_selection_changed(range_comps, append=is_ctrl, toggle=False)
+                    else:
+                        # Single Click (Toggle if Ctrl)
+                        self.on_selection_changed(data, append=is_ctrl, toggle=is_ctrl)
                     
                     # Rebuild layer panel now that builder state is updated
                     self.layer_panel.rebuild()

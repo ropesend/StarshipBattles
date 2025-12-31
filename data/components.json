@@ -443,7 +443,7 @@
             "energy_cost": 2,
             "base_accuracy": 20.0,
             "accuracy_falloff": 0.0003,
-            "firing_arc": 90,
+            "firing_arc": 180,
             "sprite_index": 151,
             "abilities": {
                 "BeamWeapon": true,

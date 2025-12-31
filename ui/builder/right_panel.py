@@ -348,26 +348,33 @@ class BuilderRightPanel:
             
             return curr_y + 10
 
-        from ui.builder.stats_config import STATS_GENERAL, STATS_FIGHTER, STATS_CREW, STATS_ENDURANCE
+        from ui.builder.stats_config import (
+            STATS_MAIN, STATS_MANEUVERING, STATS_SHIELDS, 
+            STATS_ARMOR, STATS_TARGETING, STATS_LOGISTICS
+        )
 
-        # FREEZING CONFIG (Snapshot for this instance)
-        self.config_general = STATS_GENERAL
-        self.config_fighter = STATS_FIGHTER
-        self.config_crew = STATS_CREW
-        self.config_endurance = STATS_ENDURANCE
+        # FREEZING CONFIG
+        self.config_main = STATS_MAIN
+        self.config_maneuvering = STATS_MANEUVERING
+        self.config_shields = STATS_SHIELDS
+        self.config_armor = STATS_ARMOR
+        self.config_targeting = STATS_TARGETING
+        self.config_logistics = STATS_LOGISTICS
         
-        # === Column 1: Ship Stats ===
-        col1_max_y = build_section("Ship Stats", self.config_general, col1_x, start_y)
+        # === Column 1: Main, Maneuvering, Shields ===
+        y = start_y
+        y = build_section("Main Systems", self.config_main, col1_x, y)
+        y = build_section("Maneuvering", self.config_maneuvering, col1_x, y)
+        y = build_section("Shields", self.config_shields, col1_x, y)
+        col1_max_y = y
         
-        # === Column 2: Fighter, Layers, Crew, Endurance ===
+        # === Column 2: Armor, Targeting, Logistics ===
         y = start_y
         
-        # Fighter
-        y = build_section("Fighter Ops", self.config_fighter, col2_x, y)
+        # Armor
+        y = build_section("Armor", self.config_armor, col2_x, y)
         
-        # Layers (Special Case: Dynamic)
-        UILabel(pygame.Rect(col2_x, y, col_w, 20), "── Layer Usage ──", manager=self.manager, container=self.panel)
-        y += 22
+        # Layers (Special Case: Dynamic) - Inserted under Armor
         self.layer_rows = []
         for i in range(4):
             sr = StatRow(f"layer_{i}", f"Slot {i}", self.manager, self.panel, col2_x, y, col_w)
@@ -376,11 +383,11 @@ class BuilderRightPanel:
             y += 22
         y += 10
         
-        # Crew
-        y = build_section("Crew", self.config_crew, col2_x, y)
+        # Targeting
+        y = build_section("Targeting", self.config_targeting, col2_x, y)
         
-        # Endurance
-        y = build_section("Combat Endurance", self.config_endurance, col2_x, y)
+        # Logistics
+        y = build_section("Logistics", self.config_logistics, col2_x, y)
         
         col2_max_y = y
         
@@ -401,8 +408,9 @@ class BuilderRightPanel:
     def update_stats_display(self, s):
         """Update ship stats labels using Data-Driven Config."""
         
-        # Update General/Fighter/Crew/Endurance via Generic Loop
-        all_configs = self.config_general + self.config_fighter + self.config_crew + self.config_endurance
+        # Aggregated List
+        all_configs = (self.config_main + self.config_maneuvering + self.config_shields + 
+                       self.config_armor + self.config_targeting + self.config_logistics)
         
         for stat_def in all_configs:
             row = self.rows_map.get(stat_def.key)
