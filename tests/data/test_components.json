@@ -1,0 +1,108 @@
+{
+    "components": [
+        {
+            "id": "bridge",
+            "name": "Command Bridge",
+            "type": "Bridge",
+            "mass": 10,
+            "hp": 50
+        },
+        {
+            "id": "test_engine_infinite",
+            "name": "Infinite Thruster",
+            "type": "Engine",
+            "mass": 10,
+            "hp": 50,
+            "thrust_force": 500
+        },
+        {
+            "id": "test_gun_omni",
+            "name": "Omni Railgun",
+            "type": "ProjectileWeapon",
+            "mass": 10,
+            "hp": 50,
+            "damage": 50,
+            "range": 1000,
+            "projectile_speed": 1500,
+            "reload": 1.0,
+            "firing_arc": 360
+        },
+        {
+            "id": "test_gun",
+            "name": "Test Railgun",
+            "type": "ProjectileWeapon",
+            "mass": 10,
+            "hp": 50,
+            "damage": 500,
+            "range": 1000,
+            "projectile_speed": 1500,
+            "reload": 1.0,
+            "ammo_cost": 1,
+            "firing_arc": 45
+        },
+        {
+            "id": "test_laser",
+            "name": "Test Laser",
+            "type": "BeamWeapon",
+            "mass": 5,
+            "hp": 20,
+            "damage": 5,
+            "range": 800,
+            "energy_cost": 10,
+            "reload": 0.0,
+            "firing_arc": 360,
+            "base_accuracy": 2.0,
+            "accuracy_falloff": 0.001
+        },
+        {
+            "id": "generator",
+            "name": "Fusion Core",
+            "type": "Generator",
+            "mass": 20,
+            "hp": 100,
+            "energy_generation": 100
+        },
+        {
+            "id": "engine",
+            "name": "Main Thruster",
+            "type": "Engine",
+            "mass": 20,
+            "hp": 50,
+            "thrust_force": 500,
+            "fuel_cost": 0.1
+        },
+        {
+            "id": "thruster",
+            "name": "Maneuver Thruster",
+            "type": "Thruster",
+            "mass": 5,
+            "hp": 20,
+            "turn_speed": 5.0
+        },
+        {
+            "id": "fuel_tank",
+            "name": "Fuel Tank",
+            "type": "Tank",
+            "mass": 5,
+            "hp": 20,
+            "capacity": 1000,
+            "resource_type": "fuel"
+        },
+        {
+            "id": "ammo_box",
+            "name": "Ammo Magazine",
+            "type": "Tank",
+            "mass": 5,
+            "hp": 20,
+            "capacity": 1000,
+            "resource_type": "ammo"
+        },
+        {
+            "id": "armor",
+            "name": "Steel Plating",
+            "type": "Armor",
+            "mass": 20,
+            "hp": 200
+        }
+    ]
+}

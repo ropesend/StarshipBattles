@@ -21,6 +21,7 @@ from camera import Camera
 from battle import BattleScene
 from battle_setup import BattleSetupScreen
 from formation_editor import FormationEditorScene
+from ui.test_lab_scene import TestLabScene
 from profiling import PROFILER, profile_action
 
 
@@ -37,6 +38,7 @@ BUILDER = 1
 BATTLE = 2
 BATTLE_SETUP = 3
 FORMATION = 4
+TEST_LAB = 5
 
 # Initialize fonts
 pygame.font.init()
@@ -99,12 +101,14 @@ class Game:
         self.battle_setup = BattleSetupScreen()
         self.battle_scene = BattleScene(WIDTH, HEIGHT)
         self.formation_scene = FormationEditorScene(WIDTH, HEIGHT, self.on_formation_return)
+        self.test_lab_scene = TestLabScene(self)
     
     def update_menu_buttons(self):
         self.menu_buttons = [
             Button(WIDTH//2 - 100, HEIGHT//2 - 80, 200, 50, "Ship Builder", self.start_builder),
             Button(WIDTH//2 - 100, HEIGHT//2 - 10, 200, 50, "Battle Setup", self.start_battle_setup),
-            Button(WIDTH//2 - 100, HEIGHT//2 + 60, 200, 50, "Formation Editor", self.start_formation_editor)
+            Button(WIDTH//2 - 100, HEIGHT//2 + 60, 200, 50, "Formation Editor", self.start_formation_editor),
+            Button(WIDTH//2 - 100, HEIGHT//2 + 130, 200, 50, "Combat Lab", self.start_test_lab)
         ]
 
     @profile_action("App: Start Builder")
@@ -132,6 +136,11 @@ class Game:
     def on_formation_return(self):
         """Return from formation editor."""
         self.state = MENU
+    
+    def start_test_lab(self):
+        """Enter Combat Lab."""
+        self.state = TEST_LAB
+        self.test_lab_scene.scan_scenarios()
     
     def start_battle(self, team1_ships, team2_ships, headless=False):
         """Start a battle with the given ships."""
@@ -204,6 +213,8 @@ class Game:
                         self.battle_setup.update([event], self.screen.get_size())
                     elif self.state == FORMATION:
                         self.formation_scene.handle_event(event)
+                    elif self.state == TEST_LAB:
+                        self.test_lab_scene.handle_input([event])
             
             self._update_and_draw(frame_time, events)
             
@@ -226,6 +237,9 @@ class Game:
                  self.builder_scene.handle_resize(w, h)
         elif self.state == FORMATION:
              self.formation_scene.handle_resize(w, h)
+        elif self.state == TEST_LAB:
+             # Test lab handles resize if implemented, otherwise just re-draws
+             self.test_lab_scene._create_ui()
     
     def _handle_keydown(self, event):
         """Handle key press events."""
@@ -276,6 +290,8 @@ class Game:
         elif self.state == FORMATION:
             self.formation_scene.update(frame_time)
             self.formation_scene.draw(self.screen)
+        elif self.state == TEST_LAB:
+            self.test_lab_scene.draw(self.screen)
 
         if self.show_exit_dialog:
              self._draw_exit_dialog()

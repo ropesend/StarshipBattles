@@ -1,0 +1,86 @@
+{
+    "classes": {
+        "TestClass": {
+            "name": "TestClass",
+            "type": "Ship",
+            "max_mass": 5000,
+            "hull_mass": 100,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.3,
+                    "max_mass_pct": 0.2
+                },
+                {
+                    "type": "INNER",
+                    "radius_pct": 0.6,
+                    "max_mass_pct": 0.4
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.9,
+                    "max_mass_pct": 0.4
+                }
+            ]
+        },
+        "SimpleHull": {
+            "name": "SimpleHull",
+            "type": "Ship",
+            "max_mass": 2000,
+            "hull_mass": 50,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 1.0,
+                    "max_mass_pct": 1.0
+                }
+            ]
+        },
+        "ComplexHull": {
+            "name": "ComplexHull",
+            "type": "Ship",
+            "max_mass": 10000,
+            "hull_mass": 500,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.3,
+                    "max_mass_pct": 0.2
+                },
+                {
+                    "type": "INNER",
+                    "radius_pct": 0.6,
+                    "max_mass_pct": 0.3
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.9,
+                    "max_mass_pct": 0.3
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "max_mass_pct": 0.2
+                }
+            ]
+        },
+        "TargetDummy": {
+            "name": "TargetDummy",
+            "type": "Ship",
+            "max_mass": 10000,
+            "hull_mass": 500,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.5,
+                    "max_mass_pct": 0.5
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 1.0,
+                    "max_mass_pct": 0.5
+                }
+            ]
+        }
+    }
+}
