@@ -284,6 +284,19 @@ class Component:
             self.energy_generation_rate = self.data.get('energy_generation', 0) * stats['energy_gen_mult']
         if hasattr(self, 'capacity'):
             self.capacity = int(self.data.get('capacity', 0) * stats['capacity_mult'])
+            
+        # Fix for missing resource costs in recalc
+        if hasattr(self, 'energy_cost'):
+             self.energy_cost = self.data.get('energy_cost', 0) * stats.get('cost_mult', 1.0) # Assuming cost_mult applies? Or distinct?
+             # Usually cost_mult is credits. Energy cost might need flat mod or no mod.
+             # For now just reload from data.
+             self.energy_cost = self.data.get('energy_cost', 0)
+        
+        if hasattr(self, 'ammo_cost'):
+            self.ammo_cost = self.data.get('ammo_cost', 0)
+            
+        if hasattr(self, 'reload_time'):
+             self.reload_time = self.data.get('reload', 1.0)
 
         # Handle HP update (healing/new component logic)
         if old_max_hp == 0:
@@ -539,6 +552,11 @@ class ShieldRegenerator(Component):
         super()._apply_custom_stats(stats)
         # Use energy_gen_mult for regeneration rate scaling as simple_size affects it
         self.regen_rate = self.base_regen_rate * stats.get('energy_gen_mult', 1.0)
+        
+        # Restore energy_cost from abilities (Source of Truth) as _apply_base_stats overwrites it
+        # Apply cost_mult for scaling consistency
+        raw_cost = self.abilities.get('EnergyConsumption', 0)
+        self.energy_cost = raw_cost * stats.get('cost_mult', 1.0)
 
     def clone(self):
         return ShieldRegenerator(self.data)

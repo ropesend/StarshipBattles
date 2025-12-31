@@ -50,6 +50,83 @@ class TestMandatoryModifiers(unittest.TestCase):
         mock_comp.remove_modifier.side_effect = remove_mod
         return mock_comp, mods
 
+    def test_auto_apply_turret(self):
+        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
+        mock_comp, mods = self._setup_mock_comp('ProjectileWeapon')
+        mock_comp.firing_arc = 45 # Base arc
+        
+        test_registry = {
+            'turret_mount': Modifier({'id': 'turret_mount', 'name': 'Turret', 'type': 'linear', 'min_val': 0, 'max_val': 360, 'restrictions': {'allow_types': ['ProjectileWeapon']}})
+        }
+        
+        with patch.dict(MODIFIER_REGISTRY, test_registry, clear=True):
+             panel.rebuild(mock_comp, {})
+             panel.layout(10)
+        
+        self.assertIn('turret_mount', mods)
+        self.assertEqual(mods['turret_mount'].value, 45) # Should default to base
+        
+    def test_turret_min_constraint_updates(self):
+        # Ensure buttons respect the base firing arc constraint
+        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
+        mock_comp, mods = self._setup_mock_comp('ProjectileWeapon')
+        mock_comp.firing_arc = 45
+        
+        test_registry = {
+            'turret_mount': Modifier({'id': 'turret_mount', 'name': 'Turret', 'type': 'linear', 'min_val': 0, 'max_val': 360, 'restrictions': {'allow_types': ['ProjectileWeapon']}})
+        }
+        
+        with patch.dict(MODIFIER_REGISTRY, test_registry, clear=True):
+             panel.rebuild(mock_comp, {})
+             panel.layout(10)
+             
+             # Locate specific buttons (tricky without ID access, but we can simulate event with mock button)
+             # We can manually trigger handle_event with a mock button mapped in step_btn_map
+             
+             mock_btn = MagicMock()
+             # Map it to a decrement action that goes below 45
+             # Current is 45. Try to subtract 15. Should stay at 45.
+             panel.step_btn_map[mock_btn] = ('turret_mount', 15, 'snap_floor')
+             
+             # Need to mock the slider to return current value
+             # Find slider
+             idx = panel.modifier_id_list.index('turret_mount')
+             # Replace real slider with mock for this test interaction
+             slider_mock = MagicMock()
+             slider_mock.get_current_value.return_value = 45.0
+             panel.modifier_sliders[idx] = slider_mock
+             
+             # Trigger event
+             event = MagicMock()
+             event.type = pygame_gui.UI_BUTTON_PRESSED
+             event.ui_element = mock_btn
+             
+             panel.handle_event(event)
+             
+             # Verify slider set_current_value was called with 45 (clamped) not 30
+             slider_mock.set_current_value.assert_called_with(45.0)
+             
+             # Try setting to 40 directly
+             panel.step_btn_map[mock_btn] = ('turret_mount', 40, 'set_value')
+             panel.handle_event(event)
+             slider_mock.set_current_value.assert_called_with(45.0) # Should be clamped
+
+    def test_range_limit_seeker(self):
+        # Range should NOT apply to Seeker
+        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
+        mock_comp, mods = self._setup_mock_comp('SeekerWeapon')
+        
+        test_registry = {
+            'range_mount': Modifier({'id': 'range_mount', 'name': 'Range', 'type': 'linear', 'min_val': 0, 'max_val': 10, 'restrictions': {'allow_types': ['ProjectileWeapon', 'BeamWeapon']}}) 
+            # Note: Seeker NOT in allow_types (mimicking modifiers.json update)
+        }
+        
+        with patch.dict(MODIFIER_REGISTRY, test_registry, clear=True):
+             panel.rebuild(mock_comp, {})
+             panel.layout(10)
+             
+        self.assertNotIn('range_mount', mods)
+
     def test_auto_apply_size(self):
         panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
         mock_comp, mods = self._setup_mock_comp('reactor')

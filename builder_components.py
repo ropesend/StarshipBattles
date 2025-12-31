@@ -159,6 +159,16 @@ class ModifierEditorPanel:
                                   m = self.editing_component.get_modifier(mod_id)
                                   m.value = 0.0 # Default 0
 
+                    # Turret: Auto-apply to all weapons
+                    elif mod_id == 'turret_mount':
+                         is_weapon = self.editing_component.type_str in ['ProjectileWeapon', 'BeamWeapon', 'SeekerWeapon']
+                         if is_weapon and not self.editing_component.get_modifier(mod_id):
+                             self.editing_component.add_modifier(mod_id)
+                             m = self.editing_component.get_modifier(mod_id)
+                             # Default to base firing arc
+                             base = getattr(self.editing_component, 'firing_arc', mod_def.min_val)
+                             m.value = float(base)
+
                 existing_mod = self.editing_component.get_modifier(mod_id)
                 is_active = existing_mod is not None
                 current_val = existing_mod.value if is_active else mod_def.min_val
@@ -173,7 +183,7 @@ class ModifierEditorPanel:
             
             # Determine blocked state (non-removable)
             is_blocked = False
-            if mod_id in ['simple_size_mount', 'range_mount', 'facing']:
+            if mod_id in ['simple_size_mount', 'range_mount', 'facing', 'turret_mount']:
                  is_blocked = True 
             
             text = f"[{'x' if is_active else ' '}] {mod_def.name}"
@@ -216,6 +226,16 @@ class ModifierEditorPanel:
                 
                 current_x = entry_x + entry_w + 5
                 
+                # FACING: Presets First
+                if mod_id == 'facing':
+                     presets = [0, 90, 180, 270]
+                     for p_val in presets:
+                         p_btn = UIButton(pygame.Rect(current_x, y, 32, 28), str(p_val), manager=self.manager, container=self.container)
+                         self.step_btn_map[p_btn] = (mod_id, p_val, 'set_value')
+                         if not is_active: p_btn.disable()
+                         current_x += 34
+                     current_x += 5 # Spacer
+                
                 # --- Button Generation Logic ---
                 btns_to_create = [] # List of (text, value, mode/direction)
                 
@@ -230,10 +250,10 @@ class ModifierEditorPanel:
                         ('>', 15, 'snap_ceil'),
                         ('>>', 90, 'snap_ceil')
                     ]
-                elif mod_id == 'simple_size':
+                elif mod_id == 'simple_size_mount':
                     # << (100 snap), < (10 snap), < (1 delta)
                     btns_to_create = [
-                        ('<<', 100, 'snap_smart_floor'), # Special 100 logic
+                        ('<<', 100, 'snap_floor'), 
                         ('<', 10, 'snap_floor'),
                         ('<', 1, 'delta_sub'),
                         ('SLIDER', 0, 0),
@@ -287,31 +307,34 @@ class ModifierEditorPanel:
                 
                 if available_slider_width < 40: available_slider_width = 40
 
+                if available_slider_width < 40: available_slider_width = 40
+
+                # Determine local min val (for Turret Mount constraint)
+                local_min = float(mod_def.min_val)
+                if mod_id == 'turret_mount' and self.editing_component:
+                    local_min = float(getattr(self.editing_component, 'firing_arc', mod_def.min_val))
+
                 for label, val, mode in btns_to_create:
                     if label == 'SLIDER':
                          # Create Slider
                          step_increment = 0.01
                          slider = UIHorizontalSlider(
                             relative_rect=pygame.Rect(current_x, y, available_slider_width, 28),
-                            start_value=float(current_val),
-                            value_range=(float(mod_def.min_val), float(mod_def.max_val)),
+                            start_value=float(max(local_min, current_val)),
+                            value_range=(local_min, float(mod_def.max_val)),
                             manager=self.manager,
                             container=self.container,
                             object_id=f'#slider_{safe_mod_id}',
                             click_increment=step_increment
                         )
+                         if hasattr(slider, 'enable_arrow_buttons'):
+                             slider.enable_arrow_buttons = False
+                             slider.rebuild()
                          if not is_active: slider.disable()
                          self.modifier_sliders.append(slider)
                          current_x += available_slider_width + 5
                          
-                         # If Facing, add preset buttons here? "These buttons should be inline, the slider can just be smaller."
-                         if mod_id == 'facing':
-                             presets = [0, 90, 180, 270]
-                             for p_val in presets:
-                                 p_btn = UIButton(pygame.Rect(current_x, y, 32, 28), str(p_val), manager=self.manager, container=self.container)
-                                 self.step_btn_map[p_btn] = (mod_id, p_val, 'set_value')
-                                 if not is_active: p_btn.disable()
-                                 current_x += 34
+                         # Old facing presets location removed
                          
                     else:
                         # Create Button
@@ -471,6 +494,11 @@ class ModifierEditorPanel:
                      current = slider.get_current_value()
                      mod_def = MODIFIER_REGISTRY[mod_id]
                      
+                     # Determine local min val (for Turret Mount constraint)
+                     local_min = float(mod_def.min_val)
+                     if mod_id == 'turret_mount' and self.editing_component:
+                         local_min = float(getattr(self.editing_component, 'firing_arc', mod_def.min_val))
+
                      new_val = current
                      
                      if mode == 'set_value':
@@ -480,20 +508,20 @@ class ModifierEditorPanel:
                      elif mode == 'delta_sub':
                          new_val = current - val_or_step
                      elif mode == 'snap_floor':
-                         new_val = self._calculate_snap_val(current, val_or_step, -1, mod_def.min_val, mod_def.max_val)
+                         new_val = self._calculate_snap_val(current, val_or_step, -1, local_min, mod_def.max_val)
                      elif mode == 'snap_ceil':
-                         new_val = self._calculate_snap_val(current, val_or_step, 1, mod_def.min_val, mod_def.max_val)
+                         new_val = self._calculate_snap_val(current, val_or_step, 1, local_min, mod_def.max_val)
                      elif mode == 'snap_smart_floor':
                          # Size mount special 100 step
                          if current <= 100:
-                             new_val = max(mod_def.min_val, 1)
+                             new_val = max(local_min, 1)
                          else:
-                             new_val = self._calculate_snap_val(current, val_or_step, -1, mod_def.min_val, mod_def.max_val)
+                             new_val = self._calculate_snap_val(current, val_or_step, -1, local_min, mod_def.max_val)
                      else:
                          # Fallback
                          pass
 
-                     new_val = max(mod_def.min_val, min(mod_def.max_val, new_val))
+                     new_val = max(local_min, min(mod_def.max_val, new_val))
                      
                      slider.set_current_value(new_val)
                      if entry: entry.set_text(f"{new_val:.2f}")

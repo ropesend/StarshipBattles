@@ -385,6 +385,23 @@ class BuilderRightPanel:
              
         col2_max_y = y + 10
         
+        # Combat Endurance (Column 2, continued)
+        y = col2_max_y
+        UILabel(pygame.Rect(col2_x, y, col_w, 20), "── Combat Endurance ──", manager=self.manager, container=self.panel)
+        y += 22
+        
+        endurance_stats = [
+            ('fuel_time', 'Fuel Time'),
+            ('ammo_time', 'Ordnance Time'),
+            ('energy_time', 'Energy Time'),
+            ('recharge_time', 'Recharge Time')
+        ]
+        
+        for key, text in endurance_stats:
+            y = self._add_stat_row(key, text, col2_x, col_w, y)
+            
+        col2_max_y = y + 10
+        
         # === Requirements (Bottom, Split) ===
         y = max(col1_max_y, col2_max_y) + 10
         
@@ -510,6 +527,34 @@ class BuilderRightPanel:
         
         self.crew_labels['life_support']['value'].set_text(f"{life_support}")
         self.crew_labels['life_support']['unit'].set_text(f" {ls_status}")
+        
+        # Helper for time formatting
+        def fmt_time(val):
+            if val == float('inf') or val > 99999:
+                return "Infinite"
+            if val <= 0:
+                # Could be 0 if consumption is massive or capacity 0
+                if val == 0 and isinstance(val, int): # capacity 0 check?
+                     return "0.0s"
+                return "0.0s"
+            if val > 3600:
+                return f"{val/3600:.1f}h"
+            if val > 60:
+                return f"{val/60:.1f}m"
+            return f"{val:.1f}s"
+
+        # Update Combat Endurance
+        fuel_t = getattr(s, 'fuel_endurance', float('inf'))
+        set_val('fuel_time', fmt_time(fuel_t), "")
+        
+        ammo_t = getattr(s, 'ammo_endurance', float('inf'))
+        set_val('ammo_time', fmt_time(ammo_t), "")
+        
+        energy_t = getattr(s, 'energy_endurance', float('inf'))
+        set_val('energy_time', fmt_time(energy_t), "")
+        
+        recharge_t = getattr(s, 'energy_recharge', float('inf'))
+        set_val('recharge_time', fmt_time(recharge_t), "")
         
         # Update requirements (Left)
         missing_reqs = s.get_missing_requirements()

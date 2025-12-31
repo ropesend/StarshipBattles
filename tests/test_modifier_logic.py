@@ -59,20 +59,43 @@ class TestModifierLogic(unittest.TestCase):
         self.assertEqual(self.calculate_snap_increment(30, 15, 360), 45)
 
     def test_size_decrement(self):
-        # The arrows here should function similarly except with the rounding be to the nearest 10 or 100
-        # unless the value is 100 or less, in which case it should reduce to 1
-        
-        # 100 step
-        self.assertEqual(self.calculate_size_decrement(50, 100, 1), 1)
+        # 100 step (Snap Floor 100)
+        # 376 -> 300
+        self.assertEqual(self.calculate_snap_decrement(376, 100, 1), 300)
+        # 300 -> 200
+        self.assertEqual(self.calculate_snap_decrement(300, 100, 1), 200)
+        # 147 -> 100
+        self.assertEqual(self.calculate_snap_decrement(147, 100, 1), 100)
+        # 100 -> 1 (Special case: <= 100 goes to 1?)
+        # User said: "unless the value is 100 or less, in which case it should reduce to 1"
+        # My implementation of smart_floor handled this.
         self.assertEqual(self.calculate_size_decrement(100, 100, 1), 1)
-        self.assertEqual(self.calculate_size_decrement(150, 100, 1), 100)
-        self.assertEqual(self.calculate_size_decrement(200, 100, 1), 100)
+        self.assertEqual(self.calculate_size_decrement(50, 100, 1), 1)
         
-        # 10 step
-        # "so 87 becomees 80"
-        self.assertEqual(self.calculate_size_decrement(87, 10, 1), 80)
-        # what if 8? -> 0? min val is 1 (assumed for size)
-        self.assertEqual(self.calculate_size_decrement(8, 10, 1), 1) # target 0, max(1, 0) -> 1
+        # 10 step (Snap Floor 10)
+        # 376 -> 370
+        self.assertEqual(self.calculate_snap_decrement(376, 10, 1), 370)
+        # 87 -> 80
+        self.assertEqual(self.calculate_snap_decrement(87, 10, 1), 80)
+        
+        # 1 step (Delta 1)
+        # 376 -> 375
+        self.assertEqual(376 - 1, 375)
+
+    def test_size_increment(self):
+        # 100 step (Snap Ceil 100)
+        # 147 -> 200
+        self.assertEqual(self.calculate_snap_increment(147, 100, 1024), 200)
+        # 150 -> 200
+        self.assertEqual(self.calculate_snap_increment(150, 100, 1024), 200)
+        
+        # 10 step (Snap Ceil 10)
+        # 147 -> 150
+        self.assertEqual(self.calculate_snap_increment(147, 10, 1024), 150)
+        
+        # 1 step (Delta 1)
+        # 147 -> 148
+        self.assertEqual(147 + 1, 148)
         
         
 

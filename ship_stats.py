@@ -262,6 +262,78 @@ class ShipStatsCalculator:
             
         # Initialize Resources 
         self._initialize_resources(ship)
+        
+        # 7. Combat Endurance Stats
+        # -------------------------
+        self._calculate_combat_endurance(ship, component_pool)
+
+    def _calculate_combat_endurance(self, ship, component_pool):
+        """Calculate endurance times for Fuel, Ammo, and Energy."""
+        
+        # A. Fuel
+        # Rate = Sum of Engine.fuel_cost_per_sec (active)
+        # Thrusters assumed to not consume fuel for cruising/combat duration per spec assumptions
+        fuel_consumption = 0.0
+        for c in component_pool:
+            if c.is_active and isinstance(c, Engine):
+                fuel_consumption += getattr(c, 'fuel_cost_per_sec', 0)
+        
+        ship.fuel_consumption = fuel_consumption
+        ship.fuel_endurance = (ship.max_fuel / fuel_consumption) if fuel_consumption > 0 else float('inf')
+        
+        # B. Ordinance (Ammo)
+        # Rate = Sum of Weapon.ammo_cost * (1.0 / reload_time)
+        ammo_consumption = 0.0
+        for c in component_pool:
+            if c.is_active and isinstance(c, Weapon):
+                cost = getattr(c, 'ammo_cost', 0)
+                reload_t = getattr(c, 'reload_time', 1.0)
+                if cost > 0 and reload_t > 0:
+                    rate = cost / reload_t
+                    ammo_consumption += rate
+
+        ship.ammo_consumption = ammo_consumption
+        ship.ammo_endurance = (ship.max_ammo / ammo_consumption) if ammo_consumption > 0 else float('inf')
+
+        # C. Energy
+        # Rate = Weapons + Shield Regen + Other?
+        # Net = Gen - Consumption
+        energy_consumption = 0.0
+        for c in component_pool:
+            if c.is_active:
+                # Weapons
+                if isinstance(c, Weapon):
+                    # Check for energy cost
+                    cost = getattr(c, 'energy_cost', 0)
+                    reload_t = getattr(c, 'reload_time', 1.0)
+                    if cost > 0 and reload_t > 0:
+                        energy_consumption += cost / reload_t
+                elif isinstance(c, ShieldRegenerator):
+                     # Shield Regen Cost is handled in Phase 3 aggregation as 'shield_regen_cost'
+                     # But we should probably use the aggregated value to ensure we capture it all.
+                     pass 
+        
+        # Add aggregated shield cost
+        energy_consumption += ship.shield_regen_cost
+        
+        ship.energy_consumption = energy_consumption
+        ship.energy_net = ship.energy_gen_rate - energy_consumption
+        
+        if ship.energy_net < 0:
+            # Draining
+            drain_rate = abs(ship.energy_net)
+            ship.energy_endurance = ship.max_energy / drain_rate
+        else:
+            # Sustainable
+            ship.energy_endurance = float('inf')
+            
+        # Recharge Time
+        # Assume starting from 0 to Full using only Generation (no consumption)
+        # Or should it be Net Recharge? Prompt says "if consumption stops". So purely Generation.
+        if ship.energy_gen_rate > 0:
+            ship.energy_recharge = ship.max_energy / ship.energy_gen_rate
+        else:
+            ship.energy_recharge = float('inf')
 
     def _priority_sort_key(self, c):
         t = c.type_str
