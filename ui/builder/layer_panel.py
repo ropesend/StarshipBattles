@@ -14,8 +14,10 @@ from ui.builder.structure_list_items import (
 )
 from ui.builder.grouping_strategies import DefaultGroupingStrategy, TypeGroupingStrategy, FlatGroupingStrategy
 from ui.builder.panel_layout_config import StructurePanelLayoutConfig
+from ui.builder.drop_target import DropTarget
+from ship import VALIDATOR
 
-class LayerPanel:
+class LayerPanel(DropTarget):
     def __init__(self, builder, manager, rect):
         self.builder = builder
         self.manager = manager
@@ -334,6 +336,23 @@ class LayerPanel:
                         highlight_surf.fill(self.config.SELECTION_COLOR) 
                         screen.blit(highlight_surf, clipped.topleft)
 
+    def can_accept_drop(self, pos):
+        return self.get_target_layer_at(pos) is not None
+
+    def accept_drop(self, pos, component, count=1):
+        target_layer = self.get_target_layer_at(pos)
+        if target_layer:
+             # Validation
+             validation = VALIDATOR.validate_addition(self.builder.ship, component, target_layer)
+             if validation.is_valid:
+                 self.builder.ship.add_component(component, target_layer)
+                 self.builder.update_stats()
+                 return True
+             else:
+                 self.builder.show_error(f"Cannot add: {', '.join(validation.errors)}")
+                 return False
+        return False
+
     def get_target_layer_at(self, pos):
         """
         Determines if the position is within a layer's drop zone.
@@ -344,9 +363,11 @@ class LayerPanel:
         mx, my = pos
         current_checking_layer = None
         
+        # We need to account for scroll position!
+        # The items are inside scroll_container. 
+        # get_abs_rect on the items *should* handle this if pygame_gui is working normally.
+        
         for item in self.items:
-            # We must be careful: items are relative to scrolling container.
-            # But get_abs_rect handles that.
             abs_rect = item.panel.get_abs_rect()
             
             # Since header defines the start of a layer section, we track it.
@@ -357,12 +378,10 @@ class LayerPanel:
             if abs_rect.collidepoint(mx, my):
                 return current_checking_layer
                 
-        # If hovering empty space at bottom of list, return last layer?
-        # Or if we are in the panel but not over an item?
-        # Default to ARMOR if not found? No, allow explicit drop elsewhere?
-        # But rect collision passed.
-        # If we are below the last item but in panel, attach to last layer encountered?
+        # If hovering empty space at bottom of list...
         if current_checking_layer:
+            # Check if we are physically below the last item?
+            # Or just assume if we are in the panel rect (checked at start) and last header was X...
             return current_checking_layer
             
         return None

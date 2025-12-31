@@ -8,6 +8,10 @@ class InteractionController:
         self.dragged_item = None
         self.selected_component = None
         self.hovered_component = None
+        self.drop_targets = []
+
+    def register_drop_target(self, target):
+        self.drop_targets.append(target)
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -75,48 +79,23 @@ class InteractionController:
 
     @profile_action("Builder: Drop Component")
     def _handle_drop(self, pos):
-        # Check if dropped on LayerPanel
-        closest_layer = self.builder.layer_panel.get_target_layer_at(pos)
+        comp = self.dragged_item
         
-        if not closest_layer:
-            # Fallback (optional?) or just ignore
-            # User request: "Instead of Adding them to the circles... drop them onto this new list"
-            # So we strictly enforce list dropping for component addition?
-            # Or should we keep the old logic as backup? 
-            # "Instead of" implies replacement.
-            return
-        
-        if closest_layer:
-            # Suppress header toggle (fix for drop causing toggle)
-            if hasattr(self.builder.layer_panel, 'suppress_toggle'):
-                self.builder.layer_panel.suppress_toggle()
-            
-            comp = self.dragged_item
-            # Check restrictions using the centralized validator (allowed_layers removed from components)
-            from ship import VALIDATOR
-            validation = VALIDATOR.validate_addition(self.builder.ship, comp, closest_layer)
-            
-            if not validation.is_valid:
-                 reason = ", ".join(validation.errors)
-                 self.builder.show_error(f"Cannot place: {reason}")
-                 return
+        # Check bulk add count
+        count = 1
+        if hasattr(self.builder.left_panel, 'get_add_count'):
+            count = self.builder.left_panel.get_add_count()
 
-            # Add component (re-validates internally, but that's fine)
-            # Check bulk add count
-            count = 1
-            if hasattr(self.builder.left_panel, 'get_add_count'):
-                count = self.builder.left_panel.get_add_count()
-                
-            if count > 1:
-                added = self.builder.ship.add_components_bulk(comp, closest_layer, count)
-                if added > 0:
-                    self.builder.update_stats()
-                    if added < count:
-                        self.builder.show_error(f"Added only {added}/{count} (Check limits)")
-                else:
-                   self.builder.show_error("Could not add components")
-            else:
-                if self.builder.ship.add_component(comp, closest_layer):
-                   self.builder.update_stats()
-                else:
-                   self.builder.show_error("Could not add component")
+        handled = False
+        for target in self.drop_targets:
+            if target.can_accept_drop(pos):
+                if hasattr(target, 'suppress_toggle'):
+                    target.suppress_toggle()
+                    
+                if target.accept_drop(pos, comp, count):
+                    handled = True
+                    break
+        
+        if not handled:
+             # Just return, drop cancelled/ignored
+             return

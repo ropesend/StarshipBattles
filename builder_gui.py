@@ -136,6 +136,8 @@ class BuilderSceneGUI:
                 self, self.ui_manager,
                 pygame.Rect(self.left_panel_width, 0, self.layer_panel_width, panels_height)
             )
+            # Register Drop Target
+            self.controller.register_drop_target(self.layer_panel)
             
             self.right_panel = BuilderRightPanel(
                 self, self.ui_manager,

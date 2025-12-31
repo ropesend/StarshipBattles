@@ -1,74 +1,59 @@
-
 import unittest
-import sys
-import os
+from unittest.mock import MagicMock
 import pygame
-from unittest.mock import MagicMock, patch
+from ui.builder.drop_target import DropTarget
+from ui.builder.interaction_controller import InteractionController
 
-# Dummy video driver
-os.environ["SDL_VIDEODRIVER"] = "dummy"
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+class MockDropTarget(DropTarget):
+    def __init__(self):
+        self.accepted = False
+        self.last_pos = None
+        self.last_comp = None
+        
+    def can_accept_drop(self, pos):
+        return pos[0] > 100 # Accept if x > 100
+        
+    def accept_drop(self, pos, component, count=1):
+        if self.can_accept_drop(pos):
+            self.accepted = True
+            self.last_pos = pos
+            self.last_comp = component
+            return True
+        return False
 
-from builder_gui import InteractionController
-from ship import LayerType
-
-class TestBuilderGUIFix(unittest.TestCase):
+class TestBuilderInteraction(unittest.TestCase):
     def setUp(self):
         pygame.init()
-        self.mock_builder = MagicMock()
-        self.mock_view = MagicMock()
-        self.controller = InteractionController(self.mock_builder, self.mock_view)
+        self.builder = MagicMock()
+        self.builder.detail_panel.rect = pygame.Rect(0, 0, 0, 0) # Mock rect
+        self.builder.left_panel.get_add_count.return_value = 1
+        self.view = MagicMock()
+        self.view.rect = pygame.Rect(0, 0, 100, 100)
         
-        # Setup mock ship
-        self.mock_ship = MagicMock()
-        self.mock_builder.ship = self.mock_ship
+        self.controller = InteractionController(self.builder, self.view)
         
-        # Setup dragged item
-        self.mock_comp = MagicMock()
-        self.mock_comp.allowed_layers = [LayerType.CORE]
-        self.mock_comp.name = "TestComp"
-        self.mock_comp.mass = 10
-        self.controller.dragged_item = self.mock_comp
+    def test_drop_delegation(self):
+        target = MockDropTarget()
+        self.controller.register_drop_target(target)
         
-        # Setup layer panel mock
-        self.mock_builder.layer_panel = MagicMock()
+        # Simulate Drop at (150, 150) - Should accept
+        comp = MagicMock()
+        self.controller.dragged_item = comp
+        self.controller._handle_drop((150, 150))
         
-        # Setup left panel mock
-        self.mock_builder.left_panel = MagicMock()
-        self.mock_builder.left_panel.get_add_count.return_value = 1
-
-    def test_handle_drop_valid(self):
-        """Test _handle_drop with valid component and layer."""
-        # Setup: Hit a layer
-        self.mock_builder.layer_panel.get_target_layer_at.return_value = LayerType.CORE
+        self.assertTrue(target.accepted)
+        self.assertEqual(target.last_comp, comp)
         
-        # Mock VALIDATOR
-        with patch('ship.VALIDATOR') as mock_validator:
-            mock_validator.validate_addition.return_value.is_valid = True
-            
-            # Mock ship.add_component to return True
-            self.mock_ship.add_component.return_value = True
-            
-            # Action
-            self.controller._handle_drop((100, 100))
-            
-            # Verify
-            mock_validator.validate_addition.assert_called()
-            self.mock_ship.add_component.assert_called_with(self.mock_comp, LayerType.CORE)
-            self.mock_builder.update_stats.assert_called()
-
-    def test_handle_drop_invalid_restriction(self):
-        """Test _handle_drop when validator rejects."""
-        self.mock_builder.layer_panel.get_target_layer_at.return_value = LayerType.CORE
+    def test_drop_rejection(self):
+        target = MockDropTarget()
+        self.controller.register_drop_target(target)
         
-        with patch('ship.VALIDATOR') as mock_validator:
-            mock_validator.validate_addition.return_value.is_valid = False
-            mock_validator.validate_addition.return_value.errors = ["Some Restriction"]
-            
-            self.controller._handle_drop((100, 100))
-            
-            self.mock_builder.show_error.assert_called_with("Cannot place: Some Restriction")
-            self.mock_ship.add_component.assert_not_called()
+        # Simulate Drop at (50, 50) - Should reject (x < 100)
+        comp = MagicMock()
+        self.controller.dragged_item = comp
+        self.controller._handle_drop((50, 50))
+        
+        self.assertFalse(target.accepted)
 
 if __name__ == '__main__':
     unittest.main()
