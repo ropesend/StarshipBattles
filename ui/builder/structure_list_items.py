@@ -12,13 +12,15 @@ ACTION_REMOVE_INDIVIDUAL = 'remove_individual'
 ACTION_REMOVE_GROUP = 'remove_group'
 ACTION_TOGGLE_GROUP = 'toggle_group'
 ACTION_TOGGLE_LAYER = 'toggle_layer'
+ACTION_START_DRAG = 'start_drag'
 
 class IndividualComponentItem:
     """Row for a single component inside an expanded group."""
-    def __init__(self, manager, container, component, max_mass, y_pos, width, sprite_mgr, event_handler, is_selected, config=StructurePanelLayoutConfig()):
+    def __init__(self, manager, container, component, max_mass, y_pos, width, sprite_mgr, event_handler, is_selected, is_last=False, config=StructurePanelLayoutConfig()):
         self.component = component
         self.event_handler = event_handler
         self.is_selected = is_selected
+        self.is_last = is_last
         self.config = config
         self.height = config.ROW_HEIGHT
         self.rect = pygame.Rect(0, y_pos, width, self.height)
@@ -40,6 +42,15 @@ class IndividualComponentItem:
             container=self.panel,
             object_id='#transparent_button', 
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+        )
+        
+        # Tree Connector
+        self.line_surface = self._create_tree_line(is_last, config)
+        self.line_image = UIImage(
+            relative_rect=pygame.Rect(5, 0, 20, self.height),
+            image_surface=self.line_surface,
+            manager=manager,
+            container=self.panel
         )
         
         # Icon
@@ -99,16 +110,53 @@ class IndividualComponentItem:
             object_id='#delete_button',
             anchors=config.ANCHOR_TOP_RIGHT
         )
+
+        # Drag Handle
+        self.drag_button = UIButton(
+            relative_rect=pygame.Rect(-92, 5, 28, 20),
+            text="≡",
+            manager=manager,
+            container=self.panel,
+            anchors=config.ANCHOR_TOP_RIGHT
+        )
         
-    def update(self, component, max_mass, is_selected):
+    def update(self, component, max_mass, is_selected, is_last=False):
         """Update relevant data in-place."""
         self.component = component
         self.is_selected = is_selected
+        
+        # Update Tree Line if changed
+        if is_last != self.is_last:
+            self.is_last = is_last
+            self.line_image.set_image(self._create_tree_line(is_last, self.config))
         
         self.mass_label.set_text(f"{int(component.mass)}t")
         
         pct_val = (component.mass / max_mass * 100) if max_mass > 0 else 0
         self.pct_label.set_text(f"{pct_val:.1f}%")
+
+    def _create_tree_line(self, is_last, config):
+        surf = pygame.Surface((20, self.height), pygame.SRCALPHA)
+        color = pygame.Color(config.TREE_LINE_COLOR)
+        
+        # Vertical Line
+        # Center X = 10
+        # If not last: Line goes top to bottom
+        # If last: Line goes top to center
+        # Also need horizontal line to item
+        
+        center_x = 10
+        center_y = self.height // 2
+        
+        end_y = self.height if not is_last else center_y
+        
+        # Vertical
+        pygame.draw.line(surf, color, (center_x, 0), (center_x, end_y), 1)
+        
+        # Horizontal (Connect to item)
+        pygame.draw.line(surf, color, (center_x, center_y), (20, center_y), 1)
+        
+        return surf
 
     def get_abs_rect(self):
         """Get the absolute screen rect of this item's panel."""
@@ -120,6 +168,8 @@ class IndividualComponentItem:
                 return self.event_handler.handle_item_action(ACTION_REMOVE_INDIVIDUAL, self.component)
             elif event.ui_element == self.add_button:
                 return self.event_handler.handle_item_action(ACTION_ADD_INDIVIDUAL, self.component)
+            elif event.ui_element == self.drag_button:
+                return self.event_handler.handle_item_action(ACTION_START_DRAG, self.component)
             elif event.ui_element == self.select_button:
                 return self.event_handler.handle_item_action(ACTION_SELECT_INDIVIDUAL, self.component)
         return False

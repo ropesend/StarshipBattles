@@ -1,6 +1,6 @@
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIPanel, UILabel, UIScrollingContainer
+from pygame_gui.elements import UIPanel, UILabel, UIScrollingContainer, UIDropDownMenu
 
 from ship import LayerType
 from ui.builder.structure_list_items import (
@@ -12,7 +12,7 @@ from ui.builder.structure_list_items import (
     ACTION_SELECT_GROUP, ACTION_SELECT_INDIVIDUAL,
     ACTION_TOGGLE_GROUP, ACTION_TOGGLE_LAYER
 )
-from ui.builder.grouping_strategies import DefaultGroupingStrategy
+from ui.builder.grouping_strategies import DefaultGroupingStrategy, TypeGroupingStrategy, FlatGroupingStrategy
 from ui.builder.panel_layout_config import StructurePanelLayoutConfig
 
 class LayerPanel:
@@ -32,7 +32,13 @@ class LayerPanel:
         self.selected_component_id = None 
         
         # Strategy
-        self.grouping_strategy = DefaultGroupingStrategy()
+        self.grouping_strategies = {
+            'Default': DefaultGroupingStrategy(),
+            'Compact': TypeGroupingStrategy(),
+            'Flat': FlatGroupingStrategy()
+        }
+        self.current_strategy_name = 'Default'
+        self.grouping_strategy = self.grouping_strategies[self.current_strategy_name]
         
         self.panel = UIPanel(
             relative_rect=rect,
@@ -47,7 +53,17 @@ class LayerPanel:
             container=self.panel
         )
         
-        self.list_y = 40
+        # View Options Dropdown
+        self.view_dropdown = UIDropDownMenu(
+            options_list=['Default', 'Compact', 'Flat'],
+            starting_option='Default',
+            relative_rect=pygame.Rect(-110, 5, 100, 30),
+            manager=manager,
+            container=self.panel,
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
+        )
+        
+        self.list_y = 50 # Increased slightly for dropdown clearance
         self.scroll_container = UIScrollingContainer(
             relative_rect=pygame.Rect(0, self.list_y, rect.width, rect.height - self.list_y),
             manager=manager,
@@ -166,7 +182,8 @@ class LayerPanel:
                     y_pos += item.height
                     
                     if is_expanded:
-                        for comp in comp_list:
+                        for idx, comp in enumerate(comp_list):
+                             is_last = (idx == len(comp_list) - 1)
                              is_sel_ind = False
                              if self.builder.selected_components:
                                  if any(x[2] is comp for x in self.builder.selected_components):
@@ -178,7 +195,7 @@ class LayerPanel:
                              
                              ind_item = self.ui_cache.get(ind_key)
                              if ind_item:
-                                 ind_item.update(comp, max_mass, is_sel_ind)
+                                 ind_item.update(comp, max_mass, is_sel_ind, is_last)
                                  ind_item.panel.set_relative_position((0, y_pos))
                              else:
                                  ind_item = IndividualComponentItem(
@@ -191,6 +208,7 @@ class LayerPanel:
                                     self.builder.sprite_mgr,
                                     self,
                                     is_sel_ind,
+                                    is_last,
                                     self.config
                                  )
                                  self.ui_cache[ind_key] = ind_item
@@ -245,9 +263,42 @@ class LayerPanel:
         elif action == ACTION_REMOVE_INDIVIDUAL:
             return ('remove_individual', payload)
             
+        elif action == ACTION_START_DRAG:
+            # Reorder Strategy: Pick up component (remove from ship) and attach to cursor
+            comp = payload
+            removed = False
+            for l_type, layers in self.builder.ship.layers.items():
+                if comp in layers['components']:
+                    layers['components'].remove(comp)
+                    removed = True
+                    break
+            
+            if removed:
+                self.builder.controller.dragged_item = comp
+                self.builder.ship.recalculate_stats()
+                # Clear selection if we picked up the selected item
+                if self.builder.selected_components and any(x[2] is comp for x in self.builder.selected_components):
+                     self.builder.selected_components = []
+                     self.builder.on_selection_changed(None)
+                
+                return ('refresh_ui', None)
+            
         return False
 
     def handle_event(self, event):
+        # Local Event: Dropdown
+        if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED and event.ui_element == self.view_dropdown:
+            selected = event.text
+            if selected in self.grouping_strategies:
+                self.current_strategy_name = selected
+                self.grouping_strategy = self.grouping_strategies[selected]
+                # Invalidate cache because group keys might change completely
+                for item in self.ui_cache.values():
+                    item.kill()
+                self.ui_cache = {}
+                self.rebuild()
+                return True
+        
         for item in self.items:
             if hasattr(item, 'handle_event'):
                 result = item.handle_event(event)

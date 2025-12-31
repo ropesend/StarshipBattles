@@ -65,3 +65,13 @@ class TypeGroupingStrategy:
             result.append((comps, len(comps), total_mass, key))
             
         return result
+
+class FlatGroupingStrategy:
+    """Displays components individually in order."""
+    def group_components(self, components: List[Any]) -> List[Tuple[List[Any], int, float, Any]]:
+        result = []
+        for i, c in enumerate(components):
+            # Unique key for every item
+            key = (c.id, i, "flat")
+            result.append(([c], 1, c.mass, key))
+        return result

@@ -28,7 +28,8 @@ class StructurePanelLayoutConfig:
     # Colors
     BG_COLOR_INDIVIDUAL: str = "#151515"
     BG_COLOR_GROUP: str = "#202020"
-    SELECTION_COLOR: tuple = (80, 100, 130, 120)
+    SELECTION_COLOR: tuple = (100, 100, 255, 50)
+    TREE_LINE_COLOR: str = "#505050"
     
     # Panel Anchors (Standardized)
     ANCHOR_TOP_LEFT: dict = None
