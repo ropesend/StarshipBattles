@@ -98,51 +98,95 @@ def fmt_targeting(val):
 # --- Config Groups ---
 
 
-# --- Config Groups ---
+# --- Function Registry ---
+# Maps string names from JSON to actual functions
 
-STATS_MAIN = [
-    StatDefinition('mass', 'Mass', getter=get_mass_display, unit=lambda s, v: f"/ {s.max_mass_budget}", validator=mass_validator),
-    StatDefinition('max_hp', 'Max HP'),
-    StatDefinition('energy_gen', 'Energy Gen', key='energy_gen_rate', formatter=fmt_decimal, unit="/s"),
-    StatDefinition('max_energy', 'Max Energy'),
-]
+GETTERS = {
+    'get_mass_display': get_mass_display,
+    'get_crew_required': get_crew_required,
+    'get_crew_capacity': get_crew_capacity,
+    'get_life_support': get_life_support,
+    'get_max_targets': get_max_targets
+}
 
-STATS_MANEUVERING = [
-    StatDefinition('max_speed', 'Max Speed'),
-    StatDefinition('turn_rate', 'Turn Rate', key='turn_speed', unit=" deg/s"),
-    StatDefinition('acceleration', 'Acceleration', key='acceleration_rate', formatter="{:.2f}"),
-    StatDefinition('thrust', 'Total Thrust', key='total_thrust'),
-]
+FORMATTERS = {
+    'fmt_time': fmt_time,
+    'fmt_multiply': fmt_multiply,
+    'fmt_decimal': fmt_decimal,
+    'fmt_targeting': fmt_targeting
+}
 
-STATS_SHIELDS = [
-    StatDefinition('max_shields', 'Max Shields'),
-    StatDefinition('shield_regen', 'Shield Regen', key='shield_regen_rate', formatter=fmt_decimal, unit="/s"),
-    StatDefinition('shield_cost', 'Regen Cost', key='shield_regen_cost', formatter=fmt_decimal, unit=" E/t"),
-]
+VALIDATORS = {
+    'mass_validator': mass_validator,
+    'crew_validator': crew_validator,
+    'life_support_validator': life_support_validator
+}
 
-STATS_ARMOR = [
-    StatDefinition('emissive_armor', 'Dmg Ignore'),
-]
+# lambda s, v: f"/ {s.max_mass_budget}" cannot be easily jsonified.
+# We will create a named function for it.
+def mass_unit_func(ship, val):
+    return f"/ {ship.max_mass_budget}"
 
-STATS_TARGETING = [
-    StatDefinition('targeting', 'Max Targets', getter=get_max_targets, formatter=fmt_targeting),
-    StatDefinition('target_profile', 'Defensive Odds', key='to_hit_profile', formatter=fmt_multiply, unit="x"),
-    StatDefinition('scan_strength', 'Offensive Odds', key='baseline_to_hit_offense', formatter=fmt_decimal, unit="x"),
-]
+UNITS = {
+    'mass_unit': mass_unit_func
+}
 
-STATS_LOGISTICS = [
-    # Resources
-    StatDefinition('max_fuel', 'Max Fuel'),
-    StatDefinition('max_ammo', 'Max Ammo'),
-    # Crew
-    StatDefinition('crew_required', 'Crew Required', getter=get_crew_required),
-    StatDefinition('crew_housed', 'Crew On Board', getter=get_crew_capacity, validator=crew_validator),
-    StatDefinition('life_support', 'Life Support', getter=get_life_support, validator=life_support_validator),
-    # Fighters
-    StatDefinition('fighter_capacity', 'Fighter Cap', unit="t"),
-    StatDefinition('fighters_per_wave', 'Launch/Wave'),
-    # Endurance
-    StatDefinition('fuel_time', 'Fuel Time', key='fuel_endurance', formatter=fmt_time),
-    StatDefinition('ammo_time', 'Ammo Time', key='ammo_endurance', formatter=fmt_time),
-    StatDefinition('energy_time', 'Energy Time', key='energy_endurance', formatter=fmt_time),
-]
+def load_stats_config():
+    """Load stats configuration from data/stats_layout.json."""
+    import json
+    import os
+    
+    path = os.path.join(os.getcwd(), 'data', 'stats_layout.json')
+    if not os.path.exists(path):
+        print(f"Warning: {path} not found. Using empty config.")
+        return {}
+
+    try:
+        with open(path, 'r') as f:
+            data = json.load(f)
+    except Exception as e:
+        print(f"Error loading stats config: {e}")
+        return {}
+        
+    loaded_groups = {}
+    
+    if 'groups' not in data:
+        return {}
+        
+    for group_key, group_data in data['groups'].items():
+        items = []
+        for item_data in group_data.get('items', []):
+            # Resolve functions
+            getter = GETTERS.get(item_data.get('getter')) if item_data.get('getter') else None
+            
+            fmt_val = item_data.get('formatter', "{:.0f}")
+            formatter = FORMATTERS.get(fmt_val, fmt_val) # Try lookup, else treat as string
+            
+            unit_val = item_data.get('unit', "")
+            unit = UNITS.get(unit_val, unit_val)
+            
+            validator = VALIDATORS.get(item_data.get('validator')) if item_data.get('validator') else None
+            
+            stat_def = StatDefinition(
+                id=item_data['id'],
+                label=item_data['label'],
+                key=item_data.get('key'),
+                getter=getter,
+                formatter=formatter,
+                unit=unit,
+                validator=validator
+            )
+            items.append(stat_def)
+        loaded_groups[group_key] = items
+        
+    return loaded_groups
+
+# Load on module import
+_loaded_config = load_stats_config()
+
+STATS_MAIN = _loaded_config.get('main', [])
+STATS_MANEUVERING = _loaded_config.get('maneuvering', [])
+STATS_SHIELDS = _loaded_config.get('shields', [])
+STATS_ARMOR = _loaded_config.get('armor', [])
+STATS_TARGETING = _loaded_config.get('targeting', [])
+STATS_LOGISTICS = _loaded_config.get('logistics', [])

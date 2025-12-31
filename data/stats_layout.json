@@ -1,0 +1,171 @@
+{
+    "groups": {
+        "main": {
+            "title": "Main Systems",
+            "items": [
+                {
+                    "id": "mass",
+                    "label": "Mass",
+                    "getter": "get_mass_display",
+                    "unit": "mass_unit",
+                    "validator": "mass_validator"
+                },
+                {
+                    "id": "max_hp",
+                    "label": "Max HP"
+                },
+                {
+                    "id": "energy_gen",
+                    "label": "Energy Gen",
+                    "key": "energy_gen_rate",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "max_energy",
+                    "label": "Max Energy"
+                }
+            ]
+        },
+        "maneuvering": {
+            "title": "Maneuvering",
+            "items": [
+                {
+                    "id": "max_speed",
+                    "label": "Max Speed"
+                },
+                {
+                    "id": "turn_rate",
+                    "label": "Turn Rate",
+                    "key": "turn_speed",
+                    "unit": " deg/s"
+                },
+                {
+                    "id": "acceleration",
+                    "label": "Acceleration",
+                    "key": "acceleration_rate",
+                    "formatter": "{:.2f}"
+                },
+                {
+                    "id": "thrust",
+                    "label": "Total Thrust",
+                    "key": "total_thrust"
+                }
+            ]
+        },
+        "shields": {
+            "title": "Shields",
+            "items": [
+                {
+                    "id": "max_shields",
+                    "label": "Max Shields"
+                },
+                {
+                    "id": "shield_regen",
+                    "label": "Shield Regen",
+                    "key": "shield_regen_rate",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "shield_cost",
+                    "label": "Regen Cost",
+                    "key": "shield_regen_cost",
+                    "formatter": "fmt_decimal",
+                    "unit": " E/t"
+                }
+            ]
+        },
+        "armor": {
+            "title": "Armor",
+            "items": [
+                {
+                    "id": "emissive_armor",
+                    "label": "Dmg Ignore"
+                }
+            ]
+        },
+        "targeting": {
+            "title": "Targeting",
+            "items": [
+                {
+                    "id": "targeting",
+                    "label": "Max Targets",
+                    "getter": "get_max_targets",
+                    "formatter": "fmt_targeting"
+                },
+                {
+                    "id": "target_profile",
+                    "label": "Defensive Odds",
+                    "key": "to_hit_profile",
+                    "formatter": "fmt_multiply",
+                    "unit": "x"
+                },
+                {
+                    "id": "scan_strength",
+                    "label": "Offensive Odds",
+                    "key": "baseline_to_hit_offense",
+                    "formatter": "fmt_decimal",
+                    "unit": "x"
+                }
+            ]
+        },
+        "logistics": {
+            "title": "Logistics",
+            "items": [
+                {
+                    "id": "max_fuel",
+                    "label": "Max Fuel"
+                },
+                {
+                    "id": "max_ammo",
+                    "label": "Max Ammo"
+                },
+                {
+                    "id": "crew_required",
+                    "label": "Crew Required",
+                    "getter": "get_crew_required"
+                },
+                {
+                    "id": "crew_housed",
+                    "label": "Crew On Board",
+                    "getter": "get_crew_capacity",
+                    "validator": "crew_validator"
+                },
+                {
+                    "id": "life_support",
+                    "label": "Life Support",
+                    "getter": "get_life_support",
+                    "validator": "life_support_validator"
+                },
+                {
+                    "id": "fighter_capacity",
+                    "label": "Fighter Cap",
+                    "unit": "t"
+                },
+                {
+                    "id": "fighters_per_wave",
+                    "label": "Launch/Wave"
+                },
+                {
+                    "id": "fuel_time",
+                    "label": "Fuel Time",
+                    "key": "fuel_endurance",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "ammo_time",
+                    "label": "Ammo Time",
+                    "key": "ammo_endurance",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "energy_time",
+                    "label": "Energy Time",
+                    "key": "energy_endurance",
+                    "formatter": "fmt_time"
+                }
+            ]
+        }
+    }
+}
