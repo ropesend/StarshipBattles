@@ -55,7 +55,7 @@ class ModifierEffects:
             turret_mult = 1.0 + 0.514 * math.log(1.0 + arc / 30.0)
             stats['mass_mult'] *= turret_mult
             # Turret mount sets the arc capability (value is Total Arc in degrees, so +/- is half)
-            stats['arc_set'] = float(arc) / 2.0
+            stats['arc_set'] = float(arc)
 
     @staticmethod
     def facing(val, stats):

@@ -104,8 +104,8 @@ class TestModifierEffectsFunctions(unittest.TestCase):
         
         ModifierEffects.turret_mount(90, stats)
         
-        # arc_set should be half of total (90/2 = 45)
-        self.assertEqual(stats['arc_set'], 45.0)
+        # Now sets FULL arc (90.0)
+        self.assertEqual(stats['arc_set'], 90.0)
     
     def test_facing_sets_property(self):
         """Facing modifier should set facing_angle property."""

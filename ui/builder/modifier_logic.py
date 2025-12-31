@@ -61,6 +61,10 @@ class ModifierLogic:
             if ModifierLogic.is_modifier_allowed('range_mount', component):
                 mandatory.append('range_mount')
                 
+            # Precision Targeting: For BeamWeapon
+            if component.type_str == 'BeamWeapon' and ModifierLogic.is_modifier_allowed('precision_mount', component):
+                mandatory.append('precision_mount')
+                
             # Facing: For all weapons
             if ModifierLogic.is_modifier_allowed('facing', component):
                 mandatory.append('facing')
@@ -109,6 +113,8 @@ class ModifierLogic:
         elif mod_id == 'range_mount':
             return 0.0
         elif mod_id == 'facing':
+            return 0.0
+        elif mod_id == 'precision_mount':
             return 0.0
         elif mod_id == 'turret_mount':
             # Default to base firing arc

@@ -1,6 +1,7 @@
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMenu, UITextBox, UIImage
+from pygame_gui.core import UIElement
 
 from ship import VEHICLE_CLASSES
 from ai import COMBAT_STRATEGIES
@@ -47,11 +48,6 @@ class StatRow:
             self.value.hide()
             self.unit.hide()
         self._visible = visible
-
-# Configuration for Stat Sections
-
-
-
 
 class BuilderRightPanel:
     def __init__(self, builder, manager, rect, event_bus=None):
@@ -133,9 +129,6 @@ class BuilderRightPanel:
         self.ai_dropdown = UIDropDownMenu(ai_options, ai_display, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
         
         # Portrait Image (Side by Side)
-        # Controls end around y ≈ 10 + 4*40 = 170. Next is 210.
-        # Let's put image at x=280, y=10.
-        # Height ≈ 200 (5 rows * 40). Width ≈ 200.
         self.portrait_image = None
         img_x = 280
         img_size = 200 # Approx match height of 5 rows (200px)
@@ -143,10 +136,7 @@ class BuilderRightPanel:
         
         self.update_portrait_image()
         
-        # Set last_y to below the TALLEST element (controls or image)
-        # Controls: y starts 10, 5 rows of 40 = 210.
         y += 40 # Ends at 210
-        
         self.last_y = max(y, 10 + img_size) + 10
 
     def refresh_controls(self):
@@ -201,11 +191,7 @@ class BuilderRightPanel:
 
         curr_class = s.ship_class
         if curr_class not in class_options: 
-            # If current class is not in the list (e.g. type changed implicitly), force it or pick first?
-            # Ideally we keep the class if valid.
             if curr_class in VEHICLE_CLASSES:
-                 # It exists but wasn't in list? Means type mismatch in logic above.
-                 # Just default to first option if we can't find it.
                  curr_class = class_options[0]
         
         self.class_dropdown = UIDropDownMenu(class_options, curr_class, class_rect, manager=self.manager, container=self.panel)
@@ -234,16 +220,6 @@ class BuilderRightPanel:
         theme = getattr(self.builder.ship, 'theme_id', 'Federation')
         ship_class = self.builder.ship.ship_class
         
-        # Map theme ID to folder name if necessary (simple map for now, or trust ID)
-        # Theme IDs are usually "Federation", "Klingons", etc.
-        # But let's check if we need mapping. The script used:
-        # fed -> Federation, etc. But the game uses full names likely.
-        # Let's assume theme_id matches directory name for now as per `ShipThemeManager`.
-        
-        # Filename Logic:
-        # Standard: "Battle Cruiser" -> "BattleCruiser_Portrait.jpg"
-        # Subtypes: "Fighter (Small)" -> "SmallFighter_Portrait.jpg"
-        
         match = re.match(r"(.*)\s+\((.*)\)", ship_class)
         if match:
              base = match.group(1).strip().replace(" ", "")
@@ -256,7 +232,6 @@ class BuilderRightPanel:
         
         base_path = "resources/Portraits"
         # We need absolute path or relative to CWD
-        # Assuming CWD is project root
         full_path = os.path.join(base_path, theme, filename)
         
         # Check for new location: Resources/ShipThemes/{theme}/Portraits
@@ -281,7 +256,6 @@ class BuilderRightPanel:
             
             # Scale to fit width, maintaining aspect
             max_w = self.portrait_rect.width
-            # Allow height to match width (square)
             max_h = self.portrait_rect.height
             
             img_w, img_h = image_surf.get_size()
@@ -312,9 +286,6 @@ class BuilderRightPanel:
             
         except Exception as e:
             print(f"Failed to load portrait {full_path}: {e}")
-
-
-
 
     def setup_stats(self):
         y = self.last_y
@@ -378,7 +349,15 @@ class BuilderRightPanel:
         # === Column 2: Logistics, Crew, Fighter ===
         y = start_y
         
-        y = build_section("Logistics", self.stats_config.get('logistics', []), col2_x, y)
+        # Updated Logistics Sections split
+        if 'logistics' in self.stats_config:
+             # Legacy fallback if split not present
+             y = build_section("Logistics", self.stats_config.get('logistics', []), col2_x, y)
+        else:
+             y = build_section("Fuel Logistics", self.stats_config.get('fuel_logistics', []), col2_x, y)
+             y = build_section("Ordinance (Ammo)", self.stats_config.get('ammo_logistics', []), col2_x, y)
+             y = build_section("Energy", self.stats_config.get('energy_logistics', []), col2_x, y)
+
         y = build_section("Crew Logistics", self.stats_config.get('crewlogistics', []), col2_x, y)
         y = build_section("Fighter Support", self.stats_config.get('fightersupport', []), col2_x, y)
         

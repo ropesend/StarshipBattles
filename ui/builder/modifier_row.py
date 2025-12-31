@@ -87,50 +87,23 @@ class ModifierControlRow:
                 current_x += 34
             current_x += 5
             
-        # Step Buttons & Slider logic
+        # Step Buttons - Render ALL on the left
         step_btns = self.config.get('step_buttons', [])
-        
-        # Calculate width logic
         btn_width = 25
-        total_btn_width = sum((btn_width + 2) for b in step_btns)
         
-        safe_width = self.width - 40
-        available_slider_width = safe_width - current_x - total_btn_width - 5
-        if available_slider_width < 40: available_slider_width = 40
-        
-        # Determine local range
-        local_min, local_max = 0, 100 # Defaults, updated in update()
-        
-        for btn_def in step_btns:
-            # Slider Placeholder in list? No, our list implies order: Before Slider / After Slider?
-            # The config list I wrote had ">" labels.
-            # Let's assume the config list contains ALL buttons.
-            # And we need to place the slider in the middle?
-            # Or just place buttons before/after?
-            # My config example: <<, <, <, >, >, >>. No "SLIDER" marker.
-            # Let's check logic: negative delta = left, positive = right?
-            # Simple heuristic: 'sub' mode or value < current? 
-            # Actually, standard is: Decrements Left, Slider, Increments Right.
-            
-            is_decrement = btn_def.get('mode') == 'delta_sub' or btn_def.get('mode') == 'snap_floor'
-            
-            # If we just switched from decrement to increment, place slider?
-            # Or just use two lists? 
-            # Let's iterate. If we hit the first increment and haven't placed slider, place it?
-            pass
-
-        # Split buttons
-        left_btns = [b for b in step_btns if b['mode'] in ['delta_sub', 'snap_floor']]
-        right_btns = [b for b in step_btns if b['mode'] in ['delta_add', 'snap_ceil']]
-        
-        # Render Left
-        for b_def in left_btns:
+        for b_def in step_btns:
             btn = UIButton(pygame.Rect(current_x, y, btn_width, 28), b_def['label'], manager=self.manager, container=self.container)
             self.buttons[btn] = {'action': b_def['mode'], 'value': b_def['value']}
             self.ui_elements.append(btn)
             current_x += (btn_width + 2)
             
-        # Render Slider
+        current_x += 3 # Gap for slider
+            
+        # Slider - Takes remaining space
+        safe_width = self.width - 20 # margin
+        available_slider_width = safe_width - current_x
+        if available_slider_width < 40: available_slider_width = 40
+        
         self.slider = UIHorizontalSlider(
             relative_rect=pygame.Rect(current_x, y, available_slider_width, 28),
             start_value=0, # Updated later
@@ -146,13 +119,6 @@ class ModifierControlRow:
             
         self.ui_elements.append(self.slider)
         current_x += available_slider_width + 5
-        
-        # Render Right
-        for b_def in right_btns:
-            btn = UIButton(pygame.Rect(current_x, y, btn_width, 28), b_def['label'], manager=self.manager, container=self.container)
-            self.buttons[btn] = {'action': b_def['mode'], 'value': b_def['value']}
-            self.ui_elements.append(btn)
-            current_x += (btn_width + 2)
 
     def _clear_ui(self):
         for el in self.ui_elements:

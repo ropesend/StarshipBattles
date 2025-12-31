@@ -27,96 +27,106 @@
                 }
             ]
         },
-        "logistics": {
-            "title": "Logistics",
+        "fuel_logistics": {
+            "title": "Fuel Logistics",
             "items": [
                 {
                     "id": "max_fuel",
-                    "label": "Storage Fuel"
-                },
-                {
-                    "id": "max_ammo",
-                    "label": "Storage Ammo"
-                },
-                {
-                    "id": "max_energy",
-                    "label": "Storage Energy"
+                    "label": "Max Storage"
                 },
                 {
                     "id": "fuel_burn",
-                    "label": "Fuel Burn Rate",
+                    "label": "Burn Rate",
                     "getter": "get_fuel_consumption",
                     "formatter": "fmt_decimal",
                     "unit": "/s"
                 },
                 {
-                    "id": "ammo_burn",
-                    "label": "Ammo Burn Rate",
-                    "getter": "get_ammo_consumption",
-                    "formatter": "fmt_decimal",
-                    "unit": "/s"
-                },
-                {
-                    "id": "energy_burn",
-                    "label": "Energy Burn Rate",
-                    "getter": "get_energy_consumption",
-                    "formatter": "fmt_decimal",
-                    "unit": "/s"
-                },
-                {
                     "id": "fuel_regen",
-                    "label": "Fuel Regen",
+                    "label": "Regen Rate",
                     "getter": "get_fuel_recharge",
                     "formatter": "fmt_decimal",
                     "unit": "/s"
                 },
                 {
+                    "id": "fuel_endurance",
+                    "label": "Endurance",
+                    "key": "fuel_endurance",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "fuel_replenish",
+                    "label": "Time to resupply",
+                    "getter": "get_zero",
+                    "formatter": "fmt_time"
+                }
+            ]
+        },
+        "ammo_logistics": {
+            "title": "Ordinance (Ammo)",
+            "items": [
+                {
+                    "id": "max_ammo",
+                    "label": "Max Storage"
+                },
+                {
+                    "id": "ammo_burn",
+                    "label": "Consumption",
+                    "getter": "get_ammo_consumption",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
                     "id": "ammo_regen",
-                    "label": "Ammo Regen",
+                    "label": "Regen Rate",
                     "getter": "get_ammo_recharge",
                     "formatter": "fmt_decimal",
                     "unit": "/s"
                 },
                 {
+                    "id": "ammo_endurance",
+                    "label": "Endurance",
+                    "key": "ammo_endurance",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "ammo_replenish",
+                    "label": "Time to resupply",
+                    "getter": "get_zero",
+                    "formatter": "fmt_time"
+                }
+            ]
+        },
+        "energy_logistics": {
+            "title": "Energy",
+            "items": [
+                {
+                    "id": "max_energy",
+                    "label": "Max Storage"
+                },
+                {
+                    "id": "energy_burn",
+                    "label": "Consumption",
+                    "getter": "get_energy_consumption",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
                     "id": "energy_regen",
-                    "label": "Energy Regen",
+                    "label": "Regen Rate",
                     "key": "energy_gen_rate",
                     "formatter": "fmt_decimal",
                     "unit": "/s"
                 },
                 {
-                    "id": "fuel_endurance",
-                    "label": "Fuel Endurance",
-                    "key": "fuel_endurance",
-                    "formatter": "fmt_time"
-                },
-                {
-                    "id": "ammo_endurance",
-                    "label": "Ammo Endurance",
-                    "key": "ammo_endurance",
-                    "formatter": "fmt_time"
-                },
-                {
                     "id": "energy_endurance",
-                    "label": "Energy Endurance",
+                    "label": "Endurance",
                     "key": "energy_endurance",
                     "formatter": "fmt_time"
                 },
                 {
-                    "id": "fuel_replenish",
-                    "label": "Replenish Fuel",
-                    "getter": "get_zero",
-                    "formatter": "fmt_time"
-                },
-                {
-                    "id": "ammo_replenish",
-                    "label": "Replenish Ammo",
-                    "getter": "get_zero",
-                    "formatter": "fmt_time"
-                },
-                {
                     "id": "energy_replenish",
-                    "label": "Replenish Energy",
+                    "label": "Time to resupply",
                     "key": "energy_recharge",
                     "formatter": "fmt_time"
                 }

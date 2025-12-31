@@ -819,6 +819,7 @@ class BuilderSceneGUI:
             self.update_stats()
             # Also update the layers panel in case components changed
             self.layer_panel.rebuild()
+            self.left_panel.update_component_list() # Update available components based on hull type
             self.rebuild_modifier_ui()
             print(message)
         elif message:

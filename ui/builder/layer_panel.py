@@ -57,7 +57,15 @@ class LayerPanel(DropTarget):
             container=self.panel
         )
         
-        self.list_y = 50 # Increased slightly for dropdown clearance
+        # Explicit Layers Header
+        UILabel(
+            relative_rect=pygame.Rect(10, 30, 200, 20),
+            text="Layers",
+            manager=manager,
+            container=self.panel
+        )
+        
+        self.list_y = 55 # Increased for headers
         self.scroll_container = UIScrollingContainer(
             relative_rect=pygame.Rect(0, self.list_y, rect.width, rect.height - self.list_y),
             manager=manager,
@@ -111,7 +119,8 @@ class LayerPanel(DropTarget):
             components = data['components']
             
             current_mass = sum(c.mass for c in components)
-            max_mass = ship.max_mass_budget * data.get('max_mass_pct', 1.0)
+            layer_max_mass = ship.max_mass_budget * data.get('max_mass_pct', 1.0)
+            total_max_mass = ship.max_mass_budget
             
             # --- HEADER ---
             header_key = ("header", l_type)
@@ -119,7 +128,7 @@ class LayerPanel(DropTarget):
             
             header = self.ui_cache.get(header_key)
             if header:
-                header.update(current_mass, max_mass, self.expanded_layers.get(l_type, True))
+                header.update(current_mass, layer_max_mass, self.expanded_layers.get(l_type, True))
                 header.panel.set_relative_position((0, y_pos))
             else:
                 header = LayerHeaderItem(
@@ -127,7 +136,7 @@ class LayerPanel(DropTarget):
                     self.scroll_container,
                     l_type,
                     current_mass,
-                    max_mass,
+                    layer_max_mass,
                     self.expanded_layers.get(l_type, True),
                     self, # Event Handler
                     y_pos,
@@ -142,7 +151,7 @@ class LayerPanel(DropTarget):
             if self.expanded_layers.get(l_type, True):
                 groups = self.grouping_strategy.group_components(components)
                 for comp_list, count, mass_total, group_key in groups:
-                    pct_val = (mass_total / max_mass * 100) if max_mass > 0 else 0
+                    pct_val = (mass_total / total_max_mass * 100) if total_max_mass > 0 else 0
                     
                     if count <= 1:
                         is_expanded = False
@@ -201,14 +210,14 @@ class LayerPanel(DropTarget):
                              
                              ind_item = self.ui_cache.get(ind_key)
                              if ind_item:
-                                 ind_item.update(comp, max_mass, is_sel_ind, is_last)
+                                 ind_item.update(comp, total_max_mass, is_sel_ind, is_last)
                                  ind_item.panel.set_relative_position((0, y_pos))
                              else:
                                  ind_item = IndividualComponentItem(
                                     self.manager,
                                     self.scroll_container,
                                     comp,
-                                    max_mass,
+                                    total_max_mass,
                                     y_pos,
                                     content_width,
                                     self.builder.sprite_mgr,

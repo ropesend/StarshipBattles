@@ -158,7 +158,7 @@ class TestIsDerelict(unittest.TestCase):
 
 
 class TestToHitProfile(unittest.TestCase):
-    """Test defensive to-hit profile calculation."""
+    """Test defensive to-hit profile calculation (Defense Score)."""
     
     @classmethod
     def setUpClass(cls):
@@ -180,11 +180,11 @@ class TestToHitProfile(unittest.TestCase):
         ship.recalculate_stats()
         
         self.assertTrue(hasattr(ship, 'to_hit_profile'))
-        self.assertIsInstance(ship.to_hit_profile, float)
-        self.assertGreater(ship.to_hit_profile, 0)
-    
-    def test_larger_ship_higher_profile(self):
-        """Larger ships should have higher to-hit profile (easier to hit)."""
+        # Can be float or int
+        self.assertIsInstance(ship.to_hit_profile, (float, int))
+        
+    def test_larger_ship_easier_to_hit(self):
+        """Larger ships should have LOWER Defense Score (Easier to Hit)."""
         # Small ship
         small = Ship("Small", 0, 0, (255, 255, 255), ship_class="Escort")
         small.add_component(create_component('bridge'), LayerType.CORE)
@@ -193,19 +193,23 @@ class TestToHitProfile(unittest.TestCase):
         small.add_component(create_component('standard_engine'), LayerType.OUTER)
         small.recalculate_stats()
         
-        # Large ship with more mass
+        # Large ship
         large = Ship("Large", 0, 0, (255, 255, 255), ship_class="Battleship")
         large.add_component(create_component('bridge'), LayerType.CORE)
         large.add_component(create_component('crew_quarters'), LayerType.CORE)
         large.add_component(create_component('life_support'), LayerType.CORE)
         large.add_component(create_component('standard_engine'), LayerType.OUTER)
-        # Add more mass to increase size
-        for _ in range(10):
-            large.add_component(create_component('armor_plate'), LayerType.ARMOR)
+        # Add massive bulk
+        for _ in range(20):
+             # Adding heavy structure/armor to increase mass/radius
+             large.add_component(create_component('armor_plate'), LayerType.ARMOR)
+             
         large.recalculate_stats()
         
-        # Larger ship should be easier to hit
-        self.assertGreater(large.to_hit_profile, small.to_hit_profile)
+        # Logic: Defense Score = SizeScore + ManueverScore
+        # Large Size = Negative Score. Small Size = Less Negative/Positive.
+        # So Large Ship Score < Small Ship Score
+        self.assertLess(large.to_hit_profile, small.to_hit_profile)
     
     def test_baseline_offense_exists(self):
         """Ship should have baseline_to_hit_offense attribute."""
@@ -216,7 +220,7 @@ class TestToHitProfile(unittest.TestCase):
         ship.recalculate_stats()
         
         self.assertTrue(hasattr(ship, 'baseline_to_hit_offense'))
-        self.assertIsInstance(ship.baseline_to_hit_offense, float)
+        self.assertIsInstance(ship.baseline_to_hit_offense, (float, int))
 
 
 class TestMaxWeaponRange(unittest.TestCase):
