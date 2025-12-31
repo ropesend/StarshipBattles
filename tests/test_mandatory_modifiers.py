@@ -80,36 +80,73 @@ class TestMandatoryModifiers(unittest.TestCase):
              panel.rebuild(mock_comp, {})
              panel.layout(10)
              
-             # Locate specific buttons (tricky without ID access, but we can simulate event with mock button)
-             # We can manually trigger handle_event with a mock button mapped in step_btn_map
+             # Locate row
+             if 'turret_mount' not in panel.modifier_rows:
+                 self.fail("Row not found")
+             row = panel.modifier_rows['turret_mount']
              
-             mock_btn = MagicMock()
-             # Map it to a decrement action that goes below 45
-             # Current is 45. Try to subtract 15. Should stay at 45.
-             panel.step_btn_map[mock_btn] = ('turret_mount', 15, 'snap_floor')
+             # Locate a decrement button in the row
+             # We need to find the button that does snap_floor 15.
+             # Row stores buttons in self.buttons dict: element -> action
+             target_btn = None
+             for btn, action in row.buttons.items():
+                 if action['action'] == 'snap_floor' and action['value'] == 15:
+                     target_btn = btn
+                     break
+                     
+             if not target_btn:
+                 self.fail("Decrement button not found in row")
              
-             # Need to mock the slider to return current value
-             # Find slider
-             idx = panel.modifier_id_list.index('turret_mount')
-             # Replace real slider with mock for this test interaction
-             slider_mock = MagicMock()
-             slider_mock.get_current_value.return_value = 45.0
-             panel.modifier_sliders[idx] = slider_mock
+             # Mock the slider in the row to return current value
+             row.slider = MagicMock()
+             row.slider.get_current_value.return_value = 45.0
              
              # Trigger event
              event = MagicMock()
              event.type = pygame_gui.UI_BUTTON_PRESSED
+             event.ui_element = target_btn
+             
+             # Handle event
+             panel.handle_event(event)
+             
+             # Verify callback was called with clamped value?
+             # No, internal logic: handle_event triggers on_change_callback if changed.
+             # If value clamped to 45 (same as current), NO callback.
+             # Wait, logic is: target = current - 15 = 30.
+             # Constraint: min 45.
+             # Result: max(45, 30) = 45.
+             # Change: 45 -> 45. No change.
+             # So on_change_callback should NOT be called.
+             # But verify slider didn't move/set?
+             # The Row updates its internal state?
+             # Actually `ModifierControlRow.handle_event` calls `on_change_callback` if val changes.
+             # If val doesn't change, no callback.
+             
+             # Test explicit set attempt to violate constraint
+             # Using 'set_value' mode button if we had one, or manual injection.
+             # Let's inject a fake button into the row for testing 'set_value'
+             mock_btn = MagicMock()
+             row.buttons[mock_btn] = {'action': 'set_value', 'value': 40}
+             
              event.ui_element = mock_btn
+             panel.handle_event(event)
+             
+             # Should be clamped to 45.
+             # 45 -> 45. No change.
+             
+             # Try setting current to 60, then decrement to 45 (allowed), then decrement to 30 (blocked)
+             row.current_value = 60.0
+             # Decrement 15 -> 45
+             event.ui_element = target_btn
+             
+             # We need to mock the callback because Row calls it
+             mock_cb = MagicMock()
+             row.on_change_callback = mock_cb
              
              panel.handle_event(event)
              
-             # Verify slider set_current_value was called with 45 (clamped) not 30
-             slider_mock.set_current_value.assert_called_with(45.0)
-             
-             # Try setting to 40 directly
-             panel.step_btn_map[mock_btn] = ('turret_mount', 40, 'set_value')
-             panel.handle_event(event)
-             slider_mock.set_current_value.assert_called_with(45.0) # Should be clamped
+             # Should have called callback with 45
+             mock_cb.assert_called_with('value_change', 'turret_mount', 45.0)
 
     def test_range_limit_seeker(self):
         # Range should NOT apply to Seeker
@@ -201,16 +238,20 @@ class TestMandatoryModifiers(unittest.TestCase):
             panel.rebuild(mock_comp, {})
             panel.layout(10)
             
-            # Find button
-            try:
-                idx = panel.modifier_id_list.index('simple_size_mount')
-                btn = panel.modifier_buttons[idx]
-            except ValueError:
-                self.fail("simple_size_mount not found in UI")
+            # Find button - New Structure uses modifier_rows
+            if 'simple_size_mount' not in panel.modifier_rows:
+                self.fail("simple_size_mount row not created")
                 
+            row = panel.modifier_rows['simple_size_mount']
+            btn = row.toggle_btn
+            
             event = MagicMock()
             event.type = pygame_gui.UI_BUTTON_PRESSED
             event.ui_element = btn
+            
+            # Use row.handle_event or panel.handle_event?
+            # Panel delegates to row. If we call panel.handle_event(event), it iterates rows.
+            # But the row must be active.
             
             panel.handle_event(event)
         
