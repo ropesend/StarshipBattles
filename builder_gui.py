@@ -669,7 +669,7 @@ class BuilderSceneGUI:
                     
                     # data is group_key
                     comps = []
-                    from ui.builder.layer_panel import get_component_group_key
+                    from ui.builder.grouping_strategies import get_component_group_key
                     for layers in self.ship.layers.values():
                         for c in layers['components']:
                              if get_component_group_key(c) == data:
@@ -698,7 +698,7 @@ class BuilderSceneGUI:
                  # Updated Requirement: Pressing - should delete ONE of the components.
                  
                  # data is group_key
-                 from ui.builder.layer_panel import get_component_group_key
+                 from ui.builder.grouping_strategies import get_component_group_key
                  
                  # Find Last Component in this group to remove
                  found_layer = None
@@ -751,7 +751,7 @@ class BuilderSceneGUI:
                      target_comp = data
                  else:
                      # Find first component of group
-                     from ui.builder.layer_panel import get_component_group_key
+                     from ui.builder.grouping_strategies import get_component_group_key
                      for layers in self.ship.layers.values():
                          for c in layers['components']:
                              if get_component_group_key(c) == data:

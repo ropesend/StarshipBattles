@@ -63,9 +63,12 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         sprite_mgr = MagicMock()
         sprite_mgr.get_sprite.return_value = pygame.Surface((32, 32))
         
+        # Mock Event Handler
+        event_handler = MagicMock()
+        
         item = IndividualComponentItem(
             self.manager, container, self.component, 100, 0, 200, sprite_mgr,
-            lambda x: None, lambda x: None, lambda x: None, False
+            event_handler, False
         )
         
         # Check Label Alignment Style
@@ -86,10 +89,12 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         container = self.manager.get_root_container()
         sprite_mgr = MagicMock()
         sprite_mgr.get_sprite.return_value = pygame.Surface((32, 32))
+
+        event_handler = MagicMock()
         
         item = LayerComponentItem(
             self.manager, container, self.component, 1, 10, 10.0, False,
-            lambda x: None, lambda x: None, lambda x: None, lambda x: None, "key", False, 0, 200, sprite_mgr
+            "key", False, 0, 200, sprite_mgr, event_handler
         )
         
         # Check Label
