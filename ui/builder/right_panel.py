@@ -348,31 +348,23 @@ class BuilderRightPanel:
             
             return curr_y + 10
 
-        from ui.builder.stats_config import (
-            STATS_MAIN, STATS_MANEUVERING, STATS_SHIELDS, 
-            STATS_ARMOR, STATS_TARGETING, STATS_LOGISTICS
-        )
+        from ui.builder.stats_config import STATS_CONFIG
 
         # FREEZING CONFIG
-        self.config_main = STATS_MAIN
-        self.config_maneuvering = STATS_MANEUVERING
-        self.config_shields = STATS_SHIELDS
-        self.config_armor = STATS_ARMOR
-        self.config_targeting = STATS_TARGETING
-        self.config_logistics = STATS_LOGISTICS
+        self.stats_config = STATS_CONFIG
         
         # === Column 1: Main, Maneuvering, Shields ===
         y = start_y
-        y = build_section("Main Systems", self.config_main, col1_x, y)
-        y = build_section("Maneuvering", self.config_maneuvering, col1_x, y)
-        y = build_section("Shields", self.config_shields, col1_x, y)
+        y = build_section("Main Systems", self.stats_config.get('main', []), col1_x, y)
+        y = build_section("Maneuvering", self.stats_config.get('maneuvering', []), col1_x, y)
+        y = build_section("Shields", self.stats_config.get('shields', []), col1_x, y)
         col1_max_y = y
         
         # === Column 2: Armor, Targeting, Logistics ===
         y = start_y
         
         # Armor
-        y = build_section("Armor", self.config_armor, col2_x, y)
+        y = build_section("Armor", self.stats_config.get('armor', []), col2_x, y)
         
         # Layers (Special Case: Dynamic) - Inserted under Armor
         self.layer_rows = []
@@ -384,10 +376,16 @@ class BuilderRightPanel:
         y += 10
         
         # Targeting
-        y = build_section("Targeting", self.config_targeting, col2_x, y)
+        y = build_section("Targeting", self.stats_config.get('targeting', []), col2_x, y)
         
         # Logistics
-        y = build_section("Logistics", self.config_logistics, col2_x, y)
+        y = build_section("Logistics", self.stats_config.get('logistics', []), col2_x, y)
+        
+        # Crew Logistics (New)
+        y = build_section("Crew Logistics", self.stats_config.get('crewlogistics', []), col2_x, y)
+
+        # Fighter Support (New)
+        y = build_section("Fighter Support", self.stats_config.get('fightersupport', []), col2_x, y)
         
         col2_max_y = y
         
@@ -408,9 +406,10 @@ class BuilderRightPanel:
     def update_stats_display(self, s):
         """Update ship stats labels using Data-Driven Config."""
         
-        # Aggregated List
-        all_configs = (self.config_main + self.config_maneuvering + self.config_shields + 
-                       self.config_armor + self.config_targeting + self.config_logistics)
+        # Aggregated List from all configured groups
+        all_configs = []
+        for group_list in self.stats_config.values():
+            all_configs.extend(group_list)
         
         for stat_def in all_configs:
             row = self.rows_map.get(stat_def.key)

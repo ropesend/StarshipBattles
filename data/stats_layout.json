@@ -13,17 +13,6 @@
                 {
                     "id": "max_hp",
                     "label": "Max HP"
-                },
-                {
-                    "id": "energy_gen",
-                    "label": "Energy Gen",
-                    "key": "energy_gen_rate",
-                    "formatter": "fmt_decimal",
-                    "unit": "/s"
-                },
-                {
-                    "id": "max_energy",
-                    "label": "Max Energy"
                 }
             ]
         },
@@ -82,6 +71,12 @@
                 {
                     "id": "emissive_armor",
                     "label": "Dmg Ignore"
+                },
+                {
+                    "id": "crystalline_armor",
+                    "label": "Shield Regen/Hit",
+                    "unit": "/hit",
+                    "formatter": "fmt_decimal"
                 }
             ]
         },
@@ -122,30 +117,15 @@
                     "label": "Max Ammo"
                 },
                 {
-                    "id": "crew_required",
-                    "label": "Crew Required",
-                    "getter": "get_crew_required"
+                    "id": "max_energy",
+                    "label": "Max Energy"
                 },
                 {
-                    "id": "crew_housed",
-                    "label": "Crew On Board",
-                    "getter": "get_crew_capacity",
-                    "validator": "crew_validator"
-                },
-                {
-                    "id": "life_support",
-                    "label": "Life Support",
-                    "getter": "get_life_support",
-                    "validator": "life_support_validator"
-                },
-                {
-                    "id": "fighter_capacity",
-                    "label": "Fighter Cap",
-                    "unit": "t"
-                },
-                {
-                    "id": "fighters_per_wave",
-                    "label": "Launch/Wave"
+                    "id": "energy_gen",
+                    "label": "Energy Gen",
+                    "key": "energy_gen_rate",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
                 },
                 {
                     "id": "fuel_time",
@@ -163,6 +143,47 @@
                     "id": "energy_time",
                     "label": "Energy Time",
                     "key": "energy_endurance",
+                    "formatter": "fmt_time"
+                }
+            ]
+        },
+        "crewlogistics": {
+            "title": "Crew Logistics",
+            "items": [
+                {
+                    "id": "crew_required",
+                    "label": "Crew Required",
+                    "getter": "get_crew_required"
+                },
+                {
+                    "id": "crew_housed",
+                    "label": "Crew On Board",
+                    "getter": "get_crew_capacity",
+                    "validator": "crew_validator"
+                },
+                {
+                    "id": "life_support",
+                    "label": "Life Support",
+                    "getter": "get_life_support",
+                    "validator": "life_support_validator"
+                }
+            ]
+        },
+        "fightersupport": {
+            "title": "Fighter Support",
+            "items": [
+                {
+                    "id": "fighter_capacity",
+                    "label": "Fighter Cap"
+                },
+                {
+                    "id": "fighters_per_wave",
+                    "label": "Launch/Wave"
+                },
+                {
+                    "id": "fighter_time",
+                    "label": "Fighter Time",
+                    "key": "fighter_endurance",
                     "formatter": "fmt_time"
                 }
             ]

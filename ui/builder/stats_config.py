@@ -182,11 +182,13 @@ def load_stats_config():
     return loaded_groups
 
 # Load on module import
-_loaded_config = load_stats_config()
+STATS_CONFIG = load_stats_config()
 
-STATS_MAIN = _loaded_config.get('main', [])
-STATS_MANEUVERING = _loaded_config.get('maneuvering', [])
-STATS_SHIELDS = _loaded_config.get('shields', [])
-STATS_ARMOR = _loaded_config.get('armor', [])
-STATS_TARGETING = _loaded_config.get('targeting', [])
-STATS_LOGISTICS = _loaded_config.get('logistics', [])
+STATS_MAIN = STATS_CONFIG.get('main', [])
+STATS_MANEUVERING = STATS_CONFIG.get('maneuvering', [])
+STATS_SHIELDS = STATS_CONFIG.get('shields', [])
+STATS_ARMOR = STATS_CONFIG.get('armor', [])
+STATS_TARGETING = STATS_CONFIG.get('targeting', [])
+STATS_LOGISTICS = STATS_CONFIG.get('logistics', [])
+STATS_CREW_LOGISTICS = STATS_CONFIG.get('crewlogistics', [])
+STATS_FIGHTER_SUPPORT = STATS_CONFIG.get('fightersupport', [])
