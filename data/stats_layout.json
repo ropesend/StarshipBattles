@@ -208,17 +208,17 @@
                 },
                 {
                     "id": "target_profile",
-                    "label": "Defensive Odds",
+                    "label": "Evasion Score",
                     "key": "to_hit_profile",
-                    "formatter": "fmt_multiply",
-                    "unit": "x"
+                    "formatter": "fmt_score",
+                    "unit": ""
                 },
                 {
                     "id": "scan_strength",
-                    "label": "Offensive Odds",
+                    "label": "Targeting Score",
                     "key": "baseline_to_hit_offense",
-                    "formatter": "fmt_decimal",
-                    "unit": "x"
+                    "formatter": "fmt_score",
+                    "unit": ""
                 }
             ]
         },

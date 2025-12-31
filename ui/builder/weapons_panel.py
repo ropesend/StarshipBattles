@@ -253,52 +253,105 @@ class WeaponsReportPanel:
     def _calculate_threshold_ranges(self, weapon, ship):
         """
         Calculate the range at which each hit probability threshold is reached.
+        Uses Sigmoid Math: P = 1 / (1 + exp(-x))
+        x = (Base + Attack) - (Range*Falloff + Defense)
+        x = NetScore - Range*Falloff
+        
+        To find Range for a given P:
+        1 + exp(-x) = 1/P
+        exp(-x) = (1/P) - 1 = (1-P)/P
+        -x = ln((1-P)/P)
+        x = -ln((1-P)/P) = ln(P/(1-P))
+        
+        NetScore - Range*Falloff = ln(P/(1-P))
+        Range*Falloff = NetScore - ln(P/(1-P))
+        Range = (NetScore - ln(P/(1-P))) / Falloff
         
         Returns list of tuples: (threshold, range_value, damage)
-        Range is None if threshold is unreachable within weapon range.
         """
         results = []
-        target_defense = self.target_defense_mod
+        import math
         
-        
-        base_acc = getattr(weapon, 'base_accuracy', 1.0)
-        falloff = getattr(weapon, 'accuracy_falloff', 0.0)
+        # Get Scores
+        base_acc = getattr(weapon, 'base_accuracy', 2.0)
+        falloff = getattr(weapon, 'accuracy_falloff', 0.001)
         max_range = getattr(weapon, 'range', 0)
-        ship_offense = getattr(ship, 'baseline_to_hit_offense', 1.0)
         damage = getattr(weapon, 'damage', 0)
         
-        for threshold in self.THRESHOLDS:
-            # Calculate range needed for this hit chance
-            if falloff > 0:
-                # New Formula: Hit = Base * (1 - Range*Falloff) * ShipMod * TargetMod
-                # Hit / (Base * ShipMod * TargetMod) = 1 - Range*Falloff
-                # Range*Falloff = 1 - (Hit / Denom)
-                # Range = (1 - (Hit / Denom)) / Falloff
-                
-                denom = base_acc * ship_offense * target_defense
-                if denom == 0:
-                    range_for_threshold = None
-                else:
-                    ratio = threshold / denom
-                    if ratio > 1.0:
-                        range_for_threshold = None # Impossible to reach this accuracy
-                    else:
-                        range_for_threshold = (1.0 - ratio) / falloff
-            else:
-                # No falloff - either always or never hits at this threshold
-                effective_base = base_acc * ship_offense * target_defense
-                if effective_base >= threshold:
-                    range_for_threshold = max_range  # Achievable at max range
-                else:
-                    range_for_threshold = None  # Never reaches this threshold
+        # Ship Scores
+        attack_score = 0.0
+        if hasattr(ship, 'get_total_sensor_score'):
+            attack_score = ship.get_total_sensor_score()
             
-            # Clamp to weapon's max range
+        defense_score = 0.0 
+        # For the visualization, we assume a standard target or the selected target
+        if self.target_ship and hasattr(self.target_ship, 'get_total_ecm_score'):
+            defense_score = self.target_ship.get_total_ecm_score()
+        else:
+            # Default generic target profile? 
+            # effectively 0.0 unless we want to simulate a "typical" enemy
+            defense_score = 0.0
+            
+        net_starting_score = (base_acc + attack_score) - defense_score
+        
+        for threshold in self.THRESHOLDS:
+            # Threshold P must be 0 < P < 1
+            p = max(0.0001, min(0.9999, threshold))
+            
+            logit_p = math.log(p / (1.0 - p))
+            
+            if falloff > 0:
+                # Range = (NetScore - logit_p) / Falloff
+                r = (net_starting_score - logit_p) / falloff
+                
+                # If negative range required, it means we have > P even at 0 distance
+                if r < 0:
+                   # If we are effectively "always above", range is max?
+                   # No, it means we start above it. We stay above it until...
+                   # Wait, this solves for the EXACT point P. 
+                   # If r < 0, the crossing point is behind us.
+                   # If slope is negative (falloff > 0), then we are BELOW P for all positive range?
+                   # No, falloff Reduces score. So score drops as range increases.
+                   # High Score -> High P.
+                   # If crossing point is negative, it means at 0 we are already below P? 
+                   # Or above?
+                   # NetScore at 0 = net_starting_score.
+                   # Logit(P) is the score needed for P.
+                   # If NetStart > Logit(P), we start above P. Range to reach P is positive.
+                   pass
+                
+                range_for_threshold = r
+            else:
+                # No falloff. Constant score.
+                if net_starting_score >= logit_p:
+                    range_for_threshold = max_range
+                else:
+                    range_for_threshold = None
+            
+            # Clamp logic
             if range_for_threshold is not None:
-                if range_for_threshold <= 0:
-                    range_for_threshold = 0
+                if range_for_threshold < 0:
+                     # Calculate P at 0
+                     score_at_0 = net_starting_score
+                     p_at_0 = 1.0 / (1.0 + math.exp(-score_at_0))
+                     if p_at_0 > p:
+                         # We start above threshold and never go below?
+                         # Wait, falloff decreases score.
+                         # If r < 0, then NetStart < Logit(P). We start BELOW.
+                         # Since it decreases, we never reach it.
+                         range_for_threshold = None
+                     else:
+                         # We start below. (Shouldn't happen with standard falloff direction?)
+                         range_for_threshold = None # Can't improve
                 elif range_for_threshold > max_range:
-                    range_for_threshold = None  # Unreachable within weapon range
-                    
+                     # Check if we are above it the whole time
+                     score_at_max = net_starting_score - max_range*falloff
+                     if score_at_max > logit_p:
+                         range_for_threshold = max_range # Valid whole range
+                     else:
+                         # We cross it past max range.
+                         range_for_threshold = max_range
+                         
             results.append((threshold, range_for_threshold, damage))
             
         return results
@@ -328,7 +381,7 @@ class WeaponsReportPanel:
         new_names = set(item['weapon'].name for item in self._weapons_cache)
         if old_names != new_names:
             self._name_cache.clear()
-
+            
         # Update Scrollbar
         total_height = len(self._weapons_cache) * self.WEAPON_ROW_HEIGHT
         visible_height = self.rect.height - 50 # minus header/padding
@@ -339,7 +392,7 @@ class WeaponsReportPanel:
         else:
             self.scroll_bar.hide()
             self.scroll_bar.set_visible_percentage(1.0)
-            self.scroll_bar.set_scroll_from_start_percentage(0.0)  # Reset if not needed
+            self.scroll_bar.set_scroll_from_start_percentage(0.0)
 
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -398,15 +451,31 @@ class WeaponsReportPanel:
         damage = getattr(weapon, 'damage', 0)
         
         if isinstance(weapon, BeamWeapon):
-            range_factor = max(0.0, 1.0 - (hover_range * falloff))
-            hit_chance = max(0.0, min(1.0, base_acc * range_factor * ship_mod * target_mod))
+            # Sigmoid Logic
+            import math
+            
+            # Scores
+            attack_score = 0.0
+            if hasattr(ship, 'get_total_sensor_score'):
+                attack_score = ship.get_total_sensor_score()
+            
+            defense_score = 0.0 # Standard target
+            if self.target_ship and hasattr(self.target_ship, 'get_total_ecm_score'):
+                defense_score = self.target_ship.get_total_ecm_score()
+                
+            net_score = (base_acc + attack_score) - (hover_range * falloff + defense_score)
+            
+            # Sigmoid
+            clamped = max(-20.0, min(20.0, net_score))
+            hit_chance = 1.0 / (1.0 + math.exp(-clamped))
+            
             acc_text = f"{int(hit_chance * 100)}%"
             verbose_info = {
                 'base_acc': base_acc,
-                'falloff': falloff,
-                'range_factor': range_factor,
-                'ship_mod': ship_mod,
-                'target_mod': target_mod
+                'attack_score': attack_score,
+                'defense_score': defense_score,
+                'range_penalty': hover_range * falloff,
+                'net_score': net_score
             }
         else:
             acc_text = "N/A"
@@ -588,16 +657,30 @@ class WeaponsReportPanel:
         pygame.draw.line(screen, self.BEAM_BAR_COLOR, (start_x, bar_y), (start_x + weapon_bar_width, bar_y), self.BAR_HEIGHT)
         
         # Calculate stats for start/end
+        # Sigmoid Logic for Start/End
+        import math
+        
+        # Scores
         base_acc = getattr(weapon, 'base_accuracy', 1.0)
         falloff = getattr(weapon, 'accuracy_falloff', 0.0)
-        ship_mod = getattr(ship, 'baseline_to_hit_offense', 1.0)
-        target_mod = self.target_defense_mod
         
-        factor_at_0 = max(0.0, 1.0 - (0 * falloff))
-        factor_at_max = max(0.0, 1.0 - (weapon_range * falloff))
+        attack_score = 0.0
+        if hasattr(ship, 'get_total_sensor_score'):
+            attack_score = ship.get_total_sensor_score()
+            
+        defense_score = 0.0
+        if self.target_ship and hasattr(self.target_ship, 'get_total_ecm_score'):
+            defense_score = self.target_ship.get_total_ecm_score()
         
-        chance_at_0 = max(0.0, min(1.0, base_acc * factor_at_0 * ship_mod * target_mod))
-        chance_at_max = max(0.0, min(1.0, base_acc * factor_at_max * ship_mod * target_mod))
+        # Chance at 0
+        net_at_0 = (base_acc + attack_score) - (0 * falloff + defense_score)
+        clamped_0 = max(-20.0, min(20.0, net_at_0))
+        chance_at_0 = 1.0 / (1.0 + math.exp(-clamped_0))
+        
+        # Chance at max
+        net_at_max = (base_acc + attack_score) - (weapon_range * falloff + defense_score)
+        clamped_max = max(-20.0, min(20.0, net_at_max))
+        chance_at_max = 1.0 / (1.0 + math.exp(-clamped_max))
         
         # Calculate damage at start/end
         if hasattr(weapon, 'get_damage'):
@@ -701,10 +784,11 @@ class WeaponsReportPanel:
             v = self._tooltip_data['verbose']
             lines = [
                 f"Range: {self._tooltip_data['range']}",
-                f"Base Accuracy: {v['base_acc']:.2f}",
-                f"Range Factor: x{v['range_factor']:.3f} (1 - {self._tooltip_data['range']} * {v['falloff']})",
-                f"Ship Offense Mod: x{v['ship_mod']:.2f}",
-                f"Target Defense Mod: x{v['target_mod']:.2f}",
+                f"Base Score: {v['base_acc']:.2f}",
+                f"Attack Score: +{v['attack_score']:.2f}",
+                f"Range Penalty: -{v['range_penalty']:.2f}",
+                f"Defense Score: -{v['defense_score']:.2f}",
+                f"Net Score: {v['net_score']:.2f}",
                 f"----------------",
                 f"Final Accuracy: {self._tooltip_data['accuracy']}",
                 f"Damage: {self._tooltip_data['damage']}"

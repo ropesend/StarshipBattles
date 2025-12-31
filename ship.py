@@ -146,6 +146,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.current_fuel: float = 0.0
         self.max_ammo: int = 0
         self.current_ammo: int = 0
+        self.baseline_to_hit_offense = 0.0 # Score
+        self.to_hit_profile = 0.0 # Score
+        self.total_defense_score = 0.0 # Score (Size + Maneuver + ECM)
+        self.emissive_armor = 0
+        self.crystalline_armor = 0
         self.energy_gen_rate: float = 0.0
         
         # Shield Stats
@@ -427,6 +432,34 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
              
         totals = self.stats_calculator.calculate_ability_totals(all_components)
         return totals.get(ability_name, 0)
+    
+    def get_total_sensor_score(self) -> float:
+        """Calculate total Targeting Score from all active sensors."""
+        total_score = 0.0
+        for layer in self.layers.values():
+            for comp in layer['components']:
+                if isinstance(comp, Sensor) and comp.is_active:
+                     total_score += comp.attack_modifier
+        return total_score
+
+    def get_total_ecm_score(self) -> float:
+        """Calculate total Evasion/Defense Score from all active ECM/Electronics."""
+        total_score = 0.0
+        for layer in self.layers.values():
+            for comp in layer['components']:
+                if isinstance(comp, Electronics) and comp.is_active:
+                     total_score += comp.defense_modifier
+                # Also include Armor passive defense (Scattering, Stealth)
+                if isinstance(comp, Armor) and comp.is_active:
+                     # Check for ToHitDefenseModifier ability which might be in generic abilities
+                     # New Armor logic might have it in abilities dict directly
+                     val = comp.abilities.get('ToHitDefenseModifier', None)
+                     if val:
+                         if isinstance(val, dict):
+                             total_score += val.get('value', 0.0)
+                         else:
+                             total_score += float(val)
+        return total_score
 
     def check_validity(self) -> bool:
         """Check if the current ship design is valid."""

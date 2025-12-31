@@ -68,22 +68,30 @@ class ModifierEffects:
     @staticmethod
     def precision_mount(val, stats):
         """
-        Reduces accuracy falloff (makes beam stay accurate longer).
-        val is percentage (0-99).
+        Increases Base Accuracy Score.
+        val: Level (0-5).
+        Effect: +0.5 Score per level.
+        Mass: Increases by 50% per level (1.5x, 2.0x, etc).
         """
-        pct = val
-        reduction = pct / 100.0
-        # Clamp to 0.99 to prevent total removal of falloff
-        reduction = max(0.0, min(0.99, reduction))
+        level = val
+        score_boost = level * 0.5
         
-        mult = 1.0 - reduction
-        stats['properties']['accuracy_falloff_mult'] = mult
+        # Add to 'properties' override for base_accuracy
+        # We need to know the original base accuracy? 
+        # Actually, `_apply_base_stats` doesn't support "adding" to a property easily unless we do it here.
+        # But `stats` dict has `properties`.
+        # We can use a special key `base_accuracy_add` if we supported it, 
+        # OR we can assume `base_accuracy` is 2.0 and override it? No, that breaks different weapons.
         
+        # Solution: Use `arc_add` pattern but for accuracy.
+        # Let's add `accuracy_add` to stats dict.
+        if 'accuracy_add' not in stats:
+            stats['accuracy_add'] = 0.0
+        stats['accuracy_add'] += score_boost
         
-        # Mass increase proportional to square of amount of reduction
-        # Using factor 1.0 for proportionality constant implies doubling mass at 100% reduction
-        mass_increase_factor = 1.0 + (reduction ** 2) 
-        stats['mass_mult'] *= mass_increase_factor
+        # Mass increase: 1.0 + (0.5 * level)
+        mass_factor = 1.0 + (level * 0.5)
+        stats['mass_mult'] *= mass_factor
 
     @staticmethod
     def rapid_fire(val, stats):

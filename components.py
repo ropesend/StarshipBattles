@@ -233,6 +233,7 @@ class Component:
             'consumption_mult': 1.0,
             'mass_add': 0.0,
             'arc_add': 0.0,
+            'accuracy_add': 0.0,
             'arc_set': None,
             'properties': {},
             # New Modifier Support
@@ -488,17 +489,42 @@ class BeamWeapon(Weapon):
         # Actually in old code it was checking `getattr(self, 'accuracy_falloff_mult')`.
         # Base `_apply_base_stats` applies properties to self. So this works.
         self.accuracy_falloff = base * getattr(self, 'accuracy_falloff_mult', 1.0)
+        
+        # Apply Base Accuracy Additive Score (e.g. Precision Targeting)
+        base_acc = self.data.get('base_accuracy', 1.0) # Default depends on data, usually 2.0 now
+        self.base_accuracy = base_acc + stats.get('accuracy_add', 0.0)
 
 
     def clone(self):
         return BeamWeapon(self.data)
     
-    def calculate_hit_chance(self, distance):
-        """Calculate hit chance based on distance with multiplicative falloff."""
-        factor = 1.0 - (distance * self.accuracy_falloff)
-        factor = max(0.0, factor)
-        chance = self.base_accuracy * factor
-        return max(0.0, min(1.0, chance))
+    def calculate_hit_chance(self, distance, attack_score_bonus=0.0, defense_score_penalty=0.0):
+        """
+        Calculate hit chance using the Logistic Function (Sigmoid).
+        Formula: P = 1 / (1 + e^-x)
+        Where x = (BaseScore + AttackBonuses) - (RangePenalty + DefensePenalties)
+        
+        Args:
+            distance (float): Range to target in pixels.
+            attack_score_bonus (float): Total accuracy score from attacker (Sensors, etc).
+            defense_score_penalty (float): Total defense score from target (ECM, Size, etc).
+        """
+        # 1. Calculate Score
+        # Range Penalty: falloff * distance
+        range_penalty = self.accuracy_falloff * distance
+        
+        net_score = (self.base_accuracy + attack_score_bonus) - (range_penalty + defense_score_penalty)
+        
+        # 2. Sigmoid Function
+        try:
+            # Clamp exp input to avoid overflow (e.g. e^700 is huge)
+            # A score > 10 is basically 100%, < -10 is 0%.
+            clamped_score = max(-20.0, min(20.0, net_score))
+            chance = 1.0 / (1.0 + math.exp(-clamped_score))
+        except OverflowError:
+            chance = 0.0 if net_score < 0 else 1.0
+            
+        return chance
 
 class SeekerWeapon(Weapon):
     def __init__(self, data):
@@ -534,13 +560,11 @@ class SeekerWeapon(Weapon):
         # Apply stealth
         self.projectile_stealth_level = stats.get('projectile_stealth_level', 0.0)
         
-        # Calculate To-Hit Defense (Baseline + Stealth)
-        # Assuming baseline is 0 unless in data
+        # Calculate To-Hit Defense Score (Baseline + Stealth)
+        # Baseline is 0.0. Each stealth level adds +0.2 Score.
+        # This replaces the old percentage logic.
         base_def = self.data.get('to_hit_defense', 0.0)
-        # Assuming each stealth level adds 0.1 (10%) to defense? 
-        # Or level IS the value? Description says "Stealth Level".
-        # Let's assume linear addition.
-        self.to_hit_defense = base_def + (self.projectile_stealth_level * 0.1)
+        self.to_hit_defense = base_def + (self.projectile_stealth_level * 0.2)
         
     def clone(self):
         return SeekerWeapon(self.data)
@@ -564,21 +588,21 @@ class LifeSupport(Component):
         return LifeSupport(self.data)
 
 class Sensor(Component):
-    """Provides sensor capabilities like attack modifiers."""
+    """Provides sensor capabilities like attack modifiers (Score)."""
     def __init__(self, data):
         super().__init__(data)
-        val = self.abilities.get('ToHitAttackModifier', 1.0)
-        self.attack_modifier = val.get('value', 1.0) if isinstance(val, dict) else val
+        val = self.abilities.get('ToHitAttackModifier', 0.0)
+        self.attack_modifier = val.get('value', 0.0) if isinstance(val, dict) else val
     
     def clone(self):
         return Sensor(self.data)
 
 class Electronics(Component):
-    """Provides electronic warfare capabilities like defense modifiers."""
+    """Provides electronic warfare capabilities like defense modifiers (Score)."""
     def __init__(self, data):
         super().__init__(data)
-        val = self.abilities.get('ToHitDefenseModifier', 1.0)
-        self.defense_modifier = val.get('value', 1.0) if isinstance(val, dict) else val
+        val = self.abilities.get('ToHitDefenseModifier', 0.0)
+        self.defense_modifier = val.get('value', 0.0) if isinstance(val, dict) else val
     
     def clone(self):
         return Electronics(self.data)

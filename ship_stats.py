@@ -233,23 +233,42 @@ class ShipStatsCalculator:
         # 6. Phase 5: To-Hit & Electronic Warfare Stats
         # ---------------------------------------------
         
-        # Defensive Profile 
+        # New Logit-Score System:
+        # Defense Score (Higher = Harder to Hit). Is SUBTRACTED from Accuracy.
+        # Components:
+        # 1. Size: Larger = Easier to Hit (Negative Score).
+        # 2. Maneuver: Agile = Harder to Hit (Positive Score).
+        # 3. ECM: Noise = Harder to Hit (Positive Score).
+        
         diameter = ship.radius * 2
-        size_factor = (diameter / 80.0) ** 2
         
-        # Factor 2: Maneuverability
-        maneuver_bonus = 1.0 + (ship.turn_speed / 225.0) + (ship.acceleration_rate / 20.0)
-        maneuver_factor = 1.0 / maneuver_bonus
+        # Size Score:
+        # Baseline Diameter 80 (Mass ~1k) = 0.0
+        # Formula: -2.5 * log10(diameter / 80)
+        # Prevents log(0)
+        d_ratio = max(0.1, diameter / 80.0)
+        size_score = -2.5 * math.log10(d_ratio)
         
-        # Factor 3: Electronic Defense (ECM)
-        defense_mods = self._get_ability_total(component_pool, 'ToHitDefenseModifier')
-        if defense_mods < 0.01: defense_mods = 1.0
+        # Maneuver Score:
+        # Accel contributes ~0-2.5 pts (Fighters 25 accel) -> /10
+        # Turn contributes ~0-2.0 pts (Fighters 180 turn) -> /90
+        maneuver_score = (ship.acceleration_rate / 10.0) + (ship.turn_speed / 90.0)
         
-        ship.to_hit_profile = size_factor * maneuver_factor / defense_mods
+        # ECM Score (Additive)
+        ecm_score = self._get_ability_total(component_pool, 'ToHitDefenseModifier')
+        # Default 0 if none
+        if isinstance(ecm_score, bool): ecm_score = 0.0
         
-        # Offensive Baseline (Sensor Strength)
+        # Total Defense Score
+        ship.total_defense_score = size_score + maneuver_score + ecm_score
+        
+        # Legacy/Alias for UI until fully refactored
+        ship.to_hit_profile = ship.total_defense_score
+        
+        # Offensive Baseline (Sensor Strength) - Score
         attack_mods = self._get_ability_total(component_pool, 'ToHitAttackModifier')
-        if attack_mods < 0.01: attack_mods = 1.0
+        # Default 0
+        if isinstance(attack_mods, bool): attack_mods = 0.0
         
         ship.baseline_to_hit_offense = attack_mods
 

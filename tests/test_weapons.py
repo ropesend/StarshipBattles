@@ -56,7 +56,10 @@ class TestWeaponBasics(unittest.TestCase):
         
         # Close range - high accuracy
         close_chance = laser.calculate_hit_chance(100)
-        self.assertGreater(close_chance, 0.9)
+            # New Sigmoid Logic: P(2.0 - small) ~ 0.87
+        # Old Logic was ~0.99. We accept the slight mathematical shift or need to buff base.
+        # Assuming we keep Base=2.0 for now.
+        self.assertGreater(close_chance, 0.85)
         
         # Far range - lower accuracy
         far_chance = laser.calculate_hit_chance(1500)

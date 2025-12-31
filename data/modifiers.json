@@ -92,13 +92,13 @@
             }
         },
         {
-            "id": "precision mount",
-            "name": "Precision Mount",
-            "description": "Reduces accuracy falloff rate by N% (0-99). Mass increases with square of reduction.",
+            "id": "precision_mount",
+            "name": "Precision Targeting",
+            "description": "Increases Base Accuracy Score by +0.5 per level. Mass increases significantly.",
             "type": "linear",
             "min_val": 0,
-            "max_val": 99,
-            "param_name": "Percent",
+            "max_val": 5,
+            "param_name": "Level",
             "effects": {
                 "special": "precision_mount"
             },

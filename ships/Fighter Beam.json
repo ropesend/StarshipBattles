@@ -1,0 +1,160 @@
+{
+    "name": "Fighter Beam",
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "team_id": 0,
+    "ship_class": "Fighter (Small)",
+    "theme_id": "Atlantians",
+    "ai_strategy": "attack_run",
+    "layers": {
+        "CORE": [
+            {
+                "id": "fighter_cockpit",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_thruster",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_sensor",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_ecm",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 179.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_battery",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 179.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "ARMOR": [
+            {
+                "id": "mini_scattering_armor",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ]
+    },
+    "expected_stats": {
+        "max_hp": 30,
+        "max_fuel": 2000,
+        "max_ammo": 0,
+        "max_energy": 200,
+        "max_speed": 80.01443875695341,
+        "turn_speed": 10002.707389079993,
+        "total_thrust": 80.0,
+        "mass": 24.995488702671132,
+        "armor_hp_pool": 5
+    }
+}

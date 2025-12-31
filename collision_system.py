@@ -49,7 +49,22 @@ class CollisionSystem:
                 if valid_t:
                     hit_dist = min(valid_t)
                     beam_comp = attack['component']
-                    chance = beam_comp.calculate_hit_chance(hit_dist)
+                    
+                    # New Logic: Get Scores
+                    source_ship = attack.get('source')
+                    attack_score = 0.0
+                    if source_ship and hasattr(source_ship, 'get_total_sensor_score'):
+                        attack_score = source_ship.get_total_sensor_score()
+                        
+                    defense_score = 0.0
+                    if hasattr(target, 'total_defense_score'):
+                        defense_score = target.total_defense_score
+                    elif hasattr(target, 'get_total_ecm_score'):
+                        # Fallback
+                        defense_score = target.get_total_ecm_score()
+                        
+                    # Calculate Chance with Sigmoid Logic
+                    chance = beam_comp.calculate_hit_chance(hit_dist, attack_score, defense_score)
                     
                     if random.random() < chance:
                         # Evaluate damage at hit distance

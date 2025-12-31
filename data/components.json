@@ -168,7 +168,7 @@
             "abilities": {
                 "Armor": true,
                 "ToHitDefenseModifier": {
-                    "value": 1.15,
+                    "value": 0.2,
                     "stack_group": "Scattering"
                 }
             },
@@ -266,8 +266,8 @@
             "range": 2000,
             "reload": 0.2,
             "energy_cost": 5,
-            "base_accuracy": 1.0,
-            "accuracy_falloff": 0.0001,
+            "base_accuracy": 2.0,
+            "accuracy_falloff": 0.001,
             "firing_arc": 1,
             "sprite_index": 87,
             "abilities": {
@@ -322,7 +322,7 @@
             "sprite_index": 25,
             "abilities": {
                 "ToHitAttackModifier": {
-                    "value": 2.0,
+                    "value": 1.0,
                     "stack_group": "Sensor"
                 }
             },
@@ -342,7 +342,7 @@
             "sprite_index": 26,
             "abilities": {
                 "ToHitDefenseModifier": {
-                    "value": 2.0,
+                    "value": 1.0,
                     "stack_group": "ECM"
                 }
             },
@@ -442,8 +442,8 @@
             "range": 800,
             "reload": 0.04,
             "energy_cost": 2,
-            "base_accuracy": 20.0,
-            "accuracy_falloff": 0.0003,
+            "base_accuracy": 3.0,
+            "accuracy_falloff": 0.003,
             "firing_arc": 180,
             "sprite_index": 151,
             "abilities": {
@@ -583,8 +583,8 @@
             "range": 1000,
             "reload": 1.0,
             "energy_cost": 0,
-            "base_accuracy": 1.0,
-            "accuracy_falloff": 0.0001,
+            "base_accuracy": 2.0,
+            "accuracy_falloff": 0.001,
             "firing_arc": 1,
             "sprite_index": 138,
             "abilities": {
@@ -605,8 +605,8 @@
             "range": 800,
             "reload": 0.3,
             "energy_cost": 2,
-            "base_accuracy": 1.0,
-            "accuracy_falloff": 0.0001,
+            "base_accuracy": 2.0,
+            "accuracy_falloff": 0.001,
             "firing_arc": 1,
             "sprite_index": 140,
             "abilities": {
@@ -627,7 +627,7 @@
             "range": 200,
             "reload": 15.0,
             "energy_cost": 0,
-            "base_accuracy": 1.0,
+            "base_accuracy": 2.0,
             "accuracy_falloff": 0.0,
             "firing_arc": 10,
             "sprite_index": 216,
@@ -663,7 +663,7 @@
             "sprite_index": 25,
             "abilities": {
                 "ToHitAttackModifier": {
-                    "value": 1.2,
+                    "value": 0.2,
                     "stack_group": "Sensor"
                 }
             },
@@ -681,7 +681,7 @@
             "sprite_index": 26,
             "abilities": {
                 "ToHitDefenseModifier": {
-                    "value": 1.2,
+                    "value": 0.2,
                     "stack_group": "ECM"
                 }
             },
@@ -734,7 +734,7 @@
             "abilities": {
                 "Armor": true,
                 "ToHitDefenseModifier": {
-                    "value": 1.15,
+                    "value": 0.2,
                     "stack_group": "Scattering"
                 }
             },

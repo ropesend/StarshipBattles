@@ -131,6 +131,8 @@ class ComponentDetailPanel:
             add_line(f"Energy Cost: {comp.energy_cost}", '#64C8FF')
         if hasattr(comp, 'firing_arc'):
             add_line(f"Arc: {comp.firing_arc}°", '#FF64FF')
+        if hasattr(comp, 'base_accuracy'):
+             add_line(f"Accuracy Score: +{comp.base_accuracy:.1f}", '#FFFF64')
             
         # Missile Stats
         if hasattr(comp, 'endurance'):
@@ -141,7 +143,7 @@ class ComponentDetailPanel:
              if hasattr(comp, 'to_hit_defense'):
                  def_val = comp.to_hit_defense
                  if def_val > 0:
-                     add_line(f"Defense Odds: {def_val:.2f}", '#800080') # Purple for stealth
+                     add_line(f"Defense Score: +{def_val:.1f}", '#800080') # Purple for stealth
 
         if hasattr(comp, 'turn_rate') and hasattr(comp, 'endurance'):
              add_line(f"Turn Rate: {comp.turn_rate}°/s", '#64FF64')
@@ -181,9 +183,13 @@ class ComponentDetailPanel:
                 elif k == "LifeSupportCapacity":
                     add_line(f"• Life Support: {v}", '#96FFFF')
                 elif k == "ToHitAttackModifier":
-                    add_line(f"• Targeting: x{v}", '#FF6464')
+                    val = v.get('value', 0) if isinstance(v, dict) else v
+                    sign = "+" if val >= 0 else ""
+                    add_line(f"• Targeting Score: {sign}{val:.1f}", '#FF6464')
                 elif k == "ToHitDefenseModifier":
-                    add_line(f"• ECM: x{v}", '#64FFFF')
+                    val = v.get('value', 0) if isinstance(v, dict) else v
+                    sign = "+" if val >= 0 else ""
+                    add_line(f"• Evasion Score: {sign}{val:.1f}", '#64FFFF')
                 elif k == "EmissiveArmor":
                     add_line(f"• Damage Ignore: {v}", '#FFFF00')
                 # Skip stats already shown above

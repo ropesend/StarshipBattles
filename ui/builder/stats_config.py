@@ -50,6 +50,9 @@ def fmt_multiply(val):
 def fmt_decimal(val):
     return f"{val:.1f}"
 
+def fmt_score(val):
+    return f"+{val:.1f}" if val >= 0 else f"{val:.1f}"
+
 # --- Validators ---
 def mass_validator(ship, val):
     return (ship.mass_limits_ok, "✓" if ship.mass_limits_ok else "✗")
@@ -152,6 +155,7 @@ FORMATTERS = {
     'fmt_time': fmt_time,
     'fmt_multiply': fmt_multiply,
     'fmt_decimal': fmt_decimal,
+    'fmt_score': fmt_score,
     'fmt_targeting': fmt_targeting
 }
 
