@@ -7,15 +7,16 @@ import pygame
 # Mocking builder logic
 class MockBuilder:
     def __init__(self):
-        self.selected_component_group = []
+        self.selected_components = []
         self.ship = Ship("Test Ship", 0, 0, (0,0,0))
 
     def propagate_group_modifiers(self, leader_comp):
-        if not self.selected_component_group: return
+        if not self.selected_components: return
         
         leader_mods = leader_comp.modifiers
         
-        for comp in self.selected_component_group:
+        # In real app selected_components is list of tuples (layer, idx, comp)
+        for _, _, comp in self.selected_components:
             if comp is leader_comp: continue
             
             # Clear and Copy
@@ -50,8 +51,13 @@ class TestModifierGroupPropagation(unittest.TestCase):
         self.comp2 = Component(base_data)
         self.comp3 = Component(base_data)
         
-        # Setup Group
-        self.builder.selected_component_group = [self.comp1, self.comp2, self.comp3]
+        # Setup Group (Simulating selection)
+        # Tuples: (layer, index, comp)
+        self.builder.selected_components = [
+            ('CORE', 0, self.comp1),
+            ('CORE', 1, self.comp2),
+            ('CORE', 2, self.comp3)
+        ]
         
     def test_add_modifier_default_value(self):
         """Test that adding specific modifier respects min_val if default is not set or 0."""

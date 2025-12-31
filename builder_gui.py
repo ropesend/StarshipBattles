@@ -361,7 +361,11 @@ class BuilderSceneGUI:
         self.error_timer = 0
         self.show_firing_arcs = False
         
-        self.selected_component_group = None
+        self.show_firing_arcs = False
+        
+        # New Selection System
+        self.selected_components = [] # List of (layer_type, index, component) tuples or wrapped components
+
         
         self._create_ui()
         
@@ -469,13 +473,90 @@ class BuilderSceneGUI:
         self.left_panel.update_component_list()
         self.rebuild_modifier_ui()
 
-    def _on_modifier_change(self):
-        if self.selected_component:
-            # Propagate modifications to the entire selected group
-            if self.selected_component_group:
-                self.propagate_group_modifiers(self.selected_component[2])
+
+    def update_stats(self):
+        self.right_panel.update_stats_display(self.ship)
+        self.layer_panel.rebuild()
+        
+    def on_selection_changed(self, new_selection, append=False):
+        """
+        Handle selection changes.
+        new_selection: can be a single component tuple (layer, idx, comp), a list of them, or None.
+        append: If True, add to existing selection instead of replacing.
+        """
+        if new_selection is None:
+            if not append:
+                self.selected_components = []
+        else:
+            if not isinstance(new_selection, list):
+                new_selection = [new_selection]
             
-            self.selected_component[2].recalculate_stats()
+            # Normalize to tuples if possible, or wrapping objects
+            # Ideally we want (layer, index, comp)
+            # If we get just component, we'll have to find it or wrap it
+            
+            norm_selection = []
+            for item in new_selection:
+                if isinstance(item, tuple) and len(item) == 3:
+                    norm_selection.append(item)
+                elif hasattr(item, 'id'): # It's a component
+                     # Find it in ship?
+                     found = False
+                     for l_type, l_data in self.ship.layers.items():
+                         try:
+                             idx = l_data['components'].index(item)
+                             norm_selection.append((l_type, idx, item))
+                             found = True
+                             break
+                         except ValueError:
+                             continue
+                     if not found:
+                         # Maybe it's a template (dragged)
+                         norm_selection.append((None, -1, item))
+            
+            if append:
+                # Add unique items
+                current_ids = {c[2].id for c in self.selected_components}
+                for item in norm_selection:
+                    if item[2].id not in current_ids:
+                        self.selected_components.append(item)
+            else:
+                self.selected_components = norm_selection
+
+        # Update dependent UI
+        # For properties panel, we generally show the LAST selected item (or first?)
+        # Let's show the last one added to selection as "primary"
+        self.selected_component = self.selected_components[-1] if self.selected_components else None
+        
+        # Update Builder State for Panel
+        if self.selected_components:
+             # If we have a group selected, layer panel needs to know?
+             # Layer panel now highlights based on builder.selected_components check in its rebuild
+             pass
+
+        self.rebuild_modifier_ui()
+
+    def _on_modifier_change(self):
+        # Propagate to ALL selected components
+        if self.selected_components:
+            # The modifier panel edits "editing_component".
+            # We need to sync that to others.
+            editing_comp = self.selected_component[2]
+            
+            for item in self.selected_components:
+                comp = item[2]
+                if comp is editing_comp: continue
+                
+                # Apply modifiers from editing_comp to comp
+                # Copy modifiers
+                comp.modifiers = []
+                for m in editing_comp.modifiers:
+                    new_m = m.__class__(m.definition, m.value)
+                    comp.modifiers.append(new_m)
+                comp.recalculate_stats()
+                
+            editing_comp.recalculate_stats()
+            
         self.ship.recalculate_stats()
         self.right_panel.update_stats_display(self.ship)
 
@@ -484,54 +565,6 @@ class BuilderSceneGUI:
         # Start Y is 0 relative to the modifier container panel
         self.modifier_panel.rebuild(editing_component, self.template_modifiers)
         self.modifier_panel.layout(0)
-
-    def update_stats(self):
-        self.right_panel.update_stats_display(self.ship)
-        self.layer_panel.rebuild()
-        
-    def on_selection_changed(self, component_tuple):
-        # component_tuple is (layer, index, comp) or None
-        # OR just comp if coming from layer panel
-        
-        # New: support selected_component_group
-        # If component_tuple is just a component object (from layer panel), wrap it mockingly
-        
-        if component_tuple:
-            if isinstance(component_tuple, tuple):
-                self.selected_component = component_tuple
-            else:
-                # It's a component object
-                self.selected_component = (None, -1, component_tuple)
-        else:
-            self.selected_component = None
-            self.selected_component_group = None
-            
-        self.rebuild_modifier_ui()
-            
-    def propagate_group_modifiers(self, leader_comp):
-        """
-        Copy modifiers from leader component to all others in the selected group.
-        """
-        if not self.selected_component_group: return
-        
-        # Definition of "Identical" relies on modifiers matching.
-        # Use serialization/deserialization or manual copy.
-        
-        leader_mods = leader_comp.modifiers
-        
-        for comp in self.selected_component_group:
-            if comp is leader_comp: continue
-            
-            # Clear and Copy
-            comp.modifiers = []
-            for m in leader_mods:
-                # Create new AppMod with same def and value
-                new_mod = m.__class__(m.definition, m.value)
-                comp.modifiers.append(new_mod)
-            
-            comp.recalculate_stats()
-            
-        self.ship.recalculate_stats()
         
     @property
     def selected_component(self):
@@ -575,12 +608,9 @@ class BuilderSceneGUI:
                  return
 
             act_type, data = action
-            if act_type == 'refresh_ui':
-                # Check for group propagation
-                if self.selected_component_group and self.selected_component:
-                    self.propagate_group_modifiers(self.selected_component[2])
-                    
+            if act_type == 'refresh_ui': 
                 self.update_stats()
+                
                 
             elif act_type == 'select_component_type':
                 with profile_block("Builder: Select Component Type"):
@@ -588,7 +618,7 @@ class BuilderSceneGUI:
                     # Clear Layer Panel Selection (avoid confusion)
                     self.layer_panel.selected_group_key = None
                     self.layer_panel.selected_component_id = None
-                    self.selected_component_group = None  # Clear builder's group selection state
+                    self.on_selection_changed(None) # Clear
                     self.layer_panel.rebuild()
                     
                     self.controller.dragged_item = c.clone()
@@ -611,7 +641,13 @@ class BuilderSceneGUI:
                 
             elif act_type == 'select_group':
                 with profile_block("Builder: Select Group"):
-                    self.left_panel.deselect_all()
+                    # Check modifier keys for multi-select
+                    keys = pygame.key.get_pressed()
+                    append = keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
+                    
+                    if not append:
+                        self.left_panel.deselect_all()
+                    
                     # data is group_key
                     comps = []
                     from ui.builder.layer_panel import get_component_group_key
@@ -620,37 +656,52 @@ class BuilderSceneGUI:
                              if get_component_group_key(c) == data:
                                  comps.append(c)
                     
-                    self.selected_component_group = comps
-                    if comps:
-                        self.on_selection_changed(comps[0]) # Set leader
+                    self.on_selection_changed(comps, append=append)
                     
                     # Rebuild layer panel now that builder state is updated
                     self.layer_panel.rebuild()
                 
             elif act_type == 'select_individual':
                 with profile_block("Builder: Select Individual"):
-                    self.left_panel.deselect_all()
-                    self.selected_component_group = None
-                    self.on_selection_changed(data)
+                    keys = pygame.key.get_pressed()
+                    append = keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
+                    
+                    if not append:
+                        self.left_panel.deselect_all()
+                        
+                    self.on_selection_changed(data, append=append)
                     
                     # Rebuild layer panel now that builder state is updated
                     self.layer_panel.rebuild()
                 
             elif act_type == 'remove_group':
+                 # User requested delete on group.
+                 # Updated Requirement: Pressing - should delete ONE of the components.
+                 
                  # data is group_key
                  from ui.builder.layer_panel import get_component_group_key
-                 to_remove = []
-                 for l_type, layers in self.ship.layers.items():
-                    for idx, c in enumerate(layers['components']):
-                         if get_component_group_key(c) == data:
-                             to_remove.append((l_type, idx))
-                 # Remove in reverse order to avoid index shifting
-                 for l_type, idx in reversed(to_remove):
-                     self.ship.remove_component(l_type, idx)
                  
-                 self.layer_panel.selected_group_key = None # Clear Selection
-                 self.on_selection_changed(None)
-                 self.update_stats()
+                 # Find Last Component in this group to remove
+                 found_layer = None
+                 found_idx = -1
+                 
+                 # Iterate backwards to find one instance
+                 for l_type, layers in self.ship.layers.items():
+                    # Check safe iteration
+                    comps = layers['components']
+                    for idx in range(len(comps)-1, -1, -1):
+                         c = comps[idx]
+                         if get_component_group_key(c) == data:
+                             found_layer = l_type
+                             found_idx = idx
+                             break
+                    if found_layer: break
+                 
+                 if found_layer:
+                     self.ship.remove_component(found_layer, found_idx)
+                     # self.on_selection_changed(None) # Don't clear selection on partial remove?
+                     # Better to clear if we removed the selected one.
+                     self.update_stats()
                  
             elif act_type == 'remove_individual':
                  # data is component
@@ -664,8 +715,56 @@ class BuilderSceneGUI:
                      if removed:
                          break
                  
-                 self.on_selection_changed(None)
+                 # Remove from selection list if present
+                 if self.selected_components:
+                      self.selected_components = [x for x in self.selected_components if x[2] is not data]
+                      self.on_selection_changed(self.selected_components) # Update primary
+                 
                  self.update_stats()
+                 
+            elif act_type == 'add_group' or act_type == 'add_individual':
+                 # Clone and Add one instance
+                 # data is group_key (for group) or component (for individual)
+                 
+                 target_comp = None
+                 
+                 if act_type == 'add_individual':
+                     target_comp = data
+                 else:
+                     # Find first component of group
+                     from ui.builder.layer_panel import get_component_group_key
+                     for layers in self.ship.layers.values():
+                         for c in layers['components']:
+                             if get_component_group_key(c) == data:
+                                 target_comp = c
+                                 break
+                         if target_comp: break
+                         
+                 if target_comp:
+                     # Clone
+                     new_comp = target_comp.clone()
+                     for m in target_comp.modifiers:
+                        new_comp.add_modifier(m.definition.id)
+                        nm = new_comp.get_modifier(m.definition.id)
+                        if nm: nm.value = m.value
+                     new_comp.recalculate_stats()
+                     
+                     # Find layer of original
+                     target_layer = None
+                     for l_type, layers in self.ship.layers.items():
+                         if target_comp in layers['components']:
+                             target_layer = l_type
+                             break
+                             
+                     if target_layer:
+                         from ship import VALIDATOR
+                         validation = VALIDATOR.validate_addition(self.ship, new_comp, target_layer)
+                         if validation.is_valid:
+                             self.ship.add_component(new_comp, target_layer)
+                             self.update_stats()
+                         else:
+                             self.show_error(f"Cannot add: {', '.join(validation.errors)}")
+
             elif act_type == 'apply_preset':
                 self.template_modifiers = data
                 self.rebuild_modifier_ui()

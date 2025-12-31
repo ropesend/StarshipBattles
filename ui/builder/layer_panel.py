@@ -26,9 +26,10 @@ def get_component_group_key(component):
 
 class IndividualComponentItem:
     """Row for a single component inside an expanded group."""
-    def __init__(self, manager, container, component, max_mass, y_pos, width, sprite_mgr, callback_remove, callback_select, is_selected):
+    def __init__(self, manager, container, component, max_mass, y_pos, width, sprite_mgr, callback_remove, callback_add, callback_select, is_selected):
         self.component = component
         self.callback_remove = callback_remove
+        self.callback_add = callback_add
         self.callback_select = callback_select
         self.is_selected = is_selected  # Track selection state
         self.height = 30
@@ -72,12 +73,13 @@ class IndividualComponentItem:
             relative_rect=pygame.Rect(50, 0, 150, self.height),
             text=f"{component.name}",
             manager=manager,
-            container=self.panel
+            container=self.panel,
+            object_id='#left_aligned_label'
         )
         
         # Mass shifted right
         UILabel(
-            relative_rect=pygame.Rect(-130, 0, 60, self.height),
+            relative_rect=pygame.Rect(-160, 0, 60, self.height),
             text=f"{int(component.mass)}t",
             manager=manager,
             container=self.panel,
@@ -86,21 +88,30 @@ class IndividualComponentItem:
         
         pct_val = (component.mass / max_mass * 100) if max_mass > 0 else 0
         UILabel(
-            relative_rect=pygame.Rect(-70, 0, 50, self.height),
+            relative_rect=pygame.Rect(-100, 0, 50, self.height),
             text=f"{pct_val:.1f}%",
             manager=manager,
             container=self.panel,
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}
         )
 
+        # Add Button
+        self.add_button = UIButton(
+            relative_rect=pygame.Rect(-62, 5, 28, 20),
+            text="+",
+            manager=manager,
+            container=self.panel,
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
+        )
+
         # Remove Button
         self.remove_button = UIButton(
-            relative_rect=pygame.Rect(-32, 2, 28, 26),
-            text="✕",
+            relative_rect=pygame.Rect(-32, 5, 28, 20),
+            text="-",
             manager=manager,
             container=self.panel,
             object_id='#delete_button',
-            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
         )
         
     def get_abs_rect(self):
@@ -111,6 +122,8 @@ class IndividualComponentItem:
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.remove_button:
                 return self.callback_remove(self.component)
+            elif event.ui_element == self.add_button:
+                return self.callback_add(self.component)
             elif event.ui_element == self.select_button:
                 return self.callback_select(self.component)
         return False
@@ -122,10 +135,11 @@ class LayerComponentItem:
     """
     Row representing a component group.
     """
-    def __init__(self, manager, container, component, count, total_mass, total_pct, is_expanded, callback_expand, callback_select, callback_remove, group_key, is_selected, y_pos, width, sprite_mgr):
+    def __init__(self, manager, container, component, count, total_mass, total_pct, is_expanded, callback_expand, callback_select, callback_add, callback_remove, group_key, is_selected, y_pos, width, sprite_mgr):
         self.group_key = group_key
         self.callback_expand = callback_expand
         self.callback_select = callback_select
+        self.callback_add = callback_add
         self.callback_remove = callback_remove
         self.count = count
         self.is_selected = is_selected  # Track selection state
@@ -187,12 +201,13 @@ class LayerComponentItem:
             relative_rect=pygame.Rect(65, 0, 160, self.height),
             text=name_text,
             manager=manager,
-            container=self.panel
+            container=self.panel,
+            object_id='#left_aligned_label'
         )
         
         # Mass
         UILabel(
-            relative_rect=pygame.Rect(-130, 0, 60, self.height),
+            relative_rect=pygame.Rect(-160, 0, 60, self.height),
             text=f"{int(total_mass)}t",
             manager=manager,
             container=self.panel,
@@ -201,21 +216,30 @@ class LayerComponentItem:
         
         # Percent
         UILabel(
-            relative_rect=pygame.Rect(-70, 0, 50, self.height),
+            relative_rect=pygame.Rect(-100, 0, 50, self.height),
             text=f"{total_pct:.1f}%",
             manager=manager,
             container=self.panel,
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}
         )
-        
+
+        # Add Button
+        self.add_button = UIButton(
+            relative_rect=pygame.Rect(-62, 5, 28, 30),
+            text="+",
+            manager=manager,
+            container=self.panel,
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
+        )
+
         # Remove Button
         self.remove_button = UIButton(
             relative_rect=pygame.Rect(-32, 5, 28, 30),
-            text="✕",
+            text="-",
             manager=manager,
             container=self.panel,
             object_id='#delete_button',
-            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
         )
 
     def handle_event(self, event):
@@ -225,6 +249,8 @@ class LayerComponentItem:
                 return ('refresh_ui', None)
             elif event.ui_element == self.remove_button:
                 return self.callback_remove(self.group_key)
+            elif event.ui_element == self.add_button:
+                return self.callback_add(self.group_key)
             elif event.ui_element == self.select_button:
                 return self.callback_select(self.group_key)
         return False
@@ -372,6 +398,12 @@ class LayerPanel:
         # self.rebuild() # Defer to builder_gui after state update
         return ('select_individual', component)
         
+    def on_add_group(self, group_key):
+        return ('add_group', group_key)
+
+    def on_add_individual(self, component):
+        return ('add_individual', component)
+
     def on_remove_group(self, group_key):
         return ('remove_group', group_key)
         
@@ -425,12 +457,26 @@ class LayerPanel:
                         is_expanded = self.expanded_groups.get(group_key, False)
                     
                     # Use builder state for selection source of truth
+                    # Use builder state for selection source of truth
                     is_selected_group = False
-                    if self.builder.selected_component_group:
-                        # Check if the first component (template) is in the selected group
-                        # Uses object identity which is stable even if modifiers change
-                        if comp_list[0] in self.builder.selected_component_group:
-                           is_selected_group = True
+                    if self.builder.selected_components:
+                        # Check if ANY component in this group is selected
+                        # This highlights the group if any memeber is selected.
+                        # OR we could require ALL. 
+                        # Usually for "Group Selection" we want to know if the group CONCEPT is selected.
+                        # But with multi-select, we might just have 1 item.
+                        
+                        # Let's say if ANY item in comp_list is in selected_components, we highlight group?
+                        # Or maybe we only highlight if ALL are selected?
+                        
+                        # The 'select_group' action selects ALL components.
+                        # So let's check if the first component is selected, that's a good proxy if we assume consistent group selection.
+                        # But with multi-select across groups, checking just existence is safer.
+                        
+                        selected_objs = [x[2] for x in self.builder.selected_components]
+                        # If first item is selected, treat group as having some selection focus
+                        if comp_list[0] in selected_objs:
+                            is_selected_group = True
 
                     # Use first component as template
                     comp_template = comp_list[0]
@@ -445,6 +491,7 @@ class LayerPanel:
                         is_expanded,
                         self.toggle_group,
                         self.on_select_group,
+                        self.on_add_group,
                         self.on_remove_group,
                         group_key,
                         is_selected_group,
@@ -475,6 +522,7 @@ class LayerPanel:
                                 content_width,
                                 self.builder.sprite_mgr,
                                 self.on_remove_individual,
+                                self.on_add_individual,
                                 self.on_select_individual,
                                 is_sel_ind
                              )

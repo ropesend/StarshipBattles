@@ -43,5 +43,10 @@
         "misc": {
             "text_horiz_alignment": "left"
         }
+    },
+    "#left_aligned_label": {
+        "misc": {
+            "text_horiz_alignment": "left"
+        }
     }
 }
