@@ -22,7 +22,7 @@ class ModifierEditorPanel:
         self.modifier_buttons = []
         self.modifier_sliders = []
         self.modifier_entries = []
-        self.step_btn_map = {} # btn_element -> (mod_id, step, direction)
+        self.step_btn_map = {} # btn_element -> (mod_id, step, direction/mode)
         
         self.preset_buttons = []
         self.preset_delete_buttons = []
@@ -30,6 +30,27 @@ class ModifierEditorPanel:
         # State
         self.active_slider_mod_id = None
         self.extra_ui_elements = [] # Generic storage for labels/etc to kill
+
+    def _calculate_snap_val(self, current, interval, direction, min_val, max_val):
+        """Calculates the next snap value based on interval and direction."""
+        if direction < 0:
+            # Decrement
+            remainder = current % interval
+            if abs(remainder) < 0.001: # Float epsilon
+                target = current - interval
+            else:
+                target = current - remainder
+            return max(min_val, target)
+        else:
+            # Increment
+            remainder = current % interval
+            dist = interval - remainder
+            # If we are very close to multiple, go to next
+            if abs(remainder) < 0.001:
+                target = current + interval
+            else:
+                target = current + dist
+            return min(max_val, target)
 
     def rebuild(self, editing_component, template_modifiers):
         """Rebuild the modifier UI based on current state."""
@@ -113,6 +134,31 @@ class ModifierEditorPanel:
                             allow = False
                 if not allow: continue
                 
+                # --- MANDATORY MODIFIER ENFORCEMENT ---
+                if self.editing_component:
+                    # Size Mount: Auto-apply to all, init 1
+                    if mod_id == 'simple_size_mount':
+                        if not self.editing_component.get_modifier(mod_id):
+                            self.editing_component.add_modifier(mod_id)
+                            m = self.editing_component.get_modifier(mod_id)
+                            m.value = 1.0 # Init 1
+                    
+                    # Range Mount: Auto-apply to Projectile and Beam, init 0
+                    elif mod_id == 'range_mount':
+                        is_weapon = self.editing_component.type_str in ['ProjectileWeapon', 'BeamWeapon', 'SeekerWeapon']
+                        if is_weapon and not self.editing_component.get_modifier(mod_id):
+                             self.editing_component.add_modifier(mod_id)
+                             m = self.editing_component.get_modifier(mod_id)
+                             m.value = 0.0 # Init 0
+                             
+                    # Facing: Auto-apply to all weapons, default 0
+                    elif mod_id == 'facing':
+                         is_weapon = self.editing_component.type_str in ['ProjectileWeapon', 'BeamWeapon', 'SeekerWeapon']
+                         if is_weapon and not self.editing_component.get_modifier(mod_id):
+                                  self.editing_component.add_modifier(mod_id)
+                                  m = self.editing_component.get_modifier(mod_id)
+                                  m.value = 0.0 # Default 0
+
                 existing_mod = self.editing_component.get_modifier(mod_id)
                 is_active = existing_mod is not None
                 current_val = existing_mod.value if is_active else mod_def.min_val
@@ -125,15 +171,19 @@ class ModifierEditorPanel:
             # Sanitize ID for UI (pygame_gui doesn't allow spaces/dots in IDs)
             safe_mod_id = mod_id.replace(' ', '_').replace('.', '_')
             
+            # Determine blocked state (non-removable)
+            is_blocked = False
+            if mod_id in ['simple_size_mount', 'range_mount', 'facing']:
+                 is_blocked = True 
+            
             text = f"[{'x' if is_active else ' '}] {mod_def.name}"
             is_readonly = getattr(mod_def, 'readonly', False)
             if is_readonly:
                 # If readonly, we still show it but maybe different text?
-                # User requested "show on the left side... but it should not be clickacble"
                 if is_active:
                      text = f"[AUTO] {mod_def.name}"
                 else: 
-                     text = f"[   ] {mod_def.name}" # Should not happen if auto-applied from template
+                     text = f"[   ] {mod_def.name}" 
             
             btn = UIButton(
                 relative_rect=pygame.Rect(10, y, 170, 28),
@@ -142,22 +192,18 @@ class ModifierEditorPanel:
                 container=self.container,
                 object_id=f'#mod_{safe_mod_id}'
             )
-            if is_readonly: 
+            if is_readonly: # Don't disable blocked ones, just prevent untoggling
                 btn.disable()
             self.modifier_buttons.append(btn)
             
             if mod_def.type_str == 'linear':
-                # Layout: Label (Already created as btn) | Entry | << | < | Slider | > | >>
-                # Label Button Width: 170 (Existing)
-                # Available Width = Self.width - 20 - 170 = ~230 (Assuming panel is 450?)
-                # Wait, panel width passed to init.
-                # Left Panel width is 450.
-                # Label: 170. Entry: 50. <<: 25. < 25. > 25. >> 25.
-                # Slider gets remainder.
-                
                 # Entry
                 entry_x = 185
                 entry_w = 60
+                
+                # Check for custom layouts spacing needs
+                # Normal: Entry | << | < | Slider | > | >>
+                
                 entry = UITextEntryLine(
                     relative_rect=pygame.Rect(entry_x, y, entry_w, 28),
                     manager=self.manager,
@@ -168,64 +214,111 @@ class ModifierEditorPanel:
                 if not is_active: entry.disable()
                 self.modifier_entries.append(entry)
                 
-                # Define buttons if range allows large steps
-                show_buttons = (mod_def.max_val - mod_def.min_val) >= 20
-                
                 current_x = entry_x + entry_w + 5
                 
-                step = 0.01
-                if mod_id == 'range_mount': step = 0.1
-                elif mod_def.max_val - mod_def.min_val > 50: step = 1.0
-                elif mod_def.max_val - mod_def.min_val > 10: step = 0.1
+                # --- Button Generation Logic ---
+                btns_to_create = [] # List of (text, value, mode/direction)
                 
-                if show_buttons:
-                    # << (-100)
-                    btn = UIButton(pygame.Rect(current_x, y, 25, 28), "<<", manager=self.manager, container=self.container)
-                    self.step_btn_map[btn] = (mod_id, step * 10, -1)
-                    if not is_active: btn.disable()
-                    current_x += 27
+                if mod_id == 'turret_mount' or mod_id == 'facing':
+                    # << (90 snap), < (15 snap), < (1 delta)
+                    btns_to_create = [
+                        ('<<', 90, 'snap_floor'),
+                        ('<', 15, 'snap_floor'),
+                        ('<', 1, 'delta_sub'),
+                        ('SLIDER', 0, 0),
+                        ('>', 1, 'delta_add'),
+                        ('>', 15, 'snap_ceil'),
+                        ('>>', 90, 'snap_ceil')
+                    ]
+                elif mod_id == 'simple_size':
+                    # << (100 snap), < (10 snap), < (1 delta)
+                    btns_to_create = [
+                        ('<<', 100, 'snap_smart_floor'), # Special 100 logic
+                        ('<', 10, 'snap_floor'),
+                        ('<', 1, 'delta_sub'),
+                        ('SLIDER', 0, 0),
+                        ('>', 1, 'delta_add'),
+                        ('>', 10, 'snap_ceil'),
+                        ('>>', 100, 'snap_ceil')
+                    ]
+                elif mod_id == 'range_mount':
+                     btns_to_create = [
+                        ('<<', 1.0, 'delta_sub'),
+                        ('<', 0.1, 'delta_sub'),
+                        ('SLIDER', 0, 0),
+                        ('>', 0.1, 'delta_add'),
+                        ('>>', 1.0, 'delta_add')
+                     ]
+                else:
+                    # Standard Logic
+                    step = 0.01
+                    if mod_def.max_val - mod_def.min_val > 50: step = 1.0
+                    elif mod_def.max_val - mod_def.min_val > 10: step = 0.1
                     
-                    # < (-10)
-                    btn = UIButton(pygame.Rect(current_x, y, 25, 28), "<", manager=self.manager, container=self.container)
-                    self.step_btn_map[btn] = (mod_id, step, -1)
-                    if not is_active: btn.disable()
-                    current_x += 27
-                    
-                # Slider (No specific changes other than ensure it uses the available space)
-                # Calculate remaining width for slider
+                    show_buttons = (mod_def.max_val - mod_def.min_val) >= 20
+                    if show_buttons:
+                         btns_to_create = [
+                            ('<<', step * 10, 'delta_sub'),
+                            ('<', step, 'delta_sub'),
+                            ('SLIDER', 0, 0),
+                            ('>', step, 'delta_add'),
+                            ('>>', step * 10, 'delta_add')
+                         ]
+                    else:
+                        btns_to_create = [('SLIDER', 0, 0)]
+                        
+                # --- Render Buttons ---
                 
-                safe_width = self.width - 40 
-                right_btns_w = 54 if show_buttons else 0
-                slider_w = safe_width - current_x - right_btns_w - 5
+                # Pre-calculate buttons width to size slider
+                btn_width = 25
+                total_btn_width = 0
+                for label, _, _ in btns_to_create:
+                    if label != 'SLIDER':
+                        total_btn_width += (btn_width + 2)
                 
-                if slider_w < 50:
-                    slider_w = 50
+                safe_width = self.width - 40
+                available_slider_width = safe_width - current_x - total_btn_width - 5
                 
-                slider = UIHorizontalSlider(
-                    relative_rect=pygame.Rect(current_x, y, slider_w, 28),
-                    start_value=float(current_val),
-                    value_range=(float(mod_def.min_val), float(mod_def.max_val)),
-                    manager=self.manager,
-                    container=self.container,
-                    object_id=f'#slider_{safe_mod_id}',
-                    click_increment=step
-                )
-                if not is_active: slider.disable()
-                self.modifier_sliders.append(slider)
-                current_x += slider_w + 5
+                # Check for Facing presets
+                if mod_id == 'facing':
+                    # Need space for 0, 90, 180, 270 buttons
+                    # 4 buttons * 35px = 140px
+                    available_slider_width -= 140
                 
-                if show_buttons:
-                     # > (+10)
-                    btn = UIButton(pygame.Rect(current_x, y, 25, 28), ">", manager=self.manager, container=self.container)
-                    self.step_btn_map[btn] = (mod_id, step, 1)
-                    if not is_active: btn.disable()
-                    current_x += 27
-                    
-                    # >> (+100)
-                    btn = UIButton(pygame.Rect(current_x, y, 25, 28), ">>", manager=self.manager, container=self.container)
-                    self.step_btn_map[btn] = (mod_id, step * 10, 1)
-                    if not is_active: btn.disable()
-                    
+                if available_slider_width < 40: available_slider_width = 40
+
+                for label, val, mode in btns_to_create:
+                    if label == 'SLIDER':
+                         # Create Slider
+                         step_increment = 0.01
+                         slider = UIHorizontalSlider(
+                            relative_rect=pygame.Rect(current_x, y, available_slider_width, 28),
+                            start_value=float(current_val),
+                            value_range=(float(mod_def.min_val), float(mod_def.max_val)),
+                            manager=self.manager,
+                            container=self.container,
+                            object_id=f'#slider_{safe_mod_id}',
+                            click_increment=step_increment
+                        )
+                         if not is_active: slider.disable()
+                         self.modifier_sliders.append(slider)
+                         current_x += available_slider_width + 5
+                         
+                         # If Facing, add preset buttons here? "These buttons should be inline, the slider can just be smaller."
+                         if mod_id == 'facing':
+                             presets = [0, 90, 180, 270]
+                             for p_val in presets:
+                                 p_btn = UIButton(pygame.Rect(current_x, y, 32, 28), str(p_val), manager=self.manager, container=self.container)
+                                 self.step_btn_map[p_btn] = (mod_id, p_val, 'set_value')
+                                 if not is_active: p_btn.disable()
+                                 current_x += 34
+                         
+                    else:
+                        # Create Button
+                        btn = UIButton(pygame.Rect(current_x, y, btn_width, 28), label, manager=self.manager, container=self.container)
+                        self.step_btn_map[btn] = (mod_id, val, mode) # Store mode instead of direction
+                        if not is_active: btn.disable()
+                        current_x += (btn_width + 2)
             else:
                 self.modifier_entries.append(None)
                 self.modifier_sliders.append(None)
@@ -309,8 +402,12 @@ class ModifierEditorPanel:
                     if self.editing_component:
                          # Update component directly
                          if self.editing_component.get_modifier(mod_id):
-                             self.editing_component.remove_modifier(mod_id)
-                             is_active = False
+                             # Check mandatory
+                             if mod_id in ['simple_size_mount', 'range_mount', 'facing']:
+                                  is_active = True
+                             else:
+                                  self.editing_component.remove_modifier(mod_id)
+                                  is_active = False
                          else:
                              self.editing_component.add_modifier(mod_id)
                              is_active = True
@@ -357,8 +454,9 @@ class ModifierEditorPanel:
                          return ('refresh_ui', None)
             
             # Step Buttons
+            # Step Buttons
             if event.ui_element in self.step_btn_map:
-                mod_id, step, direction = self.step_btn_map[event.ui_element]
+                mod_id, val_or_step, mode = self.step_btn_map[event.ui_element]
                 
                 # Find slider/entry indices
                 try:
@@ -372,8 +470,30 @@ class ModifierEditorPanel:
                 if slider:
                      current = slider.get_current_value()
                      mod_def = MODIFIER_REGISTRY[mod_id]
-                     delta = step * direction
-                     new_val = max(mod_def.min_val, min(mod_def.max_val, current + delta))
+                     
+                     new_val = current
+                     
+                     if mode == 'set_value':
+                         new_val = float(val_or_step)
+                     elif mode == 'delta_add':
+                         new_val = current + val_or_step
+                     elif mode == 'delta_sub':
+                         new_val = current - val_or_step
+                     elif mode == 'snap_floor':
+                         new_val = self._calculate_snap_val(current, val_or_step, -1, mod_def.min_val, mod_def.max_val)
+                     elif mode == 'snap_ceil':
+                         new_val = self._calculate_snap_val(current, val_or_step, 1, mod_def.min_val, mod_def.max_val)
+                     elif mode == 'snap_smart_floor':
+                         # Size mount special 100 step
+                         if current <= 100:
+                             new_val = max(mod_def.min_val, 1)
+                         else:
+                             new_val = self._calculate_snap_val(current, val_or_step, -1, mod_def.min_val, mod_def.max_val)
+                     else:
+                         # Fallback
+                         pass
+
+                     new_val = max(mod_def.min_val, min(mod_def.max_val, new_val))
                      
                      slider.set_current_value(new_val)
                      if entry: entry.set_text(f"{new_val:.2f}")
