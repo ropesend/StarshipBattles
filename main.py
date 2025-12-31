@@ -5,11 +5,13 @@ import os
 
 from ship import Ship, LayerType
 
-# Parse command line arguments
+# Parse command line arguments - use parse_known_args to handle being imported as a module
 parser = argparse.ArgumentParser(description="Starship Battles")
 parser.add_argument('--force-resolution', action='store_true',
                     help='Force 2560x1600 resolution regardless of monitor size')
-args = parser.parse_args()
+# parse_known_args returns (known_args, unknown_args) - this prevents failure when
+# pytest or other tools pass their own arguments
+args, _ = parser.parse_known_args()
 from designs import create_brick, create_interceptor
 from components import load_components, load_modifiers
 from ui import Button
