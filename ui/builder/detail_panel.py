@@ -135,6 +135,8 @@ class ComponentDetailPanel:
         # Missile Stats
         if hasattr(comp, 'endurance'):
              add_line(f"Endurance: {comp.endurance}s", '#64C8FF')
+        if hasattr(comp, 'hp') and isinstance(comp, SeekerWeapon):
+             add_line(f"Missile HP: {comp.hp}", '#FF6464')
         if hasattr(comp, 'turn_rate') and hasattr(comp, 'endurance'):
              add_line(f"Turn Rate: {comp.turn_rate}°/s", '#64FF64')
              if hasattr(comp, 'projectile_speed'):

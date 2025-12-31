@@ -34,7 +34,8 @@ class ModifierLogic:
         """Returns a list of modifier IDs that are mandatory for this component."""
         mandatory = ['simple_size_mount'] # Everyone gets size
         
-        is_weapon = component.type_str in ['ProjectileWeapon', 'BeamWeapon', 'SeekerWeapon']
+        is_weapon = component.type_str in ['Weapon', 'ProjectileWeapon', 'BeamWeapon', 'SeekerWeapon']
+        is_seeker = component.type_str == 'SeekerWeapon'
         
         if is_weapon:
             # Check allowed types for specific mods before enforcing them
@@ -52,7 +53,29 @@ class ModifierLogic:
             # Turret: For all weapons
             if ModifierLogic.is_modifier_allowed('turret_mount', component):
                 mandatory.append('turret_mount')
-                
+            
+            # Rapid Fire: For all weapons
+            if ModifierLogic.is_modifier_allowed('rapid_fire', component):
+                mandatory.append('rapid_fire')
+
+        if is_seeker:
+             # Seeker specific variants
+             if ModifierLogic.is_modifier_allowed('seeker_endurance', component):
+                 mandatory.append('seeker_endurance')
+             if ModifierLogic.is_modifier_allowed('seeker_damage', component):
+                 mandatory.append('seeker_damage')
+             if ModifierLogic.is_modifier_allowed('seeker_armored', component):
+                 mandatory.append('seeker_armored')
+             if ModifierLogic.is_modifier_allowed('seeker_stealth', component):
+                 mandatory.append('seeker_stealth')
+                 
+        # Automation: For any component with CrewRequired ability
+        # Need to check if component HAS crew requirement.
+        # Check base abilities or current abilities? Base/Data is safer source of truth for "capability"
+        if 'CrewRequired' in component.data.get('abilities', {}) or 'CrewRequired' in component.abilities:
+             if ModifierLogic.is_modifier_allowed('automation', component):
+                 mandatory.append('automation')
+                 
         return mandatory
 
     @staticmethod

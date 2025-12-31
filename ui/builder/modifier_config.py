@@ -68,6 +68,18 @@ MODIFIER_UI_CONFIG = {
              {'label': '>>', 'value': 1.0, 'mode': 'delta_add'}
         ],
         'slider_step': 0.01,
+        'slider_step': 0.01,
+    },
+    'automation': {
+        'control_type': 'linear_stepped',
+        'step_buttons': [
+             {'label': '<<', 'value': 0.5, 'mode': 'snap_floor'}, # Snap to 0.0/0.5? Or just delta?
+             {'label': '<', 'value': 0.1, 'mode': 'delta_sub'},
+             # Slider
+             {'label': '>', 'value': 0.1, 'mode': 'delta_add'},
+             {'label': '>>', 'value': 0.5, 'mode': 'snap_ceil'}
+        ],
+        'slider_step': 0.01,
     }
 }
 
