@@ -252,7 +252,7 @@ class ShipStatsCalculator:
         # Maneuver Score:
         # Accel contributes ~0-2.5 pts (Fighters 25 accel) -> /10
         # Turn contributes ~0-2.0 pts (Fighters 180 turn) -> /90
-        maneuver_score = (ship.acceleration_rate / 20.0) + (ship.turn_speed / 360.0)
+        maneuver_score = math.sqrt((ship.acceleration_rate / 20.0) + (ship.turn_speed / 360.0))
         
         # ECM Score (Additive)
         ecm_score = self._get_ability_total(component_pool, 'ToHitDefenseModifier')
