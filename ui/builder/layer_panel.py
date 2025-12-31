@@ -62,18 +62,20 @@ class LayerPanel(DropTarget):
             relative_rect=pygame.Rect(0, self.list_y, rect.width, rect.height - self.list_y),
             manager=manager,
             container=self.panel,
+            starting_height=1,  # Keep scroll container and children on low layers
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
         
-        # View Options Dropdown
+        # View Options Dropdown - standard creation
         self.view_dropdown = UIDropDownMenu(
             options_list=['Default', 'Compact', 'Flat'],
-            starting_option='Default',
+            starting_option=self.current_strategy_name,
             relative_rect=pygame.Rect(-110, 5, 100, 30),
             manager=manager,
             container=self.panel,
             anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
         )
+        self.view_dropdown.change_layer(100)
         
         self.expanded_layers = {
             LayerType.CORE: True,
@@ -313,6 +315,15 @@ class LayerPanel(DropTarget):
     def update(self, dt):
         if self.toggle_suppress_timer > 0:
             self.toggle_suppress_timer -= dt
+            
+        # Hide scroll container when dropdown is expanded to avoid z-order issues
+        # This was requested by the user as the preferred solution/workaround
+        if self.view_dropdown.current_state == self.view_dropdown.menu_states['expanded']:
+            if self.scroll_container.visible:
+                self.scroll_container.hide()
+        else:
+            if not self.scroll_container.visible:
+                self.scroll_container.show()
             
     def suppress_toggle(self):
         """Suppress toggle events for a short duration."""
