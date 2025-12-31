@@ -5,6 +5,73 @@ from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMen
 from ship import VEHICLE_CLASSES
 from ai import COMBAT_STRATEGIES
 
+class StatRow:
+    """Helper class to manage a single statistic row (Label | Value | Unit) with caching."""
+    def __init__(self, key, label_text, manager, container, x, y, width):
+        self.key = key
+        # Layout: Label 50%, Value 30%, Unit 20%
+        lbl_w = int(width * 0.50)
+        val_w = int(width * 0.30)
+        unit_w = width - lbl_w - val_w
+        
+        self.label = UILabel(pygame.Rect(x, y, lbl_w, 20), f"{label_text}:", 
+                           manager=manager, container=container, object_id="#stat_label")
+        self.value = UILabel(pygame.Rect(x + lbl_w, y, val_w, 20), "--", 
+                           manager=manager, container=container, object_id="#stat_value")
+        self.unit = UILabel(pygame.Rect(x + lbl_w + val_w, y, unit_w, 20), "", 
+                          manager=manager, container=container, object_id="#stat_unit")
+        
+        self._last_val = None
+        self._last_unit = None
+        self._visible = True
+
+    def update(self, val_text, unit_text=""):
+        if self._last_val != val_text:
+            self.value.set_text(val_text)
+            self._last_val = val_text
+            
+        if self._last_unit != unit_text:
+            self.unit.set_text(unit_text)
+            self._last_unit = unit_text
+
+    def set_visible(self, visible):
+        if self._visible == visible:
+            return
+            
+        if visible:
+            self.label.show()
+            self.value.show()
+            self.unit.show()
+        else:
+            self.label.hide()
+            self.value.hide()
+            self.unit.hide()
+        self._visible = visible
+
+# Configuration for Stat Sections
+STATS_GENERAL = [
+    ('mass', 'Mass'), ('max_hp', 'Max HP'), ('emissive_armor', 'Dmg Ignore'), 
+    ('max_shields', 'Shields'), ('shield_regen', 'Shield Regen'), ('shield_cost', 'Regen Cost'),
+    ('max_speed', 'Max Speed'), ('turn_rate', 'Turn Rate'), ('acceleration', 'Acceleration'),
+    ('thrust', 'Total Thrust'), ('energy_gen', 'Energy Gen'), ('max_fuel', 'Max Fuel'),
+    ('max_ammo', 'Max Ammo'), ('max_energy', 'Max Energy'),
+    ('targeting', 'Targeting'), ('target_profile', 'Defensive Odds'), ('scan_strength', 'Offensive Odds')
+]
+
+STATS_FIGHTER = [
+    ('fighter_capacity', 'Total Storage'),
+    ('fighter_size_cap', 'Max Size Cap'),
+    ('fighters_per_wave', 'Per Wave'),
+    ('launch_cycle', 'Cycle Time')
+]
+
+STATS_ENDURANCE = [
+    ('fuel_time', 'Fuel Time'),
+    ('ammo_time', 'Ordnance Time'),
+    ('energy_time', 'Energy Time'),
+    ('recharge_time', 'Recharge Time')
+]
+
 class BuilderRightPanel:
     def __init__(self, builder, manager, rect):
         self.builder = builder
@@ -259,28 +326,8 @@ class BuilderRightPanel:
         except Exception as e:
             print(f"Failed to load portrait {full_path}: {e}")
 
-    def _add_stat_row(self, key, label_text, x, width, y):
-        """Helper to create Label | Value | Unit row."""
-        # Widths:
-        # Label: 50%
-        # Value: 30% (Right Aligned)
-        # Unit: 20% (Left Aligned)
-        
-        lbl_w = int(width * 0.50)
-        val_w = int(width * 0.30)
-        unit_w = width - lbl_w - val_w
-        
-        # Label
-        l = UILabel(pygame.Rect(x, y, lbl_w, 20), f"{label_text}:", manager=self.manager, container=self.panel, object_id="#stat_label")
-        
-        # Value (Right Aligned)
-        v = UILabel(pygame.Rect(x + lbl_w, y, val_w, 20), "--", manager=self.manager, container=self.panel, object_id="#stat_value")
-        
-        # Unit (Left Aligned)
-        u = UILabel(pygame.Rect(x + lbl_w + val_w, y, unit_w, 20), "", manager=self.manager, container=self.panel, object_id="#stat_unit")
-        
-        self.stat_rows[key] = {'label': l, 'value': v, 'unit': u}
-        return y + 20
+
+
 
     def setup_stats(self):
         y = self.last_y
@@ -305,18 +352,9 @@ class BuilderRightPanel:
         
         self.stat_rows = {}
         
-        # General Stats
-        general_stats = [
-            ('mass', 'Mass'), ('max_hp', 'Max HP'), ('emissive_armor', 'Dmg Ignore'), 
-            ('max_shields', 'Shields'), ('shield_regen', 'Shield Regen'), ('shield_cost', 'Regen Cost'),
-            ('max_speed', 'Max Speed'), ('turn_rate', 'Turn Rate'), ('acceleration', 'Acceleration'),
-            ('thrust', 'Total Thrust'), ('energy_gen', 'Energy Gen'), ('max_fuel', 'Max Fuel'),
-            ('max_ammo', 'Max Ammo'), ('max_energy', 'Max Energy'),
-            ('targeting', 'Targeting'), ('target_profile', 'Defensive Odds'), ('scan_strength', 'Offensive Odds')
-        ]
-        
-        for key, text in general_stats:
-            y = self._add_stat_row(key, text, col1_x, col_w, y)
+        for key, text in STATS_GENERAL:
+            self.stat_rows[key] = StatRow(key, text, self.manager, self.panel, col1_x, y, col_w)
+            y += 20
             
         col1_max_y = y + 10
         
@@ -327,15 +365,9 @@ class BuilderRightPanel:
         UILabel(pygame.Rect(col2_x, y, col_w, 25), "── Fighter Ops ──", manager=self.manager, container=self.panel)
         y += 30
         
-        fighter_stats = [
-            ('fighter_capacity', 'Total Storage'),
-            ('fighter_size_cap', 'Max Size Cap'),
-            ('fighters_per_wave', 'Per Wave'),
-            ('launch_cycle', 'Cycle Time')
-        ]
-        
-        for key, text in fighter_stats:
-            y = self._add_stat_row(key, text, col2_x, col_w, y)
+        for key, text in STATS_FIGHTER:
+            self.stat_rows[key] = StatRow(key, text, self.manager, self.panel, col2_x, y, col_w)
+            y += 20
             
         y += 10
         
@@ -344,21 +376,9 @@ class BuilderRightPanel:
         y += 22
         self.layer_rows = []
         for i in range(4):
-            # Split slots into Label ("Slot 0") | Value ("--%") | Unit ("(0t)")
-            
-            lbl_w = int(col_w * 0.40)
-            val_w = int(col_w * 0.30) # Right aligned pct
-            unit_w = col_w - lbl_w - val_w # Left aligned mass
-            
-            l = UILabel(pygame.Rect(col2_x, y, lbl_w, 20), f"Slot {i}:", manager=self.manager, container=self.panel, object_id="#stat_label")
-            v = UILabel(pygame.Rect(col2_x + lbl_w, y, val_w, 20), "--%", manager=self.manager, container=self.panel, object_id="#stat_value")
-            u = UILabel(pygame.Rect(col2_x + lbl_w + val_w, y, unit_w, 20), "", manager=self.manager, container=self.panel, object_id="#stat_unit")
-            
-            l.hide()
-            v.hide()
-            u.hide()
-            
-            self.layer_rows.append({'label': l, 'value': v, 'unit': u})
+            sr = StatRow(f"layer_{i}", f"Slot {i}", self.manager, self.panel, col2_x, y, col_w)
+            sr.set_visible(False)
+            self.layer_rows.append(sr)
             y += 22
             
         y += 10
@@ -368,19 +388,10 @@ class BuilderRightPanel:
         y += 22
         self.crew_labels = {}
         
-        # Use _add_stat_row logic ratios
         crew_keys = [('crew_required', 'Crew Required'), ('crew_housed', 'Crew On Board'), ('life_support', 'Life Support')]
         
         for k, text in crew_keys:
-             lbl_w = int(col_w * 0.50)
-             val_w = int(col_w * 0.30)
-             unit_w = col_w - lbl_w - val_w
-             
-             l = UILabel(pygame.Rect(col2_x, y, lbl_w, 20), f"{text}:", manager=self.manager, container=self.panel, object_id="#stat_label")
-             v = UILabel(pygame.Rect(col2_x + lbl_w, y, val_w, 20), "--", manager=self.manager, container=self.panel, object_id="#stat_value")
-             u = UILabel(pygame.Rect(col2_x + lbl_w + val_w, y, unit_w, 20), "", manager=self.manager, container=self.panel, object_id="#stat_unit")
-             
-             self.crew_labels[k] = {'label': l, 'value': v, 'unit': u}
+             self.stat_rows[k] = StatRow(k, text, self.manager, self.panel, col2_x, y, col_w)
              y += 22 
              
         col2_max_y = y + 10
@@ -390,15 +401,9 @@ class BuilderRightPanel:
         UILabel(pygame.Rect(col2_x, y, col_w, 20), "── Combat Endurance ──", manager=self.manager, container=self.panel)
         y += 22
         
-        endurance_stats = [
-            ('fuel_time', 'Fuel Time'),
-            ('ammo_time', 'Ordnance Time'),
-            ('energy_time', 'Energy Time'),
-            ('recharge_time', 'Recharge Time')
-        ]
-        
-        for key, text in endurance_stats:
-            y = self._add_stat_row(key, text, col2_x, col_w, y)
+        for key, text in STATS_ENDURANCE:
+            self.stat_rows[key] = StatRow(key, text, self.manager, self.panel, col2_x, y, col_w)
+            y += 20
             
         col2_max_y = y + 10
         
@@ -418,11 +423,11 @@ class BuilderRightPanel:
 
     def update_stats_display(self, s):
         """Update ship stats labels."""
-        # Helper to set text
+        
+        # Helper to set val
         def set_val(k, num_txt, unit_txt=""):
             if k in self.stat_rows:
-                self.stat_rows[k]['value'].set_text(num_txt)
-                self.stat_rows[k]['unit'].set_text(unit_txt)
+                self.stat_rows[k].update(num_txt, unit_txt)
 
         # Mass with color indicator
         mass_status = "✓" if s.mass_limits_ok else "✗"
@@ -471,9 +476,7 @@ class BuilderRightPanel:
         
         # Hide all first
         for row in self.layer_rows:
-            row['label'].hide()
-            row['value'].hide()
-            row['unit'].hide()
+            row.set_visible(False)
             
         sorted_layers = sorted(s.layers.items(), key=lambda x: x[0].value) 
         
@@ -490,15 +493,11 @@ class BuilderRightPanel:
                 
                 row = self.layer_rows[slot_idx]
                 
-                row['label'].set_text(f"{layer_type.name}:")
-                # Value: "50% / 100%"
-                row['value'].set_text(f"{ratio:.0f}% / {limit:.0f}%")
-                # Unit: "(120t) ✓"
-                row['unit'].set_text(f" ({mass:.0f}t) {status_icon}")
+                # Update Label directly since it changes per slot in this dynamic list
+                row.label.set_text(f"{layer_type.name}:")
+                row.update(f"{ratio:.0f}% / {limit:.0f}%", f" ({mass:.0f}t) {status_icon}")
                 
-                row['label'].show()
-                row['value'].show()
-                row['unit'].show()
+                row.set_visible(True)
                 
                 slot_idx += 1
         
@@ -515,18 +514,14 @@ class BuilderRightPanel:
         crew_ok = crew_capacity >= crew_required
         crew_status = "✓" if crew_ok else f"✗ Miss {crew_required - crew_capacity}"
         
-        self.crew_labels['crew_required']['value'].set_text(f"{crew_required}")
-        self.crew_labels['crew_required']['unit'].set_text("")
-        
-        self.crew_labels['crew_housed']['value'].set_text(f"{crew_housed}")
-        self.crew_labels['crew_housed']['unit'].set_text(f" {crew_status}")
+        set_val('crew_required', f"{crew_required}", "")
+        set_val('crew_housed', f"{crew_housed}", f" {crew_status}")
         
         life_support = s.get_ability_total('LifeSupportCapacity')
         ls_ok = life_support >= crew_required
         ls_status = "✓" if ls_ok else f"✗ -{crew_required - life_support}"
         
-        self.crew_labels['life_support']['value'].set_text(f"{life_support}")
-        self.crew_labels['life_support']['unit'].set_text(f" {ls_status}")
+        set_val('life_support', f"{life_support}", f" {ls_status}")
         
         # Helper for time formatting
         def fmt_time(val):
