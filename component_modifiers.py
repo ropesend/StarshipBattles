@@ -79,10 +79,115 @@ class ModifierEffects:
         mult = 1.0 - reduction
         stats['properties']['accuracy_falloff_mult'] = mult
         
+        
         # Mass increase proportional to square of amount of reduction
         # Using factor 1.0 for proportionality constant implies doubling mass at 100% reduction
         mass_increase_factor = 1.0 + (reduction ** 2) 
         stats['mass_mult'] *= mass_increase_factor
+
+    @staticmethod
+    def rapid_fire(val, stats):
+        """
+        Reduces reload time.
+        val is percentage multiplier of fire rate (e.g., 2.0 = 2x fire rate -> 0.5x reload).
+        Range 1.0 to 100.0 (though UI might clamp differently).
+        Mass scales with fire rate delta: 2x rate -> 3x mass.
+        Formula: mass_mult += (rate_mult - 1.0) * 2.0
+        """
+        rate_mult = val
+        if rate_mult < 1.0: rate_mult = 1.0
+        
+        # Reload time is inverse of fire rate
+        stats['reload_mult'] *= (1.0 / rate_mult)
+        
+        # Mass scaling
+        # "It the firing rate is doubled the mass should be tripled."
+        # Base mass = 1. New mass = 3. Delta = +2.
+        # Rate delta = +1 (from 1->2).
+        # So mass added = rate_delta * 2.
+        mass_increase = (rate_mult - 1.0) * 2.0
+        stats['mass_mult'] += mass_increase
+
+    @staticmethod
+    def seeker_endurance(val, stats):
+        """
+        Increases seeker endurance.
+        val: multiplier (1.0 to 10.0).
+        2x endurance -> 1.5x mass.
+        Formula: mass_mult *= (1.0 + (mult - 1.0) * 0.5) ?
+        Wait: "2x endurance should result in 1.5x mass". 
+        Base: 1.0. New: 1.5. Delta: 0.5. Endurance Delta: 1.0.
+        So mass factor = 1.0 + (val - 1.0) * 0.5
+        """
+        mult = val
+        stats['endurance_mult'] *= mult
+        
+        mass_factor = 1.0 + (mult - 1.0) * 0.5
+        stats['mass_mult'] *= mass_factor
+
+    @staticmethod
+    def seeker_damage(val, stats):
+        """
+        Increases seeker damage.
+        val: multiplier (1.0 to 1000.0).
+        2x damage -> 1.75x mass.
+        Base: 1.0. New: 1.75. Delta: 0.75. Dmg Delta: 1.0.
+        So mass factor = 1.0 + (val - 1.0) * 0.75
+        """
+        mult = val
+        stats['projectile_damage_mult'] *= mult
+        
+        mass_factor = 1.0 + (mult - 1.0) * 0.75
+        stats['mass_mult'] *= mass_factor
+
+    @staticmethod
+    def seeker_armored(val, stats):
+        """
+        Increases seeker HP.
+        val: multiplier (1.0 to 1000.0).
+        2x HP -> 1.75x mass.
+        """
+        mult = val
+        stats['projectile_hp_mult'] *= mult
+        
+        mass_factor = 1.0 + (mult - 1.0) * 0.75
+        stats['mass_mult'] *= mass_factor
+
+    @staticmethod
+    def seeker_stealth(val, stats):
+        """
+        Makes seeker harder to hit.
+        val: stealth level/factor.
+        Mass rises dramatically.
+        Let's assume val is arbitrary scale.
+        "dramatically" -> Exponential? Or high linear?
+        Let's try linear factor 2x per unit?
+        stats['mass_mult'] *= (1 + val * 2.0)
+        """
+        level = val
+        stats['projectile_stealth_level'] += level
+        
+        # Mass increase
+        stats['mass_mult'] *= (1.0 + level * 2.0)
+
+    @staticmethod
+    def automation(val, stats):
+        """
+        Reduces crew requirements.
+        val: Reduction percentage (0.0 to 0.99).
+        Mass increases with degree of automation.
+        Let's say 100% automation (0 crew) -> 2x mass.
+        stats['crew_req_mult'] = 1.0 - val
+        stats['mass_mult'] *= (1.0 + val)
+        """
+        reduction = val
+        if reduction > 0.99: reduction = 0.99
+        if reduction < 0.0: reduction = 0.0
+        
+        stats['crew_req_mult'] *= (1.0 - reduction)
+        
+        # Mass increase
+        stats['mass_mult'] *= (1.0 + reduction)
 
 
 
@@ -93,6 +198,12 @@ SPECIAL_EFFECT_HANDLERS = {
     'turret_mount': ModifierEffects.turret_mount,
     'facing': ModifierEffects.facing,
     'precision_mount': ModifierEffects.precision_mount,
+    'rapid_fire': ModifierEffects.rapid_fire,
+    'seeker_endurance': ModifierEffects.seeker_endurance,
+    'seeker_damage': ModifierEffects.seeker_damage,
+    'seeker_armored': ModifierEffects.seeker_armored,
+    'seeker_stealth': ModifierEffects.seeker_stealth,
+    'automation': ModifierEffects.automation,
 
 }
 

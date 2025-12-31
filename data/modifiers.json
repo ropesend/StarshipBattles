@@ -102,6 +102,117 @@
                     "BeamWeapon"
                 ]
             }
+        },
+        {
+            "id": "rapid_fire",
+            "name": "Rapid Fire Mount",
+            "description": "Reduces reload time by increasing fire rate. Mass increases with rate multiplier. Applies to all weapons.",
+            "type": "linear",
+            "param_name": "Fire Rate Multiplier",
+            "min_val": 1.0,
+            "max_val": 10.0,
+            "default_val": 1.0,
+            "effects": {
+                "special": "rapid_fire"
+            },
+            "restrictions": {
+                "allow_types": [
+                    "Weapon",
+                    "ProjectileWeapon",
+                    "BeamWeapon",
+                    "SeekerWeapon"
+                ]
+            }
+        },
+        {
+            "id": "seeker_endurance",
+            "name": "Endurance Mount",
+            "description": "Increases seeker endurance/range (1x-10x). Mass scales with endurance.",
+            "type": "linear",
+            "param_name": "Multiplier",
+            "min_val": 1.0,
+            "max_val": 10.0,
+            "default_val": 1.0,
+            "effects": {
+                "special": "seeker_endurance"
+            },
+            "restrictions": {
+                "allow_types": [
+                    "SeekerWeapon"
+                ]
+            }
+        },
+        {
+            "id": "seeker_damage",
+            "name": "Damage Mount",
+            "description": "Increases seeker damage (1x-1000x). Mass scales with damage.",
+            "type": "linear",
+            "param_name": "Multiplier",
+            "min_val": 1.0,
+            "max_val": 1000.0,
+            "default_val": 1.0,
+            "effects": {
+                "special": "seeker_damage"
+            },
+            "restrictions": {
+                "allow_types": [
+                    "SeekerWeapon"
+                ]
+            }
+        },
+        {
+            "id": "seeker_armored",
+            "name": "Armored Missile Mount",
+            "description": "Increases seeker HP (1x-1000x). Mass scales with HP.",
+            "type": "linear",
+            "param_name": "Multiplier",
+            "min_val": 1.0,
+            "max_val": 1000.0,
+            "default_val": 1.0,
+            "effects": {
+                "special": "seeker_armored"
+            },
+            "restrictions": {
+                "allow_types": [
+                    "SeekerWeapon"
+                ]
+            }
+        },
+        {
+            "id": "seeker_stealth",
+            "name": "Stealth Mount",
+            "description": "Makes seeker harder to hit. Mass rises dramatically with stealth level.",
+            "type": "linear",
+            "param_name": "Level",
+            "min_val": 0,
+            "max_val": 10,
+            "default_val": 0,
+            "effects": {
+                "special": "seeker_stealth"
+            },
+            "restrictions": {
+                "allow_types": [
+                    "SeekerWeapon"
+                ]
+            }
+        },
+        {
+            "id": "automation",
+            "name": "Automation",
+            "description": "Reduces crew requirement (0% to 99%). Mass increases with automation.",
+            "type": "linear",
+            "param_name": "Reduction",
+            "min_val": 0.0,
+            "max_val": 0.99,
+            "default_val": 0.0,
+            "effects": {
+                "special": "automation"
+            },
+            "restrictions": {
+                "allow_abilities": [
+                    "CrewRequired"
+                ]
+            }
         }
     ]
 }

@@ -234,7 +234,14 @@ class Component:
             'mass_add': 0.0,
             'arc_add': 0.0,
             'arc_set': None,
-            'properties': {}
+            'properties': {},
+            # New Modifier Support
+            'reload_mult': 1.0,
+            'endurance_mult': 1.0,
+            'projectile_hp_mult': 1.0,
+            'projectile_damage_mult': 1.0,
+            'projectile_stealth_level': 0.0,
+            'crew_req_mult': 1.0
         }
         
         for m in self.modifiers:
@@ -298,7 +305,7 @@ class Component:
             self.ammo_cost = base_ammo * stats.get('consumption_mult', 1.0)
             
         if hasattr(self, 'reload_time'):
-             self.reload_time = self.data.get('reload', 1.0)
+             self.reload_time = self.data.get('reload', 1.0) * stats.get('reload_mult', 1.0)
 
         # Apply Consumption Multipliers to specific components
         if isinstance(self, Engine) and hasattr(self, 'fuel_cost_per_sec'):
@@ -321,7 +328,7 @@ class Component:
                 # If it's a raw number, scale it
                 # Note: We should probably use the base value if we could, but abilities dict is reset in _reset_and_evaluate_base_formulas
                 # So 'val' here is the base value from data/formula
-                self.abilities['CrewRequired'] = int(math.ceil(val * crew_mult))
+                self.abilities['CrewRequired'] = int(math.ceil(val * crew_mult * stats.get('crew_req_mult', 1.0)))
 
         # Handle HP update (healing/new component logic)
         if old_max_hp == 0:
@@ -506,10 +513,27 @@ class SeekerWeapon(Weapon):
         super()._apply_custom_stats(stats)
         
         # Apply 80% rule to the calculated range (Straight Line * 0.8 * Multipliers)
-        # Note: Base `_apply_base_stats` already applied `range_mult` to `self.range` based on `data['range']`.
-        # But `SeekerWeapon` ignores `data['range']` and creates it from projectile_speed.
-        # So we overwrite it here.
+        # Apply endurance_mult
+        self.endurance = self.data.get('endurance', 5.0) * stats.get('endurance_mult', 1.0)
+        
         self.range = int((self.projectile_speed * self.endurance) * 0.8 * stats['range_mult'])
+        
+        # Apply projectile HP modifier
+        base_proj_hp = self.data.get('hp', 1)
+        self.hp = int(base_proj_hp * stats.get('projectile_hp_mult', 1.0))
+        
+        # Apply projectile damage modifier
+        # Handled by base class damage_multiplier? Or separate? 
+        # Base class uses stats['damage_mult']. We want to stack our projectile_damage_mult on top if it's separate.
+        # But wait, modifiers logic can just write to damage_mult.
+        # If we have a specific 'projectile_damage_mult' intended for this, let's fold it into self.damage_multiplier if we can,
+        # or apply it to self.damage if it's base damage.
+        # `_apply_base_stats` sets `self.damage_multiplier = stats['damage_mult']`.
+        # So we can just multiply that further.
+        self.damage_multiplier *= stats.get('projectile_damage_mult', 1.0)
+        
+        # Apply stealth
+        self.projectile_stealth_level = stats.get('projectile_stealth_level', 0.0)
         
     def clone(self):
         return SeekerWeapon(self.data)
