@@ -211,7 +211,7 @@ class LayerComponentItem:
         # Expand Button
         self.expand_button = UIButton(
             relative_rect=pygame.Rect(2, 5, 20, 30),
-            text="▼" if is_expanded else "▶",
+            text="▲" if is_expanded else "▼",
             manager=manager,
             container=self.panel,
             object_id='#expand_button'
@@ -298,7 +298,7 @@ class LayerComponentItem:
             self.expand_button.hide()
         else:
             self.expand_button.show()
-            arrow = "▼" if is_expanded else "▶"
+            arrow = "▲" if is_expanded else "▼"
             self.expand_button.set_text(arrow)
 
     def handle_event(self, event):
@@ -345,7 +345,7 @@ class LayerHeaderItem:
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
         
-        arrow = "▼" if is_expanded else "▶"
+        arrow = "▲" if is_expanded else "▼"
         self.arrow_label = UILabel(
             relative_rect=pygame.Rect(5, 0, 20, self.height),
             text=arrow,
@@ -377,7 +377,7 @@ class LayerHeaderItem:
         )
         
     def update(self, current_mass, max_mass, is_expanded):
-        arrow = "▼" if is_expanded else "▶"
+        arrow = "▲" if is_expanded else "▼"
         self.arrow_label.set_text(arrow)
         
         pct_filled = (current_mass / max_mass * 100) if max_mass > 0 else 0

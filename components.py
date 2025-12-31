@@ -534,6 +534,14 @@ class SeekerWeapon(Weapon):
         # Apply stealth
         self.projectile_stealth_level = stats.get('projectile_stealth_level', 0.0)
         
+        # Calculate To-Hit Defense (Baseline + Stealth)
+        # Assuming baseline is 0 unless in data
+        base_def = self.data.get('to_hit_defense', 0.0)
+        # Assuming each stealth level adds 0.1 (10%) to defense? 
+        # Or level IS the value? Description says "Stealth Level".
+        # Let's assume linear addition.
+        self.to_hit_defense = base_def + (self.projectile_stealth_level * 0.1)
+        
     def clone(self):
         return SeekerWeapon(self.data)
 

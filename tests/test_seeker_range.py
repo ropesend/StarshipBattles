@@ -39,11 +39,18 @@ class TestSeekerRange(unittest.TestCase):
         from components import load_modifiers
         load_modifiers("data/modifiers.json")
         
-        # Note: 'range_mount' implies a mounting system but let's test if logic holds
-        missile.add_modifier('range_mount', 1.0)
+        # Note: 'range_mount' is no longer allowed on Seekers. We use 'seeker_endurance' for range extension.
+        # 'seeker_endurance' value acts as a direct multiplier for endurance, which scales range.
+        missile.add_modifier('seeker_endurance', 2.0)
         
         straight_range = missile.projectile_speed * missile.endurance
-        expected_range = int(straight_range * 0.8 * 2.0)
+        # Since we applied 2.0 multiplier to endurance, missile.endurance is already doubled inside the component logic.
+        # The formula is (Speed * Endurance) * 0.8.
+        # So we expect (Speed * (BaseEndurance * 2.0)) * 0.8.
+        
+        # Let's recalculate expected based on base values to be sure
+        base_endurance = missile.data.get('endurance', 5.0)
+        expected_range = int((missile.projectile_speed * (base_endurance * 2.0)) * 0.8)
         
         self.assertEqual(missile.range, expected_range,
              f"Range with modifier should be {expected_range}, got {missile.range}")

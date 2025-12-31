@@ -46,6 +46,10 @@ class TestMandatoryUpdates(unittest.TestCase):
             
             self.assertNotIn('automation', mandatory)
             self.assertIn('rapid_fire', mandatory)
+            
+            # Verify strict allow_abilities check
+            self.assertFalse(ModifierLogic.is_modifier_allowed('automation', comp),
+                             "Automation should be disallowed for component with no crew req")
 
     def test_seeker_mandatory(self):
         comp_data = {'id': 'seeker', 'name': 'Seeker', 'type': 'SeekerWeapon', 'hp':10, 'mass':10}

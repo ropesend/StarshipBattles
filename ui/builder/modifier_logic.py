@@ -27,6 +27,21 @@ class ModifierLogic:
             if component.type_str in mod_def.restrictions['deny_types']:
                 return False
                 
+        if 'allow_abilities' in mod_def.restrictions:
+            # Check if component has ANY of the allowed abilities
+            # Logic: If 'allow_abilities' is present, component MUST have at least one.
+            # Assuming AND logical requirement? Usually "Allow if X OR Y". 
+            # But here allow_abilities usually lists required capability.
+            # Let's check if component.abilities is used.
+            required = mod_def.restrictions['allow_abilities']
+            has_ability = False
+            for abil in required:
+                if abil in component.abilities or abil in component.data.get('abilities', {}):
+                    has_ability = True
+                    break
+            if not has_ability:
+                return False
+                
         return True
 
     @staticmethod

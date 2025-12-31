@@ -137,6 +137,12 @@ class ComponentDetailPanel:
              add_line(f"Endurance: {comp.endurance}s", '#64C8FF')
         if hasattr(comp, 'hp') and isinstance(comp, SeekerWeapon):
              add_line(f"Missile HP: {comp.hp}", '#FF6464')
+             # Show To-Hit Defense if present
+             if hasattr(comp, 'to_hit_defense'):
+                 def_val = comp.to_hit_defense
+                 if def_val > 0:
+                     add_line(f"Defense Odds: {def_val:.2f}", '#800080') # Purple for stealth
+
         if hasattr(comp, 'turn_rate') and hasattr(comp, 'endurance'):
              add_line(f"Turn Rate: {comp.turn_rate}°/s", '#64FF64')
              if hasattr(comp, 'projectile_speed'):

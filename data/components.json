@@ -412,6 +412,7 @@
                 "Satellite",
                 "Planetary Complex"
             ],
+            "to_hit_defense": 0.0,
             "damage": 100,
             "projectile_speed": 6000,
             "turn_rate": 200,
