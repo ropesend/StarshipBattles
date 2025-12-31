@@ -1,0 +1,267 @@
+{
+    "groups": {
+        "main": {
+            "title": "Main Systems",
+            "items": [
+                {
+                    "id": "mass",
+                    "label": "Mass",
+                    "getter": "get_mass_display",
+                    "unit": "mass_unit",
+                    "validator": "mass_validator"
+                },
+                {
+                    "id": "max_hp",
+                    "label": "Max HP"
+                },
+                {
+                    "id": "max_energy",
+                    "label": "Max Energy"
+                },
+                {
+                    "id": "energy_gen",
+                    "label": "Energy Gen",
+                    "key": "energy_gen_rate",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                }
+            ]
+        },
+        "logistics": {
+            "title": "Logistics",
+            "items": [
+                {
+                    "id": "max_fuel",
+                    "label": "Storage Fuel"
+                },
+                {
+                    "id": "max_ammo",
+                    "label": "Storage Ammo"
+                },
+                {
+                    "id": "max_energy",
+                    "label": "Storage Energy"
+                },
+                {
+                    "id": "fuel_burn",
+                    "label": "Fuel Burn Rate",
+                    "getter": "get_fuel_consumption",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "ammo_burn",
+                    "label": "Ammo Burn Rate",
+                    "getter": "get_ammo_consumption",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "energy_burn",
+                    "label": "Energy Burn Rate",
+                    "getter": "get_energy_consumption",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "fuel_regen",
+                    "label": "Fuel Regen",
+                    "getter": "get_fuel_recharge",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "ammo_regen",
+                    "label": "Ammo Regen",
+                    "getter": "get_ammo_recharge",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "energy_regen",
+                    "label": "Energy Regen",
+                    "key": "energy_gen_rate",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "fuel_endurance",
+                    "label": "Fuel Endurance",
+                    "key": "fuel_endurance",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "ammo_endurance",
+                    "label": "Ammo Endurance",
+                    "key": "ammo_endurance",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "energy_endurance",
+                    "label": "Energy Endurance",
+                    "key": "energy_endurance",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "fuel_replenish",
+                    "label": "Replenish Fuel",
+                    "getter": "get_zero",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "ammo_replenish",
+                    "label": "Replenish Ammo",
+                    "getter": "get_zero",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "energy_replenish",
+                    "label": "Replenish Energy",
+                    "key": "energy_recharge",
+                    "formatter": "fmt_time"
+                }
+            ]
+        },
+        "armor": {
+            "title": "Armor",
+            "items": [
+                {
+                    "id": "armor_hp",
+                    "label": "Total Armor HP",
+                    "getter": "get_armor_hp"
+                },
+                {
+                    "id": "emissive_armor",
+                    "label": "Dmg Ignore"
+                },
+                {
+                    "id": "crystalline_armor",
+                    "label": "Shield Regen/Hit",
+                    "unit": "/hit",
+                    "formatter": "fmt_decimal"
+                }
+            ]
+        },
+        "maneuvering": {
+            "title": "Maneuvering",
+            "items": [
+                {
+                    "id": "thrust",
+                    "label": "Total Thrust",
+                    "key": "total_thrust"
+                },
+                {
+                    "id": "acceleration",
+                    "label": "Acceleration",
+                    "key": "acceleration_rate",
+                    "formatter": "{:.2f}"
+                },
+                {
+                    "id": "max_speed",
+                    "label": "Top Speed"
+                },
+                {
+                    "id": "maneuver_points",
+                    "label": "Total Maneuvering Points",
+                    "getter": "get_maneuver_points",
+                    "formatter": "{:.0f}"
+                },
+                {
+                    "id": "turn_rate",
+                    "label": "Turning Rate",
+                    "key": "turn_speed",
+                    "unit": " deg/s"
+                }
+            ]
+        },
+        "shields": {
+            "title": "Shields",
+            "items": [
+                {
+                    "id": "max_shields",
+                    "label": "Max Shields"
+                },
+                {
+                    "id": "shield_regen",
+                    "label": "Shield Regen",
+                    "key": "shield_regen_rate",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "shield_cost",
+                    "label": "Regen Cost",
+                    "key": "shield_regen_cost",
+                    "formatter": "fmt_decimal",
+                    "unit": " E/t"
+                }
+            ]
+        },
+        "targeting": {
+            "title": "Targeting",
+            "items": [
+                {
+                    "id": "targeting",
+                    "label": "Max Targets",
+                    "getter": "get_max_targets",
+                    "formatter": "fmt_targeting"
+                },
+                {
+                    "id": "target_profile",
+                    "label": "Defensive Odds",
+                    "key": "to_hit_profile",
+                    "formatter": "fmt_multiply",
+                    "unit": "x"
+                },
+                {
+                    "id": "scan_strength",
+                    "label": "Offensive Odds",
+                    "key": "baseline_to_hit_offense",
+                    "formatter": "fmt_decimal",
+                    "unit": "x"
+                }
+            ]
+        },
+        "crewlogistics": {
+            "title": "Crew Logistics",
+            "items": [
+                {
+                    "id": "crew_required",
+                    "label": "Crew Required",
+                    "getter": "get_crew_required"
+                },
+                {
+                    "id": "crew_housed",
+                    "label": "Crew On Board",
+                    "getter": "get_crew_capacity",
+                    "validator": "crew_validator"
+                },
+                {
+                    "id": "life_support",
+                    "label": "Life Support",
+                    "getter": "get_life_support",
+                    "validator": "life_support_validator"
+                }
+            ]
+        },
+        "fightersupport": {
+            "title": "Fighter Support",
+            "items": [
+                {
+                    "id": "fighter_capacity",
+                    "label": "Fighter Cap"
+                },
+                {
+                    "id": "fighters_per_wave",
+                    "label": "Launch/Wave"
+                },
+                {
+                    "id": "fighter_time",
+                    "label": "Fighter Time",
+                    "key": "fighter_endurance",
+                    "formatter": "fmt_time"
+                }
+            ]
+        }
+    }
+}

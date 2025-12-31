@@ -42,6 +42,9 @@ class ShipStatsCalculator:
         ship.emissive_armor = 0
         ship.crystalline_armor = 0
         
+        # Maneuvering Points (Raw Thrust/Turning Capability unrelated to mass)
+        ship.total_maneuver_points = 0
+        
         # Hangar Stats
         ship.fighter_capacity = 0
         ship.fighters_per_wave = 0
@@ -133,6 +136,7 @@ class ShipStatsCalculator:
                 ship.total_thrust += comp.thrust_force
             elif isinstance(comp, Thruster):
                 ship.turn_speed += comp.turn_speed
+                ship.total_maneuver_points += comp.turn_speed
             elif isinstance(comp, Generator):
                 ship.energy_gen_rate += comp.energy_generation_rate
             elif isinstance(comp, Tank):
