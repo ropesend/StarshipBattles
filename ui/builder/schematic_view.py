@@ -13,11 +13,19 @@ class SchematicView:
         self.theme_manager = theme_manager
         self.cx = rect.centerx
         self.cy = rect.centery
+        self.arc_cache = {} # Key: (weapon_id, range, arc, facing, rect_size) -> surface
 
     def update_rect(self, rect):
         self.rect = rect
         self.cx = rect.centerx
         self.cy = rect.centery
+        # Invalidate cache if view size changes significantly? 
+        # Actually arcs are drawn relative to center, if center moves we just blit differently.
+        # But if screen size changes, surface size might need to change.
+        self.invalidate_cache()
+
+    def invalidate_cache(self):
+        self.arc_cache = {}
 
     def _calculate_max_r(self, ship):
         class_def = VEHICLE_CLASSES.get(ship.ship_class, {})
@@ -113,12 +121,22 @@ class SchematicView:
         if isinstance(comp, Weapon):
             self.draw_weapon_arc(screen, comp)
 
-    def draw_weapon_arc(self, screen, weapon):
+    def _get_cached_arc(self, screen_size, weapon):
         cx, cy = self.cx, self.cy
         arc_degrees = getattr(weapon, 'firing_arc', 20)
         weapon_range = getattr(weapon, 'range', 1000)
         facing = getattr(weapon, 'facing_angle', 0)
+        w_id = weapon.id
         
+        # Cache Key: (Weapon ID, Range, Arc, Facing, Screen Size Tuple)
+        # Using Weapon ID ensures unique weapons (with modifiers) are cached uniquely.
+        # But if we modify the weapon, we need to invalidate or key off value.
+        # Ideally we key off value.
+        cache_key = (w_id, weapon_range, arc_degrees, facing, screen_size)
+        
+        if cache_key in self.arc_cache:
+            return self.arc_cache[cache_key]
+            
         display_range = min(weapon_range / 10, 300)
         
         start_angle = math.radians(90 - facing - (arc_degrees / 2))
@@ -138,14 +156,25 @@ class SchematicView:
         points.append((cx, cy))
         
         if len(points) > 2:
-            arc_surface = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+            arc_surface = pygame.Surface(screen_size, pygame.SRCALPHA)
             pygame.draw.polygon(arc_surface, (*color[:3], 50), points)
             pygame.draw.lines(arc_surface, color[:3], True, points, 2)
-            screen.blit(arc_surface, (0, 0))
             
-        font = pygame.font.SysFont("Arial", 10)
-        mid_angle = (start_angle + end_angle) / 2
-        label_x = cx + math.cos(mid_angle) * (display_range + 15)
-        label_y = cy - math.sin(mid_angle) * (display_range + 15)
-        label = font.render(f"{weapon_range}", True, color[:3])
-        screen.blit(label, (label_x - label.get_width() // 2, label_y - label.get_height() // 2))
+            # Label
+            font = pygame.font.SysFont("Arial", 10)
+            mid_angle = (start_angle + end_angle) / 2
+            label_x = cx + math.cos(mid_angle) * (display_range + 15)
+            label_y = cy - math.sin(mid_angle) * (display_range + 15)
+            label = font.render(f"{weapon_range}", True, color[:3])
+            arc_surface.blit(label, (label_x - label.get_width() // 2, label_y - label.get_height() // 2))
+            
+            self.arc_cache[cache_key] = arc_surface
+            return arc_surface
+        
+        self.arc_cache[cache_key] = None
+        return None
+
+    def draw_weapon_arc(self, screen, weapon):
+        surface = self._get_cached_arc(screen.get_size(), weapon)
+        if surface:
+            screen.blit(surface, (0, 0))
