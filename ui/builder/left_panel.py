@@ -41,8 +41,8 @@ class BuilderLeftPanel:
         )
         
         # Bulk Add UI (y=80)
-        # Layout: Label "Count:" | Entry | << | <<< | Slider | >>> | >>
-        # Widths: 40 | 45 | 30 | 30 | Slider | 30 | 30
+        # Layout: Label "Count:" | Entry | <<< | << | < | Slider | > | >> | >>>
+        # Widths: 40 | 45 | 25 | 25 | 25 | Slider | 25 | 25 | 25
         u_y = 80
         
         # Label
@@ -55,25 +55,29 @@ class BuilderLeftPanel:
         self.count_entry.set_text("1")
         self.count_entry.set_allowed_characters('numbers')
         
-        # Buttons Left
-        self.btn_m100 = UIButton(pygame.Rect(100, u_y, 30, 25), "<<", manager=manager, container=self.panel)
-        self.btn_m10  = UIButton(pygame.Rect(132, u_y, 30, 25), "<", manager=manager, container=self.panel)
+        btn_w = 25
+        gap = 2
         
-        # Slider
-        # Total width avail approx 450. Used 162 so far.
-        # Right buttons need 64 width (30+30+4).
-        # max x = rect.width (450)
-        # right side starts at 450 - 64 = 386
-        # slider width = 386 - 165 = 221
-        slider_x = 165
-        right_btns_start = rect.width - 65
+        # Buttons Left (100, 10, 1)
+        start_btns = 100
+        self.btn_m100 = UIButton(pygame.Rect(start_btns, u_y, btn_w, 25), "<<<", manager=manager, container=self.panel)
+        self.btn_m10  = UIButton(pygame.Rect(start_btns + btn_w + gap, u_y, btn_w, 25), "<<", manager=manager, container=self.panel)
+        self.btn_m1   = UIButton(pygame.Rect(start_btns + (btn_w + gap)*2, u_y, btn_w, 25), "<", manager=manager, container=self.panel)
+        
+        slider_x = start_btns + (btn_w + gap)*3 + 5
+        
+        # Right Buttons (1, 10, 100)
+        # Total width avail approx 450.
+        # Right btns take (25+2)*3 = 81
+        right_btns_start = rect.width - 85 
+        
         slider_w = right_btns_start - slider_x - 5
         
         self.count_slider = UIHorizontalSlider(pygame.Rect(slider_x, u_y, slider_w, 25), 1, (1, 1000), manager=manager, container=self.panel)
         
-        # Buttons Right
-        self.btn_p10  = UIButton(pygame.Rect(right_btns_start, u_y, 30, 25), ">", manager=manager, container=self.panel)
-        self.btn_p100 = UIButton(pygame.Rect(right_btns_start + 32, u_y, 30, 25), ">>", manager=manager, container=self.panel)
+        self.btn_p1   = UIButton(pygame.Rect(right_btns_start, u_y, btn_w, 25), ">", manager=manager, container=self.panel)
+        self.btn_p10  = UIButton(pygame.Rect(right_btns_start + btn_w + gap, u_y, btn_w, 25), ">>", manager=manager, container=self.panel)
+        self.btn_p100 = UIButton(pygame.Rect(right_btns_start + (btn_w + gap)*2, u_y, btn_w, 25), ">>>", manager=manager, container=self.panel)
         
         # Row 2 (Removed, single line now)
         u_y += 35
@@ -373,15 +377,39 @@ class BuilderLeftPanel:
                 return None
                 
         elif event.type == pygame_gui.UI_BUTTON_PRESSED:
-            delta = 0
-            if event.ui_element == self.btn_m100: delta = -100
-            elif event.ui_element == self.btn_m10: delta = -10
-            elif event.ui_element == self.btn_p10: delta = 10
-            elif event.ui_element == self.btn_p100: delta = 100
+            current = int(self.count_slider.get_current_value())
+            new_val = current
             
-            if delta != 0:
-                current = int(self.count_slider.get_current_value())
-                new_val = max(1, min(1000, current + delta))
+            # Simple Increments
+            if event.ui_element == self.btn_m1: new_val = current - 1
+            elif event.ui_element == self.btn_p1: new_val = current + 1
+            
+            # Snap Logic
+            # << / >> : Snap to 10
+            elif event.ui_element == self.btn_p10:
+                # Next multiple of 10. (12 -> 20, 20 -> 30)
+                # (current // 10 + 1) * 10
+                new_val = (current // 10 + 1) * 10
+            elif event.ui_element == self.btn_m10:
+                # Prev multiple of 10. (12 -> 10, 10 -> 0 -> 1 min)
+                # If current % 10 == 0: subtract 10
+                # Else: floor(current / 10) * 10
+                if current % 10 == 0:
+                    new_val = current - 10
+                else:
+                    new_val = (current // 10) * 10
+                    
+            # <<< / >>> : Snap to 100
+            elif event.ui_element == self.btn_p100:
+                new_val = (current // 100 + 1) * 100
+            elif event.ui_element == self.btn_m100:
+                if current % 100 == 0:
+                    new_val = current - 100
+                else:
+                    new_val = (current // 100) * 100
+            
+            if new_val != current:
+                new_val = max(1, min(1000, new_val))
                 self.count_slider.set_current_value(new_val)
                 self.count_entry.set_text(str(new_val))
                 return None
