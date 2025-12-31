@@ -126,11 +126,10 @@ class BattleEngine:
 
     def _log_initial_status(self) -> None:
         for s in self.ships:
-            status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={s.current_fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f} Derelict={s.is_derelict}"
+            status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={s.current_fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f}"
             self.logger.log(status_msg)
             
-            if s.is_derelict:
-                self.logger.log(f"WARNING: {s.name} is DERELICT at start!")
+            # Removed Derelict Warning
             if s.total_thrust <= 0:
                 self.logger.log(f"WARNING: {s.name} has NO THRUST!")
             if s.turn_speed <= 0.01:
@@ -246,13 +245,13 @@ class BattleEngine:
         self.projectile_manager.update(self.grid)
 
     def is_battle_over(self) -> bool:
-        team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive and not getattr(s, 'is_derelict', False))
-        team2_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive and not getattr(s, 'is_derelict', False))
+        team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
+        team2_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
         return team1_alive == 0 or team2_alive == 0
 
     def get_winner(self) -> int:
-        team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive and not getattr(s, 'is_derelict', False))
-        team2_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive and not getattr(s, 'is_derelict', False))
+        team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
+        team2_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
         if team1_alive > 0 and team2_alive == 0:
             return 0
         elif team2_alive > 0 and team1_alive == 0:

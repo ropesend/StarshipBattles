@@ -180,42 +180,21 @@ class ShipStatsCalculator:
         # 5. Phase 4: Physics & Limits
         # ----------------------------
         
-        # Derelict Check
-        # Condition: No functional Bridge OR No functional Engines (Thrust <= 0)
-        has_active_bridge = False
-        for c in component_pool:
-            if isinstance(c, Bridge) and c.is_active:
-                has_active_bridge = True
-                break
-        
-        if ship.vehicle_type == "Satellite":
-            if not has_active_bridge:
-                ship.is_derelict = True
-            else:
-                ship.is_derelict = False
-        else:
-            if (not has_active_bridge) or (ship.total_thrust <= 0):
-                ship.is_derelict = True
-                ship.total_thrust = 0 # Ensure 0
-            else:
-                ship.is_derelict = False
+        # Derelict Check - REMOVED per user request
+        # Condition: Ships are never derelict, they only die when destroyed.
+        ship.is_derelict = False
         
         # Physics Stats - INVERSE MASS SCALING
         K_THRUST = 2500
         K_TURN = 25000
         
         if ship.mass > 0:
-            if ship.is_derelict:
-                ship.acceleration_rate = 2.0 # Allow deceleration to stop
-                ship.turn_speed = 0
-                ship.max_speed = 0
-            else:
-                ship.acceleration_rate = (ship.total_thrust * K_THRUST) / (ship.mass * ship.mass)
-                raw_turn_speed = ship.turn_speed
-                ship.turn_speed = (raw_turn_speed * K_TURN) / (ship.mass ** 1.5)
-                
-                K_SPEED = 25
-                ship.max_speed = (ship.total_thrust * K_SPEED) / ship.mass if ship.total_thrust > 0 else 0
+            ship.acceleration_rate = (ship.total_thrust * K_THRUST) / (ship.mass * ship.mass)
+            raw_turn_speed = ship.turn_speed
+            ship.turn_speed = (raw_turn_speed * K_TURN) / (ship.mass ** 1.5)
+            
+            K_SPEED = 25
+            ship.max_speed = (ship.total_thrust * K_SPEED) / ship.mass if ship.total_thrust > 0 else 0
         else:
             ship.acceleration_rate = 0
             ship.max_speed = 0

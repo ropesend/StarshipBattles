@@ -72,8 +72,7 @@ class AIController:
         candidates = self.grid.query_radius(self.ship.position, 200000)
         enemies = [obj for obj in candidates 
                    if obj.is_alive and hasattr(obj, 'team_id') 
-                   and obj.team_id == self.enemy_team_id
-                   and not getattr(obj, 'is_derelict', False)]
+                   and obj.team_id == self.enemy_team_id]
         
         
         if not enemies:
@@ -167,7 +166,6 @@ class AIController:
         enemies = [obj for obj in candidates 
                    if obj.is_alive and hasattr(obj, 'team_id') 
                    and obj.team_id == self.enemy_team_id
-                   and not getattr(obj, 'is_derelict', False)
                    and obj != current]
                    
         if not enemies:
@@ -351,11 +349,11 @@ class AIController:
                  self.ship.turn_throttle = 1.0
                  self.ship.engine_throttle = 1.0
 
-        # Derelict Check
-        if getattr(self.ship, 'is_derelict', False):
-            self.ship.comp_trigger_pulled = False
-            self.ship.target_speed = 0 
-            return
+        # Derelict Check - REMOVED
+        # if getattr(self.ship, 'is_derelict', False):
+        #     self.ship.comp_trigger_pulled = False
+        #     self.ship.target_speed = 0 
+        #     return
 
         strategy = self.get_current_strategy()
         strategy_id = getattr(self.ship, 'ai_strategy', 'max_weapons_range')
@@ -363,13 +361,13 @@ class AIController:
         # Formation Targeting Sync
         if self.ship.in_formation and self.ship.formation_master:
              master_target = self.ship.formation_master.current_target
-             if master_target and master_target.is_alive and not getattr(master_target, 'is_derelict', False):
+             if master_target and master_target.is_alive:
                  self.ship.current_target = master_target
 
         # Target Acquisition (Standard)
         target = self.ship.current_target
         if target:
-            if not target.is_alive or getattr(target, 'is_derelict', False):
+            if not target.is_alive:
                 target = None
                 self.ship.current_target = None
                 self.ship.secondary_targets = []

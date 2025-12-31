@@ -1,7 +1,17 @@
 === BATTLE LOG STARTED ===
-Battle started: 1 vs 1 ships
-Ship 'Attacker' (Team 0): HP=320/320 Mass=115.0 Thrust=500.0 Fuel=1000 TurnSpeed=0.00 MaxSpeed=108.70 Derelict=False
-WARNING: Attacker has LOW/NO TURN SPEED (0.0000)!
-Ship 'Target' (Team 1): HP=290/290 Mass=570.0 Thrust=500.0 Fuel=1000 TurnSpeed=9.19 MaxSpeed=21.93 Derelict=False
-Projectile fired at [94.518, 0]
+Battle started: 2 vs 2 ships
+Ship 'Attacker_In_Range' (Team 0): HP=1150/1150 Mass=180.0 Thrust=500.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=69.44
+WARNING: Attacker_In_Range has LOW/NO TURN SPEED (0.0000)!
+Ship 'Attacker_Out_Range' (Team 0): HP=1150/1150 Mass=180.0 Thrust=500.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=69.44
+WARNING: Attacker_Out_Range has LOW/NO TURN SPEED (0.0000)!
+Ship 'Target_In_Range' (Team 1): HP=1050/1050 Mass=610.0 Thrust=0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00
+WARNING: Target_In_Range has NO THRUST!
+WARNING: Target_In_Range has LOW/NO TURN SPEED (0.0000)!
+Ship 'Target_Out_Range' (Team 1): HP=1050/1050 Mass=610.0 Thrust=0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00
+WARNING: Target_Out_Range has NO THRUST!
+WARNING: Target_Out_Range has LOW/NO TURN SPEED (0.0000)!
+Projectile fired at [0, 0]
+Projectile fired at [69.4444, 2000]
+Projectile fired at [0, 0]
+Projectile fired at [69.4444, 2000]
 === BATTLE LOG ENDED ===

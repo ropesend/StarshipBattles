@@ -1,6 +1,7 @@
 import pygame
 from typing import List, Set, Any, TYPE_CHECKING
 from game_constants import AttackType
+from logger import log_debug
 
 if TYPE_CHECKING:
     from spatial import SpatialGrid
@@ -70,6 +71,7 @@ class ProjectileManager:
                 if dv_sq == 0:
                     if D0.length() < collision_radius:
                         hit = True
+                        log_debug(f"Hit (Static)! D0={D0.length()} Rad={collision_radius}")
                 else:
                     t = -D0.dot(DV) / dv_sq
                     t_clamped = max(0, min(t, 1.0))
@@ -77,8 +79,18 @@ class ProjectileManager:
                     p_at_t = p_start + p.velocity * t_clamped
                     s_at_t = s_prev_pos + s_vel * t_clamped
                     
-                    if p_at_t.distance_to(s_at_t) < collision_radius:
+                    dist = p_at_t.distance_to(s_at_t)
+                    
+                    # LOGGING
+                    # log_debug(f"Check {s.name}: P_start={p_start} P_vel={p.velocity} S_pos={s_prev_pos} S_vel={s_vel}")
+                    # log_debug(f"Math: t={t:.4f} t_clamped={t_clamped:.4f} Dist={dist:.2f} ColRad={collision_radius}")
+                    
+                    if dist < collision_radius:
                         hit = True
+                        log_debug(f"HIT! Ship={s.name} Dist={dist:.2f} < Rad={collision_radius} t={t_clamped:.4f}")
+                    else:
+                        # log_debug(f"MISS Ship={s.name} Dist={dist:.2f} > Rad={collision_radius}")
+                        pass
                 
                 if hit:
                     # Calculate hit distance from projectile origin

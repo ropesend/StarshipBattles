@@ -1,0 +1,55 @@
+{
+    "name": "Test Target",
+    "color": [
+        0,
+        0,
+        255
+    ],
+    "team_id": 0,
+    "ship_class": "ComplexHull",
+    "theme_id": "Federation",
+    "ai_strategy": "optimal_firing_range",
+    "layers": {
+        "CORE": [
+            {
+                "id": "bridge",
+                "modifiers": []
+            }
+        ],
+        "INNER": [],
+        "OUTER": [],
+        "ARMOR": [
+            {
+                "id": "armor",
+                "modifiers": []
+            },
+            {
+                "id": "armor",
+                "modifiers": []
+            },
+            {
+                "id": "armor",
+                "modifiers": []
+            },
+            {
+                "id": "armor",
+                "modifiers": []
+            },
+            {
+                "id": "armor",
+                "modifiers": []
+            }
+        ]
+    },
+    "expected_stats": {
+        "max_hp": 1050,
+        "max_fuel": 0,
+        "max_ammo": 0,
+        "max_energy": 0,
+        "max_speed": 0,
+        "turn_speed": 0.0,
+        "total_thrust": 0,
+        "mass": 160.0,
+        "armor_hp_pool": 1000
+    }
+}

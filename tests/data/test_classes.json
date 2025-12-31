@@ -32,7 +32,12 @@
                 {
                     "type": "CORE",
                     "radius_pct": 1.0,
-                    "max_mass_pct": 1.0
+                    "max_mass_pct": 0.8
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "max_mass_pct": 0.2
                 }
             ]
         },
