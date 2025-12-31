@@ -523,14 +523,13 @@ class SeekerWeapon(Weapon):
         self.hp = int(base_proj_hp * stats.get('projectile_hp_mult', 1.0))
         
         # Apply projectile damage modifier
-        # Handled by base class damage_multiplier? Or separate? 
-        # Base class uses stats['damage_mult']. We want to stack our projectile_damage_mult on top if it's separate.
-        # But wait, modifiers logic can just write to damage_mult.
-        # If we have a specific 'projectile_damage_mult' intended for this, let's fold it into self.damage_multiplier if we can,
-        # or apply it to self.damage if it's base damage.
-        # `_apply_base_stats` sets `self.damage_multiplier = stats['damage_mult']`.
-        # So we can just multiply that further.
-        self.damage_multiplier *= stats.get('projectile_damage_mult', 1.0)
+        # For seekers, damage is a payload value applied on impact, stored in self.damage
+        base_damage = self.data.get('damage', 10)
+        self.damage = int(base_damage * stats.get('projectile_damage_mult', 1.0))
+        
+        # We also clear damage_multiplier as we applied it directly to the base value
+        # This prevents double application if get_damage() is used
+        self.damage_multiplier = 1.0
         
         # Apply stealth
         self.projectile_stealth_level = stats.get('projectile_stealth_level', 0.0)

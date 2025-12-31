@@ -161,9 +161,52 @@ class TestNewModifiers(unittest.TestCase):
         comp._reset_and_evaluate_base_formulas() # To reset abilities
         comp._apply_base_stats(stats, 50)
         
-        # Crew Required should be 7 (10 * sqrt(1.5) * 0.5 = 6.12 -> 7)
         self.assertEqual(comp.abilities['CrewRequired'], 7)
         self.assertEqual(comp.mass, 150) # 100 * 1.5
+
+    def test_seeker_damage_application(self):
+        # Verify that projectile_damage_mult is applied to comp.damage for Seeker
+        from components import SeekerWeapon
+        
+        seeker_data = {
+            'id': 'test_seeker_dmg',
+            'name': 'Test Seeker Dmg',
+            'type': 'SeekerWeapon',
+            'mass': 100,
+            'hp': 1,
+            'damage': 100, # Base damage
+        }
+        
+        comp = SeekerWeapon(seeker_data)
+        
+        # Sim stats
+        stats = {
+             'mass_mult': 1.0,
+             'hp_mult': 1.0,
+             'damage_mult': 1.0,
+             'range_mult': 1.0,
+             'cost_mult': 1.0,
+             'consumption_mult': 1.0,
+             'properties': {},
+             'reload_mult': 1.0,
+             'endurance_mult': 1.0,
+             'projectile_hp_mult': 1.0,
+             'projectile_damage_mult': 10.0, # 10x damage
+             'crew_req_mult': 1.0,
+             'projectile_stealth_level': 0.0,
+             'arc_set': None,
+             'arc_add': 0.0,
+             'mass_add': 0.0
+        }
+        
+        comp._apply_base_stats(stats, 1)
+        comp._apply_custom_stats(stats)
+        
+        # Should be 100 * 10.0 = 1000
+        self.assertEqual(comp.damage, 1000)
+        # Verify multiplier didn't stack weirdly if re-applied
+        # (Though we cleared it in code)
+        self.assertEqual(comp.damage_multiplier, 1.0)
 
 if __name__ == '__main__':
     unittest.main()

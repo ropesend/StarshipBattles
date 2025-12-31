@@ -61,10 +61,15 @@
             "effects": {
                 "special": "range_mount"
             },
-            "allow_types": [
-                "ProjectileWeapon",
-                "BeamWeapon"
-            ]
+            "restrictions": {
+                "allow_types": [
+                    "ProjectileWeapon",
+                    "BeamWeapon"
+                ],
+                "deny_types": [
+                    "SeekerWeapon"
+                ]
+            }
         },
         {
             "id": "facing",

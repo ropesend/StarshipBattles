@@ -226,12 +226,10 @@ class ModifierControlRow:
                 
         # Mandatory lock
         if component and ModifierLogic.is_modifier_mandatory(self.mod_id, component):
-            # Toggle button should be disabled so it can't be unchecked
-             # But keep it visible to show it's active
-             # NOTE: disabling button grays it out. Maybe we just trap the click?
-             # For now, disable is safest.
-             pass
-             # self.toggle_btn.disable() # (Optional choice)
+            # Disable toggle so it can't be unchecked (visual cue + prevent click)
+             self.toggle_btn.disable()
+        else:
+             self.toggle_btn.enable()
 
     def handle_event(self, event):
         """Handle internal events. Returns True if a change occurred."""
