@@ -12,7 +12,7 @@ import glob
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ship import Ship
+from ship import Ship, load_vehicle_classes
 from components import (
     load_components, load_modifiers, create_component,
     MODIFIER_REGISTRY, COMPONENT_REGISTRY
@@ -92,6 +92,7 @@ class TestShipExpectedStats(unittest.TestCase):
     def setUpClass(cls):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
+        load_vehicle_classes()
     
     def test_escort1_expected_stats(self):
         """Escort 1 ship should match expected_stats."""

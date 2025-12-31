@@ -173,75 +173,62 @@ class Component:
             return 0
 
     def recalculate_stats(self):
-        """Recalculate component stats with multiplicative modifier stacking.
-        
-        Modifiers stack multiplicatively.
-        Logic is now delegated to component_modifiers.py registry.
-        """
-        from component_modifiers import apply_modifier_effects
-        import copy
-        
-        # Reset abilities from raw data (deep copy to preserve structure for formula evaluation)
-        self.abilities = copy.deepcopy(self.data.get('abilities', {}))
-        
+        """Recalculate component stats with multiplicative modifier stacking."""
+        # Capture old hp for current_hp logic at end
         old_max_hp = self.max_hp
 
-        # 0. Evaluate Formulas (Base Stats)
+        # 1. Reset and Evaluate Base Formulas
+        self._reset_and_evaluate_base_formulas()
+
+        # 2. Calculate Modifier Stats (Accumulate multipliers)
+        stats = self._calculate_modifier_stats()
+
+        # 3. Apply Base Stats (Generic attributes)
+        self._apply_base_stats(stats, old_max_hp)
+        
+        # 4. Apply Custom/Subclass Stats
+        self._apply_custom_stats(stats)
+
+    def _reset_and_evaluate_base_formulas(self):
+        import copy
+        # Reset abilities from raw data
+        self.abilities = copy.deepcopy(self.data.get('abilities', {}))
+        
         # Context building
         context = {
             'ship_class_mass': 1000 # Default fallback
         }
-        
         if self.ship:
-            # Try to get max mass budget from ship
-            # If ship is attached to a vehicle class, use that.
-            context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
-            
+             context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
+
+        # Evaluate Formulas for attributes
         for attr, formula in self.formulas.items():
             val = self._evaluate_math_formula(formula, context)
-            
-            # Map back to appropriate attributes
             if attr == 'mass':
                 self.base_mass = float(val)
-                self.mass = self.base_mass
+                self.mass = self.base_mass # Reset to base
             elif attr == 'hp':
                 self.base_max_hp = int(val)
-                self.max_hp = self.base_max_hp
+                self.max_hp = self.base_max_hp # Reset to base
             else:
-                 # Generic attribute (damage, range, etc)
-                 # Update ONLY the data dict? Or the attribute?
-                 # Most attributes are read from data[] during init or recalc
-                 # For safety, let's update data[] AND set the attribute if it exists
-                 # self.data[attr] = val # DO NOT modify shared data!
                  if hasattr(self, attr):
-                     # Type conversion if necessary?
-                     # Ideally schema dependent, but int is safe for most
                      if isinstance(getattr(self, attr), int):
                          setattr(self, attr, int(val))
                      else:
                          setattr(self, attr, val)
-
+        
         # Evaluate formulas in abilities
-        # We need to process self.abilities (which is a copy of data['abilities'])
-        # Iterate and evaluate
         for ability_name, val in self.abilities.items():
             if isinstance(val, str) and val.startswith("="):
-                # Standard Key-Value formula
                 new_val = self._evaluate_math_formula(val[1:], context)
                 self.abilities[ability_name] = new_val
             elif isinstance(val, dict):
-                 # Complex object: check 'value' field
                  if 'value' in val and isinstance(val['value'], str) and val['value'].startswith("="):
                      new_val = self._evaluate_math_formula(val['value'][1:], context)
-                     val['value'] = new_val # Update in place within the dict
+                     val['value'] = new_val
 
-
-        # Start with base values
-        self.mass = self.base_mass
-        self.max_hp = self.base_max_hp
-
-        
-        # Initialize stat multipliers and accumulators
+    def _calculate_modifier_stats(self):
+        from component_modifiers import apply_modifier_effects
         stats = {
             'mass_mult': 1.0,
             'hp_mult': 1.0,
@@ -260,44 +247,43 @@ class Component:
             'properties': {}
         }
         
-        
-        # Process all modifiers
         for m in self.modifiers:
             apply_modifier_effects(m.definition, m.value, stats, component=self)
+            
+        return stats
 
-        # Apply specific property overrides (like facing)
+    def _apply_base_stats(self, stats, old_max_hp):
+        # Apply specific property overrides
         for prop, val in stats['properties'].items():
             if hasattr(self, prop):
                 setattr(self, prop, val)
 
         # Apply Arc effects
         if hasattr(self, 'firing_arc'):
-            # If 'arc_set' was used, it overrides everything else
             if stats['arc_set'] is not None:
                 self.firing_arc = stats['arc_set']
             else:
-                # Otherwise apply additive modifiers to base
-                # Using 3 as base assumption if missing, to match original logic
                 base = self.data.get('firing_arc', 3)
                 self.firing_arc = base + stats['arc_add']
 
-        # Apply all accumulated multipliers to base values
-        # Mass has an additive component too
-        self.mass = (self.mass + stats['mass_add']) * stats['mass_mult']
+        # Apply Base Multipliers
+        self.mass = (self.base_mass + stats['mass_add']) * stats['mass_mult']
         
+        # Note: old_max_hp is passed in, captured before base formula reset
         self.max_hp = int(self.base_max_hp * stats['hp_mult'])
         
-        # Persist damage multiplier for dynamic calculations (get_damage)
-        self.damage_multiplier = stats['damage_mult']
+        # Multipliers for generic attributes
+        self.damage_multiplier = stats['damage_mult'] # Persist for get_damage
         
         if hasattr(self, 'damage'):
+            # logic for handling formula-based damage is in Weapon subclass or get_damage usually,
+            # but if 'damage' is a simple int attribute, we scale it.
+            # However, Weapon class stores 'damage' as base int.
+            # To handle non-Weapon components with damage:
             raw_damage = self.data.get('damage', 0)
-            if isinstance(raw_damage, str) and raw_damage.startswith("="):
-                # Re-evaluate formula at range 0 and apply multiplier
-                base_damage = self._evaluate_math_formula(raw_damage[1:], {'range_to_target': 0})
-                self.damage = int(base_damage * stats['damage_mult'])
-            else:
-                self.damage = int(raw_damage * stats['damage_mult'])
+            if not (isinstance(raw_damage, str) and raw_damage.startswith("=")):
+                 self.damage = int(raw_damage * stats['damage_mult'])
+
         if hasattr(self, 'range'):
             self.range = int(self.data.get('range', 0) * stats['range_mult'])
         if hasattr(self, 'cost'):
@@ -311,16 +297,25 @@ class Component:
         if hasattr(self, 'capacity'):
             self.capacity = int(self.data.get('capacity', 0) * stats['capacity_mult'])
 
-        # Apply specific scaling to Crew/LifeSupport abilities and attributes
+        # Handle HP update (healing/new component logic)
+        if old_max_hp == 0:
+            self.current_hp = self.max_hp
+        elif self.current_hp >= old_max_hp:
+            self.current_hp = self.max_hp
+            
+        # Ensure cap
+        self.current_hp = min(self.current_hp, self.max_hp)
+
+    def _apply_custom_stats(self, stats):
+        """Hook for subclasses to apply specific stats."""
+        # Base implementation handles Crew/LifeSupport as they are somewhat generic in this system
         if 'CrewCapacity' in self.abilities:
             val = self.abilities['CrewCapacity']
             if isinstance(val, (int, float)):
                 self.abilities['CrewCapacity'] = int(val * stats['crew_capacity_mult'])
         
         if hasattr(self, 'crew_capacity'):
-             # Use the value from abilities if possible, or data default
              base = self.data.get('crew_capacity', 10)
-             # Better to use base from abilities if consistent, but preserving legacy behavior:
              self.crew_capacity = int(base * stats['crew_capacity_mult'])
 
         if 'LifeSupportCapacity' in self.abilities:
@@ -331,15 +326,6 @@ class Component:
         if hasattr(self, 'life_support_capacity'):
              base = self.data.get('life_support_capacity', 10)
              self.life_support_capacity = int(base * stats['life_support_capacity_mult'])
-            
-        # If component was at full HP before calculation, or is new (current>=old_max), update to new max
-        # Special case: If old_max_hp was 0 (uninitialized formula), treat as new component
-        if old_max_hp == 0:
-            self.current_hp = self.max_hp
-        elif self.current_hp >= old_max_hp:
-            self.current_hp = self.max_hp
-            # Otherwise keep damage but cap at new max
-            self.current_hp = min(self.current_hp, self.max_hp)
 
     def clone(self):
         # Create a new instance with the same data
@@ -460,15 +446,14 @@ class BeamWeapon(Weapon):
         self.base_accuracy = data.get('base_accuracy', 1.0)
         self.accuracy_falloff = data.get('accuracy_falloff', 0.001)
 
-    def recalculate_stats(self):
-        # Reset specific modifiers before parent calc (which might set them if modifier exists)
-        self.accuracy_falloff_mult = 1.0
-        
-        super().recalculate_stats()
+    def _apply_custom_stats(self, stats):
+        super()._apply_custom_stats(stats)
         
         # Apply accuracy falloff multiplier
-        # If modifier exists, self.accuracy_falloff_mult was updated by stats['properties'] logic in super
         base = self.data.get('accuracy_falloff', 0.001)
+        # Check if accuracy_falloff_mult was set by properties in super (it would be in stats['properties'])
+        # Actually in old code it was checking `getattr(self, 'accuracy_falloff_mult')`.
+        # Base `_apply_base_stats` applies properties to self. So this works.
         self.accuracy_falloff = base * getattr(self, 'accuracy_falloff_mult', 1.0)
 
 
@@ -491,33 +476,13 @@ class SeekerWeapon(Weapon):
         self.hp = data.get('hp', 1)
         self.range = int(self.projectile_speed * self.endurance * 0.8)
 
-    def recalculate_stats(self):
-        super().recalculate_stats()
-        from component_modifiers import apply_modifier_effects
-
-        # Recalculate range mult locally since super() uses data['range'] which is invalid for Seeker
-        stats = {
-            'mass_mult': 1.0,
-            'hp_mult': 1.0,
-            'damage_mult': 1.0,
-            'range_mult': 1.0,
-            'cost_mult': 1.0,
-            'thrust_mult': 1.0,
-            'turn_mult': 1.0,
-            'energy_gen_mult': 1.0,
-            'capacity_mult': 1.0,
-            'crew_capacity_mult': 1.0,
-            'life_support_capacity_mult': 1.0,
-            'mass_add': 0.0,
-            'arc_add': 0.0,
-            'arc_set': None,
-            'properties': {}
-        }
+    def _apply_custom_stats(self, stats):
+        super()._apply_custom_stats(stats)
         
-        for m in self.modifiers:
-            apply_modifier_effects(m.definition, m.value, stats, component=self)
-
         # Apply 80% rule to the calculated range (Straight Line * 0.8 * Multipliers)
+        # Note: Base `_apply_base_stats` already applied `range_mult` to `self.range` based on `data['range']`.
+        # But `SeekerWeapon` ignores `data['range']` and creates it from projectile_speed.
+        # So we overwrite it here.
         self.range = int((self.projectile_speed * self.endurance) * 0.8 * stats['range_mult'])
         
     def clone(self):
@@ -568,52 +533,9 @@ class Shield(Component):
         self.shield_capacity = self.abilities.get('ShieldProjection', 0)
         self.base_shield_capacity = self.shield_capacity
     
-    def recalculate_stats(self):
-        super().recalculate_stats()
-        from component_modifiers import apply_modifier_effects
-        
-        # Recalc local
-        stats = {
-            'capacity_mult': 1.0,
-            # Other stats calculated in super, but we need capacity_mult explicitly if not stored on self
-            # But super uses local 'stats' dict which is lost. 
-            # We need to re-run modifiers for local properties not covered by super.
-            # OR better: Add 'shield_capacity' to the generic recalculate loop if possible?
-            # Creating a lightweight re-calc for now.
-        }
-        # Wait, if super() ran, we lost the 'stats' dict. 
-        # But 'stats' in super handles 'capacity_mult' -> 'self.capacity'.
-        # Shield uses 'self.shield_capacity'.
-        # So we must manually apply modifiers here.
-        
-        current_stats = self._get_modifier_stats()
-        self.shield_capacity = int(self.base_shield_capacity * current_stats.get('capacity_mult', 1.0))
-
-    def _get_modifier_stats(self):
-        from component_modifiers import apply_modifier_effects
-        stats = {
-            'mass_mult': 1.0,
-            'hp_mult': 1.0,
-            'damage_mult': 1.0,
-            'range_mult': 1.0,
-            'cost_mult': 1.0,
-            'thrust_mult': 1.0,
-            'turn_mult': 1.0,
-            'energy_gen_mult': 1.0,
-            'capacity_mult': 1.0,
-            'crew_capacity_mult': 1.0,
-            'life_support_capacity_mult': 1.0,
-            'mass_add': 0.0,
-            'arc_add': 0.0,
-            'arc_set': None,
-            'properties': {}
-        }
-        for m in self.modifiers:
-             eff = m.definition.effects
-             # We only care about capacity_mult here or simple_size which sets it
-             # Re-using apply_modifier_effects is safest
-             apply_modifier_effects(m.definition, m.value, stats, component=self)
-        return stats
+    def _apply_custom_stats(self, stats):
+        super()._apply_custom_stats(stats)
+        self.shield_capacity = int(self.base_shield_capacity * stats.get('capacity_mult', 1.0))
 
     def clone(self):
         return Shield(self.data)
@@ -625,37 +547,10 @@ class ShieldRegenerator(Component):
         self.base_regen_rate = self.regen_rate
         self.energy_cost = self.abilities.get('EnergyConsumption', 0)
     
-    def recalculate_stats(self):
-        super().recalculate_stats()
-        # Scale regen using energy_gen_mult (logical fit for simple_size) or capacity_mult?
-        # simple_size scales energy_gen_mult. Regen is generation.
-        
-        current_stats = self._get_modifier_stats()
+    def _apply_custom_stats(self, stats):
+        super()._apply_custom_stats(stats)
         # Use energy_gen_mult for regeneration rate scaling as simple_size affects it
-        self.regen_rate = self.base_regen_rate * current_stats.get('energy_gen_mult', 1.0)
-        
-    def _get_modifier_stats(self):
-        from component_modifiers import apply_modifier_effects
-        stats = {
-            'mass_mult': 1.0,
-            'hp_mult': 1.0,
-            'damage_mult': 1.0,
-            'range_mult': 1.0,
-            'cost_mult': 1.0,
-            'thrust_mult': 1.0,
-            'turn_mult': 1.0,
-            'energy_gen_mult': 1.0,
-            'capacity_mult': 1.0,
-            'crew_capacity_mult': 1.0,
-            'life_support_capacity_mult': 1.0,
-            'mass_add': 0.0,
-            'arc_add': 0.0,
-            'arc_set': None,
-            'properties': {}
-        }
-        for m in self.modifiers:
-             apply_modifier_effects(m.definition, m.value, stats, component=self)
-        return stats
+        self.regen_rate = self.base_regen_rate * stats.get('energy_gen_mult', 1.0)
 
     def clone(self):
         return ShieldRegenerator(self.data)
@@ -708,12 +603,30 @@ class Hangar(Component):
         return Hangar(self.data)
 
 COMPONENT_REGISTRY = {}
+COMPONENT_TYPE_MAP = {
+    "Bridge": Bridge,
+    "Weapon": ProjectileWeapon,
+    "ProjectileWeapon": ProjectileWeapon,
+    "Engine": Engine,
+    "Thruster": Thruster,
+    "Tank": Tank,
+    "Armor": Armor,
+    "Generator": Generator,
+    "BeamWeapon": BeamWeapon,
+    "CrewQuarters": CrewQuarters,
+    "LifeSupport": LifeSupport,
+    "Sensor": Sensor,
+    "Electronics": Electronics,
+    "Shield": Shield,
+    "ShieldRegenerator": ShieldRegenerator,
+    "SeekerWeapon": SeekerWeapon,
+    "Hangar": Hangar
+}
 
 def load_components(filepath="data/components.json"):
     global COMPONENT_REGISTRY
     import os
 
-    
     # Try absolute path based on this file if CWD fails
     if not os.path.exists(filepath):
         print(f"WARN: {filepath} not found in CWD ({os.getcwd()}).")
@@ -733,49 +646,13 @@ def load_components(filepath="data/components.json"):
         
         for comp_def in data['components']:
             c_type = comp_def['type']
-            obj = None
             try:
-                if c_type == "Bridge":
-                    obj = Bridge(comp_def)
-                elif c_type == "Weapon" or c_type == "ProjectileWeapon":
-                    obj = ProjectileWeapon(comp_def)
-                elif c_type == "Engine":
-                    obj = Engine(comp_def)
-                elif c_type == "Thruster":
-                    obj = Thruster(comp_def)
-                elif c_type == "Tank":
-                    obj = Tank(comp_def)
-                elif c_type == "Armor":
-                    obj = Armor(comp_def)
-                elif c_type == "Generator":
-                    obj = Generator(comp_def)
-                elif c_type == "BeamWeapon":
-                    obj = BeamWeapon(comp_def)
-                elif c_type == "CrewQuarters":
-                    obj = CrewQuarters(comp_def)
-                elif c_type == "LifeSupport":
-                    obj = LifeSupport(comp_def)
-                elif c_type == "Sensor":
-                    obj = Sensor(comp_def)
-                elif c_type == "Electronics":
-                    obj = Electronics(comp_def)
-                elif c_type == "Shield":
-                    obj = Shield(comp_def)
-                elif c_type == "ShieldRegenerator":
-                    obj = ShieldRegenerator(comp_def)
-                elif c_type == "SeekerWeapon":
-                    obj = SeekerWeapon(comp_def)
-                elif c_type == "Hangar":
-                    obj = Hangar(comp_def)
-                else:
-                    obj = Component(comp_def)
-                
+                cls = COMPONENT_TYPE_MAP.get(c_type, Component)
+                obj = cls(comp_def)
                 COMPONENT_REGISTRY[comp_def['id']] = obj
             except Exception as e:
                 print(f"ERROR creating component {comp_def.get('id')}: {e}")
                 
-
-        
     except Exception as e:
         print(f"ERROR loading/parsing components json: {e}")
 

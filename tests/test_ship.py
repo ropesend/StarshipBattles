@@ -11,7 +11,7 @@ from components import load_components, create_component, Bridge
 class TestShip(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        initialize_ship_data("C:\\Dev\\Starship Battles") 
+        initialize_ship_data() 
         load_components("data/components.json")
 
     def test_add_component_constraints(self):
