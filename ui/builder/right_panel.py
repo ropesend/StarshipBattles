@@ -353,8 +353,12 @@ class BuilderRightPanel:
         # FREEZING CONFIG
         self.stats_config = STATS_CONFIG
         
-        # === Column 1: Armor, Targeting, Main Systems, Shields ===
+        # === Column 1: Main, Maneuvering, Shields, Armor, Targeting ===
         y = start_y
+        
+        y = build_section("Main Systems", self.stats_config.get('main', []), col1_x, y)
+        y = build_section("Maneuvering", self.stats_config.get('maneuvering', []), col1_x, y)
+        y = build_section("Shields", self.stats_config.get('shields', []), col1_x, y)
         
         # Armor
         y = build_section("Armor", self.stats_config.get('armor', []), col1_x, y)
@@ -369,14 +373,11 @@ class BuilderRightPanel:
         y += 10
         
         y = build_section("Targeting", self.stats_config.get('targeting', []), col1_x, y)
-        y = build_section("Main Systems", self.stats_config.get('main', []), col1_x, y)
-        y = build_section("Shields", self.stats_config.get('shields', []), col1_x, y)
         col1_max_y = y
         
-        # === Column 2: Logistics, Maneuvering, Crew, Fighter ===
+        # === Column 2: Logistics, Crew, Fighter ===
         y = start_y
         
-        y = build_section("Maneuvering", self.stats_config.get('maneuvering', []), col2_x, y)
         y = build_section("Logistics", self.stats_config.get('logistics', []), col2_x, y)
         y = build_section("Crew Logistics", self.stats_config.get('crewlogistics', []), col2_x, y)
         y = build_section("Fighter Support", self.stats_config.get('fightersupport', []), col2_x, y)

@@ -74,7 +74,9 @@ class ModifierLogic:
             return 0.0
         elif mod_id == 'turret_mount':
             # Default to base firing arc
-            return float(getattr(component, 'firing_arc', mod_def.min_val))
+            # Use comp.data to get the TRUE base value, ignoring any current runtime modifications
+            base_arc = component.data.get('firing_arc', mod_def.min_val)
+            return float(base_arc)
             
         return mod_def.default_val
         
@@ -100,7 +102,9 @@ class ModifierLogic:
         
         if mod_id == 'turret_mount':
             # Min value cannot be less than the component's base fixed arc
-            local_min = float(getattr(component, 'firing_arc', local_min))
+            # Use comp.data to get the TRUE base value, ignoring any current runtime modifications
+            base_arc = component.data.get('firing_arc', local_min)
+            local_min = float(base_arc)
             
         return (local_min, local_max)
 
