@@ -19,6 +19,12 @@ class StructurePanelLayoutConfig:
     LABEL_OFFSET_X: int = 50
     LAYER_NAME_OFFSET_X: int = 65
     
+    # Field Widths
+    STATS_WIDTH: int = 200
+    NAME_WIDTH: int = 220
+    MASS_WIDTH: int = 60
+    PCT_WIDTH: int = 50
+    
     # Colors
     BG_COLOR_INDIVIDUAL: str = "#151515"
     BG_COLOR_GROUP: str = "#202020"

@@ -54,24 +54,26 @@ class IndividualComponentItem:
             )
             
         UILabel(
-            relative_rect=pygame.Rect(config.LABEL_OFFSET_X, 0, 150, self.height),
+            relative_rect=pygame.Rect(config.LABEL_OFFSET_X, 0, config.NAME_WIDTH, self.height),
             text=f"{component.name}",
             manager=manager,
             container=self.panel,
             object_id='#left_aligned_label'
         )
         
+        
         # Mass shifted right
-        UILabel(
-            relative_rect=pygame.Rect(-160, 0, 60, self.height),
+        self.mass_label = UILabel(
+            relative_rect=pygame.Rect(-160, 0, config.MASS_WIDTH, self.height),
             text=f"{int(component.mass)}t",
             manager=manager,
             container=self.panel,
             anchors=config.ANCHOR_TOP_RIGHT.copy()
-        ).set_dimensions((60, self.height)) # Fix anchor adjustment if needed? pygame_gui usually handles it
+        )
+        self.mass_label.set_dimensions((config.MASS_WIDTH, self.height)) # Fix anchor adjustment if needed? pygame_gui usually handles it
         
         pct_val = (component.mass / max_mass * 100) if max_mass > 0 else 0
-        UILabel(
+        self.pct_label = UILabel(
             relative_rect=pygame.Rect(-100, 0, 50, self.height),
             text=f"{pct_val:.1f}%",
             manager=manager,
@@ -98,6 +100,16 @@ class IndividualComponentItem:
             anchors=config.ANCHOR_TOP_RIGHT
         )
         
+    def update(self, component, max_mass, is_selected):
+        """Update relevant data in-place."""
+        self.component = component
+        self.is_selected = is_selected
+        
+        self.mass_label.set_text(f"{int(component.mass)}t")
+        
+        pct_val = (component.mass / max_mass * 100) if max_mass > 0 else 0
+        self.pct_label.set_text(f"{pct_val:.1f}%")
+
     def get_abs_rect(self):
         """Get the absolute screen rect of this item's panel."""
         return self.panel.get_abs_rect()
@@ -147,6 +159,7 @@ class LayerComponentItem:
         )
         
         # Expand Button
+        self.expand_button = None
         if count > 1:
             arrow = "▼" if is_expanded else "▶"
             self.expand_button = UIButton(
@@ -156,8 +169,6 @@ class LayerComponentItem:
                 container=self.panel,
                 object_id='#expand_button'
             )
-        else:
-            self.expand_button = None
         
         # Icon
         sprite = sprite_mgr.get_sprite(component.sprite_index)
@@ -175,8 +186,8 @@ class LayerComponentItem:
         if count > 1:
             name_text += f" x{count}"
             
-        UILabel(
-            relative_rect=pygame.Rect(config.LAYER_NAME_OFFSET_X, 0, 160, self.height),
+        self.name_label = UILabel(
+            relative_rect=pygame.Rect(config.LAYER_NAME_OFFSET_X, 0, config.NAME_WIDTH, self.height),
             text=name_text,
             manager=manager,
             container=self.panel,
@@ -184,8 +195,8 @@ class LayerComponentItem:
         )
         
         # Mass
-        UILabel(
-            relative_rect=pygame.Rect(-160, 0, 60, self.height),
+        self.mass_label = UILabel(
+            relative_rect=pygame.Rect(-160, 0, config.MASS_WIDTH, self.height),
             text=f"{int(total_mass)}t",
             manager=manager,
             container=self.panel,
@@ -193,8 +204,8 @@ class LayerComponentItem:
         )
         
         # Percent
-        UILabel(
-            relative_rect=pygame.Rect(-100, 0, 50, self.height),
+        self.pct_label = UILabel(
+            relative_rect=pygame.Rect(-100, 0, config.PCT_WIDTH, self.height),
             text=f"{total_pct:.1f}%",
             manager=manager,
             container=self.panel,
@@ -219,6 +230,28 @@ class LayerComponentItem:
             object_id='#delete_button',
             anchors=config.ANCHOR_TOP_RIGHT
         )
+
+    def update(self, count, total_mass, total_pct, is_expanded, is_selected, component_name):
+        self.count = count
+        self.is_selected = is_selected
+        
+        # Update labels
+        name_text = f"{component_name}"
+        if count > 1:
+            name_text += f" x{count}"
+        self.name_label.set_text(name_text)
+        
+        self.mass_label.set_text(f"{int(total_mass)}t")
+        self.pct_label.set_text(f"{total_pct:.1f}%")
+        
+        # Update expand arrow
+        if self.expand_button:
+            if count <= 1:
+                self.expand_button.hide()
+            else:
+                self.expand_button.show()
+                arrow = "▼" if is_expanded else "▶"
+                self.expand_button.set_text(arrow)
 
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -265,7 +298,7 @@ class LayerHeaderItem:
         )
         
         arrow = "▼" if is_expanded else "▶"
-        UILabel(
+        self.arrow_label = UILabel(
             relative_rect=pygame.Rect(5, 0, 20, self.height),
             text=arrow,
             manager=manager,
@@ -286,14 +319,26 @@ class LayerHeaderItem:
         if current_mass > max_mass:
             obj_id = '#layer_stats_text_overflow'
             
-        UILabel(
-            relative_rect=pygame.Rect(-150, 0, 140, self.height),
+        self.stats_label = UILabel(
+            relative_rect=pygame.Rect(-210, 0, config.STATS_WIDTH, self.height),
             text=stats_text,
             manager=manager,
             container=self.panel,
             object_id=obj_id,
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}
         )
+        
+    def update(self, current_mass, max_mass, is_expanded):
+        arrow = "▼" if is_expanded else "▶"
+        self.arrow_label.set_text(arrow)
+        
+        pct_filled = (current_mass / max_mass * 100) if max_mass > 0 else 0
+        stats_text = f"{int(current_mass)}/{int(max_mass)}t ({pct_filled:.1f}%)"
+        self.stats_label.set_text(stats_text)
+        
+        # Optional: Update Object ID for overflow color?
+        # PygameGUI doesn't support changing object_id easily at runtime without rebuild. 
+        # But we can change text color if we track the labels. For now, text update is good.
         
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.button:

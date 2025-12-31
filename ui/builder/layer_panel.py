@@ -97,22 +97,23 @@ class LayerPanel:
             
             header = self.ui_cache.get(header_key)
             if header:
-                # Recreate headers for now to ensure text updates
-                header.kill() 
-            
-            header = LayerHeaderItem(
-                self.manager,
-                self.scroll_container,
-                l_type,
-                current_mass,
-                max_mass,
-                self.expanded_layers.get(l_type, True),
-                self, # Event Handler
-                y_pos,
-                content_width,
-                self.config
-            )
-            self.ui_cache[header_key] = header # Update cache
+                header.update(current_mass, max_mass, self.expanded_layers.get(l_type, True))
+                header.panel.set_relative_position((0, y_pos))
+            else:
+                header = LayerHeaderItem(
+                    self.manager,
+                    self.scroll_container,
+                    l_type,
+                    current_mass,
+                    max_mass,
+                    self.expanded_layers.get(l_type, True),
+                    self, # Event Handler
+                    y_pos,
+                    content_width,
+                    self.config
+                )
+                self.ui_cache[header_key] = header
+                
             new_items_list.append(header)
             y_pos += header.height
             
@@ -138,26 +139,29 @@ class LayerPanel:
                     item_key = ("group", group_key)
                     visited_keys.add(item_key)
                     
-                    if item_key in self.ui_cache:
-                         self.ui_cache[item_key].kill() 
-
-                    item = LayerComponentItem(
-                        self.manager,
-                        self.scroll_container,
-                        comp_template,
-                        count,
-                        mass_total,
-                        pct_val,
-                        is_expanded,
-                        group_key,
-                        is_selected_group,
-                        y_pos,
-                        content_width,
-                        self.builder.sprite_mgr,
-                        self,
-                        self.config
-                    )
-                    self.ui_cache[item_key] = item
+                    item = self.ui_cache.get(item_key)
+                    if item:
+                        item.update(count, mass_total, pct_val, is_expanded, is_selected_group, comp_template.name)
+                        item.panel.set_relative_position((0, y_pos))
+                    else:
+                        item = LayerComponentItem(
+                            self.manager,
+                            self.scroll_container,
+                            comp_template,
+                            count,
+                            mass_total,
+                            pct_val,
+                            is_expanded,
+                            group_key,
+                            is_selected_group,
+                            y_pos,
+                            content_width,
+                            self.builder.sprite_mgr,
+                            self,
+                            self.config
+                        )
+                        self.ui_cache[item_key] = item
+                        
                     new_items_list.append(item)
                     y_pos += item.height
                     
@@ -172,22 +176,25 @@ class LayerPanel:
                              ind_key = ("ind", comp)
                              visited_keys.add(ind_key)
                              
-                             if ind_key in self.ui_cache:
-                                 self.ui_cache[ind_key].kill()
+                             ind_item = self.ui_cache.get(ind_key)
+                             if ind_item:
+                                 ind_item.update(comp, max_mass, is_sel_ind)
+                                 ind_item.panel.set_relative_position((0, y_pos))
+                             else:
+                                 ind_item = IndividualComponentItem(
+                                    self.manager,
+                                    self.scroll_container,
+                                    comp,
+                                    max_mass,
+                                    y_pos,
+                                    content_width,
+                                    self.builder.sprite_mgr,
+                                    self,
+                                    is_sel_ind,
+                                    self.config
+                                 )
+                                 self.ui_cache[ind_key] = ind_item
                                  
-                             ind_item = IndividualComponentItem(
-                                self.manager,
-                                self.scroll_container,
-                                comp,
-                                max_mass,
-                                y_pos,
-                                content_width,
-                                self.builder.sprite_mgr,
-                                self,
-                                is_sel_ind,
-                                self.config
-                             )
-                             self.ui_cache[ind_key] = ind_item
                              new_items_list.append(ind_item)
                              y_pos += ind_item.height
             
