@@ -273,7 +273,10 @@ class ShipStatsPanel(BattlePanel):
         y += 16
         
         for layer_type in [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]:
-            for comp in ship.layers[layer_type]['components']:
+            layer = ship.layers.get(layer_type)
+            if not layer: continue
+
+            for comp in layer['components']:
                 if isinstance(comp, Weapon): continue
                 
                 hp_pct = comp.current_hp / comp.max_hp if comp.max_hp > 0 else 1.0
