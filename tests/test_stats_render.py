@@ -65,7 +65,7 @@ class TestStatsRender(unittest.TestCase):
     def test_logistics_section(self, mock_label, mock_entry, mock_drop, mock_box, mock_img):
          panel = BuilderRightPanel(self.builder, self.manager, pygame.Rect(0,0,400,600))
          self.assertIn('crew_required', panel.rows_map)
-         self.assertIn('fuel_time', panel.rows_map)
+         self.assertIn('fuel_endurance', panel.rows_map)
 
 if __name__ == '__main__':
     unittest.main()

@@ -418,7 +418,7 @@
             "endurance": 3.0,
             "reload": 4.0,
             "ammo_cost": 5,
-            "firing_arc": 45,
+            "firing_arc": 1,
             "sprite_index": 86,
             "abilities": {
                 "SeekerWeapon": true,

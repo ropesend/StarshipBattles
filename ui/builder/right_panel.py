@@ -353,38 +353,32 @@ class BuilderRightPanel:
         # FREEZING CONFIG
         self.stats_config = STATS_CONFIG
         
-        # === Column 1: Main, Maneuvering, Shields ===
-        y = start_y
-        y = build_section("Main Systems", self.stats_config.get('main', []), col1_x, y)
-        y = build_section("Maneuvering", self.stats_config.get('maneuvering', []), col1_x, y)
-        y = build_section("Shields", self.stats_config.get('shields', []), col1_x, y)
-        col1_max_y = y
-        
-        # === Column 2: Armor, Targeting, Logistics ===
+        # === Column 1: Armor, Targeting, Main Systems, Shields ===
         y = start_y
         
         # Armor
-        y = build_section("Armor", self.stats_config.get('armor', []), col2_x, y)
+        y = build_section("Armor", self.stats_config.get('armor', []), col1_x, y)
         
         # Layers (Special Case: Dynamic) - Inserted under Armor
         self.layer_rows = []
         for i in range(4):
-            sr = StatRow(f"layer_{i}", f"Slot {i}", self.manager, self.panel, col2_x, y, col_w)
+            sr = StatRow(f"layer_{i}", f"Slot {i}", self.manager, self.panel, col1_x, y, col_w)
             sr.set_visible(False)
             self.layer_rows.append(sr)
             y += 22
         y += 10
         
-        # Targeting
-        y = build_section("Targeting", self.stats_config.get('targeting', []), col2_x, y)
+        y = build_section("Targeting", self.stats_config.get('targeting', []), col1_x, y)
+        y = build_section("Main Systems", self.stats_config.get('main', []), col1_x, y)
+        y = build_section("Shields", self.stats_config.get('shields', []), col1_x, y)
+        col1_max_y = y
         
-        # Logistics
+        # === Column 2: Logistics, Maneuvering, Crew, Fighter ===
+        y = start_y
+        
+        y = build_section("Maneuvering", self.stats_config.get('maneuvering', []), col2_x, y)
         y = build_section("Logistics", self.stats_config.get('logistics', []), col2_x, y)
-        
-        # Crew Logistics (New)
         y = build_section("Crew Logistics", self.stats_config.get('crewlogistics', []), col2_x, y)
-
-        # Fighter Support (New)
         y = build_section("Fighter Support", self.stats_config.get('fightersupport', []), col2_x, y)
         
         col2_max_y = y

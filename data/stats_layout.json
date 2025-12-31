@@ -13,6 +13,132 @@
                 {
                     "id": "max_hp",
                     "label": "Max HP"
+                },
+                {
+                    "id": "max_energy",
+                    "label": "Max Energy"
+                },
+                {
+                    "id": "energy_gen",
+                    "label": "Energy Gen",
+                    "key": "energy_gen_rate",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                }
+            ]
+        },
+        "logistics": {
+            "title": "Logistics",
+            "items": [
+                {
+                    "id": "max_fuel",
+                    "label": "Storage Fuel"
+                },
+                {
+                    "id": "max_ammo",
+                    "label": "Storage Ammo"
+                },
+                {
+                    "id": "max_energy",
+                    "label": "Storage Energy"
+                },
+                {
+                    "id": "fuel_burn",
+                    "label": "Fuel Burn Rate",
+                    "getter": "get_fuel_consumption",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "ammo_burn",
+                    "label": "Ammo Burn Rate",
+                    "getter": "get_ammo_consumption",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "energy_burn",
+                    "label": "Energy Burn Rate",
+                    "getter": "get_energy_consumption",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "fuel_regen",
+                    "label": "Fuel Regen",
+                    "getter": "get_fuel_recharge",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "ammo_regen",
+                    "label": "Ammo Regen",
+                    "getter": "get_ammo_recharge",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "energy_regen",
+                    "label": "Energy Regen",
+                    "key": "energy_gen_rate",
+                    "formatter": "fmt_decimal",
+                    "unit": "/s"
+                },
+                {
+                    "id": "fuel_endurance",
+                    "label": "Fuel Endurance",
+                    "key": "fuel_endurance",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "ammo_endurance",
+                    "label": "Ammo Endurance",
+                    "key": "ammo_endurance",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "energy_endurance",
+                    "label": "Energy Endurance",
+                    "key": "energy_endurance",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "fuel_replenish",
+                    "label": "Replenish Fuel",
+                    "getter": "get_zero",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "ammo_replenish",
+                    "label": "Replenish Ammo",
+                    "getter": "get_zero",
+                    "formatter": "fmt_time"
+                },
+                {
+                    "id": "energy_replenish",
+                    "label": "Replenish Energy",
+                    "key": "energy_recharge",
+                    "formatter": "fmt_time"
+                }
+            ]
+        },
+        "armor": {
+            "title": "Armor",
+            "items": [
+                {
+                    "id": "armor_hp",
+                    "label": "Total Armor HP",
+                    "getter": "get_armor_hp"
+                },
+                {
+                    "id": "emissive_armor",
+                    "label": "Dmg Ignore"
+                },
+                {
+                    "id": "crystalline_armor",
+                    "label": "Shield Regen/Hit",
+                    "unit": "/hit",
+                    "formatter": "fmt_decimal"
                 }
             ]
         },
@@ -20,14 +146,9 @@
             "title": "Maneuvering",
             "items": [
                 {
-                    "id": "max_speed",
-                    "label": "Max Speed"
-                },
-                {
-                    "id": "turn_rate",
-                    "label": "Turn Rate",
-                    "key": "turn_speed",
-                    "unit": " deg/s"
+                    "id": "thrust",
+                    "label": "Total Thrust",
+                    "key": "total_thrust"
                 },
                 {
                     "id": "acceleration",
@@ -36,9 +157,20 @@
                     "formatter": "{:.2f}"
                 },
                 {
-                    "id": "thrust",
-                    "label": "Total Thrust",
-                    "key": "total_thrust"
+                    "id": "max_speed",
+                    "label": "Top Speed"
+                },
+                {
+                    "id": "maneuver_points",
+                    "label": "Total Maneuvering Points",
+                    "getter": "get_maneuver_points",
+                    "formatter": "{:.0f}"
+                },
+                {
+                    "id": "turn_rate",
+                    "label": "Turning Rate",
+                    "key": "turn_speed",
+                    "unit": " deg/s"
                 }
             ]
         },
@@ -65,21 +197,6 @@
                 }
             ]
         },
-        "armor": {
-            "title": "Armor",
-            "items": [
-                {
-                    "id": "emissive_armor",
-                    "label": "Dmg Ignore"
-                },
-                {
-                    "id": "crystalline_armor",
-                    "label": "Shield Regen/Hit",
-                    "unit": "/hit",
-                    "formatter": "fmt_decimal"
-                }
-            ]
-        },
         "targeting": {
             "title": "Targeting",
             "items": [
@@ -102,48 +219,6 @@
                     "key": "baseline_to_hit_offense",
                     "formatter": "fmt_decimal",
                     "unit": "x"
-                }
-            ]
-        },
-        "logistics": {
-            "title": "Logistics",
-            "items": [
-                {
-                    "id": "max_fuel",
-                    "label": "Max Fuel"
-                },
-                {
-                    "id": "max_ammo",
-                    "label": "Max Ammo"
-                },
-                {
-                    "id": "max_energy",
-                    "label": "Max Energy"
-                },
-                {
-                    "id": "energy_gen",
-                    "label": "Energy Gen",
-                    "key": "energy_gen_rate",
-                    "formatter": "fmt_decimal",
-                    "unit": "/s"
-                },
-                {
-                    "id": "fuel_time",
-                    "label": "Fuel Time",
-                    "key": "fuel_endurance",
-                    "formatter": "fmt_time"
-                },
-                {
-                    "id": "ammo_time",
-                    "label": "Ammo Time",
-                    "key": "ammo_endurance",
-                    "formatter": "fmt_time"
-                },
-                {
-                    "id": "energy_time",
-                    "label": "Energy Time",
-                    "key": "energy_endurance",
-                    "formatter": "fmt_time"
                 }
             ]
         },

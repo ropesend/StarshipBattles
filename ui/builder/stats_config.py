@@ -95,6 +95,36 @@ def get_max_targets(ship):
 def fmt_targeting(val):
     return "Single" if val == 1 else f"Multi ({val})"
 
+# --- New Getters (Logistics Update) ---
+def get_armor_hp(ship):
+    from ship import LayerType
+    if LayerType.ARMOR in ship.layers:
+        return ship.layers[LayerType.ARMOR].get('max_hp_pool', 0)
+    return 0
+
+def get_maneuver_points(ship):
+    return getattr(ship, 'total_maneuver_points', 0)
+
+def get_zero(ship):
+    return 0
+
+def get_fuel_recharge(ship):
+    # Placeholder: No regen mechanism yet
+    return 0
+    
+def get_ammo_recharge(ship):
+    # Placeholder: No regen mechanism yet
+    return 0
+    
+def get_fuel_consumption(ship):
+    return getattr(ship, 'fuel_consumption', 0)
+
+def get_ammo_consumption(ship):
+    return getattr(ship, 'ammo_consumption', 0)
+
+def get_energy_consumption(ship):
+    return getattr(ship, 'energy_consumption', 0)
+
 # --- Config Groups ---
 
 
@@ -106,7 +136,16 @@ GETTERS = {
     'get_crew_required': get_crew_required,
     'get_crew_capacity': get_crew_capacity,
     'get_life_support': get_life_support,
-    'get_max_targets': get_max_targets
+    'get_max_targets': get_max_targets,
+    # New
+    'get_armor_hp': get_armor_hp,
+    'get_maneuver_points': get_maneuver_points,
+    'get_zero': get_zero,
+    'get_fuel_recharge': get_fuel_recharge,
+    'get_ammo_recharge': get_ammo_recharge,
+    'get_fuel_consumption': get_fuel_consumption,
+    'get_ammo_consumption': get_ammo_consumption,
+    'get_energy_consumption': get_energy_consumption
 }
 
 FORMATTERS = {
