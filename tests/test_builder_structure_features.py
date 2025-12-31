@@ -108,9 +108,9 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         c1 = Component(self.comp_data)
         c2 = Component(self.comp_data)
         c3 = Component(self.comp_data)
-        c1.id = 1
-        c2.id = 2
-        c3.id = 3
+        c1.id = "test_id" # Ensure they are same type
+        c2.id = "test_id"
+        c3.id = "test_id"
         
         # Select c1
         self.builder_gui.on_selection_changed(c1, append=False)
@@ -134,8 +134,8 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         """Test that changing a modifier on one selected component updates others."""
         c1 = Component(self.comp_data)
         c2 = Component(self.comp_data)
-        c1.id = 1
-        c2.id = 2
+        c1.id = "test_id"
+        c2.id = "test_id"
         
         # Setup modifiers
         mod_def = MagicMock()

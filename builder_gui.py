@@ -161,8 +161,8 @@ class SchematicView:
         
         display_range = min(weapon_range / 10, 300)
         
-        start_angle = math.radians(90 - facing - arc_degrees)
-        end_angle = math.radians(90 - facing + arc_degrees)
+        start_angle = math.radians(90 - facing - (arc_degrees / 2))
+        end_angle = math.radians(90 - facing + (arc_degrees / 2))
         
         if isinstance(weapon, BeamWeapon):
             color = (100, 255, 255, 100)
@@ -515,11 +515,30 @@ class BuilderSceneGUI:
                          norm_selection.append((None, -1, item))
             
             if append:
-                # Add unique items
-                current_ids = {c[2].id for c in self.selected_components}
-                for item in norm_selection:
-                    if item[2].id not in current_ids:
-                        self.selected_components.append(item)
+                # 1. Enforce Homogeneity
+                # Check if new items match the type (definition ID) of existing selection
+                if self.selected_components and norm_selection:
+                    # Get definition ID of currently selected items (assuming they are homogeneous)
+                    # We can check the first one.
+                    current_def_id = self.selected_components[0][2].id
+                    
+                    # Check if all new items match this ID
+                    matches_type = all(item[2].id == current_def_id for item in norm_selection)
+                    
+                    if not matches_type:
+                        # User clicked a different type. Standard behavior: Replace selection.
+                        # This feels cleaner than ignoring it.
+                        self.selected_components = norm_selection
+                        append = False # Treat as replace
+                    else:
+                        # Add unique items (Uniqueness based on OBJECT IDENTITY, not Def ID)
+                        current_objs = {c[2] for c in self.selected_components}
+                        for item in norm_selection:
+                            if item[2] not in current_objs:
+                                self.selected_components.append(item)
+                else:
+                    # Nothing currently selected, just append (which effectively is a set)
+                     self.selected_components = norm_selection
             else:
                 self.selected_components = norm_selection
 

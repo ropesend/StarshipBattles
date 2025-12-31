@@ -142,11 +142,13 @@ class TestCombatTargeting(unittest.TestCase):
         self.assertEqual(len(attacks), 0, "Should not fire at target outside arc (90 > 45)")
 
         # Case 3: Target at 45 degrees (Boundary Valid)
+        # With new "Total Arc" logic, 45 deg target requires 90 deg arc (±45)
+        weapon.firing_arc = 90 
         weapon.cooldown_timer = 0
         self.target.position = pygame.math.Vector2(100, 100) 
         self.attacker.is_derelict = False
         attacks = self.attacker.fire_weapons()
-        self.assertEqual(len(attacks), 1, "Should fire at target exactly on arc boundary (45 deg)")
+        self.assertEqual(len(attacks), 1, "Should fire at target exactly on arc boundary (45 deg) with 90 deg arc")
 
     def test_seeker_ignores_arc(self):
         """Verify SeekerWeapon fires even if target is outside arc."""

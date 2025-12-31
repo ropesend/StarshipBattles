@@ -21,6 +21,8 @@ class ModifierEffects:
         stats['capacity_mult'] *= scale
         stats['crew_capacity_mult'] *= scale
         stats['life_support_capacity_mult'] *= scale
+        # Consumptions options
+        stats['consumption_mult'] *= scale
 
     @staticmethod
     def range_mount(val, stats):

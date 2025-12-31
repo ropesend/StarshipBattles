@@ -505,13 +505,21 @@ class LayerPanel:
                     if is_expanded:
                         for comp in comp_list:
                              # Highlight if: 1) this specific individual is selected, OR
-                             # 2) the parent group is selected (and no specific individual override)
+                             # 2) the parent group is selected (explicit group selection)
+                             
                              is_sel_ind = False
-                             if self.builder.selected_component and self.builder.selected_component[2] is comp:
-                                 is_sel_ind = True
-                             elif is_selected_group:
-                                 # Parent group is selected, so highlight all children
-                                 is_sel_ind = True
+                             if self.builder.selected_components:
+                                 # Efficient check
+                                 # We could cache this set at start of rebuild for performance, 
+                                 # but list is usually small (<100 components).
+                                 if any(x[2] is comp for x in self.builder.selected_components):
+                                     is_sel_ind = True
+                                     
+                             # elif is_selected_group: 
+                             #    # If group header is selected, do we behave as if all children are selected?
+                             #    # Group header selection (via 'select_group') selects ALL components in logic.
+                             #    # So checking selected_components above covers it!
+                             #    pass
                                  
                              ind_item = IndividualComponentItem(
                                 self.manager,

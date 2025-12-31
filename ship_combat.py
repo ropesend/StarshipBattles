@@ -130,7 +130,7 @@ class ShipCombatMixin:
                                 comp_facing = (ship_angle + comp.facing_angle) % 360
                                 diff = (aim_angle - comp_facing + 180) % 360 - 180
                                 
-                                if abs(diff) <= comp.firing_arc:
+                                if abs(diff) <= (comp.firing_arc / 2):
                                     valid_target = True
                                     target = candidate
                                     break # Found a valid target, fire!
@@ -176,7 +176,7 @@ class ShipCombatMixin:
                                     launch_vec = pygame.math.Vector2(math.cos(rad), math.sin(rad))
                                     
                                     # If target in arc, launch at target
-                                    if abs(diff) <= comp.firing_arc:
+                                    if abs(diff) <= (comp.firing_arc / 2):
                                         launch_vec = aim_vec.normalize() if aim_vec.length() > 0 else launch_vec
 
                                     speed = comp.projectile_speed / 100.0  # Pixels/tick

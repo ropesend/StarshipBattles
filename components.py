@@ -1,4 +1,5 @@
 import json
+import math
 from enum import Enum, auto
 from formula_system import evaluate_math_formula
 
@@ -229,6 +230,7 @@ class Component:
             'capacity_mult': 1.0,
             'crew_capacity_mult': 1.0,
             'life_support_capacity_mult': 1.0,
+            'consumption_mult': 1.0,
             'mass_add': 0.0,
             'arc_add': 0.0,
             'arc_set': None,
@@ -287,16 +289,39 @@ class Component:
             
         # Fix for missing resource costs in recalc
         if hasattr(self, 'energy_cost'):
-             self.energy_cost = self.data.get('energy_cost', 0) * stats.get('cost_mult', 1.0) # Assuming cost_mult applies? Or distinct?
-             # Usually cost_mult is credits. Energy cost might need flat mod or no mod.
-             # For now just reload from data.
-             self.energy_cost = self.data.get('energy_cost', 0)
+             # Reload from data first to get base
+             base_energy = self.data.get('energy_cost', 0)
+             self.energy_cost = base_energy * stats.get('consumption_mult', 1.0)
         
         if hasattr(self, 'ammo_cost'):
-            self.ammo_cost = self.data.get('ammo_cost', 0)
+            base_ammo = self.data.get('ammo_cost', 0)
+            self.ammo_cost = base_ammo * stats.get('consumption_mult', 1.0)
             
         if hasattr(self, 'reload_time'):
              self.reload_time = self.data.get('reload', 1.0)
+
+        # Apply Consumption Multipliers to specific components
+        if isinstance(self, Engine) and hasattr(self, 'fuel_cost_per_sec'):
+            base_fuel = self.data.get('fuel_cost', 0)
+            self.fuel_cost_per_sec = base_fuel * stats.get('consumption_mult', 1.0)
+
+        # Crew Requirement Scaling
+        # Rule: crew requirements should grow with the sqrt of mass of the component
+        # We derive this from the total mass multiplier
+        mass_scaling_factor = stats.get('mass_mult', 1.0)
+        # Avoid complex numbers if somehow negative
+        if mass_scaling_factor < 0: mass_scaling_factor = 0
+        
+        crew_mult = math.sqrt(mass_scaling_factor)
+        
+        # Apply to CrewRequired ability
+        if 'CrewRequired' in self.abilities:
+            val = self.abilities['CrewRequired']
+            if isinstance(val, (int, float)):
+                # If it's a raw number, scale it
+                # Note: We should probably use the base value if we could, but abilities dict is reset in _reset_and_evaluate_base_formulas
+                # So 'val' here is the base value from data/formula
+                self.abilities['CrewRequired'] = int(math.ceil(val * crew_mult))
 
         # Handle HP update (healing/new component logic)
         if old_max_hp == 0:

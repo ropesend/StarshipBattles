@@ -27,7 +27,7 @@ class TestFiringArcLogic(unittest.TestCase):
         diff = (aim_angle - comp_facing + 180) % 360 - 180
         
         # 5. Check
-        return abs(diff) <= arc
+        return abs(diff) <= (arc / 2)
 
     def test_forward_fire(self):
         # Scenario 1: Forward Fire (Working)
@@ -53,3 +53,11 @@ class TestFiringArcLogic(unittest.TestCase):
         # This was marked as "SHOULD Fail" in the original script.
         result = self.check_arc(0, 90, 45, (0,0), (100, 0))
         self.assertFalse(result, "Target out of side arc should be invalid")
+
+    def test_half_angle_restriction(self):
+        # Scenario 5: Half Angle Restriction (New Behavior)
+        # Arc 45 (Total). Target at 30 degrees.
+        # Old behavior: 30 <= 45 (Hit).
+        # New behavior: 30 <= 22.5 (Miss).
+        result = self.check_arc(0, 0, 45, (0,0), (100, 57)) # tan(30) ~ 0.57
+        self.assertFalse(result, "Target at 30 deg should be outside 45 deg total arc (±22.5)")

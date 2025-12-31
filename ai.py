@@ -257,7 +257,7 @@ class AIController:
                     comp_facing = (ship_angle + comp.facing_angle) % 360
                     diff = (angle_to_target - comp_facing + 180) % 360 - 180
                     
-                    if abs(diff) <= comp.firing_arc:
+                    if abs(diff) <= (comp.firing_arc / 2):
                         return True
         return False
 
