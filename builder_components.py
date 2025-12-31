@@ -3,16 +3,11 @@ import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIHorizontalSlider
 from components import MODIFIER_REGISTRY
 from logger import log_info, log_debug
-import tkinter as tk
-from tkinter import simpledialog
-
-# Hidden root window for dialogs
-tk_root = tk.Tk()
-tk_root.withdraw()
 
 from ui.builder.modifier_logic import ModifierLogic
 from ui.builder.modifier_config import MODIFIER_UI_CONFIG, DEFAULT_CONFIG
 from ui.builder.modifier_row import ModifierControlRow
+from ui.builder.preset_ui import PresetManagerUI
 
 class ModifierEditorPanel:
     def __init__(self, manager, container, width, preset_manager, on_change_callback):
@@ -30,9 +25,9 @@ class ModifierEditorPanel:
         self.extra_ui_elements = [] # Headers, global buttons
         self.modifier_rows = {} # mod_id -> ModifierControlRow
         
-        self.preset_buttons = []
-        self.preset_delete_buttons = []
-
+        # Preset UI Sub-Component
+        self.preset_ui = PresetManagerUI(manager, container, width, preset_manager)
+        
     def rebuild(self, editing_component, template_modifiers):
         """Rebuild/Update the modifier UI based on current state."""
         self.editing_component = editing_component
@@ -83,10 +78,7 @@ class ModifierEditorPanel:
             if self.editing_component:
                 allowed = ModifierLogic.is_modifier_allowed(mod_id, self.editing_component)
             else:
-                allowed = True # Show all in template mode? Or filter?
-                # Generally show all unless restriction is global.
-                # Assuming simple filtering for now.
-                pass
+                allowed = True
                 
             if allowed:
                 current_mod_ids.append(mod_id)
@@ -96,17 +88,6 @@ class ModifierEditorPanel:
                 row = self.modifier_rows[mod_id]
                 
                 # Update Position if needed (re-layout)
-                # Currently ModifierControlRow doesn't support dynamic move easily without rebuilding widgets.
-                # But since we are strictly vertical list, we can just rebuild if Y changed?
-                # Or we can just set relative_rects.
-                # For this pass, let's just create/recreate if Y mismatch or simple update.
-                # To minimize complexity: re-build UI if Y changed. NOT ideal for pooling.
-                # BETTER: Just call build_ui(y) on the row. It clears and rebuilds widgets.
-                # This is still destroy/create but abstracted.
-                # To be TRULY persistent, we'd move rects. 
-                # Given time constraints, calling build_ui(y) is fine, it's cleaner than before.
-                
-                # Check if we need to move
                 if not hasattr(row, 'y') or row.y != y:
                      row.build_ui(y)
                 
@@ -123,7 +104,9 @@ class ModifierEditorPanel:
             
         # 3. Presets (Template Mode)
         if not self.editing_component:
-            y = self._layout_presets(y)
+            y = self.preset_ui.layout(y)
+        else:
+            self.preset_ui.clear()
             
     def _ensure_row(self, mod_id, mod_def, y):
         if mod_id not in self.modifier_rows:
@@ -132,56 +115,6 @@ class ModifierEditorPanel:
             row = ModifierControlRow(self.manager, self.container, self.width, mod_id, mod_def, config, self._on_row_change)
             row.build_ui(y)
             self.modifier_rows[mod_id] = row
-            
-    def _layout_presets(self, y):
-        y += 10
-        self.save_preset_btn = UIButton(
-            relative_rect=pygame.Rect(10, y, self.width - 20, 28),
-            text="💾 Save Current Settings",
-            manager=self.manager,
-            container=self.container
-        )
-        self.extra_ui_elements.append(self.save_preset_btn)
-        y += 35
-        
-        presets = self.preset_manager.get_all_presets()
-        if presets:
-            preset_label = UILabel(
-                relative_rect=pygame.Rect(10, y, 200, 20),
-                text="Saved Presets:",
-                manager=self.manager,
-                container=self.container
-            )
-            self.extra_ui_elements.append(preset_label)
-            y += 22
-            
-        self.preset_buttons = []
-        self.preset_delete_buttons = []
-        
-        for preset_name in presets.keys():
-            safe_id = preset_name.replace(' ', '_').replace('.', '_')
-            
-            btn = UIButton(
-                relative_rect=pygame.Rect(10, y, self.width - 60, 28),
-                text=f"📋 {preset_name}",
-                manager=self.manager,
-                container=self.container,
-                object_id=f'#preset_{safe_id}'
-            )
-            self.preset_buttons.append((preset_name, btn))
-            self.extra_ui_elements.append(btn)
-            
-            del_btn = UIButton(
-                relative_rect=pygame.Rect(self.width - 45, y, 35, 28),
-                text="🗑",
-                manager=self.manager,
-                container=self.container,
-                object_id=f'#preset_del_{safe_id}'
-            )
-            self.preset_delete_buttons.append((preset_name, del_btn))
-            self.extra_ui_elements.append(del_btn)
-            y += 30
-        return y
 
     def _clear_extra_ui(self):
         for el in self.extra_ui_elements:
@@ -232,34 +165,16 @@ class ModifierEditorPanel:
             if hasattr(self, 'clear_settings_btn') and event.ui_element == self.clear_settings_btn:
                 return ('clear_settings', None)
             
-            elif hasattr(self, 'save_preset_btn') and event.ui_element == self.save_preset_btn:
-                if self.template_modifiers:
-                    preset_name = simpledialog.askstring("Save Preset", "Enter preset name:", parent=tk_root)
-                    if preset_name:
-                         self.preset_manager.save_preset(preset_name, self.template_modifiers)
-                         return ('refresh_ui', None)
 
-        # 2. Check Presets
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-             for p_name, btn in self.preset_buttons:
-                 if event.ui_element == btn:
-                     preset = self.preset_manager.get_preset(p_name)
-                     if preset:
-                         return ('apply_preset', dict(preset))
-                         
-             for p_name, btn in self.preset_delete_buttons:
-                 if event.ui_element == btn:
-                     self.preset_manager.delete_preset(p_name)
-                     return ('refresh_ui', None)
+        # 2. delegate to Preset UI
+        if not self.editing_component:
+             res = self.preset_ui.handle_event(event, self.template_modifiers)
+             if res: return res
 
         # 3. Delegate to Rows
         for row in self.modifier_rows.values():
             if row.handle_event(event):
                 # Row handled it and requested update
-                # We might want to refresh Stats?
-                # The callback already triggered on_change_callback, so stats are likely updating.
-                # But we might need to return something to main builder?
-                # 'refresh_ui' implies rebuild of THIS panel usually, or update of stats.
                 return ('refresh_ui', None) # Force builder update
 
         return None

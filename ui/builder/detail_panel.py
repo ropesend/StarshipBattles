@@ -7,6 +7,7 @@ from components import (
     Engine, Thruster, Armor, Tank, Generator, CrewQuarters, LifeSupport
 )
 import json
+from ui.builder.modifier_logic import ModifierLogic
 
 class ComponentDetailPanel:
     def __init__(self, manager, rect, image_base_path):
@@ -172,7 +173,16 @@ class ComponentDetailPanel:
         if comp.modifiers:
             lines.append("<br>Modifiers:")
             for m in comp.modifiers:
-                add_line(f"• {m.definition.name}: {m.value:.0f}", '#96FF96')
+                is_mandatory = ModifierLogic.is_modifier_mandatory(m.definition.id, comp)
+                
+                name_str = m.definition.name
+                color = '#96FF96' # Green for optional
+                
+                if is_mandatory:
+                    name_str = f"{name_str} [A]" # Auto
+                    color = '#FFD700' # Gold/Gold for mandatory
+                    
+                add_line(f"• {name_str}: {m.value:.2f}", color)
         
         full_html = "<br>".join(lines)
         if full_html != self.last_html:

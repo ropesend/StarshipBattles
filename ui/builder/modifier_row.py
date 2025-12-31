@@ -47,7 +47,8 @@ class ModifierControlRow:
             text=f"[ ] {self.mod_def.name}",
             manager=self.manager,
             container=self.container,
-            object_id=f'#mod_{safe_mod_id}'
+            object_id=f'#mod_{safe_mod_id}',
+            tool_tip_text=self.mod_def.description
         )
         self.ui_elements.append(self.toggle_btn)
         
@@ -234,6 +235,10 @@ class ModifierControlRow:
 
     def handle_event(self, event):
         """Handle internal events. Returns True if a change occurred."""
+        # Only process events that have a UI element (pygame_gui events)
+        if not hasattr(event, 'ui_element'):
+            return False
+
         if not self.is_active and event.ui_element != self.toggle_btn:
             return False
             
