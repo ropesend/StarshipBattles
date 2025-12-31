@@ -10,7 +10,7 @@ import json
 from ui.builder.modifier_logic import ModifierLogic
 
 class ComponentDetailPanel:
-    def __init__(self, manager, rect, image_base_path):
+    def __init__(self, manager, rect, image_base_path, event_bus=None):
         self.manager = manager
         self.rect = rect
         self.image_base_path = image_base_path
@@ -20,6 +20,9 @@ class ComponentDetailPanel:
             manager=manager,
             object_id='#detail_panel'
         )
+        
+        if event_bus:
+            event_bus.subscribe("SELECTION_CHANGED", self.on_selection_changed)
         
         self.current_component = None
         self.last_html = ""
@@ -63,6 +66,18 @@ class ComponentDetailPanel:
             manager=manager,
             container=self.panel
         )
+
+    def on_selection_changed(self, selection_data):
+         # selection_data matches what BuilderSceneGUI emits: self.selected_component
+         # which is a tuple (layer, idx, comp) or None using the new system
+         
+         if selection_data and isinstance(selection_data, tuple):
+             self.show_component(selection_data[2])
+         elif hasattr(selection_data, 'id'): # Direct component
+             self.show_component(selection_data)
+         else:
+             self.show_component(None)
+        
         
     def show_component(self, comp):
         if not comp:

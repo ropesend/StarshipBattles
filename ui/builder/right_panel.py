@@ -54,10 +54,13 @@ class StatRow:
 
 
 class BuilderRightPanel:
-    def __init__(self, builder, manager, rect):
+    def __init__(self, builder, manager, rect, event_bus=None):
         self.builder = builder
         self.manager = manager
         self.rect = rect
+        
+        if event_bus:
+            event_bus.subscribe("SHIP_UPDATED", self.on_ship_updated)
         
         self.panel = UIPanel(
             relative_rect=rect,
@@ -68,6 +71,9 @@ class BuilderRightPanel:
         self.setup_controls()
         self.setup_stats()
         
+    def on_ship_updated(self, ship):
+        self.update_stats_display(ship)
+
     def setup_controls(self):
         y = 10
         width = self.rect.width

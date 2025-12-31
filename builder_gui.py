@@ -28,6 +28,7 @@ from ship_theme import ShipThemeManager
 from ui.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel, LayerPanel
 from ui.builder.schematic_view import SchematicView
 from ui.builder.interaction_controller import InteractionController
+from ui.builder.event_bus import EventBus
 
 # Initialize Tkinter root and hide it (for simpledialog)
 try:
@@ -58,6 +59,8 @@ class BuilderSceneGUI:
         self.width = screen_width
         self.height = screen_height
         self.on_start_battle = on_start_battle
+        
+        self.event_bus = EventBus()
         
         # UI Manager
         import os
@@ -137,7 +140,8 @@ class BuilderSceneGUI:
             self.right_panel = BuilderRightPanel(
                 self, self.ui_manager,
                 pygame.Rect(self.width - self.right_panel_width, 0, 
-                            self.right_panel_width, self.height - self.bottom_bar_height - self.weapons_report_height)
+                            self.right_panel_width, self.height - self.bottom_bar_height - self.weapons_report_height),
+                event_bus=self.event_bus
             )
             
             # Modifier Panel (Bottom Spanning Left+Layer)
@@ -182,7 +186,8 @@ class BuilderSceneGUI:
             self.detail_panel = ComponentDetailPanel(
                 self.ui_manager,
                 pygame.Rect(detail_x, 0, self.detail_panel_width, avail_height),
-                os.path.join(base_path, "Resources", "Images", "Components")
+                os.path.join(base_path, "Resources", "Images", "Components"),
+                event_bus=self.event_bus
             )
         
         # Bottom Bar Buttons
@@ -220,8 +225,9 @@ class BuilderSceneGUI:
 
 
     def update_stats(self):
-        self.right_panel.update_stats_display(self.ship)
+        # self.right_panel.update_stats_display(self.ship) # Now handled by event
         self.layer_panel.rebuild()
+        self.event_bus.emit('SHIP_UPDATED', self.ship)
         
     def on_selection_changed(self, new_selection, append=False):
         """
@@ -299,6 +305,7 @@ class BuilderSceneGUI:
              pass
 
         self.rebuild_modifier_ui()
+        self.event_bus.emit('SELECTION_CHANGED', self.selected_component)
 
     def _on_modifier_change(self):
         # Propagate to ALL selected components
@@ -322,7 +329,8 @@ class BuilderSceneGUI:
             editing_comp.recalculate_stats()
             
         self.ship.recalculate_stats()
-        self.right_panel.update_stats_display(self.ship)
+        # self.right_panel.update_stats_display(self.ship) # Now handled by event
+        self.event_bus.emit('SHIP_UPDATED', self.ship)
 
     def rebuild_modifier_ui(self):
         editing_component = self.selected_component[2] if self.selected_component else None
