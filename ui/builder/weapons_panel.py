@@ -145,10 +145,16 @@ class WeaponsReportPanel:
             'seeker': True
         }
         
-        self.btn_proj = UIButton(pygame.Rect(start_x, btn_y, 80, btn_h), "Projectiles", manager=manager, container=self.panel)
-        self.btn_beam = UIButton(pygame.Rect(start_x + 80 + spacing, btn_y, 60, btn_h), "Beams", manager=manager, container=self.panel)
-        self.btn_seek = UIButton(pygame.Rect(start_x + 140 + spacing * 2, btn_y, 70, btn_h), "Seekers", manager=manager, container=self.panel)
-        self.btn_all = UIButton(pygame.Rect(start_x + 210 + spacing * 3, btn_y, 50, btn_h), "All", manager=manager, container=self.panel)
+        # Button dimensions
+        btn_w_proj = 110
+        btn_w_beam = 110
+        btn_w_seek = 110
+        btn_w_all = 60
+        
+        self.btn_proj = UIButton(pygame.Rect(start_x, btn_y, btn_w_proj, btn_h), "Projectiles", manager=manager, container=self.panel)
+        self.btn_beam = UIButton(pygame.Rect(start_x + btn_w_proj + spacing, btn_y, btn_w_beam, btn_h), "Beams", manager=manager, container=self.panel)
+        self.btn_seek = UIButton(pygame.Rect(start_x + btn_w_proj + btn_w_beam + spacing * 2, btn_y, btn_w_seek, btn_h), "Seekers", manager=manager, container=self.panel)
+        self.btn_all = UIButton(pygame.Rect(start_x + btn_w_proj + btn_w_beam + btn_w_seek + spacing * 3, btn_y, btn_w_all, btn_h), "All", manager=manager, container=self.panel)
         
         self._update_button_colors()
         
@@ -742,7 +748,7 @@ class WeaponsReportPanel:
         if self.target_name:
             target_text = f"Target: {self.target_name} (Def Mod: {self.target_defense_mod:.2f})"
             target_surf = self.target_font.render(target_text, True, self.COLOR_TARGET_INFO)
-            screen.blit(target_surf, (self.rect.x + 300, self.rect.y + 5))
+            screen.blit(target_surf, (self.rect.x + 660, self.rect.y + 5))
             
         if not self._weapons_cache:
             # No weapons to display
