@@ -40,8 +40,12 @@ class TestMandatoryModifiers(unittest.TestCase):
         def add_mod(mid):
             m = MagicMock()
             m.value = 1.0 # Default
+            m.value = 1.0 # Default
             mods[mid] = m
             return True
+        
+        # ModifierLogic now reads from comp.data for base stats
+        mock_comp.data = {}
         def remove_mod(mid):
             if mid in mods: del mods[mid]
             
@@ -54,6 +58,7 @@ class TestMandatoryModifiers(unittest.TestCase):
         panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
         mock_comp, mods = self._setup_mock_comp('ProjectileWeapon')
         mock_comp.firing_arc = 45 # Base arc
+        mock_comp.data['firing_arc'] = 45
         
         test_registry = {
             'turret_mount': Modifier({'id': 'turret_mount', 'name': 'Turret', 'type': 'linear', 'min_val': 0, 'max_val': 360, 'restrictions': {'allow_types': ['ProjectileWeapon']}})
@@ -71,6 +76,7 @@ class TestMandatoryModifiers(unittest.TestCase):
         panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
         mock_comp, mods = self._setup_mock_comp('ProjectileWeapon')
         mock_comp.firing_arc = 45
+        mock_comp.data['firing_arc'] = 45
         
         test_registry = {
             'turret_mount': Modifier({'id': 'turret_mount', 'name': 'Turret', 'type': 'linear', 'min_val': 0, 'max_val': 360, 'restrictions': {'allow_types': ['ProjectileWeapon']}})
