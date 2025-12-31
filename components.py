@@ -1,5 +1,6 @@
 import json
 from enum import Enum, auto
+from formula_system import evaluate_math_formula
 
 class ComponentStatus(Enum):
     ACTIVE = auto()
@@ -157,20 +158,7 @@ class Component:
                 return m
         return None
         
-    def _evaluate_math_formula(self, formula, context):
-        """Safely evaluate math formula."""
-        import math
-        # Sandbox / Validation could go here.
-        # ALLOWED NAMES: math members + context keys
-        
-        names = {k: v for k, v in math.__dict__.items() if not k.startswith("__")}
-        names.update(context)
-        
-        try:
-            return eval(formula, {"__builtins__": {}}, names)
-        except Exception as e:
-            # print(f"Error evaluating formula '{formula}': {e}")
-            return 0
+
 
     def recalculate_stats(self):
         """Recalculate component stats with multiplicative modifier stacking."""
@@ -203,7 +191,7 @@ class Component:
 
         # Evaluate Formulas for attributes
         for attr, formula in self.formulas.items():
-            val = self._evaluate_math_formula(formula, context)
+            val = evaluate_math_formula(formula, context)
             if attr == 'mass':
                 self.base_mass = float(val)
                 self.mass = self.base_mass # Reset to base
@@ -220,11 +208,11 @@ class Component:
         # Evaluate formulas in abilities
         for ability_name, val in self.abilities.items():
             if isinstance(val, str) and val.startswith("="):
-                new_val = self._evaluate_math_formula(val[1:], context)
+                new_val = evaluate_math_formula(val[1:], context)
                 self.abilities[ability_name] = new_val
             elif isinstance(val, dict):
                  if 'value' in val and isinstance(val['value'], str) and val['value'].startswith("="):
-                     new_val = self._evaluate_math_formula(val['value'][1:], context)
+                     new_val = evaluate_math_formula(val['value'][1:], context)
                      val['value'] = new_val
 
     def _calculate_modifier_stats(self):
@@ -345,7 +333,7 @@ class Weapon(Component):
         if isinstance(raw_damage, str) and raw_damage.startswith("="):
             self.damage_formula = raw_damage[1:]  # Store formula without '='
             # Evaluate at range 0 for base display value
-            self.damage = int(max(0, self._evaluate_math_formula(self.damage_formula, {'range_to_target': 0})))
+            self.damage = int(max(0, evaluate_math_formula(self.damage_formula, {'range_to_target': 0})))
         else:
             self.damage_formula = None
             self.damage = int(raw_damage) if raw_damage else 0
@@ -364,7 +352,7 @@ class Weapon(Component):
         """Evaluate damage at a specific range. Returns base damage if no formula."""
         if self.damage_formula:
             context = {'range_to_target': range_to_target}
-            base_val = max(0, self._evaluate_math_formula(self.damage_formula, context))
+            base_val = max(0, evaluate_math_formula(self.damage_formula, context))
             mult = getattr(self, 'damage_multiplier', 1.0)
             return int(base_val * mult)
         return int(self.damage)
