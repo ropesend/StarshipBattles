@@ -49,28 +49,9 @@ class StatRow:
         self._visible = visible
 
 # Configuration for Stat Sections
-STATS_GENERAL = [
-    ('mass', 'Mass'), ('max_hp', 'Max HP'), ('emissive_armor', 'Dmg Ignore'), 
-    ('max_shields', 'Shields'), ('shield_regen', 'Shield Regen'), ('shield_cost', 'Regen Cost'),
-    ('max_speed', 'Max Speed'), ('turn_rate', 'Turn Rate'), ('acceleration', 'Acceleration'),
-    ('thrust', 'Total Thrust'), ('energy_gen', 'Energy Gen'), ('max_fuel', 'Max Fuel'),
-    ('max_ammo', 'Max Ammo'), ('max_energy', 'Max Energy'),
-    ('targeting', 'Targeting'), ('target_profile', 'Defensive Odds'), ('scan_strength', 'Offensive Odds')
-]
 
-STATS_FIGHTER = [
-    ('fighter_capacity', 'Total Storage'),
-    ('fighter_size_cap', 'Max Size Cap'),
-    ('fighters_per_wave', 'Per Wave'),
-    ('launch_cycle', 'Cycle Time')
-]
 
-STATS_ENDURANCE = [
-    ('fuel_time', 'Fuel Time'),
-    ('ammo_time', 'Ordnance Time'),
-    ('energy_time', 'Energy Time'),
-    ('recharge_time', 'Recharge Time')
-]
+
 
 class BuilderRightPanel:
     def __init__(self, builder, manager, rect):
@@ -345,33 +326,40 @@ class BuilderRightPanel:
         
         start_y = y
         
+        self.rows_map = {} # Store StatRow instances by key
+        
+        # === Generic Helper to Build Section ===
+        def build_section(title, stats_list, x, start_y):
+            curr_y = start_y
+            UILabel(pygame.Rect(x, curr_y, col_w, 25), f"── {title} ──", manager=self.manager, container=self.panel)
+            curr_y += 30
+            
+            for stat_def in stats_list:
+                row = StatRow(stat_def.key, stat_def.label, self.manager, self.panel, x, curr_y, col_w)
+                row.definition = stat_def # Attach definition to row for update loop
+                self.rows_map[stat_def.key] = row
+                curr_y += 20
+            
+            return curr_y + 10
+
+        from ui.builder.stats_config import STATS_GENERAL, STATS_FIGHTER, STATS_CREW, STATS_ENDURANCE
+
+        # FREEZING CONFIG (Snapshot for this instance)
+        self.config_general = STATS_GENERAL
+        self.config_fighter = STATS_FIGHTER
+        self.config_crew = STATS_CREW
+        self.config_endurance = STATS_ENDURANCE
+        
         # === Column 1: Ship Stats ===
-        y = start_y
-        UILabel(pygame.Rect(col1_x, y, col_w, 25), "── Ship Stats ──", manager=self.manager, container=self.panel)
-        y += 30
+        col1_max_y = build_section("Ship Stats", self.config_general, col1_x, start_y)
         
-        self.stat_rows = {}
-        
-        for key, text in STATS_GENERAL:
-            self.stat_rows[key] = StatRow(key, text, self.manager, self.panel, col1_x, y, col_w)
-            y += 20
-            
-        col1_max_y = y + 10
-        
-        # === Column 2: Fighter, Layers, Crew ===
+        # === Column 2: Fighter, Layers, Crew, Endurance ===
         y = start_y
         
-        # Fighter Ops
-        UILabel(pygame.Rect(col2_x, y, col_w, 25), "── Fighter Ops ──", manager=self.manager, container=self.panel)
-        y += 30
+        # Fighter
+        y = build_section("Fighter Ops", self.config_fighter, col2_x, y)
         
-        for key, text in STATS_FIGHTER:
-            self.stat_rows[key] = StatRow(key, text, self.manager, self.panel, col2_x, y, col_w)
-            y += 20
-            
-        y += 10
-        
-        # Layer Usage
+        # Layers (Special Case: Dynamic)
         UILabel(pygame.Rect(col2_x, y, col_w, 20), "── Layer Usage ──", manager=self.manager, container=self.panel)
         y += 22
         self.layer_rows = []
@@ -380,32 +368,15 @@ class BuilderRightPanel:
             sr.set_visible(False)
             self.layer_rows.append(sr)
             y += 22
-            
         y += 10
         
         # Crew
-        UILabel(pygame.Rect(col2_x, y, col_w, 20), "── Crew ──", manager=self.manager, container=self.panel)
-        y += 22
-        self.crew_labels = {}
+        y = build_section("Crew", self.config_crew, col2_x, y)
         
-        crew_keys = [('crew_required', 'Crew Required'), ('crew_housed', 'Crew On Board'), ('life_support', 'Life Support')]
+        # Endurance
+        y = build_section("Combat Endurance", self.config_endurance, col2_x, y)
         
-        for k, text in crew_keys:
-             self.stat_rows[k] = StatRow(k, text, self.manager, self.panel, col2_x, y, col_w)
-             y += 22 
-             
-        col2_max_y = y + 10
-        
-        # Combat Endurance (Column 2, continued)
-        y = col2_max_y
-        UILabel(pygame.Rect(col2_x, y, col_w, 20), "── Combat Endurance ──", manager=self.manager, container=self.panel)
-        y += 22
-        
-        for key, text in STATS_ENDURANCE:
-            self.stat_rows[key] = StatRow(key, text, self.manager, self.panel, col2_x, y, col_w)
-            y += 20
-            
-        col2_max_y = y + 10
+        col2_max_y = y
         
         # === Requirements (Bottom, Split) ===
         y = max(col1_max_y, col2_max_y) + 10
@@ -422,56 +393,29 @@ class BuilderRightPanel:
         self.req_box_right = UITextBox("", pygame.Rect(col2_x, y, col_w, rem_h), manager=self.manager, container=self.panel)
 
     def update_stats_display(self, s):
-        """Update ship stats labels."""
+        """Update ship stats labels using Data-Driven Config."""
         
-        # Helper to set val
-        def set_val(k, num_txt, unit_txt=""):
-            if k in self.stat_rows:
-                self.stat_rows[k].update(num_txt, unit_txt)
-
-        # Mass with color indicator
-        mass_status = "✓" if s.mass_limits_ok else "✗"
-        # Unit gets status
-        set_val('mass', f"{s.mass:.0f} / {s.max_mass_budget}", f" {mass_status}")
+        # Update General/Fighter/Crew/Endurance via Generic Loop
+        all_configs = self.config_general + self.config_fighter + self.config_crew + self.config_endurance
         
-        set_val('max_hp', f"{s.max_hp:.0f}")
-        set_val('emissive_armor', f"{getattr(s, 'emissive_armor', 0):.0f}")
-        set_val('max_shields', f"{s.max_shields:.0f}")
-        set_val('shield_regen', f"{s.shield_regen_rate:.1f}", "/s")
-        set_val('shield_cost', f"{s.shield_regen_cost:.1f}", " E/t")
+        for stat_def in all_configs:
+            row = self.rows_map.get(stat_def.key)
+            if row:
+                val = stat_def.get_value(s)
+                
+                # Check validation
+                is_ok, status_txt = stat_def.get_status(s, val)
+                
+                fmt_val = stat_def.format_value(val)
+                unit_val = stat_def.get_display_unit(s, val)
+                
+                final_unit = f"{unit_val}"
+                if status_txt:
+                     final_unit += f" {status_txt}"
+                     
+                row.update(fmt_val, final_unit)
         
-        set_val('max_speed', f"{s.max_speed:.0f}")
-        set_val('turn_rate', f"{s.turn_speed:.0f}", " deg/s")
-        set_val('acceleration', f"{s.acceleration_rate:.2f}")
-        set_val('thrust', f"{s.total_thrust:.0f}")
-        set_val('energy_gen', f"{s.energy_gen_rate:.1f}", "/s")
-        set_val('max_fuel', f"{s.max_fuel:.0f}")
-        set_val('max_ammo', f"{s.max_ammo:.0f}")
-        set_val('max_energy', f"{s.max_energy:.0f}")
-        
-        # Targeting
-        t_count = getattr(s, 'max_targets', 1)
-        t_text = "Single" if t_count == 1 else f"Multi ({t_count})"
-        set_val('targeting', t_text)
-        
-        # To-Hit Stats
-        set_val('target_profile', f"{s.to_hit_profile:.4f}", "x")
-        set_val('scan_strength', f"{s.baseline_to_hit_offense:.1f}", "x")
-
-        # Fighter Stats
-        f_cap = getattr(s, 'fighter_capacity', 0)
-        set_val('fighter_capacity', f"{f_cap:.0f}", "t")
-        
-        f_size = getattr(s, 'fighter_size_cap', 0)
-        set_val('fighter_size_cap', f"{f_size:.0f}", "t")
-        
-        f_wave = getattr(s, 'fighters_per_wave', 0)
-        set_val('fighters_per_wave', f"{f_wave}")
-        
-        l_cycle = getattr(s, 'launch_cycle', 0)
-        set_val('launch_cycle', f"{l_cycle:.1f}", "s")
-        
-        # Update layer stats
+        # Update layer stats (Still somewhat special case due to dynamic list)
         from ship import LayerType
         
         # Hide all first
@@ -500,56 +444,6 @@ class BuilderRightPanel:
                 row.set_visible(True)
                 
                 slot_idx += 1
-        
-        # Update crew stats
-        crew_capacity = max(0, s.get_ability_total('CrewCapacity'))
-        crew_required = s.get_ability_total('CrewRequired')
-        
-        # Legacy fallback
-        legacy_req = abs(min(0, s.get_ability_total('CrewCapacity')))
-        crew_required += legacy_req
-        
-        crew_housed = crew_capacity
-        
-        crew_ok = crew_capacity >= crew_required
-        crew_status = "✓" if crew_ok else f"✗ Miss {crew_required - crew_capacity}"
-        
-        set_val('crew_required', f"{crew_required}", "")
-        set_val('crew_housed', f"{crew_housed}", f" {crew_status}")
-        
-        life_support = s.get_ability_total('LifeSupportCapacity')
-        ls_ok = life_support >= crew_required
-        ls_status = "✓" if ls_ok else f"✗ -{crew_required - life_support}"
-        
-        set_val('life_support', f"{life_support}", f" {ls_status}")
-        
-        # Helper for time formatting
-        def fmt_time(val):
-            if val == float('inf') or val > 99999:
-                return "Infinite"
-            if val <= 0:
-                # Could be 0 if consumption is massive or capacity 0
-                if val == 0 and isinstance(val, int): # capacity 0 check?
-                     return "0.0s"
-                return "0.0s"
-            if val > 3600:
-                return f"{val/3600:.1f}h"
-            if val > 60:
-                return f"{val/60:.1f}m"
-            return f"{val:.1f}s"
-
-        # Update Combat Endurance
-        fuel_t = getattr(s, 'fuel_endurance', float('inf'))
-        set_val('fuel_time', fmt_time(fuel_t), "")
-        
-        ammo_t = getattr(s, 'ammo_endurance', float('inf'))
-        set_val('ammo_time', fmt_time(ammo_t), "")
-        
-        energy_t = getattr(s, 'energy_endurance', float('inf'))
-        set_val('energy_time', fmt_time(energy_t), "")
-        
-        recharge_t = getattr(s, 'energy_recharge', float('inf'))
-        set_val('recharge_time', fmt_time(recharge_t), "")
         
         # Update requirements (Left)
         missing_reqs = s.get_missing_requirements()
