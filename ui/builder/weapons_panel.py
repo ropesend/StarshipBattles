@@ -115,7 +115,7 @@ class WeaponsReportPanel:
 
         # Target ship for calculations
         self.target_ship = None
-        self.target_defense_mod = 1.0
+        self.target_defense_mod = 0.0 # Score
         self.target_name = None
         
         # Background panel
@@ -227,14 +227,14 @@ class WeaponsReportPanel:
         """Set a specific target ship for calculations."""
         self.target_ship = ship
         self.target_name = ship.name
-        # Use target's defensive modifier if available
-        self.target_defense_mod = getattr(ship, 'to_hit_profile', 1.0)
+        # Use target's total defense score
+        self.target_defense_mod = getattr(ship, 'total_defense_score', 0.0)
         
     def clear_target(self):
         """Reset to default target parameters."""
         self.target_ship = None
         self.target_name = None
-        self.target_defense_mod = 1.0
+        self.target_defense_mod = 0.0
         
     def _get_all_weapons(self, ship):
         """Get list of all weapon components from ship, filtered."""
@@ -283,14 +283,7 @@ class WeaponsReportPanel:
         if hasattr(ship, 'get_total_sensor_score'):
             attack_score = ship.get_total_sensor_score()
             
-        defense_score = 0.0 
-        # For the visualization, we assume a standard target or the selected target
-        if self.target_ship and hasattr(self.target_ship, 'get_total_ecm_score'):
-            defense_score = self.target_ship.get_total_ecm_score()
-        else:
-            # Default generic target profile? 
-            # effectively 0.0 unless we want to simulate a "typical" enemy
-            defense_score = 0.0
+        defense_score = self.target_defense_mod
             
         net_starting_score = (base_acc + attack_score) - defense_score
         
@@ -459,9 +452,7 @@ class WeaponsReportPanel:
             if hasattr(ship, 'get_total_sensor_score'):
                 attack_score = ship.get_total_sensor_score()
             
-            defense_score = 0.0 # Standard target
-            if self.target_ship and hasattr(self.target_ship, 'get_total_ecm_score'):
-                defense_score = self.target_ship.get_total_ecm_score()
+            defense_score = self.target_defense_mod
                 
             net_score = (base_acc + attack_score) - (hover_range * falloff + defense_score)
             
@@ -668,9 +659,7 @@ class WeaponsReportPanel:
         if hasattr(ship, 'get_total_sensor_score'):
             attack_score = ship.get_total_sensor_score()
             
-        defense_score = 0.0
-        if self.target_ship and hasattr(self.target_ship, 'get_total_ecm_score'):
-            defense_score = self.target_ship.get_total_ecm_score()
+        defense_score = self.target_defense_mod
         
         # Chance at 0
         net_at_0 = (base_acc + attack_score) - (0 * falloff + defense_score)
