@@ -277,6 +277,10 @@ class InteractionController:
             return
         
         if closest_layer:
+            # Suppress header toggle (fix for drop causing toggle)
+            if hasattr(self.builder.layer_panel, 'suppress_toggle'):
+                self.builder.layer_panel.suppress_toggle()
+            
             comp = self.dragged_item
             # Check restrictions using the centralized validator (allowed_layers removed from components)
             from ship import VALIDATOR

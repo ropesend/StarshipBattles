@@ -40,6 +40,8 @@ class LayerPanel:
         self.current_strategy_name = 'Default'
         self.grouping_strategy = self.grouping_strategies[self.current_strategy_name]
         
+        self.toggle_suppress_timer = 0.0
+        
         self.panel = UIPanel(
             relative_rect=rect,
             manager=manager,
@@ -53,6 +55,14 @@ class LayerPanel:
             container=self.panel
         )
         
+        self.list_y = 50 # Increased slightly for dropdown clearance
+        self.scroll_container = UIScrollingContainer(
+            relative_rect=pygame.Rect(0, self.list_y, rect.width, rect.height - self.list_y),
+            manager=manager,
+            container=self.panel,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+        )
+        
         # View Options Dropdown
         self.view_dropdown = UIDropDownMenu(
             options_list=['Default', 'Compact', 'Flat'],
@@ -61,14 +71,6 @@ class LayerPanel:
             manager=manager,
             container=self.panel,
             anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
-        )
-        
-        self.list_y = 50 # Increased slightly for dropdown clearance
-        self.scroll_container = UIScrollingContainer(
-            relative_rect=pygame.Rect(0, self.list_y, rect.width, rect.height - self.list_y),
-            manager=manager,
-            container=self.panel,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
         
         self.expanded_layers = {
@@ -307,7 +309,12 @@ class LayerPanel:
         return False
 
     def update(self, dt):
-        pass
+        if self.toggle_suppress_timer > 0:
+            self.toggle_suppress_timer -= dt
+            
+    def suppress_toggle(self):
+        """Suppress toggle events for a short duration."""
+        self.toggle_suppress_timer = 0.2
         
     def draw(self, screen):
         # Draw selection highlight overlays for selected items
@@ -323,6 +330,7 @@ class LayerPanel:
                         clipped = abs_rect.clip(container_rect)
                         # Draw semi-transparent highlight
                         highlight_surf = pygame.Surface((clipped.width, clipped.height), pygame.SRCALPHA)
+                        # Use color from config
                         highlight_surf.fill(self.config.SELECTION_COLOR) 
                         screen.blit(highlight_surf, clipped.topleft)
 
@@ -337,9 +345,24 @@ class LayerPanel:
         current_checking_layer = None
         
         for item in self.items:
+            # We must be careful: items are relative to scrolling container.
+            # But get_abs_rect handles that.
             abs_rect = item.panel.get_abs_rect()
+            
+            # Since header defines the start of a layer section, we track it.
             if isinstance(item, LayerHeaderItem):
                 current_checking_layer = item.layer_type
+            
+            # If we are hovering THIS item, and we have established a current layer, return it.
             if abs_rect.collidepoint(mx, my):
                 return current_checking_layer
+                
+        # If hovering empty space at bottom of list, return last layer?
+        # Or if we are in the panel but not over an item?
+        # Default to ARMOR if not found? No, allow explicit drop elsewhere?
+        # But rect collision passed.
+        # If we are below the last item but in panel, attach to last layer encountered?
+        if current_checking_layer:
+            return current_checking_layer
+            
         return None

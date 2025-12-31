@@ -392,6 +392,10 @@ class LayerHeaderItem:
         
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.button:
+            # Check for toggle suppression (e.g. from drop event)
+            if getattr(self.event_handler, 'toggle_suppress_timer', 0) > 0:
+                return False
+
             self.event_handler.handle_item_action(ACTION_TOGGLE_LAYER, self.layer_type)
             return ('refresh_ui', None)
         return False
