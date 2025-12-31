@@ -55,29 +55,29 @@ class BuilderLeftPanel:
         self.count_entry.set_text("1")
         self.count_entry.set_allowed_characters('numbers')
         
-        btn_w = 25
+        btn_w = 30
         gap = 2
         
-        # Buttons Left (100, 10, 1)
+        # Buttons (All on left now)
+        # Sequence: m100, m10, m1, p1, p10, p100
         start_btns = 100
-        self.btn_m100 = UIButton(pygame.Rect(start_btns, u_y, btn_w, 25), "<<<", manager=manager, container=self.panel)
-        self.btn_m10  = UIButton(pygame.Rect(start_btns + btn_w + gap, u_y, btn_w, 25), "<<", manager=manager, container=self.panel)
-        self.btn_m1   = UIButton(pygame.Rect(start_btns + (btn_w + gap)*2, u_y, btn_w, 25), "<", manager=manager, container=self.panel)
         
-        slider_x = start_btns + (btn_w + gap)*3 + 5
+        self.btn_m100 = UIButton(pygame.Rect(start_btns, u_y, btn_w, 25), "<<<", manager=manager, container=self.panel, object_id='#mini_arrow_btn')
+        self.btn_m10  = UIButton(pygame.Rect(start_btns + btn_w + gap, u_y, btn_w, 25), "<<", manager=manager, container=self.panel, object_id='#mini_arrow_btn')
+        self.btn_m1   = UIButton(pygame.Rect(start_btns + (btn_w + gap)*2, u_y, btn_w, 25), "<", manager=manager, container=self.panel, object_id='#mini_arrow_btn')
         
-        # Right Buttons (1, 10, 100)
-        # Total width avail approx 450.
-        # Right btns take (25+2)*3 = 81
-        right_btns_start = rect.width - 85 
+        # Start Positive buttons immediately after
+        p_start = start_btns + (btn_w + gap)*3
         
-        slider_w = right_btns_start - slider_x - 5
+        self.btn_p1   = UIButton(pygame.Rect(p_start, u_y, btn_w, 25), ">", manager=manager, container=self.panel, object_id='#mini_arrow_btn')
+        self.btn_p10  = UIButton(pygame.Rect(p_start + btn_w + gap, u_y, btn_w, 25), ">>", manager=manager, container=self.panel, object_id='#mini_arrow_btn')
+        self.btn_p100 = UIButton(pygame.Rect(p_start + (btn_w + gap)*2, u_y, btn_w, 25), ">>>", manager=manager, container=self.panel, object_id='#mini_arrow_btn')
+        
+        # Slider takes remaining space
+        slider_x = p_start + (btn_w + gap)*3 + 5
+        slider_w = rect.width - slider_x - 10
         
         self.count_slider = UIHorizontalSlider(pygame.Rect(slider_x, u_y, slider_w, 25), 1, (1, 1000), manager=manager, container=self.panel)
-        
-        self.btn_p1   = UIButton(pygame.Rect(right_btns_start, u_y, btn_w, 25), ">", manager=manager, container=self.panel)
-        self.btn_p10  = UIButton(pygame.Rect(right_btns_start + btn_w + gap, u_y, btn_w, 25), ">>", manager=manager, container=self.panel)
-        self.btn_p100 = UIButton(pygame.Rect(right_btns_start + (btn_w + gap)*2, u_y, btn_w, 25), ">>>", manager=manager, container=self.panel)
         
         # Row 2 (Removed, single line now)
         u_y += 35
