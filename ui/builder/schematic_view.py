@@ -3,8 +3,8 @@ import math
 from ship import VEHICLE_CLASSES, LayerType
 from components import Weapon, BeamWeapon
 
-# Colors
-SHIP_VIEW_BG = (10, 10, 20)
+from ui.colors import COLORS
+SHIP_VIEW_BG = COLORS['bg_deep']
 
 class SchematicView:
     def __init__(self, rect, sprite_manager, theme_manager):

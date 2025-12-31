@@ -209,16 +209,15 @@ class LayerComponentItem:
         )
         
         # Expand Button
-        self.expand_button = None
-        if count > 1:
-            arrow = "▼" if is_expanded else "▶"
-            self.expand_button = UIButton(
-                relative_rect=pygame.Rect(2, 5, 20, 30),
-                text=arrow,
-                manager=manager,
-                container=self.panel,
-                object_id='#expand_button'
-            )
+        self.expand_button = UIButton(
+            relative_rect=pygame.Rect(2, 5, 20, 30),
+            text="▼" if is_expanded else "▶",
+            manager=manager,
+            container=self.panel,
+            object_id='#expand_button'
+        )
+        if count <= 1:
+            self.expand_button.hide()
         
         # Icon
         sprite = sprite_mgr.get_sprite(component.sprite_index)
@@ -295,17 +294,16 @@ class LayerComponentItem:
         self.pct_label.set_text(f"{total_pct:.1f}%")
         
         # Update expand arrow
-        if self.expand_button:
-            if count <= 1:
-                self.expand_button.hide()
-            else:
-                self.expand_button.show()
-                arrow = "▼" if is_expanded else "▶"
-                self.expand_button.set_text(arrow)
+        if count <= 1:
+            self.expand_button.hide()
+        else:
+            self.expand_button.show()
+            arrow = "▼" if is_expanded else "▶"
+            self.expand_button.set_text(arrow)
 
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if self.expand_button and event.ui_element == self.expand_button:
+            if event.ui_element == self.expand_button:
                 self.event_handler.handle_item_action(ACTION_TOGGLE_GROUP, self.group_key)
                 return ('refresh_ui', None)
             elif event.ui_element == self.remove_button:

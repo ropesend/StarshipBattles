@@ -38,8 +38,9 @@ except:
     tk_root = None
 
 # Colors
-BG_COLOR = (20, 20, 30)
-PANEL_BG = '#1e1e28'
+from ui.colors import COLORS
+BG_COLOR = COLORS['bg_deep']
+PANEL_BG = '#14181f'
 
 import logging
 logger = logging.getLogger(__name__)
@@ -794,7 +795,7 @@ class BuilderSceneGUI:
                 
         if self.error_timer > 0:
             font = pygame.font.SysFont("Arial", 18)
-            err_surf = font.render(self.error_message, True, (255, 100, 100))
+            err_surf = font.render(self.error_message, True, COLORS['text_error'])
             x = (self.width - err_surf.get_width()) // 2
             screen.blit(err_surf, (x, 50))
             

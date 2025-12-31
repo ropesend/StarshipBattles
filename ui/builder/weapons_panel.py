@@ -2,6 +2,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIButton, UIVerticalScrollBar
 from components import Weapon, BeamWeapon, SeekerWeapon, ProjectileWeapon
+from ui.colors import COLORS
 
 class WeaponsReportPanel:
     """Panel displaying weapon range and hit probability visualization."""
@@ -75,14 +76,14 @@ class WeaponsReportPanel:
     SEEKER_BAR_COLOR = (80, 40, 80)
     
     # === Text Colors ===
-    COLOR_WEAPON_NAME = (200, 200, 200)
-    COLOR_DAMAGE_LABEL = (200, 200, 100)
-    COLOR_RANGE_LABEL = (180, 180, 180)
-    COLOR_RANGE_SCALE = (120, 120, 140)
-    COLOR_SCALE_LINE = (50, 50, 70)
-    COLOR_SCALE_LABEL = (80, 80, 100)
-    COLOR_NO_WEAPONS = (100, 100, 100)
-    COLOR_TARGET_INFO = (200, 220, 100)
+    COLOR_WEAPON_NAME = COLORS['text_bright']
+    COLOR_DAMAGE_LABEL = (200, 200, 100) # Keep yellow for contrast
+    COLOR_RANGE_LABEL = COLORS['text_normal']
+    COLOR_RANGE_SCALE = COLORS['text_subtle']
+    COLOR_SCALE_LINE = COLORS['border_subtle']
+    COLOR_SCALE_LABEL = COLORS['text_disabled']
+    COLOR_NO_WEAPONS = COLORS['text_disabled']
+    COLOR_TARGET_INFO = COLORS['text_highlight']
     
     # === Accuracy Label Colors ===
     COLOR_ACC_HIGH = (0, 200, 0)      # > 50%
@@ -92,8 +93,8 @@ class WeaponsReportPanel:
     # === Tooltip Constants ===
     TOOLTIP_PADDING = 10
     TOOLTIP_LINE_HEIGHT = 20
-    TOOLTIP_BG_COLOR = (30, 30, 40)
-    TOOLTIP_BORDER_COLOR = (100, 100, 120)
+    TOOLTIP_BG_COLOR = COLORS['bg_dark']
+    TOOLTIP_BORDER_COLOR = COLORS['border_active']
     
     # === Font Configuration ===
     FONT_NAME = "Arial"

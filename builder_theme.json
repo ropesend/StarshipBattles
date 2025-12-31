@@ -7,6 +7,51 @@
                 "package": "pygame_gui.data",
                 "resource": "FiraCode-Regular.ttf"
             }
+        },
+        "colours": {
+            "normal_bg": "#1a1e26",
+            "dark_bg": "#14181f",
+            "disabled_bg": "#12151a",
+            "selected_bg": "#2a3855",
+            "hovered_bg": "#283040",
+            "normal_text": "#9aabcc",
+            "hovered_text": "#c8daff",
+            "selected_text": "#ffffff",
+            "disabled_text": "#556070",
+            "normal_border": "#2a3545",
+            "hovered_border": "#55aaee",
+            "selected_border": "#4499dd",
+            "disabled_border": "#2a3040"
+        }
+    },
+    "panel": {
+        "colours": {
+            "dark_bg": "#14181f",
+            "normal_bg": "#1a1e26",
+            "normal_border": "#2a3545"
+        },
+        "misc": {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "4",
+            "border_width": "1"
+        }
+    },
+    "button": {
+        "colours": {
+            "normal_bg": "#1e2530",
+            "hovered_bg": "#283040",
+            "active_bg": "#2a3855",
+            "normal_border": "#3a4860",
+            "hovered_border": "#55aaee",
+            "active_border": "#66bbff",
+            "normal_text": "#aabbdd",
+            "hovered_text": "#ddeeff",
+            "active_text": "#ffffff"
+        },
+        "misc": {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "4",
+            "border_width": "1"
         }
     },
     "selection_list": {
@@ -15,33 +60,104 @@
             "corner_radius": 2,
             "list_item_height": 20
         },
-        "background_colour": "#25292e",
-        "border_colour": "#404050"
+        "colours": {
+            "normal_bg": "#1a1e26",
+            "dark_bg": "#12151a",
+            "normal_border": "#2a3545"
+        }
+    },
+    "selection_list.@selection_list_item": {
+        "colours": {
+            "normal_bg": "#1e2530",
+            "hovered_bg": "#283040",
+            "selected_bg": "#2a3855",
+            "normal_text": "#9aabcc",
+            "hovered_text": "#c8daff",
+            "selected_text": "#ffffff"
+        }
+    },
+    "text_entry_line": {
+        "colours": {
+            "normal_bg": "#14181f",
+            "hovered_bg": "#1a1e26",
+            "normal_border": "#2a3545",
+            "hovered_border": "#4488cc",
+            "normal_text": "#c8d4e8",
+            "selected_text": "#ffffff",
+            "selected_bg": "#2a3855"
+        },
+        "misc": {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "2",
+            "border_width": "1"
+        }
+    },
+    "horizontal_slider": {
+        "colours": {
+            "normal_bg": "#12151a",
+            "normal_border": "#2a3545"
+        },
+        "misc": {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "2"
+        }
+    },
+    "horizontal_slider.#sliding_button": {
+        "colours": {
+            "normal_bg": "#3366aa",
+            "hovered_bg": "#4488cc",
+            "active_bg": "#4488dd",
+            "normal_border": "#4488bb",
+            "hovered_border": "#66ccff",
+            "active_border": "#66bbff"
+        },
+        "misc": {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "2"
+        }
     },
     "drop_down_menu": {
         "misc": {
             "shape": "rounded_rectangle",
             "corner_radius": 2
+        },
+        "colours": {
+            "normal_bg": "#1a1e26",
+            "hovered_bg": "#283040",
+            "normal_border": "#2a3545",
+            "hovered_border": "#55aaee"
         }
     },
     "label": {
         "misc": {
             "text_horiz_alignment": "center"
+        },
+        "colours": {
+            "normal_text": "#9aabcc"
         }
     },
     "#stat_label": {
         "misc": {
             "text_horiz_alignment": "left"
+        },
+        "colours": {
+            "normal_text": "#8899bb"
         }
     },
     "#stat_value": {
         "misc": {
             "text_horiz_alignment": "right"
+        },
+        "colours": {
+            "normal_text": "#aaccff"
         }
     },
     "#stat_unit": {
         "misc": {
             "text_horiz_alignment": "left"
+        },
+        "colours": {
+            "normal_text": "#667799"
         }
     },
     "#left_aligned_label": {
