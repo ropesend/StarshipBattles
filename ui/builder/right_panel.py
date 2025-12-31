@@ -288,11 +288,30 @@ class BuilderRightPanel:
             print(f"Failed to load portrait {full_path}: {e}")
 
     def setup_stats(self):
+        # Create Scroll Container for Stats
+        # Starts after controls (last_y) and takes remaining height
+        
+        # Calculate available height
         y = self.last_y
+        total_h = self.rect.height - y - 10
+        if total_h < 100: total_h = 100
+        
+        self.stats_scroll = pygame_gui.elements.UIScrollingContainer(
+            relative_rect=pygame.Rect(0, y, self.rect.width, total_h),
+            manager=self.manager,
+            container=self.panel,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+        )
+        
+        # We need a container for the scrolling content (inner)
+        # However, UIScrollingContainer acts as the container source. 
+        # Elements should be parented to self.stats_scroll
         
         # Columns
-        # Width available
-        full_w = self.rect.width
+        # Width available inside scrollbar (assume 20px scrollbar)
+        list_w = self.stats_scroll.get_container().get_rect().width
+        full_w = list_w
+        
         col_gap = 10
         margin = 10
         avail_w = full_w - (2 * margin) - col_gap
@@ -301,6 +320,8 @@ class BuilderRightPanel:
         col1_x = margin
         col2_x = margin + col_w + col_gap
         
+        # Start Y inside container (0-indexed)
+        y = 10 
         start_y = y
         
         self.rows_map = {} # Store StatRow instances by key
@@ -308,11 +329,11 @@ class BuilderRightPanel:
         # === Generic Helper to Build Section ===
         def build_section(title, stats_list, x, start_y):
             curr_y = start_y
-            UILabel(pygame.Rect(x, curr_y, col_w, 25), f"── {title} ──", manager=self.manager, container=self.panel)
+            UILabel(pygame.Rect(x, curr_y, col_w, 25), f"── {title} ──", manager=self.manager, container=self.stats_scroll)
             curr_y += 30
             
             for stat_def in stats_list:
-                row = StatRow(stat_def.key, stat_def.label, self.manager, self.panel, x, curr_y, col_w)
+                row = StatRow(stat_def.key, stat_def.label, self.manager, self.stats_scroll, x, curr_y, col_w)
                 row.definition = stat_def # Attach definition to row for update loop
                 self.rows_map[stat_def.key] = row
                 curr_y += 20
@@ -335,9 +356,15 @@ class BuilderRightPanel:
         y = build_section("Armor", self.stats_config.get('armor', []), col1_x, y)
         
         # Layers (Special Case: Dynamic) - Inserted under Armor
+        
+        # -- Added Header "Layers" --
+        UILabel(pygame.Rect(col1_x, y, col_w, 20), "Layers", manager=self.manager, container=self.stats_scroll)
+        y += 20
+        # ---------------------------
+        
         self.layer_rows = []
         for i in range(4):
-            sr = StatRow(f"layer_{i}", f"Slot {i}", self.manager, self.panel, col1_x, y, col_w)
+            sr = StatRow(f"layer_{i}", f"Slot {i}", self.manager, self.stats_scroll, col1_x, y, col_w)
             sr.set_visible(False)
             self.layer_rows.append(sr)
             y += 22
@@ -367,15 +394,20 @@ class BuilderRightPanel:
         y = max(col1_max_y, col2_max_y) + 10
         
         # Split Headers
-        UILabel(pygame.Rect(col1_x, y, col_w, 20), "── Requirements ──", manager=self.manager, container=self.panel)
-        UILabel(pygame.Rect(col2_x, y, col_w, 20), "── Recommendations ──", manager=self.manager, container=self.panel)
+        UILabel(pygame.Rect(col1_x, y, col_w, 20), "── Requirements ──", manager=self.manager, container=self.stats_scroll)
+        UILabel(pygame.Rect(col2_x, y, col_w, 20), "── Recommendations ──", manager=self.manager, container=self.stats_scroll)
         y += 25
         
-        rem_h = self.rect.height - y - 10
-        if rem_h < 50: rem_h = 50 # Minimum height
+        # Box heights (enough for content, not fixed to panel bottom anymore)
+        rem_h = 200 # Fixed reasonable height inside scroll
         
-        self.req_box_left = UITextBox("✓ All requirements met", pygame.Rect(col1_x, y, col_w, rem_h), manager=self.manager, container=self.panel)
-        self.req_box_right = UITextBox("", pygame.Rect(col2_x, y, col_w, rem_h), manager=self.manager, container=self.panel)
+        self.req_box_left = UITextBox("✓ All requirements met", pygame.Rect(col1_x, y, col_w, rem_h), manager=self.manager, container=self.stats_scroll)
+        self.req_box_right = UITextBox("", pygame.Rect(col2_x, y, col_w, rem_h), manager=self.manager, container=self.stats_scroll)
+
+        y += rem_h + 10
+        
+        # Update Scroll Area
+        self.stats_scroll.set_scrollable_area_dimensions((full_w, y))
 
     def update_stats_display(self, s):
         """Update ship stats labels using Data-Driven Config."""

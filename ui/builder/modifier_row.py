@@ -89,10 +89,10 @@ class ModifierControlRow:
             
         # Step Buttons - Render ALL on the left
         step_btns = self.config.get('step_buttons', [])
-        btn_width = 25
+        btn_width = 30
         
         for b_def in step_btns:
-            btn = UIButton(pygame.Rect(current_x, y, btn_width, 28), b_def['label'], manager=self.manager, container=self.container)
+            btn = UIButton(pygame.Rect(current_x, y, btn_width, 28), b_def['label'], manager=self.manager, container=self.container, object_id='#mini_arrow_btn')
             self.buttons[btn] = {'action': b_def['mode'], 'value': b_def['value']}
             self.ui_elements.append(btn)
             current_x += (btn_width + 2)

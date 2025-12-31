@@ -363,13 +363,21 @@ class LayerPanel(DropTarget):
         target_layer = self.get_target_layer_at(pos)
         if target_layer:
              # Validation
-             validation = VALIDATOR.validate_addition(self.builder.ship, component, target_layer)
-             if validation.is_valid:
-                 self.builder.ship.add_component(component, target_layer)
+             # For bulk add, we trust add_components_bulk to handle loop validation or we should validate appropriately.
+             # add_components_bulk performs validation internally per item or in batch.
+             # Let's delegate to ship.add_components_bulk directly.
+             
+             added_count = self.builder.ship.add_components_bulk(component, target_layer, count)
+             if added_count > 0:
                  self.builder.update_stats()
                  return True
              else:
-                 self.builder.show_error(f"Cannot add: {', '.join(validation.errors)}")
+                 # If 0 added, show error from validation of first attempt?
+                 # ship.add_components_bulk prints errors to console, but builder.show_error might be needed.
+                 # Let's re-run single validation to get the error message for UI if it failed completely.
+                 validation = VALIDATOR.validate_addition(self.builder.ship, component, target_layer)
+                 if not validation.is_valid:
+                     self.builder.show_error(f"Cannot add: {', '.join(validation.errors)}")
                  return False
         return False
 

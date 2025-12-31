@@ -13,8 +13,8 @@ from test_framework.scenario import CombatScenario
 class TestLabScene:
     def __init__(self, game):
         self.game = game
-        self.font = pygame.font.sys_font(FONT_MAIN, 24)
-        self.title_font = pygame.font.sys_font(FONT_MAIN, 48)
+        self.font = pygame.font.SysFont(FONT_MAIN, 24)
+        self.title_font = pygame.font.SysFont(FONT_MAIN, 48)
         
         self.scenarios = []
         self.selected_index = -1
