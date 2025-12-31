@@ -1,8 +1,15 @@
 """Main game entry point - coordinates scenes and game loop."""
+import argparse
 import pygame
 import os
 
 from ship import Ship, LayerType
+
+# Parse command line arguments
+parser = argparse.ArgumentParser(description="Starship Battles")
+parser.add_argument('--force-resolution', action='store_true',
+                    help='Force 2560x1600 resolution regardless of monitor size')
+args = parser.parse_args()
 from designs import create_brick, create_interceptor
 from components import load_components, load_modifiers
 from ui import Button
@@ -49,8 +56,11 @@ class Game:
         
         global WIDTH, HEIGHT
         
+        # Check for forced resolution
+        if args.force_resolution:
+            WIDTH, HEIGHT = 2560, 1600
         # Logic: Use 4K if available, else 2560x1600, else smaller?
-        if monitor_w >= 3840 and monitor_h >= 2160:
+        elif monitor_w >= 3840 and monitor_h >= 2160:
             WIDTH, HEIGHT = 3840, 2160
         elif monitor_w >= 2560 and monitor_h >= 1600:
             WIDTH, HEIGHT = 2560, 1600
