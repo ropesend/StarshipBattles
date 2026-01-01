@@ -7,6 +7,7 @@ from ship import Ship, initialize_ship_data
 from components import load_components, COMPONENT_REGISTRY, Hangar, LayerType
 from battle_engine import BattleEngine
 from game_constants import AttackType
+from ai import STRATEGY_MANAGER
 
 class TestFighterLaunch(unittest.TestCase):
     @classmethod
@@ -14,6 +15,15 @@ class TestFighterLaunch(unittest.TestCase):
         initialize_ship_data()
         load_components()
         pygame.init()
+
+    def setUp(self):
+        test_data_path = os.path.join(os.getcwd(), "tests", "data")
+        STRATEGY_MANAGER.load_data(
+             test_data_path, 
+             targeting_file="test_targeting_policies.json", 
+             movement_file="test_movement_policies.json", 
+             strategy_file="test_combat_strategies.json"
+        )
 
     def test_hangar_initialization(self):
         """Test Hangar component loads correctly."""

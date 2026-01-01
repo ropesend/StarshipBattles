@@ -181,7 +181,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.bridge_destroyed: bool = False
         
         # AI Strategy
-        self.ai_strategy: str = "optimal_firing_range"
+        self.ai_strategy: str = "standard_ranged"
         self.source_file: Optional[str] = None
         
         # Formation Attributes
@@ -611,7 +611,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             color = color_val # type: ignore
         
         s = Ship(name, 0, 0, color, data.get("team_id", 0), ship_class=data.get("ship_class", "Escort"), theme_id=data.get("theme_id", "Federation"))
-        s.ai_strategy = data.get("ai_strategy", "optimal_firing_range")
+        s.ai_strategy = data.get("ai_strategy", "standard_ranged")
         
         for l_name, comps_list in data.get("layers", {}).items():
             layer_type = None

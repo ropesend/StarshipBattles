@@ -1,6 +1,5 @@
 import unittest
 import math
-from tests.test_combat_targeting import TestCombatTargeting  # Reuse logic if needed, or just standard import
 
 class TestFiringArcLogic(unittest.TestCase):
     """

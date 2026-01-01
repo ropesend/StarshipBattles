@@ -1,0 +1,38 @@
+{
+    "_comment": "Test strategies linked to test policies.",
+    "strategies": {
+        "test_strat_simple": {
+            "name": "Test Strategy Simple",
+            "description": "Simple test strategy.",
+            "targeting_policy": "test_policy_1",
+            "movement_policy": "test_move_kite"
+        },
+        "test_strat_aggro": {
+            "name": "Test Strategy Aggro",
+            "description": "Aggressive test strategy.",
+            "targeting_policy": "test_policy_complex",
+            "movement_policy": "test_move_ram"
+        },
+        "max_weapons_range": {
+            "name": "Max Range",
+            "targeting_policy": "test_policy_1",
+            "movement_policy": "move_max_range"
+        },
+        "flee": {
+            "name": "Flee",
+            "targeting_policy": "test_policy_1",
+            "movement_policy": "move_flee",
+            "fire_while_retreating": true
+        },
+        "kamikaze": {
+            "name": "Kamikaze",
+            "targeting_policy": "test_policy_1",
+            "movement_policy": "move_ram"
+        },
+        "attack_run": {
+            "name": "Attack Run",
+            "targeting_policy": "test_policy_1",
+            "movement_policy": "move_attack_run"
+        }
+    }
+}

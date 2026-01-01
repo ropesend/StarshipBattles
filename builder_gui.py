@@ -646,14 +646,15 @@ class BuilderSceneGUI:
                 self.right_panel.update_portrait_image()
                 logger.info(f"Changed theme to {event.text}")
             elif event.ui_element == self.right_panel.ai_dropdown:
-                from ai import COMBAT_STRATEGIES
+                from ai import STRATEGY_MANAGER
                 selected_name = event.text
-                for strategy_id, strat in COMBAT_STRATEGIES.items():
-                    if strat.get('name', '') == selected_name:
-                        self.ship.ai_strategy = strategy_id
-                        break
-                else:
-                    self.ship.ai_strategy = event.text.lower().replace(' ', '_')
+                if STRATEGY_MANAGER:
+                    for strategy_id, strat in STRATEGY_MANAGER.strategies.items():
+                        if strat.get('name', '') == selected_name:
+                            self.ship.ai_strategy = strategy_id
+                            break
+                    else:
+                        self.ship.ai_strategy = event.text.lower().replace(' ', '_')
                     
         elif event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
             if event.ui_element == self.confirm_dialog:
@@ -825,16 +826,17 @@ class BuilderSceneGUI:
         
         try:
             # 1. Clear Registries
-            from ai import COMBAT_STRATEGIES, ENGAGE_DISTANCES, load_combat_strategies
+            from ai import STRATEGY_MANAGER, load_combat_strategies
             
-            # 1. Clear Registries
             COMPONENT_REGISTRY.clear()
             MODIFIER_REGISTRY.clear()
             VEHICLE_CLASSES.clear()
             SHIP_CLASSES.clear()
-            # AI Strategies need to be cleared manually if they're just a dict
-            COMBAT_STRATEGIES.clear()
-            ENGAGE_DISTANCES.clear()
+            # Clear STRATEGY_MANAGER data
+            if STRATEGY_MANAGER:
+                STRATEGY_MANAGER.strategies.clear()
+                STRATEGY_MANAGER.targeting_policies.clear()
+                STRATEGY_MANAGER.movement_policies.clear()
             
             # 2. Helper to find file (standard, test prefix, or alias) -> returns (path, is_default_fallback)
             def find_file(base_names, allow_default=True):
@@ -877,11 +879,28 @@ class BuilderSceneGUI:
             else:
                 logger.warning("No components.json found")
                 
-            # Combat Strategies - Fallback allowed
-            strat_path, is_def = find_file("combatstrategies.json")
-            if strat_path:
-                load_combat_strategies(strat_path)
-                logger.info(f"Loaded strategies from {strat_path}")
+            # Combat Strategies - Need to load all three files
+            # Check if test files exist (with test_ prefix)
+            test_strat = os.path.join(directory, "test_combat_strategies.json")
+            test_targeting = os.path.join(directory, "test_targeting_policies.json")
+            test_movement = os.path.join(directory, "test_movement_policies.json")
+            
+            if os.path.exists(test_strat):
+                # Test data mode - use test_ prefixed files
+                if STRATEGY_MANAGER:
+                    STRATEGY_MANAGER.load_data(
+                        directory,
+                        targeting_file="test_targeting_policies.json",
+                        movement_file="test_movement_policies.json",
+                        strategy_file="test_combat_strategies.json"
+                    )
+                logger.info(f"Loaded strategies from test data in {directory}")
+            else:
+                # Production mode - try standard names
+                strat_path, is_def = find_file(["combatstrategies.json", "combat_strategies.json"])
+                if strat_path:
+                    load_combat_strategies(strat_path)
+                    logger.info(f"Loaded strategies from {strat_path}")
             
             # Vehicle Classes & Layers
             # Check for 'vehicleclasses.json' OR 'classes.json'
@@ -1022,7 +1041,7 @@ class BuilderSceneGUI:
             layer_data['hp'] = 0
             
         self.template_modifiers = {}
-        self.ship.ai_strategy = "optimal_firing_range"
+        self.ship.ai_strategy = "standard_ranged"
         
         # Reset Name
         self.ship.name = "Custom Ship"

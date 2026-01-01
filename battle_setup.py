@@ -31,7 +31,7 @@ def scan_ship_designs():
                     'path': filepath,
                     'name': data.get('name', filename),
                     'ship_class': data.get('ship_class', 'Unknown'),
-                    'ai_strategy': data.get('ai_strategy', 'optimal_firing_range')
+                    'ai_strategy': data.get('ai_strategy', 'standard_ranged')
                 })
         except Exception:
             pass  # Skip invalid ship files
@@ -316,7 +316,7 @@ class BattleSetupScreen:
                     'path': ship_path,
                     'name': ship_data.get('name', 'Unknown'),
                     'ship_class': ship_data.get('ship_class', 'Unknown'),
-                    'ai_strategy': ship_data.get('ai_strategy', 'optimal_firing_range')
+                    'ai_strategy': ship_data.get('ai_strategy', 'standard_ranged')
                 }
 
             # Calculate Center
@@ -357,7 +357,7 @@ class BattleSetupScreen:
                 
                 target_list.append({
                     'design': design_entry,
-                    'strategy': design_entry.get('ai_strategy', 'optimal_firing_range'),
+                    'strategy': design_entry.get('ai_strategy', 'standard_ranged'),
                     'relative_position': (world_x, world_y),
                     'formation_id': formation_id,
                     'formation_name': formation['name'],
@@ -426,12 +426,12 @@ class BattleSetupScreen:
                             if event.button == 1:
                                 self.team1.append({
                                     'design': design,
-                                    'strategy': design.get('ai_strategy', 'optimal_firing_range')
+                                    'strategy': design.get('ai_strategy', 'standard_ranged')
                                 })
                             elif event.button == 3:
                                 self.team2.append({
                                     'design': design,
-                                    'strategy': design.get('ai_strategy', 'optimal_firing_range')
+                                    'strategy': design.get('ai_strategy', 'standard_ranged')
                                 })
                             found_click = True
                             return

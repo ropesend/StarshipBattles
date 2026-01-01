@@ -1,0 +1,32 @@
+{
+    "_comment": "Test data for movement policies.",
+    "policies": {
+        "test_move_kite": {
+            "behavior": "kite",
+            "engage_distance": "max_range",
+            "params": {}
+        },
+        "test_move_ram": {
+            "behavior": "ram",
+            "engage_distance": "ram",
+            "retreat_hp_threshold": 0.0,
+            "avoid_collisions": false
+        },
+        "move_max_range": {
+            "behavior": "kite",
+            "engage_distance": "max_range"
+        },
+        "move_flee": {
+            "behavior": "flee",
+            "engage_distance": "max_range"
+        },
+        "move_ram": {
+            "behavior": "ram",
+            "engage_distance": "ram"
+        },
+        "move_attack_run": {
+            "behavior": "attack_run",
+            "engage_distance": "max_range"
+        }
+    }
+}

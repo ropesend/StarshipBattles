@@ -138,22 +138,33 @@ class TestMultitarget(unittest.TestCase):
         self.grid.insert(m1)
         self.grid.insert(m2)
         
-        # Inject Strategy
-        with unittest.mock.patch.dict(COMBAT_STRATEGIES, {
-            'test_strat': {'targeting_priority': ['missiles_in_pdc_arc', 'nearest']}
-        }):
-            self.ship.ai_strategy = 'test_strat'
-            
-            # Force AI update to use this strategy
-            # AIController.find_secondary_targets uses self.ship.ai_strategy to lookup
-            sec = self.ai.find_secondary_targets()
+        # Inject Strategy into StrategyManager (new data-driven system)
+        from ai import STRATEGY_MANAGER
         
-        # Diagnostic print
-        # print([t for t in sec])
+        # Add test targeting policy with missiles_in_pdc_arc rule
+        STRATEGY_MANAGER.targeting_policies['test_pdc_target'] = {
+            'name': 'Test PDC Targeting',
+            'rules': [
+                {'type': 'missiles_in_pdc_arc', 'weight': 2000, 'required': True},
+                {'type': 'nearest', 'weight': 100}
+            ]
+        }
+        
+        # Add test strategy that uses this targeting policy
+        STRATEGY_MANAGER.strategies['test_strat'] = {
+            'name': 'Test Strategy',
+            'targeting_policy': 'test_pdc_target',
+            'movement_policy': 'kite_max'
+        }
+        
+        self.ship.ai_strategy = 'test_strat'
+        
+        # Force AI update to use this strategy
+        sec = self.ai.find_secondary_targets()
         
         # M1 should be prioritized because it is in PDC arc
         self.assertIn(m1, sec)
-        # M2 should NOT be in list (hard filter)
+        # M2 should NOT be in list (hard filter via required=True)
         self.assertNotIn(m2, sec)
         
         # Verify Firing

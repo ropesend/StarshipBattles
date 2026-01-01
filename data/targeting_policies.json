@@ -1,0 +1,115 @@
+{
+    "_comment": "Data-driven targeting priorities. 'rules' are evaluated in order or by weight.",
+    "policies": {
+        "standard": {
+            "name": "Standard Balanced",
+            "rules": [
+                {
+                    "type": "pdc_arc",
+                    "weight": 2000,
+                    "required": false
+                },
+                {
+                    "type": "has_weapons",
+                    "weight": 1000
+                },
+                {
+                    "type": "most_damaged",
+                    "weight": 500
+                },
+                {
+                    "type": "strongest",
+                    "weight": 300
+                },
+                {
+                    "type": "nearest",
+                    "weight": 100
+                }
+            ]
+        },
+        "sniper": {
+            "name": "Sniper Focus",
+            "rules": [
+                {
+                    "type": "pdc_arc",
+                    "weight": 2000
+                },
+                {
+                    "type": "most_damaged",
+                    "weight": 800
+                },
+                {
+                    "type": "weakest",
+                    "weight": 600
+                },
+                {
+                    "type": "least_armor",
+                    "weight": 500
+                },
+                {
+                    "type": "nearest",
+                    "weight": 100
+                }
+            ]
+        },
+        "brawler": {
+            "name": "Heavy Hitter",
+            "rules": [
+                {
+                    "type": "pdc_arc",
+                    "weight": 2000
+                },
+                {
+                    "type": "strongest",
+                    "weight": 800
+                },
+                {
+                    "type": "largest",
+                    "weight": 600
+                },
+                {
+                    "type": "has_weapons",
+                    "weight": 500
+                },
+                {
+                    "type": "nearest",
+                    "weight": 200
+                }
+            ]
+        },
+        "anti_fighter": {
+            "name": "Anti-Fighter",
+            "rules": [
+                {
+                    "type": "pdc_arc",
+                    "weight": 2000
+                },
+                {
+                    "type": "smallest",
+                    "weight": 1000
+                },
+                {
+                    "type": "fastest",
+                    "weight": 800
+                },
+                {
+                    "type": "nearest",
+                    "weight": 500
+                }
+            ]
+        },
+        "self_defense": {
+            "name": "Pure Self Defense",
+            "rules": [
+                {
+                    "type": "pdc_arc",
+                    "weight": 3000
+                },
+                {
+                    "type": "nearest",
+                    "weight": 1000
+                }
+            ]
+        }
+    }
+}
