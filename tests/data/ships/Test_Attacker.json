@@ -6,13 +6,13 @@
         0
     ],
     "team_id": 0,
-    "ship_class": "SimpleHull",
+    "ship_class": "TestShip_S_2L",
     "theme_id": "Federation",
     "ai_strategy": "optimal_firing_range",
     "layers": {
         "CORE": [
             {
-                "id": "bridge",
+                "id": "test_bridge_basic",
                 "modifiers": []
             },
             {
@@ -20,7 +20,7 @@
                 "modifiers": []
             },
             {
-                "id": "test_gun_omni",
+                "id": "test_weapon_proj_omni",
                 "modifiers": []
             }
         ],
@@ -28,23 +28,23 @@
         "OUTER": [],
         "ARMOR": [
             {
-                "id": "armor",
+                "id": "test_armor_std",
                 "modifiers": []
             },
             {
-                "id": "armor",
+                "id": "test_armor_std",
                 "modifiers": []
             },
             {
-                "id": "armor",
+                "id": "test_armor_std",
                 "modifiers": []
             },
             {
-                "id": "armor",
+                "id": "test_armor_std",
                 "modifiers": []
             },
             {
-                "id": "armor",
+                "id": "test_armor_std",
                 "modifiers": []
             }
         ]
@@ -54,9 +54,9 @@
         "max_fuel": 0,
         "max_ammo": 0,
         "max_energy": 0,
-        "max_speed": 69.44444444444444,
+        "max_speed": 694.4444444444445,
         "turn_speed": 0.0,
-        "total_thrust": 500.0,
+        "total_thrust": 5000.0,
         "mass": 180.0,
         "armor_hp_pool": 1000
     }

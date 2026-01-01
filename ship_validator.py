@@ -227,14 +227,6 @@ class ClassRequirementsRule(ValidationRule):
             
         return result
 
-class BridgeExistenceRule(ValidationRule):
-    def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
-        result = ValidationResult(True)
-        has_bridge = any(c.type_str == "Bridge" for l in ship.layers.values() for c in l['components'])
-        # Or check instance using isinstance if we can import Bridge
-        if not has_bridge:
-            result.add_error("Ship needs a Bridge!")
-        return result
 
 class ResourceDependencyRule(ValidationRule):
     def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
@@ -311,7 +303,7 @@ class ShipDesignValidator:
         ]
         self.design_rules: List[ValidationRule] = [
              ClassRequirementsRule(),
-             BridgeExistenceRule(),
+
              ResourceDependencyRule(),
              # MassBudgetRule() could also apply here for final check
              MassBudgetRule() 

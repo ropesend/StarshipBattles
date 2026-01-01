@@ -6,13 +6,13 @@
         255
     ],
     "team_id": 0,
-    "ship_class": "ComplexHull",
+    "ship_class": "TestShip_L_4L",
     "theme_id": "Federation",
     "ai_strategy": "optimal_firing_range",
     "layers": {
         "CORE": [
             {
-                "id": "bridge",
+                "id": "test_bridge_basic",
                 "modifiers": []
             }
         ],
@@ -20,23 +20,23 @@
         "OUTER": [],
         "ARMOR": [
             {
-                "id": "armor",
+                "id": "test_armor_std",
                 "modifiers": []
             },
             {
-                "id": "armor",
+                "id": "test_armor_std",
                 "modifiers": []
             },
             {
-                "id": "armor",
+                "id": "test_armor_std",
                 "modifiers": []
             },
             {
-                "id": "armor",
+                "id": "test_armor_std",
                 "modifiers": []
             },
             {
-                "id": "armor",
+                "id": "test_armor_std",
                 "modifiers": []
             }
         ]

@@ -20,13 +20,13 @@ def generate_test_ships():
         os.makedirs(output_dir)
 
     # 1. Create Attacker
-    # "Attacker": SimpleHull, test_engine_infinite, test_gun_omni, bridge, 5x armor
-    attacker = Ship(name="Test Attacker", ship_class="SimpleHull", x=0, y=0, color=(255, 0, 0))
-    attacker.add_component(create_component("bridge"), LayerType.CORE)
+    # "Attacker": TestShip_S_2L, test_engine_infinite, test_weapon_proj_omni, test_bridge_basic, 5x test_armor_std
+    attacker = Ship(name="Test Attacker", ship_class="TestShip_S_2L", x=0, y=0, color=(255, 0, 0))
+    attacker.add_component(create_component("test_bridge_basic"), LayerType.CORE)
     attacker.add_component(create_component("test_engine_infinite"), LayerType.CORE)
-    attacker.add_component(create_component("test_gun_omni"), LayerType.CORE)
+    attacker.add_component(create_component("test_weapon_proj_omni"), LayerType.CORE)
     for _ in range(5):
-        attacker.add_component(create_component("armor"), LayerType.ARMOR)
+        attacker.add_component(create_component("test_armor_std"), LayerType.ARMOR)
     
     attacker.recalculate_stats()
     
@@ -36,12 +36,12 @@ def generate_test_ships():
         print(f"Saved Test_Attacker.json to {output_dir}")
 
     # 2. Create Target
-    # "Target": ComplexHull, bridge, 5x armor. NO ENGINE.
-    target = Ship(name="Test Target", ship_class="ComplexHull", x=0, y=0, color=(0, 0, 255))
-    target.add_component(create_component("bridge"), LayerType.CORE)
+    # "Target": TestShip_L_4L, test_bridge_basic, 5x test_armor_std, NO ENGINE
+    target = Ship(name="Test Target", ship_class="TestShip_L_4L", x=0, y=0, color=(0, 0, 255))
+    target.add_component(create_component("test_bridge_basic"), LayerType.CORE)
     # NO ENGINE
     for _ in range(5):
-        target.add_component(create_component("armor"), LayerType.ARMOR)
+        target.add_component(create_component("test_armor_std"), LayerType.ARMOR)
         
     target.recalculate_stats()
     

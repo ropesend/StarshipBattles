@@ -1,23 +1,112 @@
 {
     "components": [
         {
-            "id": "bridge",
-            "name": "Command Bridge",
+            "id": "test_bridge_basic",
+            "name": "Test Bridge (Basic)",
             "type": "Bridge",
             "mass": 10,
-            "hp": 50
+            "hp": 50,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "abilities": {
+                "CommandAndControl": true
+            }
         },
         {
             "id": "test_engine_infinite",
-            "name": "Infinite Thruster",
+            "name": "Test Engine (Infinite)",
             "type": "Engine",
             "mass": 10,
             "hp": 50,
-            "thrust_force": 500
+            "thrust_force": 5000,
+            "abilities": {
+                "CombatPropulsion": 5000
+            }
         },
         {
-            "id": "test_gun_omni",
-            "name": "Omni Railgun",
+            "id": "test_engine_std",
+            "name": "Test Engine (Std)",
+            "type": "Engine",
+            "mass": 20,
+            "hp": 50,
+            "thrust_force": 500,
+            "fuel_cost": 0.1,
+            "abilities": {
+                "CombatPropulsion": 500
+            }
+        },
+        {
+            "id": "test_thruster_std",
+            "name": "Test Thruster (Std)",
+            "type": "Thruster",
+            "mass": 5,
+            "hp": 20,
+            "turn_speed": 5.0,
+            "abilities": {
+                "ManeuveringThruster": 5.0
+            }
+        },
+        {
+            "id": "test_gen_fusion",
+            "name": "Test Generator (Fusion)",
+            "type": "Generator",
+            "mass": 20,
+            "hp": 100,
+            "energy_generation": 100,
+            "abilities": {
+                "EnergyGeneration": 100
+            }
+        },
+        {
+            "id": "test_storage_fuel",
+            "name": "Test Fuel Tank",
+            "type": "Tank",
+            "mass": 5,
+            "hp": 20,
+            "capacity": 1000,
+            "resource_type": "fuel",
+            "abilities": {
+                "FuelStorage": 1000
+            }
+        },
+        {
+            "id": "test_storage_ammo",
+            "name": "Test Ammo Mag",
+            "type": "Tank",
+            "mass": 5,
+            "hp": 20,
+            "capacity": 1000,
+            "resource_type": "ammo",
+            "abilities": {
+                "AmmoStorage": 1000
+            }
+        },
+        {
+            "id": "test_storage_energy",
+            "name": "Test Battery",
+            "type": "Tank",
+            "mass": 5,
+            "hp": 20,
+            "capacity": 1000,
+            "resource_type": "energy",
+            "abilities": {
+                "EnergyStorage": 1000
+            }
+        },
+        {
+            "id": "test_armor_std",
+            "name": "Test Armor (Std)",
+            "type": "Armor",
+            "mass": 20,
+            "hp": 200,
+            "abilities": {
+                "Armor": true
+            }
+        },
+        {
+            "id": "test_weapon_proj_omni",
+            "name": "Test Weapon (Proj, Omni)",
             "type": "ProjectileWeapon",
             "mass": 10,
             "hp": 50,
@@ -25,11 +114,14 @@
             "range": 1000,
             "projectile_speed": 1500,
             "reload": 1.0,
-            "firing_arc": 360
+            "firing_arc": 360,
+            "abilities": {
+                "ProjectileWeapon": true
+            }
         },
         {
-            "id": "test_gun",
-            "name": "Test Railgun",
+            "id": "test_weapon_proj_fixed",
+            "name": "Test Weapon (Proj, Fixed)",
             "type": "ProjectileWeapon",
             "mass": 10,
             "hp": 50,
@@ -38,11 +130,14 @@
             "projectile_speed": 1500,
             "reload": 1.0,
             "ammo_cost": 1,
-            "firing_arc": 45
+            "firing_arc": 45,
+            "abilities": {
+                "ProjectileWeapon": true
+            }
         },
         {
-            "id": "test_laser",
-            "name": "Test Laser",
+            "id": "test_weapon_beam_std",
+            "name": "Test Weapon (Beam, Std)",
             "type": "BeamWeapon",
             "mass": 5,
             "hp": 20,
@@ -52,57 +147,219 @@
             "reload": 0.0,
             "firing_arc": 360,
             "base_accuracy": 2.0,
-            "accuracy_falloff": 0.001
+            "accuracy_falloff": 0.001,
+            "abilities": {
+                "BeamWeapon": true
+            }
         },
         {
-            "id": "generator",
-            "name": "Fusion Core",
-            "type": "Generator",
+            "id": "test_weapon_missile_std",
+            "name": "Test Weapon (Missile, Std)",
+            "type": "SeekerWeapon",
             "mass": 20,
-            "hp": 100,
-            "energy_generation": 100
+            "hp": 20,
+            "damage": 100,
+            "range": 3000,
+            "projectile_speed": 1000,
+            "turn_rate": 90,
+            "endurance": 5.0,
+            "reload": 5.0,
+            "ammo_cost": 5,
+            "firing_arc": 360,
+            "abilities": {
+                "SeekerWeapon": true
+            }
+        },
+        {
+            "id": "test_weapon_pd_std",
+            "name": "Test Weapon (PD, Std)",
+            "type": "BeamWeapon",
+            "mass": 5,
+            "hp": 10,
+            "damage": 2,
+            "range": 500,
+            "reload": 0.1,
+            "energy_cost": 1,
+            "firing_arc": 180,
+            "base_accuracy": 10.0,
+            "accuracy_falloff": 0.01,
+            "abilities": {
+                "BeamWeapon": true,
+                "PointDefense": true
+            }
+        },
+        {
+            "id": "test_shield_std",
+            "name": "Test Shield (Std)",
+            "type": "Shield",
+            "mass": 20,
+            "hp": 50,
+            "abilities": {
+                "ShieldProjection": 200
+            }
+        },
+        {
+            "id": "test_shield_regen",
+            "name": "Test Shield (Regen)",
+            "type": "ShieldRegenerator",
+            "mass": 20,
+            "hp": 50,
+            "abilities": {
+                "ShieldRegeneration": 5.0,
+                "EnergyConsumption": 5.0
+            }
+        },
+        {
+            "id": "test_sensor_std",
+            "name": "Test Sensor (Std)",
+            "type": "Sensor",
+            "mass": 10,
+            "hp": 20,
+            "abilities": {
+                "ToHitAttackModifier": {
+                    "value": 0.5,
+                    "stack_group": "Sensor"
+                }
+            }
+        },
+        {
+            "id": "test_ecm_std",
+            "name": "Test ECM (Std)",
+            "type": "Electronics",
+            "mass": 10,
+            "hp": 20,
+            "abilities": {
+                "ToHitDefenseModifier": {
+                    "value": 0.5,
+                    "stack_group": "ECM"
+                }
+            }
+        },
+        {
+            "id": "bridge",
+            "name": "Command Bridge (Legacy)",
+            "type": "Bridge",
+            "mass": 10,
+            "hp": 50,
+            "abilities": {
+                "CommandAndControl": true
+            }
         },
         {
             "id": "engine",
-            "name": "Main Thruster",
+            "name": "Main Thruster (Legacy)",
             "type": "Engine",
             "mass": 20,
             "hp": 50,
             "thrust_force": 500,
-            "fuel_cost": 0.1
+            "fuel_cost": 0.1,
+            "abilities": {
+                "CombatPropulsion": 500
+            }
+        },
+        {
+            "id": "test_gun_omni",
+            "name": "Omni Railgun (Legacy)",
+            "type": "ProjectileWeapon",
+            "mass": 10,
+            "hp": 50,
+            "damage": 50,
+            "range": 1000,
+            "projectile_speed": 1500,
+            "reload": 1.0,
+            "firing_arc": 360,
+            "abilities": {
+                "ProjectileWeapon": true
+            }
+        },
+        {
+            "id": "test_gun",
+            "name": "Test Railgun (Legacy)",
+            "type": "ProjectileWeapon",
+            "mass": 10,
+            "hp": 50,
+            "damage": 500,
+            "range": 1000,
+            "projectile_speed": 1500,
+            "reload": 1.0,
+            "ammo_cost": 1,
+            "firing_arc": 45,
+            "abilities": {
+                "ProjectileWeapon": true
+            }
+        },
+        {
+            "id": "test_laser",
+            "name": "Test Laser (Legacy)",
+            "type": "BeamWeapon",
+            "mass": 5,
+            "hp": 20,
+            "damage": 5,
+            "range": 800,
+            "energy_cost": 10,
+            "reload": 0.0,
+            "firing_arc": 360,
+            "base_accuracy": 2.0,
+            "accuracy_falloff": 0.001,
+            "abilities": {
+                "BeamWeapon": true
+            }
+        },
+        {
+            "id": "generator",
+            "name": "Fusion Core (Legacy)",
+            "type": "Generator",
+            "mass": 20,
+            "hp": 100,
+            "energy_generation": 100,
+            "abilities": {
+                "EnergyGeneration": 100
+            }
         },
         {
             "id": "thruster",
-            "name": "Maneuver Thruster",
+            "name": "Maneuver Thruster (Legacy)",
             "type": "Thruster",
             "mass": 5,
             "hp": 20,
-            "turn_speed": 5.0
+            "turn_speed": 5.0,
+            "abilities": {
+                "ManeuveringThruster": 5.0
+            }
         },
         {
             "id": "fuel_tank",
-            "name": "Fuel Tank",
+            "name": "Fuel Tank (Legacy)",
             "type": "Tank",
             "mass": 5,
             "hp": 20,
             "capacity": 1000,
-            "resource_type": "fuel"
+            "resource_type": "fuel",
+            "abilities": {
+                "FuelStorage": 1000
+            }
         },
         {
             "id": "ammo_box",
-            "name": "Ammo Magazine",
+            "name": "Ammo Magazine (Legacy)",
             "type": "Tank",
             "mass": 5,
             "hp": 20,
             "capacity": 1000,
-            "resource_type": "ammo"
+            "resource_type": "ammo",
+            "abilities": {
+                "AmmoStorage": 1000
+            }
         },
         {
             "id": "armor",
-            "name": "Steel Plating",
+            "name": "Steel Plating (Legacy)",
             "type": "Armor",
             "mass": 20,
-            "hp": 200
+            "hp": 200,
+            "abilities": {
+                "Armor": true
+            }
         }
     ]
 }

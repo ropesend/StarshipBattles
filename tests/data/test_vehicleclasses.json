@@ -1,5 +1,92 @@
 {
     "classes": {
+        "TestShip_S_2L": {
+            "name": "TestShip_S_2L",
+            "type": "Ship",
+            "max_mass": 2000,
+            "hull_mass": 50,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 1.0,
+                    "max_mass_pct": 0.8
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "max_mass_pct": 0.2
+                }
+            ]
+        },
+        "TestShip_M_3L": {
+            "name": "TestShip_M_3L",
+            "type": "Ship",
+            "max_mass": 5000,
+            "hull_mass": 200,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.5,
+                    "max_mass_pct": 0.4
+                },
+                {
+                    "type": "INNER",
+                    "radius_pct": 0.8,
+                    "max_mass_pct": 0.3
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 1.0,
+                    "max_mass_pct": 0.3
+                }
+            ]
+        },
+        "TestShip_L_4L": {
+            "name": "TestShip_L_4L",
+            "type": "Ship",
+            "max_mass": 10000,
+            "hull_mass": 500,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.3,
+                    "max_mass_pct": 0.2
+                },
+                {
+                    "type": "INNER",
+                    "radius_pct": 0.6,
+                    "max_mass_pct": 0.3
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 0.9,
+                    "max_mass_pct": 0.3
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "max_mass_pct": 0.2
+                }
+            ]
+        },
+        "TestShip_Target": {
+            "name": "TestShip_Target",
+            "type": "Ship",
+            "max_mass": 100000,
+            "hull_mass": 500,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.5,
+                    "max_mass_pct": 0.5
+                },
+                {
+                    "type": "OUTER",
+                    "radius_pct": 1.0,
+                    "max_mass_pct": 0.5
+                }
+            ]
+        },
         "TestClass": {
             "name": "TestClass",
             "type": "Ship",
@@ -20,70 +107,6 @@
                     "type": "OUTER",
                     "radius_pct": 0.9,
                     "max_mass_pct": 0.4
-                }
-            ]
-        },
-        "SimpleHull": {
-            "name": "SimpleHull",
-            "type": "Ship",
-            "max_mass": 2000,
-            "hull_mass": 50,
-            "layers": [
-                {
-                    "type": "CORE",
-                    "radius_pct": 1.0,
-                    "max_mass_pct": 0.8
-                },
-                {
-                    "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "max_mass_pct": 0.2
-                }
-            ]
-        },
-        "ComplexHull": {
-            "name": "ComplexHull",
-            "type": "Ship",
-            "max_mass": 10000,
-            "hull_mass": 500,
-            "layers": [
-                {
-                    "type": "CORE",
-                    "radius_pct": 0.3,
-                    "max_mass_pct": 0.2
-                },
-                {
-                    "type": "INNER",
-                    "radius_pct": 0.6,
-                    "max_mass_pct": 0.3
-                },
-                {
-                    "type": "OUTER",
-                    "radius_pct": 0.9,
-                    "max_mass_pct": 0.3
-                },
-                {
-                    "type": "ARMOR",
-                    "radius_pct": 1.0,
-                    "max_mass_pct": 0.2
-                }
-            ]
-        },
-        "TargetDummy": {
-            "name": "TargetDummy",
-            "type": "Ship",
-            "max_mass": 10000,
-            "hull_mass": 500,
-            "layers": [
-                {
-                    "type": "CORE",
-                    "radius_pct": 0.5,
-                    "max_mass_pct": 0.5
-                },
-                {
-                    "type": "OUTER",
-                    "radius_pct": 1.0,
-                    "max_mass_pct": 0.5
                 }
             ]
         }
