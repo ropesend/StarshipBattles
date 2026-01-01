@@ -1,11 +1,19 @@
 
 import unittest
+from unittest.mock import MagicMock, patch
 import pygame
+import sys
+import os
+
+# Ensure project root is in path
+sys.path.append(os.getcwd())
+
 from spatial import SpatialGrid
 from battle import BattleScene
 from ship import Ship, initialize_ship_data
 from components import load_components
-import os
+
+from ai import STRATEGY_MANAGER
 
 class TestBattleSetupLogic(unittest.TestCase):
     """Test SpatialGrid functionality and BattleScene setup logic."""
@@ -18,6 +26,22 @@ class TestBattleSetupLogic(unittest.TestCase):
         initialize_ship_data(base_dir)
         load_components(os.path.join(base_dir, "data", "components.json"))
         
+    def setUp(self):
+        test_data_path = os.path.join(os.getcwd(), "tests", "data")
+        STRATEGY_MANAGER.load_data(
+             test_data_path, 
+             targeting_file="test_targeting_policies.json", 
+             movement_file="test_movement_policies.json", 
+             strategy_file="test_combat_strategies.json"
+        )
+        # Mock window surface if BattleScene needs it for initialization
+        # This part was in the user's provided 'Code Edit' but not directly related to the original file's tests.
+        # Keeping it commented out as it might be for a different test context.
+        # self.setup = BattleSetup() # Original file does not use BattleSetup directly in tests
+        # self.setup.window = MagicMock()
+        # self.setup.width = 800
+        # self.setup.height = 600
+
     @classmethod
     def tearDownClass(cls):
         pygame.quit()

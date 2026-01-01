@@ -4,11 +4,13 @@ import sys
 import os
 import pygame
 import math
+import inspect
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ship import Ship, LayerType
-from ai import AIController
+import ai
+from ai import AIController, STRATEGY_MANAGER
 from spatial import SpatialGrid
 from components import load_components, create_component
 
@@ -19,6 +21,15 @@ class TestAIController(unittest.TestCase):
         load_components("data/components.json")
     
     def setUp(self):
+        # Load test data for AI strategies to ensure reproducible tests
+        test_data_path = os.path.join(os.getcwd(), "tests", "data")
+        STRATEGY_MANAGER.load_data(
+            test_data_path, 
+            targeting_file="test_targeting_policies.json", 
+            movement_file="test_movement_policies.json", 
+            strategy_file="test_combat_strategies.json"
+        )
+
         self.grid = SpatialGrid(cell_size=2000)
         
         # Create two ships with full crew infrastructure
@@ -124,6 +135,14 @@ class TestAIStrategyStates(unittest.TestCase):
         load_components("data/components.json")
     
     def setUp(self):
+        # Load test data for AI strategies to ensure reproducible tests
+        test_data_path = os.path.join(os.getcwd(), "tests", "data")
+        STRATEGY_MANAGER.load_data(
+            test_data_path, 
+            targeting_file="test_targeting_policies.json", 
+            movement_file="test_movement_policies.json", 
+            strategy_file="test_combat_strategies.json"
+        )
         self.grid = SpatialGrid(cell_size=2000)
         
         self.ship = Ship("Attacker", 0, 0, (0, 255, 0), team_id=0)

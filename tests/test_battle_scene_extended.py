@@ -1,11 +1,15 @@
 
 import unittest
+import sys
+import os
+sys.path.append(os.getcwd())
 import pygame
 from battle import BattleScene
 from ship import Ship, initialize_ship_data
 from components import load_components, create_component, LayerType
 import os
 from unittest import mock
+from ai import STRATEGY_MANAGER
 
 class TestBattleSceneExtended(unittest.TestCase):
     """Test BattleScene simulation loop, victory conditions, and headless mode."""
@@ -21,6 +25,15 @@ class TestBattleSceneExtended(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         pygame.quit()
+
+    def setUp(self):
+        test_data_path = os.path.join(os.getcwd(), "tests", "data")
+        STRATEGY_MANAGER.load_data(
+             test_data_path, 
+             targeting_file="test_targeting_policies.json", 
+             movement_file="test_movement_policies.json", 
+             strategy_file="test_combat_strategies.json"
+        )
 
     def test_is_battle_over_victory(self):
         """Verify is_battle_over identifies when one team is eliminated."""

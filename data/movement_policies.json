@@ -1,0 +1,54 @@
+{
+    "_comment": "Movement behavior presets.",
+    "policies": {
+        "kite_max": {
+            "behavior": "kite",
+            "engage_distance": "max_range",
+            "retreat_hp_threshold": 0.15,
+            "avoid_collisions": true,
+            "maintain_distance": true
+        },
+        "kite_medium": {
+            "behavior": "kite",
+            "engage_distance": "medium_range",
+            "retreat_hp_threshold": 0.15,
+            "avoid_collisions": true
+        },
+        "brawl_close": {
+            "behavior": "kite",
+            "engage_distance": "point_blank",
+            "retreat_hp_threshold": 0.05,
+            "avoid_collisions": false
+        },
+        "strafe_run": {
+            "behavior": "attack_run",
+            "engage_distance": "short_range",
+            "retreat_hp_threshold": 0.2,
+            "avoid_collisions": true,
+            "params": {
+                "approach_distance": 0.3,
+                "retreat_distance": 0.9,
+                "retreat_duration": 2.5
+            }
+        },
+        "ramming_speed": {
+            "behavior": "ram",
+            "engage_distance": "ram",
+            "retreat_hp_threshold": 0.0,
+            "avoid_collisions": false
+        },
+        "hold_position": {
+            "behavior": "kite",
+            "engage_distance": "max_range",
+            "retreat_hp_threshold": 0.5,
+            "avoid_collisions": true,
+            "throttle_limit": 0.1
+        },
+        "flee_panic": {
+            "behavior": "flee",
+            "engage_distance": "max_range",
+            "retreat_hp_threshold": 1.0,
+            "avoid_collisions": true
+        }
+    }
+}

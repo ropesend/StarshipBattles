@@ -1,0 +1,47 @@
+{
+    "_comment": "Integration of Targeting and Movement policies.",
+    "strategies": {
+        "standard_ranged": {
+            "name": "Standard Ranged",
+            "description": "Engage at maximum range, balanced targeting.",
+            "targeting_policy": "standard",
+            "movement_policy": "kite_max"
+        },
+        "sniper": {
+            "name": "Sniper",
+            "description": "Long range focus on weak targets.",
+            "targeting_policy": "sniper",
+            "movement_policy": "kite_max"
+        },
+        "brawler": {
+            "name": "Brawler",
+            "description": "Close quarters combat against heavy targets.",
+            "targeting_policy": "brawler",
+            "movement_policy": "brawl_close"
+        },
+        "interceptor": {
+            "name": "Interceptor",
+            "description": "Fast attack against fighters/bombers.",
+            "targeting_policy": "anti_fighter",
+            "movement_policy": "kite_medium"
+        },
+        "hit_and_run": {
+            "name": "Hit & Run",
+            "description": "Strafing attacks.",
+            "targeting_policy": "standard",
+            "movement_policy": "strafe_run"
+        },
+        "kamikaze": {
+            "name": "Kamikaze",
+            "description": "Ram targets.",
+            "targeting_policy": "brawler",
+            "movement_policy": "ramming_speed"
+        },
+        "cautious": {
+            "name": "Cautious",
+            "description": "Avoid damage, stay far back.",
+            "targeting_policy": "self_defense",
+            "movement_policy": "hold_position"
+        }
+    }
+}

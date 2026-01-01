@@ -8,12 +8,9 @@ import sys
 # Ensure imports work from project root
 sys.path.append(os.getcwd())
 
-from ship import Ship
-from battle import BattleScene
-from ai import AIController
 from ship import Ship, initialize_ship_data
 from battle import BattleScene
-from ai import AIController
+from ai import AIController, STRATEGY_MANAGER
 from components import LayerType, COMPONENT_REGISTRY, load_components, load_modifiers
 
 class TestMovementAndAI(unittest.TestCase):
@@ -37,6 +34,13 @@ class TestMovementAndAI(unittest.TestCase):
             load_modifiers(mod_path)
 
     def setUp(self):
+        test_data_path = os.path.join(os.getcwd(), "tests", "data")
+        STRATEGY_MANAGER.load_data(
+             test_data_path, 
+             targeting_file="test_targeting_policies.json", 
+             movement_file="test_movement_policies.json", 
+             strategy_file="test_combat_strategies.json"
+        )
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser")
 
     def get_component_clone(self, id):

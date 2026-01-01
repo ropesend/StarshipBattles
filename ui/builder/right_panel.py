@@ -4,7 +4,7 @@ from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMen
 from pygame_gui.core import UIElement
 
 from ship import VEHICLE_CLASSES
-from ai import COMBAT_STRATEGIES
+from ai import STRATEGY_MANAGER
 
 class StatRow:
     """Helper class to manage a single statistic row (Label | Value | Unit) with caching."""
@@ -118,13 +118,24 @@ class BuilderRightPanel:
         
         # AI
         UILabel(pygame.Rect(10, y, 60, 25), "AI:", manager=self.manager, container=self.panel)
-        ai_options = [strat.get('name', sid.replace('_', ' ').title()) for sid, strat in COMBAT_STRATEGIES.items()]
         
-        ai_display = self.builder.ship.ai_strategy.replace('_', ' ').title()
-        for sid, strat in COMBAT_STRATEGIES.items():
+        strategies = STRATEGY_MANAGER.strategies if STRATEGY_MANAGER else {}
+        ai_options = [strat.get('name', sid.replace('_', ' ').title()) for sid, strat in strategies.items()]
+        
+        # Ensure we have at least one option
+        if not ai_options:
+            ai_options = ['Standard Ranged']
+        
+        # Find display name for ship's current strategy
+        ai_display = None
+        for sid, strat in strategies.items():
             if sid == self.builder.ship.ai_strategy:
-                ai_display = strat.get('name', ai_display)
+                ai_display = strat.get('name', sid.replace('_', ' ').title())
                 break
+        
+        # Fallback to first option if ship's strategy is not in new data-driven system
+        if ai_display is None or ai_display not in ai_options:
+            ai_display = ai_options[0]
                 
         self.ai_dropdown = UIDropDownMenu(ai_options, ai_display, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
         
@@ -197,13 +208,23 @@ class BuilderRightPanel:
         self.class_dropdown = UIDropDownMenu(class_options, curr_class, class_rect, manager=self.manager, container=self.panel)
         
         # 5. Recreate AI
-        ai_options = [strat.get('name', sid.replace('_', ' ').title()) for sid, strat in COMBAT_STRATEGIES.items()]
+        strategies = STRATEGY_MANAGER.strategies if STRATEGY_MANAGER else {}
+        ai_options = [strat.get('name', sid.replace('_', ' ').title()) for sid, strat in strategies.items()]
         
-        ai_display = s.ai_strategy.replace('_', ' ').title()
-        for sid, strat in COMBAT_STRATEGIES.items():
+        # Ensure we have at least one option
+        if not ai_options:
+            ai_options = ['Standard Ranged']
+        
+        # Find display name for ship's current strategy
+        ai_display = None
+        for sid, strat in strategies.items():
             if sid == s.ai_strategy:
-                ai_display = strat.get('name', ai_display)
+                ai_display = strat.get('name', sid.replace('_', ' ').title())
                 break
+        
+        # Fallback to first option if ship's strategy is not in new data-driven system
+        if ai_display is None or ai_display not in ai_options:
+            ai_display = ai_options[0]
                 
         self.ai_dropdown = UIDropDownMenu(ai_options, ai_display, ai_rect, manager=self.manager, container=self.panel)
 
