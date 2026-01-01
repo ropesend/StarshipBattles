@@ -5,9 +5,9 @@ import sys
 import os
 
 # Adjust path to find modules
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from ship import Ship, LayerType, initialize_ship_data
+from ship import Ship, LayerType, initialize_ship_data, load_vehicle_classes
 from components import Weapon, BeamWeapon, ProjectileWeapon, SeekerWeapon, create_component, load_components
 from ship_combat import ShipCombatMixin
 from game_constants import AttackType
@@ -26,20 +26,21 @@ class TestCombatTargeting(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         pygame.init()
-        # Initialize data - assumes running from repo root or C:\Dev\Starship Battles
+        # Initialize data with standardized test files
         try:
             cwd = os.getcwd()
             # If we are in 'tests' folder, go up
             if os.path.basename(cwd) == "tests":
                 cwd = os.path.dirname(cwd)
             
-            initialize_ship_data(cwd)
-            load_components(os.path.join(cwd, "data", "components.json"))
+            # Load specific test data
+            load_vehicle_classes(os.path.join(cwd, "tests", "data", "test_vehicleclasses.json"))
+            load_components(os.path.join(cwd, "tests", "data", "test_components.json"))
         except Exception as e:
             print(f"Set up warning: {e}")
-            # Fallback for manual paths if needed
-            initialize_ship_data("C:\\Dev\\Starship Battles")
-            load_components("C:\\Dev\\Starship Battles\\data\\components.json")
+            # Fallback (shouldn't be reached if paths are correct)
+            load_vehicle_classes("tests/data/test_vehicleclasses.json")
+            load_components("tests/data/test_components.json")
 
     @classmethod
     def tearDownClass(cls):
@@ -50,7 +51,7 @@ class TestCombatTargeting(unittest.TestCase):
         self.attacker = Ship("Attacker", 0, 0, (255, 0, 0))
         self.attacker.team_id = 0
         # Ensure it has a bridge/core so it's alive
-        self.attacker.add_component(create_component('bridge'), LayerType.CORE)
+        self.attacker.add_component(create_component('test_bridge_basic'), LayerType.CORE)
         self.attacker.recalculate_stats() # Init basic stats
         self.attacker.is_alive = True
         self.attacker.is_derelict = False
@@ -62,7 +63,7 @@ class TestCombatTargeting(unittest.TestCase):
         # Create target ship
         self.target = Ship("Target", 200, 0, (0, 0, 255))
         self.target.team_id = 1
-        self.target.add_component(create_component('bridge'), LayerType.CORE)
+        self.target.add_component(create_component('test_bridge_basic'), LayerType.CORE)
         self.target.recalculate_stats()
         self.target.is_alive = True
         self.target.velocity = pygame.math.Vector2(0, 0)
@@ -190,13 +191,13 @@ class TestCombatTargeting(unittest.TestCase):
         t1 = Ship("T1", -200, 0, (0,0,0)) 
         t1.is_alive = True
         t1.team_id = 1
-        t1.add_component(create_component('bridge'), LayerType.CORE)
+        t1.add_component(create_component('test_bridge_basic'), LayerType.CORE)
         
         # Target 2: Valid (In front)
         t2 = Ship("T2", 200, 0, (0,0,0)) 
         t2.is_alive = True
         t2.team_id = 1
-        t2.add_component(create_component('bridge'), LayerType.CORE)
+        t2.add_component(create_component('test_bridge_basic'), LayerType.CORE)
 
         self.attacker.current_target = t1
         self.attacker.secondary_targets = [t2]

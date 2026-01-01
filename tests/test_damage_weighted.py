@@ -62,6 +62,10 @@ class MockShip(ShipCombatMixin):
     def recalculate_stats(self):
         pass
 
+    def update_derelict_status(self):
+        # Stub for testing
+        pass
+
 class TestDamageWeighted(unittest.TestCase):
     def setUp(self):
         self.ship = MockShip()
@@ -105,7 +109,8 @@ class TestDamageWeighted(unittest.TestCase):
         self.ship.take_damage(100)
         
         self.assertEqual(bridge.current_hp, 0)
-        self.assertFalse(self.ship.is_alive)
+        self.assertEqual(bridge.current_hp, 0)
+        self.assertTrue(self.ship.is_alive) # Should be alive now (hardcoded logic removed)
 
 if __name__ == '__main__':
     unittest.main()

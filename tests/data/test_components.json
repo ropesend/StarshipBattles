@@ -9,6 +9,7 @@
             "allowed_vehicle_types": [
                 "Ship"
             ],
+            "sprite_index": 3,
             "abilities": {
                 "CommandAndControl": true
             }
@@ -20,6 +21,7 @@
             "mass": 10,
             "hp": 50,
             "thrust_force": 5000,
+            "sprite_index": 10,
             "abilities": {
                 "CombatPropulsion": 5000
             }
@@ -32,6 +34,7 @@
             "hp": 50,
             "thrust_force": 500,
             "fuel_cost": 0.1,
+            "sprite_index": 10,
             "abilities": {
                 "CombatPropulsion": 500
             }
@@ -43,6 +46,7 @@
             "mass": 5,
             "hp": 20,
             "turn_speed": 5.0,
+            "sprite_index": 78,
             "abilities": {
                 "ManeuveringThruster": 5.0
             }
@@ -54,6 +58,7 @@
             "mass": 20,
             "hp": 100,
             "energy_generation": 100,
+            "sprite_index": 81,
             "abilities": {
                 "EnergyGeneration": 100
             }
@@ -66,6 +71,7 @@
             "hp": 20,
             "capacity": 1000,
             "resource_type": "fuel",
+            "sprite_index": 20,
             "abilities": {
                 "FuelStorage": 1000
             }
@@ -78,6 +84,7 @@
             "hp": 20,
             "capacity": 1000,
             "resource_type": "ammo",
+            "sprite_index": 19,
             "abilities": {
                 "AmmoStorage": 1000
             }
@@ -90,6 +97,7 @@
             "hp": 20,
             "capacity": 1000,
             "resource_type": "energy",
+            "sprite_index": 19,
             "abilities": {
                 "EnergyStorage": 1000
             }
@@ -100,6 +108,7 @@
             "type": "Armor",
             "mass": 20,
             "hp": 200,
+            "sprite_index": 14,
             "abilities": {
                 "Armor": true
             }
@@ -115,6 +124,7 @@
             "projectile_speed": 1500,
             "reload": 1.0,
             "firing_arc": 360,
+            "sprite_index": 85,
             "abilities": {
                 "ProjectileWeapon": true
             }
@@ -131,6 +141,11 @@
             "reload": 1.0,
             "ammo_cost": 1,
             "firing_arc": 45,
+            "sprite_index": 85,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite"
+            ],
             "abilities": {
                 "ProjectileWeapon": true
             }
@@ -146,6 +161,11 @@
             "energy_cost": 10,
             "reload": 0.0,
             "firing_arc": 360,
+            "sprite_index": 87,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite"
+            ],
             "base_accuracy": 2.0,
             "accuracy_falloff": 0.001,
             "abilities": {
@@ -153,7 +173,29 @@
             }
         },
         {
-            "id": "test_weapon_missile_std",
+            "id": "test_weapon_beam_fixed",
+            "name": "Test Weapon (Beam, Fixed)",
+            "type": "BeamWeapon",
+            "mass": 5,
+            "hp": 20,
+            "damage": 5,
+            "range": 800,
+            "energy_cost": 10,
+            "reload": 0.0,
+            "firing_arc": 45,
+            "sprite_index": 87,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite"
+            ],
+            "base_accuracy": 2.0,
+            "accuracy_falloff": 0.001,
+            "abilities": {
+                "BeamWeapon": true
+            }
+        },
+        {
+            "id": "test_weapon_missile_omni",
             "name": "Test Weapon (Missile, Std)",
             "type": "SeekerWeapon",
             "mass": 20,
@@ -166,12 +208,13 @@
             "reload": 5.0,
             "ammo_cost": 5,
             "firing_arc": 360,
+            "sprite_index": 86,
             "abilities": {
                 "SeekerWeapon": true
             }
         },
         {
-            "id": "test_weapon_pd_std",
+            "id": "test_weapon_pd_omni",
             "name": "Test Weapon (PD, Std)",
             "type": "BeamWeapon",
             "mass": 5,
@@ -180,7 +223,8 @@
             "range": 500,
             "reload": 0.1,
             "energy_cost": 1,
-            "firing_arc": 180,
+            "firing_arc": 360,
+            "sprite_index": 151,
             "base_accuracy": 10.0,
             "accuracy_falloff": 0.01,
             "abilities": {
@@ -194,6 +238,7 @@
             "type": "Shield",
             "mass": 20,
             "hp": 50,
+            "sprite_index": 16,
             "abilities": {
                 "ShieldProjection": 200
             }
@@ -204,6 +249,7 @@
             "type": "ShieldRegenerator",
             "mass": 20,
             "hp": 50,
+            "sprite_index": 18,
             "abilities": {
                 "ShieldRegeneration": 5.0,
                 "EnergyConsumption": 5.0
@@ -215,6 +261,7 @@
             "type": "Sensor",
             "mass": 10,
             "hp": 20,
+            "sprite_index": 25,
             "abilities": {
                 "ToHitAttackModifier": {
                     "value": 0.5,
@@ -228,6 +275,7 @@
             "type": "Electronics",
             "mass": 10,
             "hp": 20,
+            "sprite_index": 26,
             "abilities": {
                 "ToHitDefenseModifier": {
                     "value": 0.5,
@@ -236,129 +284,55 @@
             }
         },
         {
-            "id": "bridge",
-            "name": "Command Bridge (Legacy)",
+            "id": "test_cockpit_fighter",
+            "name": "Test Fighter Cockpit",
+            "type": "Bridge",
+            "mass": 2,
+            "hp": 2,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 53,
+            "abilities": {
+                "CommandAndControl": true,
+                "LifeSupportCapacity": 1,
+                "CrewCapacity": 1
+            }
+        },
+        {
+            "id": "test_core_satellite",
+            "name": "Test Satellite Core",
             "type": "Bridge",
             "mass": 10,
             "hp": 50,
+            "allowed_vehicle_types": [
+                "Satellite"
+            ],
+            "sprite_index": 9,
             "abilities": {
                 "CommandAndControl": true
             }
         },
         {
-            "id": "engine",
-            "name": "Main Thruster (Legacy)",
-            "type": "Engine",
+            "id": "test_crew_quarters",
+            "name": "Test Crew Quarters",
+            "type": "CrewQuarters",
+            "mass": 30,
+            "hp": 60,
+            "sprite_index": 5,
+            "abilities": {
+                "CrewCapacity": 10
+            }
+        },
+        {
+            "id": "test_life_support",
+            "name": "Test Life Support",
+            "type": "LifeSupport",
             "mass": 20,
-            "hp": 50,
-            "thrust_force": 500,
-            "fuel_cost": 0.1,
+            "hp": 40,
+            "sprite_index": 4,
             "abilities": {
-                "CombatPropulsion": 500
-            }
-        },
-        {
-            "id": "test_gun_omni",
-            "name": "Omni Railgun (Legacy)",
-            "type": "ProjectileWeapon",
-            "mass": 10,
-            "hp": 50,
-            "damage": 50,
-            "range": 1000,
-            "projectile_speed": 1500,
-            "reload": 1.0,
-            "firing_arc": 360,
-            "abilities": {
-                "ProjectileWeapon": true
-            }
-        },
-        {
-            "id": "test_gun",
-            "name": "Test Railgun (Legacy)",
-            "type": "ProjectileWeapon",
-            "mass": 10,
-            "hp": 50,
-            "damage": 500,
-            "range": 1000,
-            "projectile_speed": 1500,
-            "reload": 1.0,
-            "ammo_cost": 1,
-            "firing_arc": 45,
-            "abilities": {
-                "ProjectileWeapon": true
-            }
-        },
-        {
-            "id": "test_laser",
-            "name": "Test Laser (Legacy)",
-            "type": "BeamWeapon",
-            "mass": 5,
-            "hp": 20,
-            "damage": 5,
-            "range": 800,
-            "energy_cost": 10,
-            "reload": 0.0,
-            "firing_arc": 360,
-            "base_accuracy": 2.0,
-            "accuracy_falloff": 0.001,
-            "abilities": {
-                "BeamWeapon": true
-            }
-        },
-        {
-            "id": "generator",
-            "name": "Fusion Core (Legacy)",
-            "type": "Generator",
-            "mass": 20,
-            "hp": 100,
-            "energy_generation": 100,
-            "abilities": {
-                "EnergyGeneration": 100
-            }
-        },
-        {
-            "id": "thruster",
-            "name": "Maneuver Thruster (Legacy)",
-            "type": "Thruster",
-            "mass": 5,
-            "hp": 20,
-            "turn_speed": 5.0,
-            "abilities": {
-                "ManeuveringThruster": 5.0
-            }
-        },
-        {
-            "id": "fuel_tank",
-            "name": "Fuel Tank (Legacy)",
-            "type": "Tank",
-            "mass": 5,
-            "hp": 20,
-            "capacity": 1000,
-            "resource_type": "fuel",
-            "abilities": {
-                "FuelStorage": 1000
-            }
-        },
-        {
-            "id": "ammo_box",
-            "name": "Ammo Magazine (Legacy)",
-            "type": "Tank",
-            "mass": 5,
-            "hp": 20,
-            "capacity": 1000,
-            "resource_type": "ammo",
-            "abilities": {
-                "AmmoStorage": 1000
-            }
-        },
-        {
-            "id": "armor",
-            "name": "Steel Plating (Legacy)",
-            "type": "Armor",
-            "mass": 20,
-            "hp": 200,
-            "abilities": {
-                "Armor": true
+                "LifeSupportCapacity": 25
             }
         }
     ]

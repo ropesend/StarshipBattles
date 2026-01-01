@@ -15,32 +15,33 @@ class EnginePerformanceTest(CombatScenario):
         data_dir = os.path.join(base_dir, "tests", "data")
         
         self.components_path = os.path.join(data_dir, "test_components.json")
-        self.vehicle_classes_path = os.path.join(data_dir, "test_classes.json")
+        self.vehicle_classes_path = os.path.join(data_dir, "test_vehicleclasses.json")
         self.modifiers_path = os.path.join(data_dir, "test_modifiers.json")
         
     def setup(self, battle_engine):
         # 1. Light Scout (High Thrust/Mass Ratio)
         # 1 Engine (10), 1 Bridge (10), Hull (50) = 70 Mass
-        # Thrust 500. Expected Max Speed = (500 * 25) / 70 = 178.57
+        # 1 Engine (10), Hull (50) = 60 Mass
+        # Thrust 500. Expected Max Speed = (500 * 25) / 60 = 208.33
+        engines = ["test_engine_infinite"] * 4 # Defined here for interceptor, but used in the edit for scout
         self.scout = self.create_ship(
             name="Scout",
             team_id=0,
             x=0, y=100,
-            ship_class="SimpleHull",
-            components=["test_engine_infinite", "bridge"] 
+            ship_class="TestShip_S_2L",
+            components=["test_engine_infinite"]
         )
         self.scout.angle = 0
         
         # 2. Heavy Hauler (Low Thrust/Mass Ratio)
         # 1 Engine (10), 1 Bridge (10), Hull (50), 10 Armor (200) = 270 Mass
-        # Thrust 500. Expected Max Speed = (500 * 25) / 270 = 46.29
-        armor_list = ["armor"] * 10
+        armor_list = ["test_armor_std"] * 10
         self.hauler = self.create_ship(
             name="Hauler",
             team_id=0,
             x=0, y=200,
-            ship_class="SimpleHull",
-            components=["test_engine_infinite", "bridge"] + armor_list
+            ship_class="TestShip_S_2L",
+            components=["test_engine_infinite"] + armor_list
         )
         self.hauler.angle = 0
         
@@ -52,8 +53,8 @@ class EnginePerformanceTest(CombatScenario):
             name="Interceptor",
             team_id=0,
             x=0, y=300,
-            ship_class="SimpleHull",
-            components=engines + ["bridge"]
+            ship_class="TestShip_S_2L",
+            components=engines
         )
         self.interceptor.angle = 0
         
@@ -62,8 +63,8 @@ class EnginePerformanceTest(CombatScenario):
             name="Monitor",
             team_id=1,
             x=10000, y=0,
-            ship_class="TargetDummy",
-            components=["armor", "bridge", "test_engine_infinite"] # Minimal Setup
+            ship_class="TestShip_Target",
+            components=["test_armor_std", "test_engine_infinite"] # Minimal Setup
         )
         
         battle_engine.start([self.scout, self.hauler, self.interceptor], [dummy])

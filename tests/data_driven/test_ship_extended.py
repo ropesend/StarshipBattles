@@ -5,9 +5,9 @@ import os
 import pygame
 import math
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from ship import Ship, LayerType, initialize_ship_data
+from ship import Ship, LayerType, initialize_ship_data, load_vehicle_classes
 from components import load_components, create_component
 
 
@@ -17,8 +17,8 @@ class TestSolveLead(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
+        load_vehicle_classes("tests/data/test_vehicleclasses.json")
+        load_components("tests/data/test_components.json")
     
     @classmethod
     def tearDownClass(cls):
@@ -26,9 +26,9 @@ class TestSolveLead(unittest.TestCase):
     
     def setUp(self):
         self.ship = Ship("Shooter", 0, 0, (255, 255, 255))
-        self.ship.add_component(create_component('bridge'), LayerType.CORE)
-        self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        self.ship.add_component(create_component('life_support'), LayerType.CORE)
+        self.ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        self.ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        self.ship.add_component(create_component('test_life_support'), LayerType.CORE)
         self.ship.recalculate_stats()
     
     def test_solve_lead_stationary_target(self):
@@ -94,17 +94,14 @@ class TestSolveLead(unittest.TestCase):
         self.assertLess(t, stationary_time)
 
 
-
-
-
 class TestToHitProfile(unittest.TestCase):
     """Test defensive to-hit profile calculation (Defense Score)."""
     
     @classmethod
     def setUpClass(cls):
         pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
+        load_vehicle_classes("tests/data/test_vehicleclasses.json")
+        load_components("tests/data/test_components.json")
     
     @classmethod
     def tearDownClass(cls):
@@ -113,10 +110,10 @@ class TestToHitProfile(unittest.TestCase):
     def test_to_hit_profile_exists(self):
         """Ship should have a to_hit_profile attribute after recalculate_stats."""
         ship = Ship("TestShip", 0, 0, (255, 255, 255))
-        ship.add_component(create_component('bridge'), LayerType.CORE)
-        ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        ship.add_component(create_component('life_support'), LayerType.CORE)
-        ship.add_component(create_component('standard_engine'), LayerType.OUTER)
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
+        ship.add_component(create_component('test_engine_std'), LayerType.OUTER)
         ship.recalculate_stats()
         
         self.assertTrue(hasattr(ship, 'to_hit_profile'))
@@ -125,24 +122,24 @@ class TestToHitProfile(unittest.TestCase):
         
     def test_larger_ship_easier_to_hit(self):
         """Larger ships should have LOWER Defense Score (Easier to Hit)."""
-        # Small ship
-        small = Ship("Small", 0, 0, (255, 255, 255), ship_class="Escort")
-        small.add_component(create_component('bridge'), LayerType.CORE)
-        small.add_component(create_component('crew_quarters'), LayerType.CORE)
-        small.add_component(create_component('life_support'), LayerType.CORE)
-        small.add_component(create_component('standard_engine'), LayerType.OUTER)
+        # Small ship - TestShip_S_2L (Max Mass 2000)
+        small = Ship("Small", 0, 0, (255, 255, 255), ship_class="TestShip_S_2L")
+        small.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        small.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        small.add_component(create_component('test_life_support'), LayerType.CORE)
+        small.add_component(create_component('test_engine_std'), LayerType.CORE)
         small.recalculate_stats()
         
-        # Large ship
-        large = Ship("Large", 0, 0, (255, 255, 255), ship_class="Battleship")
-        large.add_component(create_component('bridge'), LayerType.CORE)
-        large.add_component(create_component('crew_quarters'), LayerType.CORE)
-        large.add_component(create_component('life_support'), LayerType.CORE)
-        large.add_component(create_component('standard_engine'), LayerType.OUTER)
+        # Large ship - TestShip_L_4L (Max Mass 10000)
+        large = Ship("Large", 0, 0, (255, 255, 255), ship_class="TestShip_L_4L")
+        large.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        large.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        large.add_component(create_component('test_life_support'), LayerType.CORE)
+        large.add_component(create_component('test_engine_std'), LayerType.OUTER)
         # Add massive bulk
         for _ in range(20):
              # Adding heavy structure/armor to increase mass/radius
-             large.add_component(create_component('armor_plate'), LayerType.ARMOR)
+             large.add_component(create_component('test_armor_std'), LayerType.ARMOR)
              
         large.recalculate_stats()
         
@@ -154,9 +151,9 @@ class TestToHitProfile(unittest.TestCase):
     def test_baseline_offense_exists(self):
         """Ship should have baseline_to_hit_offense attribute."""
         ship = Ship("TestShip", 0, 0, (255, 255, 255))
-        ship.add_component(create_component('bridge'), LayerType.CORE)
-        ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        ship.add_component(create_component('life_support'), LayerType.CORE)
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
         ship.recalculate_stats()
         
         self.assertTrue(hasattr(ship, 'baseline_to_hit_offense'))
@@ -169,8 +166,8 @@ class TestMaxWeaponRange(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
+        load_vehicle_classes("tests/data/test_vehicleclasses.json")
+        load_components("tests/data/test_components.json")
     
     @classmethod
     def tearDownClass(cls):
@@ -179,9 +176,9 @@ class TestMaxWeaponRange(unittest.TestCase):
     def test_max_weapon_range_no_weapons(self):
         """Ship with no weapons should have 0 max range."""
         ship = Ship("Unarmed", 0, 0, (255, 255, 255))
-        ship.add_component(create_component('bridge'), LayerType.CORE)
-        ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        ship.add_component(create_component('life_support'), LayerType.CORE)
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
         ship.recalculate_stats()
         
         self.assertEqual(ship.max_weapon_range, 0)
@@ -189,10 +186,10 @@ class TestMaxWeaponRange(unittest.TestCase):
     def test_max_weapon_range_single_weapon(self):
         """Ship with one weapon should return that weapon's range."""
         ship = Ship("Armed", 0, 0, (255, 255, 255))
-        ship.add_component(create_component('bridge'), LayerType.CORE)
-        ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        ship.add_component(create_component('life_support'), LayerType.CORE)
-        railgun = create_component('railgun')
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
+        railgun = create_component('test_weapon_proj_fixed')
         ship.add_component(railgun, LayerType.OUTER)
         ship.recalculate_stats()
         
@@ -201,13 +198,13 @@ class TestMaxWeaponRange(unittest.TestCase):
     def test_max_weapon_range_multiple_weapons(self):
         """Ship with multiple weapons should return longest range."""
         ship = Ship("HeavilyArmed", 0, 0, (255, 255, 255))
-        ship.add_component(create_component('bridge'), LayerType.CORE)
-        ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        ship.add_component(create_component('life_support'), LayerType.CORE)
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
         
         # Add different weapons
-        railgun = create_component('railgun')
-        laser = create_component('laser_cannon')
+        railgun = create_component('test_weapon_proj_fixed')
+        laser = create_component('test_weapon_beam_std')
         ship.add_component(railgun, LayerType.OUTER)
         ship.add_component(laser, LayerType.OUTER)
         ship.recalculate_stats()
@@ -218,3 +215,4 @@ class TestMaxWeaponRange(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

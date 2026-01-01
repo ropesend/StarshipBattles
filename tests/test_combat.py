@@ -33,6 +33,23 @@ class TestDamageLayerLogic(unittest.TestCase):
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship.add_component(create_component('life_support'), LayerType.CORE)
         self.ship.add_component(create_component('armor_plate'), LayerType.ARMOR)
+        
+        # Ensure TestShip class exists in VEHICLE_CLASSES with correct layers
+        from ship import VEHICLE_CLASSES
+        VEHICLE_CLASSES["TestShip"] = {
+            "hull_mass": 50, "max_mass": 1000,
+            "layers": [
+                {"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 0.5},
+                {"type": "ARMOR", "radius_pct": 1.0, "max_mass_pct": 0.5}
+            ]
+        }
+        self.ship._initialize_layers()
+        # Re-add components because _initialize_layers clears them
+        self.ship.add_component(create_component('bridge'), LayerType.CORE)
+        self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
+        self.ship.add_component(create_component('life_support'), LayerType.CORE)
+        self.ship.add_component(create_component('armor_plate'), LayerType.ARMOR)
+        
         self.ship.recalculate_stats()
     
     def test_armor_absorbs_damage_first(self):
@@ -100,12 +117,49 @@ class TestDamageLayerLogic(unittest.TestCase):
         # Deal massive damage to destroy bridge
         # Need to potentially hit bridge multiple times due to random selection
         for _ in range(50):
-            if not self.ship.is_alive:
+            if not bridge.is_active:
                 break
             self.ship.take_damage(100)
         
-        # Either ship died or bridge was destroyed
-        self.assertTrue(not self.ship.is_alive or not bridge.is_active)
+        # Bridge should be destroyed
+        self.assertFalse(bridge.is_active)
+        
+        # Ship should STILL BE ALIVE (No requirements set for "TestShip")
+        self.assertTrue(self.ship.is_alive)
+        self.assertFalse(self.ship.is_derelict)
+
+    def test_bridge_requirement_kills_ship(self):
+        """Destroying the bridge SHOULD kill the ship IF required."""
+        # Inject requirement
+        from ship import VEHICLE_CLASSES
+        VEHICLE_CLASSES["TestShip"] = {
+            "hull_mass": 50, "max_mass": 1000,
+            "requirements": {"CommandAndControl": True}
+        }
+        self.ship.ship_class = "TestShip" # Must match key
+        # Re-init ship to pick up requirements
+        self.ship.update_derelict_status()
+        
+        # Ensure bridge exists and provides CommandAndControl
+        # (Assuming standard bridge provides it)
+        
+        # Remove armor first
+        self.ship.layers[LayerType.ARMOR]['components'] = []
+        
+        bridge = None
+        for c in self.ship.layers[LayerType.CORE]['components']:
+             if isinstance(c, Bridge):
+                 bridge = c
+                 break
+        
+        # Kill logic
+        for _ in range(50):
+            if self.ship.is_derelict:
+                break
+            self.ship.take_damage(100)
+
+        # Should be derelict now
+        self.assertTrue(self.ship.is_derelict)
 
 
 class TestEnergyRegeneration(unittest.TestCase):

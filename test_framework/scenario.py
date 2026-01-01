@@ -100,16 +100,18 @@ class CombatScenario:
             # Assume TestClass has a CORE or INNER
             
             # Use 'bridge' as default required core if layer exists
-            if LayerType.CORE in ship.layers:
-                ship.add_component(create_component('bridge'), LayerType.CORE)
+            # REMOVED: No hardcoded bridge. Scenarios must specify components explicitely.
+            # if LayerType.CORE in ship.layers:
+            #    ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
             
             # Add generator to first available internal layer
-            gen_layer = None
-            if LayerType.INNER in ship.layers: gen_layer = LayerType.INNER
-            elif LayerType.CORE in ship.layers: gen_layer = LayerType.CORE
+            # REMOVED: No hardcoded generator.
+            # gen_layer = None
+            # if LayerType.INNER in ship.layers: gen_layer = LayerType.INNER
+            # elif LayerType.CORE in ship.layers: gen_layer = LayerType.CORE
             
-            if gen_layer:
-                ship.add_component(create_component('generator'), gen_layer)
+            # if gen_layer:
+            #    ship.add_component(create_component('test_gen_fusion'), gen_layer)
             
             for comp_id in components:
                 # Try adding to various layers

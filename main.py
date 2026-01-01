@@ -125,6 +125,7 @@ class Game:
     def start_battle_setup(self, preserve_teams=False):
         """Enter battle setup screen."""
         self.state = BATTLE_SETUP
+        self.return_state = BATTLE_SETUP
         self.battle_setup.start(preserve_teams=preserve_teams)
 
     @profile_action("App: Start Formation Editor")
@@ -140,6 +141,7 @@ class Game:
     def start_test_lab(self):
         """Enter Combat Lab."""
         self.state = TEST_LAB
+        self.return_state = TEST_LAB
         self.test_lab_scene.scan_scenarios()
     
     def start_battle(self, team1_ships, team2_ships, headless=False):
@@ -265,7 +267,11 @@ class Game:
             if self.battle_scene.handle_click(mx, my, event.button, self.screen.get_size()):
                 if self.battle_scene.action_return_to_setup:
                     self.battle_scene.action_return_to_setup = False
-                    self.start_battle_setup(preserve_teams=True)
+                    
+                    if hasattr(self, 'return_state') and self.return_state == TEST_LAB:
+                        self.start_test_lab()
+                    else:
+                        self.start_battle_setup(preserve_teams=True)
     
     def _handle_scroll(self, event):
         """Handle mouse wheel events."""

@@ -15,7 +15,7 @@ class RangeTest(CombatScenario):
         self.data_dir = os.path.join(base_dir, "tests", "data")
         
         self.components_path = os.path.join(self.data_dir, "test_components.json")
-        self.vehicle_classes_path = os.path.join(self.data_dir, "test_classes.json")
+        self.vehicle_classes_path = os.path.join(self.data_dir, "test_vehicleclasses.json")
         self.modifiers_path = os.path.join(self.data_dir, "test_modifiers.json")
         
     def setup(self, battle_engine):

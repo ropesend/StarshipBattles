@@ -1,17 +1,81 @@
 === BATTLE LOG STARTED ===
-Battle started: 2 vs 2 ships
-Ship 'Attacker_In_Range' (Team 0): HP=1150/1150 Mass=180.0 Thrust=500.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=69.44
-WARNING: Attacker_In_Range has LOW/NO TURN SPEED (0.0000)!
-Ship 'Attacker_Out_Range' (Team 0): HP=1150/1150 Mass=180.0 Thrust=500.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=69.44
-WARNING: Attacker_Out_Range has LOW/NO TURN SPEED (0.0000)!
-Ship 'Target_In_Range' (Team 1): HP=1050/1050 Mass=610.0 Thrust=0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00
-WARNING: Target_In_Range has NO THRUST!
-WARNING: Target_In_Range has LOW/NO TURN SPEED (0.0000)!
-Ship 'Target_Out_Range' (Team 1): HP=1050/1050 Mass=610.0 Thrust=0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00
-WARNING: Target_Out_Range has NO THRUST!
-WARNING: Target_Out_Range has LOW/NO TURN SPEED (0.0000)!
+Battle started: 3 vs 3 ships
+Ship 'Attacker_Range 10%' (Team 0): HP=1150/1150 Mass=180.0 Thrust=5000.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=694.44
+WARNING: Attacker_Range 10% has LOW/NO TURN SPEED (0.0000)!
+Ship 'Attacker_Range 50%' (Team 0): HP=1150/1150 Mass=180.0 Thrust=5000.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=694.44
+WARNING: Attacker_Range 50% has LOW/NO TURN SPEED (0.0000)!
+Ship 'Attacker_Range 90%' (Team 0): HP=1150/1150 Mass=180.0 Thrust=5000.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=694.44
+WARNING: Attacker_Range 90% has LOW/NO TURN SPEED (0.0000)!
+Ship 'Target_Range 10%' (Team 1): HP=1050/1050 Mass=160.0 Thrust=0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00
+WARNING: Target_Range 10% has NO THRUST!
+WARNING: Target_Range 10% has LOW/NO TURN SPEED (0.0000)!
+Ship 'Target_Range 50%' (Team 1): HP=1050/1050 Mass=160.0 Thrust=0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00
+WARNING: Target_Range 50% has NO THRUST!
+WARNING: Target_Range 50% has LOW/NO TURN SPEED (0.0000)!
+Ship 'Target_Range 90%' (Team 1): HP=1050/1050 Mass=160.0 Thrust=0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00
+WARNING: Target_Range 90% has NO THRUST!
+WARNING: Target_Range 90% has LOW/NO TURN SPEED (0.0000)!
 Projectile fired at [0, 0]
-Projectile fired at [69.4444, 2000]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
 Projectile fired at [0, 0]
-Projectile fired at [69.4444, 2000]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
+Projectile fired at [0, 0]
+Projectile fired at [0, 2000]
+Projectile fired at [0, 4000]
 === BATTLE LOG ENDED ===

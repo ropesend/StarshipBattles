@@ -42,7 +42,18 @@ class TestShip(unittest.TestCase):
         self.assertEqual(ship.current_mass, 50)
 
     def test_damage_armor_absorption(self):
+        # Inject TestShip definition strictly
+        from ship import VEHICLE_CLASSES
+        VEHICLE_CLASSES["TestShip"] = {
+            "hull_mass": 50, "max_mass": 1000,
+            "layers": [
+                {"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 0.5},
+                {"type": "ARMOR", "radius_pct": 1.0, "max_mass_pct": 0.5}
+            ]
+        }
+        
         ship = Ship("TestShip", 0, 0, (255, 255, 255))
+        # ship._initialize_layers() # Ship init calls this, and it sees the new class def logic
         
         # Add Armor Plate (250 HP) to ARMOR layer
         armor = create_component('armor_plate')

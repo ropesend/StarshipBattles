@@ -339,6 +339,7 @@ class ShipCombatMixin:
             
         if remaining_damage < damage_amount:
             self.recalculate_stats()
+            self.update_derelict_status()
 
     def _damage_layer(self, layer_type, damage):
         layer = self.layers[layer_type]
@@ -363,9 +364,10 @@ class ShipCombatMixin:
             
             damage -= damage_absorbed
             
-            if isinstance(target, Bridge) and target.current_hp <= 0:
-                self.die()
-                break # Ship died, stop processing
+            # REMOVED: Hardcoded Bridge death. 
+            # if isinstance(target, Bridge) and target.current_hp <= 0:
+            #     self.die() 
+            #     break 
                 
         return damage
 

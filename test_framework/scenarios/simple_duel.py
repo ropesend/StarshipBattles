@@ -20,7 +20,7 @@ class SimpleDuel(CombatScenario):
         data_dir = os.path.join(base_dir, "tests", "data")
         
         self.components_path = os.path.join(data_dir, "test_components.json")
-        self.vehicle_classes_path = os.path.join(data_dir, "test_classes.json")
+        self.vehicle_classes_path = os.path.join(data_dir, "test_vehicleclasses.json")
         self.modifiers_path = os.path.join(data_dir, "test_modifiers.json")
         
     def setup(self, battle_engine):
@@ -29,9 +29,9 @@ class SimpleDuel(CombatScenario):
             name="Attacker", 
             team_id=0, 
             x=0, y=0, 
-            ship_class="SimpleHull",
+            ship_class="TestShip_S_2L",
             components=[
-                "test_engine_infinite", "test_gun_omni", "bridge", "fuel_tank"
+                "test_engine_infinite", "test_weapon_proj_omni", "test_storage_fuel"
             ]
         )
 
@@ -44,8 +44,8 @@ class SimpleDuel(CombatScenario):
             name="Target",
             team_id=1,
             x=800, y=0,
-            ship_class="TargetDummy",
-            components=["thruster", "engine", "bridge", "fuel_tank"]
+            ship_class="TestShip_Target",
+            components=["test_thruster_std", "test_engine_std", "test_storage_fuel"]
         )
         
         battle_engine.start([attacker], [target])

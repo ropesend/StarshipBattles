@@ -109,6 +109,37 @@
                     "max_mass_pct": 0.4
                 }
             ]
+        },
+        "TestFighter_S": {
+            "name": "TestFighter_S",
+            "type": "Fighter",
+            "max_mass": 25,
+            "hull_mass": 5,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 0.8,
+                    "max_mass_pct": 0.8
+                },
+                {
+                    "type": "ARMOR",
+                    "radius_pct": 1.0,
+                    "max_mass_pct": 0.2
+                }
+            ]
+        },
+        "TestSat_S": {
+            "name": "TestSat_S",
+            "type": "Satellite",
+            "max_mass": 250,
+            "hull_mass": 50,
+            "layers": [
+                {
+                    "type": "CORE",
+                    "radius_pct": 1.0,
+                    "max_mass_pct": 0.9
+                }
+            ]
         }
     }
 }

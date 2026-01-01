@@ -208,6 +208,53 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Initialize helper (lazy or eager)
         self.stats_calculator: Optional[ShipStatsCalculator] = None
 
+    def update_derelict_status(self) -> None:
+        """
+        Update is_derelict status based on vehicle class requirements.
+        If essential components (e.g. Bridge) are destroyed, ship becomes derelict.
+        """
+        # 1. Get Requirements
+        class_def = VEHICLE_CLASSES.get(self.ship_class, {})
+        requirements = class_def.get('requirements', {})
+        
+        # 2. If no requirements, never derelict (unless dead)
+        if not requirements:
+            self.is_derelict = False
+            return
+
+        # 3. Calculate Current Active Abilities
+        active_components = []
+        for layer in self.layers.values():
+            for c in layer['components']:
+                if c.is_active and c.current_hp > 0:
+                     active_components.append(c)
+        
+        if not self.stats_calculator:
+             self.stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)
+             
+        # Recalculate abilities based on currently living components
+        totals = self.stats_calculator.calculate_ability_totals(active_components)
+        
+        # 4. Check Requirements
+        is_derelict = False
+        for req_ability, min_val in requirements.items():
+            # Support boolean requirements (True means > 0)
+            current_val = totals.get(req_ability, 0)
+            
+            if isinstance(min_val, bool):
+                if min_val and not current_val:
+                    is_derelict = True
+                    break
+            elif isinstance(min_val, (int, float)):
+                 if current_val < min_val:
+                     is_derelict = True
+                     break
+        
+        if is_derelict and not self.is_derelict:
+            print(f"{self.name} has become DERELICT (Requirements not met)")
+            
+        self.is_derelict = is_derelict
+
     def _initialize_layers(self) -> None:
         """Initialize or Re-initialize layers based on current ship_class."""
         class_def = VEHICLE_CLASSES.get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
