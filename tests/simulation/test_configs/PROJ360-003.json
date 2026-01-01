@@ -1,0 +1,28 @@
+﻿{
+    "test_id": "PROJ360-003",
+    "description": "Projectile 360 - Linear Target Fast",
+    "duration_ticks": 1000,
+    "ships": [
+        {
+            "name": "Attacker",
+            "file": "tests/data/ships/Test_Attacker_Proj360.json",
+            "position": [0, 0],
+            "ai_strategy": "do_nothing"
+        },
+        {
+            "name": "Target",
+            "file": "tests/data/ships/Test_Target_Linear_Fast.json",
+            "position": [-800, 200],
+            "ai_strategy": "straight_line"
+        }
+    ],
+    "assertions": [
+        {
+            "type": "hit_rate",
+            "attacker": "Test Attacker Proj360",
+            "target": "Test Target Linear Fast",
+            "min": 0.90,
+            "max": 1.0
+        }
+    ]
+}

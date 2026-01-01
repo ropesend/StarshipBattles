@@ -12,6 +12,10 @@ class ShipStatsCalculator:
         """
         Recalculates all derived stats for the ship based on its components and class.
         """
+        # Import local to avoid circular dep if needed, or top level if safe.
+        # resources.py likely imports NOTHING from ship_stats.
+        from resources import ResourceStorage, ResourceGeneration
+
         # 1. Reset Base Calculations
         ship.current_mass = 0
         ship.layer_status = {}
@@ -29,11 +33,9 @@ class ShipStatsCalculator:
         # Base Stats Reset
         ship.total_thrust = 0
         ship.turn_speed = 0
-        ship.max_fuel = 0
-        ship.max_ammo = 0
-        ship.ammo_gen_rate = 0
-        ship.max_energy = 0
-        ship.energy_gen_rate = 0
+        if hasattr(ship, 'resources'):
+            ship.resources.reset_stats()
+            
         ship.max_shields = 0
         ship.shield_regen_rate = 0
         ship.shield_regen_rate = 0
@@ -132,34 +134,57 @@ class ShipStatsCalculator:
         # 4. Phase 3: Stats Aggregation (Active Components Only)
         # ------------------------------------------------------
         
+        # Local accumulators for atomic updates (prevents premature clamping)
+        total_max_fuel = 0
+        total_max_ammo = 0
+        total_max_energy = 0
+        total_energy_gen = 0
+        total_ammo_gen = 0
+        total_thrust = 0
+        total_turn_speed = 0
+        total_max_shields = 0
+        total_shield_regen = 0
+        total_shield_cost = 0
+
         for comp in component_pool:
             if not comp.is_active: continue
             
+            # Generic Ability Handling
+            # Using Ability Instances (New System)
+            if hasattr(comp, 'ability_instances'):
+                for ability in comp.ability_instances:
+                    # Resource Storage
+                    if isinstance(ability, ResourceStorage):
+                        if ability.resource_type == 'fuel':
+                            total_max_fuel += ability.max_amount
+                        elif ability.resource_type == 'ammo':
+                            total_max_ammo += ability.max_amount
+                        elif ability.resource_type == 'energy':
+                            total_max_energy += ability.max_amount
+                    
+                    # Resource Generation
+                    elif isinstance(ability, ResourceGeneration):
+                        if ability.resource_type == 'energy':
+                            total_energy_gen += ability.rate
+                        elif ability.resource_type == 'ammo':
+                            total_ammo_gen += ability.rate
+            
+            # Legacy / Specific Hardware Checks
             if isinstance(comp, Engine):
-                ship.total_thrust += comp.thrust_force
+                total_thrust += comp.thrust_force
             elif isinstance(comp, Thruster):
-                ship.turn_speed += comp.turn_speed
+                total_turn_speed += comp.turn_speed
                 ship.total_maneuver_points += comp.turn_speed
-            elif isinstance(comp, Generator):
-                ship.energy_gen_rate += comp.energy_generation_rate
-            elif isinstance(comp, Tank):
-                if comp.resource_type == 'fuel':
-                    ship.max_fuel += comp.capacity
-                elif comp.resource_type == 'ammo':
-                    ship.max_ammo += comp.capacity
-                elif comp.resource_type == 'energy':
-                    ship.max_energy += comp.capacity
             elif isinstance(comp, Armor):
                 if LayerType.ARMOR in ship.layers:
                     ship.layers[LayerType.ARMOR]['max_hp_pool'] += comp.max_hp
             elif isinstance(comp, Shield):
-                ship.max_shields += comp.shield_capacity
+                total_max_shields += comp.shield_capacity
             elif isinstance(comp, ShieldRegenerator):
-                ship.shield_regen_rate += comp.regen_rate
-                ship.shield_regen_cost += comp.energy_cost
+                total_shield_regen += comp.regen_rate
+                total_shield_cost += comp.energy_cost
             elif isinstance(comp, Hangar):
                 ship.fighter_capacity += comp.storage_capacity
-                # ship.launch_mass is replaced by granular stats
                 ship.fighters_per_wave += 1
                 if comp.max_launch_mass > ship.fighter_size_cap:
                     ship.fighter_size_cap = comp.max_launch_mass
@@ -173,12 +198,18 @@ class ShipStatsCalculator:
             if mt > 0:
                 if mt > ship.max_targets:
                     ship.max_targets = mt 
-                    
-            # Emissive Armor - NOW HANDLED IN calculate_ability_totals
-            # ea = comp.abilities.get('EmissiveArmor', 0)
-            # if ea > 0:
-            #     ship.emissive_armor += ea 
-            pass  # Removed manual summation 
+
+        # Apply Accumulated Totals Atomicially
+        ship.max_fuel = total_max_fuel
+        ship.max_ammo = total_max_ammo
+        ship.max_energy = total_max_energy
+        ship.energy_gen_rate = total_energy_gen
+        ship.ammo_gen_rate = total_ammo_gen
+        ship.total_thrust = total_thrust
+        ship.turn_speed = total_turn_speed
+        ship.max_shields = total_max_shields
+        ship.shield_regen_rate = total_shield_regen
+        ship.shield_regen_cost = total_shield_cost
 
         # 5. Phase 4: Physics & Limits
         # ----------------------------
@@ -389,7 +420,6 @@ class ShipStatsCalculator:
         
         if not getattr(ship, '_resources_initialized', False):
             if ship.max_fuel > 0:
-
                 ship.current_fuel = ship.max_fuel
             if ship.max_ammo > 0:
                 ship.current_ammo = ship.max_ammo

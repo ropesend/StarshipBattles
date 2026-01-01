@@ -27,8 +27,12 @@ class TestEventType(Enum):
     SIM_END = "SIM_END"
 
 
+
 # Global flag to enable/disable test logging
 TEST_LOGGING_ENABLED = False
+
+# Global reference to active logger
+ACTIVE_LOGGER = None
 
 # Default log directory
 TEST_LOG_DIR = "tests/simulation/output/logs/"
@@ -65,6 +69,7 @@ class ComponentTestLogger:
         
     def start(self) -> None:
         """Start a new logging session."""
+        global ACTIVE_LOGGER
         if not self.enabled:
             return
             
@@ -74,12 +79,24 @@ class ComponentTestLogger:
         filepath = os.path.join(self.log_dir, self.filename)
         try:
             self.file = open(filepath, 'w', encoding='utf-8')
+            ACTIVE_LOGGER = self
+            
+            # Register with core logger
+            import logger
+            logger.set_event_handler(self.log_event)
+            
         except IOError as e:
             print(f"Warning: Could not open test log file: {e}")
             self.enabled = False
     
     def close(self) -> None:
         """Close the log file."""
+        global ACTIVE_LOGGER
+        
+        # Unregister from core logger
+        import logger
+        logger.set_event_handler(None)
+        
         if self.file:
             try:
                 self.file.close()
@@ -87,6 +104,8 @@ class ComponentTestLogger:
                 pass
             finally:
                 self.file = None
+                if ACTIVE_LOGGER == self:
+                    ACTIVE_LOGGER = None
     
     def set_tick(self, tick: int) -> None:
         """Update the current tick for subsequent log entries."""
@@ -103,16 +122,32 @@ class ComponentTestLogger:
         if not self.enabled or not self.file:
             return
         
-        # Format: [TICK:N] EVENT_TYPE | key=value | key=value
-        parts = [f"[TICK:{self.current_tick}]", event_type.value]
+        # Format for console/log
+        # To make it easiest for the parser, ensure we use its pattern
+        # [TICK:N] | EVENT_TYPE | key=value | ...
         
+        # Note: Previous implementation used 'pipe' delimited but parser uses regex
+        # Pattern: r'\[TICK:(\d+)\]\s*\|\s*(\w+)(?:\s*\|(.*))?'
+        
+        parts = [f"[TICK:{self.current_tick}]"]
+        
+        # Use simple string for event type if it's an Enum
+        etype_str = event_type.value if isinstance(event_type, TestEventType) else str(event_type)
+        parts.append(etype_str)
+        
+        kv_parts = []
         for key, value in kwargs.items():
-            parts.append(f"{key}={value}")
+            kv_parts.append(f"{key}={value}")
         
+        if kv_parts:
+            parts.append(" | ".join(kv_parts))
+        else:
+            parts.append("") # Empty data part
+            
         line = " | ".join(parts)
         try:
             self.file.write(line + "\n")
-            self.file.flush()  # Ensure immediate write for debugging
+            self.file.flush()
         except IOError:
             pass
     
@@ -143,16 +178,17 @@ class ComponentTestLogger:
         """Log ship velocity event."""
         self.log_event(TestEventType.SHIP_VELOCITY,
                       name=name,
-                      vel=f"({vx:.2f},{vy:.2f})",
-                      speed=f"{speed:.2f}",
-                      heading=f"{heading:.1f}")
+                      vx=f"{float(vx):.2f}",
+                      vy=f"{float(vy):.2f}",
+                      speed=f"{float(speed):.2f}",
+                      heading=f"{float(heading):.1f}")
     
     def log_ship_position(self, name: str, x: float, y: float) -> None:
         """Log ship position event."""
         self.log_event(TestEventType.SHIP_POSITION,
                       name=name,
-                      x=f"{x:.1f}",
-                      y=f"{y:.1f}")
+                      x=f"{float(x):.1f}",
+                      y=f"{float(y):.1f}")
     
     def log_weapon_fire(self, ship_name: str, weapon_id: str, 
                         target: str, weapon_type: str) -> None:
@@ -218,3 +254,25 @@ def set_test_log_dir(directory: str) -> None:
     """Set the test log output directory."""
     global TEST_LOG_DIR
     TEST_LOG_DIR = directory
+
+def log_event(event_type_str: str, **kwargs):
+    """
+    Global helper to log an event to the active logger.
+    
+    Args:
+        event_type_str: String or Enum for event type
+        **kwargs: Log data
+    """
+    if str(event_type_str).startswith("TestEventType."):
+         # It's an enum, use it
+         pass
+    else:
+        # It's a string, try to find it in Enum or use raw
+        try:
+             # If it's a raw string like "WEAPON_FIRE", checking enum might be good but not strictly required
+             pass
+        except:
+             pass
+             
+    if ACTIVE_LOGGER:
+        ACTIVE_LOGGER.log_event(event_type_str, **kwargs)

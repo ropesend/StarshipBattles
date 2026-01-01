@@ -15,28 +15,67 @@ class ShipPhysicsMixin:
         """
         # Determine target speed based on input state
         if getattr(self, 'is_thrusting', False):
-            self.target_speed = self.max_speed * getattr(self, 'engine_throttle', 1.0)
+            # Calculate Dynamic Thrust based on OPERATIONAL engines
+            current_total_thrust = 0.0
+            if hasattr(self, 'layers'):
+                for layer in self.layers.values():
+                    for comp in layer['components']:
+                        if isinstance(comp, Engine) and comp.is_operational:
+                            current_total_thrust += comp.thrust_force
+            
+            # Recalculate acceleration for this frame based on available thrust
+            # Mass constant for now
+            K_THRUST = 2500
+            if self.mass > 0:
+                current_accel = (current_total_thrust * K_THRUST) / (self.mass * self.mass)
+                # Cap at max potential accel? Or just use it.
+                # Just use it.
+                # Update Max Speed potential too? 
+                # If we have half engines, we have half top speed?
+                # Physics says Force / Drag ~ Speed. 
+                # self.max_speed is currently pre-calculated based on ALL engines.
+                # We should scale target_speed?
+                
+                # Simple logic: target_speed is max_speed * throttle.
+                # But if engines are down, we can't reach max_speed.
+                # With less thrust, we just accelerate slower?
+                # Arcade physics: max_speed is usually a limit, but if Force is lower, do we cap speed lower?
+                # Formula: max_speed = (total_thrust * K_SPEED) / mass
+                # Let's dynamically calculate this frame's max speed potential.
+                K_SPEED = 25
+                potential_max_speed = (current_total_thrust * K_SPEED) / self.mass
+                
+                # Apply Throttle
+                target_v = potential_max_speed * getattr(self, 'engine_throttle', 1.0)
+                
+                # Override self.acceleration_rate temporarily for this update? 
+                # Or just use the local current_accel
+                step = current_accel
+                
+                # Logic copied from original but dynamic step/target
+                diff = target_v - self.current_speed
+                if diff != 0:
+                     if abs(diff) <= step:
+                         self.current_speed = target_v
+                     else:
+                         self.current_speed += step if diff > 0 else -step
+            
         else:
+            # Coasting / Decelerating
+            # Drag? 
             self.target_speed = 0
+            step = self.acceleration_rate # Use base accel as deceleration? Or Drag?
+            # Original code used self.acceleration_rate for decel too.
+            diff = 0 - self.current_speed
+            if diff != 0:
+                if abs(diff) <= step:
+                    self.current_speed = 0
+                else:
+                    self.current_speed += step if diff > 0 else -step
             
         # Reset input flag for next frame
         self.is_thrusting = False
     
-        # 1. Update Speed (Linear Acceleration/Deceleration)
-        # We move current_speed towards target_speed by acceleration_rate
-        
-        diff = self.target_speed - self.current_speed
-        
-        if diff != 0:
-            # Determine step size (Acceleration rate)
-            # Both accel and decel use the same rate as requested
-            step = self.acceleration_rate
-            
-            if abs(diff) <= step:
-                self.current_speed = self.target_speed
-            else:
-                self.current_speed += step if diff > 0 else -step
-        
         # 2. Update Position
         # Velocity matches heading * speed (No drift, Arcade style)
         forward = self.forward_vector()
@@ -50,34 +89,12 @@ class ShipPhysicsMixin:
 
     def thrust_forward(self):
         """
-        Apply thrust logic: Consume fuel and set thrusting flag.
-        
-        Fuel is only required if the engine has a non-zero fuel_cost.
-        Engines with fuel_cost=0 can thrust indefinitely without fuel.
+        Apply thrust input. 
+        Note: Actual fuel consumption happens in Ship.update -> Component.update.
+        This simply flags the desire to move.
         """
-        # Calculate total fuel cost from all active engines
-        fuel_cost = 0
-        if hasattr(self, 'layers'):
-            for layer in self.layers.values():
-                for comp in layer['components']:
-                    if isinstance(comp, Engine) and comp.is_active:
-                        # Get fuel cost (default 0 if not specified)
-                        cost = getattr(comp, 'fuel_cost_per_sec', 0) or 0
-                        fuel_cost += cost / 100.0
+        self.is_thrusting = True
         
-        # If no fuel cost required, always allow thrusting
-        if fuel_cost <= 0:
-            self.is_thrusting = True
-            return
-        
-        # Fuel is required - check if we have enough
-        if self.current_fuel >= fuel_cost:
-            self.current_fuel -= fuel_cost
-            self.is_thrusting = True
-        else:
-            self.current_fuel = max(0, self.current_fuel)
-            self.is_thrusting = False
-
     def rotate(self, direction):
         """
         Rotate the ship.
@@ -85,3 +102,5 @@ class ShipPhysicsMixin:
         """
         turn_per_tick = (self.turn_speed * getattr(self, 'turn_throttle', 1.0)) / 100.0
         self.angle += direction * turn_per_tick
+        
+

@@ -51,6 +51,7 @@ class MockPDC(BeamWeapon):
             'firing_arc': 360,
             'reload': 0.1
         }
+        self.ability_instances = []
 
     def update(self):
         dt = 0.01
@@ -60,7 +61,7 @@ class MockPDC(BeamWeapon):
     def can_fire(self):
         return self.is_active and self.cooldown_timer <= 0
         
-    def fire(self):
+    def fire(self, target=None):
         if self.can_fire():
             self.cooldown_timer = self.reload_time
             return True

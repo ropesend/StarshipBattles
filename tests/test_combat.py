@@ -190,7 +190,8 @@ class TestEnergyRegeneration(unittest.TestCase):
         self.ship.current_energy = self.ship.max_energy / 2
         initial_energy = self.ship.current_energy
         
-        self.ship.update_combat_cooldowns()
+        # Energy regeneration happens in Ship.update() via ResourceRegistry (tick-based)
+        self.ship.update()
         
         self.assertGreater(self.ship.current_energy, initial_energy)
     
@@ -251,7 +252,8 @@ class TestWeaponCooldowns(unittest.TestCase):
         initial_cooldown = weapon.cooldown_timer
         self.assertGreater(initial_cooldown, 0, "Weapon should have cooldown after firing")
         
-        self.ship.update_combat_cooldowns()
+        # Weapon cooldowns are updated in Ship.update() via Component.update() (tick-based)
+        self.ship.update()
         
         self.assertLess(weapon.cooldown_timer, initial_cooldown)
 

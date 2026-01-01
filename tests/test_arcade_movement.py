@@ -64,12 +64,12 @@ class TestArcadeMovement(unittest.TestCase):
         self.assertEqual(initial_speed, 0)
         
         self.ship.thrust_forward()
-        self.ship.update_physics_movement()  # Process the thrust flag
+        self.ship.update()  # Full update triggers component fuel consumption
         
         # Speed should increase by acceleration_rate (flag-based physics)
         self.assertGreater(self.ship.current_speed, 0)
         
-        # Fuel consumed
+        # Fuel consumed via engine's ResourceConsumption ability
         self.assertLess(self.ship.current_fuel, self.ship.max_fuel)
 
     def test_movement_direction(self):

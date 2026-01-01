@@ -64,8 +64,10 @@
         "max_ammo": 0,
         "max_energy": 0,
         "max_speed": 1.2230919765166341,
+        "acceleration_rate": 0.011967631864154933,
         "turn_speed": 0.0,
         "total_thrust": 500.0,
-        "mass": 10220.0
+        "mass": 10220.0,
+        "armor_hp_pool": 0
     }
 }

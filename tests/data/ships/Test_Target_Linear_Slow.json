@@ -1,0 +1,38 @@
+{
+    "name": "Test Target Linear Slow",
+    "color": [
+        0,
+        0,
+        255
+    ],
+    "team_id": 2,
+    "ship_class": "TestM_2L",
+    "theme_id": "Federation",
+    "ai_strategy": "test_straight_line",
+    "layers": {
+        "CORE": [
+            {
+                "id": "test_armor_std",
+                "modifiers": []
+            },
+            {
+                "id": "test_engine_no_fuel",
+                "modifiers": []
+            }
+        ],
+        "ARMOR": []
+    },
+    "_test_notes": "Linearly moving target, slow speed",
+    "expected_stats": {
+        "max_hp": 250,
+        "max_fuel": 0,
+        "max_ammo": 0,
+        "max_energy": 0,
+        "max_speed": 52.083333333333336,
+        "acceleration_rate": 21.70138888888889,
+        "turn_speed": 0.0,
+        "total_thrust": 500.0,
+        "mass": 240.0,
+        "armor_hp_pool": 200
+    }
+}

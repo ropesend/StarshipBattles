@@ -1,6 +1,6 @@
 import pygame
 from physics import PhysicsBody
-from logger import log_debug
+from logger import log_debug, log_event
 from game_constants import AttackType
 
 class Projectile(PhysicsBody):
@@ -61,6 +61,12 @@ class Projectile(PhysicsBody):
              if self.endurance <= 0:
                  self.is_alive = False
                  self.status = 'miss'
+                 # Log Expiration (Seeker or Timed Projectile)
+                 if self.type == AttackType.MISSILE or self.type == 'missile':
+                     log_event("SEEKER_EXPIRE", 
+                               seeker_id=str(id(self)), 
+                               reason="lifetime",
+                               tick=0)
                  return
 
         # Guidance Logic (if missile)
@@ -68,25 +74,18 @@ class Projectile(PhysicsBody):
             self._update_guidance(dt)
             
         # Physics Update (from PhysicsBody)
-        # PhysicsBody.update adds accel, drag, and moves position.
-        # But Projectile logic in BattleScene was:
-        # pos += vel
-        # distance += vel.length
-        # We want to use PhysicsBody but we need to track distance for range limit.
-        
-        # Override standard update slightly or hook into it
-        # PhysicsBody.update defaults to dt=1.0 logic (1 tick). 
-        # But we passed 0.01. Let's rely on velocity.
-        
-        # For simple projectiles, no drag usually?
-        # self.drag = 0 
-        
         self.position += self.velocity
         
         self.distance_traveled += self.velocity.length()
         if self.max_range and self.distance_traveled > self.max_range:
             self.is_alive = False
             self.status = 'miss'
+            # Log Range Expiration
+            if self.type == AttackType.MISSILE or self.type == 'missile':
+                log_event("SEEKER_EXPIRE", 
+                          seeker_id=str(id(self)), 
+                          reason="max_range",
+                          tick=0)
 
     def _update_guidance(self, dt):
         target = self.target

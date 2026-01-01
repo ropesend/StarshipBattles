@@ -18,6 +18,22 @@ class PhysicsBody:
         self.drag = 0.5  # Linear drag to prevent infinite drift stability issues
         self.angular_drag = 0.5
 
+    @property
+    def x(self):
+        return self.position.x
+    
+    @x.setter
+    def x(self, value):
+        self.position.x = value
+        
+    @property
+    def y(self):
+        return self.position.y
+        
+    @y.setter
+    def y(self, value):
+        self.position.y = value
+
     def update(self, dt=1.0):
         """
         Update physics. dt is ignored (1 tick = fixed step).

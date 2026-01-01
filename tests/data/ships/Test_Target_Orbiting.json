@@ -1,0 +1,42 @@
+{
+    "name": "Test Target Orbiting",
+    "color": [
+        0,
+        0,
+        255
+    ],
+    "team_id": 2,
+    "ship_class": "TestM_2L",
+    "theme_id": "Federation",
+    "ai_strategy": "test_orbit_target",
+    "layers": {
+        "CORE": [
+            {
+                "id": "test_armor_std",
+                "modifiers": []
+            },
+            {
+                "id": "test_engine_no_fuel",
+                "modifiers": []
+            },
+            {
+                "id": "test_thruster_std",
+                "modifiers": []
+            }
+        ],
+        "ARMOR": []
+    },
+    "_test_notes": "Orbiting target",
+    "expected_stats": {
+        "max_hp": 270,
+        "max_fuel": 0,
+        "max_ammo": 0,
+        "max_energy": 0,
+        "max_speed": 51.02040816326531,
+        "acceleration_rate": 20.824656393169512,
+        "turn_speed": 32.595743112241834,
+        "total_thrust": 500.0,
+        "mass": 245.0,
+        "armor_hp_pool": 200
+    }
+}

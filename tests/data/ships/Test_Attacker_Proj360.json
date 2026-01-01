@@ -1,0 +1,38 @@
+{
+    "name": "Test Attacker Proj360",
+    "color": [
+        255,
+        0,
+        0
+    ],
+    "team_id": 1,
+    "ship_class": "TestS_2L",
+    "theme_id": "Federation",
+    "ai_strategy": "test_do_nothing",
+    "layers": {
+        "CORE": [
+            {
+                "id": "test_weapon_proj_omni",
+                "modifiers": []
+            },
+            {
+                "id": "test_storage_ammo",
+                "modifiers": []
+            }
+        ],
+        "ARMOR": []
+    },
+    "_test_notes": "Attacker with 360 degree projectile weapon",
+    "expected_stats": {
+        "max_hp": 70,
+        "max_fuel": 0,
+        "max_ammo": 1000,
+        "max_energy": 0,
+        "max_speed": 0,
+        "acceleration_rate": 0.0,
+        "turn_speed": 0.0,
+        "total_thrust": 0,
+        "mass": 35.0,
+        "armor_hp_pool": 0
+    }
+}

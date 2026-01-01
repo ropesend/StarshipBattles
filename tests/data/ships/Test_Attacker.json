@@ -16,10 +16,6 @@
                 "modifiers": []
             },
             {
-                "id": "test_engine_infinite",
-                "modifiers": []
-            },
-            {
                 "id": "test_weapon_proj_omni",
                 "modifiers": []
             }
@@ -50,14 +46,15 @@
         ]
     },
     "expected_stats": {
-        "max_hp": 1150,
+        "max_hp": 1100,
         "max_fuel": 0,
         "max_ammo": 0,
         "max_energy": 0,
-        "max_speed": 694.4444444444445,
+        "max_speed": 0,
+        "acceleration_rate": 0.0,
         "turn_speed": 0.0,
-        "total_thrust": 5000.0,
-        "mass": 180.0,
+        "total_thrust": 0,
+        "mass": 170.0,
         "armor_hp_pool": 1000
     }
 }

@@ -19,25 +19,34 @@ class ShipCombatMixin:
         """Update weapon cooldowns and energy regeneration. Assumes 1 tick cycle."""
         if not self.is_alive: return
 
-        # Regenerate Energy
-        if self.current_energy < self.max_energy:
-            self.current_energy += self.energy_gen_rate / 100.0
-            if self.current_energy > self.max_energy:
-                self.current_energy = self.max_energy
-
-        # Regenerate Ammo
-        if self.current_ammo < self.max_ammo and getattr(self, 'ammo_gen_rate', 0) > 0:
-            self.current_ammo += self.ammo_gen_rate / 100.0
-            if self.current_ammo > self.max_ammo:
-                self.current_ammo = self.max_ammo
-        
-        # Regenerate Shields (if energy available)
+        # Regenerate Shield (Custom Logic preserved as per Plan)
+        # Using Generic Energy Resource
         if self.current_shields < self.max_shields and self.shield_regen_rate > 0:
             regen_amount = self.shield_regen_rate / 100.0
             cost_amount = self.shield_regen_cost / 100.0
             
-            if self.current_energy >= cost_amount:
-                self.current_energy -= cost_amount
+            # Use Generic Resource
+            has_energy = True
+            if cost_amount > 0 and hasattr(self, 'resources'):
+                energy_res = self.resources.get_resource('energy')
+                if energy_res:
+                    if energy_res.current_value >= cost_amount:
+                        energy_res.consume(cost_amount)
+                    else:
+                        has_energy = False
+                else:
+                    # Legacy fallback? Or assume 0?
+                    # If generic resources not present, maybe fallback to self.current_energy?
+                    # No, we are moving fully.
+                    has_energy = False
+            elif cost_amount > 0 and not hasattr(self, 'resources'):
+                # Legacy Fallback
+                if self.current_energy >= cost_amount:
+                   self.current_energy -= cost_amount
+                else:
+                   has_energy = False
+            
+            if has_energy:
                 self.current_shields += regen_amount
                 if self.current_shields > self.max_shields:
                     self.current_shields = self.max_shields
@@ -46,12 +55,8 @@ class ShipCombatMixin:
         if getattr(self, 'repair_rate', 0) > 0:
              self._apply_repair(self.repair_rate / 100.0)
 
-        # Component Cooldowns
-        for layer in self.layers.values():
-            for comp in layer['components']:
-                if hasattr(comp, 'update') and comp.is_active:
-                    # Pass 1 tick (0.01 seconds) to update
-                    comp.update()
+        # Component Cooldowns - Moved to Ship.update()
+        pass
 
     def fire_weapons(self, context=None):
         """
@@ -81,16 +86,8 @@ class ShipCombatMixin:
                     continue
 
                 if isinstance(comp, Weapon) and comp.is_active:
-                    # Determine cost and resource type
-                    cost = 0
-                    has_resource = False
-                    
-                    if isinstance(comp, BeamWeapon):
-                        cost = comp.energy_cost
-                        has_resource = (self.current_energy >= cost)
-                    else:
-                        cost = comp.ammo_cost
-                        has_resource = (self.current_ammo >= cost)
+                    # Check resources via Component Abilities
+                    has_resource = comp.can_afford_activation()
                     
                     if has_resource and comp.can_fire():
                         # TARGETING logic
@@ -150,13 +147,15 @@ class ShipCombatMixin:
                                     target = candidate
                                     break
 
-                        if valid_target and target and comp.fire():
+                        if valid_target and target and comp.fire(target):
                             self.total_shots_fired += 1
                             comp.shots_fired += 1
                             
+                            # Deduct Resource generically
+                            comp.consume_activation()
+                            
                             # Deduct Resource
                             if isinstance(comp, BeamWeapon):
-                                self.current_energy -= cost
                                 comp.shots_hit += 1 # Beams are hitscan and we only fire if valid_target (in arc/range)
                                 # Technically valid_target means "can hit", but accuracy fail?
                                 # BeamWeapon has accuracy falloff. 
@@ -177,7 +176,8 @@ class ShipCombatMixin:
                                 })
                             else:
                                 from projectiles import Projectile
-                                self.current_ammo -= cost
+                                
+                                # Seeker Logic
                                 
                                 # Seeker Logic
                                 if isinstance(comp, SeekerWeapon):

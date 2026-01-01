@@ -20,9 +20,15 @@
     },
     "_test_notes": "Minimal ship: 1 engine only. Mass = hull(20) + engine(20) = 40",
     "expected_stats": {
-        "total_thrust": 500,
-        "mass": 40,
+        "max_hp": 50,
+        "max_fuel": 0,
+        "max_ammo": 0,
+        "max_energy": 0,
         "max_speed": 312.5,
-        "acceleration_rate": 78125
+        "acceleration_rate": 781.25,
+        "turn_speed": 0.0,
+        "total_thrust": 500.0,
+        "mass": 40.0,
+        "armor_hp_pool": 0
     }
 }

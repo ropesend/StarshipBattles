@@ -47,6 +47,7 @@
         "max_ammo": 0,
         "max_energy": 0,
         "max_speed": 0,
+        "acceleration_rate": 0.0,
         "turn_speed": 0.0,
         "total_thrust": 0,
         "mass": 160.0,

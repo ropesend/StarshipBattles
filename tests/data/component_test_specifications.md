@@ -653,10 +653,10 @@ All scenarios must be tested at **4 facing angles**:
 - [x] Fix fuel requirement to be data-driven (engines with fuel_cost=0 don't require fuel) ✅
 
 ### Phase 1: Engine Tests
-- [ ] Create engine test ship JSON files (see Section 5.1)
-- [ ] Create test configs for `ENG-001` through `ENG-005`
-- [ ] Add velocity logging to ship update loop
-- [ ] Verify logged speeds match formulas from `ship_stats.py`
+- [x] Create engine test ship JSON files (see Section 5.1)
+- [x] Create test configs for `ENG-001` through `ENG-005`
+- [x] Add velocity logging to ship update loop
+- [x] Verify logged speeds match formulas from `ship_stats.py`
 
 ### Phase 2: 360° Weapon Tests
 - [ ] Create attacker ships (Section 5.2)

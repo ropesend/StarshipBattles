@@ -46,6 +46,8 @@ class ApplicationModifier:
         self.definition = mod_def
         self.value = value if value is not None else mod_def.default_val
 
+from resources import ABILITY_REGISTRY, create_ability
+
 class Component:
     def __init__(self, data):
         import copy
@@ -68,17 +70,22 @@ class Component:
         self.cost = data.get('cost', 0)
         
         # Parse abilities from data
-        self.abilities = data.get('abilities', {}) # This is already a copy from self.data deepcopy? No, data passed in.
-        # self.data is safe. But we used `data` arg.
-        self.data = copy.deepcopy(data)
-        
-        # Re-source from deepcopy to be sure? Use self.data
         self.abilities = self.data.get('abilities', {})
         self.base_abilities = copy.deepcopy(self.abilities)
         
         self.ship = None # Container reference
         
         self.modifiers = [] # list of ApplicationModifier
+        
+        # Ability Instances (New System)
+        self.ability_instances = []
+        self._is_operational = True # Tracks if component has resources to operate
+        
+        # SHIM: Inject legacy fields into generic abilities if not present
+        self._apply_legacy_shim()
+
+        # Instantiate Abilities
+        self._instantiate_abilities()
         
         # Load default modifiers from data definition
         if 'modifiers' in self.data:
@@ -112,6 +119,144 @@ class Component:
                      if key == 'hp': 
                          self.max_hp = 0
                          self.current_hp = 0
+
+    def _apply_legacy_shim(self):
+        """Convert legacy fields (fuel_cost, etc) to Abilities if needed."""
+        # 1. Fuel Cost -> ResourceConsumption (Constant)
+        fuel_cost = self.data.get('fuel_cost', 0)
+        if fuel_cost > 0:
+            # Check if already has it
+            found = False
+            if 'ResourceConsumption' in self.abilities:
+                 # Check list or dict
+                 val = self.abilities['ResourceConsumption']
+                 if isinstance(val, list):
+                     for v in val:
+                         if v.get('resource') == 'fuel': found = True
+                 elif isinstance(val, dict):
+                     if val.get('resource') == 'fuel': found = True
+            
+            if not found:
+                if 'ResourceConsumption' not in self.abilities:
+                    self.abilities['ResourceConsumption'] = []
+                elif isinstance(self.abilities['ResourceConsumption'], dict):
+                     # Convert single dict to list
+                     self.abilities['ResourceConsumption'] = [self.abilities['ResourceConsumption']]
+                
+                self.abilities['ResourceConsumption'].append({
+                    "resource": "fuel",
+                    "amount": fuel_cost,
+                    "trigger": "constant"
+                })
+
+        # 2. Energy/Ammo Cost -> ResourceConsumption (Activation) - Handled mostly in Weapon subclass shim or generic here?
+        # Generic is safer.
+        energy_cost = self.data.get('energy_cost', 0)
+        if energy_cost > 0:
+            self._ensure_consumption('energy', energy_cost, 'activation')
+
+        ammo_cost = self.data.get('ammo_cost', 0)
+        if ammo_cost > 0:
+            self._ensure_consumption('ammo', ammo_cost, 'activation')
+            
+        # 3. Storage (Tanks)
+        cap = self.data.get('capacity', 0)
+        if cap > 0:
+            rtype = self.data.get('resource_type', 'fuel')
+            # Check if not already defined
+            if 'ResourceStorage' not in self.abilities:
+                self.abilities['ResourceStorage'] = []
+                self.abilities['ResourceStorage'].append({
+                    "resource": rtype,
+                    "amount": cap
+                })
+
+        # 4. Generation
+        gen = self.data.get('energy_generation', 0)
+        if gen > 0:
+             if 'ResourceGeneration' not in self.abilities:
+                self.abilities['ResourceGeneration'] = []
+                self.abilities['ResourceGeneration'].append({
+                    "resource": "energy",
+                    "amount": gen
+                })
+
+    def _ensure_consumption(self, resource, amount, trigger):
+        if 'ResourceConsumption' not in self.abilities:
+            self.abilities['ResourceConsumption'] = []
+        
+        # Canonicalize to list
+        if isinstance(self.abilities['ResourceConsumption'], dict):
+             self.abilities['ResourceConsumption'] = [self.abilities['ResourceConsumption']]
+             
+        # Check specific existence not critical for shim as duplicate constant consumption sums up, 
+        # but duplicate activation might double cost?
+        # Assume shim only runs if data is OLD.
+        self.abilities['ResourceConsumption'].append({
+            "resource": resource,
+            "amount": amount,
+            "trigger": trigger
+        })
+
+    def _instantiate_abilities(self):
+        """Instantiate Ability objects from self.abilities dict."""
+        self.ability_instances = []
+        for name, data in self.abilities.items():
+            # Data can be list (multiple abilities of same type) or dict (single)
+            # Or primitive (e.g. CrewCapacity: 10)
+            
+            # Primitives are NOT generic abilities in the new system class sense yet, 
+            # unless we map them. For now, we only care about ResourceXYZ abilities.
+            if name not in ABILITY_REGISTRY:
+                continue
+                
+            if isinstance(data, list):
+                for item in data:
+                    ab = create_ability(name, self, item)
+                    if ab: self.ability_instances.append(ab)
+            elif isinstance(data, dict):
+                 ab = create_ability(name, self, data)
+                 if ab: self.ability_instances.append(ab)
+            
+    def update(self):
+        """Update component state for one tick (resource consumption, cooldowns)."""
+        # 1. Update Abilities (Constant Consumption)
+        all_satisfied = True
+        
+        for ability in self.ability_instances:
+            if not ability.update():
+                from resources import ResourceConsumption
+                if isinstance(ability, ResourceConsumption) and ability.trigger == 'constant':
+                     all_satisfied = False
+        
+        self._is_operational = all_satisfied and self.is_active
+
+    @property
+    def is_operational(self):
+        return self._is_operational and self.is_active
+
+    def can_afford_activation(self):
+        """Check if component can afford activation costs."""
+        from resources import ResourceConsumption
+        for ability in self.ability_instances:
+            if isinstance(ability, ResourceConsumption) and ability.trigger == 'activation':
+                if not ability.check_available():
+                    return False
+        return True
+
+    def consume_activation(self):
+        """Consume activation costs."""
+        from resources import ResourceConsumption
+        for ability in self.ability_instances:
+            if isinstance(ability, ResourceConsumption) and ability.trigger == 'activation':
+                ability.check_and_consume()
+
+    def try_activate(self):
+        """Analyze if we can activate, and if so, consume and return True. (Legacy/Simple usage)"""
+        if self.can_afford_activation():
+            self.consume_activation()
+            return True
+        return False
 
 
 
@@ -371,6 +516,8 @@ class Bridge(Component):
     def __init__(self, data):
         super().__init__(data)
 
+from logger import log_event
+
 class Weapon(Component):
     def __init__(self, data):
         super().__init__(data)
@@ -404,18 +551,27 @@ class Weapon(Component):
         return int(self.damage)
 
     def update(self):
-        # Cycle-Based: 1 tick = 0.01 seconds. Decrement timer by dt.
-        dt = 0.01
+        # Tick-Based: Each call decrements cooldown by 1 tick (0.01 seconds)
+        TICK_DURATION = 0.01
         if self.cooldown_timer > 0:
-            self.cooldown_timer -= dt
+            self.cooldown_timer -= TICK_DURATION
 
     def can_fire(self):
         return self.is_active and self.cooldown_timer <= 0
 
-    def fire(self):
+    def fire(self, target=None):
         if self.can_fire():
             self.cooldown_timer = self.reload_time
             self.fire_count += 1
+            
+            # Log weapon fire event
+            if self.ship:
+                target_name = getattr(target, 'name', "Unknown Target") if target else "None"
+                log_event("WEAPON_FIRE", 
+                         ship_name=self.ship.name, 
+                         weapon_id=self.id, 
+                         target=target_name,
+                         tick=0) # Tick will be auto-filled by logger wrapper if not available, but ideally context passed
             return True
         return False
     
@@ -453,6 +609,16 @@ class Tank(Component):
         super().__init__(data)
         self.capacity = data.get('capacity', 0)
         self.resource_type = data.get('resource_type', 'fuel')
+    
+    def _apply_custom_stats(self, stats):
+        super()._apply_custom_stats(stats)
+        self.capacity = int(self.data.get('capacity', 0) * stats.get('capacity_mult', 1.0))
+        
+        # Sync to Ability (Shim)
+        from resources import ResourceStorage
+        for ab in self.ability_instances:
+            if isinstance(ab, ResourceStorage) and ab.resource_type == self.resource_type:
+                ab.max_amount = self.capacity
 
     def clone(self):
         return Tank(self.data)
@@ -469,6 +635,18 @@ class Generator(Component):
     def __init__(self, data):
         super().__init__(data)
         self.energy_generation_rate = data.get('energy_generation', 0)
+
+    def _apply_custom_stats(self, stats):
+        super()._apply_custom_stats(stats)
+        # Apply energy_gen_mult
+        base = self.data.get('energy_generation', 0)
+        self.energy_generation_rate = base * stats.get('energy_gen_mult', 1.0)
+        
+        # Sync to Ability (Shim)
+        from resources import ResourceGeneration
+        for ab in self.ability_instances:
+            if isinstance(ab, ResourceGeneration) and ab.resource_type == 'energy':
+                ab.rate = self.energy_generation_rate
 
     def clone(self):
         return Generator(self.data)
@@ -672,9 +850,10 @@ class Hangar(Component):
         self.fighter_class = "Fighter (Small)" # Default
         
     def update(self):
-        dt = 0.01
+        # Tick-Based: Each call decrements cooldown by 1 tick (0.01 seconds)
+        TICK_DURATION = 0.01
         if self.cooldown_timer > 0:
-            self.cooldown_timer -= dt
+            self.cooldown_timer -= TICK_DURATION
 
     def can_launch(self):
         return self.is_active and self.cooldown_timer <= 0

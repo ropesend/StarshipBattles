@@ -48,18 +48,28 @@ class TestShipPhysicsThrust(unittest.TestCase):
         initial_fuel = self.ship.current_fuel
         self.assertGreater(initial_fuel, 0, "Ship needs fuel for this test")
         
+        # Thrust and update to trigger fuel consumption via component abilities
         self.ship.thrust_forward()
+        self.ship.update()  # This runs Component.update() which consumes fuel
         
         # Should have consumed some fuel
         self.assertLess(self.ship.current_fuel, initial_fuel)
     
     def test_thrust_no_fuel_no_thrust(self):
-        """Can't thrust without fuel."""
+        """Ship without fuel should not be able to sustain thrust."""
         self.ship.current_fuel = 0
         
-        self.ship.thrust_forward()
+        # Run update to trigger fuel starvation check on engine
+        # This marks engine as non-operational via ResourceConsumption ability
+        self.ship.update()
         
-        self.assertFalse(self.ship.is_thrusting)
+        # Now attempt to thrust - engine should be non-operational
+        self.ship.thrust_forward()
+        self.ship.update()
+        
+        # Speed should be 0 or very low because engine is non-operational
+        # With no operational engines, thrust_force is 0, so no acceleration
+        self.assertLess(self.ship.current_speed, 1.0)
     
     def test_update_physics_accelerates_when_thrusting(self):
         """Speed should increase toward max when thrusting."""

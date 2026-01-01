@@ -1,0 +1,42 @@
+{
+    "name": "Test Attacker Beam360 Med",
+    "color": [
+        255,
+        0,
+        0
+    ],
+    "team_id": 1,
+    "ship_class": "TestS_2L",
+    "theme_id": "Federation",
+    "ai_strategy": "test_do_nothing",
+    "layers": {
+        "CORE": [
+            {
+                "id": "test_beam_med_acc",
+                "modifiers": []
+            },
+            {
+                "id": "test_gen_fusion",
+                "modifiers": []
+            },
+            {
+                "id": "test_storage_energy",
+                "modifiers": []
+            }
+        ],
+        "ARMOR": []
+    },
+    "_test_notes": "Attacker with Medium Accuracy (2.0) Beam",
+    "expected_stats": {
+        "max_hp": 140,
+        "max_fuel": 0,
+        "max_ammo": 0,
+        "max_energy": 1000,
+        "max_speed": 0,
+        "acceleration_rate": 0.0,
+        "turn_speed": 0.0,
+        "total_thrust": 0,
+        "mass": 50.0,
+        "armor_hp_pool": 0
+    }
+}

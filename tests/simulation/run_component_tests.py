@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import unittest
+import math
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
@@ -18,9 +19,28 @@ import pygame
 from ship import Ship, load_vehicle_classes, LayerType
 from components import load_components, create_component
 from battle_engine import BattleEngine
+from ai import AIController
 
 from test_logger import ComponentTestLogger, TestEventType, enable_test_logging
 from test_log_parser import TestLogParser
+
+
+class TestGrid:
+    """Mock grid for AI target finding in tests."""
+    def __init__(self, ships: List[Ship]):
+        self.ships = ships
+        self.width = 10000
+        self.height = 10000
+        
+    def query_radius(self, position, radius):
+        """Return all ships within radius (simplified: returns all ships)."""
+        # In a real hash we'd filter, but for small N tests, all is fine.
+        # Could implement distance check if strictly needed.
+        return self.ships
+        
+    def add(self, entity): pass
+    def remove(self, entity): pass
+    def update(self, entity): pass
 
 
 @dataclass
@@ -132,6 +152,16 @@ class ComponentTestRunner:
         # Log simulation start
         logger.log_sim_start(config.test_id, [s.name for s in ships])
         
+        # Initialize Grid and AI Controllers
+        grid = TestGrid(ships)
+        ai_controllers = {}
+        for ship in ships:
+            # Determine enemy team (Team 1 vs Team 2 usually)
+            enemy_team = 2 if ship.team_id == 1 else 1 
+            # If default team 0, maybe enemy is 1? Default for tests: Attacker=1, Target=2.
+            # If ship set to 0, adapt if needed.
+            ai_controllers[ship.name] = AIController(ship, grid, enemy_team)
+
         # Build AI strategy map for each ship
         ai_strategies = {}
         for i, ship_config in enumerate(config.ships):
@@ -143,24 +173,47 @@ class ComponentTestRunner:
             
             # Apply AI behaviors and update each ship
             for ship in ships:
+                if not ship.is_alive: continue
+                
                 strategy = ai_strategies.get(ship.name, 'do_nothing')
+                controller = ai_controllers[ship.name]
                 
-                # Apply behavior based on strategy
-                if strategy == 'straight_line':
-                    # Thrust forward continuously
-                    ship.thrust_forward()
-                elif strategy == 'rotate_only':
-                    # Rotate but don't move
-                    ship.rotate(1)  # Rotate right
-                elif strategy == 'do_nothing':
-                    # No action
-                    pass
-                # TODO: Add more strategy behaviors as needed
+                # Ensure target acquisition
+                if not ship.current_target:
+                    ship.current_target = controller.find_target()
+                    if ship.name == "Test Attacker Proj360" and not ship.current_target:
+                         # Force debug for this specific failure
+                         pass # print(f"[DEBUG] {ship.name} failed to find target. Grid: {len(grid.ships)} ships. EnemyTeam: {controller.enemy_team_id}")
                 
-                # Update ship physics
-                ship.update(context={'projectiles': [], 'grid': None})
+                if ship.name == "Test Attacker Proj360" and tick < 5:
+                    print(f"[DEBUG] Tick {tick}: {ship.name} Target: {ship.current_target} Trigger: {ship.comp_trigger_pulled} Pos: {ship.position}")
+
+                # Check for Direct Behavior Override via known keys
+                if strategy in controller.behaviors:
+                    behavior = controller.behaviors[strategy]
+                    if controller.current_behavior != behavior:
+                        if behavior: behavior.enter()
+                        controller.current_behavior = behavior
+                    
+                    # Manually handle firing trigger for overridden behaviors
+                    # (Normally handled by controller.update)
+                    if ship.current_target:
+                        ship.comp_trigger_pulled = True
+                    else:
+                        ship.comp_trigger_pulled = False
+                        
+                    if behavior:
+                        # Context usually comes from policy/strategy, empty dict for simple overrides
+                        behavior.update(ship.current_target, {})
+                else:
+                    # Use full controller logic (Strategy Manager Lookup)
+                    ship.ai_strategy = strategy
+                    controller.update()
+                
+                # Update ship physics (uses throttles set by AI)
+                ship.update(context={'projectiles': [], 'grid': grid})
             
-            # Log velocity at specified ticks
+            # Log velocity and position at specified ticks
             if tick in config.velocity_log_ticks or tick == config.duration_ticks:
                 for ship in ships:
                     vel = ship.velocity if hasattr(ship, 'velocity') else pygame.math.Vector2(0, 0)
@@ -172,6 +225,11 @@ class ComponentTestRunner:
                         vy=vel.y if vel else 0,
                         speed=speed,
                         heading=heading
+                    )
+                    logger.log_ship_position(
+                        name=ship.name,
+                        x=ship.x,
+                        y=ship.y
                     )
         
         # Log simulation end
@@ -301,6 +359,51 @@ class ComponentTestRunner:
                 return True, "No hits as expected"
             else:
                 return False, f"Expected 0 hits but got {hits}"
+
+        elif atype == 'position_delta':
+            ship = params.get('ship', '')
+            start_tick = params.get('start_tick', 0)
+            end_tick = params.get('end_tick', 1000)
+            max_delta = params.get('max_delta', 0.1)
+            min_delta = params.get('min_delta', 0.0)
+            
+            start_pos = parser.get_position_at_tick(ship, start_tick)
+            end_pos = parser.get_position_at_tick(ship, end_tick)
+            
+            if not start_pos or not end_pos:
+                return False, f"Missing position data for {ship}"
+                
+            dist = math.sqrt((end_pos[0] - start_pos[0])**2 + (end_pos[1] - start_pos[1])**2)
+            
+            if min_delta <= dist <= max_delta:
+                return True, f"Displacement {dist:.2f} within [{min_delta}, {max_delta}]"
+            else:
+                return False, f"Displacement {dist:.2f} outside [{min_delta}, {max_delta}]"
+                
+        elif atype == 'heading_change':
+            ship = params.get('ship', '')
+            tick = params.get('tick', 1000)
+            expected_heading = params.get('expected_heading', None)
+            min_rotation = params.get('min_rotation', 0.0)
+            
+            initial_heading = parser.get_velocity_at_tick(ship, 0, param='heading')
+            final_heading = parser.get_velocity_at_tick(ship, tick, param='heading')
+            
+            if initial_heading is None or final_heading is None:
+                 return False, f"Missing heading data for {ship}"
+                 
+            if expected_heading is not None:
+                diff = abs(final_heading - expected_heading) % 360
+                if diff < 1.0:
+                     return True, f"Heading {final_heading} matches {expected_heading}"
+                else:
+                     return False, f"Heading {final_heading} != {expected_heading}"
+            
+            total_rotation = abs(final_heading - initial_heading)
+            if total_rotation >= min_rotation:
+                return True, f"Rotation {total_rotation} >= {min_rotation}"
+            else:
+                return False, f"Rotation {total_rotation} < {min_rotation}"
         
         else:
             return False, f"Unknown assertion type: {atype}"

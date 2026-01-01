@@ -38,9 +38,10 @@ class TestShields(unittest.TestCase):
         self.ship.add_component(self.shield, LayerType.CORE)
         self.ship.add_component(self.regenerator, LayerType.CORE)
         
+        self.ship.recalculate_stats()
+        # Set energy AFTER recalculate_stats since stats calculation resets resources
         self.ship.max_energy = 1000
-        self.ship.current_energy = 1000
-        self.ship.recalculate_stats() 
+        self.ship.current_energy = 1000 
 
     def tearDown(self):
         pygame.quit()

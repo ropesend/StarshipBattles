@@ -10,7 +10,7 @@ from physics import PhysicsBody
 from components import (
     Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, 
     Generator, BeamWeapon, ProjectileWeapon, CrewQuarters, LifeSupport, 
-    Sensor, Electronics, Shield, ShieldRegenerator,
+    Sensor, Electronics, Shield, ShieldRegenerator, SeekerWeapon,
     COMPONENT_REGISTRY, MODIFIER_REGISTRY
 )
 from logger import log_debug
@@ -18,6 +18,7 @@ from ship_validator import ShipDesignValidator, ValidationResult
 from ship_stats import ShipStatsCalculator
 from ship_physics import ShipPhysicsMixin
 from ship_combat import ShipCombatMixin
+from resources import ResourceRegistry
 
 if TYPE_CHECKING:
     pass
@@ -144,34 +145,29 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         
         self.radius: float = 40.0 # Will be recalculated
         
-        # Resources (Capacities and Current) - start at 0, recalculate_stats sets them
-        self.max_energy: int = 0
-        self.current_energy: float = 0.0
-        self.max_fuel: int = 0
-        self.current_fuel: float = 0.0
-        self.max_ammo: int = 0
-        self.current_ammo: float = 0.0 # Changed to float for regeneration
-        self.ammo_gen_rate: float = 0.0
+        # Resources (New System)
+        self.resources = ResourceRegistry()
+        
+        # Resource initialization tracking
+        self._resources_initialized: bool = False
+        
         self.baseline_to_hit_offense = 0.0 # Score
         self.to_hit_profile = 0.0 # Score
         self.total_defense_score = 0.0 # Score (Size + Maneuver + ECM)
         self.emissive_armor = 0
         self.crystalline_armor = 0
-        self.energy_gen_rate: float = 0.0
         
-        # Shield Stats
+        # Shield Stats (Still specific for now)
         self.max_shields: int = 0
         self.current_shields: float = 0.0
         self.shield_regen_rate: float = 0.0
         self.shield_regen_cost: float = 0.0
         self.repair_rate: float = 0.0
         
-        # Resource initialization tracking
-        self._resources_initialized: bool = False
-        
         # New Stats
         self.mass_limits_ok: bool = True
         self.layer_status: Dict[LayerType, Dict[str, Any]] = {}
+        self._loading_warnings: List[str] = []
         
         # Old init values
         self.current_mass: float = 0.0 
@@ -197,6 +193,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.current_speed: float = 0.0
         self.acceleration_rate: float = 0.0
         self.is_thrusting: bool = False
+        self.comp_trigger_pulled: bool = False
         
         # Aiming
         self.aim_point: Optional[Any] = None
@@ -209,6 +206,145 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         
         # Initialize helper (lazy or eager)
         self.stats_calculator: Optional[ShipStatsCalculator] = None
+
+    @property
+    def max_energy(self):
+        r = self.resources.get_resource('energy')
+        return r.max_value if r else 0
+    @max_energy.setter
+    def max_energy(self, v):
+        if not self.resources.get_resource('energy'): self.resources.register_storage('energy', 0)
+        self.resources.get_resource('energy').set_max(v)
+
+    @property
+    def current_energy(self):
+        r = self.resources.get_resource('energy')
+        return r.current_value if r else 0.0
+    @current_energy.setter
+    def current_energy(self, v):
+        if not self.resources.get_resource('energy'): self.resources.register_storage('energy', 0)
+        self.resources.get_resource('energy').current_value = v
+
+    @property
+    def max_fuel(self):
+        r = self.resources.get_resource('fuel')
+        return r.max_value if r else 0
+    @max_fuel.setter
+    def max_fuel(self, v):
+        if not self.resources.get_resource('fuel'): self.resources.register_storage('fuel', 0)
+        self.resources.get_resource('fuel').set_max(v)
+
+    @property
+    def current_fuel(self):
+        r = self.resources.get_resource('fuel')
+        return r.current_value if r else 0.0
+    @current_fuel.setter
+    def current_fuel(self, v):
+        if not self.resources.get_resource('fuel'): self.resources.register_storage('fuel', 0)
+        self.resources.get_resource('fuel').current_value = v
+
+    @property
+    def max_ammo(self):
+        r = self.resources.get_resource('ammo')
+        return r.max_value if r else 0
+    @max_ammo.setter
+    def max_ammo(self, v):
+        if not self.resources.get_resource('ammo'): self.resources.register_storage('ammo', 0)
+        self.resources.get_resource('ammo').set_max(v)
+
+    @property
+    def current_ammo(self):
+        r = self.resources.get_resource('ammo')
+        return r.current_value if r else 0.0
+    @current_ammo.setter
+    def current_ammo(self, v):
+        if not self.resources.get_resource('ammo'): self.resources.register_storage('ammo', 0)
+        self.resources.get_resource('ammo').current_value = v
+
+    @property
+    def energy_gen_rate(self):
+        r = self.resources.get_resource('energy')
+        return r.regen_rate if r else 0
+    @energy_gen_rate.setter
+    def energy_gen_rate(self, v):
+        if not self.resources.get_resource('energy'): self.resources.register_storage('energy', 0)
+        self.resources.get_resource('energy').regen_rate = v
+    
+    @property
+    def ammo_gen_rate(self):
+        r = self.resources.get_resource('ammo')
+        return r.regen_rate if r else 0
+    @ammo_gen_rate.setter
+    def ammo_gen_rate(self, v):
+        if not self.resources.get_resource('ammo'): self.resources.register_storage('ammo', 0)
+        self.resources.get_resource('ammo').regen_rate = v
+
+    @property
+    def max_hp(self) -> int:
+        """Total HP of all components."""
+        total = 0
+        for layer in self.layers.values():
+            for c in layer['components']:
+                total += c.max_hp
+        return total
+
+    @property
+    def hp(self) -> int:
+        """Current HP of all components."""
+        total = 0
+        for layer in self.layers.values():
+            for c in layer['components']:
+                total += c.current_hp
+        return total
+
+    @property
+    def max_weapon_range(self) -> float:
+        """Calculate maximum range of all equipped weapons."""
+        max_rng = 0.0
+        for layer in self.layers.values():
+            for comp in layer['components']:
+                if isinstance(comp, Weapon):
+                    # For SeekerWeapons, range might be function of speed * endurance
+                    # But the Weapon class usually has a 'range' attribute or we calculate it
+                    rng = comp.range
+                    if isinstance(comp, SeekerWeapon):
+                         rng = comp.projectile_speed * comp.endurance
+                    
+                    if rng > max_rng:
+                        max_rng = rng
+        return max_rng if max_rng > 0 else 0.0
+
+    def update(self, dt: float = 0.01, context: Optional[dict] = None) -> None:
+        """
+        Update ship state (physics, combat, resources).
+        """
+        if not self.is_alive:
+            return
+
+        # 1. Update Resources (Regeneration) - Tick-based
+        if self.resources:
+             self.resources.update()
+
+        # 2. Update Components (Consumption, Cooldowns) - Tick-based
+        for layer in self.layers.values():
+            for comp in layer['components']:
+                if comp.is_active:
+                    comp.update()
+        
+        # 3. Physics (Thrust calc handling operational engines)
+        self.update_physics_movement()
+        
+        # PhysicsBody.update() (Applies velocity to position)
+        super().update(dt)
+        
+        # 4. Combat Cooldowns (Shields/Repair/Custom Logic)
+        self.update_combat_cooldowns()
+
+        # 5. Firing Logic (Link AI trigger to Combat System)
+        if self.comp_trigger_pulled:
+            new_attacks = self.fire_weapons(context)
+            if new_attacks:
+                self.just_fired_projectiles.extend(new_attacks)
 
     def update_derelict_status(self) -> None:
         """
@@ -349,7 +485,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                     if self.add_component(comp, old_layer):
                          added = True
                 
-                # 2. If failed, try allowed layers for this component
                 # 2. If failed, try all other layers in the new ship
                 if not added:
                     for layer_type in self.layers.keys():
@@ -395,15 +530,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Loop to add
         for _ in range(count):
             # Must clone for each new instance
-            # Note: For the first one, we might utilize the passed 'component' if it's already a fresh clone intended for use,
-            # but to be safe and consistent, we clone.
-            # If the caller passed a 'template', we clone. 
-            # However, if the caller dragged a specific instance, they expect that instance to be added.
-            # But for bulk, we imply copies.
-            
-            # Optimization: If adding 1000 items, validation might be slow if it iterates all components.
-            # But we must validate to respect mass limits etc.
-            
             new_comp = component.clone()
             
             # Use the global validator
@@ -524,55 +650,39 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         return result.is_valid
 
     @property
-    def hp(self) -> int:
-        return sum(c.current_hp for layer in self.layers.values() for c in layer['components'])
-
-    @property
-    def max_hp(self) -> int:
-        return sum(c.max_hp for layer in self.layers.values() for c in layer['components'])
-
-    @property
-    def max_weapon_range(self) -> int:
-        max_rng = 0
-        for layer in self.layers.values():
-            for comp in layer['components']:
-                if isinstance(comp, Weapon) and comp.is_active:
-                    if comp.range > max_rng:
-                        max_rng = comp.range
-        return max_rng
-
-    def update(self, context: Optional[Dict[str, Any]] = None) -> None:
-        if not self.is_alive: return
-
-        # Delegate to Mixins
-        self.update_combat_cooldowns()
-        self.update_physics_movement()
-        
-        # Handle Firing
-        self.just_fired_projectiles = []
-        if getattr(self, 'comp_trigger_pulled', False):
-             self.just_fired_projectiles = self.fire_weapons(context=context)
+    def layers_dict(self) -> Dict[str, List[Any]]:
+        """Helper for JSON serialization."""
+        d = {}
+        for l_type, data in self.layers.items():
+            d[l_type.name] = []
+            for comp in data['components']:
+                # Minimal serialization: ID + Modifiers
+                c_data = {
+                    "id": comp.id,
+                    "modifiers": []
+                }
+                for m_id, m_val in comp.modifiers.items():
+                    c_data["modifiers"].append({"id": m_id, "value": m_val})
+                d[l_type.name].append(c_data)
+        return d
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize ship to dictionary."""
-        # Recalculate stats to ensure they're current
-        self.recalculate_stats()
-        
         data = {
             "name": self.name,
-            "color": self.color,
-            "team_id": self.team_id,
             "ship_class": self.ship_class,
-            "theme_id": getattr(self, 'theme_id', 'Federation'),
+            "theme_id": self.theme_id,
+            "team_id": self.team_id,
+            "color": self.color,
             "ai_strategy": self.ai_strategy,
             "layers": {},
-            # Save expected stats for verification when loading
             "expected_stats": {
                 "max_hp": self.max_hp,
                 "max_fuel": self.max_fuel,
-                "max_ammo": self.max_ammo,
                 "max_energy": self.max_energy,
+                "max_ammo": self.max_ammo,
                 "max_speed": self.max_speed,
+                "acceleration_rate": self.acceleration_rate,
                 "turn_speed": self.turn_speed,
                 "total_thrust": self.total_thrust,
                 "mass": self.mass,
@@ -582,18 +692,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         
         for ltype, layer_data in self.layers.items():
             filter_comps = []
-            for c in layer_data['components']:
-                # Save component ID and Modifiers
-                c_data = {
-                    "id": c.id,
-                    "modifiers": []
-                }
-                for m in c.modifiers:
-                    c_data['modifiers'].append({
-                        "id": m.definition.id,
-                        "value": m.value
-                    })
-                filter_comps.append(c_data)
+            for comp in layer_data['components']:
+                # Save as dict with modifiers
+                c_obj = {"id": comp.id}
+                if comp.modifiers:
+                    c_obj["modifiers"] = [{"id": k, "value": v} for k, v in comp.modifiers.items()]
+                filter_comps.append(c_obj)
                 
             data["layers"][ltype.name] = filter_comps
         return data
@@ -662,6 +766,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 mismatches.append(f"max_ammo: got {s.max_ammo}, expected {expected['max_ammo']}")
             if expected.get('max_speed') and abs(s.max_speed - expected['max_speed']) > 0.1:
                 mismatches.append(f"max_speed: got {s.max_speed:.1f}, expected {expected['max_speed']:.1f}")
+            if expected.get('acceleration_rate') and abs(s.acceleration_rate - expected['acceleration_rate']) > 0.001:
+                mismatches.append(f"acceleration_rate: got {s.acceleration_rate:.3f}, expected {expected['acceleration_rate']:.3f}")
             if expected.get('turn_speed') and abs(s.turn_speed - expected['turn_speed']) > 0.1:
                 mismatches.append(f"turn_speed: got {s.turn_speed:.1f}, expected {expected['turn_speed']:.1f}")
             if expected.get('total_thrust') and abs(s.total_thrust - expected['total_thrust']) > 1:
@@ -671,6 +777,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             armor_hp = s.layers[LayerType.ARMOR]['max_hp_pool'] if LayerType.ARMOR in s.layers else 0
             if expected.get('armor_hp_pool') and abs(armor_hp - expected['armor_hp_pool']) > 1:
                 mismatches.append(f"armor_hp_pool: got {armor_hp}, expected {expected['armor_hp_pool']}")
+            
+            s._loading_warnings = mismatches
             
             if mismatches:
                 print(f"WARNING: Ship '{s.name}' stats mismatch after loading!")

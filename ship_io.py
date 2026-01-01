@@ -76,7 +76,12 @@ class ShipIO:
                 new_ship.position = pygame.math.Vector2(screen_width // 2, screen_height // 2)
                 new_ship.recalculate_stats()
                 
-                return new_ship, f"Loaded ship from {os.path.basename(filename)}"
+                msg = f"Loaded ship from {os.path.basename(filename)}"
+                if getattr(new_ship, '_loading_warnings', []):
+                    warn_count = len(new_ship._loading_warnings)
+                    msg += f"\nSafe Loaded with {warn_count} stat mismatches (auto-corrected)."
+                
+                return new_ship, msg
             return None, None  # Cancelled
             
         except Exception as e:

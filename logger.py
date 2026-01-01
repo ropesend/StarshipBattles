@@ -51,3 +51,16 @@ def log_error(msg):
     
 def set_logging(enabled):
     _logger.set_enabled(enabled)
+
+# Event Logging for Simulation/Tests
+_event_handler = None
+
+def set_event_handler(handler):
+    """Register a callback for structured events."""
+    global _event_handler
+    _event_handler = handler
+
+def log_event(event_type, **kwargs):
+    """Log a structured event if a handler is registered."""
+    if _event_handler:
+        _event_handler(event_type, **kwargs)

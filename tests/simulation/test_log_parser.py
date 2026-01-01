@@ -103,16 +103,17 @@ class TestLogParser:
         self._ensure_parsed()
         return [e for e in self.events if e.tick == tick]
     
-    def get_velocity_at_tick(self, ship_name: str, tick: int) -> Optional[float]:
+    def get_velocity_at_tick(self, ship_name: str, tick: int, param: str = "speed") -> Optional[float]:
         """
-        Return ship speed at specified tick.
+        Return ship velocity parameter at specified tick.
         
         Args:
             ship_name: Name of the ship
             tick: Tick number to query
+            param: Parameter to return ('speed', 'vx', 'vy', 'heading')
             
         Returns:
-            Speed value or None if not found
+            Value or None if not found
         """
         self._ensure_parsed()
         
@@ -121,12 +122,37 @@ class TestLogParser:
             if (event.tick == tick and 
                 event.event_type == "SHIP_VELOCITY" and
                 event.data.get("name") == ship_name):
-                speed_str = event.data.get("speed", "0")
+                val_str = event.data.get(param, "0")
                 try:
-                    return float(speed_str)
+                    return float(val_str)
                 except ValueError:
                     return None
         
+        return None
+        
+    def get_position_at_tick(self, ship_name: str, tick: int) -> Optional[Tuple[float, float]]:
+        """
+        Return ship position (x, y) at specified tick.
+        
+        Args:
+            ship_name: Name of the ship
+            tick: Tick number to query
+            
+        Returns:
+            Tuple (x, y) or None if not found
+        """
+        self._ensure_parsed()
+        
+        for event in self.events:
+            if (event.tick == tick and 
+                event.event_type == "SHIP_POSITION" and
+                event.data.get("name") == ship_name):
+                try:
+                    x = float(event.data.get("x", 0))
+                    y = float(event.data.get("y", 0))
+                    return (x, y)
+                except ValueError:
+                    return None
         return None
     
     def get_velocity_history(self, ship_name: str) -> List[Tuple[int, float]]:

@@ -37,9 +37,15 @@
     },
     "_test_notes": "3 engines + 2x 10k mass sims. Mass = hull(2000) + 3*20 + 2*10000 = 22060. Thrust = 1500",
     "expected_stats": {
-        "total_thrust": 1500,
-        "mass": 22060,
-        "max_speed": 1.70,
-        "acceleration_rate": 7.70
+        "max_hp": 152,
+        "max_fuel": 0,
+        "max_ammo": 0,
+        "max_energy": 0,
+        "max_speed": 1.699909338168631,
+        "acceleration_rate": 0.007705844687981102,
+        "turn_speed": 0.0,
+        "total_thrust": 1500.0,
+        "mass": 22060.0,
+        "armor_hp_pool": 0
     }
 }
