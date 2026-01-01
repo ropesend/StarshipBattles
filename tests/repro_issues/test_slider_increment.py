@@ -2,7 +2,6 @@ import unittest
 from unittest.mock import MagicMock, patch
 import sys
 
-import sys
 import os
 
 # Add project root to sys.path
@@ -14,13 +13,16 @@ class TestSliderIncrement(unittest.TestCase):
         cls.modules_patcher = patch.dict(sys.modules, {
             'pygame': MagicMock(),
             'pygame_gui': MagicMock(),
-            'pygame_gui.elements': MagicMock()
+            'pygame_gui.elements': MagicMock(),
+            'pygame_gui.core': MagicMock(),
+            'pygame_gui.windows': MagicMock()
         })
         cls.modules_patcher.start()
         
-        # Import module
-        if 'builder_components' in sys.modules:
-            del sys.modules['builder_components']
+        # Aggressively unload target modules to ensure they reload with patched dependencies
+        to_unload = [m for m in sys.modules if m.startswith('ui.builder') or m == 'builder_components']
+        for m in to_unload:
+            del sys.modules[m]
             
         import builder_components
         cls.module = builder_components
@@ -28,8 +30,9 @@ class TestSliderIncrement(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.modules_patcher.stop()
-        if 'builder_components' in sys.modules:
-            del sys.modules['builder_components']
+        to_unload = [m for m in sys.modules if m.startswith('ui.builder') or m == 'builder_components']
+        for m in to_unload:
+            del sys.modules[m]
 
     def test_range_mount_increment(self):
         """Test that the Range Mount slider is initialized with 0.1 increment."""
@@ -59,7 +62,7 @@ class TestSliderIncrement(unittest.TestCase):
         }
         
         with patch('builder_components.MODIFIER_REGISTRY', mock_registry):
-            with patch('builder_components.UIHorizontalSlider') as MockSlider:
+            with patch('ui.builder.modifier_row.UIHorizontalSlider') as MockSlider:
                 panel.rebuild(None, template_modifiers)
                 panel.layout(0)
                 

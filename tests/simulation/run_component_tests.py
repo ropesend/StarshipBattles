@@ -335,8 +335,8 @@ class TestResult:
         status = "PASS" if self.passed else "FAIL"
         lines = [f"[{status}] {self.test_id}: {self.description}"]
         for r in self.assertion_results:
-            symbol = "✓" if r.passed else "✗"
-            lines.append(f"  {symbol} {r.assertion_type}: {r.message}")
+            status_str = "[PASS]" if r.passed else "[FAIL]"
+            lines.append(f"  {status_str} {r.assertion_type}: {r.message}")
         return "\n".join(lines)
 
 

@@ -1,0 +1,45 @@
+{
+    "test_id": "ENG-004",
+    "description": "Speed increases with engines (comparing high mass ships).",
+    "ships": [
+        {
+            "file": "tests/data/ships/Test_Engine_1x_HighMass.json",
+            "position": [
+                0,
+                0
+            ],
+            "ai_strategy": "straight_line"
+        },
+        {
+            "file": "tests/data/ships/Test_Engine_3x_HighMass.json",
+            "position": [
+                0,
+                100
+            ],
+            "ai_strategy": "straight_line"
+        }
+    ],
+    "duration_ticks": 1000,
+    "velocity_log_ticks": [
+        0,
+        100,
+        500,
+        1000
+    ],
+    "assertions": [
+        {
+            "type": "velocity_at_tick",
+            "ship": "Test Engine 1x HighMass",
+            "tick": 1000,
+            "expected_speed": 1.22,
+            "tolerance": 0.05
+        },
+        {
+            "type": "velocity_at_tick",
+            "ship": "Test Engine 3x HighMass",
+            "tick": 1000,
+            "expected_speed": 1.70,
+            "tolerance": 0.05
+        }
+    ]
+}

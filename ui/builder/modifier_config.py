@@ -70,7 +70,7 @@ MODIFIER_UI_CONFIG = {
              {'label': '>>', 'value': 1.0, 'mode': 'delta_add'},
              {'label': '>>>', 'value': 5.0, 'mode': 'delta_add'}
         ],
-        'slider_step': 0.01,
+        'slider_step': 0.1,
     },
     'automation': {
         'control_type': 'linear_stepped',

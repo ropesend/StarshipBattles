@@ -8,7 +8,6 @@ import sys
 # Ensure project root is in path
 sys.path.append(os.getcwd())
 
-from ui.builder.right_panel import BuilderRightPanel
 from ship import Ship, LayerType
 from components import Component
 
@@ -34,6 +33,7 @@ class TestStatsRender(unittest.TestCase):
     @patch('ui.builder.right_panel.UILabel')
     def test_stats_panel_creation_and_update(self, mock_label, mock_entry, mock_drop, mock_box, mock_img, mock_scroll_container):
         """Test that RightPanel creates stats based on config and updates them without error."""
+        from ui.builder.right_panel import BuilderRightPanel
         # Create Panel
         panel = BuilderRightPanel(self.builder, self.manager, pygame.Rect(0,0,400,600))
         
@@ -65,6 +65,7 @@ class TestStatsRender(unittest.TestCase):
     @patch('ui.builder.right_panel.UITextEntryLine')
     @patch('ui.builder.right_panel.UILabel')
     def test_logistics_section(self, mock_label, mock_entry, mock_drop, mock_box, mock_img, mock_scroll_container):
+         from ui.builder.right_panel import BuilderRightPanel
          panel = BuilderRightPanel(self.builder, self.manager, pygame.Rect(0,0,400,600))
          self.assertIn('crew_required', panel.rows_map)
          self.assertIn('fuel_endurance', panel.rows_map)

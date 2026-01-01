@@ -12,7 +12,7 @@
     "layers": {
         "CORE": [
             {
-                "id": "test_engine_std",
+                "id": "test_engine_no_fuel",
                 "modifiers": []
             },
             {
@@ -58,11 +58,14 @@
         ],
         "ARMOR": []
     },
-    "_test_notes": "1 engine + 10x mass simulators. Mass = hull(200) + engine(20) + 10*1000 = 10220",
     "expected_stats": {
-        "total_thrust": 500,
-        "mass": 10220,
-        "max_speed": 1.223,
-        "acceleration_rate": 0.0119
+        "max_hp": 60,
+        "max_fuel": 0,
+        "max_ammo": 0,
+        "max_energy": 0,
+        "max_speed": 1.2230919765166341,
+        "turn_speed": 0.0,
+        "total_thrust": 500.0,
+        "mass": 10220.0
     }
 }

@@ -6,13 +6,13 @@
         0
     ],
     "team_id": 0,
-    "ship_class": "TestS_2L",
+    "ship_class": "TestM_2L",
     "theme_id": "Federation",
     "ai_strategy": "do_nothing",
     "layers": {
         "CORE": [
             {
-                "id": "test_engine_std",
+                "id": "test_engine_no_fuel",
                 "modifiers": []
             },
             {
@@ -26,11 +26,11 @@
         ],
         "ARMOR": []
     },
-    "_test_notes": "1 engine + 2x mass simulators. Mass = hull(20) + engine(20) + 2*1000 = 2040",
+    "_test_notes": "1 engine + 2x mass simulators. Mass = hull(200) + engine(20) + 2*1000 = 2220",
     "expected_stats": {
         "total_thrust": 500,
-        "mass": 2040,
-        "max_speed": 6.127,
-        "acceleration_rate": 0.300
+        "mass": 2220,
+        "max_speed": 5.63,
+        "acceleration_rate": 0.253
     }
 }

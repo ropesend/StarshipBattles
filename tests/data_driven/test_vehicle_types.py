@@ -45,23 +45,23 @@ class TestVehicleClassLoading(unittest.TestCase):
         fighter_classes = [n for n, c in VEHICLE_CLASSES.items() if c.get('type') == 'Fighter']
         self.assertGreater(len(fighter_classes), 0, "At least one Fighter class should exist")
         # Check specific variants
-        self.assertIn("TestFighter_S", VEHICLE_CLASSES)
+        self.assertIn("TestFighter", VEHICLE_CLASSES)
     
     def test_satellite_classes_loaded(self):
         """Verify Satellite class variants are loaded."""
         sat_classes = [n for n, c in VEHICLE_CLASSES.items() if c.get('type') == 'Satellite']
         self.assertGreater(len(sat_classes), 0, "At least one Satellite class should exist")
-        self.assertIn("TestSat_S", VEHICLE_CLASSES)
+        self.assertIn("TestSatellite", VEHICLE_CLASSES)
 
     def test_fighter_mass_ranges(self):
         """Check Fighter mass ranges are appropriate."""
-        small = VEHICLE_CLASSES.get("TestFighter_S", {})
+        small = VEHICLE_CLASSES.get("TestFighter", {})
         # Fighters should be light
         self.assertLessEqual(small.get('max_mass', 0), 100)  
 
     def test_satellite_has_no_propulsion_requirement(self):
         """Verify Satellites do NOT require propulsion."""
-        sat = VEHICLE_CLASSES.get("TestSat_S", {})
+        sat = VEHICLE_CLASSES.get("TestSatellite", {})
         # Our test class explicitly has no requirements defined in JSON, so this passes implicitly
         reqs = sat.get('requirements', {})
         # Should NOT have CombatPropulsion requirement
@@ -86,10 +86,10 @@ class TestShipVehicleType(unittest.TestCase):
         ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="TestShip_S_2L")
         self.assertEqual(ship.vehicle_type, "Ship")
         
-        fighter = Ship("Test Fighter", 0, 0, (255, 0, 0), ship_class="TestFighter_S")
+        fighter = Ship("Test Fighter", 0, 0, (255, 0, 0), ship_class="TestFighter")
         self.assertEqual(fighter.vehicle_type, "Fighter")
         
-        sat = Ship("Test Satellite", 0, 0, (255, 0, 0), ship_class="TestSat_S")
+        sat = Ship("Test Satellite", 0, 0, (255, 0, 0), ship_class="TestSatellite")
         self.assertEqual(sat.vehicle_type, "Satellite")
 
     def test_default_vehicle_type(self):
@@ -110,26 +110,26 @@ class TestComponentRestrictions(unittest.TestCase):
 
     def test_fighter_accepts_fighter_components(self):
         """Fighter can add Fighter-specific components."""
-        fighter = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestFighter_S")
+        fighter = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestFighter")
         cockpit = COMPONENT_REGISTRY["test_cockpit_fighter"].clone()
         result = fighter.add_component(cockpit, LayerType.CORE)
         self.assertTrue(result, "Fighter should accept Fighter Cockpit")
 
     def test_fighter_rejects_ship_components(self):
         """Fighter cannot add Ship-only components."""
-        fighter = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestFighter_S")
+        fighter = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestFighter")
         bridge = COMPONENT_REGISTRY["test_bridge_basic"].clone()
         result = fighter.add_component(bridge, LayerType.CORE)
         self.assertFalse(result, "Fighter should reject standard Bridge")
 
     def test_satellite_rejects_engines_and_thrusters(self):
         """Satellites cannot add propulsion components."""
-        sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestSat_S")
+        sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestSatellite")
         
         engine = COMPONENT_REGISTRY["test_engine_std"].clone()
         # Satellite S only has CORE ("radius_pct": 1.0). 
         # But wait, layer defs matter? No, add_component checks allowed_vehicle_types.
-        # Ensure we add to a valid layer. TestSat_S has only CORE.
+        # Ensure we add to a valid layer. TestSatellite has only CORE.
         result = sat.add_component(engine, LayerType.CORE)
         self.assertFalse(result, "Satellite should reject Engine")
         
@@ -139,7 +139,7 @@ class TestComponentRestrictions(unittest.TestCase):
 
     def test_satellite_accepts_weapons(self):
         """Satellites can add allowed weapons."""
-        sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestSat_S")
+        sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestSatellite")
         
         railgun = COMPONENT_REGISTRY["test_weapon_proj_fixed"].clone()
         result = sat.add_component(railgun, LayerType.CORE)
@@ -186,7 +186,7 @@ class TestSatelliteLogic(unittest.TestCase):
 
     def test_satellite_ignores_crew_requirements(self):
         """Satellite components ignore crew requirements."""
-        sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestSat_S")
+        sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestSatellite")
         
         # Railgun normally requires crew (if defined in test data? test_weapon_proj_fixed doesn't have crew reqs currently?)
         # Let's check test_weapon_proj_fixed ability definitions.
@@ -230,7 +230,7 @@ class TestSatelliteAI(unittest.TestCase):
 
     def test_satellite_ai_does_not_navigate(self):
         """Satellite AI should NOT call navigation/movement methods."""
-        sat = Ship("Test Sat", 0, 0, (255, 0, 0), ship_class="TestSat_S")
+        sat = Ship("Test Sat", 0, 0, (255, 0, 0), ship_class="TestSatellite")
         core = COMPONENT_REGISTRY["test_core_satellite"].clone()
         sat.add_component(core, LayerType.CORE)
         sat.recalculate_stats()
@@ -254,7 +254,7 @@ class TestSatelliteAI(unittest.TestCase):
     def test_satellite_ai_still_targets(self):
         """Satellite AI should still acquire targets."""
         sat = Ship("Test Sat", 100, 100, (255, 0, 0), team_id=0, 
-                   ship_class="TestSat_S")
+                   ship_class="TestSatellite")
         core = COMPONENT_REGISTRY["test_core_satellite"].clone()
         sat.add_component(core, LayerType.CORE)
         sat.recalculate_stats()
@@ -276,7 +276,7 @@ class TestSatelliteAI(unittest.TestCase):
     def test_satellite_ai_fires_when_has_target(self):
         """Satellite AI should set comp_trigger_pulled when target exists."""
         sat = Ship("Test Sat", 100, 100, (255, 0, 0), team_id=0,
-                   ship_class="TestSat_S")
+                   ship_class="TestSatellite")
         core = COMPONENT_REGISTRY["test_core_satellite"].clone()
         sat.add_component(core, LayerType.CORE)
         

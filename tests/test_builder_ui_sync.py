@@ -12,7 +12,6 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ui.builder.right_panel import BuilderRightPanel
 from ship import Ship, initialize_ship_data, VEHICLE_CLASSES
 from components import load_components
 from ai import COMBAT_STRATEGIES
@@ -45,6 +44,7 @@ class TestBuilderUISync(unittest.TestCase):
         # Mock image loading to avoid file IO errors during refresh_controls -> update_portrait_image
         with patch('pygame.image.load'):
              with patch('ui.builder.right_panel.BuilderRightPanel.update_portrait_image'):
+                from ui.builder.right_panel import BuilderRightPanel
                 self.panel = BuilderRightPanel(self.mock_builder, self.manager, pygame.Rect(0, 0, 300, 600))
 
     def _get_option_value(self, option):

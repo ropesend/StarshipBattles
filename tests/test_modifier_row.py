@@ -2,7 +2,7 @@ import unittest
 import pygame
 import pygame_gui
 from unittest.mock import MagicMock
-from ui.builder.modifier_row import ModifierControlRow
+from unittest.mock import MagicMock
 from ui.builder.modifier_logic import ModifierLogic
 from components import Modifier
 
@@ -16,7 +16,9 @@ class TestModifierRow(unittest.TestCase):
     def tearDown(self):
         pygame.quit()
         
+        
     def test_build_ui_creates_elements(self):
+        from ui.builder.modifier_row import ModifierControlRow
         mod_def = Modifier({'id': 'test_mod', 'name': 'Test Mod', 'type': 'linear', 'min_val': 0, 'max_val': 100})
         config = {
             'control_type': 'linear_stepped', 
@@ -34,6 +36,7 @@ class TestModifierRow(unittest.TestCase):
         self.assertEqual(len(row.buttons), 1) # 1 step button
         
     def test_update_state(self):
+        from ui.builder.modifier_row import ModifierControlRow
         mod_def = Modifier({'id': 'test_mod', 'name': 'Test Mod', 'type': 'linear', 'min_val': 0, 'max_val': 100})
         config = {}
         row = ModifierControlRow(self.manager, self.container, 300, 'test_mod', mod_def, config, MagicMock())
@@ -66,6 +69,7 @@ class TestModifierRow(unittest.TestCase):
         self.assertEqual(row.current_value, 50)
         
     def test_mandatory_lock(self):
+        from ui.builder.modifier_row import ModifierControlRow
         mod_def = Modifier({'id': 'mandatory_mod', 'name': 'Mandatory', 'type': 'linear'})
         row = ModifierControlRow(self.manager, self.container, 300, 'mandatory_mod', mod_def, {}, MagicMock())
         row.build_ui(10)

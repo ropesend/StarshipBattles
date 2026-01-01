@@ -12,15 +12,15 @@
     "layers": {
         "CORE": [
             {
-                "id": "test_engine_std",
+                "id": "test_engine_no_fuel",
                 "modifiers": []
             },
             {
-                "id": "test_engine_std",
+                "id": "test_engine_no_fuel",
                 "modifiers": []
             },
             {
-                "id": "test_engine_std",
+                "id": "test_engine_no_fuel",
                 "modifiers": []
             },
             {

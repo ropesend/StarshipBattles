@@ -10,7 +10,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ship import Ship, LayerType
 import ai
-from ai import AIController, STRATEGY_MANAGER
+from ai import AIController
+import ai
 from spatial import SpatialGrid
 from components import load_components, create_component
 
@@ -19,11 +20,13 @@ class TestAIController(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         load_components("data/components.json")
+        from ship import load_vehicle_classes
+        load_vehicle_classes("tests/data/test_vehicleclasses.json")
     
     def setUp(self):
         # Load test data for AI strategies to ensure reproducible tests
         test_data_path = os.path.join(os.getcwd(), "tests", "data")
-        STRATEGY_MANAGER.load_data(
+        ai.STRATEGY_MANAGER.load_data(
             test_data_path, 
             targeting_file="test_targeting_policies.json", 
             movement_file="test_movement_policies.json", 
@@ -33,7 +36,7 @@ class TestAIController(unittest.TestCase):
         self.grid = SpatialGrid(cell_size=2000)
         
         # Create two ships with full crew infrastructure
-        self.ship1 = Ship("Ally", 0, 0, (0, 255, 0), team_id=0, ship_class="Escort")
+        self.ship1 = Ship("Ally", 0, 0, (0, 255, 0), team_id=0, ship_class="TestM_4L")
         self.ship1.add_component(create_component('bridge'), LayerType.CORE)
         self.ship1.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship1.add_component(create_component('life_support'), LayerType.CORE)
@@ -41,7 +44,7 @@ class TestAIController(unittest.TestCase):
         self.ship1.add_component(create_component('thruster'), LayerType.INNER)
         self.ship1.recalculate_stats()
         
-        self.ship2 = Ship("Enemy", 1000, 0, (255, 0, 0), team_id=1, ship_class="Escort")
+        self.ship2 = Ship("Enemy", 1000, 0, (255, 0, 0), team_id=1, ship_class="TestM_4L")
         self.ship2.add_component(create_component('bridge'), LayerType.CORE)
         self.ship2.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship2.add_component(create_component('life_support'), LayerType.CORE)
@@ -133,11 +136,13 @@ class TestAIStrategyStates(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         load_components("data/components.json")
+        from ship import load_vehicle_classes
+        load_vehicle_classes("tests/data/test_vehicleclasses.json")
     
     def setUp(self):
         # Load test data for AI strategies to ensure reproducible tests
         test_data_path = os.path.join(os.getcwd(), "tests", "data")
-        STRATEGY_MANAGER.load_data(
+        ai.STRATEGY_MANAGER.load_data(
             test_data_path, 
             targeting_file="test_targeting_policies.json", 
             movement_file="test_movement_policies.json", 
@@ -145,7 +150,7 @@ class TestAIStrategyStates(unittest.TestCase):
         )
         self.grid = SpatialGrid(cell_size=2000)
         
-        self.ship = Ship("Attacker", 0, 0, (0, 255, 0), team_id=0)
+        self.ship = Ship("Attacker", 0, 0, (0, 255, 0), team_id=0, ship_class="TestM_4L")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship.add_component(create_component('life_support'), LayerType.CORE)
@@ -153,7 +158,7 @@ class TestAIStrategyStates(unittest.TestCase):
         self.ship.add_component(create_component('railgun'), LayerType.OUTER)
         self.ship.recalculate_stats()
         
-        self.target = Ship("Target", 500, 0, (255, 0, 0), team_id=1, ship_class="Escort")
+        self.target = Ship("Target", 500, 0, (255, 0, 0), team_id=1, ship_class="TestM_4L")
         self.target.add_component(create_component('bridge'), LayerType.CORE)
         self.target.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.target.add_component(create_component('life_support'), LayerType.CORE)

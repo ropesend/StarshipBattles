@@ -107,7 +107,7 @@ class ModifierControlRow:
         self.slider = UIHorizontalSlider(
             relative_rect=pygame.Rect(current_x, y, available_slider_width, 28),
             start_value=0, # Updated later
-            value_range=(0, 100), # Updated later
+            value_range=(0.0, 100.0), # Updated later
             manager=self.manager,
             container=self.container,
             object_id=f'#slider_{safe_id}',
