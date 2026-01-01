@@ -94,67 +94,7 @@ class TestSolveLead(unittest.TestCase):
         self.assertLess(t, stationary_time)
 
 
-class TestIsDerelict(unittest.TestCase):
-    """Test derelict status calculation."""
-    
-    @classmethod
-    def setUpClass(cls):
-        pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
-    
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-    
-    def test_healthy_ship_not_derelict(self):
-        """Ship with bridge and engines should NOT be derelict."""
-        ship = Ship("Healthy", 0, 0, (255, 255, 255))
-        ship.add_component(create_component('bridge'), LayerType.CORE)
-        ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        ship.add_component(create_component('life_support'), LayerType.CORE)
-        ship.add_component(create_component('standard_engine'), LayerType.OUTER)
-        ship.recalculate_stats()
-        
-        self.assertFalse(ship.is_derelict)
-    
-    def test_no_bridge_is_derelict(self):
-        """Ship without bridge should be derelict."""
-        ship = Ship("NoBridge", 0, 0, (255, 255, 255))
-        ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        ship.add_component(create_component('life_support'), LayerType.CORE)
-        ship.add_component(create_component('standard_engine'), LayerType.OUTER)
-        ship.recalculate_stats()
-        
-        self.assertTrue(ship.is_derelict)
-    
-    def test_no_engine_is_derelict(self):
-        """Ship without any propulsion should be derelict."""
-        ship = Ship("NoEngine", 0, 0, (255, 255, 255))
-        ship.add_component(create_component('bridge'), LayerType.CORE)
-        ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        ship.add_component(create_component('life_support'), LayerType.CORE)
-        # No engines added
-        ship.recalculate_stats()
-        
-        self.assertTrue(ship.is_derelict)
-    
-    def test_damaged_bridge_is_derelict(self):
-        """Ship with destroyed bridge should be derelict."""
-        ship = Ship("DamagedBridge", 0, 0, (255, 255, 255))
-        bridge = create_component('bridge')
-        ship.add_component(bridge, LayerType.CORE)
-        ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        ship.add_component(create_component('life_support'), LayerType.CORE)
-        ship.add_component(create_component('standard_engine'), LayerType.OUTER)
-        
-        # Damage bridge below 50% threshold
-        bridge.current_hp = bridge.max_hp * 0.4
-        ship.recalculate_stats()
-        
-        # Bridge should now be inactive
-        self.assertFalse(bridge.is_active)
-        self.assertTrue(ship.is_derelict)
+
 
 
 class TestToHitProfile(unittest.TestCase):

@@ -245,11 +245,15 @@ class BuilderRightPanel:
             if os.path.exists(full_path_space):
                 full_path = full_path_space
             else:
-                 # Fallback or None
-                 if self.portrait_image:
-                     self.portrait_image.kill()
-                     self.portrait_image = None
-                 return
+                 # Fallback to Default Portrait
+                 default_path = os.path.join("Resources", "Images", "Default_Ship_Portrait.png")
+                 if os.path.exists(default_path):
+                     full_path = default_path
+                 else:
+                     if self.portrait_image:
+                         self.portrait_image.kill()
+                         self.portrait_image = None
+                     return
 
         try:
             image_surf = pygame.image.load(full_path).convert_alpha()

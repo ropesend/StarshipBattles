@@ -58,7 +58,7 @@ if __name__ == "__main__":
         COMPONENT_REGISTRY.clear()
         load_components("tests/data/test_components.json")
 
-        class_data = load_json_data("tests/data/test_classes.json")
+        class_data = load_json_data("tests/data/test_vehicleclasses.json")
         VEHICLE_CLASSES.clear()
         for k, v in class_data.items():
             VEHICLE_CLASSES[k] = v

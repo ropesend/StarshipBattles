@@ -29,7 +29,7 @@ class TestBattleSceneExtended(unittest.TestCase):
         ship1 = Ship("T1", 0, 0, (255,0,0), team_id=0, ship_class="Escort")
         ship2 = Ship("T2", 1000, 1000, (0,0,255), team_id=1, ship_class="Escort")
         
-        # Ensure they have bridges, crew, AND ENGINES so they aren't derelict
+        # Ensure they are fully equipped ships
         for s in [ship1, ship2]:
             s.add_component(create_component('bridge'), LayerType.CORE)
             s.add_component(create_component('crew_quarters'), LayerType.CORE)

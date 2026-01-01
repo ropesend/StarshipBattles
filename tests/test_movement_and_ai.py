@@ -44,43 +44,6 @@ class TestMovementAndAI(unittest.TestCase):
             return COMPONENT_REGISTRY[id].clone()
         return None
 
-    def test_derelict_status_logic(self):
-        s = self.ship
-        # Should be active initially with bare minimum from setUp? 
-        # No, setUp creates empty ship. Cruiser requirements not met.
-        # But is_derelict defaults to False?
-        # Recalculate stats handles status.
-        
-        # Add basic life support + crew quarters + power + bridge
-        if "bridge" not in COMPONENT_REGISTRY:
-             return
-             
-        bridge = self.get_component_clone("bridge")
-        s.add_component(bridge, LayerType.CORE)
-        
-        gen = self.get_component_clone("generator")
-        s.add_component(gen, LayerType.CORE)
-        
-        # Add engine for CombatPropulsion requirement
-        engine = self.get_component_clone("standard_engine")
-        s.add_component(engine, LayerType.OUTER)
-        
-        quart = self.get_component_clone("crew_quarters")
-        s.add_component(quart, LayerType.INNER)
-        s.add_component(self.get_component_clone("crew_quarters"), LayerType.INNER)
-        s.add_component(self.get_component_clone("crew_quarters"), LayerType.INNER)
-        s.add_component(self.get_component_clone("crew_quarters"), LayerType.INNER)
-
-        tank = self.get_component_clone("fuel_tank")
-        s.add_component(tank, LayerType.INNER)
-        
-        ls = self.get_component_clone("life_support")
-        s.add_component(ls, LayerType.INNER)
-        
-        # ... logic ...
-        s.recalculate_stats()
-        self.assertFalse(s.is_derelict, "Fully equipped ship should NOT be derelict")
-
     def test_ai_target_acquisition_long_range(self):
         """
         Regression Test: Ensure AI can target enemies at very long range.

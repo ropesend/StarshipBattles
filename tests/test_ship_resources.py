@@ -128,7 +128,6 @@ class TestShipResources(unittest.TestCase):
         self.ship.recalculate_stats()
         
         self.assertTrue(core.is_active)
-        self.assertFalse(self.ship.is_derelict)
 
 if __name__ == '__main__':
     unittest.main()

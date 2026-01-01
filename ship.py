@@ -31,7 +31,7 @@ VALIDATOR = _VALIDATOR
 VEHICLE_CLASSES: Dict[str, Any] = {}
 SHIP_CLASSES: Dict[str, float] = {}  # Legacy compatibility - maps class name to max_mass
 
-def load_vehicle_classes(filepath: str = "data/vehicleclasses.json") -> None:
+def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_filepath: Optional[str] = None) -> None:
     """
     Load vehicle class definitions from JSON.
     This should be called explicitly during game initialization.
@@ -48,15 +48,20 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json") -> None:
 
     # Try to load layer definitions
     layer_definitions = {}
-    layers_path = os.path.join(os.path.dirname(filepath), "vehiclelayers.json")
+    
+    if layers_filepath:
+        layers_path = layers_filepath
+    else:
+        layers_path = os.path.join(os.path.dirname(filepath), "vehiclelayers.json")
+        
     if os.path.exists(layers_path):
         try:
             with open(layers_path, 'r') as f:
                 layer_data = json.load(f)
                 layer_definitions = layer_data.get('definitions', {})
-                print(f"Loaded {len(layer_definitions)} layer configurations.")
+                print(f"Loaded {len(layer_definitions)} layer configurations from {os.path.basename(layers_path)}.")
         except Exception as e:
-            print(f"Error loading vehiclelayers.json: {e}")
+            print(f"Error loading layers from {layers_path}: {e}")
             
     try:
         with open(filepath, 'r') as f:

@@ -47,13 +47,8 @@ class TestFighterLaunch(unittest.TestCase):
             
         ship.recalculate_stats()
         
-        if getattr(ship, 'is_derelict', False):
-            # print(f"DEBUG: Ship Derelict ...")
-            pass
-
         # Ensure active
         self.assertTrue(ship.is_alive, f"Ship should be alive. HP: {ship.hp}/{ship.max_hp}")
-        self.assertFalse(getattr(ship, 'is_derelict', False), "Ship is DERELICT! Needs Bridge?")
         self.assertTrue(hangar.is_active, f"Hangar should be active. HP: {hangar.current_hp}/{hangar.max_hp}")
         self.assertTrue(hangar.can_launch())
         

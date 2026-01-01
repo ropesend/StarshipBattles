@@ -1,7 +1,7 @@
 import json
 import math
 import tkinter
-from tkinter import simpledialog
+from tkinter import simpledialog, filedialog
 import os
 
 import pygame
@@ -207,6 +207,7 @@ class BuilderSceneGUI:
             ('load_btn', "Load", 140),
             ('arc_toggle_btn', "Show Firing Arcs", 160),
             ('target_btn', "Select Target", 140),
+            ('select_data_btn', "Select Data", 140),
             ('verbose_btn', "Toggle Verbose", 160),
             ('start_btn', "Return", 140)
         ]
@@ -591,6 +592,8 @@ class BuilderSceneGUI:
                 self.arc_toggle_btn.set_text("Hide Firing Arcs" if self.show_firing_arcs else "Show Firing Arcs")
             elif event.ui_element == self.target_btn:
                 self._on_select_target_pressed()
+            elif event.ui_element == self.select_data_btn:
+                self._on_select_data_pressed()
             elif event.ui_element == self.verbose_btn:
                  self.weapons_report_panel.verbose_tooltip = not self.weapons_report_panel.verbose_tooltip
             elif event.ui_element == self.detail_panel.details_btn:
@@ -798,6 +801,181 @@ class BuilderSceneGUI:
             err_surf = font.render(self.error_message, True, COLORS['text_error'])
             x = (self.width - err_surf.get_width()) // 2
             screen.blit(err_surf, (x, 50))
+
+    def _on_select_data_pressed(self):
+        """Open dialog to select a data directory and reload game data."""
+        if not tk_root:
+            self.show_error("Tkinter not initialized, cannot open dialog")
+            return
+            
+        initial_dir = os.path.join(os.getcwd(), "data")
+        directory = filedialog.askdirectory(
+            initialdir=initial_dir,
+            title="Select Data Directory"
+        )
+        
+        if directory:
+            with profile_block(f"Builder: Reload Data from {os.path.basename(directory)}"):
+                self._reload_data(directory)
+
+    def _reload_data(self, directory: str):
+        """Reload global game data from the specified directory."""
+        from components import load_components, load_modifiers, COMPONENT_REGISTRY, MODIFIER_REGISTRY
+        from ship import load_vehicle_classes, VEHICLE_CLASSES, SHIP_CLASSES
+        
+        try:
+            # 1. Clear Registries
+            from ai import COMBAT_STRATEGIES, ENGAGE_DISTANCES, load_combat_strategies
+            
+            # 1. Clear Registries
+            COMPONENT_REGISTRY.clear()
+            MODIFIER_REGISTRY.clear()
+            VEHICLE_CLASSES.clear()
+            SHIP_CLASSES.clear()
+            # AI Strategies need to be cleared manually if they're just a dict
+            COMBAT_STRATEGIES.clear()
+            ENGAGE_DISTANCES.clear()
+            
+            # 2. Helper to find file (standard, test prefix, or alias) -> returns (path, is_default_fallback)
+            def find_file(base_names, allow_default=True):
+                if isinstance(base_names, str): base_names = [base_names]
+                
+                # 1. Custom Directory Support
+                for name in base_names:
+                    # Direct match
+                    p = os.path.join(directory, name)
+                    if os.path.exists(p): return p, False
+                    
+                    # Test prefix match
+                    p = os.path.join(directory, "test_" + name)
+                    if os.path.exists(p): return p, False
+                
+                # 2. Default Fallback
+                if allow_default:
+                     default_dir = os.path.join(os.getcwd(), "data")
+                     for name in base_names:
+                         p = os.path.join(default_dir, name)
+                         if os.path.exists(p): return p, True
+                
+                return None, False
+            
+            # 3. Load Data
+            
+            # Modifiers
+            mod_path, _ = find_file("modifiers.json")
+            if mod_path:
+                load_modifiers(mod_path)
+                logger.info(f"Loaded modifiers from {mod_path}")
+            else:
+                logger.warning("No modifiers.json found")
+
+            # Components
+            comp_path, _ = find_file("components.json")
+            if comp_path:
+                load_components(comp_path)
+                logger.info(f"Loaded components from {comp_path}")
+            else:
+                logger.warning("No components.json found")
+                
+            # Combat Strategies - Fallback allowed
+            strat_path, is_def = find_file("combatstrategies.json")
+            if strat_path:
+                load_combat_strategies(strat_path)
+                logger.info(f"Loaded strategies from {strat_path}")
+            
+            # Vehicle Classes & Layers
+            # Check for 'vehicleclasses.json' OR 'classes.json'
+            vclass_path, _ = find_file(["vehicleclasses.json", "classes.json"])
+            vlayer_path, _ = find_file(["vehiclelayers.json", "layers.json"])
+            
+            if vclass_path:
+                if vlayer_path:
+                     load_vehicle_classes(vclass_path, layers_filepath=vlayer_path)
+                     logger.info(f"Loaded classes from {vclass_path} with layers from {vlayer_path}")
+                else:
+                     load_vehicle_classes(vclass_path)
+                     logger.info(f"Loaded classes from {vclass_path}")
+            else:
+                # If checking tests/data failed, try global default explicitly if not already tried?
+                # find_file with allow_default=True should have caught it.
+                logger.warning("No vehicleclasses.json found")
+
+            # 4. Refresh UI
+            self.right_panel.refresh_controls()
+            self.left_panel.update_component_list()
+            self.rebuild_modifier_ui()
+            
+            self.show_error("Data Reloaded Successfully!")
+            
+            # 5. Refresh Builder State
+            self.available_components = get_all_components()
+            self.template_modifiers = {}
+            
+            # Reset Ship
+            # Find a valid default class
+            default_class = "Escort"
+            if default_class not in VEHICLE_CLASSES and VEHICLE_CLASSES:
+                # Pick first available
+                default_class = next(iter(VEHICLE_CLASSES.keys()))
+                
+            self.ship = Ship("Custom Ship", self.width // 2, self.height // 2, (100, 100, 255), ship_class=default_class)
+            self.ship.recalculate_stats()
+            
+            # Reset UI Panels
+            # Left Panel needs to rebuild list
+            self.left_panel.update_component_list()
+            
+            # Center View
+            self.view.selected_component = None
+            self.controller.selected_component = None
+            self.selected_components = []
+            
+            # Right Panel needs to refresh dropdowns
+            # We need to recreate the class dropdown or update its items
+            # Accessing right_panel internals (tight coupling, but needed for quick fix)
+            
+            # Update Class Dropdown
+            valid_classes = [(n, VEHICLE_CLASSES[n].get('max_mass', 0)) for n, c in VEHICLE_CLASSES.items()]
+            valid_classes.sort(key=lambda x: x[1])
+            valid_class_names = [n for n, m in valid_classes]
+            if not valid_class_names: valid_class_names = ["Escort"]
+            
+            if hasattr(self.right_panel, 'class_dropdown'):
+                self.right_panel.class_dropdown.kill()
+                self.right_panel.class_dropdown = UIDropDownMenu(
+                    valid_class_names, 
+                    default_class,
+                    pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30), 
+                    manager=self.ui_manager, 
+                    container=self.right_panel.panel
+                )
+                
+            # Update Type Dropdown if it exists
+            if hasattr(self.right_panel, 'vehicle_type_dropdown'):
+                types = sorted(list(set(c.get('type', 'Ship') for c in VEHICLE_CLASSES.values())))
+                if not types: types = ["Ship"]
+                default_type = VEHICLE_CLASSES[default_class].get('type', 'Ship')
+                
+                self.right_panel.vehicle_type_dropdown.kill()
+                self.right_panel.vehicle_type_dropdown = UIDropDownMenu(
+                     types,
+                     default_type,
+                     pygame.Rect(70, self.right_panel.vehicle_type_dropdown.relative_rect.y, 195, 30),
+                     manager=self.ui_manager,
+                     container=self.right_panel.panel
+                )
+            
+            self.update_stats()
+            self.rebuild_modifier_ui()
+            
+            # Show success
+            self.show_error(f"Reloaded data from {os.path.basename(directory)}")
+            
+        except Exception as e:
+            logger.error(f"Failed to reload data: {e}")
+            import traceback
+            traceback.print_exc()
+            self.show_error(f"Error reloading data: {e}")
             
     
     # Tooltip method removed

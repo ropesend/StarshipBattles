@@ -144,7 +144,7 @@ class TestPDC(unittest.TestCase):
 
         attacks = self.ship.fire_weapons(context)
         
-        self.assertTrue(len(attacks) > 0, f"PDC should have fired. Ship Derelict: {self.ship.is_derelict}")
+        self.assertTrue(len(attacks) > 0, "PDC should have fired.")
         attack = attacks[0]
         self.assertEqual(attack['type'], AttackType.BEAM)
         self.assertEqual(attack['target'], self.missile)

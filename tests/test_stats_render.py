@@ -26,12 +26,13 @@ class TestStatsRender(unittest.TestCase):
     def tearDown(self):
         pygame.quit()
 
+    @patch('pygame_gui.elements.UIScrollingContainer')
     @patch('ui.builder.right_panel.UIImage')
     @patch('ui.builder.right_panel.UITextBox')
     @patch('ui.builder.right_panel.UIDropDownMenu')
     @patch('ui.builder.right_panel.UITextEntryLine')
     @patch('ui.builder.right_panel.UILabel')
-    def test_stats_panel_creation_and_update(self, mock_label, mock_entry, mock_drop, mock_box, mock_img):
+    def test_stats_panel_creation_and_update(self, mock_label, mock_entry, mock_drop, mock_box, mock_img, mock_scroll_container):
         """Test that RightPanel creates stats based on config and updates them without error."""
         # Create Panel
         panel = BuilderRightPanel(self.builder, self.manager, pygame.Rect(0,0,400,600))
@@ -57,12 +58,13 @@ class TestStatsRender(unittest.TestCase):
         # Since StatRow is in the same file, it uses the global symbol UILabel which we patched.
         # So yes, StatRow.label is a Mock.
         
+    @patch('pygame_gui.elements.UIScrollingContainer')
     @patch('ui.builder.right_panel.UIImage')
     @patch('ui.builder.right_panel.UITextBox')
     @patch('ui.builder.right_panel.UIDropDownMenu')
     @patch('ui.builder.right_panel.UITextEntryLine')
     @patch('ui.builder.right_panel.UILabel')
-    def test_logistics_section(self, mock_label, mock_entry, mock_drop, mock_box, mock_img):
+    def test_logistics_section(self, mock_label, mock_entry, mock_drop, mock_box, mock_img, mock_scroll_container):
          panel = BuilderRightPanel(self.builder, self.manager, pygame.Rect(0,0,400,600))
          self.assertIn('crew_required', panel.rows_map)
          self.assertIn('fuel_endurance', panel.rows_map)

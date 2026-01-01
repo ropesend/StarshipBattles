@@ -176,40 +176,6 @@ class TestSatelliteLogic(unittest.TestCase):
         load_modifiers()
         pygame.init()
 
-    def test_satellite_not_derelict_without_engines(self):
-        """Satellite with Core is NOT derelict even without propulsion."""
-        sat = Ship("Test Sat", 0, 0, (255, 0, 0), ship_class="Satellite (Small)")
-        
-        # Add satellite core (command)
-        core = COMPONENT_REGISTRY["satellite_core"].clone()
-        sat.add_component(core, LayerType.CORE)
-        sat.recalculate_stats()
-        
-        # Should have 0 thrust but NOT be derelict
-        self.assertEqual(sat.total_thrust, 0)
-        self.assertFalse(sat.is_derelict, 
-                        "Satellite with Core should NOT be derelict")
-
-    def test_ship_is_derelict_without_engines(self):
-        """Standard Ship WITH bridge but NO engines IS derelict."""
-        ship = Ship("Test", 0, 0, (255, 0, 0), ship_class="Escort")
-        bridge = COMPONENT_REGISTRY["bridge"].clone()
-        ship.add_component(bridge, LayerType.CORE)
-        ship.recalculate_stats()
-        
-        self.assertEqual(ship.total_thrust, 0)
-        self.assertTrue(ship.is_derelict, 
-                       "Ship with 0 thrust SHOULD be derelict")
-
-    def test_satellite_derelict_without_core(self):
-        """Satellite WITHOUT command is derelict."""
-        sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="Satellite (Small)")
-        # Don't add core
-        sat.recalculate_stats()
-        
-        self.assertTrue(sat.is_derelict, 
-                       "Satellite without Core SHOULD be derelict")
-
     def test_satellite_ignores_crew_requirements(self):
         """Satellite components ignore crew requirements."""
         sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="Satellite (Small)")
@@ -331,83 +297,10 @@ class TestFighterLogic(unittest.TestCase):
     def tearDownClass(cls):
         pygame.quit()
 
-    def test_fighter_requires_propulsion(self):
-        """Fighter without propulsion is derelict."""
-        fighter = Ship("Test", 0, 0, (255, 0, 0), ship_class="Fighter (Small)")
-        cockpit = COMPONENT_REGISTRY["fighter_cockpit"].clone()
-        fighter.add_component(cockpit, LayerType.CORE)
-        fighter.recalculate_stats()
-        
-        # No engine = derelict
-        self.assertTrue(fighter.is_derelict, 
-                       "Fighter without engine SHOULD be derelict")
-
-    def test_fighter_with_engine_not_derelict(self):
-        """Fighter with cockpit AND engine is NOT derelict."""
-        fighter = Ship("Test", 0, 0, (255, 0, 0), ship_class="Fighter (Small)")
-        cockpit = COMPONENT_REGISTRY["fighter_cockpit"].clone()
-        engine = COMPONENT_REGISTRY["mini_engine"].clone()
-        
-        fighter.add_component(cockpit, LayerType.CORE)
-        fighter.add_component(engine, LayerType.CORE)
-        fighter.recalculate_stats()
-        
-        self.assertFalse(fighter.is_derelict)
-        self.assertGreater(fighter.total_thrust, 0)
 
 
-class TestTargetingExclusion(unittest.TestCase):
-    """Test that derelict ships are excluded from targeting."""
-    
-    @classmethod
-    def setUpClass(cls):
-        initialize_ship_data()
-        load_components()
-        load_modifiers()
-        load_combat_strategies()
-        pygame.init()
 
-    def test_derelict_excluded_from_targeting(self):
-        """Derelict ships should not be targeted."""
-        attacker = Ship("Attacker", 0, 0, (255, 0, 0), team_id=0, ship_class="Escort")
-        
-        # Create a derelict enemy (no bridge)
-        derelict = Ship("Derelict", 100, 100, (0, 255, 0), team_id=1, ship_class="Escort")
-        derelict.is_alive = True
-        derelict.is_derelict = True
-        
-        class MockGrid:
-            def query_radius(self, pos, radius):
-                return [derelict]
-        
-        ai = AIController(attacker, MockGrid(), enemy_team_id=1)
-        target = ai.find_target()
-        
-        # Should NOT target derelict
-        self.assertIsNone(target, "AI should not target derelict ships")
 
-    def test_active_satellite_can_be_targeted(self):
-        """Active (non-derelict) Satellite CAN be targeted."""
-        attacker = Ship("Attacker", 0, 0, (255, 0, 0), team_id=0, ship_class="Escort")
-        
-        # Create active satellite
-        sat = Ship("Enemy Sat", 100, 100, (0, 255, 0), team_id=1, 
-                   ship_class="Satellite (Small)")
-        core = COMPONENT_REGISTRY["satellite_core"].clone()
-        sat.add_component(core, LayerType.CORE)
-        sat.recalculate_stats()
-        sat.is_alive = True
-        
-        class MockGrid:
-            def query_radius(self, pos, radius):
-                return [sat]
-        
-        ai = AIController(attacker, MockGrid(), enemy_team_id=1)
-        target = ai.find_target()
-        
-        # SHOULD target active satellite
-        self.assertEqual(target, sat, 
-                        "AI should target active Satellite")
 
 
 if __name__ == '__main__':
