@@ -189,9 +189,12 @@ class Component:
         if isinstance(self.abilities['ResourceConsumption'], dict):
              self.abilities['ResourceConsumption'] = [self.abilities['ResourceConsumption']]
              
-        # Check specific existence not critical for shim as duplicate constant consumption sums up, 
-        # but duplicate activation might double cost?
-        # Assume shim only runs if data is OLD.
+        # Check for duplicates
+        for item in self.abilities['ResourceConsumption']:
+            if item.get('resource') == resource and item.get('trigger') == trigger:
+                # Already exists. Trust the sync logic to update amount if needed.
+                return
+
         self.abilities['ResourceConsumption'].append({
             "resource": resource,
             "amount": amount,
@@ -457,6 +460,15 @@ class Component:
         if isinstance(self, Engine) and hasattr(self, 'fuel_cost_per_sec'):
             base_fuel = self.data.get('fuel_cost', 0)
             self.fuel_cost_per_sec = base_fuel * stats.get('consumption_mult', 1.0)
+            
+        # Generic Sync: Update Activation Abilities if attributes changed
+        from resources import ResourceConsumption
+        for ab in self.ability_instances:
+            if isinstance(ab, ResourceConsumption) and ab.trigger == 'activation':
+                if ab.resource_name == 'energy' and hasattr(self, 'energy_cost'):
+                    ab.amount = self.energy_cost
+                elif ab.resource_name == 'ammo' and hasattr(self, 'ammo_cost'):
+                    ab.amount = self.ammo_cost
 
         # Crew Requirement Scaling
         # Rule: crew requirements should grow with the sqrt of mass of the component
@@ -595,6 +607,14 @@ class Engine(Component):
     
     def clone(self):
         return Engine(self.data)
+
+    def _apply_custom_stats(self, stats):
+        super()._apply_custom_stats(stats)
+        # Sync to Ability
+        from resources import ResourceConsumption
+        for ab in self.ability_instances:
+            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'fuel' and ab.trigger == 'constant':
+                ab.amount = self.fuel_cost_per_sec
 
 class Thruster(Component):
     def __init__(self, data):

@@ -34,17 +34,7 @@ class ShipCombatMixin:
                         energy_res.consume(cost_amount)
                     else:
                         has_energy = False
-                else:
-                    # Legacy fallback? Or assume 0?
-                    # If generic resources not present, maybe fallback to self.current_energy?
-                    # No, we are moving fully.
-                    has_energy = False
-            elif cost_amount > 0 and not hasattr(self, 'resources'):
-                # Legacy Fallback
-                if self.current_energy >= cost_amount:
-                   self.current_energy -= cost_amount
-                else:
-                   has_energy = False
+
             
             if has_energy:
                 self.current_shields += regen_amount

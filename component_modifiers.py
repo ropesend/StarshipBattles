@@ -233,6 +233,24 @@ def apply_modifier_effects(modifier_def, value, stats, component=None):
         stats['mass_mult'] *= (1.0 + eff['mass_mult'])
     if 'hp_mult' in eff:
         stats['hp_mult'] *= (1.0 + eff['hp_mult'])
+    if 'damage_mult' in eff:
+        stats['damage_mult'] *= (1.0 + eff['damage_mult'])
+    if 'range_mult' in eff:
+        stats['range_mult'] *= (1.0 + eff['range_mult'])
+    if 'cost_mult' in eff:
+        stats['cost_mult'] *= (1.0 + eff['cost_mult'])
+    if 'thrust_mult' in eff:
+        stats['thrust_mult'] *= (1.0 + eff['thrust_mult'])
+    if 'turn_mult' in eff:
+        stats['turn_mult'] *= (1.0 + eff['turn_mult'])
+    if 'energy_gen_mult' in eff:
+        stats['energy_gen_mult'] *= (1.0 + eff['energy_gen_mult'])
+    if 'capacity_mult' in eff:
+        stats['capacity_mult'] *= (1.0 + eff['capacity_mult'])
+    if 'consumption_mult' in eff:
+        stats['consumption_mult'] *= (1.0 + eff['consumption_mult'])
+    if 'reload_mult' in eff:
+        stats['reload_mult'] *= (1.0 + eff['reload_mult'])
         
     # 2. Mass add per unit
     if 'mass_add_per_unit' in eff:

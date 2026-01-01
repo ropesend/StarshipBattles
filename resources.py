@@ -43,7 +43,13 @@ class ResourceState:
 
 class ResourceRegistry:
     """
-    Registry of all resources on a ship.
+    Registry of all resources on a ship. 
+    Acts as the Source of Truth for current resource state (fuel, energy, ammo).
+    
+    Responsibilities:
+    - Tracking current vs max values.
+    - Handling regeneration ticks (update).
+    - Providing thread-safe(ish) consume/check methods.
     """
     def __init__(self):
         self._resources: Dict[str, ResourceState] = {}
@@ -52,52 +58,66 @@ class ResourceRegistry:
         return self._resources.get(name)
 
     def register_storage(self, name: str, amount: float):
-        """Add storage capacity for a resource."""
+        """
+        Add storage capacity for a resource. Increase max_value.
+        Note: Does not automatically fill current_value unless initialized implicitly elsewhere.
+        """
         if name not in self._resources:
             self._resources[name] = ResourceState(name)
         
         # Increase max capacity
         res = self._resources[name]
         res.max_value += amount
-        # Optionally Initialize current to full if it was empty/new? 
-        # For now, we assume 'filling' happens elsewhere or starts full.
-        # Let's assume starts full for simplicity in this refactor unless explicitly empty.
-        # But if we add storage dynamically (e.g. ship editor), we might not want to auto-fill.
-        # In ShipStatsCalculator, we usually reset max to 0 and rebuild.
 
     def register_generation(self, name: str, rate: float):
-        """Add generation rate for a resource."""
+        """Add generation rate (units/sec) for a resource."""
         if name not in self._resources:
             self._resources[name] = ResourceState(name)
         
         self._resources[name].regen_rate += rate
 
     def reset_stats(self):
-        """Reset max values and rates to 0 (before recalculation). Current values persist."""
+        """
+        Reset max values and regeneration rates to 0 before a full stat recalculation.
+        Current resource values are PERSISTED to maintain game state.
+        """
         for res in self._resources.values():
             res.max_value = 0.0
             res.regen_rate = 0.0
             # Note: We DON'T reset current_value here, as that is the game state.
 
     def update(self):
-        """Update all resources for one tick."""
+        """Update all resources for one tick (apply regeneration)."""
         for res in self._resources.values():
             res.update()
 
 # --- Ability System ---
 
 class Ability:
-    """Base class for component abilities."""
+    """
+    Base class for component abilities.
+    Abilities represent functional capabilities (Consumption, Storage, Generation, special effects)
+    that are data-driven and attached to Components.
+    """
     def __init__(self, component, data: Dict[str, Any]):
         self.component = component
         self.data = data
     
     def update(self) -> bool:
+        """
+        Called every tick (0.01s). 
+        Used for constant resource consumption or continuous effects.
+        Returns True if operational, False if failed (e.g. starvation).
+        """
         pass
         return True
 
     def on_activation(self) -> bool:
-        """Called when component tries to activate (e.g. fire weapon). Returns True if allowed."""
+        """
+        Called when component tries to activate (e.g. fire weapon). 
+        Used for checking activation costs or conditions.
+        Returns True if allowed.
+        """
         return True
 
 class ResourceConsumption(Ability):
