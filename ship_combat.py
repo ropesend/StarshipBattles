@@ -1,7 +1,7 @@
 import pygame
 import math
 import random
-from components import LayerType, Weapon, BeamWeapon, ProjectileWeapon, Bridge, SeekerWeapon, Hangar
+from components import LayerType, Weapon, BeamWeapon, ProjectileWeapon, Bridge, SeekerWeapon, Hangar, ComponentStatus
 from logger import log_debug
 from game_constants import AttackType
 
@@ -24,6 +24,12 @@ class ShipCombatMixin:
             self.current_energy += self.energy_gen_rate / 100.0
             if self.current_energy > self.max_energy:
                 self.current_energy = self.max_energy
+
+        # Regenerate Ammo
+        if self.current_ammo < self.max_ammo and getattr(self, 'ammo_gen_rate', 0) > 0:
+            self.current_ammo += self.ammo_gen_rate / 100.0
+            if self.current_ammo > self.max_ammo:
+                self.current_ammo = self.max_ammo
         
         # Regenerate Shields (if energy available)
         if self.current_shields < self.max_shields and self.shield_regen_rate > 0:
@@ -36,6 +42,10 @@ class ShipCombatMixin:
                 if self.current_shields > self.max_shields:
                     self.current_shields = self.max_shields
         
+        # Apply Ship Repair
+        if getattr(self, 'repair_rate', 0) > 0:
+             self._apply_repair(self.repair_rate / 100.0)
+
         # Component Cooldowns
         for layer in self.layers.values():
             for comp in layer['components']:
@@ -377,3 +387,39 @@ class ShipCombatMixin:
         self.velocity = pygame.math.Vector2(0,0)
         # Recalculate to ensure UI shows 0 stats
         self.recalculate_stats()
+
+    def _apply_repair(self, repair_amount):
+        """Apply structural repair to damaged components."""
+        if repair_amount <= 0: return
+
+        # Identify damaged components (Current HP < Max HP)
+        # Filter for live components only (HP > 0) to avoid reviving dead parts (unless desired?)
+        # For now, sticking to repairing 'damaged' but not strict 'destroyed' logic,
+        # but consistency with `_damage_layer` which stops at 0 suggests 0 is dead.
+        damaged_candidates = []
+        for layer in self.layers.values():
+            for comp in layer['components']:
+                if 0 < comp.current_hp < comp.max_hp:
+                     damaged_candidates.append(comp)
+
+        if not damaged_candidates:
+            return
+
+        # Strategy: Repair the most damaged one (relative) to try and restore functionality
+        damaged_candidates.sort(key=lambda c: c.current_hp / c.max_hp)
+
+        target = damaged_candidates[0]
+        
+        # Apply repair
+        missing = target.max_hp - target.current_hp
+        amount_to_apply = min(missing, repair_amount)
+        
+        target.current_hp += amount_to_apply
+        
+        # Check Status Restoration
+        # If component was considered inactive/damaged due to HP <= 50%, restore it
+        if not target.is_active:
+             if target.current_hp > (target.max_hp * 0.5):
+                 target.is_active = True
+                 target.status = ComponentStatus.ACTIVE
+

@@ -775,6 +775,85 @@
                 "CrewRequired": 5
             },
             "major_classification": "Infrastructure"
+        },
+        {
+            "id": "master_computer",
+            "name": "Master Computer",
+            "type": "Bridge",
+            "mass": 50,
+            "hp": 100,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 27,
+            "abilities": {
+                "CommandAndControl": true,
+                "ToHitDefenseModifier": {
+                    "value": 0.5,
+                    "stack_group": "MasterComputer"
+                },
+                "ToHitAttackModifier": {
+                    "value": 0.5,
+                    "stack_group": "MasterComputer"
+                },
+                "EnergyConsumption": 10.0
+            },
+            "major_classification": "Crewsupport"
+        },
+        {
+            "id": "robotic_drone_crew",
+            "name": "Robotic Drone Crew",
+            "type": "CrewQuarters",
+            "mass": 30,
+            "hp": 50,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 5,
+            "abilities": {
+                "CrewCapacity": 10,
+                "LifeSupportCapacity": 10,
+                "EnergyConsumption": 5.0
+            },
+            "major_classification": "Crewsupport"
+        },
+        {
+            "id": "emergency_repair_bay",
+            "name": "Emergency Repair Bay",
+            "type": "Engineering",
+            "mass": 50,
+            "hp": 100,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 21,
+            "abilities": {
+                "ShipRepair": 5.0,
+                "CrewRequired": 5,
+                "EnergyConsumption": 2.0
+            },
+            "major_classification": "Infrastructure"
+        },
+        {
+            "id": "ordnance_vat",
+            "name": "Ordnance Vat",
+            "type": "Factory",
+            "mass": 80,
+            "hp": 150,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 19,
+            "abilities": {
+                "AmmoGeneration": 2.0,
+                "CrewRequired": 5,
+                "EnergyConsumption": 15.0
+            },
+            "major_classification": "Infrastructure"
         }
     ]
 }

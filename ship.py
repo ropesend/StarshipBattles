@@ -150,7 +150,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.max_fuel: int = 0
         self.current_fuel: float = 0.0
         self.max_ammo: int = 0
-        self.current_ammo: int = 0
+        self.current_ammo: float = 0.0 # Changed to float for regeneration
+        self.ammo_gen_rate: float = 0.0
         self.baseline_to_hit_offense = 0.0 # Score
         self.to_hit_profile = 0.0 # Score
         self.total_defense_score = 0.0 # Score (Size + Maneuver + ECM)
@@ -163,6 +164,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.current_shields: float = 0.0
         self.shield_regen_rate: float = 0.0
         self.shield_regen_cost: float = 0.0
+        self.repair_rate: float = 0.0
         
         # Resource initialization tracking
         self._resources_initialized: bool = False

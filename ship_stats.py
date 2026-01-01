@@ -31,11 +31,14 @@ class ShipStatsCalculator:
         ship.turn_speed = 0
         ship.max_fuel = 0
         ship.max_ammo = 0
+        ship.ammo_gen_rate = 0
         ship.max_energy = 0
         ship.energy_gen_rate = 0
         ship.max_shields = 0
         ship.shield_regen_rate = 0
+        ship.shield_regen_rate = 0
         ship.shield_regen_cost = 0
+        ship.repair_rate = 0
         if LayerType.ARMOR in ship.layers:
             ship.layers[LayerType.ARMOR]['max_hp_pool'] = 0
             
@@ -256,6 +259,12 @@ class ShipStatsCalculator:
         
         # Crystalline Armor (Max Stacking)
         ship.crystalline_armor = self._get_ability_total(component_pool, 'CrystallineArmor')
+
+        # Ship Repair (SumStacking)
+        ship.repair_rate = self._get_ability_total(component_pool, 'ShipRepair')
+        
+        # Ammo Generation (SumStacking)
+        ship.ammo_gen_rate = self._get_ability_total(component_pool, 'AmmoGeneration')
 
         # Armor Pool Init (if starting)
         if LayerType.ARMOR in ship.layers:
