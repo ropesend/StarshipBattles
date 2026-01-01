@@ -49,21 +49,33 @@ class ShipPhysicsMixin:
         self.angular_velocity = 0
 
     def thrust_forward(self):
-        """Apply thrust logic: Consume fuel and set thrusting flag."""
-        # Cost depends on Engines
+        """
+        Apply thrust logic: Consume fuel and set thrusting flag.
+        
+        Fuel is only required if the engine has a non-zero fuel_cost.
+        Engines with fuel_cost=0 can thrust indefinitely without fuel.
+        """
+        # Calculate total fuel cost from all active engines
         fuel_cost = 0
         if hasattr(self, 'layers'):
             for layer in self.layers.values():
                 for comp in layer['components']:
                     if isinstance(comp, Engine) and comp.is_active:
-                         fuel_cost += comp.fuel_cost_per_sec / 100.0
+                        # Get fuel cost (default 0 if not specified)
+                        cost = getattr(comp, 'fuel_cost_per_sec', 0) or 0
+                        fuel_cost += cost / 100.0
         
-        # Only thrust if we have fuel
+        # If no fuel cost required, always allow thrusting
+        if fuel_cost <= 0:
+            self.is_thrusting = True
+            return
+        
+        # Fuel is required - check if we have enough
         if self.current_fuel >= fuel_cost:
             self.current_fuel -= fuel_cost
             self.is_thrusting = True
         else:
-            self.current_fuel = 0
+            self.current_fuel = max(0, self.current_fuel)
             self.is_thrusting = False
 
     def rotate(self, direction):

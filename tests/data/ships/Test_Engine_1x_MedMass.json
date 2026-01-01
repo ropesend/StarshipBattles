@@ -1,0 +1,36 @@
+{
+    "name": "Test Engine 1x MedMass",
+    "color": [
+        0,
+        255,
+        0
+    ],
+    "team_id": 0,
+    "ship_class": "TestS_2L",
+    "theme_id": "Federation",
+    "ai_strategy": "do_nothing",
+    "layers": {
+        "CORE": [
+            {
+                "id": "test_engine_std",
+                "modifiers": []
+            },
+            {
+                "id": "test_mass_sim_1k",
+                "modifiers": []
+            },
+            {
+                "id": "test_mass_sim_1k",
+                "modifiers": []
+            }
+        ],
+        "ARMOR": []
+    },
+    "_test_notes": "1 engine + 2x mass simulators. Mass = hull(20) + engine(20) + 2*1000 = 2040",
+    "expected_stats": {
+        "total_thrust": 500,
+        "mass": 2040,
+        "max_speed": 6.127,
+        "acceleration_rate": 0.300
+    }
+}

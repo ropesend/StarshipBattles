@@ -245,3 +245,116 @@ class FormationBehavior(AIBehavior):
             target_pos = predicted_master_pos + pred_offset
             
             self.controller.navigate_to(target_pos, stop_dist=self.NAVIGATE_STOP_DIST, precise=True)
+
+
+# =============================================================================
+# TEST-SPECIFIC BEHAVIORS
+# =============================================================================
+
+class DoNothingBehavior(AIBehavior):
+    """Ship sits completely still. No movement, no rotation, no firing."""
+    
+    def update(self, target: Any, strategy: Dict[str, Any]) -> None:
+        # Explicitly disable firing
+        self.controller.ship.comp_trigger_pulled = False
+        # Do nothing else - no navigation, no rotation
+
+
+class StraightLineBehavior(AIBehavior):
+    """Full thrust in initial facing direction. No rotation."""
+    
+    def update(self, target: Any, strategy: Dict[str, Any]) -> None:
+        # Thrust forward without any rotation
+        self.controller.ship.thrust_forward()
+        # No rotation commands issued
+
+
+class RotateOnlyBehavior(AIBehavior):
+    """Continuous rotation at max turn rate, no translation."""
+    
+    def update(self, target: Any, strategy: Dict[str, Any]) -> None:
+        # Get rotation direction from strategy (default: clockwise = 1)
+        direction = strategy.get('rotation_direction', 1)
+        self.controller.ship.rotate(direction)
+        # No thrust commands issued
+
+
+class ErraticBehavior(AIBehavior):
+    """Random direction changes at random intervals."""
+    
+    def __init__(self, controller: Any) -> None:
+        super().__init__(controller)
+        self.direction_timer: float = 0.0
+        self.current_direction: int = 1
+        self.next_change_interval: float = 1.0
+        
+    def enter(self) -> None:
+        import random
+        self.direction_timer = 0.0
+        self.current_direction = random.choice([-1, 1])
+        self.next_change_interval = random.uniform(0.5, 2.0)
+    
+    def update(self, target: Any, strategy: Dict[str, Any]) -> None:
+        import random
+        
+        TICK_DURATION = 0.01
+        
+        # Update timer
+        self.direction_timer += TICK_DURATION
+        
+        # Check if it's time to change direction
+        min_interval = strategy.get('turn_interval_min', 0.5)
+        max_interval = strategy.get('turn_interval_max', 2.0)
+        
+        if self.direction_timer >= self.next_change_interval:
+            # Change direction randomly
+            self.current_direction = random.choice([-1, 0, 1])
+            self.next_change_interval = random.uniform(min_interval, max_interval)
+            self.direction_timer = 0.0
+        
+        # Apply rotation if not going straight
+        if self.current_direction != 0:
+            self.controller.ship.rotate(self.current_direction)
+        
+        # Always thrust forward
+        self.controller.ship.thrust_forward()
+
+
+class OrbitBehavior(AIBehavior):
+    """Circle target at fixed distance."""
+    
+    DEFAULT_ORBIT_DISTANCE: int = 500
+    
+    def update(self, target: Any, strategy: Dict[str, Any]) -> None:
+        if not target:
+            return
+            
+        orbit_distance = strategy.get('orbit_distance', self.DEFAULT_ORBIT_DISTANCE)
+        
+        ship = self.controller.ship
+        vec_to_target = target.position - ship.position
+        dist = vec_to_target.length()
+        
+        if dist == 0:
+            return
+        
+        # Calculate tangent direction (perpendicular to radial vector)
+        # Rotate 90 degrees for counter-clockwise orbit
+        radial = vec_to_target.normalize()
+        tangent = pygame.math.Vector2(-radial.y, radial.x)
+        
+        # Adjust radial component to maintain orbit distance
+        if dist < orbit_distance * 0.9:
+            # Too close - add outward component
+            move_dir = (tangent - radial * 0.5).normalize()
+        elif dist > orbit_distance * 1.1:
+            # Too far - add inward component
+            move_dir = (tangent + radial * 0.5).normalize()
+        else:
+            # In range - pure tangent
+            move_dir = tangent
+        
+        # Navigate to a point along the movement direction
+        target_pos = ship.position + move_dir * 200
+        self.controller.navigate_to(target_pos, stop_dist=0, precise=False)
+

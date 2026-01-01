@@ -202,14 +202,16 @@ class BuilderSceneGUI:
         # Define buttons to create in order
         # (Attribute Name, Text, Width)
         button_defs = [
-            ('clear_btn', "Clear Design", 140),
-            ('save_btn', "Save", 140),
-            ('load_btn', "Load", 140),
-            ('arc_toggle_btn', "Show Firing Arcs", 160),
-            ('target_btn', "Select Target", 140),
-            ('select_data_btn', "Select Data", 140),
-            ('verbose_btn', "Toggle Verbose", 160),
-            ('start_btn', "Return", 140)
+            ('clear_btn', "Clear Design", 110),
+            ('save_btn', "Save", 80),
+            ('load_btn', "Load", 80),
+            ('arc_toggle_btn', "Show Firing Arcs", 140),
+            ('target_btn', "Select Target", 110),
+            ('std_data_btn', "Standard Data", 110),
+            ('test_data_btn', "Test Data", 90),
+            ('select_data_btn', "Select Data...", 110),
+            ('verbose_btn', "Toggle Verbose", 120),
+            ('start_btn', "Return", 100)
         ]
         
         total_width = sum(b[2] for b in button_defs) + spacing * (len(button_defs) - 1)
@@ -592,6 +594,10 @@ class BuilderSceneGUI:
                 self.arc_toggle_btn.set_text("Hide Firing Arcs" if self.show_firing_arcs else "Show Firing Arcs")
             elif event.ui_element == self.target_btn:
                 self._on_select_target_pressed()
+            elif event.ui_element == self.std_data_btn:
+                self._load_standard_data()
+            elif event.ui_element == self.test_data_btn:
+                self._load_test_data()
             elif event.ui_element == self.select_data_btn:
                 self._on_select_data_pressed()
             elif event.ui_element == self.verbose_btn:
@@ -818,6 +824,22 @@ class BuilderSceneGUI:
         if directory:
             with profile_block(f"Builder: Reload Data from {os.path.basename(directory)}"):
                 self._reload_data(directory)
+
+    def _load_standard_data(self):
+        """Load standard data from 'data/' directory and set ship directory to 'ships/'."""
+        with profile_block("Builder: Load Standard Data"):
+            directory = os.path.join(os.getcwd(), "data")
+            self._reload_data(directory)
+            ShipIO.default_ships_folder = "ships"
+            self.show_error("Loaded Standard Data • Ships: ships/")
+
+    def _load_test_data(self):
+        """Load test data from 'tests/data/' directory and set ship directory to 'tests/data/ships/'."""
+        with profile_block("Builder: Load Test Data"):
+            directory = os.path.join(os.getcwd(), "tests", "data")
+            self._reload_data(directory)
+            ShipIO.default_ships_folder = os.path.join("tests", "data", "ships")
+            self.show_error("Loaded Test Data • Ships: tests/data/ships/")
 
     def _reload_data(self, directory: str):
         """Reload global game data from the specified directory."""

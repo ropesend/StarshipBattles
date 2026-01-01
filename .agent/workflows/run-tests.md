@@ -2,6 +2,8 @@
 description: run unit tests after code changes
 ---
 
+// turbo-all
+
 # Run All Unit Tests
 
 After making any code changes to the Starship Battles project, run the full test suite:

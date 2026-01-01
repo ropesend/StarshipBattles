@@ -1,5 +1,5 @@
 {
-    "_comment": "Test strategies linked to test policies.",
+    "_comment": "Test strategies linked to test policies. Includes test-specific strategies for component testing.",
     "strategies": {
         "test_strat_simple": {
             "name": "Test Strategy Simple",
@@ -33,6 +33,36 @@
             "name": "Attack Run",
             "targeting_policy": "test_policy_1",
             "movement_policy": "move_attack_run"
+        },
+        "test_stationary": {
+            "name": "Stationary (Test)",
+            "description": "Ship sits still, no firing, no movement.",
+            "targeting_policy": "test_policy_1",
+            "movement_policy": "test_do_nothing"
+        },
+        "test_linear": {
+            "name": "Linear Movement (Test)",
+            "description": "Ship moves forward at full thrust, no turning.",
+            "targeting_policy": "test_policy_1",
+            "movement_policy": "test_straight_line"
+        },
+        "test_orbiting": {
+            "name": "Orbiting (Test)",
+            "description": "Ship circles target at fixed distance.",
+            "targeting_policy": "test_policy_1",
+            "movement_policy": "test_orbit_target"
+        },
+        "test_evasive": {
+            "name": "Evasive (Test)",
+            "description": "Ship makes random direction changes.",
+            "targeting_policy": "test_policy_1",
+            "movement_policy": "test_erratic_maneuver"
+        },
+        "test_rotating": {
+            "name": "Rotating (Test)",
+            "description": "Ship spins in place without translation.",
+            "targeting_policy": "test_policy_1",
+            "movement_policy": "test_rotate_in_place"
         }
     }
 }

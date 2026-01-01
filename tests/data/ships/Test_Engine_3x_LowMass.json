@@ -1,0 +1,37 @@
+{
+    "name": "Test Engine 3x LowMass",
+    "color": [
+        0,
+        255,
+        0
+    ],
+    "team_id": 0,
+    "ship_class": "TestM_3L",
+    "theme_id": "Federation",
+    "ai_strategy": "do_nothing",
+    "layers": {
+        "CORE": [
+            {
+                "id": "test_engine_std",
+                "modifiers": []
+            },
+            {
+                "id": "test_engine_std",
+                "modifiers": []
+            },
+            {
+                "id": "test_engine_std",
+                "modifiers": []
+            }
+        ],
+        "OUTER": [],
+        "ARMOR": []
+    },
+    "_test_notes": "3 engines, minimal mass. Mass = hull(200) + 3*engine(20) = 260. Thrust = 1500",
+    "expected_stats": {
+        "total_thrust": 1500,
+        "mass": 260,
+        "max_speed": 144.23,
+        "acceleration_rate": 55473.4
+    }
+}

@@ -15,15 +15,16 @@
             }
         },
         {
-            "id": "test_engine_infinite",
-            "name": "Test Engine (Infinite)",
+            "id": "test_engine_no_fuel",
+            "name": "Test Engine (No Fuel)",
             "type": "Engine",
-            "mass": 10,
+            "mass": 20,
             "hp": 50,
-            "thrust_force": 5000,
+            "thrust_force": 500,
+            "fuel_cost": 0,
             "sprite_index": 10,
             "abilities": {
-                "CombatPropulsion": 5000
+                "CombatPropulsion": 500
             }
         },
         {
@@ -333,6 +334,89 @@
             "sprite_index": 4,
             "abilities": {
                 "LifeSupportCapacity": 25
+            }
+        },
+        {
+            "_comment": "=== MASS SIMULATORS (Ballast for testing thrust/mass relationships) ===",
+            "id": "test_mass_sim_1k",
+            "name": "Mass Simulator (1,000t)",
+            "type": "Ballast",
+            "mass": 1000,
+            "hp": 1,
+            "sprite_index": 0,
+            "abilities": {}
+        },
+        {
+            "id": "test_mass_sim_10k",
+            "name": "Mass Simulator (10,000t)",
+            "type": "Ballast",
+            "mass": 10000,
+            "hp": 1,
+            "sprite_index": 0,
+            "abilities": {}
+        },
+        {
+            "id": "test_mass_sim_100k",
+            "name": "Mass Simulator (100,000t)",
+            "type": "Ballast",
+            "mass": 100000,
+            "hp": 1,
+            "sprite_index": 0,
+            "abilities": {}
+        },
+        {
+            "_comment": "=== BEAM WEAPON ACCURACY VARIANTS ===",
+            "id": "test_beam_low_acc",
+            "name": "Test Beam (Low Accuracy)",
+            "type": "BeamWeapon",
+            "mass": 5,
+            "hp": 20,
+            "damage": 5,
+            "range": 800,
+            "energy_cost": 10,
+            "reload": 0.0,
+            "firing_arc": 360,
+            "sprite_index": 87,
+            "base_accuracy": 0.5,
+            "accuracy_falloff": 0.002,
+            "abilities": {
+                "BeamWeapon": true
+            }
+        },
+        {
+            "id": "test_beam_med_acc",
+            "name": "Test Beam (Medium Accuracy)",
+            "type": "BeamWeapon",
+            "mass": 5,
+            "hp": 20,
+            "damage": 5,
+            "range": 800,
+            "energy_cost": 10,
+            "reload": 0.0,
+            "firing_arc": 360,
+            "sprite_index": 87,
+            "base_accuracy": 2.0,
+            "accuracy_falloff": 0.001,
+            "abilities": {
+                "BeamWeapon": true
+            }
+        },
+        {
+            "id": "test_beam_high_acc",
+            "name": "Test Beam (High Accuracy)",
+            "type": "BeamWeapon",
+            "mass": 5,
+            "hp": 20,
+            "damage": 5,
+            "range": 800,
+            "energy_cost": 10,
+            "reload": 0.0,
+            "firing_arc": 360,
+            "sprite_index": 87,
+            "base_accuracy": 5.0,
+            "accuracy_falloff": 0.0005,
+            "abilities": {
+                "BeamWeapon": true
             }
         }
     ]

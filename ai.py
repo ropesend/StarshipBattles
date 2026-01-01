@@ -4,7 +4,9 @@ import os
 import pygame
 from components import LayerType
 from logger import log_info
-from ai_behaviors import RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior, FormationBehavior
+from ai_behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior, 
+                          FormationBehavior, DoNothingBehavior, StraightLineBehavior,
+                          RotateOnlyBehavior, ErraticBehavior, OrbitBehavior)
 from game_constants import AttackType
 
 # Global Managers
@@ -234,7 +236,13 @@ class AIController:
             'flee': FleeBehavior(self),
             'kite': KiteBehavior(self),
             'attack_run': AttackRunBehavior(self),
-            'formation': FormationBehavior(self)
+            'formation': FormationBehavior(self),
+            # Test-specific behaviors
+            'do_nothing': DoNothingBehavior(self),
+            'straight_line': StraightLineBehavior(self),
+            'rotate_only': RotateOnlyBehavior(self),
+            'erratic': ErraticBehavior(self),
+            'orbit': OrbitBehavior(self)
         }
         self.current_behavior = None
         self.attack_state = 'approach' 

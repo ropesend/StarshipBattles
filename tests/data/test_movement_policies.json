@@ -1,5 +1,5 @@
 {
-    "_comment": "Test data for movement policies.",
+    "_comment": "Test data for movement policies. Includes test-specific behaviors for component testing.",
     "policies": {
         "test_move_kite": {
             "behavior": "kite",
@@ -27,6 +27,35 @@
         "move_attack_run": {
             "behavior": "attack_run",
             "engage_distance": "max_range"
+        },
+        "test_do_nothing": {
+            "behavior": "do_nothing",
+            "description": "No movement, rotation, or firing"
+        },
+        "test_straight_line": {
+            "behavior": "straight_line",
+            "description": "Move forward at full thrust, no turning"
+        },
+        "test_orbit_target": {
+            "behavior": "orbit",
+            "orbit_distance": 500,
+            "description": "Circle target at fixed distance"
+        },
+        "test_erratic_maneuver": {
+            "behavior": "erratic",
+            "turn_interval_min": 0.5,
+            "turn_interval_max": 2.0,
+            "description": "Random direction changes"
+        },
+        "test_rotate_in_place": {
+            "behavior": "rotate_only",
+            "rotation_direction": 1,
+            "description": "Spin in place clockwise, no translation"
+        },
+        "test_rotate_ccw": {
+            "behavior": "rotate_only",
+            "rotation_direction": -1,
+            "description": "Spin in place counter-clockwise, no translation"
         }
     }
 }

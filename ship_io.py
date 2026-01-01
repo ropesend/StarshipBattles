@@ -15,6 +15,9 @@ except Exception:
 class ShipIO:
     """Handles ship file Input/Output operations."""
     
+    # Configurable default directory (can be changed by builder)
+    default_ships_folder = "ships"
+    
     @staticmethod
     def save_ship(ship):
         """Save ship design to file. Returns True if successful."""
@@ -23,7 +26,7 @@ class ShipIO:
             
         try:
             data = ship.to_dict()
-            ships_folder = os.path.join(os.getcwd(), "ships")
+            ships_folder = os.path.join(os.getcwd(), ShipIO.default_ships_folder)
             if not os.path.exists(ships_folder):
                 os.makedirs(ships_folder)
                 
@@ -55,7 +58,7 @@ class ShipIO:
             return None, "Tkinter not initialized"
             
         try:
-            ships_folder = os.path.join(os.getcwd(), "ships")
+            ships_folder = os.path.join(os.getcwd(), ShipIO.default_ships_folder)
             if not os.path.exists(ships_folder):
                 os.makedirs(ships_folder)
                 
