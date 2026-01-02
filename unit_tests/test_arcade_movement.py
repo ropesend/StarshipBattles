@@ -12,7 +12,8 @@ from components import load_components, create_component, Engine, Thruster
 class TestArcadeMovement(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        initialize_ship_data("C:\\Dev\\Starship Battles")
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        initialize_ship_data(root_dir)
         load_components("data/components.json")
 
     def setUp(self):

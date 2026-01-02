@@ -8,7 +8,8 @@ class TestShields(unittest.TestCase):
         # Minimal init
         pygame.init()
         # Load components for crew support
-        initialize_ship_data("C:\\Dev\\Starship Battles")
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        initialize_ship_data(root_dir)
         load_components("data/components.json")
         
         self.ship = Ship("TestShip", 0, 0, (255,0,0))

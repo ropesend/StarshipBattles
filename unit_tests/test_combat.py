@@ -17,7 +17,8 @@ class TestDamageLayerLogic(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        initialize_ship_data(root_dir)
         load_components("data/components.json")
     
     @classmethod
@@ -168,7 +169,8 @@ class TestEnergyRegeneration(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        initialize_ship_data(root_dir)
         load_components("data/components.json")
     
     @classmethod
@@ -222,7 +224,8 @@ class TestWeaponCooldowns(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        initialize_ship_data(root_dir)
         load_components("data/components.json")
     
     @classmethod

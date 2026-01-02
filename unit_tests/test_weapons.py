@@ -17,7 +17,8 @@ from components import (
 class TestWeaponBasics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        initialize_ship_data("C:\\Dev\\Starship Battles")
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        initialize_ship_data(root_dir)
         load_components("data/components.json")
     
     def test_weapon_initialization(self):
@@ -83,7 +84,8 @@ class TestWeaponBasics(unittest.TestCase):
 class TestWeaponFiring(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        initialize_ship_data("C:\\Dev\\Starship Battles")
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        initialize_ship_data(root_dir)
         load_components("data/components.json")
     
     def setUp(self):
@@ -148,7 +150,8 @@ class TestWeaponFiring(unittest.TestCase):
 class TestLeadCalculation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        initialize_ship_data("C:\\Dev\\Starship Battles")
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        initialize_ship_data(root_dir)
         load_components("data/components.json")
     
     def setUp(self):
