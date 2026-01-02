@@ -5,9 +5,29 @@ from components import Generator, Tank, BeamWeapon, Bridge, Engine, Thruster, Ar
 from main import draw_ship, draw_hud
 
 # Mock Data for Components
-GEN_DATA = {'id': 'gen1', 'name': 'Reactor', 'mass': 50, 'hp': 100, 'type': 'Generator', 'allowed_layers': ['CORE', 'INNER'], 'energy_generation': 50}
-TANK_DATA = {'id': 'bat1', 'name': 'Battery', 'mass': 20, 'hp': 50, 'type': 'Tank', 'allowed_layers': ['INNER', 'OUTER'], 'capacity': 100, 'resource_type': 'energy'}
-BEAM_DATA = {'id': 'las1', 'name': 'Laser', 'mass': 10, 'hp': 40, 'type': 'BeamWeapon', 'allowed_layers': ['OUTER'], 'damage': 10, 'range': 800, 'reload': 0.5, 'energy_cost': 20, 'base_accuracy': 1.0, 'accuracy_falloff': 0.001}
+# Mock Data for Components
+GEN_DATA = {
+    'id': 'gen1', 'name': 'Reactor', 'mass': 50, 'hp': 100, 'type': 'Generator', 
+    'allowed_layers': ['CORE', 'INNER'], 
+    'abilities': {
+        'EnergyGeneration': [{'resource': 'energy', 'amount': 50}]
+    }
+}
+TANK_DATA = {
+    'id': 'bat1', 'name': 'Battery', 'mass': 20, 'hp': 50, 'type': 'Tank', 
+    'allowed_layers': ['INNER', 'OUTER'], 
+    'abilities': {
+        'ResourceStorage': [{'resource': 'energy', 'amount': 100}]
+    }
+}
+BEAM_DATA = {
+    'id': 'las1', 'name': 'Laser', 'mass': 10, 'hp': 40, 'type': 'BeamWeapon', 
+    'allowed_layers': ['OUTER'], 'damage': 10, 'range': 800, 'reload': 0.5, 
+    'base_accuracy': 1.0, 'accuracy_falloff': 0.001,
+    'abilities': {
+        'ResourceConsumption': [{'resource': 'energy', 'amount': 20, 'trigger': 'activation'}]
+    }
+}
 BRIDGE_DATA = {'id': 'br1', 'name': 'Bridge', 'mass': 10, 'hp': 50, 'type': 'Bridge', 'allowed_layers': ['CORE']}
 
 def create_beam_ship(x, y, color):

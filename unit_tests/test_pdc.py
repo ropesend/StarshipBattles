@@ -17,7 +17,10 @@ class MockPDC(BeamWeapon):
         self.name = "PDC"
         self.range = 1000
         self.damage = 10
-        self.energy_cost = 0
+        # Legacy 'energy_cost' removed. 
+        # PDC energy consumption is now handled via abilities in components.json or defaults.
+        # If we need to test cost, we should modify abilities directly.
+        pass
         self.current_hp = 10
         self.max_hp = 10
         self.is_active = True

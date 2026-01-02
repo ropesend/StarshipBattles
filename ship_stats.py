@@ -38,7 +38,7 @@ class ShipStatsCalculator:
             
         ship.max_shields = 0
         ship.shield_regen_rate = 0
-        ship.shield_regen_rate = 0
+        ship.shield_regen_cost = 0
         ship.shield_regen_cost = 0
         ship.repair_rate = 0
         if LayerType.ARMOR in ship.layers:
@@ -310,116 +310,10 @@ class ShipStatsCalculator:
         # Ammo Generation (SumStacking)
         ship.ammo_gen_rate = self._get_ability_total(component_pool, 'AmmoGeneration')
 
-        # 6. Aggregate Resources (Storage & Generation)
-        # ---------------------------------------------
-        total_fuel = 0
-        total_energy = 0
-        total_ammo = 0
-        total_energy_gen = 0
-        
-        for comp in component_pool:
-            if not comp.is_active: continue
-            
-            # Use instantiated abilities (Source of truth for modified values)
-            if hasattr(comp, 'ability_instances'):
-                for ab in comp.ability_instances:
-                    # Note: ResourceStorage/Generation are imported at start of calculate
-                    
-                    if isinstance(ab, ResourceStorage):
-                         # ab.max_amount is the modified capacity
-                         if ab.resource_type == 'fuel':
-                             total_fuel += ab.max_amount
-                         elif ab.resource_type == 'energy':
-                             total_energy += ab.max_amount
-                         elif ab.resource_type == 'ammo':
-                             total_ammo += ab.max_amount
-                             
-                    elif isinstance(ab, ResourceGeneration):
-                         # ab.rate is the modified rate
-                         if ab.resource_type == 'energy':
-                             total_energy_gen += ab.rate
-
-        if hasattr(ship, 'resources'):
-             # Note: We are re-registering here essentially (or overwriting?). 
-             # Phase 3 handled 'Legacy' components but Phase 6 handles 'Abilities'.
-             # Wait, logic check: 
-             # Phase 3 iterates Component Pool.
-             # Phase 6 ALSO iterates Component Pool but specifically for 'ResourceStorage'.
-             # Actually, Phase 3 loop INCLUDES generic ability handling (lines 154+).
-             # So Phase 3 IS accumulating ability values into total_max_fuel.
-             # Phase 6 loop (lines 312+) seems REDUNDANT or conflicting if it re-sums.
-             # Let's check logic flow.
-             # Phase 3:
-             #   Iterate components:
-             #     If ResourceStorage -> add to total_max_fuel
-             #   Apply to ship.max_fuel
-             # Phase 6:
-             #   Iterate components AGAIN:
-             #     If ResourceStorage -> add to total_fuel (local var)
-             #   Apply to ship.max_fuel ( overwriting Phase 3?)
-             #
-             # YES. Phase 6 seems to be a duplicate or specific override.
-             # Given refactor, we should probably UNIFY this.
-             # But to be safe and follow plan, let's just update this block to behave correctly.
-             # The existing code OVERWRITES ship.max_fuel with 'total_fuel' calculated here.
-             # So we should register here too? Or relies on `register_storage` being additive?
-             # `register_storage` ADDS to capacity.
-             # If we call it in Phase 3 AND Phase 6, we DOUBLE capacity.
-             #
-             # Investigation:
-             # Phase 3 loop (lines 149-207) Handles:
-             #  - ResourceStorage ability (lines 157-164)
-             #  - Engine/Thruster/Armor legacy (lines 173+)
-             #
-             # Phase 6 loop (lines 312-333) Handles:
-             #  - ResourceStorage ability (lines 320-327)
-             #  - ResourceGeneration ability (lines 329-333)
-             #
-             # It looks like Phase 6 is partially redundant but might have been intended for 'final separate pass'.
-             # Since 'register_storage' adds, calling it twice IS A BUG.
-             # We should probably REMOVE the Phase 6 redundant aggregation if Phase 3 covers it.
-             # Phase 3 covers 'ResourceStorage' (lines 157) and 'ResourceGeneration' (Phase 3 lines 166: YES).
-             #
-             # Wait, Phase 3 has:
-             #   elif isinstance(ability, ResourceGeneration):
-             #       if ability.resource_type == 'energy': total_energy_gen += ability.rate
-             #
-             # So Phase 3 covers everything. 
-             # Phase 6 appears to be dead/duplicate code from refactor attempts.
-             # However, let's verify if Phase 3 *applies* everything.
-             # Phase 3 applies to 'total_max_fuel' etc local vars.
-             # Then lines 208 applies to ship properties.
-             #
-             # Phase 6 calculates 'total_fuel' etc.
-             # Then lines 334 applies to ship properties.
-             #
-             # IF we keep both, we are just overwriting.
-             # BUT `register_storage` accumulates.
-             # So we MUST NOT call register_storage twice for the same components.
-             #
-             # DECISION:
-             # Phase 6 is redundant. I will COMMENT OUT Phase 6 application or remove it,
-             # essentially relying on Phase 3.
-             # BUT wait: Phase 3 loop accumulates `total_max_fuel`.
-             # Phase 6 loop accumulates `total_fuel`.
-             # If I remove Phase 6, I must ensure Phase 3 is correct.
-             # Phase 3 looks correct.
-             #
-             # Let's replace Phase 6 application with a PASS or reset?
-             # Actually, `ship.resources.reset_stats()` was called at start.
-             # So if Phase 3 registers, we are good.
-             # If Phase 6 also registers (if I changed it), it would double.
-             # The existing code (before my changes) was OVERWRITING properties.
-             # `ship.max_fuel = total_fuel`.
-             # So effectively Phase 6 'won'. 
-             # Since Phase 3 and Phase 6 logic is identical for ResourceStorage, result is same.
-             #
-             # Strategy: Remove Phase 6 redundant logic to clean up confusion and avoid double-counting with `register`.
-             pass
-        # ship.max_fuel = total_fuel
-        # ship.max_ammo = total_ammo
-        # ship.max_energy = total_energy
-        # ship.energy_gen_rate = total_energy_gen
+        # 6. Aggregate Resources (Storage & Generation) - DEPRECATED / REMOVED
+        # Phase 3 already handles Ability aggregation for Ship properties and ResourceRegistry.
+        # This block was legacy/redundant and risked double-counting if active.
+        pass
 
         # Shield Stats
         ship.max_shields = self._get_ability_total(component_pool, 'ShieldProjection')

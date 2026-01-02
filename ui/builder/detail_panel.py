@@ -125,10 +125,42 @@ class ComponentDetailPanel:
             add_line(f"Range: {comp.range}", '#FFA500')
         if hasattr(comp, 'reload_time'):
             add_line(f"Reload: {comp.reload_time}s", '#FFC864')
-        if hasattr(comp, 'ammo_cost') and comp.ammo_cost > 0:
-            add_line(f"Ammo Cost: {comp.ammo_cost}", '#C8C832')
-        if hasattr(comp, 'energy_cost') and comp.energy_cost > 0:
-            add_line(f"Energy Cost: {comp.energy_cost}", '#64C8FF')
+        # Ability-based Resource Checks
+        # Note: We check `ability_instances` if available (post-init) or raw data
+        # For builder, we often have the raw component.
+        
+        # Helper to find ability cost/storage
+        def get_ability_val(comp, ability_name, resource_name=None, field='amount'):
+            if hasattr(comp, 'ability_instances'):
+                for ab in comp.ability_instances:
+                    if ab.__class__.__name__ == ability_name:
+                         if resource_name:
+                             if getattr(ab, 'resource_name', '') == resource_name:
+                                 return getattr(ab, field, 0)
+                         else:
+                             return getattr(ab, field, 0)
+            # Fallback to raw data (common in builder before simulation)
+            raw_abs = getattr(comp, 'abilities', {})
+            if ability_name in raw_abs:
+                data = raw_abs[ability_name]
+                # data is list of dicts
+                if isinstance(data, list):
+                    for item in data:
+                        if resource_name and item.get('resource') == resource_name:
+                            return item.get(field, 0)
+                        elif not resource_name:
+                             return item.get(field, 0)
+            return 0
+
+        # Ammo Cost (Activation)
+        ammo_cost = get_ability_val(comp, 'ResourceConsumption', 'ammo', 'amount')
+        if ammo_cost > 0:
+            add_line(f"Ammo Cost: {ammo_cost}", '#C8C832')
+            
+        # Energy Cost (Activation)
+        energy_cost = get_ability_val(comp, 'ResourceConsumption', 'energy', 'amount')
+        if energy_cost > 0:
+             add_line(f"Energy Cost: {energy_cost}", '#64C8FF')
         if hasattr(comp, 'firing_arc'):
             add_line(f"Arc: {comp.firing_arc}°", '#FF64FF')
         if hasattr(comp, 'base_accuracy'):
@@ -155,15 +187,29 @@ class ComponentDetailPanel:
             add_line(f"Thrust: {comp.thrust_force}", '#64FF64')
         if hasattr(comp, 'turn_speed') and comp.turn_speed > 0:
             add_line(f"Turn Speed: {comp.turn_speed}°/s", '#64FF96')
-        if hasattr(comp, 'fuel_cost_per_sec') and comp.fuel_cost_per_sec > 0:
-            add_line(f"Fuel: {comp.fuel_cost_per_sec}/s", '#FFA500')
+        # Fuel Cost (Constant)
+        fuel_cost = get_ability_val(comp, 'ResourceConsumption', 'fuel', 'amount')
+        if fuel_cost > 0:
+            add_line(f"Fuel: {fuel_cost}/s", '#FFA500')
             
         # Resource Stats
-        if hasattr(comp, 'capacity') and comp.capacity > 0:
-            rtype = getattr(comp, 'resource_type', 'Resource').title()
-            add_line(f"{rtype} Cap: {comp.capacity}", '#64FFFF')
-        if hasattr(comp, 'energy_generation_rate') and comp.energy_generation_rate > 0:
-            add_line(f"Energy Gen: {comp.energy_generation_rate}/s", '#FFFF00')
+        # Resource Storage (Capacity)
+        # We need to iterate all storage abilities
+        raw_abs = getattr(comp, 'abilities', {})
+        if 'ResourceStorage' in raw_abs:
+            storages = raw_abs['ResourceStorage']
+            for s in storages:
+                r_type = s.get('resource', '').title()
+                amt = s.get('amount', 0)
+                if amt > 0:
+                    add_line(f"{r_type} Cap: {amt}", '#64FFFF')
+        
+        # Energy Generation
+        e_gen = get_ability_val(comp, 'ResourceGeneration', 'energy', 'amount') # check 'amount' or 'rate'? 
+        # definition uses 'amount', logic uses 'rate', let's check basic data structure
+        # In data: { "resource": "energy", "amount": 5.0 }
+        if e_gen > 0:
+            add_line(f"Energy Gen: {e_gen}/s", '#FFFF00')
             
         # Shield Stats
         if hasattr(comp, 'shield_capacity') and comp.shield_capacity > 0:
