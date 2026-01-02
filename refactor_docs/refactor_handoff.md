@@ -2,8 +2,8 @@
 
 ## 1. High-Level Context
 **Refactor Goal**: Transition from Inheritance-based Components (`Engine`, `Weapon`) to Composition-based Components (`Component` + `Abilities`).
-**Current Phase**: Phase 1 (Foundation)
-**Strategy**: Incremental implementation. We are building the `abilities.py` module first. Existing code is untouched for now.
+**Current Phase**: Phase 1 (Post-Implementation Review)
+**Strategy**: `abilities.py` is built. `resources.py` is migrated. Next agent must INDEPENDENTLY VERIFY this foundation before Phase 2 begins.
 
 ## 2. Test Management Strategy
 *   **Active**: Test is valid and expected to pass.
@@ -35,6 +35,8 @@
 | `unit_tests/test_builder_validation.py` | **Active** | validation logic. Critical for data integrity. | Phase 6 |
 
 ## 4. Next Agent Instructions
-*   **Current Focus**: Phase 1 - Foundation.
-*   **Immediate Action**: Create `abilities.py` and implement the base `Ability` class and the Resource/Gameplay abilities defined in the task list.
-*   **Watch Out For**: Circular imports. `abilities.py` should NOT import `components.py`.
+*   **Current Focus**: Phase 1 - Verification & Review.
+*   **Immediate Action**: PROCEED WITH CAUTION. Perform a code review of `abilities.py` and `resources.py`.
+*   **Verify**: Ensure `ABILITY_REGISTRY` is complete and `Component` imports in valid order.
+*   **Execute**: Run `unit_tests/test_abilities.py` and `unit_tests/test_resources.py` yourself to confirm green state.
+*   **Then**: Only after verification, proceed to Phase 2 (Component Refactor).
