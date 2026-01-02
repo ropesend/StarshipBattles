@@ -122,9 +122,15 @@
         - [x] `Bridge` class → `Bridge = Component` alias <!-- id: 127 -->
         - [x] `Engine`, `Thruster` → `Component` aliases <!-- id: 149a -->
         - [x] `Tank`, `Armor`, `Generator` → `Component` aliases <!-- id: 149b -->
+        - [x] `Weapon`, `ProjectileWeapon` → `Component` aliases <!-- id: 127c -->
+        - [x] `BeamWeapon`, `SeekerWeapon` → `Component` aliases <!-- id: 127d -->
         - [x] **AUDIT**: No `isinstance` checks remain for any legacy class <!-- id: 127b -->
-        - [ ] Weapon hierarchy classes have complex behavior (cooldown, fire methods) - keep as-is <!-- id: 127c -->
-        - [ ] Delete `_instantiate_abilities` shim logic (lines 182-296) <!-- id: 128 -->
+        - [x] Fixed seeker range tests (0.8 maneuvering factor in ability) <!-- id: 127e -->
+        - [ ] Delete `_instantiate_abilities` shim logic <!-- id: 128 -->
         - [ ] Simplify `COMPONENT_TYPE_MAP` - many entries now point to `Component` <!-- id: 150 -->
         - [ ] Clean up unused imports across codebase <!-- id: 130 -->
+    - [ ] **Future: Modifier → Ability Value Sync** <!-- id: 151 -->
+        - When modifiers change stats (e.g., `endurance_mult`), ability values should recalculate
+        - Currently abilities read from data dict; modifiers affect stats dict
+        - Removed legacy `SeekerWeapon._apply_custom_stats` that bridged this gap
 

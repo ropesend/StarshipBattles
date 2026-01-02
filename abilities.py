@@ -335,9 +335,9 @@ class SeekerWeaponAbility(WeaponAbility):
         self.to_hit_defense = float(data.get('to_hit_defense', 0.0))
         
         # Recalculate range based on endurance if basic range not set or derived
-        # Often range is just speed * endurance
+        # Seekers use 80% of straight-line range to account for maneuvering
         if self.range <= 0 and self.projectile_speed > 0:
-             self.range = self.projectile_speed * self.endurance
+             self.range = int(self.projectile_speed * self.endurance * 0.8)
 
 # --- Registry ---
 

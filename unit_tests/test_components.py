@@ -29,8 +29,11 @@ class TestComponents(unittest.TestCase):
 
     def test_create_component_types(self):
         railgun = create_component('railgun')
-        self.assertIsInstance(railgun, Weapon)
-        self.assertEqual(railgun.damage, 40)
+        # Phase 7: Check weapon has ability, not legacy class
+        self.assertTrue(railgun.has_ability('WeaponAbility'))
+        weapon_ab = railgun.get_ability('ProjectileWeaponAbility')
+        self.assertIsNotNone(weapon_ab)
+        self.assertEqual(weapon_ab.damage, 40)
         
         tank = create_component('fuel_tank')
         self.assertIsInstance(tank, Tank)
@@ -123,12 +126,16 @@ class TestModifierStacking(unittest.TestCase):
     def test_range_stacking(self):
         """Range mount level 2 should give 4x range."""
         railgun = create_component('railgun')
-        base_range = railgun.range  # 2400 (now read from ability dict via constructor)
+        # Phase 7: Get range from ability
+        weapon_ab = railgun.get_ability('ProjectileWeaponAbility')
+        base_range = weapon_ab.range  # 2400
         
         railgun.add_modifier('range_mount', 2.0)  # Level 2 = 4x range
         
+        # Re-get ability after modifier application
+        weapon_ab = railgun.get_ability('ProjectileWeaponAbility')
         expected_range = base_range * 4  # 9600
-        self.assertAlmostEqual(railgun.range, expected_range, places=0)
+        self.assertAlmostEqual(weapon_ab.range, expected_range, places=0)
 
 
 class TestModifierOrder(unittest.TestCase):

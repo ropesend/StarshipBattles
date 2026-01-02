@@ -651,100 +651,13 @@ Bridge = Component
 
 from logger import log_event
 
-class Weapon(Component):
-    def __init__(self, data):
-        super().__init__(data)
-        
-        # Helper to read weapon stats from root or abilities dict
-        def get_weapon_data(key, default=0):
-            if key in data:
-                return data[key]
-            # Check in ability dicts (Phase 6 migrated structure)
-            abilities = data.get('abilities', {})
-            for ab_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility', 'WeaponAbility']:
-                if ab_name in abilities:
-                    ab_data = abilities[ab_name]
-                    if isinstance(ab_data, dict) and key in ab_data:
-                        return ab_data[key]
-            return default
-        
-        # Store raw damage value/formula
-        raw_damage = get_weapon_data('damage', 0)
-        if isinstance(raw_damage, str) and raw_damage.startswith("="):
-            self.damage_formula = raw_damage[1:]  # Store formula without '='
-            # Evaluate at range 0 for base display value
-            self.damage = int(max(0, evaluate_math_formula(self.damage_formula, {'range_to_target': 0})))
-        else:
-            self.damage_formula = None
-            self.damage = int(raw_damage) if raw_damage else 0
-        
-        self.range = get_weapon_data('range', 0)
-        self.reload_time = get_weapon_data('reload', 1.0)
-        
-        self.cooldown_timer = 0.0
-        self.firing_arc = get_weapon_data('firing_arc', 20) # Degrees
-        self.facing_angle = get_weapon_data('facing_angle', 0) # Degrees relative to component forward (0)
-        self.fire_count = 0  # Track how many times weapon has fired
-        self.shots_fired = 0
-        self.shots_hit = 0
+# Phase 7: Weapon is now an alias for Component (backward compatible)
+# All weapon stats and methods are now in WeaponAbility/ProjectileWeaponAbility/BeamWeaponAbility
+Weapon = Component
 
-    def get_damage(self, range_to_target: float) -> int:
-        """Evaluate damage at a specific range. Returns base damage if no formula."""
-        if self.damage_formula:
-            context = {'range_to_target': range_to_target}
-            base_val = max(0, evaluate_math_formula(self.damage_formula, context))
-            mult = getattr(self, 'damage_multiplier', 1.0)
-            return int(base_val * mult)
-        return int(self.damage)
-
-    def update(self):
-        super().update()
-        # Tick-Based: Each call decrements cooldown by 1 tick (0.01 seconds)
-        TICK_DURATION = 0.01
-        if self.cooldown_timer > 0:
-            self.cooldown_timer -= TICK_DURATION
-
-    def can_fire(self):
-        return self.is_active and self.cooldown_timer <= 0
-
-    def fire(self, target=None):
-        if self.can_fire():
-            self.cooldown_timer = self.reload_time
-            self.fire_count += 1
-            
-            # Log weapon fire event
-            if self.ship:
-                target_name = getattr(target, 'name', "Unknown Target") if target else "None"
-                log_event("WEAPON_FIRE", 
-                         ship_name=self.ship.name, 
-                         weapon_id=self.id, 
-                         target=target_name,
-                         tick=0) # Tick will be auto-filled by logger wrapper if not available, but ideally context passed
-            return True
-        return False
-    
-    def clone(self):
-        # Default clone for base weapon, though usually we clone concrete types
-        return Weapon(self.data)
-
-class ProjectileWeapon(Weapon):
-    def __init__(self, data):
-        super().__init__(data)
-        # Helper to read from root or abilities dict
-        def get_weapon_data(key, default=0):
-            if key in data:
-                return data[key]
-            abilities = data.get('abilities', {})
-            for ab_name in ['ProjectileWeaponAbility', 'WeaponAbility']:
-                if ab_name in abilities:
-                    ab_data = abilities[ab_name]
-                    if isinstance(ab_data, dict) and key in ab_data:
-                        return ab_data[key]
-            return default
-        self.projectile_speed = get_weapon_data('projectile_speed', 1200)
-        
-    def clone(self):
-        return ProjectileWeapon(self.data)
+# Phase 7: ProjectileWeapon is now an alias for Component
+# All projectile stats are in ProjectileWeaponAbility
+ProjectileWeapon = Component
 
 # Phase 7: Engine, Thruster are now aliases for Component (backward compatible)
 # All thrust/turn stats are now managed via CombatPropulsion/ManeuveringThruster abilities
@@ -756,111 +669,13 @@ Tank = Component
 Armor = Component
 Generator = Component
 
-class BeamWeapon(Weapon):
-    def __init__(self, data):
-        super().__init__(data)
-        # Helper to read from root or abilities dict
-        def get_weapon_data(key, default=0):
-            if key in data:
-                return data[key]
-            abilities = data.get('abilities', {})
-            for ab_name in ['BeamWeaponAbility', 'WeaponAbility']:
-                if ab_name in abilities:
-                    ab_data = abilities[ab_name]
-                    if isinstance(ab_data, dict) and key in ab_data:
-                        return ab_data[key]
-            return default
-        self.base_accuracy = get_weapon_data('base_accuracy', 1.0)
-        self.accuracy_falloff = get_weapon_data('accuracy_falloff', 0.001)
+# Phase 7: BeamWeapon is now an alias for Component
+# All beam accuracy stats and calculate_hit_chance are in BeamWeaponAbility
+BeamWeapon = Component
 
-    def _apply_custom_stats(self, stats):
-        super()._apply_custom_stats(stats)
-        
-        # Apply accuracy falloff multiplier
-        base = self.data.get('accuracy_falloff', 0.001)
-        # Check if accuracy_falloff_mult was set by properties in super (it would be in stats['properties'])
-        # Actually in old code it was checking `getattr(self, 'accuracy_falloff_mult')`.
-        # Base `_apply_base_stats` applies properties to self. So this works.
-        self.accuracy_falloff = base * getattr(self, 'accuracy_falloff_mult', 1.0)
-        
-        # Apply Base Accuracy Additive Score (e.g. Precision Targeting)
-        base_acc = self.data.get('base_accuracy', 1.0) # Default depends on data, usually 2.0 now
-        self.base_accuracy = base_acc + stats.get('accuracy_add', 0.0)
-
-
-    def clone(self):
-        return BeamWeapon(self.data)
-    
-    def calculate_hit_chance(self, distance, attack_score_bonus=0.0, defense_score_penalty=0.0):
-        """
-        Calculate hit chance using the Logistic Function (Sigmoid).
-        Formula: P = 1 / (1 + e^-x)
-        Where x = (BaseScore + AttackBonuses) - (RangePenalty + DefensePenalties)
-        
-        Args:
-            distance (float): Range to target in pixels.
-            attack_score_bonus (float): Total accuracy score from attacker (Sensors, etc).
-            defense_score_penalty (float): Total defense score from target (ECM, Size, etc).
-        """
-        # 1. Calculate Score
-        # Range Penalty: falloff * distance
-        range_penalty = self.accuracy_falloff * distance
-        
-        net_score = (self.base_accuracy + attack_score_bonus) - (range_penalty + defense_score_penalty)
-        
-        # 2. Sigmoid Function
-        try:
-            # Clamp exp input to avoid overflow (e.g. e^700 is huge)
-            # A score > 10 is basically 100%, < -10 is 0%.
-            clamped_score = max(-20.0, min(20.0, net_score))
-            chance = 1.0 / (1.0 + math.exp(-clamped_score))
-        except OverflowError:
-            chance = 0.0 if net_score < 0 else 1.0
-            
-        return chance
-
-class SeekerWeapon(Weapon):
-    def __init__(self, data):
-        super().__init__(data)
-        self.projectile_speed = data.get('projectile_speed', 1000)
-        self.turn_rate = data.get('turn_rate', 30)
-        self.endurance = data.get('endurance', 5.0)
-        self.hp = data.get('hp', 1)
-        self.range = int(self.projectile_speed * self.endurance * 0.8)
-
-    def _apply_custom_stats(self, stats):
-        super()._apply_custom_stats(stats)
-        
-        # Apply 80% rule to the calculated range (Straight Line * 0.8 * Multipliers)
-        # Apply endurance_mult
-        self.endurance = self.data.get('endurance', 5.0) * stats.get('endurance_mult', 1.0)
-        
-        self.range = int((self.projectile_speed * self.endurance) * 0.8 * stats['range_mult'])
-        
-        # Apply projectile HP modifier
-        base_proj_hp = self.data.get('hp', 1)
-        self.hp = int(base_proj_hp * stats.get('projectile_hp_mult', 1.0))
-        
-        # Apply projectile damage modifier
-        # For seekers, damage is a payload value applied on impact, stored in self.damage
-        base_damage = self.data.get('damage', 10)
-        self.damage = int(base_damage * stats.get('projectile_damage_mult', 1.0))
-        
-        # We also clear damage_multiplier as we applied it directly to the base value
-        # This prevents double application if get_damage() is used
-        self.damage_multiplier = 1.0
-        
-        # Apply stealth
-        self.projectile_stealth_level = stats.get('projectile_stealth_level', 0.0)
-        
-        # Calculate To-Hit Defense Score (Baseline + Stealth)
-        # Baseline is 0.0. Each stealth level adds +0.2 Score.
-        # This replaces the old percentage logic.
-        base_def = self.data.get('to_hit_defense', 0.0)
-        self.to_hit_defense = base_def + (self.projectile_stealth_level * 0.2)
-        
-    def clone(self):
-        return SeekerWeapon(self.data)
+# Phase 7: SeekerWeapon is now an alias for Component
+# All seeker stats are in SeekerWeaponAbility
+SeekerWeapon = Component
 
 class CrewQuarters(Component):
     """Provides crew capacity for the ship."""

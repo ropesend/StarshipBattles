@@ -149,8 +149,8 @@ class TestAbilities(unittest.TestCase):
         self.assertEqual(ab.endurance, 10.0)
         self.assertEqual(ab.turn_rate, 45.0)
         self.assertEqual(ab.to_hit_defense, 1.5)
-        # Range should be auto-calculated: speed * endurance
-        self.assertEqual(ab.range, 5000)
+        # Range should be auto-calculated: speed * endurance * 0.8 (maneuvering efficiency)
+        self.assertEqual(ab.range, 4000)  # 500 * 10 * 0.8
 
     def test_get_abilities_polymorphism(self):
         """Test that get_abilities() finds abilities by parent class."""

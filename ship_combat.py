@@ -144,6 +144,8 @@ class ShipCombatMixin:
 
                         if valid_target and target and weapon_ab.fire(target):
                             self.total_shots_fired += 1
+                            # Phase 7: Safe attribute access after Weapon alias conversion
+                            if not hasattr(comp, 'shots_fired'): comp.shots_fired = 0
                             comp.shots_fired += 1
                             
                             # Deduct Resource generically
@@ -151,6 +153,8 @@ class ShipCombatMixin:
                             
                             # Deduct Resource
                             if comp.has_ability('BeamWeaponAbility'):
+                                # Phase 7: Safe attribute access
+                                if not hasattr(comp, 'shots_hit'): comp.shots_hit = 0
                                 comp.shots_hit += 1 # Beams are hitscan and we only fire if valid_target (in arc/range)
                                 # Technically valid_target means "can hit", but accuracy fail?
                                 # BeamWeapon has accuracy falloff. 

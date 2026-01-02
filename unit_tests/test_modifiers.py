@@ -58,7 +58,9 @@ class TestModifiers(unittest.TestCase):
     def test_modifier_effects_on_stats(self):
         """Test that modifier effects are applied to stats."""
         railgun = create_component('railgun')
-        base_arc = railgun.firing_arc
+        # Phase 7: Get firing_arc from ability
+        weapon_ab = railgun.get_ability('ProjectileWeaponAbility') or railgun.get_ability('WeaponAbility')
+        base_arc = weapon_ab.firing_arc if weapon_ab else 20
         
         # Check for arc-modifying modifier
         if 'wide_arc' in MODIFIER_REGISTRY:
@@ -111,8 +113,11 @@ class TestComponentCloning(unittest.TestCase):
         clone = railgun.clone()
         
         self.assertIsInstance(clone, ProjectileWeapon)
-        self.assertEqual(clone.damage, railgun.damage)
-        self.assertEqual(clone.projectile_speed, railgun.projectile_speed)
+        # Phase 7: Compare ability values, not component attributes
+        clone_ab = clone.get_ability('ProjectileWeaponAbility')
+        railgun_ab = railgun.get_ability('ProjectileWeaponAbility')
+        self.assertEqual(clone_ab.damage, railgun_ab.damage)
+        self.assertEqual(clone_ab.projectile_speed, railgun_ab.projectile_speed)
     
     def test_beam_weapon_clone(self):
         """BeamWeapon should clone correctly."""

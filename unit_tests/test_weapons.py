@@ -21,12 +21,16 @@ class TestWeaponBasics(unittest.TestCase):
         load_components("data/components.json")
     
     def test_weapon_initialization(self):
-        """Weapon should initialize with correct stats."""
+        """Weapon should initialize with correct stats via ability."""
         railgun = create_component('railgun')
         
-        self.assertEqual(railgun.damage, 40)
-        self.assertEqual(railgun.range, 2400)
-        self.assertGreater(railgun.projectile_speed, 0)
+        # Phase 7: Use ability-based access
+        weapon_ab = railgun.get_ability('ProjectileWeaponAbility')
+        self.assertIsNotNone(weapon_ab)
+        
+        self.assertEqual(weapon_ab.damage, 40)
+        self.assertEqual(weapon_ab.range, 2400)
+        self.assertGreater(weapon_ab.projectile_speed, 0)
     
     def test_weapon_cooldown(self):
         """Weapon should respect cooldown timer via ability."""
