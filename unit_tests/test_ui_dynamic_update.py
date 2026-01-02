@@ -22,6 +22,10 @@ class TestUIDynamicUpdate(unittest.TestCase):
         importlib.reload(ui.builder.stats_config) # Resets STATS_CONFIG
         importlib.reload(ui.builder.right_panel) # Re-imports fresh classes
         
+        # Also reload resources to reset ResourceRegistry if needed
+        import resources
+        importlib.reload(resources)
+        
         # Capture fresh class references
         self.ShipClass = ship.Ship
         self.BuilderRightPanelClass = ui.builder.right_panel.BuilderRightPanel

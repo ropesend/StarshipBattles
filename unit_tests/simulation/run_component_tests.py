@@ -89,11 +89,11 @@ class ComponentTestRunner:
     
     Usage:
         runner = ComponentTestRunner()
-        result = runner.run_test("tests/simulation/test_configs/ENG-001.json")
+        result = runner.run_test("unit_tests/simulation/test_configs/ENG-001.json")
         print(f"Pass: {result.passed}")
     """
     
-    def __init__(self, data_dir: str = "tests/data"):
+    def __init__(self, data_dir: str = "unit_tests/data"):
         """
         Initialize the test runner.
         
@@ -443,7 +443,7 @@ class TestResult:
         return "\n".join(lines)
 
 
-def run_all_tests(config_dir: str = "tests/simulation/test_configs") -> List[TestResult]:
+def run_all_tests(config_dir: str = "unit_tests/simulation/test_configs") -> List[TestResult]:
     """
     Run all test configurations in a directory.
     
@@ -479,7 +479,7 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='Run component simulation tests')
     parser.add_argument('--config', '-c', help='Path to single test config file')
-    parser.add_argument('--dir', '-d', default='tests/simulation/test_configs',
+    parser.add_argument('--dir', '-d', default='unit_tests/simulation/test_configs',
                         help='Directory containing test configs')
     
     args = parser.parse_args()

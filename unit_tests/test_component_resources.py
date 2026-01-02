@@ -6,15 +6,20 @@ class MockShip:
     def __init__(self):
         self.resources = ResourceRegistry()
 
-class TestComponentShim(unittest.TestCase):
-    def test_fuel_shim(self):
+class TestComponentCapabilities(unittest.TestCase):
+    def test_fuel_ability(self):
+        # TEST REFACTOR: Using strict ability definition instead of legacy 'fuel_cost'
         data = {
             "id": "test_engine",
             "name": "Test Engine",
             "type": "Engine",
             "mass": 10,
             "hp": 100,
-            "fuel_cost": 5.0
+            "abilities": {
+                "ResourceConsumption": [
+                    {"resource": "fuel", "amount": 5.0, "trigger": "constant"}
+                ]
+            }
         }
         c = Component(data)
         
@@ -26,16 +31,21 @@ class TestComponentShim(unittest.TestCase):
             if isinstance(ab, ResourceConsumption):
                 if ab.resource_name == 'fuel' and ab.amount == 5.0 and ab.trigger == 'constant':
                     found = True
-        self.assertTrue(found, "Fuel Cost shim failed")
+        self.assertTrue(found, "Fuel Ability failed to instantiate")
 
-    def test_energy_activation_shim(self):
+    def test_energy_activation_ability(self):
+        # TEST REFACTOR: Using strict ability definition
         data = {
             "id": "test_laser",
             "name": "Laser",
             "type": "Weapon",
             "mass": 10,
             "hp": 100,
-            "energy_cost": 10.0
+            "abilities": {
+                "ResourceConsumption": [
+                    {"resource": "energy", "amount": 10.0, "trigger": "activation"}
+                ]
+            }
         }
         c = Component(data)
         
@@ -44,17 +54,22 @@ class TestComponentShim(unittest.TestCase):
             if isinstance(ab, ResourceConsumption):
                 if ab.resource_name == 'energy' and ab.amount == 10.0 and ab.trigger == 'activation':
                     found = True
-        self.assertTrue(found, "Energy Activation shim failed")
+        self.assertTrue(found, "Energy Activation ability failed to instantiate")
 
 class TestComponentOperation(unittest.TestCase):
     def test_operational_status(self):
+        # TEST REFACTOR: Using strict ability definition
         data = {
             "id": "test_engine",
             "name": "Test Engine",
             "type": "Engine",
             "mass": 10,
             "hp": 100,
-            "fuel_cost": 10.0 # Constant drain
+            "abilities": {
+                "ResourceConsumption": [
+                    {"resource": "fuel", "amount": 10.0, "trigger": "constant"}
+                ]
+            }
         }
         c = Component(data)
         ship = MockShip()

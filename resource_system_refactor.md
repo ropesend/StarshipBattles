@@ -4,7 +4,8 @@
 *   **Phase 2**: Ship Logic Refactor (Complete)
 *   **Phase 3**: Physics & Combat Integration (Complete)
 *   **Phase 4**: UI & Builder Updates (Complete)
-*   **Phase 5**: Data Migration (Pending)
+*   **Phase 5**: Data Migration (Complete) - Verified Clean
+*   **Phase 6**: Cleanup & Verification (Complete) - Legacy Code Removed
 
 ## Goal
 Unify the handling of Fuel, Energy, and Ammunition (and potential future resources) into a single, generic **Resource System**. This removes hardcoded fields like `fuel_cost` or `max_energy` and replaces them with data-driven "Abilities" attached to components.
@@ -92,9 +93,26 @@ Passive regeneration of a resource.
     *   Dynamically render bars for any resource with `max > 0`.
     *   (Optionally preserve specific colors for known types: Fuel=Yellow, Energy=Blue, Ammo=Red).
 
-### Phase 5: Data Migration
-1.  **Update `components.json`**: Use a script to convert `fuel_cost`, `energy_cost`, `ammo_cost`, `max_fuel`, etc., into the new `abilities` format.
-2.  **Update `ships/` JSON**: Remove legacy stats (`max_fuel`, etc.) and rely on calculated stats.
+### Phase 5: Data Migration (Complete)
+1.  **Update `components.json`**: Verified that all `fuel_cost`, `energy_cost`, etc. keys have been removed and replaced with `abilities`.
+2.  **Verify Ship Files**: Checked `data/ships/*.json` and `data/vehicleclasses.json`; no legacy keys found.
+
+### Phase 6: Cleanup & Verification (Complete)
+1.  **Remove Legacy Code**: Deleted `_apply_legacy_shim` and `_ensure_consumption` from `components.py`.
+2.  **Strict Initialization**: Updated Component subclasses (`Engine`, `Tank`, `Weapon`, `Generator`) to strictly load from `abilities`.
+3.  **Regression Testing**:
+    *   Fixed `test_component_resources.py` to test new `Ability` system directly.
+    *   Fixed `test_combat_endurance.py` by removing legacy sync code in `Tank` class.
+    *   Verified full test suite passing (with known unrelated UI flake).
+
+## What May Be Needed (Post-Migration)
+1.  **Monitor for Regressions**: Watch for any persistent "0 resource" bugs in UI (unlikely after fixes).
+2.  **Visual Polish**:
+    *   **Colors**: Ensure default resource bar colors are distinct (possibly hash-based or manually mapped).
+    *   **Icons**: Add support for resource icons in the UI (Stats Panel and HUD).
+3.  **Regression Testing**: 
+    *   Verify that saved ship designs load correctly with the new schema.
+    *   Ensure older "standard" ships from `vehicleclasses.json` behave identically in combat simulation (endurance, ammo counts) as before.
 
 ## Example Data Transformations
 

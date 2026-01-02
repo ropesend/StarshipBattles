@@ -165,4 +165,4 @@ def migrate_file(filepath):
 
 if __name__ == "__main__":
     migrate_file("data/components.json")
-    migrate_file("tests/data/test_components.json")
+    migrate_file("unit_tests/data/test_components.json")

@@ -17,8 +17,8 @@ class TestSolveLead(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         pygame.init()
-        load_vehicle_classes("tests/data/test_vehicleclasses.json")
-        load_components("tests/data/test_components.json")
+        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+        load_components("unit_tests/data/test_components.json")
     
     @classmethod
     def tearDownClass(cls):
@@ -100,8 +100,8 @@ class TestToHitProfile(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         pygame.init()
-        load_vehicle_classes("tests/data/test_vehicleclasses.json")
-        load_components("tests/data/test_components.json")
+        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+        load_components("unit_tests/data/test_components.json")
     
     @classmethod
     def tearDownClass(cls):
@@ -166,8 +166,8 @@ class TestMaxWeaponRange(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         pygame.init()
-        load_vehicle_classes("tests/data/test_vehicleclasses.json")
-        load_components("tests/data/test_components.json")
+        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+        load_components("unit_tests/data/test_components.json")
     
     @classmethod
     def tearDownClass(cls):

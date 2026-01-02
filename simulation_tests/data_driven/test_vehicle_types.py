@@ -21,13 +21,13 @@ class TestVehicleClassLoading(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Load from TEST data explicitly
-        load_vehicle_classes("tests/data/test_vehicleclasses.json")
-        load_components("tests/data/test_components.json")
+        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+        load_components("unit_tests/data/test_components.json")
         # Modifiers don't have a test file yet, assume production or none needed?
         # Many tests need modifiers loaded. 
         # For now, load production modifiers if no test modifiers exist.
         try:
-            load_modifiers("tests/data/test_modifiers.json")
+            load_modifiers("unit_tests/data/test_modifiers.json")
         except:
             load_modifiers() # Fallback
             
@@ -76,8 +76,8 @@ class TestShipVehicleType(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        load_vehicle_classes("tests/data/test_vehicleclasses.json")
-        load_components("tests/data/test_components.json")
+        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+        load_components("unit_tests/data/test_components.json")
         load_modifiers()
         pygame.init()
 
@@ -103,8 +103,8 @@ class TestComponentRestrictions(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        load_vehicle_classes("tests/data/test_vehicleclasses.json")
-        load_components("tests/data/test_components.json")
+        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+        load_components("unit_tests/data/test_components.json")
         load_modifiers()
         pygame.init()
 
@@ -179,8 +179,8 @@ class TestSatelliteLogic(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        load_vehicle_classes("tests/data/test_vehicleclasses.json")
-        load_components("tests/data/test_components.json")
+        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+        load_components("unit_tests/data/test_components.json")
         load_modifiers()
         pygame.init()
 
@@ -215,8 +215,8 @@ class TestSatelliteAI(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        load_vehicle_classes("tests/data/test_vehicleclasses.json")
-        load_components("tests/data/test_components.json")
+        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+        load_components("unit_tests/data/test_components.json")
         load_modifiers()
         load_combat_strategies()
         pygame.init()
@@ -305,8 +305,8 @@ class TestFighterLogic(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        load_vehicle_classes("tests/data/test_vehicleclasses.json")
-        load_components("tests/data/test_components.json")
+        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+        load_components("unit_tests/data/test_components.json")
         load_modifiers()
         pygame.init()
 

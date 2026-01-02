@@ -81,9 +81,6 @@ class Component:
         self.ability_instances = []
         self._is_operational = True # Tracks if component has resources to operate
         
-        # SHIM: Inject legacy fields into generic abilities if not present
-        self._apply_legacy_shim()
-
         # Instantiate Abilities
         self._instantiate_abilities()
         
@@ -119,87 +116,6 @@ class Component:
                      if key == 'hp': 
                          self.max_hp = 0
                          self.current_hp = 0
-
-    def _apply_legacy_shim(self):
-        """Convert legacy fields (fuel_cost, etc) to Abilities if needed."""
-        # 1. Fuel Cost -> ResourceConsumption (Constant)
-        fuel_cost = self.data.get('fuel_cost', 0)
-        if fuel_cost > 0:
-            # Check if already has it
-            found = False
-            if 'ResourceConsumption' in self.abilities:
-                 # Check list or dict
-                 val = self.abilities['ResourceConsumption']
-                 if isinstance(val, list):
-                     for v in val:
-                         if v.get('resource') == 'fuel': found = True
-                 elif isinstance(val, dict):
-                     if val.get('resource') == 'fuel': found = True
-            
-            if not found:
-                if 'ResourceConsumption' not in self.abilities:
-                    self.abilities['ResourceConsumption'] = []
-                elif isinstance(self.abilities['ResourceConsumption'], dict):
-                     # Convert single dict to list
-                     self.abilities['ResourceConsumption'] = [self.abilities['ResourceConsumption']]
-                
-                self.abilities['ResourceConsumption'].append({
-                    "resource": "fuel",
-                    "amount": fuel_cost,
-                    "trigger": "constant"
-                })
-
-        # 2. Energy/Ammo Cost -> ResourceConsumption (Activation) - Handled mostly in Weapon subclass shim or generic here?
-        # Generic is safer.
-        energy_cost = self.data.get('energy_cost', 0)
-        if energy_cost > 0:
-            self._ensure_consumption('energy', energy_cost, 'activation')
-
-        ammo_cost = self.data.get('ammo_cost', 0)
-        if ammo_cost > 0:
-            self._ensure_consumption('ammo', ammo_cost, 'activation')
-            
-        # 3. Storage (Tanks)
-        cap = self.data.get('capacity', 0)
-        if cap > 0:
-            rtype = self.data.get('resource_type', 'fuel')
-            # Check if not already defined
-            if 'ResourceStorage' not in self.abilities:
-                self.abilities['ResourceStorage'] = []
-                self.abilities['ResourceStorage'].append({
-                    "resource": rtype,
-                    "amount": cap
-                })
-
-        # 4. Generation
-        gen = self.data.get('energy_generation', 0)
-        if gen > 0:
-             if 'ResourceGeneration' not in self.abilities:
-                self.abilities['ResourceGeneration'] = []
-                self.abilities['ResourceGeneration'].append({
-                    "resource": "energy",
-                    "amount": gen
-                })
-
-    def _ensure_consumption(self, resource, amount, trigger):
-        if 'ResourceConsumption' not in self.abilities:
-            self.abilities['ResourceConsumption'] = []
-        
-        # Canonicalize to list
-        if isinstance(self.abilities['ResourceConsumption'], dict):
-             self.abilities['ResourceConsumption'] = [self.abilities['ResourceConsumption']]
-             
-        # Check for duplicates
-        for item in self.abilities['ResourceConsumption']:
-            if item.get('resource') == resource and item.get('trigger') == trigger:
-                # Already exists. Trust the sync logic to update amount if needed.
-                return
-
-        self.abilities['ResourceConsumption'].append({
-            "resource": resource,
-            "amount": amount,
-            "trigger": trigger
-        })
 
     def _instantiate_abilities(self):
         """Instantiate Ability objects from self.abilities dict."""
@@ -620,10 +536,10 @@ class Weapon(Component):
         
         self.range = data.get('range', 0)
         self.reload_time = data.get('reload', 1.0)
-        self.ammo_cost = data.get('ammo_cost', 0)
+        self.ammo_cost = 0
         
-        # Fallback for ammo_cost
-        if self.ammo_cost == 0 and 'ResourceConsumption' in self.abilities:
+        # Load ammo_cost from Abilities
+        if 'ResourceConsumption' in self.abilities:
             val = self.abilities['ResourceConsumption']
             if isinstance(val, list):
                  for v in val:
@@ -633,6 +549,7 @@ class Weapon(Component):
             elif isinstance(val, dict):
                  if val.get('resource') == 'ammo' and val.get('trigger') == 'activation':
                         self.ammo_cost = val.get('amount', 0)
+        self.cooldown_timer = 0.0
         self.cooldown_timer = 0.0
         self.firing_arc = data.get('firing_arc', 20) # Degrees
         self.facing_angle = data.get('facing_angle', 0) # Degrees relative to component forward (0)
@@ -691,10 +608,10 @@ class Engine(Component):
     def __init__(self, data):
         super().__init__(data)
         self.thrust_force = data.get('thrust_force', 0)
-        self.fuel_cost_per_sec = data.get('fuel_cost', 0)
+        self.fuel_cost_per_sec = 0
         
-        # Fallback to Abilities if legacy data missing
-        if self.fuel_cost_per_sec == 0 and 'ResourceConsumption' in self.abilities:
+        # Load fuel cost from Abilities
+        if 'ResourceConsumption' in self.abilities:
             # Search for fuel constant consumption
             val = self.abilities['ResourceConsumption']
             if isinstance(val, list):
@@ -728,23 +645,23 @@ class Thruster(Component):
 class Tank(Component):
     def __init__(self, data):
         super().__init__(data)
-        self.capacity = data.get('capacity', 0)
-        self.resource_type = data.get('resource_type', 'fuel')
-
-        # Fallback to Abilities
-        if self.capacity == 0 and 'ResourceStorage' in self.abilities:
-            # Need to match resource type if generic, or assume mapping
-            # Actually ResourceStorage is usually a list
+        self.capacity = 0
+        # self.resource_type? Tank needs to know what it is?
+        # Usually inferred from abilities now. But Tank class might still store it for UI?
+        # Let's inspect abilities to find what we store.
+        self.resource_type = 'unknown' # Default
+        
+        if 'ResourceStorage' in self.abilities:
             val = self.abilities['ResourceStorage']
-            # Find matching resource
             if isinstance(val, list):
-                for v in val:
-                    if v.get('resource') == self.resource_type:
-                        self.capacity = v.get('amount', 0)
-                        break
+                # Use first one?
+                if len(val) > 0:
+                    v = val[0]
+                    self.resource_type = v.get('resource', 'fuel')
+                    self.capacity = v.get('amount', 0)
             elif isinstance(val, dict):
-                 if val.get('resource') == self.resource_type:
-                        self.capacity = val.get('amount', 0)
+                 self.resource_type = val.get('resource', 'fuel')
+                 self.capacity = val.get('amount', 0)
     
     def _apply_custom_stats(self, stats):
         super()._apply_custom_stats(stats)
@@ -762,11 +679,11 @@ class Tank(Component):
                        base_cap = val.get('amount', 0)
         self.capacity = int(base_cap * stats.get('capacity_mult', 1.0))
         
-        # Sync to Ability (Shim)
-        from resources import ResourceStorage
-        for ab in self.ability_instances:
-            if isinstance(ab, ResourceStorage) and ab.resource_type == self.resource_type:
-                ab.max_amount = self.capacity
+        # Sync to Ability (Shim) - REMOVED: Ability is now Source of Truth
+        # from resources import ResourceStorage
+        # for ab in self.ability_instances:
+        #     if isinstance(ab, ResourceStorage) and ab.resource_type == self.resource_type:
+        #         ab.max_amount = self.capacity
 
     def clone(self):
         return Tank(self.data)
@@ -782,12 +699,11 @@ class Armor(Component):
 class Generator(Component):
     def __init__(self, data):
         super().__init__(data)
-        self.energy_generation_rate = data.get('energy_generation', 0)
+        self.energy_generation_rate = 0
         
-        # Fallback
-        if self.energy_generation_rate == 0 and 'EnergyGeneration' in self.abilities:
+        if 'EnergyGeneration' in self.abilities:
              self.energy_generation_rate = self.abilities.get('EnergyGeneration', 0)
-        elif self.energy_generation_rate == 0 and 'ResourceGeneration' in self.abilities:
+        elif 'ResourceGeneration' in self.abilities:
              # Check for energy
              val = self.abilities['ResourceGeneration']
              if isinstance(val, list):

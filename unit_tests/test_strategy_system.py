@@ -14,8 +14,8 @@ class TestStrategySystem(unittest.TestCase):
     def setUp(self):
         # Setup mock StrategyManager with test data
         self.manager = StrategyManager()
-        # Point to tests/data which we populated earlier
-        test_data_path = os.path.join(os.getcwd(), "tests", "data")
+        # Point to unit_tests/data which we populated earlier
+        test_data_path = os.path.join(os.getcwd(), "unit_tests", "data")
         self.manager.load_data(
             test_data_path, 
             targeting_file="test_targeting_policies.json", 

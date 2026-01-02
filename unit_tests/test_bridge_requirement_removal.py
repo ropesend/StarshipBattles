@@ -16,7 +16,7 @@ from components import Component
 class TestBridgeRequirementRemoval(unittest.TestCase):
     def setUp(self):
         # Load the test vehicle classes data
-        self.test_data_path = os.path.join("tests", "data", "test_vehicleclasses.json")
+        self.test_data_path = os.path.join("unit_tests", "data", "test_vehicleclasses.json")
         with open(self.test_data_path, "r") as f:
             self.vehicle_data = json.load(f)["classes"]
             

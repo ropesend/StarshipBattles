@@ -41,6 +41,9 @@ class TestMainIntegration(unittest.TestCase):
         """Test that the Game class can be instantiated."""
         # Setup mocks for screen resolution
         mock_info_obj = MagicMock()
+        type(mock_info_obj).current_w = unittest.mock.PropertyMock(return_value=1920)
+        type(mock_info_obj).current_h = unittest.mock.PropertyMock(return_value=1080)
+        # Fallback for direct attribute access if not property
         mock_info_obj.current_w = 1920
         mock_info_obj.current_h = 1080
         mock_info.return_value = mock_info_obj

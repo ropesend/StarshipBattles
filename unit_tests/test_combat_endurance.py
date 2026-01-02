@@ -42,6 +42,9 @@ class TestCombatEndurance(unittest.TestCase):
             "resource": "fuel",
             "amount": 1000
         }]
+        # REFRESH ABILITIES
+        tank.abilities = tank.data['abilities']
+        tank._instantiate_abilities()
         
         self.ship.add_component(tank, LayerType.INNER)
         
@@ -55,6 +58,9 @@ class TestCombatEndurance(unittest.TestCase):
             "amount": 10.0,
             "trigger": "constant"
         }]
+        # REFRESH ABILITIES
+        engine.abilities = engine.data['abilities']
+        engine._instantiate_abilities()
         
         self.ship.add_component(engine, LayerType.OUTER)
         
@@ -75,6 +81,9 @@ class TestCombatEndurance(unittest.TestCase):
             "resource": "ammo",
             "amount": 500
         }]
+        # REFRESH ABILITIES
+        tank.abilities = tank.data['abilities']
+        tank._instantiate_abilities()
         self.ship.add_component(tank, LayerType.INNER)
         
         # Add Weapon: railgun 
@@ -127,6 +136,10 @@ class TestCombatEndurance(unittest.TestCase):
         gen.data['abilities']['EnergyGeneration'] = 50 # Or use ResourceGeneration list
         # Support fallback logic
         
+        # REFRESH ABILITIES
+        gen.abilities = gen.data['abilities']
+        gen._instantiate_abilities()
+        
         self.ship.add_component(gen, LayerType.INNER)
         
         # Add Battery: 1000 capacity
@@ -138,6 +151,10 @@ class TestCombatEndurance(unittest.TestCase):
             "resource": "energy",
             "amount": 1000
         }]
+        
+        # REFRESH ABILITIES
+        bat.abilities = bat.data['abilities']
+        bat._instantiate_abilities()
         
         self.ship.add_component(bat, LayerType.INNER)
         
@@ -152,6 +169,9 @@ class TestCombatEndurance(unittest.TestCase):
             "amount": 100.0,
             "trigger": "constant"
         }]
+        # REFRESH ABILITIES
+        beam.abilities = beam.data['abilities']
+        beam._instantiate_abilities()
         self.ship.add_component(beam, LayerType.OUTER)
         
         self.ship.recalculate_stats()
@@ -171,6 +191,10 @@ class TestCombatEndurance(unittest.TestCase):
             del gen.data['abilities']['ResourceGeneration']
         gen.data['abilities']['EnergyGeneration'] = 100
         
+        # REFRESH ABILITIES
+        gen.abilities = gen.data['abilities']
+        gen._instantiate_abilities()
+        
         self.ship.add_component(gen, LayerType.INNER)
         
         # Add Battery: 2000 capacity
@@ -180,8 +204,12 @@ class TestCombatEndurance(unittest.TestCase):
         if 'ResourceStorage' in bat.data['abilities']:
             del bat.data['abilities']['ResourceStorage']
         bat.data['abilities']['EnergyStorage'] = 2000
-        self.ship.add_component(bat, LayerType.INNER)
         
+        # REFRESH ABILITIES
+        bat.abilities = bat.data['abilities']
+        bat._instantiate_abilities()
+        self.ship.add_component(bat, LayerType.INNER)
+
         self.ship.recalculate_stats()
         
         self.assertEqual(self.ship.energy_recharge, 20.0) # 2000 / 100
@@ -227,6 +255,10 @@ class TestCombatEndurance(unittest.TestCase):
                 "amount": cost / reload_t,
                 "trigger": "constant"
             })
+        
+        # REFRESH ABILITIES
+        laser.abilities = laser.data['abilities']
+        laser._instantiate_abilities()
         
         self.ship.add_component(laser, LayerType.OUTER)
         

@@ -27,7 +27,7 @@ class TestBattleSceneExtended(unittest.TestCase):
         pygame.quit()
 
     def setUp(self):
-        test_data_path = os.path.join(os.getcwd(), "tests", "data")
+        test_data_path = os.path.join(os.getcwd(), "unit_tests", "data")
         STRATEGY_MANAGER.load_data(
              test_data_path, 
              targeting_file="test_targeting_policies.json", 

@@ -39,8 +39,8 @@ class TestCombatTargeting(unittest.TestCase):
         except Exception as e:
             print(f"Set up warning: {e}")
             # Fallback (shouldn't be reached if paths are correct)
-            load_vehicle_classes("tests/data/test_vehicleclasses.json")
-            load_components("tests/data/test_components.json")
+            load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+            load_components("unit_tests/data/test_components.json")
 
     @classmethod
     def tearDownClass(cls):

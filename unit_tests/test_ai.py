@@ -21,11 +21,11 @@ class TestAIController(unittest.TestCase):
     def setUpClass(cls):
         load_components("data/components.json")
         from ship import load_vehicle_classes
-        load_vehicle_classes("tests/data/test_vehicleclasses.json")
+        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
     
     def setUp(self):
         # Load test data for AI strategies to ensure reproducible tests
-        test_data_path = os.path.join(os.getcwd(), "tests", "data")
+        test_data_path = os.path.join(os.getcwd(), "unit_tests", "data")
         ai.STRATEGY_MANAGER.load_data(
             test_data_path, 
             targeting_file="test_targeting_policies.json", 
@@ -137,11 +137,11 @@ class TestAIStrategyStates(unittest.TestCase):
     def setUpClass(cls):
         load_components("data/components.json")
         from ship import load_vehicle_classes
-        load_vehicle_classes("tests/data/test_vehicleclasses.json")
+        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
     
     def setUp(self):
         # Load test data for AI strategies to ensure reproducible tests
-        test_data_path = os.path.join(os.getcwd(), "tests", "data")
+        test_data_path = os.path.join(os.getcwd(), "unit_tests", "data")
         ai.STRATEGY_MANAGER.load_data(
             test_data_path, 
             targeting_file="test_targeting_policies.json", 
