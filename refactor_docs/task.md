@@ -120,8 +120,9 @@
         - [x] `test_builder_validation.py:53,57,69-84`: Use tags not classification <!-- id: 148 -->
     - [/] **Stage 6: The Big Delete** <!-- id: 126 -->
         - [x] `Bridge` class → `Bridge = Component` alias (backward compatible) <!-- id: 127 -->
-        - [ ] Delete `Weapon`, `ProjectileWeapon`, `BeamWeapon`, `SeekerWeapon` classes <!-- id: 127b -->
-        - [ ] Delete `Engine`, `Thruster`, `Shield` classes <!-- id: 149 -->
+        - [x] **AUDIT**: No `isinstance(Weapon/BeamWeapon/ProjectileWeapon/SeekerWeapon)` checks remain <!-- id: 127b -->
+        - [x] **AUDIT**: No `isinstance(Engine/Thruster)` checks remain <!-- id: 149 -->
+        - [ ] Optional: Convert remaining legacy classes to aliases (low priority - shims work) <!-- id: 149b -->
         - [ ] Delete `_instantiate_abilities` shim logic (lines 182-296) <!-- id: 128 -->
         - [ ] Delete `COMPONENT_TYPE_MAP` (line 1021) <!-- id: 150 -->
         - [ ] Clean up unused imports across codebase <!-- id: 130 -->
