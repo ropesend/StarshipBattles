@@ -362,72 +362,13 @@ class Component:
             self.thrust_force = self.data.get('thrust_force', 0) * stats['thrust_mult']
         if hasattr(self, 'turn_speed'):
             self.turn_speed = self.data.get('turn_speed', 0) * stats['turn_mult']
-        if hasattr(self, 'energy_generation_rate'):
-            self.energy_generation_rate = self.data.get('energy_generation', 0) * stats['energy_gen_mult']
         if hasattr(self, 'capacity'):
+            # Capacity might be used by UI or other logic still, so we keep it if it exists in data
+            # But we rely on abilities for actual logic.
             self.capacity = int(self.data.get('capacity', 0) * stats['capacity_mult'])
-            
-        # Fix for missing resource costs in recalc
-        if hasattr(self, 'energy_cost'):
-             # Reload from data first to get base
-             base_energy = self.data.get('energy_cost', 0)
-             # Fallback
-             if base_energy == 0 and 'ResourceConsumption' in self.abilities:
-                 val = self.abilities['ResourceConsumption']
-                 if isinstance(val, list):
-                     for v in val:
-                         if v.get('resource') == 'energy' and v.get('trigger') == 'activation':
-                             base_energy = v.get('amount', 0)
-                             break
-                 elif isinstance(val, dict):
-                      if val.get('resource') == 'energy' and val.get('trigger') == 'activation':
-                           base_energy = val.get('amount', 0)
-                           
-             self.energy_cost = base_energy * stats.get('consumption_mult', 1.0)
-        
-        if hasattr(self, 'ammo_cost'):
-            base_ammo = self.data.get('ammo_cost', 0)
-            # Fallback
-            if base_ammo == 0 and 'ResourceConsumption' in self.abilities:
-                 val = self.abilities['ResourceConsumption']
-                 if isinstance(val, list):
-                     for v in val:
-                         if v.get('resource') == 'ammo' and v.get('trigger') == 'activation':
-                             base_ammo = v.get('amount', 0)
-                             break
-                 elif isinstance(val, dict):
-                      if val.get('resource') == 'ammo' and val.get('trigger') == 'activation':
-                           base_ammo = val.get('amount', 0)
-            self.ammo_cost = base_ammo * stats.get('consumption_mult', 1.0)
             
         if hasattr(self, 'reload_time'):
              self.reload_time = self.data.get('reload', 1.0) * stats.get('reload_mult', 1.0)
-
-        # Apply Consumption Multipliers to specific components
-        # Use string check to avoid potentially unresolved class ref if weird import cycle
-        if self.__class__.__name__ == 'Engine' and hasattr(self, 'fuel_cost_per_sec'):
-            base_fuel = self.data.get('fuel_cost', 0)
-            # Fallback
-            if base_fuel == 0 and 'ResourceConsumption' in self.abilities:
-                 val = self.abilities['ResourceConsumption']
-                 if isinstance(val, list):
-                     for v in val:
-                         if v.get('resource') == 'fuel' and v.get('trigger') == 'constant':
-                             base_fuel = v.get('amount', 0)
-                             break
-                 elif isinstance(val, dict):
-                      if val.get('resource') == 'fuel' and val.get('trigger') == 'constant':
-                           base_fuel = val.get('amount', 0)
-            self.fuel_cost_per_sec = base_fuel * stats.get('consumption_mult', 1.0)
-            
-        # Generic Sync: Update Activation Abilities if attributes changed
-        from resources import ResourceConsumption
-        for ab in self.ability_instances:
-            if isinstance(ab, ResourceConsumption) and ab.trigger == 'activation':
-                if ab.resource_name == 'energy' and hasattr(self, 'energy_cost'):
-                    ab.amount = self.energy_cost
-                elif ab.resource_name == 'ammo' and hasattr(self, 'ammo_cost'):
-                    ab.amount = self.ammo_cost
 
         # Crew Requirement Scaling
         # Rule: crew requirements should grow with the sqrt of mass of the component
@@ -468,22 +409,21 @@ class Component:
             # ResourceStorage (Base amount * capacity_mult)
             elif isinstance(ab, ResourceStorage):
                  base = ab.data.get('amount', 0.0)
+                 if self.__class__.__name__ == "Shield":
+                      # Special case for Shield component (not ShieldRegenerator or Tank) using simple capacity
+                      # But Shield component usually uses 'ShieldProjection' ability? 
+                      # This generic block is for ResourceStorage. Shield might not use ResourceStorage.
+                      # Proceed with generic logic.
+                      pass
                  ab.max_amount = base * stats.get('capacity_mult', 1.0)
             
             # ResourceGeneration (Base amount * energy_gen_mult)
             elif isinstance(ab, ResourceGeneration):
-                 # Only apply energy_gen_mult if resource is energy?
-                 # Or use generic logic? Usually modifiers are specific.
-                 # Assuming energy_gen_mult applies to Energy.
-                 # What about AmmoGeneration? 
-                 # For now, apply energy_gen_mult for Energy, 1.0 for others?
-                 # Or just apply it if it's a generator. The modifier name implies Energy.
+                 # Apply energy_gen_mult only if resource is energy, or generic 'generation_mult' if we had one.
+                 # Modifiers like "High Output Generator" affect energy_gen_mult.
                  if ab.resource_type == 'energy':
                      base = ab.data.get('amount', 0.0)
                      ab.rate = base * stats.get('energy_gen_mult', 1.0)
-                 else:
-                     # e.g. AmmoGeneration?
-                     pass
         
         # Ensure cap
         self.current_hp = min(self.current_hp, self.max_hp)
@@ -536,20 +476,7 @@ class Weapon(Component):
         
         self.range = data.get('range', 0)
         self.reload_time = data.get('reload', 1.0)
-        self.ammo_cost = 0
         
-        # Load ammo_cost from Abilities
-        if 'ResourceConsumption' in self.abilities:
-            val = self.abilities['ResourceConsumption']
-            if isinstance(val, list):
-                 for v in val:
-                     if v.get('resource') == 'ammo' and v.get('trigger') == 'activation':
-                         self.ammo_cost = v.get('amount', 0)
-                         break
-            elif isinstance(val, dict):
-                 if val.get('resource') == 'ammo' and val.get('trigger') == 'activation':
-                        self.ammo_cost = val.get('amount', 0)
-        self.cooldown_timer = 0.0
         self.cooldown_timer = 0.0
         self.firing_arc = data.get('firing_arc', 20) # Degrees
         self.facing_angle = data.get('facing_angle', 0) # Degrees relative to component forward (0)
@@ -608,31 +535,14 @@ class Engine(Component):
     def __init__(self, data):
         super().__init__(data)
         self.thrust_force = data.get('thrust_force', 0)
-        self.fuel_cost_per_sec = 0
-        
-        # Load fuel cost from Abilities
-        if 'ResourceConsumption' in self.abilities:
-            # Search for fuel constant consumption
-            val = self.abilities['ResourceConsumption']
-            if isinstance(val, list):
-                for v in val:
-                    if v.get('resource') == 'fuel' and v.get('trigger') == 'constant':
-                        self.fuel_cost_per_sec = v.get('amount', 0)
-                        break
-            elif isinstance(val, dict):
-                 if val.get('resource') == 'fuel' and val.get('trigger') == 'constant':
-                        self.fuel_cost_per_sec = val.get('amount', 0)
     
     def clone(self):
         return Engine(self.data)
 
     def _apply_custom_stats(self, stats):
         super()._apply_custom_stats(stats)
-        # Sync to Ability
-        from resources import ResourceConsumption
-        for ab in self.ability_instances:
-            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'fuel' and ab.trigger == 'constant':
-                ab.amount = self.fuel_cost_per_sec
+        # Note: ResourceConsumption for fuel is now handled by the generic sync block in Component.recalculate_stats
+        # because the 'consumption_mult' is applied to all ResourceConsumption abilities there.
 
 class Thruster(Component):
     def __init__(self, data):
@@ -699,47 +609,12 @@ class Armor(Component):
 class Generator(Component):
     def __init__(self, data):
         super().__init__(data)
-        self.energy_generation_rate = 0
-        
-        if 'EnergyGeneration' in self.abilities:
-             self.energy_generation_rate = self.abilities.get('EnergyGeneration', 0)
-        elif 'ResourceGeneration' in self.abilities:
-             # Check for energy
-             val = self.abilities['ResourceGeneration']
-             if isinstance(val, list):
-                 for v in val:
-                     if v.get('resource') == 'energy':
-                         self.energy_generation_rate = v.get('amount', 0)
-                         break
-             elif isinstance(val, dict):
-                  if val.get('resource') == 'energy':
-                       self.energy_generation_rate = val.get('amount', 0)
+        # No local attribute needed, strictly ability-based now.
 
     def _apply_custom_stats(self, stats):
         super()._apply_custom_stats(stats)
-        # Apply energy_gen_mult
-        # Apply energy_gen_mult
-        base = self.data.get('energy_generation', 0)
-        # Fallback
-        if base == 0 and 'EnergyGeneration' in self.abilities:
-             base = self.abilities.get('EnergyGeneration', 0)
-        elif base == 0 and 'ResourceGeneration' in self.abilities:
-             val = self.abilities['ResourceGeneration']
-             if isinstance(val, list):
-                 for v in val:
-                     if v.get('resource') == 'energy':
-                         base = v.get('amount', 0)
-                         break
-             elif isinstance(val, dict):
-                  if val.get('resource') == 'energy':
-                       base = val.get('amount', 0)
-        self.energy_generation_rate = base * stats.get('energy_gen_mult', 1.0)
-        
-        # Sync to Ability (Shim)
-        from resources import ResourceGeneration
-        for ab in self.ability_instances:
-            if isinstance(ab, ResourceGeneration) and ab.resource_type == 'energy':
-                ab.rate = self.energy_generation_rate
+        # Note: ResourceGeneration (including energy) is now handled by generic sync in recalculate_stats
+        # which applies 'energy_gen_mult' to any ResourceGeneration ability of type 'energy'.
 
     def clone(self):
         return Generator(self.data)
@@ -747,18 +622,6 @@ class Generator(Component):
 class BeamWeapon(Weapon):
     def __init__(self, data):
         super().__init__(data)
-        self.energy_cost = data.get('energy_cost', 0)
-        # Fallback
-        if self.energy_cost == 0 and 'ResourceConsumption' in self.abilities:
-            val = self.abilities['ResourceConsumption']
-            if isinstance(val, list):
-                 for v in val:
-                     if v.get('resource') == 'energy' and v.get('trigger') == 'activation':
-                         self.energy_cost = v.get('amount', 0)
-                         break
-            elif isinstance(val, dict):
-                 if val.get('resource') == 'energy' and val.get('trigger') == 'activation':
-                        self.energy_cost = val.get('amount', 0)
         self.base_accuracy = data.get('base_accuracy', 1.0)
         self.accuracy_falloff = data.get('accuracy_falloff', 0.001)
 
@@ -908,17 +771,12 @@ class ShieldRegenerator(Component):
         super().__init__(data)
         self.regen_rate = self.abilities.get('ShieldRegeneration', 0)
         self.base_regen_rate = self.regen_rate
-        self.energy_cost = self.abilities.get('EnergyConsumption', 0)
     
     def _apply_custom_stats(self, stats):
         super()._apply_custom_stats(stats)
         # Use energy_gen_mult for regeneration rate scaling as simple_size affects it
         self.regen_rate = self.base_regen_rate * stats.get('energy_gen_mult', 1.0)
-        
-        # Restore energy_cost from abilities (Source of Truth) as _apply_base_stats overwrites it
-        # Apply cost_mult for scaling consistency
-        raw_cost = self.abilities.get('EnergyConsumption', 0)
-        self.energy_cost = raw_cost * stats.get('cost_mult', 1.0)
+        # Note: EnergyConsumption is now handled by generic sync in recalculate_stats
 
     def clone(self):
         return ShieldRegenerator(self.data)

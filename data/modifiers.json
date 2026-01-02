@@ -218,6 +218,24 @@
                     "CrewRequired"
                 ]
             }
+        },
+        {
+            "id": "efficient_engines",
+            "name": "Efficient Engines",
+            "type": "boolean",
+            "description": "Reduces fuel/energy consumption by 20%.",
+            "default_val": true,
+            "effects": {
+                "consumption_mult": -0.2
+            },
+            "restrictions": {
+                "allow_types": [
+                    "Engine",
+                    "Generator",
+                    "Weapon",
+                    "Thruster"
+                ]
+            }
         }
     ]
 }

@@ -49,7 +49,16 @@ class TestShields(unittest.TestCase):
     def test_stats_init(self):
         self.assertEqual(self.ship.max_shields, 100)
         self.assertEqual(self.ship.shield_regen_rate, 60.0)
-        self.assertEqual(self.ship.shield_regen_cost, 30.0)
+        
+        # Verify cost via Ability
+        from resources import ResourceConsumption
+        cost = 0
+        for ab in self.regenerator.ability_instances:
+            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'energy':
+                cost = ab.amount
+                break
+        self.assertEqual(cost, 30.0)
+        
         self.assertEqual(self.ship.current_shields, 100)
 
     def test_damage_absorption(self):

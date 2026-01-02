@@ -182,7 +182,12 @@ class ShipStatsCalculator:
                 total_max_shields += comp.shield_capacity
             elif isinstance(comp, ShieldRegenerator):
                 total_shield_regen += comp.regen_rate
-                total_shield_cost += comp.energy_cost
+                # Find energy cost from ability
+                from resources import ResourceConsumption
+                for ab in comp.ability_instances:
+                    if isinstance(ab, ResourceConsumption) and ab.resource_name == 'energy':
+                         total_shield_cost += ab.amount
+                         break
             elif isinstance(comp, Hangar):
                 ship.fighter_capacity += comp.storage_capacity
                 ship.fighters_per_wave += 1

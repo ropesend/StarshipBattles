@@ -120,7 +120,23 @@ class TestComponentCloning(unittest.TestCase):
         clone = laser.clone()
         
         self.assertIsInstance(clone, BeamWeapon)
-        self.assertEqual(clone.energy_cost, laser.energy_cost)
+        self.assertIsInstance(clone, BeamWeapon)
+        # Verify energy cost via abilities
+        from resources import ResourceConsumption
+        original_cost = 0
+        clone_cost = 0
+        
+        for ab in laser.ability_instances:
+            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'energy':
+                original_cost = ab.amount
+                break
+                
+        for ab in clone.ability_instances:
+            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'energy':
+                clone_cost = ab.amount
+                break
+                
+        self.assertEqual(clone_cost, original_cost)
 
 
 if __name__ == '__main__':

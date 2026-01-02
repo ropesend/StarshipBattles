@@ -24,12 +24,14 @@ class TestSliderIncrement(unittest.TestCase):
         cls.addClassCleanup(cls.modules_patcher.stop)
         
         # 2. Aggressively unload target modules to ensure they reload with patched dependencies
-        to_unload = [m for m in sys.modules if m.startswith('ui.builder') or m == 'builder_components']
+        # We need to unload 'components' because builder_components imports it,
+        # and if it was already loaded with real pygame, it might cause issues.
+        to_unload = [m for m in sys.modules if m.startswith('ui.') or m == 'builder_components' or m == 'components']
         for m in to_unload:
             del sys.modules[m]
             
         def cleanup_modules():
-             to_unload = [m for m in sys.modules if m.startswith('ui.builder') or m == 'builder_components']
+             to_unload = [m for m in sys.modules if m.startswith('ui.') or m == 'builder_components' or m == 'components']
              for m in to_unload:
                  del sys.modules[m]
                  
