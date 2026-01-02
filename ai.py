@@ -366,7 +366,8 @@ class AIController:
         
         for layer in ship.layers.values():
             for comp in layer.get('components', []):
-                if isinstance(comp, Weapon) and comp.is_active and comp.abilities.get('PointDefense', False):
+                # Phase 4: Use ability-based check instead of isinstance(Weapon)
+                if comp.has_ability('WeaponAbility') and comp.is_active and comp.has_pdc_ability():
                     dist = ship.position.distance_to(target.position)
                     if dist > comp.range: continue
                     
@@ -498,11 +499,11 @@ class AIController:
             self.ship.turn_throttle = min(self.ship.turn_throttle, 0.75)
 
     def _check_formation_integrity(self):
-        from components import Engine, Thruster
+        # Phase 4: Use ability-based checks instead of isinstance(Engine, Thruster)
         dmg = False
         for layer in self.ship.layers.values():
             for comp in layer.get('components', []):
-                if isinstance(comp, (Engine, Thruster)):
+                if comp.has_ability('CombatPropulsion') or comp.has_ability('ManeuveringThruster'):
                     if getattr(comp, 'current_hp', 1) < getattr(comp, 'max_hp', 1):
                         dmg = True; break
             if dmg: break

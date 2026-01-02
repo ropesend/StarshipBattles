@@ -229,17 +229,26 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
     @property
     def max_weapon_range(self) -> float:
-        """Calculate maximum range of all equipped weapons."""
+        """Calculate maximum range of all equipped weapons (Phase 4: ability-based with legacy fallback)."""
+        from abilities import SeekerWeaponAbility
         max_rng = 0.0
         for layer in self.layers.values():
             for comp in layer['components']:
-                if isinstance(comp, Weapon):
-                    # For SeekerWeapons, range might be function of speed * endurance
-                    # But the Weapon class usually has a 'range' attribute or we calculate it
-                    rng = comp.range
-                    if isinstance(comp, SeekerWeapon):
-                         rng = comp.projectile_speed * comp.endurance
-                    
+                # 1. Check WeaponAbility instances (new system)
+                for ab in comp.get_abilities('WeaponAbility'):
+                    rng = ab.range
+                    # For SeekerWeapons, range is function of speed * endurance
+                    if isinstance(ab, SeekerWeaponAbility):
+                        rng = ab.projectile_speed * ab.endurance
+                    if rng > max_rng:
+                        max_rng = rng
+                
+                # 2. Fallback: Legacy Weapon components with direct range attribute
+                if max_rng == 0.0 and hasattr(comp, 'range') and hasattr(comp, 'damage'):
+                    rng = getattr(comp, 'range', 0)
+                    if hasattr(comp, 'projectile_speed') and hasattr(comp, 'endurance'):
+                        # SeekerWeapon fallback
+                        rng = comp.projectile_speed * comp.endurance
                     if rng > max_rng:
                         max_rng = rng
         return max_rng if max_rng > 0 else 0.0

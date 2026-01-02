@@ -150,6 +150,24 @@ class Component:
         """Check if component has ability."""
         return len(self.get_abilities(ability_name)) > 0
 
+    def has_pdc_ability(self) -> bool:
+        """Check if component has a Point Defense weapon ability.
+        
+        Supports both:
+        - New system: 'pdc' in ability.tags
+        - Legacy system: abilities.get('PointDefense', False)
+        """
+        # 1. Check new tag-based system
+        for ab in self.ability_instances:
+            if 'pdc' in ab.tags:
+                return True
+        
+        # 2. Backward compatibility: check legacy abilities dict
+        if self.abilities.get('PointDefense', False):
+            return True
+            
+        return False
+
     def _instantiate_abilities(self):
         """Instantiate Ability objects from self.abilities dict + Legacy Shim."""
         self.ability_instances = []

@@ -60,8 +60,8 @@ class ShipCombatMixin:
 
         for layer in self.layers.values():
             for comp in layer['components']:
-                # Handle Hangar Launch
-                if isinstance(comp, Hangar) and comp.is_active:
+                # Handle Hangar Launch (Phase 4: ability-based check)
+                if comp.has_ability('VehicleLaunch') and comp.is_active:
                     # Auto-launch if we have a target (or maybe strategy dictates?)
                     # For now, if we have a target, we launch.
                     if self.current_target and comp.can_launch():
@@ -75,7 +75,7 @@ class ShipCombatMixin:
                             })
                     continue
 
-                if isinstance(comp, Weapon) and comp.is_active:
+                if comp.has_ability('WeaponAbility') and comp.is_active:
                     # Check resources via Component Abilities
                     has_resource = comp.can_afford_activation()
                     
@@ -105,7 +105,8 @@ class ShipCombatMixin:
                             if getattr(candidate, 'team_id', -1) == self.team_id: continue
 
                             # Specialization check: Non-PDC weapons should NOT fire at missiles
-                            is_pdc = comp.abilities.get('PointDefense', False)
+                            # Phase 4: Use ability tags instead of legacy dict
+                            is_pdc = comp.has_pdc_ability()
                             t_type = getattr(candidate, 'type', 'ship')
                             if t_type == 'missile' and not is_pdc:
                                 continue # Standard guns ignore missiles
@@ -113,7 +114,7 @@ class ShipCombatMixin:
                             # Distance Check
                             dist = self.position.distance_to(candidate.position)
                             max_range = comp.range
-                            if isinstance(comp, SeekerWeapon):
+                            if comp.has_ability('SeekerWeaponAbility'):
                                 # Approximate max range for initial check
                                 max_range = comp.projectile_speed * comp.endurance * 2.0 
 
@@ -131,7 +132,7 @@ class ShipCombatMixin:
                                     valid_target = True
                                     target = candidate
                                     break # Found a valid target, fire!
-                                elif isinstance(comp, SeekerWeapon):
+                                elif comp.has_ability('SeekerWeaponAbility'):
                                     # Seeker weapons can launch if target is out of arc
                                     valid_target = True
                                     target = candidate
@@ -145,7 +146,7 @@ class ShipCombatMixin:
                             comp.consume_activation()
                             
                             # Deduct Resource
-                            if isinstance(comp, BeamWeapon):
+                            if comp.has_ability('BeamWeaponAbility'):
                                 comp.shots_hit += 1 # Beams are hitscan and we only fire if valid_target (in arc/range)
                                 # Technically valid_target means "can hit", but accuracy fail?
                                 # BeamWeapon has accuracy falloff. 
@@ -170,7 +171,7 @@ class ShipCombatMixin:
                                 # Seeker Logic
                                 
                                 # Seeker Logic
-                                if isinstance(comp, SeekerWeapon):
+                                if comp.has_ability('SeekerWeaponAbility'):
                                     # Launch vector
                                     rad = math.radians(comp_facing)
                                     launch_vec = pygame.math.Vector2(math.cos(rad), math.sin(rad))
@@ -249,7 +250,7 @@ class ShipCombatMixin:
         # Determine target velocity
         t_vel = getattr(target, 'velocity', pygame.math.Vector2(0,0))
         
-        if isinstance(comp, ProjectileWeapon):
+        if comp.has_ability('ProjectileWeaponAbility') or comp.has_ability('SeekerWeaponAbility'):
             t = self.solve_lead(self.position, self.velocity, target.position, t_vel, comp.projectile_speed / 100.0)
             if t > 0:
                 aim_pos = target.position + t_vel * t

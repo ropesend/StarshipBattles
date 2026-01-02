@@ -53,30 +53,45 @@
         - [x] Run `unit_tests/test_ship_stats.py` to ensure no regression in calculated stats <!-- id: 43 -->
 
 
-- [ ] **Phase 4: Combat System Migration** <!-- id: 44 -->
-    - [ ] **Weapon Logic** <!-- id: 45 -->
-        - [ ] Refactor `Ship.max_weapon_range` in `ship.py` to use ability values <!-- id: 80 -->
-        - [ ] Refactor `ship_combat.py`: `fire_weapons` iterates components with `WeaponAbility` <!-- id: 46 -->
+- [/] **Phase 4: Combat System Migration** <!-- id: 44 -->
+    - [/] **Weapon Logic** <!-- id: 45 -->
+        - [x] Refactor `Ship.max_weapon_range` in `ship.py` to use ability values <!-- id: 80 -->
+        - [x] Refactor `ship_combat.py`: `fire_weapons` iterates components with `WeaponAbility` <!-- id: 46 -->
         - [ ] Update `WeaponAbility` to manage its own `cooldown_timer` <!-- id: 47 -->
         - [ ] Bind `fire()` logic: `BeamWeaponAbility` calls `apply_damage`, `Projectile` spawns entity <!-- id: 48 -->
-        - [ ] Refactor `fire_weapons`: Add `VehicleLaunchAbility` support for launching fighters <!-- id: 72 -->
-        - [ ] Refactor `_find_pdc_target`: Use `Ability.tags` instead of legacy flags <!-- id: 73 -->
-        - [ ] Refactor `ai.py`: Replace `isinstance(Weapon)` with `has_ability('WeaponAbility')` <!-- id: 82 -->
-        - [ ] Refactor `ai.py`: Update PDC detection to use `Ability.tags` instead of `abilities.get('PointDefense')` <!-- id: 83 -->
-    - [ ] **Verification** <!-- id: 49 -->
-        - [ ] Run `unit_tests/test_weapons.py` to verify firing mechanics <!-- id: 50 -->
+        - [x] Refactor `fire_weapons`: Add `VehicleLaunchAbility` support for launching fighters <!-- id: 72 -->
+        - [x] Refactor `_find_pdc_target`: Use `Ability.tags` instead of legacy flags <!-- id: 73 -->
+        - [x] Refactor `ai.py`: Replace `isinstance(Weapon)` with `has_ability('WeaponAbility')` <!-- id: 82 -->
+        - [x] Refactor `ai.py`: Update PDC detection to use `Ability.tags` instead of `abilities.get('PointDefense')` <!-- id: 83 -->
+        - [x] Refactor `ai.py`: Replace `isinstance(Engine, Thruster)` in `_check_formation_integrity` with ability checks <!-- id: 84 -->
+    - [ ] **Weapon Subclass Migration** (from review_projectiles.md) <!-- id: 85 -->
+        - [x] Replace 5 `isinstance(SeekerWeapon/BeamWeapon/ProjectileWeapon)` checks in `ship_combat.py` <!-- id: 86 -->
+        - [ ] Migrate direct `comp.damage`/`comp.range` access to ability values in `ship_combat.py` <!-- id: 87 -->
+    - [ ] **Resource Legacy Path** (from review_resources.md) <!-- id: 88 -->
+        - [ ] Migrate shield regen energy consumption from direct call to ability system (`ship_combat.py:22-42`) <!-- id: 89 -->
+        - [x] Fix EnergyConsumption trigger from "conditional" to "constant" in `abilities.py:278` <!-- id: 90 -->
+    - [/] **Verification** <!-- id: 49 -->
+        - [x] Run `unit_tests/test_weapons.py` to verify firing mechanics <!-- id: 50 -->
 
 - [ ] **Phase 5: UI & Capabilities** <!-- id: 51 -->
     - [ ] **Renderer** <!-- id: 52 -->
         - [ ] Implement `get_ui_rows()` for `CombatPropulsion` (Returns 'Thrust') <!-- id: 53 -->
         - [ ] Implement `get_ui_rows()` for `WeaponAbility` (Returns 'Damage', 'Range') <!-- id: 54 -->
         - [ ] Update `Component.get_ui_rows()` to aggregate from abilities <!-- id: 55 -->
-    - [ ] **Builder UI** <!-- id: 56 -->
+        - [ ] Replace `isinstance(Engine/Weapon/Armor)` in `rendering.py:122-124` with ability checks <!-- id: 91 -->
+    - [ ] **Builder UI** (25 isinstance checks per review_ui_builder.md) <!-- id: 56 -->
         - [ ] Refactor `ui/builder/detail_panel.py` `show_component` to use `get_ui_rows()` <!-- id: 57 -->
-        - [ ] Refactor `ui/builder/weapons_panel.py`: Remove `isinstance` checks, use `has_ability()` <!-- id: 76 -->
-    - [ ] **Battle UI** <!-- id: 77 -->
-        - [ ] Refactor `battle_ui.py`: `draw_debug_overlay` uses `WeaponAbility` <!-- id: 78 -->
-        - [ ] Refactor `battle_panels.py`: Remove `isinstance` checks in `ShipStatsPanel` <!-- id: 79 -->
+        - [ ] Refactor `ui/builder/weapons_panel.py`: Remove 8 `isinstance` checks, use `has_ability()` <!-- id: 76 -->
+        - [ ] Refactor `ui/builder/schematic_view.py`: Remove 4 weapon `isinstance` checks <!-- id: 92 -->
+        - [ ] Update `ui/builder/modifier_logic.py`: Replace `type_str` checks with ability checks <!-- id: 93 -->
+        - [ ] Migrate legacy attribute access: `damage`, `range`, `firing_arc` → ability getters <!-- id: 94 -->
+    - [ ] **Battle UI** (7 isinstance checks per review_battle_ui.md) <!-- id: 77 -->
+        - [ ] Refactor `battle_ui.py`: `draw_debug_overlay` uses `WeaponAbility` (2 checks) <!-- id: 78 -->
+        - [ ] Refactor `battle_panels.py`: Remove `isinstance` checks in `ShipStatsPanel` (2 checks) <!-- id: 79 -->
+    - [ ] **Test Coverage** (from review_test_coverage.md) <!-- id: 95 -->
+        - [ ] Add tests for `BeamWeaponAbility`, `SeekerWeaponAbility`, `ResourceGeneration` <!-- id: 96 -->
+        - [ ] Add tests for `get_abilities()`, `has_pdc_ability()` helper methods <!-- id: 97 -->
+        - [ ] Update `MockPDC` in `test_pdc.py` to use tag-based PDC detection <!-- id: 98 -->
     - [ ] **Performance** <!-- id: 58 -->
         - [ ] Add `Ship.cached_summary` property <!-- id: 59 -->
         - [ ] Update `ShipStatsCalculator` to populate summary <!-- id: 60 -->
