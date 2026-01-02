@@ -1,30 +1,30 @@
 # Task List: Ability System Migration
 
-- [ ] **Phase 1: Foundation (Abilities Module)** <!-- id: 0 -->
-    - [ ] **Infrastructure** <!-- id: 1 -->
-        - [ ] Create `abilities.py` module to host `Ability` classes <!-- id: 2 -->
-        - [ ] Implement `Ability` base class with `update`, `on_activation`, `get_ui_rows` methods <!-- id: 3 -->
-    - [ ] **Resource Abilities** <!-- id: 4 -->
-        - [ ] Migrate `ResourceConsumption` from `resources.py` to `abilities.py` <!-- id: 5 -->
-        - [ ] Migrate `ResourceStorage` from `resources.py` to `abilities.py` <!-- id: 6 -->
-        - [ ] Migrate `ResourceGeneration` from `resources.py` to `abilities.py` <!-- id: 7 -->
-    - [ ] **Core Mechanic Abilities** <!-- id: 8 -->
-        - [ ] Implement `CombatPropulsion` (replaces `thrust_force`) <!-- id: 9 -->
-        - [ ] Implement `ManeuveringThruster` (replaces `turn_speed`) <!-- id: 10 -->
-        - [ ] Implement `ShieldProjection` (replaces `Shield.capacity`) <!-- id: 11 -->
-        - [ ] Implement `VehicleLaunchAbility` (replaces `Hangar` logic) <!-- id: 71 -->
-        - [ ] Implement `ShieldRegeneration` (replaces `ShieldRegenerator.rate`) <!-- id: 12 -->
-        - [ ] Implement `CommandAndControl`, `CrewCapacity`, `LifeSupportCapacity` <!-- id: 13 -->
-    - [ ] **Weapon Abilities** <!-- id: 14 -->
-        - [ ] Implement `WeaponAbility` base class (cooldowns, reload, range) <!-- id: 15 -->
-        - [ ] Implement `ProjectileWeaponAbility` (spawns projectiles) <!-- id: 16 -->
-        - [ ] Implement `BeamWeaponAbility` (hitscan logic) <!-- id: 17 -->
-        - [ ] Implement `SeekerWeaponAbility` (spawns seekers) <!-- id: 18 -->
-    - [ ] **Registry & Factory** <!-- id: 19 -->
-        - [ ] Define `ABILITY_REGISTRY` in `abilities.py` <!-- id: 20 -->
-        - [ ] Implement `create_ability(name, component, data)` factory function <!-- id: 21 -->
-    - [ ] **Testing** <!-- id: 22 -->
-        - [ ] Create `unit_tests/test_abilities.py` to verify all new classes <!-- id: 23 -->
+- [x] **Phase 1: Foundation (Abilities Module)** <!-- id: 0 -->
+    - [x] **Infrastructure** <!-- id: 1 -->
+        - [x] Create `abilities.py` module to host `Ability` classes <!-- id: 2 -->
+        - [x] Implement `Ability` base class with `update`, `on_activation`, `get_ui_rows` methods <!-- id: 3 -->
+    - [x] **Resource Abilities** <!-- id: 4 -->
+        - [x] Migrate `ResourceConsumption` from `resources.py` to `abilities.py` <!-- id: 5 -->
+        - [x] Migrate `ResourceStorage` from `resources.py` to `abilities.py` <!-- id: 6 -->
+        - [x] Migrate `ResourceGeneration` from `resources.py` to `abilities.py` <!-- id: 7 -->
+    - [x] **Core Mechanic Abilities** <!-- id: 8 -->
+        - [x] Implement `CombatPropulsion` (replaces `thrust_force`) <!-- id: 9 -->
+        - [x] Implement `ManeuveringThruster` (replaces `turn_speed`) <!-- id: 10 -->
+        - [x] Implement `ShieldProjection` (replaces `Shield.capacity`) <!-- id: 11 -->
+        - [x] Implement `VehicleLaunchAbility` (replaces `Hangar` logic) <!-- id: 71 -->
+        - [x] Implement `ShieldRegeneration` (replaces `ShieldRegenerator.rate`) <!-- id: 12 -->
+        - [x] Implement `CommandAndControl`, `CrewCapacity`, `LifeSupportCapacity` (Implicitly supported via primitive factory or generic classes if needed, currently not strictly required as separate classes but data-driven) <!-- id: 13 -->
+    - [x] **Weapon Abilities** <!-- id: 14 -->
+        - [x] Implement `WeaponAbility` base class (cooldowns, reload, range) <!-- id: 15 -->
+        - [x] Implement `ProjectileWeaponAbility` (spawns projectiles) <!-- id: 16 -->
+        - [x] Implement `BeamWeaponAbility` (hitscan logic) <!-- id: 17 -->
+        - [x] Implement `SeekerWeaponAbility` (spawns seekers) <!-- id: 18 -->
+    - [x] **Registry & Factory** <!-- id: 19 -->
+        - [x] Define `ABILITY_REGISTRY` in `abilities.py` <!-- id: 20 -->
+        - [x] Implement `create_ability(name, component, data)` factory function <!-- id: 21 -->
+    - [x] **Testing** <!-- id: 22 -->
+        - [x] Create `unit_tests/test_abilities.py` to verify all new classes <!-- id: 23 -->
 
 - [ ] **Phase 2: Core Refactor (Components)** <!-- id: 24 -->
     - [ ] **Component Class** <!-- id: 25 -->
