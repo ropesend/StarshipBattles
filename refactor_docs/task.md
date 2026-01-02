@@ -119,10 +119,12 @@
         - [x] `test_strategy_system.py:77`: Replace `c1.damage = 10` mock <!-- id: 147 -->
         - [x] `test_builder_validation.py:53,57,69-84`: Use tags not classification <!-- id: 148 -->
     - [/] **Stage 6: The Big Delete** <!-- id: 126 -->
-        - [x] `Bridge` class → `Bridge = Component` alias (backward compatible) <!-- id: 127 -->
-        - [x] **AUDIT**: No `isinstance(Weapon/BeamWeapon/ProjectileWeapon/SeekerWeapon)` checks remain <!-- id: 127b -->
-        - [x] **AUDIT**: No `isinstance(Engine/Thruster)` checks remain <!-- id: 149 -->
-        - [ ] Optional: Convert remaining legacy classes to aliases (low priority - shims work) <!-- id: 149b -->
+        - [x] `Bridge` class → `Bridge = Component` alias <!-- id: 127 -->
+        - [x] `Engine`, `Thruster` → `Component` aliases <!-- id: 149a -->
+        - [x] `Tank`, `Armor`, `Generator` → `Component` aliases <!-- id: 149b -->
+        - [x] **AUDIT**: No `isinstance` checks remain for any legacy class <!-- id: 127b -->
+        - [ ] Weapon hierarchy classes have complex behavior (cooldown, fire methods) - keep as-is <!-- id: 127c -->
         - [ ] Delete `_instantiate_abilities` shim logic (lines 182-296) <!-- id: 128 -->
-        - [ ] Delete `COMPONENT_TYPE_MAP` (line 1021) <!-- id: 150 -->
+        - [ ] Simplify `COMPONENT_TYPE_MAP` - many entries now point to `Component` <!-- id: 150 -->
         - [ ] Clean up unused imports across codebase <!-- id: 130 -->
+

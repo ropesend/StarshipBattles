@@ -193,7 +193,7 @@ class TestShipStatsBaseline(unittest.TestCase):
         self.assertEqual(regen_ab.rate, 25.0)
     
     def test_ability_values_match_legacy_attributes(self):
-        """Verify ability values match legacy component attributes."""
+        """Phase 7: Verify ability values are correctly parsed from component data."""
         engine_data = {
             'id': 'test_engine',
             'name': 'Test Engine',
@@ -204,12 +204,10 @@ class TestShipStatsBaseline(unittest.TestCase):
         }
         engine = self.Engine(engine_data)
         
-        # Legacy attribute
-        self.assertEqual(engine.thrust_force, 2000)
-        
-        # Ability value should match
+        # Phase 7: Legacy attributes no longer exist on Component
+        # All stats are now accessed via abilities
         ab = engine.get_ability('CombatPropulsion')
-        self.assertIsNotNone(ab)
+        self.assertIsNotNone(ab, "Engine should have CombatPropulsion ability")
         self.assertEqual(ab.thrust_force, 2000.0)
     
     def test_multiple_engines_sum_thrust(self):

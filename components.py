@@ -746,54 +746,15 @@ class ProjectileWeapon(Weapon):
     def clone(self):
         return ProjectileWeapon(self.data)
 
-class Engine(Component):
-    def __init__(self, data):
-        super().__init__(data)
-        self.thrust_force = data.get('thrust_force', 0)
-    
-    def clone(self):
-        return Engine(self.data)
+# Phase 7: Engine, Thruster are now aliases for Component (backward compatible)
+# All thrust/turn stats are now managed via CombatPropulsion/ManeuveringThruster abilities
+Engine = Component
+Thruster = Component
 
-    def _apply_custom_stats(self, stats):
-        super()._apply_custom_stats(stats)
-        # Note: ResourceConsumption for fuel is now handled by the generic sync block in Component.recalculate_stats
-        # because the 'consumption_mult' is applied to all ResourceConsumption abilities there.
-
-class Thruster(Component):
-    def __init__(self, data):
-        super().__init__(data)
-        self.turn_speed = data.get('turn_speed', 0)
-
-    def clone(self):
-        return Thruster(self.data)
-
-class Tank(Component):
-    def __init__(self, data):
-        super().__init__(data)
-    
-    def _apply_custom_stats(self, stats):
-        super()._apply_custom_stats(stats)
-
-    def clone(self):
-        return Tank(self.data)
-
-class Armor(Component):
-    def __init__(self, data):
-        super().__init__(data)
-    
-    def clone(self):
-        return Armor(self.data)
-
-# Registry
-class Generator(Component):
-    def __init__(self, data):
-        super().__init__(data)
-
-    def _apply_custom_stats(self, stats):
-        super()._apply_custom_stats(stats)
-
-    def clone(self):
-        return Generator(self.data)
+# Phase 7: Tank, Armor, Generator are now aliases for Component (backward compatible)
+Tank = Component
+Armor = Component
+Generator = Component
 
 class BeamWeapon(Weapon):
     def __init__(self, data):

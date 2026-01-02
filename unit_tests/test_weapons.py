@@ -29,53 +29,63 @@ class TestWeaponBasics(unittest.TestCase):
         self.assertGreater(railgun.projectile_speed, 0)
     
     def test_weapon_cooldown(self):
-        """Weapon should respect cooldown timer."""
+        """Weapon should respect cooldown timer via ability."""
         railgun = create_component('railgun')
         
+        # Phase 7: Use ability-based access
+        weapon_ab = railgun.get_ability('ProjectileWeaponAbility') or railgun.get_ability('WeaponAbility')
+        self.assertIsNotNone(weapon_ab)
+        
         # Initially should be able to fire
-        self.assertTrue(railgun.can_fire())
+        self.assertTrue(weapon_ab.can_fire())
         
         # Fire
-        railgun.fire()
+        weapon_ab.fire(target=None)
         
         # Now should be on cooldown
-        self.assertFalse(railgun.can_fire())
+        self.assertFalse(weapon_ab.can_fire())
         
         # Cycle-Based: reload_time is seconds, 0.01s per tick. 
         # Need (reload_time / 0.01) + 1 ticks to clear cooldown.
-        ticks_needed = int(railgun.reload_time / 0.01) + 10 # Plus buffer
+        ticks_needed = int(weapon_ab.reload_time / 0.01) + 10 # Plus buffer
         for _ in range(ticks_needed):
-            railgun.update()
+            weapon_ab.update()
         
         # Should be able to fire again
-        self.assertTrue(railgun.can_fire())
+        self.assertTrue(weapon_ab.can_fire())
     
     def test_beam_weapon_accuracy(self):
-        """Beam weapon accuracy should fall off with distance."""
+        """Beam weapon accuracy should fall off with distance (via ability)."""
         laser = create_component('laser_cannon')
         
+        # Phase 7: Use ability-based access
+        beam_ab = laser.get_ability('BeamWeaponAbility')
+        self.assertIsNotNone(beam_ab)
+        
         # Close range - high accuracy
-        close_chance = laser.calculate_hit_chance(100)
-            # New Sigmoid Logic: P(2.0 - small) ~ 0.87
-        # Old Logic was ~0.99. We accept the slight mathematical shift or need to buff base.
-        # Assuming we keep Base=2.0 for now.
+        close_chance = beam_ab.calculate_hit_chance(100)
+        # New Sigmoid Logic: P(2.0 - small) ~ 0.87
         self.assertGreater(close_chance, 0.85)
         
         # Far range - lower accuracy
-        far_chance = laser.calculate_hit_chance(1500)
+        far_chance = beam_ab.calculate_hit_chance(1500)
         self.assertLess(far_chance, close_chance)
     
     def test_beam_accuracy_clamped(self):
-        """Beam accuracy should be clamped between 0 and 1."""
+        """Beam accuracy should be clamped between 0 and 1 (via ability)."""
         laser = create_component('laser_cannon')
         
+        # Phase 7: Use ability-based access
+        beam_ab = laser.get_ability('BeamWeaponAbility')
+        self.assertIsNotNone(beam_ab)
+        
         # Very close
-        close = laser.calculate_hit_chance(0)
+        close = beam_ab.calculate_hit_chance(0)
         self.assertLessEqual(close, 1.0)
         self.assertGreaterEqual(close, 0.0)
         
         # Very far (beyond reasonable range)
-        far = laser.calculate_hit_chance(100000)
+        far = beam_ab.calculate_hit_chance(100000)
         self.assertLessEqual(far, 1.0)
         self.assertGreaterEqual(far, 0.0)
 

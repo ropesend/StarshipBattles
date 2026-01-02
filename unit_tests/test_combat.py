@@ -250,15 +250,19 @@ class TestWeaponCooldowns(unittest.TestCase):
         
         self.assertIsNotNone(weapon, "No active weapon found in OUTER layer")
         
+        # Phase 7: Use ability-based access for weapon methods
+        weapon_ab = weapon.get_ability('WeaponAbility') or weapon.get_ability('ProjectileWeaponAbility')
+        self.assertIsNotNone(weapon_ab)
+        
         # Fire to start cooldown
-        weapon.fire()
-        initial_cooldown = weapon.cooldown_timer
+        weapon_ab.fire(target=None)
+        initial_cooldown = weapon_ab.cooldown_timer
         self.assertGreater(initial_cooldown, 0, "Weapon should have cooldown after firing")
         
         # Weapon cooldowns are updated in Ship.update() via Component.update() (tick-based)
         self.ship.update()
         
-        self.assertLess(weapon.cooldown_timer, initial_cooldown)
+        self.assertLess(weapon_ab.cooldown_timer, initial_cooldown)
 
 
 if __name__ == '__main__':
