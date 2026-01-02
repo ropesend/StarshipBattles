@@ -46,6 +46,7 @@ Create `abilities.py` to avoid circular imports in `components.py` or `resources
     *   `SeekerWeaponAbility` (Spawns Seeker/Missiles)
 *   **Resource Abilities** (Migrated from `resources.py`):
     *   `ResourceStorage`, `ResourceConsumption`, `ResourceGeneration`
+    *   `VehicleLaunchAbility` (Hangar logic: capacity, launch rate, fighter class)
 
 #### 1.2 Ability Factory
 *   Implement `create_ability(name, component, data)` to instantiate classes from `ABILITY_REGISTRY`.
@@ -97,6 +98,17 @@ Move firing logic to Abilities.
 #### 4.2 Seeker Logic
 *   `SeekerWeaponAbility` serves as a Factory.
 *   `fire()` spawns a `Projectile` entity into the simulation. The Ability does *not* track the missile state after launch.
+
+#### 4.3 Fighter Launch Logic
+*   **Refactor `fire_weapons`**: Explicitly check for `VehicleLaunchAbility`.
+*   **Logic**: Call `ability.try_launch()`. If successful, generate `AttackType.LAUNCH` event.
+*   **Data**: `ability.fighter_class` replaces hardcoded strings.
+
+#### 4.4 Point Defense Targeting
+*   **Refactor `_find_pdc_target`**:
+    *   Remove legacy `ability.get('PointDefense')` boolean check.
+    *   Use `ability.tags` (e.g. `{'pdc'}`) to identify PDC weapons.
+    *   Preserve logic: Standard weapons ignore missiles; PDCs target missiles (and fighters) preferentially.
 
 ### Phase 5: UI & Capabilities
 Data-driven UI rendering.

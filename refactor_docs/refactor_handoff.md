@@ -19,6 +19,10 @@
 | `unit_tests/test_ship_stats.py` | **Active** | Verifies stat aggregation. Critical regression test for Phase 3. | Phase 3 |
 | `unit_tests/test_weapons.py` | **Active** | Verifies firing logic. Critical for Phase 4. | Phase 4 |
 | `unit_tests/test_ui_dynamic_update.py` | **Active** | UI logic. Will need update when Component.type checks are removed. | Phase 5 |
+| `unit_tests/test_fighter_launch.py` | **Active** | Hangar logic. Critical for Phase 4. | Phase 4 |
+| `unit_tests/test_pdc.py` | **Active** | Point Defense targeting. Critical for Phase 4. | Phase 4 |
+| `unit_tests/test_component_modifiers_extended.py` | **Active** | Modifier stacking. Critical for Phase 2. | Phase 2 |
+| `unit_tests/test_bridge_requirement_removal.py` | **Active** | Bridge logic verification. Critical for Phase 2. | Phase 2 |
 
 ## 4. Next Agent Instructions
 *   **Current Focus**: Phase 1 - Foundation.

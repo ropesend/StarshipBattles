@@ -12,6 +12,7 @@
         - [ ] Implement `CombatPropulsion` (replaces `thrust_force`) <!-- id: 9 -->
         - [ ] Implement `ManeuveringThruster` (replaces `turn_speed`) <!-- id: 10 -->
         - [ ] Implement `ShieldProjection` (replaces `Shield.capacity`) <!-- id: 11 -->
+        - [ ] Implement `VehicleLaunchAbility` (replaces `Hangar` logic) <!-- id: 71 -->
         - [ ] Implement `ShieldRegeneration` (replaces `ShieldRegenerator.rate`) <!-- id: 12 -->
         - [ ] Implement `CommandAndControl`, `CrewCapacity`, `LifeSupportCapacity` <!-- id: 13 -->
     - [ ] **Weapon Abilities** <!-- id: 14 -->
@@ -52,6 +53,8 @@
         - [ ] Refactor `ship_combat.py`: `fire_weapons` iterates components with `WeaponAbility` <!-- id: 46 -->
         - [ ] Update `WeaponAbility` to manage its own `cooldown_timer` <!-- id: 47 -->
         - [ ] Bind `fire()` logic: `BeamWeaponAbility` calls `apply_damage`, `Projectile` spawns entity <!-- id: 48 -->
+        - [ ] Refactor `fire_weapons`: Add `VehicleLaunchAbility` support for launching fighters <!-- id: 72 -->
+        - [ ] Refactor `_find_pdc_target`: Use `Ability.tags` instead of legacy flags <!-- id: 73 -->
     - [ ] **Verification** <!-- id: 49 -->
         - [ ] Run `unit_tests/test_weapons.py` to verify firing mechanics <!-- id: 50 -->
 
