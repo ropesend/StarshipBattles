@@ -185,7 +185,7 @@ class TargetEvaluator:
                  val = -mass * (weight if weight > 0 else -factor)
                  
             elif r_type == 'has_weapons':
-                 has_wpns = any(hasattr(c, 'damage') for layer in getattr(candidate, 'layers', {}).values() 
+                 has_wpns = any(c.has_ability('WeaponAbility') for layer in getattr(candidate, 'layers', {}).values() 
                                    for c in layer.get('components', []))
                  if has_wpns:
                      val = weight if weight > 0 else 1000
@@ -362,14 +362,14 @@ class AIController:
     @staticmethod
     def _stat_is_in_pdc_arc(ship, target):
         import math
-        from components import Weapon
         
         for layer in ship.layers.values():
             for comp in layer.get('components', []):
-                # Phase 4: Use ability-based check instead of isinstance(Weapon)
+                # Phase 7: Use ability-based access for all weapon properties
                 if comp.has_ability('WeaponAbility') and comp.is_active and comp.has_pdc_ability():
+                    weapon_ab = comp.get_ability('WeaponAbility')
                     dist = ship.position.distance_to(target.position)
-                    if dist > comp.range: continue
+                    if dist > weapon_ab.range: continue
                     
                     vec_to_target = target.position - ship.position
                     if vec_to_target.length_squared() == 0: continue
@@ -377,10 +377,10 @@ class AIController:
                     angle_to_target = math.degrees(math.atan2(vec_to_target.y, vec_to_target.x)) % 360
                     
                     ship_angle = ship.angle
-                    comp_facing = (ship_angle + comp.facing_angle) % 360
+                    comp_facing = (ship_angle + weapon_ab.facing_angle) % 360
                     diff = (angle_to_target - comp_facing + 180) % 360 - 180
                     
-                    if abs(diff) <= (comp.firing_arc / 2):
+                    if abs(diff) <= (weapon_ab.firing_arc / 2):
                         return True
         return False
         

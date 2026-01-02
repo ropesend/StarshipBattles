@@ -595,8 +595,13 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         total_score = 0.0
         for layer in self.layers.values():
             for comp in layer['components']:
-                if isinstance(comp, Sensor) and comp.is_active:
-                     total_score += comp.attack_modifier
+                # Phase 7: Use ability-based check instead of isinstance(Sensor)
+                if comp.is_active and 'ToHitAttackModifier' in comp.abilities:
+                    val = comp.abilities.get('ToHitAttackModifier', 0.0)
+                    if isinstance(val, dict):
+                        total_score += val.get('value', 0.0)
+                    else:
+                        total_score += float(val)
         return total_score
 
     def get_total_ecm_score(self) -> float:
@@ -604,18 +609,13 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         total_score = 0.0
         for layer in self.layers.values():
             for comp in layer['components']:
-                if isinstance(comp, Electronics) and comp.is_active:
-                     total_score += comp.defense_modifier
-                # Also include Armor passive defense (Scattering, Stealth)
-                if isinstance(comp, Armor) and comp.is_active:
-                     # Check for ToHitDefenseModifier ability which might be in generic abilities
-                     # New Armor logic might have it in abilities dict directly
-                     val = comp.abilities.get('ToHitDefenseModifier', None)
-                     if val:
-                         if isinstance(val, dict):
-                             total_score += val.get('value', 0.0)
-                         else:
-                             total_score += float(val)
+                # Phase 7: Use ability-based check instead of isinstance(Electronics/Armor)
+                if comp.is_active and 'ToHitDefenseModifier' in comp.abilities:
+                    val = comp.abilities.get('ToHitDefenseModifier', 0.0)
+                    if isinstance(val, dict):
+                        total_score += val.get('value', 0.0)
+                    else:
+                        total_score += float(val)
         return total_score
 
     def check_validity(self) -> bool:

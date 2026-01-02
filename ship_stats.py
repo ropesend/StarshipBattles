@@ -69,13 +69,13 @@ class ShipStatsCalculator:
                 comp.status = ComponentStatus.ACTIVE
                 
                 # Check Damage Threshold (ignore Armor - armor uses HP pool, not individual component threshold)
-                if comp.major_classification != "Armor":
+                if not comp.abilities.get('Armor', False):
                      if comp.max_hp > 0 and (comp.current_hp / comp.max_hp) <= 0.5:
                          comp.is_active = False
                          comp.status = ComponentStatus.DAMAGED
                 
                 # If armor is dead (0 hp), it's inactive
-                if comp.major_classification == "Armor" and comp.current_hp <= 0:
+                if comp.abilities.get('Armor', False) and comp.current_hp <= 0:
                     comp.is_active = False
                     comp.status = ComponentStatus.DAMAGED
                 
@@ -178,8 +178,8 @@ class ShipStatsCalculator:
                 total_turn_speed += ab.turn_rate
                 ship.total_maneuver_points += ab.turn_rate
             
-            # Armor HP pool (still uses major_classification for layer assignment)
-            if comp.major_classification == "Armor":
+            # Armor HP pool (using ability-based detection)
+            if comp.abilities.get('Armor', False):
                 if LayerType.ARMOR in ship.layers:
                     ship.layers[LayerType.ARMOR]['max_hp_pool'] += comp.max_hp
             
@@ -321,13 +321,6 @@ class ShipStatsCalculator:
         # This block was legacy/redundant and risked double-counting if active.
         pass
 
-        # Shield Stats
-        ship.max_shields = self._get_ability_total(component_pool, 'ShieldProjection')
-        # Default 0 if bool/none
-        if isinstance(ship.max_shields, bool): ship.max_shields = 0.0
-            
-        ship.shield_regen_rate = self._get_ability_total(component_pool, 'ShieldRegeneration')
-        if isinstance(ship.shield_regen_rate, bool): ship.shield_regen_rate = 0.0
 
         # Armor Pool Init (if starting)
         if LayerType.ARMOR in ship.layers:

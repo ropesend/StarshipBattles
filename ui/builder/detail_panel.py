@@ -2,9 +2,7 @@ import pygame
 import pygame_gui
 import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
-from components import (
-    Engine, Thruster, Armor, Tank, Generator, CrewQuarters, LifeSupport
-)
+from components import LayerType  # Phase 7: Removed unused legacy class imports
 import json
 from ui.builder.modifier_logic import ModifierLogic
 

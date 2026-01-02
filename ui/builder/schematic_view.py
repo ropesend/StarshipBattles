@@ -122,9 +122,11 @@ class SchematicView:
 
     def _get_cached_arc(self, screen_size, weapon):
         cx, cy = self.cx, self.cy
-        arc_degrees = getattr(weapon, 'firing_arc', 20)
-        weapon_range = getattr(weapon, 'range', 1000)
-        facing = getattr(weapon, 'facing_angle', 0)
+        # Phase 7: Use ability-based access for weapon properties
+        weapon_ab = weapon.get_ability('WeaponAbility')
+        arc_degrees = weapon_ab.firing_arc if weapon_ab else 20
+        weapon_range = weapon_ab.range if weapon_ab else 1000
+        facing = weapon_ab.facing_angle if weapon_ab else 0
         w_id = weapon.id
         
         # Cache Key: (Weapon ID, Range, Arc, Facing, Screen Size Tuple)

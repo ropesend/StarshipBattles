@@ -1,7 +1,7 @@
 
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Optional, Dict
-from components import Component, LayerType, Weapon
+from components import Component, LayerType  # Phase 7: Removed unused Weapon import
 
 class ValidationResult:
     def __init__(self, is_valid: bool, errors: List[str] = None, warnings: List[str] = None):

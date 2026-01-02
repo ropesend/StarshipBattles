@@ -132,8 +132,10 @@ class BattleInterface:
             for layer in s.layers.values():
                 for comp in layer['components']:
                     if comp.has_ability('WeaponAbility') and comp.is_active:
-                        if comp.range > max_range:
-                            max_range = comp.range
+                        # Phase 7: Use ability-based access for weapon properties
+                        weapon_ab = comp.get_ability('WeaponAbility')
+                        if weapon_ab and weapon_ab.range > max_range:
+                            max_range = weapon_ab.range
             
             if max_range > 0:
                 r_screen = int(max_range * camera.zoom)
@@ -156,10 +158,13 @@ class BattleInterface:
             for layer in s.layers.values():
                 for comp in layer['components']:
                     if comp.has_ability('WeaponAbility') and comp.is_active:
+                        # Phase 7: Use ability-based access for weapon properties
+                        weapon_ab = comp.get_ability('WeaponAbility')
+                        if not weapon_ab: continue
                         ship_angle = s.angle
-                        facing = comp.facing_angle
-                        arc = comp.firing_arc
-                        rng = comp.range * camera.zoom
+                        facing = weapon_ab.facing_angle
+                        arc = weapon_ab.firing_arc
+                        rng = weapon_ab.range * camera.zoom
                         
                         start_angle = math.radians(ship_angle + facing - arc)
                         end_angle = math.radians(ship_angle + facing + arc)

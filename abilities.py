@@ -265,6 +265,14 @@ class WeaponAbility(Ability):
             return True
         return False
 
+    def get_damage(self, range_to_target: float = 0) -> float:
+        """Evaluate damage at a specific range. Returns base damage if no formula."""
+        if self.damage_formula:
+            from formula_system import evaluate_math_formula
+            context = {'range_to_target': range_to_target}
+            return max(0.0, evaluate_math_formula(self.damage_formula, context))
+        return self.damage
+
     def get_ui_rows(self):
         return [
             {'label': 'Damage', 'value': f"{self.damage:.0f}", 'color_hint': '#FF6464'}, # Red
@@ -287,6 +295,36 @@ class BeamWeaponAbility(WeaponAbility):
         super().__init__(component, data)
         self.accuracy_falloff = float(data.get('accuracy_falloff', 0.001))
         self.base_accuracy = float(data.get('base_accuracy', 1.0))
+
+    def calculate_hit_chance(self, distance: float, attack_score_bonus: float = 0.0, defense_score_penalty: float = 0.0) -> float:
+        """
+        Calculate hit chance using the Logistic Function (Sigmoid).
+        Formula: P = 1 / (1 + e^-x)
+        Where x = (BaseScore + AttackBonuses) - (RangePenalty + DefensePenalties)
+        """
+        # Range Penalty: falloff * distance
+        range_penalty = self.accuracy_falloff * distance
+        
+        net_score = (self.base_accuracy + attack_score_bonus) - (range_penalty + defense_score_penalty)
+        
+        # Sigmoid Function
+        try:
+            # Clamp exp input to avoid overflow
+            clamped_score = max(-20.0, min(20.0, net_score))
+            chance = 1.0 / (1.0 + math.exp(-clamped_score))
+        except OverflowError:
+            chance = 0.0 if net_score < 0 else 1.0
+            
+        return chance
+
+    def get_damage(self, range_to_target: float = 0) -> float:
+        """Evaluate damage at a specific range. Returns base damage if no formula."""
+        if self.damage_formula:
+            from formula_system import evaluate_math_formula
+            context = {'range_to_target': range_to_target}
+            return max(0.0, evaluate_math_formula(self.damage_formula, context))
+        return self.damage
+
 
 class SeekerWeaponAbility(WeaponAbility):
     def __init__(self, component, data: Dict[str, Any]):

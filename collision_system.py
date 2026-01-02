@@ -50,6 +50,9 @@ class CollisionSystem:
                     hit_dist = min(valid_t)
                     beam_comp = attack['component']
                     
+                    # Get ability for hit chance and damage calculations
+                    beam_ab = beam_comp.get_ability('BeamWeaponAbility')
+                    
                     # New Logic: Get Scores
                     source_ship = attack.get('source')
                     attack_score = 0.0
@@ -63,12 +66,12 @@ class CollisionSystem:
                         # Fallback
                         defense_score = target.get_total_ecm_score()
                         
-                    # Calculate Chance with Sigmoid Logic
-                    chance = beam_comp.calculate_hit_chance(hit_dist, attack_score, defense_score)
+                    # Calculate Chance with Sigmoid Logic using ability
+                    chance = beam_ab.calculate_hit_chance(hit_dist, attack_score, defense_score)
                     
                     if random.random() < chance:
-                        # Evaluate damage at hit distance
-                        damage = beam_comp.get_damage(hit_dist)
+                        # Evaluate damage at hit distance using ability
+                        damage = beam_ab.get_damage(hit_dist)
                         target.take_damage(damage)
                         end_pos = start_pos + direction * hit_dist
         

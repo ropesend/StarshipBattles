@@ -96,10 +96,15 @@ class TestBattleSceneExtended(unittest.TestCase):
         # Mock take_damage
         ship.take_damage = mock.MagicMock()
         
+        # Mock the ability that will be returned by get_ability
+        mock_ability = mock.MagicMock()
+        mock_ability.calculate_hit_chance.return_value = 1.0
+        mock_ability.get_damage.return_value = 25
+        
+        # Mock the component to return the mock ability
         mock_comp = mock.MagicMock()
         mock_comp.shots_hit = 0
-        mock_comp.calculate_hit_chance.return_value = 1.0
-        mock_comp.get_damage.return_value = 25  # Return expected damage value
+        mock_comp.get_ability.return_value = mock_ability
         
         beam = {
             'type': 'beam',

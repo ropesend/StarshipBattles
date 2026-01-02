@@ -87,37 +87,37 @@
         - [x] Run full test suite (**470 passed**) <!-- id: 70 -->
 
 - [ ] **Phase 7: Legacy Removal** <!-- id: 112 -->
-    - [ ] **Stage 1: Critical Fixes** <!-- id: 113 -->
-        - [ ] Delete `ship_stats.py:325-330` (shield overwrite bug) <!-- id: 114 -->
-        - [ ] Delete `builder.py` (dead code) <!-- id: 131 -->
-        - [ ] Fix armor classification checks in `ship_stats.py:72,78,182` <!-- id: 115 -->
-    - [ ] **Stage 2: Core Logic** <!-- id: 116 -->
-        - [ ] `ship_combat.py`: Replace 15+ `comp.damage/range` accesses <!-- id: 117 -->
-        - [ ] `ship_combat.py`: Replace `comp.fire()` with `ability.fire()` <!-- id: 118 -->
-        - [ ] `collision_system.py:67,71`: Replace `beam_comp` method calls <!-- id: 132 -->
-        - [ ] `projectile_manager.py:100-127`: Replace `source_weapon` access <!-- id: 133 -->
-        - [ ] `ai.py:188`: Replace `hasattr(c, 'damage')` with ability check <!-- id: 119 -->
-        - [ ] `ai.py:372,383`: Replace `comp.range/firing_arc` with ability access <!-- id: 134 -->
-        - [ ] `ship.py:598,607,610`: Replace `isinstance(Sensor/Electronics)` <!-- id: 120 -->
-    - [ ] **Stage 3: UI & Rendering** <!-- id: 121 -->
-        - [ ] `detail_panel.py:5-7,115,132,142,153-198`: Remove legacy imports/patterns <!-- id: 135 -->
-        - [ ] `weapons_panel.py`: Replace 10+ `getattr(weapon, ...)` calls <!-- id: 122 -->
-        - [ ] `modifier_logic.py:123,161`: Read from ability dict <!-- id: 136 -->
-        - [ ] `schematic_view.py:125-127`: Replace legacy attribute access <!-- id: 137 -->
-        - [ ] `battle_ui.py:135-162`: Replace debug overlay attributes <!-- id: 138 -->
-        - [ ] `rendering.py:123`: Replace `type_str == 'Armor'` check <!-- id: 123 -->
-    - [ ] **Stage 4: Data Files** <!-- id: 139 -->
-        - [ ] `modifiers.json`: Migrate `allow_types` → `allow_abilities` (10+ entries) <!-- id: 140 -->
-        - [ ] `components.json:481`: Replace `PointDefense: true` with ability/tag <!-- id: 141 -->
-        - [ ] `ship_validator.py:113,136`: Support ability-based restrictions <!-- id: 142 -->
-    - [ ] **Stage 5: Test Suite** <!-- id: 124 -->
-        - [ ] `test_components.py:32,36`: Replace `isinstance` assertions <!-- id: 125 -->
-        - [ ] `test_ship_stats.py`: Replace legacy instantiation (6+ locations) <!-- id: 143 -->
-        - [ ] `test_combat.py:110,151,247`: Replace `isinstance(Bridge/Weapon)` <!-- id: 144 -->
-        - [ ] `test_pdc.py:13,65-66`: Fix `MockPDC` inheritance <!-- id: 145 -->
-        - [ ] `test_modifiers.py:113,122-123`: Replace `isinstance(Weapon)` <!-- id: 146 -->
-        - [ ] `test_strategy_system.py:77`: Replace `c1.damage = 10` mock <!-- id: 147 -->
-        - [ ] `test_builder_validation.py:53,57,69-84`: Use tags not classification <!-- id: 148 -->
+    - [x] **Stage 1: Critical Fixes** <!-- id: 113 -->
+        - [x] Delete `ship_stats.py:325-330` (shield overwrite bug) <!-- id: 114 -->
+        - [x] Delete `builder.py` (dead code) <!-- id: 131 -->
+        - [x] Fix armor classification checks in `ship_stats.py:72,78,182` <!-- id: 115 -->
+    - [x] **Stage 2: Core Logic** <!-- id: 116 -->
+        - [x] `ship_combat.py`: Replace 15+ `comp.damage/range` accesses <!-- id: 117 -->
+        - [x] `ship_combat.py`: Replace `comp.fire()` with `ability.fire()` <!-- id: 118 -->
+        - [x] `collision_system.py:67,71`: Replace `beam_comp` method calls <!-- id: 132 -->
+        - [x] `projectile_manager.py:100-127`: Replace `source_weapon` access <!-- id: 133 -->
+        - [x] `ai.py:188`: Replace `hasattr(c, 'damage')` with ability check <!-- id: 119 -->
+        - [x] `ai.py:372,383`: Replace `comp.range/firing_arc` with ability access <!-- id: 134 -->
+        - [x] `ship.py:598,607,610`: Replace `isinstance(Sensor/Electronics)` <!-- id: 120 -->
+    - [x] **Stage 3: UI & Rendering** <!-- id: 121 -->
+        - [x] `detail_panel.py:5-7,115,132,142,153-198`: Remove legacy imports/patterns <!-- id: 135 -->
+        - [x] `weapons_panel.py`: Replace 10+ `getattr(weapon, ...)` calls <!-- id: 122 -->
+        - [x] `modifier_logic.py:123,161`: Read from ability dict <!-- id: 136 -->
+        - [x] `schematic_view.py:125-127`: Replace legacy attribute access <!-- id: 137 -->
+        - [x] `battle_ui.py:135-162`: Replace debug overlay attributes <!-- id: 138 -->
+        - [x] `rendering.py:123`: Replace `type_str == 'Armor'` check <!-- id: 123 -->
+    - [x] **Stage 4: Data Files** <!-- id: 139 -->
+        - [x] `modifiers.json`: Migrate `allow_types` → `allow_abilities` (10+ entries) <!-- id: 140 -->
+        - [x] `components.json:481`: Replace `PointDefense: true` with ability/tag <!-- id: 141 -->
+        - [x] `ship_validator.py:113,136`: Support ability-based restrictions <!-- id: 142 -->
+    - [x] **Stage 5: Test Suite** <!-- id: 124 -->
+        - [x] `test_components.py:32,36`: Replace `isinstance` assertions <!-- id: 125 -->
+        - [x] `test_ship_stats.py`: Replace legacy instantiation (6+ locations) <!-- id: 143 -->
+        - [x] `test_combat.py:110,151,247`: Replace `isinstance(Bridge/Weapon)` <!-- id: 144 -->
+        - [x] `test_pdc.py:13,65-66`: Fix `MockPDC` inheritance <!-- id: 145 -->
+        - [x] `test_modifiers.py:113,122-123`: Replace `isinstance(Weapon)` <!-- id: 146 -->
+        - [x] `test_strategy_system.py:77`: Replace `c1.damage = 10` mock <!-- id: 147 -->
+        - [x] `test_builder_validation.py:53,57,69-84`: Use tags not classification <!-- id: 148 -->
     - [ ] **Stage 6: The Big Delete** <!-- id: 126 -->
         - [ ] Delete `Bridge`, `Weapon`, `ProjectileWeapon`, `BeamWeapon`, `SeekerWeapon` classes <!-- id: 127 -->
         - [ ] Delete `Engine`, `Thruster`, `Shield` classes <!-- id: 149 -->

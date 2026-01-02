@@ -76,10 +76,13 @@ class ShipCombatMixin:
                     continue
 
                 if comp.has_ability('WeaponAbility') and comp.is_active:
+                    # Get weapon ability for attribute access
+                    weapon_ab = comp.get_ability('WeaponAbility')
+                    
                     # Check resources via Component Abilities
                     has_resource = comp.can_afford_activation()
                     
-                    if has_resource and comp.can_fire():
+                    if has_resource and weapon_ab.can_fire():
                         # TARGETING logic
                         valid_target = False
                         target = None
@@ -111,24 +114,25 @@ class ShipCombatMixin:
                             if t_type == 'missile' and not is_pdc:
                                 continue # Standard guns ignore missiles
                                 
-                            # Distance Check
+                            # Distance Check - use ability values
                             dist = self.position.distance_to(candidate.position)
-                            max_range = comp.range
+                            max_range = weapon_ab.range
                             if comp.has_ability('SeekerWeaponAbility'):
+                                seeker_ab = comp.get_ability('SeekerWeaponAbility')
                                 # Approximate max range for initial check
-                                max_range = comp.projectile_speed * comp.endurance * 2.0 
+                                max_range = seeker_ab.projectile_speed * seeker_ab.endurance * 2.0 
 
                             if dist <= max_range:
                                 # Solve Firing Solution
                                 aim_pos, aim_vec = self._calculate_firing_solution(comp, candidate)
                                 
-                                # ARC CHECK
+                                # ARC CHECK - use ability values
                                 aim_angle = math.degrees(math.atan2(aim_vec.y, aim_vec.x)) % 360
                                 ship_angle = self.angle
-                                comp_facing = (ship_angle + comp.facing_angle) % 360
+                                comp_facing = (ship_angle + weapon_ab.facing_angle) % 360
                                 diff = (aim_angle - comp_facing + 180) % 360 - 180
                                 
-                                if abs(diff) <= (comp.firing_arc / 2):
+                                if abs(diff) <= (weapon_ab.firing_arc / 2):
                                     valid_target = True
                                     target = candidate
                                     break # Found a valid target, fire!
@@ -138,7 +142,7 @@ class ShipCombatMixin:
                                     target = candidate
                                     break
 
-                        if valid_target and target and comp.fire(target):
+                        if valid_target and target and weapon_ab.fire(target):
                             self.total_shots_fired += 1
                             comp.shots_fired += 1
                             
@@ -158,8 +162,8 @@ class ShipCombatMixin:
                                     'type': AttackType.BEAM,
                                     'source': self,
                                     'target': target,
-                                    'damage': comp.damage,
-                                    'range': comp.range,
+                                    'damage': weapon_ab.damage,
+                                    'range': weapon_ab.range,
                                     'origin': self.position,
                                     'component': comp,
                                     'direction': aim_vec.normalize() if aim_vec.length() > 0 else pygame.math.Vector2(1, 0),
@@ -172,29 +176,31 @@ class ShipCombatMixin:
                                 
                                 # Seeker Logic
                                 if comp.has_ability('SeekerWeaponAbility'):
+                                    seeker_ab = comp.get_ability('SeekerWeaponAbility')
+                                    
                                     # Launch vector
                                     rad = math.radians(comp_facing)
                                     launch_vec = pygame.math.Vector2(math.cos(rad), math.sin(rad))
                                     
                                     # If target in arc, launch at target
-                                    if abs(diff) <= (comp.firing_arc / 2):
+                                    if abs(diff) <= (weapon_ab.firing_arc / 2):
                                         launch_vec = aim_vec.normalize() if aim_vec.length() > 0 else launch_vec
 
-                                    speed = comp.projectile_speed / 100.0  # Pixels/tick
+                                    speed = seeker_ab.projectile_speed / 100.0  # Pixels/tick
                                     p_vel = launch_vec * speed + self.velocity
                                     
                                     proj = Projectile(
                                         owner=self,
                                         position=pygame.math.Vector2(self.position),
                                         velocity=p_vel,
-                                        damage=comp.damage,
-                                        range_val=comp.projectile_speed * comp.endurance,
-                                        endurance=comp.endurance,
+                                        damage=seeker_ab.damage,
+                                        range_val=seeker_ab.projectile_speed * seeker_ab.endurance,
+                                        endurance=seeker_ab.endurance,
                                         proj_type=AttackType.MISSILE,
-                                        turn_rate=comp.turn_rate,
+                                        turn_rate=seeker_ab.turn_rate,
                                         max_speed=speed,
                                         target=target,
-                                        hp=comp.hp,
+                                        hp=getattr(comp, 'hp', 1),  # Component-level projectile HP
                                         color=(255, 50, 50),
                                         source_weapon=comp
                                     )
@@ -202,15 +208,16 @@ class ShipCombatMixin:
                                     
                                 else:
                                     # Standard Projectile
-                                    speed = comp.projectile_speed / 100.0
+                                    projectile_ab = comp.get_ability('ProjectileWeaponAbility')
+                                    speed = projectile_ab.projectile_speed / 100.0
                                     p_vel = aim_vec.normalize() * speed + self.velocity
                                     
                                     proj = Projectile(
                                         owner=self,
                                         position=pygame.math.Vector2(self.position),
                                         velocity=p_vel,
-                                        damage=comp.damage,
-                                        range_val=comp.range,
+                                        damage=projectile_ab.damage,
+                                        range_val=projectile_ab.range,
                                         endurance=None, # Range limited
                                         proj_type=AttackType.PROJECTILE,
                                         color=(255, 200, 50),
@@ -226,6 +233,10 @@ class ShipCombatMixin:
         projectiles = context.get('projectiles', [])
         if not projectiles: return None
         
+        # Get weapon ability for range check
+        weapon_ab = comp.get_ability('WeaponAbility')
+        weapon_range = weapon_ab.range if weapon_ab else getattr(comp, 'range', 0)
+        
         possible_targets = []
         for p in projectiles:
             if not p.is_alive: continue
@@ -233,7 +244,7 @@ class ShipCombatMixin:
             
             # Check range
             dist = self.position.distance_to(p.position)
-            if dist > comp.range: continue
+            if dist > weapon_range: continue
                 
             possible_targets.append((p, dist))
             
@@ -251,7 +262,14 @@ class ShipCombatMixin:
         t_vel = getattr(target, 'velocity', pygame.math.Vector2(0,0))
         
         if comp.has_ability('ProjectileWeaponAbility') or comp.has_ability('SeekerWeaponAbility'):
-            t = self.solve_lead(self.position, self.velocity, target.position, t_vel, comp.projectile_speed / 100.0)
+            # Get projectile speed from the appropriate ability
+            if comp.has_ability('SeekerWeaponAbility'):
+                proj_ab = comp.get_ability('SeekerWeaponAbility')
+            else:
+                proj_ab = comp.get_ability('ProjectileWeaponAbility')
+            
+            projectile_speed = proj_ab.projectile_speed if proj_ab else 500
+            t = self.solve_lead(self.position, self.velocity, target.position, t_vel, projectile_speed / 100.0)
             if t > 0:
                 aim_pos = target.position + t_vel * t
                 

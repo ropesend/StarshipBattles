@@ -120,7 +120,8 @@ def draw_ship(surface, ship, camera):
                     color = (200, 200, 200)
                     if comp.has_ability('WeaponAbility'): color = (255, 50, 50)
                     elif comp.has_ability('CombatPropulsion'): color = (50, 255, 100)
-                    elif comp.type_str == 'Armor': color = (100, 100, 100)
+                    # Phase 7: Use ability-based check instead of type_str
+                    elif comp.has_ability('ArmorAbility') or comp.major_classification == 'Armor': color = (100, 100, 100)
                     
                     pygame.draw.circle(surface, color, (int(comp_screen.x), int(comp_screen.y)), max(1, scale(3)))
                     current_angle += angle_step
