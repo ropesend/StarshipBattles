@@ -23,17 +23,24 @@ class TestUIDynamicUpdate(unittest.TestCase):
         
         self.manager = MagicMock()
         
+        
     def tearDown(self):
         pygame.quit()
 
     @patch('pygame_gui.elements.UIScrollingContainer')
-    @patch('ui.builder.right_panel.UIImage')
-    @patch('ui.builder.right_panel.UITextBox')
-    @patch('ui.builder.right_panel.UIDropDownMenu')
-    @patch('ui.builder.right_panel.UITextEntryLine')
-    @patch('ui.builder.right_panel.UILabel')
+    @patch('pygame_gui.elements.UIImage')
+    @patch('pygame_gui.elements.UITextBox')
+    @patch('pygame_gui.elements.UIDropDownMenu')
+    @patch('pygame_gui.elements.UITextEntryLine')
+    @patch('pygame_gui.elements.UILabel')
     def test_dynamic_row_addition(self, mock_label, mock_entry, mock_drop, mock_box, mock_img, mock_scroll_container):
         """Test that adding a resource triggers a UI rebuild to show the new row."""
+        
+        import ui.builder.right_panel
+        import importlib
+        import sys
+        if 'ui.builder.right_panel' in sys.modules:
+            importlib.reload(sys.modules['ui.builder.right_panel'])
         
         # 1. Create Panel with NO resources (ensure ship is empty initially)
         self.builder.ship.resources.reset_stats() 

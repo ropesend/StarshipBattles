@@ -72,7 +72,8 @@ class TestBuilderUISync(unittest.TestCase):
         self.mock_builder.ship.ai_strategy = "kamikaze"
         
         # 2. Call Refresh (mocking portrait update to avoid side effects)
-        with patch('ui.builder.right_panel.BuilderRightPanel.update_portrait_image') as mock_update_img:
+        # 2. Call Refresh (mocking portrait update to avoid side effects)
+        with patch.object(self.panel, 'update_portrait_image') as mock_update_img:
             self.panel.refresh_controls()
             mock_update_img.assert_called_once()
         
@@ -130,7 +131,7 @@ class TestBuilderUISync(unittest.TestCase):
         self.mock_builder.ship.vehicle_type = target_type
         self.mock_builder.ship.ship_class = target_class
         
-        with patch('ui.builder.right_panel.BuilderRightPanel.update_portrait_image'):
+        with patch.object(self.panel, 'update_portrait_image'):
             self.panel.refresh_controls()
         
         # Verify Type Dropdown
@@ -160,7 +161,7 @@ class TestBuilderUISync(unittest.TestCase):
         self.mock_builder.ship.ship_class = "Battleship"
         
         # Trigger sync
-        with patch('ui.builder.right_panel.BuilderRightPanel.update_portrait_image'):
+        with patch.object(self.panel, 'update_portrait_image'):
             self.panel.refresh_controls()
             
         # Assert sync happened
