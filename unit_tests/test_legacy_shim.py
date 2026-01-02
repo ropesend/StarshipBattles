@@ -74,3 +74,47 @@ class TestLegacyShim(unittest.TestCase):
         self.assertIsNotNone(weapon_ab, "Legacy Weapon should have WeaponAbility")
         self.assertEqual(weapon_ab.damage, 50)
         self.assertEqual(weapon_ab.range, 1000)
+
+    def test_legacy_shield_shim(self):
+        data = {
+            "id": "shield_1",
+            "name": "Legacy Shield",
+            "type": "Shield",
+            "mass": 100,
+            "hp": 50,
+            "shield_capacity": 500
+        }
+        
+        comp = Component(data)
+        
+        def get_ability(c, ability_name):
+            for ab in c.ability_instances:
+                if ab.__class__.__name__ == ability_name:
+                    return ab
+            return None
+            
+        shield_ab = get_ability(comp, "ShieldProjection")
+        self.assertIsNotNone(shield_ab, "Legacy Shield should have ShieldProjection ability")
+        self.assertEqual(shield_ab.capacity, 500)
+
+    def test_legacy_shield_regen_shim(self):
+        data = {
+            "id": "regen_1",
+            "name": "Legacy Regen",
+            "type": "ShieldRegenerator",
+            "mass": 50,
+            "hp": 20,
+            "shield_recharge_rate": 5.0
+        }
+        
+        comp = Component(data)
+        
+        def get_ability(c, ability_name):
+            for ab in c.ability_instances:
+                if ab.__class__.__name__ == ability_name:
+                    return ab
+            return None
+            
+        regen_ab = get_ability(comp, "ShieldRegeneration")
+        self.assertIsNotNone(regen_ab, "Legacy Regenerator should have ShieldRegeneration ability")
+        self.assertEqual(regen_ab.rate, 5.0)

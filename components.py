@@ -243,6 +243,18 @@ class Component:
             
             ab = create_ability(wep_type, self, wep_data)
             if ab: self.ability_instances.append(ab)
+
+        # Shim: ShieldProjection (Capacity)
+        val = get_shim_value('shield_capacity')
+        if not shim_has("ShieldProjection") and is_positive(val):
+             ab = create_ability("ShieldProjection", self, {"value": safe_float(val)})
+             if ab: self.ability_instances.append(ab)
+
+        # Shim: ShieldRegeneration (Rate)
+        val = get_shim_value('shield_recharge_rate')
+        if not shim_has("ShieldRegeneration") and is_positive(val):
+             ab = create_ability("ShieldRegeneration", self, {"value": safe_float(val)})
+             if ab: self.ability_instances.append(ab)
             
     def update(self):
         """Update component state for one tick (resource consumption, cooldowns)."""

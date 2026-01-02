@@ -40,6 +40,7 @@
 
 - [ ] **Phase 3: Stats & Physics Integration** <!-- id: 35 -->
     - [ ] **Ship Stats** <!-- id: 36 -->
+        - [ ] Create `unit_tests/test_ship_stats.py` baseline <!-- id: 81 -->
         - [ ] Refactor `ship_stats.py`: Replace `if isinstance(c, Engine)` with `c.get_abilities('CombatPropulsion')` <!-- id: 37 -->
         - [ ] Refactor `ship_stats.py`: Replace `if isinstance(c, Thruster)` with `c.get_abilities('ManeuveringThruster')` <!-- id: 38 -->
         - [ ] Refactor `ship_stats.py`: Aggregate `ShieldProjection` for max shields <!-- id: 39 -->

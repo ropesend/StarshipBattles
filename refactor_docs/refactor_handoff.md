@@ -2,7 +2,7 @@
 
 ## 1. High-Level Context
 **Refactor Goal**: Transition from Inheritance-based Components (`Engine`, `Weapon`) to Composition-based Components (`Component` + `Abilities`).
-**Current Phase**: Phase 2 (Completed) / Pre-Phase 3
+**Current Phase**: Phase 2 (Completed - Verified & Fixed Shield Shim) / Pre-Phase 3
 **Strategy**: `Component` class is refactored. `abilities` are now instantiated from data. A **Legacy Shim** is active to auto-create abilities from legacy fields (`thrust_force`, `damage`).
 **Next Focus**: Phase 3 - Stats & Physics Integration. Decouple `ship_stats.py` and `ship_physics.py` from specific component classes.
 
@@ -40,7 +40,8 @@
 
 ## 4. Next Agent Instructions
 *   **Current Focus**: Audit Phase 2 & Begin Phase 3 (Stats/Physics).
-*   **Audit**: Review `components.py` changes. Ensure Legacy Shim covers all necessary cases (Thrust, Turn, Damage, Shields).
+*   **Audit**: Review `components.py` changes. Ensure Legacy Shim covers all necessary cases (Thrust, Turn, Damage, Shields). **(DONE: Added Shield Shims)**
 *   **Verify**: Run `python -m unittest unit_tests/test_legacy_shim.py unit_tests/test_component_composition.py`.
 *   **Phase 3 Goal**: Stop calculating stats by iterating `isinstance(c, Engine)`. Instead, iterate components and sum `c.get_ability('CombatPropulsion').value`.
 *   **Caution**: `ship_stats.py` uses explicit type checks. These must be replaced with `c.has_ability()` or `c.get_abilities()`. Do NOT remove the component subclasses (`Engine`, `Weapon`) yet—just decouple the *calculations* from them.
+*   **CRITICAL IMPLEMENTATION GAP**: Currently, `Component.recalculate_stats` updates *legacy attributes* (e.g., `self.thrust_force`) with modifiers, but does **NOT** update the corresponding `Ability` instances (e.g., `CombatPropulsion.thrust_force` stays at base value). **Before switching stats calculations to use Abilities in Phase 3, you MUST update `recalculate_stats` to apply modifiers to the Ability instances.** Failure to do this will break all modifier effects (bonuses/penalties).
