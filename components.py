@@ -646,9 +646,8 @@ class Component:
         # But we need to know the class.
         return self.__class__(self.data)
 
-class Bridge(Component):
-    def __init__(self, data):
-        super().__init__(data)
+# Phase 7: Bridge is now an alias for Component (backward compatibility)
+Bridge = Component
 
 from logger import log_event
 

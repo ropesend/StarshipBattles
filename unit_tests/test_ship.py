@@ -6,7 +6,7 @@ import pygame
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ship import Ship, LayerType, initialize_ship_data
-from components import load_components, create_component, Bridge
+from components import load_components, create_component  # Phase 7: Removed Bridge import
 
 class TestShip(unittest.TestCase):
     @classmethod

@@ -8,7 +8,7 @@ import random
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ship import Ship, LayerType, initialize_ship_data
-from components import load_components, create_component, Bridge
+from components import load_components, create_component  # Phase 7: Removed Bridge import
 
 
 class TestDamageLayerLogic(unittest.TestCase):
@@ -107,7 +107,7 @@ class TestDamageLayerLogic(unittest.TestCase):
         
         bridge = None
         for c in self.ship.layers[LayerType.CORE]['components']:
-            if isinstance(c, Bridge):
+            if c.type_str == 'Bridge':
                 bridge = c
                 break
         
@@ -148,7 +148,7 @@ class TestDamageLayerLogic(unittest.TestCase):
         
         bridge = None
         for c in self.ship.layers[LayerType.CORE]['components']:
-             if isinstance(c, Bridge):
+             if c.type_str == 'Bridge':
                  bridge = c
                  break
         
@@ -240,11 +240,11 @@ class TestWeaponCooldowns(unittest.TestCase):
     
     def test_weapon_cooldown_decreases(self):
         """Weapon cooldown should decrease each tick."""
-        from components import Weapon
+        # Phase 7: Use ability-based weapon detection
         
         weapon = None
         for c in self.ship.layers[LayerType.OUTER]['components']:
-            if isinstance(c, Weapon) and c.is_active:
+            if c.has_ability('WeaponAbility') and c.is_active:
                 weapon = c
                 break
         

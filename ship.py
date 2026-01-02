@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple, Optional, Any, Union, Set, TYPE_CHECKING
 
 from physics import PhysicsBody
 from components import (
-    Component, LayerType, Bridge, Engine, Thruster, Tank, Armor, Weapon, 
+    Component, LayerType, Engine, Thruster, Tank, Armor, Weapon,  # Phase 7: Removed Bridge
     Generator, BeamWeapon, ProjectileWeapon, CrewQuarters, LifeSupport, 
     Sensor, Electronics, Shield, ShieldRegenerator, SeekerWeapon,
     COMPONENT_REGISTRY, MODIFIER_REGISTRY

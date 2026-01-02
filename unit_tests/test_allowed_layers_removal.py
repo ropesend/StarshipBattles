@@ -11,8 +11,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from components import (
-    Component, Bridge, Engine, Armor, Weapon, Generator, Tank,
-    COMPONENT_REGISTRY, load_components
+    Component, COMPONENT_REGISTRY, load_components  # Phase 7: Removed legacy class imports
 )
 from ship import Ship, LayerType, initialize_ship_data
 

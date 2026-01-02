@@ -9,7 +9,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ship import Ship, LayerType
-from components import Component, LayerType, Bridge, Armor, Weapon
+from components import Component, LayerType  # Phase 7: Removed Bridge, Armor, Weapon imports
 
 class TestBuilderValidation(unittest.TestCase):
     def setUp(self):

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pygame
 import random
 from ship_combat import ShipCombatMixin
-from components import Component, LayerType, Bridge
+from components import Component, LayerType  # Phase 7: Removed Bridge import
 
 class MockComponent(Component):
     def __init__(self, name, hp, max_hp):
@@ -16,6 +16,7 @@ class MockComponent(Component):
         self.mass = 10
         self.abilities = {}
         self.modifiers = []
+        self.type_str = "MockComponent"
 
     def take_damage(self, amount):
         self.current_hp -= amount
@@ -23,22 +24,11 @@ class MockComponent(Component):
             self.current_hp = 0
             self.is_active = False
 
-class MockBridge(Bridge):
+class MockBridge(MockComponent):  # Phase 7: Changed from Bridge to MockComponent
     def __init__(self, name, hp, max_hp):
+        super().__init__(name, hp, max_hp)
         self.id = "bridge"
-        self.name = name
-        self.current_hp = hp
-        self.max_hp = max_hp
-        self.is_active = True
-        self.mass = 10
-        self.abilities = {}
-        self.modifiers = []
-
-    def take_damage(self, amount):
-        self.current_hp -= amount
-        if self.current_hp <= 0:
-            self.current_hp = 0
-            self.is_active = False
+        self.type_str = "Bridge"  # Set type_str for detection
 
 class MockShip(ShipCombatMixin):
     def __init__(self):

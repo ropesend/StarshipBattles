@@ -118,8 +118,9 @@
         - [x] `test_modifiers.py:113,122-123`: Replace `isinstance(Weapon)` <!-- id: 146 -->
         - [x] `test_strategy_system.py:77`: Replace `c1.damage = 10` mock <!-- id: 147 -->
         - [x] `test_builder_validation.py:53,57,69-84`: Use tags not classification <!-- id: 148 -->
-    - [ ] **Stage 6: The Big Delete** <!-- id: 126 -->
-        - [ ] Delete `Bridge`, `Weapon`, `ProjectileWeapon`, `BeamWeapon`, `SeekerWeapon` classes <!-- id: 127 -->
+    - [/] **Stage 6: The Big Delete** <!-- id: 126 -->
+        - [x] `Bridge` class → `Bridge = Component` alias (backward compatible) <!-- id: 127 -->
+        - [ ] Delete `Weapon`, `ProjectileWeapon`, `BeamWeapon`, `SeekerWeapon` classes <!-- id: 127b -->
         - [ ] Delete `Engine`, `Thruster`, `Shield` classes <!-- id: 149 -->
         - [ ] Delete `_instantiate_abilities` shim logic (lines 182-296) <!-- id: 128 -->
         - [ ] Delete `COMPONENT_TYPE_MAP` (line 1021) <!-- id: 150 -->

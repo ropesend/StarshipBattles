@@ -1,41 +1,15 @@
 import pygame
 import time
 from ship import Ship, LayerType
-from components import Generator, Tank, BeamWeapon, Bridge, Engine, Thruster, Armor
-from main import draw_ship, draw_hud
-
-# Mock Data for Components
-# Mock Data for Components
-GEN_DATA = {
-    'id': 'gen1', 'name': 'Reactor', 'mass': 50, 'hp': 100, 'type': 'Generator', 
-    'allowed_layers': ['CORE', 'INNER'], 
-    'abilities': {
-        'EnergyGeneration': [{'resource': 'energy', 'amount': 50}]
-    }
-}
-TANK_DATA = {
-    'id': 'bat1', 'name': 'Battery', 'mass': 20, 'hp': 50, 'type': 'Tank', 
-    'allowed_layers': ['INNER', 'OUTER'], 
-    'abilities': {
-        'ResourceStorage': [{'resource': 'energy', 'amount': 100}]
-    }
-}
-BEAM_DATA = {
-    'id': 'las1', 'name': 'Laser', 'mass': 10, 'hp': 40, 'type': 'BeamWeapon', 
-    'allowed_layers': ['OUTER'], 'damage': 10, 'range': 800, 'reload': 0.5, 
-    'base_accuracy': 1.0, 'accuracy_falloff': 0.001,
-    'abilities': {
-        'ResourceConsumption': [{'resource': 'energy', 'amount': 20, 'trigger': 'activation'}]
-    }
-}
-BRIDGE_DATA = {'id': 'br1', 'name': 'Bridge', 'mass': 10, 'hp': 50, 'type': 'Bridge', 'allowed_layers': ['CORE']}
+from components import create_component, Component, load_components, load_modifiers  # Phase 7: Replaced legacy class imports
+from ship import initialize_ship_data
 
 def create_beam_ship(x, y, color):
     s = Ship("BeamShip", x, y, color)
-    s.add_component(Bridge(BRIDGE_DATA), LayerType.CORE)
-    s.add_component(Generator(GEN_DATA), LayerType.INNER)
-    s.add_component(Tank(TANK_DATA), LayerType.INNER)
-    s.add_component(BeamWeapon(BEAM_DATA), LayerType.OUTER)
+    s.add_component(create_component('bridge'), LayerType.CORE)
+    s.add_component(create_component('generator'), LayerType.INNER)
+    s.add_component(create_component('battery'), LayerType.INNER)
+    s.add_component(create_component('laser_cannon'), LayerType.OUTER)
     s.recalculate_stats()
     # Fill energy
     s.resources.set_value("energy", s.resources.get_max_value("energy"))

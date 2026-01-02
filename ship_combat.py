@@ -1,7 +1,7 @@
 import pygame
 import math
 import random
-from components import LayerType, Weapon, BeamWeapon, ProjectileWeapon, Bridge, SeekerWeapon, Hangar, ComponentStatus
+from components import LayerType, Weapon, BeamWeapon, ProjectileWeapon, SeekerWeapon, Hangar, ComponentStatus  # Phase 7: Removed Bridge
 from logger import log_debug
 from game_constants import AttackType
 

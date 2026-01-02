@@ -7,7 +7,7 @@ import pygame
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ship import Ship, LayerType, initialize_ship_data
-from components import load_components, Bridge, Engine
+from components import load_components  # Phase 7: Removed legacy class imports
 from designs import create_brick, create_interceptor
 
 
@@ -38,7 +38,7 @@ class TestDesignFactories(unittest.TestCase):
         ship = create_brick(0, 0)
         
         core_components = ship.layers[LayerType.CORE]['components']
-        has_bridge = any(isinstance(c, Bridge) for c in core_components)
+        has_bridge = any(c.type_str == 'Bridge' for c in core_components)
         
         self.assertTrue(has_bridge, "Brick should have a Bridge in CORE layer")
     
@@ -50,7 +50,7 @@ class TestDesignFactories(unittest.TestCase):
         for layer_data in ship.layers.values():
             all_components.extend(layer_data['components'])
         
-        has_engine = any(isinstance(c, Engine) for c in all_components)
+        has_engine = any(c.has_ability('CombatPropulsion') for c in all_components)
         self.assertTrue(has_engine, "Brick should have engines")
     
     def test_create_brick_has_armor(self):
@@ -74,7 +74,7 @@ class TestDesignFactories(unittest.TestCase):
         ship = create_interceptor(0, 0)
         
         core_components = ship.layers[LayerType.CORE]['components']
-        has_bridge = any(isinstance(c, Bridge) for c in core_components)
+        has_bridge = any(c.type_str == 'Bridge' for c in core_components)
         
         self.assertTrue(has_bridge, "Interceptor should have a Bridge in CORE layer")
     
@@ -84,7 +84,7 @@ class TestDesignFactories(unittest.TestCase):
         
         outer_components = ship.layers[LayerType.OUTER]['components']
         # Should have railguns in OUTER layer
-        has_weapons = any(hasattr(c, 'damage') for c in outer_components)
+        has_weapons = any(c.has_ability('WeaponAbility') for c in outer_components)
         
         self.assertTrue(has_weapons, "Interceptor should have weapons")
     

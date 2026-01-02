@@ -97,7 +97,7 @@ class TestPDC(unittest.TestCase):
         self.ship = Ship("Defender", 0, 0, (255,255,255), team_id=0, ship_class="Satellite (Small)")
         
         # ADD A BRIDGE so it's not derelict
-        from components import create_component, Bridge
+        from components import create_component, Component  # Phase 7: Removed Bridge import
         bridge = create_component('satellite_core') # Specific for satellites
         if not bridge:
              bridge = create_component('bridge')
@@ -105,8 +105,8 @@ class TestPDC(unittest.TestCase):
         if bridge:
             self.ship.add_component(bridge, LayerType.CORE)
         else:
-            # Fallback mock bridge if registry fails
-            mock_bridge = Bridge({
+            # Fallback mock bridge if registry fails - use Component directly
+            mock_bridge = Component({
                 'id':'bridge', 'name':'Bridge', 'type':'Bridge', 'mass':10, 'hp':10, 
                 'allowed_layers':['CORE'], 
                 'abilities':{'CommandAndControl':True, 'CrewRequired':0}
