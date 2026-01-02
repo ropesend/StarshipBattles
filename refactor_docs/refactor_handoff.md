@@ -2,8 +2,9 @@
 
 ## 1. High-Level Context
 **Refactor Goal**: Transition from Inheritance-based Components (`Engine`, `Weapon`) to Composition-based Components (`Component` + `Abilities`).
-**Current Phase**: Phase 1 (Post-Implementation Review)
-**Strategy**: `abilities.py` is built. `resources.py` is migrated. Next agent must INDEPENDENTLY VERIFY this foundation before Phase 2 begins.
+**Current Phase**: Phase 2 (Completed) / Pre-Phase 3
+**Strategy**: `Component` class is refactored. `abilities` are now instantiated from data. A **Legacy Shim** is active to auto-create abilities from legacy fields (`thrust_force`, `damage`).
+**Next Focus**: Phase 3 - Stats & Physics Integration. Decouple `ship_stats.py` and `ship_physics.py` from specific component classes.
 
 ## 2. Test Management Strategy
 *   **Active**: Test is valid and expected to pass.
@@ -20,9 +21,10 @@
 
 | Test File | Status | Reason / Context | Target Phase |
 | :--- | :--- | :--- | :--- |
-| `unit_tests/test_components.py` | **Active** | Core component tests. Will need updates in Phase 2. | Phase 2 |
-| `unit_tests/test_component_resources.py` | **Active** | Resource logic. Will likely break when `Tank` class is deprecated. | Phase 2 |
-| `unit_tests/test_ship_stats.py` | **Active** | Verifies stat aggregation. Critical regression test for Phase 3. | Phase 3 |
+| `unit_tests/test_components.py` | **Active** | Core component tests. PASSED Phase 2. | Phase 2 |
+| `unit_tests/test_component_resources.py` | **Active** | Resource logic. PASSED Phase 2. | Phase 2 |
+| `unit_tests/test_ship_stats.py` | **Missing** | File referenced in plan but does not exist. Created `test_ship.py` as regression baseline. Needs creation. | Phase 3 |
+| `unit_tests/test_ship.py` | **Active** | General ship regression. PASSED. | Phase 3 |
 | `unit_tests/test_weapons.py` | **Active** | Verifies firing logic. Critical for Phase 4. | Phase 4 |
 | `unit_tests/test_ui_dynamic_update.py` | **Active** | UI logic. Will need update when Component.type checks are removed. | Phase 5 |
 | `unit_tests/test_fighter_launch.py` | **Active** | Hangar logic. Critical for Phase 4. | Phase 4 |
@@ -33,10 +35,12 @@
 | `unit_tests/test_ai.py` | **Active** | AI logic. Critical to verify PDC/Formation checks refactor. | Phase 4 |
 | `unit_tests/test_battle_panels.py` | **Active** | UI logic. Verify refactor of `draw_ship_details`. | Phase 5 |
 | `unit_tests/test_builder_validation.py` | **Active** | validation logic. Critical for data integrity. | Phase 6 |
+| `unit_tests/test_component_composition.py` | **Active** | NEW. Verifies generic component ability composition. PASSED. | Phase 2 |
+| `unit_tests/test_legacy_shim.py` | **Active** | NEW. Verifies legacy component data backward compatibility. PASSED. | Phase 2 |
 
 ## 4. Next Agent Instructions
-*   **Current Focus**: Phase 1 - Verification & Review.
-*   **Immediate Action**: PROCEED WITH CAUTION. Perform a code review of `abilities.py` and `resources.py`.
-*   **Verify**: Ensure `ABILITY_REGISTRY` is complete and `Component` imports in valid order.
-*   **Execute**: Run `unit_tests/test_abilities.py` and `unit_tests/test_resources.py` yourself to confirm green state.
-*   **Then**: Only after verification, proceed to Phase 2 (Component Refactor).
+*   **Current Focus**: Audit Phase 2 & Begin Phase 3 (Stats/Physics).
+*   **Audit**: Review `components.py` changes. Ensure Legacy Shim covers all necessary cases (Thrust, Turn, Damage, Shields).
+*   **Verify**: Run `python -m unittest unit_tests/test_legacy_shim.py unit_tests/test_component_composition.py`.
+*   **Phase 3 Goal**: Stop calculating stats by iterating `isinstance(c, Engine)`. Instead, iterate components and sum `c.get_ability('CombatPropulsion').value`.
+*   **Caution**: `ship_stats.py` uses explicit type checks. These must be replaced with `c.has_ability()` or `c.get_abilities()`. Do NOT remove the component subclasses (`Engine`, `Weapon`) yet—just decouple the *calculations* from them.

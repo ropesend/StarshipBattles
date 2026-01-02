@@ -118,30 +118,131 @@ class Component:
                          self.max_hp = 0
                          self.current_hp = 0
 
+    def get_abilities(self, ability_name: str):
+        """
+        Get all abilities of a specific type (by registry name).
+        Supports polymorphism if the registry entry is a class.
+        """
+        from abilities import ABILITY_REGISTRY
+        
+        target_class = None
+        if ability_name in ABILITY_REGISTRY:
+            val = ABILITY_REGISTRY[ability_name]
+            if isinstance(val, type):
+                target_class = val
+        
+        found = []
+        for ab in self.ability_instances:
+            # 1. Polymorphic check (preferred)
+            if target_class and isinstance(ab, target_class):
+                found.append(ab)
+            # 2. Name check (fallback)
+            elif ab.__class__.__name__ == ability_name:
+                found.append(ab)
+        return found
+
+    def get_ability(self, ability_name: str):
+        """Get first ability of type."""
+        l = self.get_abilities(ability_name)
+        return l[0] if l else None
+
+    def has_ability(self, ability_name: str):
+        """Check if component has ability."""
+        return len(self.get_abilities(ability_name)) > 0
+
     def _instantiate_abilities(self):
-        """Instantiate Ability objects from self.abilities dict."""
+        """Instantiate Ability objects from self.abilities dict + Legacy Shim."""
         self.ability_instances = []
+        
+        # 1. Standard Loading
         for name, data in self.abilities.items():
-            # Data can be list (multiple abilities of same type) or dict (single)
-            # Or primitive (e.g. CrewCapacity: 10)
-            
-            # Primitives are NOT generic abilities in the new system class sense yet, 
-            # unless we map them. For now, we only care about ResourceXYZ abilities.
             if name not in ABILITY_REGISTRY:
                 continue
-                
             if isinstance(data, list):
                 for item in data:
                     ab = create_ability(name, self, item)
                     if ab: self.ability_instances.append(ab)
             elif isinstance(data, dict) or isinstance(data, (int, float)):
-                 # Handle primitive shortcuts (FuelStorage: 1000)
                  ab = create_ability(name, self, data)
-                 if ab: 
-                     self.ability_instances.append(ab)
-                 else:
-                     # print(f"DEBUG: Failed to create ability {name} with data {data}")
-                     pass
+                 if ab: self.ability_instances.append(ab)
+
+        # 2. Legacy Shim (Auto-Correction)
+        
+        def shim_has(name_frag):
+            for ab in self.ability_instances:
+                if ab.__class__.__name__ == name_frag: return True
+            return False
+
+        def get_shim_value(attr_name, default=0):
+            """Get value from attribute (if resolved) or data (if raw/formula)."""
+            # 1. Try resolved attribute first (from recalculate_stats loop)
+            if hasattr(self, attr_name):
+                val = getattr(self, attr_name)
+                # If it's a number, great. If strictly formula usage, might be string? 
+                # Usually resolved attributes are numbers.
+                if isinstance(val, (int, float)):
+                    return val
+            
+            # 2. Fallback to data
+            val = self.data.get(attr_name, default)
+            return val
+
+        def is_positive(val):
+            if isinstance(val, (int, float)):
+                return val > 0
+            if isinstance(val, str) and val.startswith('='):
+                return True # Assume formula yields positive
+            return False
+
+        def safe_float(val):
+            if isinstance(val, (int, float)): return float(val)
+            return 0.0 # Placeholder for formula strings
+
+        # Shim: CombatPropulsion
+        val = get_shim_value('thrust_force')
+        if not shim_has("CombatPropulsion") and is_positive(val):
+            ab = create_ability("CombatPropulsion", self, {"value": safe_float(val)})
+            if ab: self.ability_instances.append(ab)
+
+        # Shim: ManeuveringThruster
+        val = get_shim_value('turn_speed')
+        if not shim_has("ManeuveringThruster") and is_positive(val):
+            ab = create_ability("ManeuveringThruster", self, {"value": safe_float(val)})
+            if ab: self.ability_instances.append(ab)
+
+        # Shim: Weapons
+        has_weapon = False
+        from abilities import WeaponAbility
+        for ab in self.ability_instances:
+            if isinstance(ab, WeaponAbility): 
+                has_weapon = True
+                break
+        
+        # Determine strict weapon type intent (e.g. if explicit 'damage' key exists)
+        dmg = get_shim_value('damage', 0)
+        
+        if not has_weapon and is_positive(dmg):
+            # Infer type
+            wep_type = "ProjectileWeaponAbility" # Default
+            if "Beam" in self.type_str: wep_type = "BeamWeaponAbility"
+            if "Seeker" in self.type_str or "Missile" in self.type_str: wep_type = "SeekerWeaponAbility"
+            
+            wep_data = {
+                "damage": safe_float(dmg),
+                "range": safe_float(get_shim_value('range')),
+                "reload": safe_float(get_shim_value('reload', 1.0)),
+                "firing_arc": safe_float(get_shim_value('firing_arc', 20)),
+                "facing_angle": safe_float(get_shim_value('facing_angle', 0))
+            }
+            # Specifics
+            if wep_type == "ProjectileWeaponAbility":
+                wep_data["projectile_speed"] = safe_float(get_shim_value('projectile_speed', 1200))
+            elif wep_type == "BeamWeaponAbility":
+                wep_data["accuracy_falloff"] = safe_float(get_shim_value('accuracy_falloff', 0.001))
+                wep_data["base_accuracy"] = safe_float(get_shim_value('base_accuracy', 1.0))
+            
+            ab = create_ability(wep_type, self, wep_data)
+            if ab: self.ability_instances.append(ab)
             
     def update(self):
         """Update component state for one tick (resource consumption, cooldowns)."""

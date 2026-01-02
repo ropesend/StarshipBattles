@@ -26,17 +26,17 @@
     - [x] **Testing** <!-- id: 22 -->
         - [x] Create `unit_tests/test_abilities.py` to verify all new classes <!-- id: 23 -->
 
-- [ ] **Phase 2: Core Refactor (Components)** <!-- id: 24 -->
-    - [ ] **Component Class** <!-- id: 25 -->
-        - [ ] Refactor `Component.__init__` in `components.py` to strictly load abilities using the Factory <!-- id: 26 -->
-        - [ ] Implement `get_ability(type)` helper method <!-- id: 27 -->
-        - [ ] Refactor `update()` to iterate `self.ability_instances` and call `ab.update()` <!-- id: 28 -->
-    - [ ] **Legacy Shim (Critical)** <!-- id: 29 -->
-        - [ ] Add logic to `__init__`: If `thrust_force` in data, create `CombatPropulsion` ability <!-- id: 30 -->
-        - [ ] Add logic to `__init__`: If `turn_speed` in data, create `ManeuveringThruster` ability <!-- id: 31 -->
-        - [ ] Add logic to `__init__`: If `damage` in data, create appropriate `WeaponAbility` <!-- id: 32 -->
-    - [ ] **Testing** <!-- id: 33 -->
-        - [ ] Create `unit_tests/test_component_composition.py` to verify generic component behaves like an engine/weapon <!-- id: 34 -->
+- [x] **Phase 2: Core Refactor (Components)** <!-- id: 24 -->
+    - [x] **Component Class** <!-- id: 25 -->
+        - [x] Refactor `Component.__init__` in `components.py` to strictly load abilities using the Factory <!-- id: 26 -->
+        - [x] Implement `get_ability(type)` helper method <!-- id: 27 -->
+        - [x] Refactor `update()` to iterate `self.ability_instances` and call `ab.update()` <!-- id: 28 -->
+    - [x] **Legacy Shim (Critical)** <!-- id: 29 -->
+        - [x] Add logic to `__init__`: If `thrust_force` in data, create `CombatPropulsion` ability <!-- id: 30 -->
+        - [x] Add logic to `__init__`: If `turn_speed` in data, create `ManeuveringThruster` ability <!-- id: 31 -->
+        - [x] Add logic to `__init__`: If `damage` in data, create appropriate `WeaponAbility` <!-- id: 32 -->
+    - [x] **Testing** <!-- id: 33 -->
+        - [x] Create `unit_tests/test_component_composition.py` to verify generic component behaves like an engine/weapon <!-- id: 34 -->
 
 - [ ] **Phase 3: Stats & Physics Integration** <!-- id: 35 -->
     - [ ] **Ship Stats** <!-- id: 36 -->
