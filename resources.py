@@ -57,6 +57,16 @@ class ResourceRegistry:
     def get_resource(self, name: str) -> Optional[ResourceState]:
         return self._resources.get(name)
 
+    def get_value(self, name: str) -> float:
+        """Get current value of a resource, or 0.0 if not found."""
+        res = self._resources.get(name)
+        return res.current_value if res else 0.0
+
+    def get_max_value(self, name: str) -> float:
+        """Get max value of a resource, or 0.0 if not found."""
+        res = self._resources.get(name)
+        return res.max_value if res else 0.0
+
     def register_storage(self, name: str, amount: float):
         """
         Add storage capacity for a resource. Increase max_value.
@@ -143,10 +153,8 @@ class ResourceConsumption(Ability):
                     if not res.consume(cost):
                         # Starvation!
                         return False
-            else:
-                 # No resources system? Assuming failure if requirements exist but system doesn't?
-                 # Or verify if amount > 0.
-                 if self.amount > 0: return False
+                else:
+                    if self.amount > 0: return False
         return True
                     
     def check_and_consume(self) -> bool:
@@ -156,8 +164,6 @@ class ResourceConsumption(Ability):
             if res:
                 return res.consume(self.amount)
             else:
-                # If resource doesn't exist, can we consume? 
-                # If amount > 0, failure. If amount <= 0, success.
                 return self.amount <= 0
         return False
         
@@ -166,6 +172,8 @@ class ResourceConsumption(Ability):
             res = self.component.ship.resources.get_resource(self.resource_name)
             if res:
                return res.check(self.amount)
+            else:
+               return self.amount <= 0
         return False
 
 class ResourceStorage(Ability):

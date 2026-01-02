@@ -139,26 +139,49 @@ class ShipStatsPanel(BattlePanel):
         self.draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, hp_pct, hp_color)
         y += 16
         
-        # Fuel
-        fuel_pct = ship.current_fuel / ship.max_fuel if ship.max_fuel > 0 else 0
-        text = font.render(f"Fuel: {int(ship.current_fuel)}/{int(ship.max_fuel)}", True, (180, 180, 180))
-        surface.blit(text, (x_indent, y))
-        self.draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, fuel_pct, (255, 165, 0))
-        y += 16
+        # Dynamic Resource Display
+        # This replaces the hardcoded Fuel/Energy/Ammo blocks
         
-        # Energy
-        energy_pct = ship.current_energy / ship.max_energy if ship.max_energy > 0 else 0
-        text = font.render(f"Energy: {int(ship.current_energy)}/{int(ship.max_energy)}", True, (180, 180, 180))
-        surface.blit(text, (x_indent, y))
-        self.draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, energy_pct, (100, 200, 255))
-        y += 16
+        # Define standard colors for known resources (fallback to gray)
+        RESOURCE_COLORS = {
+            'fuel': (255, 165, 0),      # Orange
+            'energy': (100, 200, 255),  # Blue
+            'ammo': (200, 200, 100),    # Yellow-ish
+            'biomass': (100, 255, 100), # Green (Example)
+            'shield': (0, 200, 255)     # Cyan
+        }
         
-        # Ammo
-        ammo_pct = ship.current_ammo / ship.max_ammo if ship.max_ammo > 0 else 0
-        text = font.render(f"Ammo: {int(ship.current_ammo)}/{int(ship.max_ammo)}", True, (180, 180, 180))
-        surface.blit(text, (x_indent, y))
-        self.draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, ammo_pct, (200, 200, 100))
-        y += 16
+        if hasattr(ship, 'resources'):
+            # Using the new generic resource system
+            # We want to display any resource that has a Max Value > 0
+            # Order them consistently (Fuel, Energy, Ammo, others)
+            ORDER_PRIORITY = {'fuel': 0, 'energy': 1, 'ammo': 2}
+            
+            # Access underlying dictionary directly or use a getter if available. 
+            # ResourceRegistry._resources is technically internal but often accessed. 
+            # Better to add a public getter if strict, but for now we iterate keys.
+            all_res = []
+            if hasattr(ship.resources, '_resources'):
+                all_res = list(ship.resources._resources.values())
+            
+            # Sort: Priority first, then alphabetical
+            all_res.sort(key=lambda r: (ORDER_PRIORITY.get(r.name, 99), r.name))
+            
+            for res in all_res:
+                if res.max_value > 0:
+                    pct = res.current_value / res.max_value
+                    
+                    # Title case the name
+                    label = res.name.title()
+                    color = RESOURCE_COLORS.get(res.name, (180, 180, 180))
+                    
+                    text = font.render(f"{label}: {int(res.current_value)}/{int(res.max_value)}", True, (180, 180, 180))
+                    surface.blit(text, (x_indent, y))
+                    self.draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, pct, color)
+                    y += 16
+        else:
+            # Fallback for entities without resource system (should be none for Ships)
+            pass
         
         # Speed
         text = font.render(f"Speed: {ship.current_speed:.0f}/{ship.max_speed:.0f}", True, (180, 180, 180))
