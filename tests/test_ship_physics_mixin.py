@@ -44,13 +44,14 @@ class TestShipPhysicsThrust(unittest.TestCase):
             self.assertTrue(self.ship.is_thrusting)
     
     def test_thrust_forward_consumes_fuel(self):
-        """Thrusting should consume fuel."""
+        """Thrusting implies active engine, which consumes fuel (now constant)."""
         initial_fuel = self.ship.current_fuel
         self.assertGreater(initial_fuel, 0, "Ship needs fuel for this test")
         
-        # Thrust and update to trigger fuel consumption via component abilities
-        self.ship.thrust_forward()
-        self.ship.update()  # This runs Component.update() which consumes fuel
+        # In the new model, engines consume fuel CONSTANTLY if they are active components.
+        # Calling update() should trigger consumption regardless of thrust command if engine is ON.
+        
+        self.ship.update()  # This runs Component.update() which consumes fuel (constant trigger)
         
         # Should have consumed some fuel
         self.assertLess(self.ship.current_fuel, initial_fuel)
@@ -65,7 +66,7 @@ class TestShipPhysicsThrust(unittest.TestCase):
         
         # Now attempt to thrust - engine should be non-operational
         self.ship.thrust_forward()
-        self.ship.update()
+        self.ship.update_physics_movement() # Calculate movement based on thrust state
         
         # Speed should be 0 or very low because engine is non-operational
         # With no operational engines, thrust_force is 0, so no acceleration

@@ -101,7 +101,7 @@ class ShipStatsCalculator:
         ship.crew_onboard = available_crew
         ship.crew_required = 0
         ship.max_targets = 1 # Reset to default
-
+        
         # Effective Crew is limited by Life Support
         effective_crew = min(available_crew, available_life_support)
         
@@ -297,6 +297,48 @@ class ShipStatsCalculator:
         # Ammo Generation (SumStacking)
         ship.ammo_gen_rate = self._get_ability_total(component_pool, 'AmmoGeneration')
 
+        # 6. Aggregate Resources (Storage & Generation)
+        # ---------------------------------------------
+        total_fuel = 0
+        total_energy = 0
+        total_ammo = 0
+        total_energy_gen = 0
+        
+        for comp in component_pool:
+            if not comp.is_active: continue
+            
+            # Use instantiated abilities (Source of truth for modified values)
+            if hasattr(comp, 'ability_instances'):
+                for ab in comp.ability_instances:
+                    # Note: ResourceStorage/Generation are imported at start of calculate
+                    
+                    if isinstance(ab, ResourceStorage):
+                         # ab.max_amount is the modified capacity
+                         if ab.resource_type == 'fuel':
+                             total_fuel += ab.max_amount
+                         elif ab.resource_type == 'energy':
+                             total_energy += ab.max_amount
+                         elif ab.resource_type == 'ammo':
+                             total_ammo += ab.max_amount
+                             
+                    elif isinstance(ab, ResourceGeneration):
+                         # ab.rate is the modified rate
+                         if ab.resource_type == 'energy':
+                             total_energy_gen += ab.rate
+
+        ship.max_fuel = total_fuel
+        ship.max_energy = total_energy
+        ship.max_ammo = total_ammo
+        ship.energy_gen_rate = total_energy_gen
+
+        # Shield Stats
+        ship.max_shields = self._get_ability_total(component_pool, 'ShieldProjection')
+        # Default 0 if bool/none
+        if isinstance(ship.max_shields, bool): ship.max_shields = 0.0
+            
+        ship.shield_regen_rate = self._get_ability_total(component_pool, 'ShieldRegeneration')
+        if isinstance(ship.shield_regen_rate, bool): ship.shield_regen_rate = 0.0
+
         # Armor Pool Init (if starting)
         if LayerType.ARMOR in ship.layers:
             if ship.layers[LayerType.ARMOR]['hp_pool'] == 0:
@@ -335,9 +377,14 @@ class ShipStatsCalculator:
                     # Resource Storage dealt with in Phase 3 aggregation
                     
                     if isinstance(ab, ResourceConsumption):
-                        # Fuel (Constant)
-                        if ab.resource_name == 'fuel' and ab.trigger == 'constant':
-                            fuel_consumption += ab.amount
+                        # Constant Consumption (Generic)
+                        if ab.trigger == 'constant':
+                            if ab.resource_name == 'fuel':
+                                fuel_consumption += ab.amount
+                            elif ab.resource_name == 'energy':
+                                energy_consumption += ab.amount
+                            elif ab.resource_name == 'ammo':
+                                ammo_consumption += ab.amount
                             
                         # Activation Costs (Energy/Ammo) -> Convert to Rate
                         elif ab.trigger == 'activation':

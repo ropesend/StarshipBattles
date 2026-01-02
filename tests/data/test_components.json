@@ -21,7 +21,6 @@
             "mass": 20,
             "hp": 50,
             "thrust_force": 500,
-            "fuel_cost": 0,
             "sprite_index": 10,
             "abilities": {
                 "CombatPropulsion": 500
@@ -34,10 +33,16 @@
             "mass": 20,
             "hp": 50,
             "thrust_force": 500,
-            "fuel_cost": 0.1,
             "sprite_index": 10,
             "abilities": {
-                "CombatPropulsion": 500
+                "CombatPropulsion": 500,
+                "ResourceConsumption": [
+                    {
+                        "resource": "fuel",
+                        "amount": 0.1,
+                        "trigger": "constant"
+                    }
+                ]
             }
         },
         {
@@ -58,7 +63,6 @@
             "type": "Generator",
             "mass": 20,
             "hp": 100,
-            "energy_generation": 100,
             "sprite_index": 81,
             "abilities": {
                 "EnergyGeneration": 100
@@ -70,8 +74,6 @@
             "type": "Tank",
             "mass": 5,
             "hp": 20,
-            "capacity": 1000,
-            "resource_type": "fuel",
             "sprite_index": 20,
             "abilities": {
                 "FuelStorage": 1000
@@ -83,8 +85,6 @@
             "type": "Tank",
             "mass": 5,
             "hp": 20,
-            "capacity": 1000,
-            "resource_type": "ammo",
             "sprite_index": 19,
             "abilities": {
                 "AmmoStorage": 1000
@@ -96,8 +96,6 @@
             "type": "Tank",
             "mass": 5,
             "hp": 20,
-            "capacity": 1000,
-            "resource_type": "energy",
             "sprite_index": 19,
             "abilities": {
                 "EnergyStorage": 1000
@@ -140,7 +138,6 @@
             "range": 1000,
             "projectile_speed": 1500,
             "reload": 1.0,
-            "ammo_cost": 1,
             "firing_arc": 45,
             "sprite_index": 85,
             "allowed_vehicle_types": [
@@ -148,7 +145,14 @@
                 "Satellite"
             ],
             "abilities": {
-                "ProjectileWeapon": true
+                "ProjectileWeapon": true,
+                "ResourceConsumption": [
+                    {
+                        "resource": "ammo",
+                        "amount": 1,
+                        "trigger": "activation"
+                    }
+                ]
             }
         },
         {
@@ -159,7 +163,6 @@
             "hp": 20,
             "damage": 5,
             "range": 800,
-            "energy_cost": 10,
             "reload": 0.0,
             "firing_arc": 360,
             "sprite_index": 87,
@@ -170,7 +173,14 @@
             "base_accuracy": 2.0,
             "accuracy_falloff": 0.001,
             "abilities": {
-                "BeamWeapon": true
+                "BeamWeapon": true,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 10,
+                        "trigger": "activation"
+                    }
+                ]
             }
         },
         {
@@ -181,7 +191,6 @@
             "hp": 20,
             "damage": 5,
             "range": 800,
-            "energy_cost": 10,
             "reload": 0.0,
             "firing_arc": 45,
             "sprite_index": 87,
@@ -192,7 +201,14 @@
             "base_accuracy": 2.0,
             "accuracy_falloff": 0.001,
             "abilities": {
-                "BeamWeapon": true
+                "BeamWeapon": true,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 10,
+                        "trigger": "activation"
+                    }
+                ]
             }
         },
         {
@@ -207,11 +223,17 @@
             "turn_rate": 90,
             "endurance": 5.0,
             "reload": 5.0,
-            "ammo_cost": 5,
             "firing_arc": 360,
             "sprite_index": 86,
             "abilities": {
-                "SeekerWeapon": true
+                "SeekerWeapon": true,
+                "ResourceConsumption": [
+                    {
+                        "resource": "ammo",
+                        "amount": 5,
+                        "trigger": "activation"
+                    }
+                ]
             }
         },
         {
@@ -223,14 +245,20 @@
             "damage": 2,
             "range": 500,
             "reload": 0.1,
-            "energy_cost": 1,
             "firing_arc": 360,
             "sprite_index": 151,
             "base_accuracy": 10.0,
             "accuracy_falloff": 0.01,
             "abilities": {
                 "BeamWeapon": true,
-                "PointDefense": true
+                "PointDefense": true,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 1,
+                        "trigger": "activation"
+                    }
+                ]
             }
         },
         {
@@ -373,14 +401,20 @@
             "hp": 20,
             "damage": 5,
             "range": 800,
-            "energy_cost": 10,
             "reload": 0.0,
             "firing_arc": 360,
             "sprite_index": 87,
             "base_accuracy": 0.5,
             "accuracy_falloff": 0.002,
             "abilities": {
-                "BeamWeapon": true
+                "BeamWeapon": true,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 10,
+                        "trigger": "activation"
+                    }
+                ]
             }
         },
         {
@@ -391,14 +425,20 @@
             "hp": 20,
             "damage": 5,
             "range": 800,
-            "energy_cost": 10,
             "reload": 0.0,
             "firing_arc": 360,
             "sprite_index": 87,
             "base_accuracy": 2.0,
             "accuracy_falloff": 0.001,
             "abilities": {
-                "BeamWeapon": true
+                "BeamWeapon": true,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 10,
+                        "trigger": "activation"
+                    }
+                ]
             }
         },
         {
@@ -409,14 +449,20 @@
             "hp": 20,
             "damage": 5,
             "range": 800,
-            "energy_cost": 10,
             "reload": 0.0,
             "firing_arc": 360,
             "sprite_index": 87,
             "base_accuracy": 5.0,
             "accuracy_falloff": 0.0005,
             "abilities": {
-                "BeamWeapon": true
+                "BeamWeapon": true,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 10,
+                        "trigger": "activation"
+                    }
+                ]
             }
         }
     ]

@@ -47,12 +47,18 @@
             "range": 2400,
             "reload": 2.0,
             "projectile_speed": 20000,
-            "ammo_cost": 1,
             "firing_arc": 1,
             "sprite_index": 85,
             "abilities": {
                 "ProjectileWeapon": true,
-                "CrewRequired": 5
+                "CrewRequired": 5,
+                "ResourceConsumption": [
+                    {
+                        "resource": "ammo",
+                        "amount": 1,
+                        "trigger": "activation"
+                    }
+                ]
             },
             "major_classification": "Weapons"
         },
@@ -66,10 +72,16 @@
                 "Ship"
             ],
             "thrust_force": 150,
-            "fuel_cost": 0.5,
             "sprite_index": 10,
             "abilities": {
-                "CombatPropulsion": 150
+                "CombatPropulsion": 150,
+                "ResourceConsumption": [
+                    {
+                        "resource": "fuel",
+                        "amount": 0.5,
+                        "trigger": "constant"
+                    }
+                ]
             },
             "major_classification": "Engines"
         },
@@ -186,11 +198,14 @@
                 "Satellite",
                 "Planetary Complex"
             ],
-            "capacity": 50000,
-            "resource_type": "fuel",
             "sprite_index": 20,
             "abilities": {
-                "FuelStorage": 50000
+                "ResourceStorage": [
+                    {
+                        "resource": "fuel",
+                        "amount": 50000
+                    }
+                ]
             },
             "major_classification": "Infrastructure"
         },
@@ -205,11 +220,14 @@
                 "Satellite",
                 "Planetary Complex"
             ],
-            "capacity": 5000,
-            "resource_type": "ammo",
             "sprite_index": 19,
             "abilities": {
-                "AmmoStorage": 5000
+                "ResourceStorage": [
+                    {
+                        "resource": "ammo",
+                        "amount": 5000
+                    }
+                ]
             },
             "major_classification": "Infrastructure"
         },
@@ -224,11 +242,14 @@
                 "Satellite",
                 "Planetary Complex"
             ],
-            "capacity": 2000,
-            "resource_type": "energy",
             "sprite_index": 19,
             "abilities": {
-                "EnergyStorage": 2000
+                "ResourceStorage": [
+                    {
+                        "resource": "energy",
+                        "amount": 2000
+                    }
+                ]
             },
             "major_classification": "Infrastructure"
         },
@@ -243,10 +264,14 @@
                 "Satellite",
                 "Planetary Complex"
             ],
-            "energy_generation": 25,
             "sprite_index": 81,
             "abilities": {
-                "EnergyGeneration": 25,
+                "ResourceGeneration": [
+                    {
+                        "resource": "energy",
+                        "amount": 25
+                    }
+                ],
                 "CrewRequired": 1
             },
             "major_classification": "Infrastructure"
@@ -265,14 +290,20 @@
             "damage": "=15 * (1 - 0.00005 * range_to_target)",
             "range": 2000,
             "reload": 0.2,
-            "energy_cost": 5,
             "base_accuracy": 2.0,
             "accuracy_falloff": 0.001,
             "firing_arc": 1,
             "sprite_index": 87,
             "abilities": {
                 "BeamWeapon": true,
-                "CrewRequired": 1
+                "CrewRequired": 1,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 5,
+                        "trigger": "activation"
+                    }
+                ]
             },
             "major_classification": "Weapons"
         },
@@ -418,12 +449,18 @@
             "turn_rate": 200,
             "endurance": 3.0,
             "reload": 4.0,
-            "ammo_cost": 5,
             "firing_arc": 1,
             "sprite_index": 86,
             "abilities": {
                 "SeekerWeapon": true,
-                "CrewRequired": 3
+                "CrewRequired": 3,
+                "ResourceConsumption": [
+                    {
+                        "resource": "ammo",
+                        "amount": 5,
+                        "trigger": "activation"
+                    }
+                ]
             },
             "major_classification": "Weapons"
         },
@@ -441,7 +478,6 @@
             "damage": 4,
             "range": 800,
             "reload": 0.04,
-            "energy_cost": 2,
             "base_accuracy": 10.0,
             "accuracy_falloff": 0.003,
             "firing_arc": 180,
@@ -449,7 +485,14 @@
             "abilities": {
                 "BeamWeapon": true,
                 "PointDefense": true,
-                "CrewRequired": 1
+                "CrewRequired": 1,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 2,
+                        "trigger": "activation"
+                    }
+                ]
             },
             "major_classification": "Weapons"
         },
@@ -480,10 +523,16 @@
                 "Fighter"
             ],
             "thrust_force": 40,
-            "fuel_cost": 0.2,
             "sprite_index": 58,
             "abilities": {
-                "CombatPropulsion": 40
+                "CombatPropulsion": 40,
+                "ResourceConsumption": [
+                    {
+                        "resource": "fuel",
+                        "amount": 0.2,
+                        "trigger": "constant"
+                    }
+                ]
             },
             "major_classification": "Engines"
         },
@@ -512,11 +561,14 @@
             "allowed_vehicle_types": [
                 "Fighter"
             ],
-            "capacity": 200,
-            "resource_type": "energy",
             "sprite_index": 192,
             "abilities": {
-                "EnergyStorage": 200
+                "ResourceStorage": [
+                    {
+                        "resource": "energy",
+                        "amount": 200
+                    }
+                ]
             },
             "major_classification": "Infrastructure"
         },
@@ -529,10 +581,14 @@
             "allowed_vehicle_types": [
                 "Fighter"
             ],
-            "energy_generation": 10,
             "sprite_index": 187,
             "abilities": {
-                "EnergyGeneration": 10
+                "ResourceGeneration": [
+                    {
+                        "resource": "energy",
+                        "amount": 10
+                    }
+                ]
             },
             "major_classification": "Infrastructure"
         },
@@ -545,11 +601,14 @@
             "allowed_vehicle_types": [
                 "Fighter"
             ],
-            "capacity": 200,
-            "resource_type": "ammo",
             "sprite_index": 19,
             "abilities": {
-                "AmmoStorage": 200
+                "ResourceStorage": [
+                    {
+                        "resource": "ammo",
+                        "amount": 200
+                    }
+                ]
             },
             "major_classification": "Infrastructure"
         },
@@ -562,11 +621,14 @@
             "allowed_vehicle_types": [
                 "Fighter"
             ],
-            "capacity": 2000,
-            "resource_type": "fuel",
             "sprite_index": 20,
             "abilities": {
-                "FuelStorage": 2000
+                "ResourceStorage": [
+                    {
+                        "resource": "fuel",
+                        "amount": 2000
+                    }
+                ]
             },
             "major_classification": "Infrastructure"
         },
@@ -582,7 +644,6 @@
             "damage": 10,
             "range": 1000,
             "reload": 1.0,
-            "energy_cost": 0,
             "base_accuracy": 2.0,
             "accuracy_falloff": 0.001,
             "firing_arc": 1,
@@ -604,13 +665,19 @@
             "damage": 5,
             "range": 800,
             "reload": 0.3,
-            "energy_cost": 2,
             "base_accuracy": 2.0,
             "accuracy_falloff": 0.001,
             "firing_arc": 1,
             "sprite_index": 140,
             "abilities": {
-                "BeamWeapon": true
+                "BeamWeapon": true,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 2,
+                        "trigger": "activation"
+                    }
+                ]
             },
             "major_classification": "Weapons"
         },
@@ -626,7 +693,6 @@
             "damage": 60,
             "range": 200,
             "reload": 15.0,
-            "energy_cost": 0,
             "base_accuracy": 2.0,
             "accuracy_falloff": 0.0,
             "firing_arc": 10,

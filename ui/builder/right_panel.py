@@ -231,6 +231,9 @@ class BuilderRightPanel:
         # 6. Update Portrait
         self.update_portrait_image()
 
+        # 7. Rebuild Stats (Logic might satisfy dynamic resources)
+        self.rebuild_stats()
+
 
     def update_portrait_image(self):
         """Update the ship portrait based on current theme and class."""
@@ -365,7 +368,7 @@ class BuilderRightPanel:
             
             return curr_y + 10
 
-        from ui.builder.stats_config import STATS_CONFIG
+        from ui.builder.stats_config import STATS_CONFIG, get_logistics_rows
 
         # FREEZING CONFIG
         self.stats_config = STATS_CONFIG
@@ -401,14 +404,9 @@ class BuilderRightPanel:
         # === Column 2: Logistics, Crew, Fighter ===
         y = start_y
         
-        # Updated Logistics Sections split
-        if 'logistics' in self.stats_config:
-             # Legacy fallback if split not present
-             y = build_section("Logistics", self.stats_config.get('logistics', []), col2_x, y)
-        else:
-             y = build_section("Fuel Logistics", self.stats_config.get('fuel_logistics', []), col2_x, y)
-             y = build_section("Ordinance (Ammo)", self.stats_config.get('ammo_logistics', []), col2_x, y)
-             y = build_section("Energy", self.stats_config.get('energy_logistics', []), col2_x, y)
+        # Helper for Dynamic Logistics
+        log_rows = get_logistics_rows(self.builder.ship)
+        y = build_section("Logistics", log_rows, col2_x, y)
 
         y = build_section("Crew Logistics", self.stats_config.get('crewlogistics', []), col2_x, y)
         y = build_section("Fighter Support", self.stats_config.get('fightersupport', []), col2_x, y)
@@ -434,17 +432,20 @@ class BuilderRightPanel:
         # Update Scroll Area
         self.stats_scroll.set_scrollable_area_dimensions((full_w, y))
 
+    def rebuild_stats(self):
+        """Completely rebuild the stats scroll container (e.g. after ship load)."""
+        if hasattr(self, 'stats_scroll'):
+            self.stats_scroll.kill()
+        self.setup_stats()
+
     def update_stats_display(self, s):
         """Update ship stats labels using Data-Driven Config."""
         
-        # Aggregated List from all configured groups
-        all_configs = []
-        for group_list in self.stats_config.values():
-            all_configs.extend(group_list)
-        
-        for stat_def in all_configs:
-            row = self.rows_map.get(stat_def.key)
-            if row:
+        # Iterate over instantiated rows directly
+        # This allows us to handle dynamic rows that aren't in the static config
+        for key, row in self.rows_map.items():
+            if hasattr(row, 'definition'):
+                stat_def = row.definition
                 val = stat_def.get_value(s)
                 
                 # Check validation

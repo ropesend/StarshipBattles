@@ -195,7 +195,11 @@ class ResourceGeneration(Ability):
 ABILITY_REGISTRY = {
     "ResourceConsumption": ResourceConsumption,
     "ResourceStorage": ResourceStorage,
-    "ResourceGeneration": ResourceGeneration
+    "ResourceGeneration": ResourceGeneration,
+    "EnergyGeneration": lambda c, d: ResourceGeneration(c, {"resource": "energy", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "energy"}),
+    "FuelStorage": lambda c, d: ResourceStorage(c, {"resource": "fuel", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "fuel"}),
+    "EnergyStorage": lambda c, d: ResourceStorage(c, {"resource": "energy", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "energy"}),
+    "AmmoStorage": lambda c, d: ResourceStorage(c, {"resource": "ammo", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "ammo"})
 }
 
 def create_ability(name: str, component, data: Dict[str, Any]) -> Optional[Ability]:

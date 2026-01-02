@@ -217,9 +217,14 @@ class Component:
                 for item in data:
                     ab = create_ability(name, self, item)
                     if ab: self.ability_instances.append(ab)
-            elif isinstance(data, dict):
+            elif isinstance(data, dict) or isinstance(data, (int, float)):
+                 # Handle primitive shortcuts (FuelStorage: 1000)
                  ab = create_ability(name, self, data)
-                 if ab: self.ability_instances.append(ab)
+                 if ab: 
+                     self.ability_instances.append(ab)
+                 else:
+                     # print(f"DEBUG: Failed to create ability {name} with data {data}")
+                     pass
             
     def update(self):
         """Update component state for one tick (resource consumption, cooldowns)."""
@@ -316,6 +321,9 @@ class Component:
 
         # 1. Reset and Evaluate Base Formulas
         self._reset_and_evaluate_base_formulas()
+        
+        # 1.5 Re-instantiate Abilities (Sync instances with new abilities dict)
+        self._instantiate_abilities()
 
         # 2. Calculate Modifier Stats (Accumulate multipliers)
         stats = self._calculate_modifier_stats()
@@ -447,18 +455,53 @@ class Component:
         if hasattr(self, 'energy_cost'):
              # Reload from data first to get base
              base_energy = self.data.get('energy_cost', 0)
+             # Fallback
+             if base_energy == 0 and 'ResourceConsumption' in self.abilities:
+                 val = self.abilities['ResourceConsumption']
+                 if isinstance(val, list):
+                     for v in val:
+                         if v.get('resource') == 'energy' and v.get('trigger') == 'activation':
+                             base_energy = v.get('amount', 0)
+                             break
+                 elif isinstance(val, dict):
+                      if val.get('resource') == 'energy' and val.get('trigger') == 'activation':
+                           base_energy = val.get('amount', 0)
+                           
              self.energy_cost = base_energy * stats.get('consumption_mult', 1.0)
         
         if hasattr(self, 'ammo_cost'):
             base_ammo = self.data.get('ammo_cost', 0)
+            # Fallback
+            if base_ammo == 0 and 'ResourceConsumption' in self.abilities:
+                 val = self.abilities['ResourceConsumption']
+                 if isinstance(val, list):
+                     for v in val:
+                         if v.get('resource') == 'ammo' and v.get('trigger') == 'activation':
+                             base_ammo = v.get('amount', 0)
+                             break
+                 elif isinstance(val, dict):
+                      if val.get('resource') == 'ammo' and val.get('trigger') == 'activation':
+                           base_ammo = val.get('amount', 0)
             self.ammo_cost = base_ammo * stats.get('consumption_mult', 1.0)
             
         if hasattr(self, 'reload_time'):
              self.reload_time = self.data.get('reload', 1.0) * stats.get('reload_mult', 1.0)
 
         # Apply Consumption Multipliers to specific components
-        if isinstance(self, Engine) and hasattr(self, 'fuel_cost_per_sec'):
+        # Use string check to avoid potentially unresolved class ref if weird import cycle
+        if self.__class__.__name__ == 'Engine' and hasattr(self, 'fuel_cost_per_sec'):
             base_fuel = self.data.get('fuel_cost', 0)
+            # Fallback
+            if base_fuel == 0 and 'ResourceConsumption' in self.abilities:
+                 val = self.abilities['ResourceConsumption']
+                 if isinstance(val, list):
+                     for v in val:
+                         if v.get('resource') == 'fuel' and v.get('trigger') == 'constant':
+                             base_fuel = v.get('amount', 0)
+                             break
+                 elif isinstance(val, dict):
+                      if val.get('resource') == 'fuel' and val.get('trigger') == 'constant':
+                           base_fuel = val.get('amount', 0)
             self.fuel_cost_per_sec = base_fuel * stats.get('consumption_mult', 1.0)
             
         # Generic Sync: Update Activation Abilities if attributes changed
@@ -494,6 +537,38 @@ class Component:
         elif self.current_hp >= old_max_hp:
             self.current_hp = self.max_hp
             
+        # Ensure cap
+        self.current_hp = min(self.current_hp, self.max_hp)
+
+        # Generic Sync: Update Activation Abilities if attributes changed
+        from resources import ResourceConsumption, ResourceStorage, ResourceGeneration
+        
+        for ab in self.ability_instances:
+            # ResourceConsumption (Base amount * consumption_mult)
+            if isinstance(ab, ResourceConsumption):
+                 base = ab.data.get('amount', 0.0)
+                 ab.amount = base * stats.get('consumption_mult', 1.0)
+            
+            # ResourceStorage (Base amount * capacity_mult)
+            elif isinstance(ab, ResourceStorage):
+                 base = ab.data.get('amount', 0.0)
+                 ab.max_amount = base * stats.get('capacity_mult', 1.0)
+            
+            # ResourceGeneration (Base amount * energy_gen_mult)
+            elif isinstance(ab, ResourceGeneration):
+                 # Only apply energy_gen_mult if resource is energy?
+                 # Or use generic logic? Usually modifiers are specific.
+                 # Assuming energy_gen_mult applies to Energy.
+                 # What about AmmoGeneration? 
+                 # For now, apply energy_gen_mult for Energy, 1.0 for others?
+                 # Or just apply it if it's a generator. The modifier name implies Energy.
+                 if ab.resource_type == 'energy':
+                     base = ab.data.get('amount', 0.0)
+                     ab.rate = base * stats.get('energy_gen_mult', 1.0)
+                 else:
+                     # e.g. AmmoGeneration?
+                     pass
+        
         # Ensure cap
         self.current_hp = min(self.current_hp, self.max_hp)
 
@@ -546,6 +621,18 @@ class Weapon(Component):
         self.range = data.get('range', 0)
         self.reload_time = data.get('reload', 1.0)
         self.ammo_cost = data.get('ammo_cost', 0)
+        
+        # Fallback for ammo_cost
+        if self.ammo_cost == 0 and 'ResourceConsumption' in self.abilities:
+            val = self.abilities['ResourceConsumption']
+            if isinstance(val, list):
+                 for v in val:
+                     if v.get('resource') == 'ammo' and v.get('trigger') == 'activation':
+                         self.ammo_cost = v.get('amount', 0)
+                         break
+            elif isinstance(val, dict):
+                 if val.get('resource') == 'ammo' and val.get('trigger') == 'activation':
+                        self.ammo_cost = val.get('amount', 0)
         self.cooldown_timer = 0.0
         self.firing_arc = data.get('firing_arc', 20) # Degrees
         self.facing_angle = data.get('facing_angle', 0) # Degrees relative to component forward (0)
@@ -563,6 +650,7 @@ class Weapon(Component):
         return int(self.damage)
 
     def update(self):
+        super().update()
         # Tick-Based: Each call decrements cooldown by 1 tick (0.01 seconds)
         TICK_DURATION = 0.01
         if self.cooldown_timer > 0:
@@ -604,6 +692,19 @@ class Engine(Component):
         super().__init__(data)
         self.thrust_force = data.get('thrust_force', 0)
         self.fuel_cost_per_sec = data.get('fuel_cost', 0)
+        
+        # Fallback to Abilities if legacy data missing
+        if self.fuel_cost_per_sec == 0 and 'ResourceConsumption' in self.abilities:
+            # Search for fuel constant consumption
+            val = self.abilities['ResourceConsumption']
+            if isinstance(val, list):
+                for v in val:
+                    if v.get('resource') == 'fuel' and v.get('trigger') == 'constant':
+                        self.fuel_cost_per_sec = v.get('amount', 0)
+                        break
+            elif isinstance(val, dict):
+                 if val.get('resource') == 'fuel' and val.get('trigger') == 'constant':
+                        self.fuel_cost_per_sec = val.get('amount', 0)
     
     def clone(self):
         return Engine(self.data)
@@ -629,10 +730,37 @@ class Tank(Component):
         super().__init__(data)
         self.capacity = data.get('capacity', 0)
         self.resource_type = data.get('resource_type', 'fuel')
+
+        # Fallback to Abilities
+        if self.capacity == 0 and 'ResourceStorage' in self.abilities:
+            # Need to match resource type if generic, or assume mapping
+            # Actually ResourceStorage is usually a list
+            val = self.abilities['ResourceStorage']
+            # Find matching resource
+            if isinstance(val, list):
+                for v in val:
+                    if v.get('resource') == self.resource_type:
+                        self.capacity = v.get('amount', 0)
+                        break
+            elif isinstance(val, dict):
+                 if val.get('resource') == self.resource_type:
+                        self.capacity = val.get('amount', 0)
     
     def _apply_custom_stats(self, stats):
         super()._apply_custom_stats(stats)
-        self.capacity = int(self.data.get('capacity', 0) * stats.get('capacity_mult', 1.0))
+        # Fallback
+        base_cap = self.data.get('capacity', 0)
+        if base_cap == 0 and 'ResourceStorage' in self.abilities:
+             val = self.abilities['ResourceStorage']
+             if isinstance(val, list):
+                 for v in val:
+                     if v.get('resource') == self.resource_type:
+                         base_cap = v.get('amount', 0)
+                         break
+             elif isinstance(val, dict):
+                  if val.get('resource') == self.resource_type:
+                       base_cap = val.get('amount', 0)
+        self.capacity = int(base_cap * stats.get('capacity_mult', 1.0))
         
         # Sync to Ability (Shim)
         from resources import ResourceStorage
@@ -655,11 +783,40 @@ class Generator(Component):
     def __init__(self, data):
         super().__init__(data)
         self.energy_generation_rate = data.get('energy_generation', 0)
+        
+        # Fallback
+        if self.energy_generation_rate == 0 and 'EnergyGeneration' in self.abilities:
+             self.energy_generation_rate = self.abilities.get('EnergyGeneration', 0)
+        elif self.energy_generation_rate == 0 and 'ResourceGeneration' in self.abilities:
+             # Check for energy
+             val = self.abilities['ResourceGeneration']
+             if isinstance(val, list):
+                 for v in val:
+                     if v.get('resource') == 'energy':
+                         self.energy_generation_rate = v.get('amount', 0)
+                         break
+             elif isinstance(val, dict):
+                  if val.get('resource') == 'energy':
+                       self.energy_generation_rate = val.get('amount', 0)
 
     def _apply_custom_stats(self, stats):
         super()._apply_custom_stats(stats)
         # Apply energy_gen_mult
+        # Apply energy_gen_mult
         base = self.data.get('energy_generation', 0)
+        # Fallback
+        if base == 0 and 'EnergyGeneration' in self.abilities:
+             base = self.abilities.get('EnergyGeneration', 0)
+        elif base == 0 and 'ResourceGeneration' in self.abilities:
+             val = self.abilities['ResourceGeneration']
+             if isinstance(val, list):
+                 for v in val:
+                     if v.get('resource') == 'energy':
+                         base = v.get('amount', 0)
+                         break
+             elif isinstance(val, dict):
+                  if val.get('resource') == 'energy':
+                       base = val.get('amount', 0)
         self.energy_generation_rate = base * stats.get('energy_gen_mult', 1.0)
         
         # Sync to Ability (Shim)
@@ -675,6 +832,17 @@ class BeamWeapon(Weapon):
     def __init__(self, data):
         super().__init__(data)
         self.energy_cost = data.get('energy_cost', 0)
+        # Fallback
+        if self.energy_cost == 0 and 'ResourceConsumption' in self.abilities:
+            val = self.abilities['ResourceConsumption']
+            if isinstance(val, list):
+                 for v in val:
+                     if v.get('resource') == 'energy' and v.get('trigger') == 'activation':
+                         self.energy_cost = v.get('amount', 0)
+                         break
+            elif isinstance(val, dict):
+                 if val.get('resource') == 'energy' and val.get('trigger') == 'activation':
+                        self.energy_cost = val.get('amount', 0)
         self.base_accuracy = data.get('base_accuracy', 1.0)
         self.accuracy_falloff = data.get('accuracy_falloff', 0.001)
 

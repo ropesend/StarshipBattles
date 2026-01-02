@@ -32,32 +32,48 @@
             "items": [
                 {
                     "id": "max_fuel",
-                    "label": "Max Storage"
+                    "label": "Max Storage",
+                    "getter": "get_resource_storage",
+                    "getter_args": [
+                        "fuel"
+                    ]
                 },
                 {
                     "id": "fuel_burn",
                     "label": "Burn Rate",
-                    "getter": "get_fuel_consumption",
+                    "getter": "get_resource_consumption",
+                    "getter_args": [
+                        "fuel"
+                    ],
                     "formatter": "fmt_decimal",
                     "unit": "/s"
                 },
                 {
                     "id": "fuel_regen",
                     "label": "Regen Rate",
-                    "getter": "get_fuel_recharge",
+                    "getter": "get_resource_generation",
+                    "getter_args": [
+                        "fuel"
+                    ],
                     "formatter": "fmt_decimal",
                     "unit": "/s"
                 },
                 {
                     "id": "fuel_endurance",
                     "label": "Endurance",
-                    "key": "fuel_endurance",
+                    "getter": "get_resource_endurance",
+                    "getter_args": [
+                        "fuel"
+                    ],
                     "formatter": "fmt_time"
                 },
                 {
                     "id": "fuel_replenish",
                     "label": "Time to resupply",
-                    "getter": "get_zero",
+                    "getter": "get_resource_replenish",
+                    "getter_args": [
+                        "fuel"
+                    ],
                     "formatter": "fmt_time"
                 }
             ]
@@ -67,32 +83,48 @@
             "items": [
                 {
                     "id": "max_ammo",
-                    "label": "Max Storage"
+                    "label": "Max Storage",
+                    "getter": "get_resource_storage",
+                    "getter_args": [
+                        "ammo"
+                    ]
                 },
                 {
                     "id": "ammo_burn",
                     "label": "Consumption",
-                    "getter": "get_ammo_consumption",
+                    "getter": "get_resource_consumption",
+                    "getter_args": [
+                        "ammo"
+                    ],
                     "formatter": "fmt_decimal",
                     "unit": "/s"
                 },
                 {
                     "id": "ammo_regen",
                     "label": "Regen Rate",
-                    "getter": "get_ammo_recharge",
+                    "getter": "get_resource_generation",
+                    "getter_args": [
+                        "ammo"
+                    ],
                     "formatter": "fmt_decimal",
                     "unit": "/s"
                 },
                 {
                     "id": "ammo_endurance",
                     "label": "Endurance",
-                    "key": "ammo_endurance",
+                    "getter": "get_resource_endurance",
+                    "getter_args": [
+                        "ammo"
+                    ],
                     "formatter": "fmt_time"
                 },
                 {
                     "id": "ammo_replenish",
                     "label": "Time to resupply",
-                    "getter": "get_zero",
+                    "getter": "get_resource_replenish",
+                    "getter_args": [
+                        "ammo"
+                    ],
                     "formatter": "fmt_time"
                 }
             ]
@@ -102,32 +134,48 @@
             "items": [
                 {
                     "id": "max_energy",
-                    "label": "Max Storage"
+                    "label": "Max Storage",
+                    "getter": "get_resource_storage",
+                    "getter_args": [
+                        "energy"
+                    ]
                 },
                 {
                     "id": "energy_burn",
                     "label": "Consumption",
-                    "getter": "get_energy_consumption",
+                    "getter": "get_resource_consumption",
+                    "getter_args": [
+                        "energy"
+                    ],
                     "formatter": "fmt_decimal",
                     "unit": "/s"
                 },
                 {
                     "id": "energy_regen",
                     "label": "Regen Rate",
-                    "key": "energy_gen_rate",
+                    "getter": "get_resource_generation",
+                    "getter_args": [
+                        "energy"
+                    ],
                     "formatter": "fmt_decimal",
                     "unit": "/s"
                 },
                 {
                     "id": "energy_endurance",
                     "label": "Endurance",
-                    "key": "energy_endurance",
+                    "getter": "get_resource_endurance",
+                    "getter_args": [
+                        "energy"
+                    ],
                     "formatter": "fmt_time"
                 },
                 {
                     "id": "energy_replenish",
                     "label": "Time to resupply",
-                    "key": "energy_recharge",
+                    "getter": "get_resource_replenish",
+                    "getter_args": [
+                        "energy"
+                    ],
                     "formatter": "fmt_time"
                 }
             ]
