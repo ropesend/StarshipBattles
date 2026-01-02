@@ -3,254 +3,94 @@
 ## 1. High-Level Context
 **Refactor Goal**: Transition from Inheritance-based Components (`Engine`, `Weapon`) to Composition-based Components (`Component` + `Abilities`).
 
-**Current Phase**: Phase 5 Complete (Core), Phase 6 Next  
-**Tests**: 467/467 PASSED (as of 2026-01-02 11:57 PST)
+**Current Phase**: ✅ Phase 6 COMPLETE (Data Migration)  
+**Tests**: 470/470 PASSED (as of 2026-01-02)
 
 **Status Summary**:
 - Phase 1 ✅ Foundation (abilities.py created)
 - Phase 2 ✅ Core Refactor (Component class, Legacy Shim)
 - Phase 3 ✅ Stats & Physics Integration
-- **Phase 4 (Combat System)**: **Complete** ✅
-- **Phase 5 (UI & Capabilities)**: **Complete** ✅
-
-- **Phase 6 (Data Migration)**: **Ready to Start** ⏩
-  - **Pre-Condition**: Add missing `CommandAndControl` ability to `abilities.py`
-  - **Goal**: Migrate weapon stats into ability dicts, remove redundant legacy attributes
-  - **Verified by Code Reviews**: 4 audits completed (AI/Formation, Data, Game, Validator)
-
----
-
-## Code Review Audit Findings (Jan 2, 2026)
-
-| Area | File | Status | Action |
-|------|------|--------|--------|
-| AI & Formation | `ai.py`, `ai_behaviors.py` | ✅ OK | Uses shims (low priority cleanup) |
-| Game Integration | `main.py`, `battle.py` | ✅ OK | No legacy isinstance found |
-| Validator | `ship_validator.py` | ⚠️ FIX | Add `CommandAndControl` to ABILITY_REGISTRY |
-| Data Files | `components.json` | ⏳ MIGRATE | Weapon stats at root, need to move to abilities |
+- Phase 4 ✅ Combat System Complete
+- Phase 5 ✅ UI & Capabilities Complete
+- Phase 6 ✅ Data Migration COMPLETE
+- **Phase 7 ⏳ Legacy Removal (Planned)**
+  - ✅ Added `CommandAndControl` ability to `abilities.py`
+  - ✅ Created migration script `scripts/migrate_legacy_components.py`
+  - ✅ Migrated `data/components.json` (7 weapons, 2 engines, 2 thrusters)
+  - ✅ Fixed weapon constructors to read from ability dicts
+  - ✅ Fixed `WeaponAbility` to handle formula strings in damage/range/reload
+  - ✅ Fixed `_apply_base_stats()` to read from ability dicts instead of data root
+  - ✅ All 470 tests passing
 
 ---
 
-## 2. Phase 4 Completed Work
+## 2. PHASE 6 FINAL FIX SUMMARY
 
-The following Phase 4 tasks have been completed:
+### Root Cause
+After data migration, weapon stats (`range`, `firing_arc`, `damage`) moved from root level to ability dicts (e.g., `abilities.BeamWeaponAbility.range`). However, `_apply_base_stats()` still read from `self.data.get()` at root level, returning defaults (0/3) instead of actual values.
 
-| Task | File | Status |
-|------|------|--------|
-| `Ship.max_weapon_range` → ability iteration | ship.py:231-252 | ✅ Done |
-| Replace `isinstance(Hangar)` in fire_weapons | ship_combat.py:64 | ✅ Done |
-| Replace `isinstance(Weapon)` in fire_weapons | ship_combat.py:78 | ✅ Done |
-| PDC detection → `has_pdc_ability()` | ship_combat.py:108 | ✅ Done |
-| Replace `isinstance(Weapon)` in ai.py:369 | ai.py:369 | ✅ Done |
-| Replace `isinstance(Engine,Thruster)` in ai.py:505 | ai.py:502-506 | ✅ Done |
-| Add `has_pdc_ability()` helper | components.py:152-168 | ✅ Done |
+### Fix Applied
+Added `get_weapon_data_for_stats()` helper in `_apply_base_stats()` that:
+1. Checks root data first
+2. Falls back to ability dicts (`ProjectileWeaponAbility`, `BeamWeaponAbility`, `SeekerWeaponAbility`)
 
----
-
-## 3. Phase 4 Remaining Work (CRITICAL)
-
-The following issues were identified by independent code reviews and **MUST be completed** before Phase 5:
-
-### 3.1 Weapon Subclass isinstance Checks (ship_combat.py)
-
-| Line | Current Code | Replacement |
-|------|--------------|-------------|
-| 117 | `isinstance(comp, SeekerWeapon)` | `comp.has_ability('SeekerWeaponAbility')` | ✅ Done |
-| 135 | `isinstance(comp, SeekerWeapon)` | `comp.has_ability('SeekerWeaponAbility')` | ✅ Done |
-| 149 | `isinstance(comp, BeamWeapon)` | `comp.has_ability('BeamWeaponAbility')` | ✅ Done |
-| 174 | `isinstance(comp, SeekerWeapon)` | `comp.has_ability('SeekerWeaponAbility')` | ✅ Done |
-| 253 | `isinstance(comp, ProjectileWeapon)` | `comp.has_ability('ProjectileWeaponAbility')` | ✅ Done |
-
-### 3.2 Direct Attribute Access (ship_combat.py)
-
-Lines using `comp.damage` and `comp.range` directly:
-- Lines 116, 161, 162, 190, 191, 212, 213, 236
-
-**Action**: Continue using legacy shim for now OR create accessor methods on Component.
-
-### 3.3 Resource Legacy Path (ship_combat.py:22-42)
-
-Shield regeneration energy consumption bypasses ability system:
-```python
-energy_res.consume(cost_amount)  # Direct call at line 34
-```
-
-**Action**: Migrate to check `is_operational` on ShieldRegenerator components.
-
-### 3.4 EnergyConsumption Trigger Bug (abilities.py:278) - ✅ FIXED
-
-```python
-"trigger": "constant"  # FIXED - was "conditional"
-```
+### Files Modified
+- `components.py`: Added helper in `_apply_base_stats()` (lines 479-490)
+- `unit_tests/test_components.py`: Updated `test_range_stacking` to use `railgun.range`
 
 ---
 
-## 4. Phase 5 Scope (UI Migration)
+## 3. Files Modified This Session
 
-### COMPLETED - isinstance/type_str Migration (23 checks replaced)
-
-| File | Checks | Status |
-|------|--------|--------|
-| weapons_panel.py | 8 | ✅ Done |
-| schematic_view.py | 4 | ✅ Done |
-| detail_panel.py | 1 | ✅ Done |
-| battle_ui.py | 2 | ✅ Done |
-| battle_panels.py | 2 | ✅ Done |
-| rendering.py | 3 | ✅ Done |
-| modifier_logic.py | 3 type_str | ✅ Done |
-| **TOTAL** | **23** | ✅ |
-
-### COMPLETED - get_ui_rows() Implementation
-
-All ability classes in `abilities.py` already have `get_ui_rows()` implemented:
-- `ResourceConsumption`, `ResourceStorage`, `ResourceGeneration`
-- `CombatPropulsion`, `ManeuveringThruster`
-- `ShieldProjection`, `ShieldRegeneration`, `VehicleLaunchAbility`
-- `WeaponAbility`, `ProjectileWeaponAbility`
-
-### REMAINING Phase 5 Work
-
-| Task | Priority | Notes |
-|------|----------|-------|
-| `detail_panel.py` use `get_ui_rows()` | Low | Complex refactor, current hardcoded approach works |
-| Legacy attribute migration | Low | Shims work, can defer |
-| Ship.cached_summary | Low | Performance optimization, not critical |
-
-### Test Coverage - COMPLETE ✅
-
-Added tests for:
-- `BeamWeaponAbility`, `SeekerWeaponAbility`
-- `get_abilities()` polymorphic lookup
-- `has_pdc_ability()` tag-based detection
-- `Component.get_ui_rows()` aggregation
-- `MockPDC` updated to use tag-based PDC with BeamWeaponAbility
-
----
-
-## 5. Test Ledger
-
-| Test File | Status | Target Phase |
-|-----------|--------|--------------|
-| test_components.py | **Active** | Phase 2 |
-| test_component_resources.py | **Active** | Phase 2 |
-| test_component_composition.py | **Active** | Phase 2 |
-| test_legacy_shim.py | **Active** | Phase 2 |
-| test_ship_stats.py | **Active** | Phase 3 |
-| test_ship_physics_mixin.py | **Active** | Phase 3 |
-| test_weapons.py | **Active** | Phase 4 |
-| test_pdc.py | **Active** | Phase 4 |
-| test_fighter_launch.py | **Active** | Phase 4 |
-| test_ai.py | **Active** | Phase 4 |
-| test_battle_panels.py | **Active** | Phase 5 |
-| test_ui_dynamic_update.py | **Active** | Phase 5 |
-| test_builder_validation.py | **Active** | Phase 6 |
-
----
-
-## 6. Next Agent Instructions
-
-### Immediate Actions (Phase 4 Completion)
-
-1. ✅ **COMPLETED** - Fixed EnergyConsumption trigger in `abilities.py:278`
-
-2. ✅ **COMPLETED** - Replaced weapon subclass isinstance checks in `ship_combat.py`
-
-3. **Run tests after each change**:
-   ```powershell
-   python -m pytest unit_tests/ -n 16 --tb=no -q
-   ```
-
-### Key Files
-
-- `ship_combat.py` - Main focus for remaining Phase 4 work
-- `abilities.py` - EnergyConsumption trigger fix
-- `components.py` - `has_pdc_ability()` already implemented
-
-### Cautions
-
-- **PDC backward compatibility**: `has_pdc_ability()` checks both new tag system (`'pdc' in ab.tags`) AND legacy dict (`abilities.get('PointDefense')`)
-- **Legacy shim active**: `comp.damage`/`comp.range` still work via shim - no rush to migrate these
-- **Test baseline**: 462 tests must all pass before Phase 5
-
----
-
-## 7. Reference: Completed Phase 3 Changes
-
-| Change | Location |
-|--------|---------|
-| Modifier-to-Ability Sync | components.py:538-564 |
-| `Ship.get_total_ability_value()` | ship.py:546-578 |
-| Engine/Thruster/Shield isinstance → ability | ship_stats.py |
-| Physics thrust → ability helper | ship_physics.py:19 |
-
----
-
-## 8. Session Summary (Jan 2, 2026 - 11:27-11:57 PST)
-
-### Work Completed This Session
-
-| Category | Count | Details |
-|----------|-------|--------|
-| isinstance migration | 23 | 7 UI files migrated to `has_ability()` |
-| Component.get_ui_rows() | 1 | New method aggregating from ability_instances |
-| New tests added | 6 | abilities, polymorphism, PDC, get_ui_rows |
-| Bug fixes | 2 | test_profiling.py parallel conflicts, test_mandatory_updates.py ability data |
-
-### Key Methods Added
-
-- `Component.get_ui_rows()` - Aggregates UI rows from all ability_instances
-- All ability classes in `abilities.py` have `get_ui_rows()` implemented
-
-### Files Modified This Session
-
-**UI Files (isinstance → has_ability)**:
-- `ui/builder/weapons_panel.py` (8 checks)
-- `ui/builder/schematic_view.py` (4 checks)
-- `ui/builder/detail_panel.py` (1 check)
-- `ui/builder/modifier_logic.py` (3 type_str checks)
-- `battle_ui.py` (2 checks)
-- `battle_panels.py` (2 checks)
-- `rendering.py` (3 checks)
-
-**Core Files**:
-- `components.py` - Added `get_ui_rows()` method
-
-**Test Files**:
-- `test_abilities.py` - Added 5 new tests
-- `test_component_composition.py` - Added get_ui_rows test
-- `test_mandatory_updates.py` - Fixed ability data in test components
-- `test_profiling.py` - Fixed parallel execution file locking
-- `test_pdc.py` - Updated MockPDC to use tag-based PDC
-
----
-
-## 9. Next Agent Instructions
-
-### Recommended Next Steps
-
-1. **Perform comprehensive review** of refactor documentation
-2. **Run full test suite** to verify baseline:
-   ```powershell
-   python -m pytest unit_tests/ -n 16 --tb=no -q
-   ```
-   Expected: 467 passed
-
-3. **Choose next focus**:
-   - **Phase 6 (Data Migration)** - Create migration scripts for components.json
-   - **Remaining Phase 4/5 items** - Low priority, legacy shims work fine
-
-### Critical Context
-
-- **Legacy shims are active**: `comp.damage`, `comp.range`, `comp.thrust_force` etc. all work via shim in `Component._instantiate_abilities()`
-- **PDC detection dual-mode**: `has_pdc_ability()` checks both `'pdc' in ab.tags` AND legacy `abilities.get('PointDefense')`
-- **Test parallelization**: Use `-n 16` for parallel execution with pytest-xdist
-
-### Key Reference Files
-
-| File | Purpose |
+| File | Changes |
 |------|---------|
-| `abilities.py` | All Ability classes with get_ui_rows() |
-| `components.py` | Component class with has_ability(), get_ability(), get_ui_rows() |
-| `ship.py` | Ship class with get_total_ability_value() |
-| `refactor_docs/implementation_plan.md` | Full refactor plan |
-| `refactor_docs/task.md` | Detailed task checklist |
+| `abilities.py` | Added `CommandAndControl` class; Updated `WeaponAbility.__init__` to handle formula strings, store `_base_damage/_base_range/_base_reload` |
+| `components.py` | Updated `Weapon/ProjectileWeapon/BeamWeapon` constructors for ability dict reading; Updated `_instantiate_abilities` shim; Fixed `_apply_base_stats` to use base values |
+| `ui/builder/modifier_logic.py` | Updated to read `firing_arc` from ability dicts |
+| `data/components.json` | Migrated by script (weapon stats moved to ability dicts) |
+| `scripts/migrate_legacy_components.py` | Created migration script |
+| `unit_tests/test_combat_endurance.py` | Updated to read from ability dicts |
+| `unit_tests/test_modifier_defaults_robustness.py` | Updated assertions for new data structure |
+
+---
+
+## 4. Key Changes Summary
+
+### 4.1 Data Migration (components.json)
+Weapon stats (`damage`, `range`, `reload`, `firing_arc`, `projectile_speed`, `accuracy_falloff`, `base_accuracy`) moved from root level to ability dicts:
+```json
+// BEFORE
+{"id": "railgun", "damage": 40, "range": 2400, ...}
+
+// AFTER  
+{"id": "railgun", "abilities": {"ProjectileWeaponAbility": {"damage": 40, "range": 2400, ...}}}
+```
+
+### 4.2 Formula String Handling
+`WeaponAbility.__init__` now handles formula strings like `"=40 - (0.01 * range_to_target)"`:
+- Evaluates at range 0 for base display value
+- Stores `damage_formula` for runtime evaluation
+- Stores `_base_damage`, `_base_range`, `_base_reload` for modifier sync
+
+### 4.3 Constructor Shims
+`Weapon`, `ProjectileWeapon`, `BeamWeapon` constructors now check both root level AND ability dicts for weapon stats using `get_weapon_data()` helper.
+
+---
+
+## 5. Test Verification Commands
+
+```powershell
+# Run full suite
+python -m pytest unit_tests/ -n 16 --tb=no -q
+
+# Run specific failing test with details
+python -m pytest unit_tests/test_multitarget.py::TestMultitarget::test_pdc_missile_logic -v --tb=long
+```
+
+---
+
+## 6. Next Steps (Phase 7)
+
+1.  **Execute Legacy Removal Plan**: Follow `refactor_docs/legacy_removal_plan.md`.
+2.  **Start with Stage 1**: Critical fixes in `ship_stats.py` (Shield Calculation Bug).
+3.  **Proceed to Stage 2**: Systematic removal of `isinstance` checks in Core and Combat systems.

@@ -43,14 +43,8 @@
                 "Satellite",
                 "Planetary Complex"
             ],
-            "damage": "=40 - (0.01 * range_to_target)",
-            "range": 2400,
-            "reload": 2.0,
-            "projectile_speed": 20000,
-            "firing_arc": 1,
             "sprite_index": 85,
             "abilities": {
-                "ProjectileWeapon": true,
                 "CrewRequired": 5,
                 "ResourceConsumption": [
                     {
@@ -58,7 +52,14 @@
                         "amount": 1,
                         "trigger": "activation"
                     }
-                ]
+                ],
+                "ProjectileWeaponAbility": {
+                    "damage": "=40 - (0.01 * range_to_target)",
+                    "range": 2400,
+                    "reload": 2.0,
+                    "projectile_speed": 20000,
+                    "firing_arc": 1
+                }
             },
             "major_classification": "Weapons"
         },
@@ -71,7 +72,6 @@
             "allowed_vehicle_types": [
                 "Ship"
             ],
-            "thrust_force": 150,
             "sprite_index": 10,
             "abilities": {
                 "CombatPropulsion": 150,
@@ -94,7 +94,6 @@
             "allowed_vehicle_types": [
                 "Ship"
             ],
-            "turn_speed": 30,
             "sprite_index": 78,
             "abilities": {
                 "ManeuveringThruster": 30
@@ -287,15 +286,8 @@
                 "Satellite",
                 "Planetary Complex"
             ],
-            "damage": "=15 * (1 - 0.00005 * range_to_target)",
-            "range": 2000,
-            "reload": 0.2,
-            "base_accuracy": 2.0,
-            "accuracy_falloff": 0.001,
-            "firing_arc": 1,
             "sprite_index": 87,
             "abilities": {
-                "BeamWeapon": true,
                 "CrewRequired": 1,
                 "ResourceConsumption": [
                     {
@@ -303,7 +295,15 @@
                         "amount": 5,
                         "trigger": "activation"
                     }
-                ]
+                ],
+                "BeamWeaponAbility": {
+                    "damage": "=15 * (1 - 0.00005 * range_to_target)",
+                    "range": 2000,
+                    "reload": 0.2,
+                    "firing_arc": 1,
+                    "base_accuracy": 2.0,
+                    "accuracy_falloff": 0.001
+                }
             },
             "major_classification": "Weapons"
         },
@@ -443,16 +443,8 @@
                 "Satellite",
                 "Planetary Complex"
             ],
-            "to_hit_defense": 0.0,
-            "damage": 100,
-            "projectile_speed": 6000,
-            "turn_rate": 200,
-            "endurance": 3.0,
-            "reload": 4.0,
-            "firing_arc": 1,
             "sprite_index": 86,
             "abilities": {
-                "SeekerWeapon": true,
                 "CrewRequired": 3,
                 "ResourceConsumption": [
                     {
@@ -460,7 +452,16 @@
                         "amount": 5,
                         "trigger": "activation"
                     }
-                ]
+                ],
+                "SeekerWeaponAbility": {
+                    "damage": 100,
+                    "reload": 4.0,
+                    "projectile_speed": 6000,
+                    "firing_arc": 1,
+                    "endurance": 3.0,
+                    "turn_rate": 200,
+                    "to_hit_defense": 0.0
+                }
             },
             "major_classification": "Weapons"
         },
@@ -475,15 +476,8 @@
                 "Satellite",
                 "Planetary Complex"
             ],
-            "damage": 4,
-            "range": 800,
-            "reload": 0.04,
-            "base_accuracy": 10.0,
-            "accuracy_falloff": 0.003,
-            "firing_arc": 180,
             "sprite_index": 151,
             "abilities": {
-                "BeamWeapon": true,
                 "PointDefense": true,
                 "CrewRequired": 1,
                 "ResourceConsumption": [
@@ -492,7 +486,15 @@
                         "amount": 2,
                         "trigger": "activation"
                     }
-                ]
+                ],
+                "BeamWeaponAbility": {
+                    "damage": 4,
+                    "range": 800,
+                    "reload": 0.04,
+                    "firing_arc": 180,
+                    "base_accuracy": 10.0,
+                    "accuracy_falloff": 0.003
+                }
             },
             "major_classification": "Weapons"
         },
@@ -522,7 +524,6 @@
             "allowed_vehicle_types": [
                 "Fighter"
             ],
-            "thrust_force": 40,
             "sprite_index": 58,
             "abilities": {
                 "CombatPropulsion": 40,
@@ -545,7 +546,6 @@
             "allowed_vehicle_types": [
                 "Fighter"
             ],
-            "turn_speed": 50,
             "sprite_index": 79,
             "abilities": {
                 "ManeuveringThruster": 50
@@ -641,15 +641,16 @@
             "allowed_vehicle_types": [
                 "Fighter"
             ],
-            "damage": 10,
-            "range": 1000,
-            "reload": 1.0,
-            "base_accuracy": 2.0,
-            "accuracy_falloff": 0.001,
-            "firing_arc": 1,
             "sprite_index": 138,
             "abilities": {
-                "BeamWeapon": true
+                "BeamWeaponAbility": {
+                    "damage": 10,
+                    "range": 1000,
+                    "reload": 1.0,
+                    "firing_arc": 1,
+                    "base_accuracy": 2.0,
+                    "accuracy_falloff": 0.001
+                }
             },
             "major_classification": "Weapons"
         },
@@ -662,22 +663,23 @@
             "allowed_vehicle_types": [
                 "Fighter"
             ],
-            "damage": 5,
-            "range": 800,
-            "reload": 0.3,
-            "base_accuracy": 2.0,
-            "accuracy_falloff": 0.001,
-            "firing_arc": 1,
             "sprite_index": 140,
             "abilities": {
-                "BeamWeapon": true,
                 "ResourceConsumption": [
                     {
                         "resource": "energy",
                         "amount": 2,
                         "trigger": "activation"
                     }
-                ]
+                ],
+                "BeamWeaponAbility": {
+                    "damage": 5,
+                    "range": 800,
+                    "reload": 0.3,
+                    "firing_arc": 1,
+                    "base_accuracy": 2.0,
+                    "accuracy_falloff": 0.001
+                }
             },
             "major_classification": "Weapons"
         },
@@ -690,15 +692,16 @@
             "allowed_vehicle_types": [
                 "Fighter"
             ],
-            "damage": 60,
-            "range": 200,
-            "reload": 15.0,
-            "base_accuracy": 2.0,
-            "accuracy_falloff": 0.0,
-            "firing_arc": 10,
             "sprite_index": 216,
             "abilities": {
-                "BeamWeapon": true
+                "BeamWeaponAbility": {
+                    "damage": 60,
+                    "range": 200,
+                    "reload": 15.0,
+                    "firing_arc": 10,
+                    "base_accuracy": 2.0,
+                    "accuracy_falloff": 0.0
+                }
             },
             "major_classification": "Weapons"
         },

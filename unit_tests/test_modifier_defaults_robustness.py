@@ -25,8 +25,16 @@ class TestModifierDefaultsRobustness(unittest.TestCase):
             
         comp = create_component('railgun')
         
-        # Base value check (JSON should have 1)
-        self.assertEqual(comp.data.get('firing_arc'), 1, "Base JSON firing_arc should be 1")
+        # Base value check - Phase 6: firing_arc now in ability dict
+        base_arc = comp.data.get('firing_arc')
+        if base_arc is None:
+            abilities = comp.data.get('abilities', {})
+            for ab_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility']:
+                ab_data = abilities.get(ab_name, {})
+                if isinstance(ab_data, dict) and 'firing_arc' in ab_data:
+                    base_arc = ab_data['firing_arc']
+                    break
+        self.assertEqual(base_arc, 1, "Base JSON firing_arc should be 1")
         
         # 2. Simulate the 'corruption' or modification
         # e.g. a previous modifier calc set it to 22.5 or 45
@@ -45,7 +53,17 @@ class TestModifierDefaultsRobustness(unittest.TestCase):
             self.skipTest("PDC not found")
             
         comp = create_component('point_defence_cannon')
-        self.assertEqual(comp.data.get('firing_arc'), 180, "Base JSON firing_arc should be 180")
+        
+        # Phase 6: firing_arc now in ability dict
+        base_arc = comp.data.get('firing_arc')
+        if base_arc is None:
+            abilities = comp.data.get('abilities', {})
+            for ab_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility']:
+                ab_data = abilities.get(ab_name, {})
+                if isinstance(ab_data, dict) and 'firing_arc' in ab_data:
+                    base_arc = ab_data['firing_arc']
+                    break
+        self.assertEqual(base_arc, 180, "Base JSON firing_arc should be 180")
         
         # Simulate corruption
         comp.firing_arc = 90

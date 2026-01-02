@@ -120,7 +120,17 @@ class ModifierLogic:
         elif mod_id == 'turret_mount':
             # Default to base firing arc
             # Use comp.data to get the TRUE base value, ignoring any current runtime modifications
-            base_arc = component.data.get('firing_arc', mod_def.min_val)
+            base_arc = component.data.get('firing_arc')
+            # Phase 6: Check inside ability dicts if not at root level
+            if base_arc is None:
+                abilities = component.data.get('abilities', {})
+                for ab_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility', 'WeaponAbility']:
+                    ab_data = abilities.get(ab_name, {})
+                    if isinstance(ab_data, dict) and 'firing_arc' in ab_data:
+                        base_arc = ab_data['firing_arc']
+                        break
+            if base_arc is None:
+                base_arc = mod_def.min_val
             return float(base_arc)
             
         return mod_def.default_val
@@ -148,7 +158,17 @@ class ModifierLogic:
         if mod_id == 'turret_mount':
             # Min value cannot be less than the component's base fixed arc
             # Use comp.data to get the TRUE base value, ignoring any current runtime modifications
-            base_arc = component.data.get('firing_arc', local_min)
+            base_arc = component.data.get('firing_arc')
+            # Phase 6: Check inside ability dicts if not at root level
+            if base_arc is None:
+                abilities = component.data.get('abilities', {})
+                for ab_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility', 'WeaponAbility']:
+                    ab_data = abilities.get(ab_name, {})
+                    if isinstance(ab_data, dict) and 'firing_arc' in ab_data:
+                        base_arc = ab_data['firing_arc']
+                        break
+            if base_arc is None:
+                base_arc = local_min
             local_min = float(base_arc)
             
         return (local_min, local_max)

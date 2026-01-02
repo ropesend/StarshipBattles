@@ -123,7 +123,7 @@ class TestModifierStacking(unittest.TestCase):
     def test_range_stacking(self):
         """Range mount level 2 should give 4x range."""
         railgun = create_component('railgun')
-        base_range = railgun.data.get('range', 0)  # 2400
+        base_range = railgun.range  # 2400 (now read from ability dict via constructor)
         
         railgun.add_modifier('range_mount', 2.0)  # Level 2 = 4x range
         

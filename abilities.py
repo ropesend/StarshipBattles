@@ -200,6 +200,11 @@ class VehicleLaunchAbility(Ability):
             {'label': 'Hangar', 'value': f"{self.fighter_class}", 'color_hint': '#C8C8C8'},
             {'label': 'Cycle', 'value': f"{self.cycle_time}s", 'color_hint': '#C8C8C8'}
         ]
+
+class CommandAndControl(Ability):
+    """Marks component as providing ship command capability."""
+    def get_ui_rows(self):
+        return [{'label': 'Command', 'value': 'Active', 'color_hint': '#96FF96'}]
         
 # --- Weapon Abilities ---
 
@@ -207,9 +212,37 @@ class WeaponAbility(Ability):
     """Base for offensive capabilities."""
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        self.damage = float(data.get('damage', 0))
-        self.range = float(data.get('range', 0))
-        self.reload_time = float(data.get('reload', 1.0))
+        
+        # Handle damage (may be number or formula string)
+        raw_damage = data.get('damage', 0)
+        if isinstance(raw_damage, str) and raw_damage.startswith('='):
+            from formula_system import evaluate_math_formula
+            self.damage_formula = raw_damage[1:]  # Store without '='
+            # Evaluate at range 0 for base value
+            self.damage = float(max(0, evaluate_math_formula(self.damage_formula, {'range_to_target': 0})))
+        else:
+            self.damage_formula = None
+            self.damage = float(raw_damage) if raw_damage else 0.0
+        self._base_damage = self.damage  # Store for modifier sync
+        
+        # Handle range (may be number or formula string)
+        raw_range = data.get('range', 0)
+        if isinstance(raw_range, str) and raw_range.startswith('='):
+            from formula_system import evaluate_math_formula
+            self.range = float(max(0, evaluate_math_formula(raw_range[1:], {})))
+        else:
+            self.range = float(raw_range) if raw_range else 0.0
+        self._base_range = self.range  # Store for modifier sync
+        
+        # Handle reload (may be number or formula string)  
+        raw_reload = data.get('reload', 1.0)
+        if isinstance(raw_reload, str) and raw_reload.startswith('='):
+            from formula_system import evaluate_math_formula
+            self.reload_time = float(max(0.01, evaluate_math_formula(raw_reload[1:], {})))
+        else:
+            self.reload_time = float(raw_reload) if raw_reload else 1.0
+        self._base_reload = self.reload_time  # Store for modifier sync
+        
         self.firing_arc = float(data.get('firing_arc', 360))
         self.facing_angle = float(data.get('facing_angle', 0))
         self.cooldown_timer = 0.0
@@ -283,6 +316,7 @@ ABILITY_REGISTRY = {
     "ProjectileWeaponAbility": ProjectileWeaponAbility,
     "BeamWeaponAbility": BeamWeaponAbility,
     "SeekerWeaponAbility": SeekerWeaponAbility,
+    "CommandAndControl": CommandAndControl,
     
     # Primitive/Shortcut Factories
     "FuelStorage": lambda c, d: ResourceStorage(c, {"resource": "fuel", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "fuel"}),

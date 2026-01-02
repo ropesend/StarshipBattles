@@ -240,21 +240,30 @@ class TestCombatEndurance(unittest.TestCase):
         import copy
         laser.data = copy.deepcopy(laser.data)
         # Force constant for test stats
-        cost = laser.data.get('energy_cost', 0) # 5
-        reload_t = laser.data.get('reload', 1) or 0.1 # 0.2
+        cost = laser.data.get('energy_cost', 0) # 5 (Check ResourceConsumption in abilities)
+        if cost == 0 and 'abilities' in laser.data:
+            for rc in laser.data['abilities'].get('ResourceConsumption', []):
+                if isinstance(rc, dict) and rc.get('resource') == 'energy':
+                    cost = rc.get('amount', 0)
+                    break
+        # Read reload from ability dict (Phase 6 migrated structure)
+        reload_t = laser.data.get('reload', 0)
+        if reload_t == 0 and 'abilities' in laser.data:
+            for ab_name in ['BeamWeaponAbility', 'ProjectileWeaponAbility', 'SeekerWeaponAbility']:
+                ab_data = laser.data['abilities'].get(ab_name, {})
+                if isinstance(ab_data, dict) and 'reload' in ab_data:
+                    reload_t = ab_data['reload']
+                    break
+        reload_t = reload_t or 0.1  # fallback
         
-        # In DATA
+        # In DATA - clear existing and set fresh for test
         if 'abilities' not in laser.data: laser.data['abilities'] = {}
-        if 'ResourceConsumption' not in laser.data['abilities']:
-             laser.data['abilities']['ResourceConsumption'] = []
-             
-        # Check if already list
-        if isinstance(laser.data['abilities']['ResourceConsumption'], list):
-             laser.data['abilities']['ResourceConsumption'].append({
-                "resource": "energy",
-                "amount": cost / reload_t,
-                "trigger": "constant"
-            })
+        # Clear existing ResourceConsumption to avoid double-counting
+        laser.data['abilities']['ResourceConsumption'] = [{
+            "resource": "energy",
+            "amount": cost / reload_t,
+            "trigger": "constant"
+        }]
         
         # REFRESH ABILITIES
         laser.abilities = laser.data['abilities']

@@ -97,19 +97,46 @@
         - [x] Add `Ship.cached_summary` property <!-- id: 59 -->
         - [x] Update `ShipStatsCalculator` to populate summary <!-- id: 60 -->
 
-- [ ] **Phase 6: Data Migration** <!-- id: 61 -->
-    - [ ] **Pre-Migration Fixes** (from code review audits) <!-- id: 100 -->
-        - [ ] Add `CommandAndControl` class to `abilities.py` and `ABILITY_REGISTRY` <!-- id: 101 -->
-        - [ ] Verify validation passes after adding ability <!-- id: 102 -->
-    - [ ] **Scripting** <!-- id: 62 -->
-        - [ ] Create `scripts/migrate_legacy_components.py` to identify and move legacy keys <!-- id: 63 -->
-        - [ ] Implement dry-run mode to preview changes <!-- id: 64 -->
-        - [ ] Migrate weapon stats (`damage`, `range`, `reload`) into ability dict <!-- id: 103 -->
-        - [ ] Remove redundant `thrust_force`/`turn_speed` from engines/thrusters <!-- id: 104 -->
-    - [ ] **Validation** <!-- id: 65 -->
-        - [ ] Update `ship_validator.py` with `EnableAbilityConstraints` rule <!-- id: 66 -->
-    - [ ] **Execution** <!-- id: 67 -->
-        - [ ] Run migration script on `data/components.json` <!-- id: 68 -->
-        - [ ] Manual check of `data/components.json` <!-- id: 69 -->
-        - [ ] Run full test suite (target: 470+ passed) <!-- id: 70 -->
+- [x] **Phase 6: Data Migration** <!-- id: 61 -->
+    - [x] **Pre-Migration Fixes** (from code review audits) <!-- id: 100 -->
+        - [x] Add `CommandAndControl` class to `abilities.py` and `ABILITY_REGISTRY` <!-- id: 101 -->
+        - [x] Verify validation passes after adding ability <!-- id: 102 -->
+    - [x] **Scripting** <!-- id: 62 -->
+        - [x] Create `scripts/migrate_legacy_components.py` to identify and move legacy keys <!-- id: 63 -->
+        - [x] Implement dry-run mode to preview changes <!-- id: 64 -->
+        - [x] Migrate weapon stats (`damage`, `range`, `reload`) into ability dict <!-- id: 103 -->
+        - [x] Remove redundant `thrust_force`/`turn_speed` from engines/thrusters <!-- id: 104 -->
+    - [x] **Code Fixes for Migrated Data** <!-- id: 105 -->
+        - [x] Fix `WeaponAbility.__init__` to handle formula strings <!-- id: 106 -->
+        - [x] Store `_base_damage/_base_range/_base_reload` for modifier sync <!-- id: 107 -->
+        - [x] Update `_apply_base_stats` to use base values not data dict <!-- id: 108 -->
+        - [x] Update weapon constructors (`Weapon`, `ProjectileWeapon`, `BeamWeapon`) <!-- id: 109 -->
+        - [x] Update `ModifierLogic` to read `firing_arc` from ability dicts <!-- id: 110 -->
+    - [x] **Validation** <!-- id: 65 -->
+        - [x] Update `ship_validator.py` with `EnableAbilityConstraints` rule <!-- id: 66 -->
+    - [x] **Execution** <!-- id: 67 -->
+        - [x] Run migration script on `data/components.json` <!-- id: 68 -->
+        - [x] Manual check of `data/components.json` <!-- id: 69 -->
+        - [x] Run full test suite (**470 passed**) <!-- id: 70 -->
+        - [x] Fix `test_pdc_missile_logic` (updated `_apply_base_stats` to read from ability dicts) <!-- id: 111 -->
+
+- [ ] **Phase 7: Legacy Removal (Final Cleanup)** <!-- id: 112 -->
+    - [ ] **Stage 1: Critical Fixes** <!-- id: 113 -->
+        - [ ] Fix shield calculation overwrite in `ship_stats.py` <!-- id: 114 -->
+        - [ ] Fix legacy armor classification checks in `ship_stats.py` <!-- id: 115 -->
+    - [ ] **Stage 2: Core Logic Migration** <!-- id: 116 -->
+        - [ ] Refactor `ship_combat.py`: Replace `comp.damage/range` with ability getters <!-- id: 117 -->
+        - [ ] Refactor `ship_combat.py`: Replace `comp.fire()` with `ability.fire()` <!-- id: 118 -->
+        - [ ] Refactor `ai.py`: Update TargetEvaluator and PDC checks to use abilities <!-- id: 119 -->
+        - [ ] Refactor `ship.py`: Remove `isinstance` checks for Sensor/Electronics <!-- id: 120 -->
+    - [ ] **Stage 3: UI & Rendering** <!-- id: 121 -->
+        - [ ] Refactor Builder UI `weapons_panel.py` and `schematic_view.py` <!-- id: 122 -->
+        - [ ] Refactor `rendering.py` color selection <!-- id: 123 -->
+    - [ ] **Stage 4: Test Suite Updates** <!-- id: 124 -->
+        - [ ] Update `test_components.py` to remove `isinstance(Weapon)` checks <!-- id: 125 -->
+    - [ ] **Stage 5: The Big Delete** <!-- id: 126 -->
+        - [ ] Remove `Weapon`, `Engine`, `Shield` subclasses from `components.py` <!-- id: 127 -->
+        - [ ] Remove `_instantiate_abilities` shim logic <!-- id: 128 -->
+        - [ ] Remove `__getattr__` shims (`damage`, `range`, `thrust_force`) <!-- id: 129 -->
+        - [ ] Clean up unused imports across codebase <!-- id: 130 -->
 

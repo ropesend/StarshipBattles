@@ -203,7 +203,7 @@ class Component:
             return False
 
         def get_shim_value(attr_name, default=0):
-            """Get value from attribute (if resolved) or data (if raw/formula)."""
+            """Get value from attribute, data root, or abilities dict."""
             # 1. Try resolved attribute first (from recalculate_stats loop)
             if hasattr(self, attr_name):
                 val = getattr(self, attr_name)
@@ -212,9 +212,19 @@ class Component:
                 if isinstance(val, (int, float)):
                     return val
             
-            # 2. Fallback to data
-            val = self.data.get(attr_name, default)
-            return val
+            # 2. Check root data
+            if attr_name in self.data:
+                return self.data[attr_name]
+            
+            # 3. Check inside ability dicts (Phase 6: weapon stats migrated here)
+            abilities = self.data.get('abilities', {})
+            for ability_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility', 'WeaponAbility']:
+                if ability_name in abilities:
+                    ab_data = abilities[ability_name]
+                    if isinstance(ab_data, dict) and attr_name in ab_data:
+                        return ab_data[attr_name]
+            
+            return default
 
         def is_positive(val):
             if isinstance(val, (int, float)):
@@ -466,6 +476,19 @@ class Component:
         return stats
 
     def _apply_base_stats(self, stats, old_max_hp):
+        # Helper to read weapon data from root OR ability dicts (Phase 6 migration)
+        def get_weapon_data_for_stats(key, default=0):
+            if key in self.data:
+                return self.data[key]
+            # Check in ability dicts
+            abilities = self.data.get('abilities', {})
+            for ab_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility', 'WeaponAbility']:
+                if ab_name in abilities:
+                    ab_data = abilities[ab_name]
+                    if isinstance(ab_data, dict) and key in ab_data:
+                        return ab_data[key]
+            return default
+
         # Apply specific property overrides
         for prop, val in stats['properties'].items():
             if hasattr(self, prop):
@@ -476,7 +499,7 @@ class Component:
             if stats['arc_set'] is not None:
                 self.firing_arc = stats['arc_set']
             else:
-                base = self.data.get('firing_arc', 3)
+                base = get_weapon_data_for_stats('firing_arc', 3)
                 self.firing_arc = base + stats['arc_add']
 
         # Apply Base Multipliers
@@ -493,12 +516,12 @@ class Component:
             # but if 'damage' is a simple int attribute, we scale it.
             # However, Weapon class stores 'damage' as base int.
             # To handle non-Weapon components with damage:
-            raw_damage = self.data.get('damage', 0)
+            raw_damage = get_weapon_data_for_stats('damage', 0)
             if not (isinstance(raw_damage, str) and raw_damage.startswith("=")):
                  self.damage = int(raw_damage * stats['damage_mult'])
 
         if hasattr(self, 'range'):
-            self.range = int(self.data.get('range', 0) * stats['range_mult'])
+            self.range = int(get_weapon_data_for_stats('range', 0) * stats['range_mult'])
         if hasattr(self, 'cost'):
             self.cost = int(self.data.get('cost', 0) * stats['cost_mult'])
         if hasattr(self, 'thrust_force'):
@@ -585,9 +608,13 @@ class Component:
                 if isinstance(base, (int, float)):
                     ab.rate = float(base) * stats.get('capacity_mult', 1.0)  # Regen scales with capacity
             elif isinstance(ab, WeaponAbility):
-                ab.damage = float(ab.data.get('damage', 0)) * stats.get('damage_mult', 1.0)
-                ab.range = float(ab.data.get('range', 0)) * stats.get('range_mult', 1.0)
-                ab.reload_time = float(ab.data.get('reload', 1.0)) * stats.get('reload_mult', 1.0)
+                # Use already-evaluated base values from ability (formulas handled in constructor)
+                base_damage = getattr(ab, '_base_damage', ab.damage)
+                base_range = getattr(ab, '_base_range', ab.range)
+                base_reload = getattr(ab, '_base_reload', ab.reload_time)
+                ab.damage = float(base_damage) * stats.get('damage_mult', 1.0)
+                ab.range = float(base_range) * stats.get('range_mult', 1.0)
+                ab.reload_time = float(base_reload) * stats.get('reload_mult', 1.0)
         
         # Ensure cap
         self.current_hp = min(self.current_hp, self.max_hp)
@@ -628,8 +655,22 @@ from logger import log_event
 class Weapon(Component):
     def __init__(self, data):
         super().__init__(data)
+        
+        # Helper to read weapon stats from root or abilities dict
+        def get_weapon_data(key, default=0):
+            if key in data:
+                return data[key]
+            # Check in ability dicts (Phase 6 migrated structure)
+            abilities = data.get('abilities', {})
+            for ab_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility', 'WeaponAbility']:
+                if ab_name in abilities:
+                    ab_data = abilities[ab_name]
+                    if isinstance(ab_data, dict) and key in ab_data:
+                        return ab_data[key]
+            return default
+        
         # Store raw damage value/formula
-        raw_damage = data.get('damage', 0)
+        raw_damage = get_weapon_data('damage', 0)
         if isinstance(raw_damage, str) and raw_damage.startswith("="):
             self.damage_formula = raw_damage[1:]  # Store formula without '='
             # Evaluate at range 0 for base display value
@@ -638,12 +679,12 @@ class Weapon(Component):
             self.damage_formula = None
             self.damage = int(raw_damage) if raw_damage else 0
         
-        self.range = data.get('range', 0)
-        self.reload_time = data.get('reload', 1.0)
+        self.range = get_weapon_data('range', 0)
+        self.reload_time = get_weapon_data('reload', 1.0)
         
         self.cooldown_timer = 0.0
-        self.firing_arc = data.get('firing_arc', 20) # Degrees
-        self.facing_angle = data.get('facing_angle', 0) # Degrees relative to component forward (0)
+        self.firing_arc = get_weapon_data('firing_arc', 20) # Degrees
+        self.facing_angle = get_weapon_data('facing_angle', 0) # Degrees relative to component forward (0)
         self.fire_count = 0  # Track how many times weapon has fired
         self.shots_fired = 0
         self.shots_hit = 0
@@ -690,7 +731,18 @@ class Weapon(Component):
 class ProjectileWeapon(Weapon):
     def __init__(self, data):
         super().__init__(data)
-        self.projectile_speed = data.get('projectile_speed', 1200) # Default speed
+        # Helper to read from root or abilities dict
+        def get_weapon_data(key, default=0):
+            if key in data:
+                return data[key]
+            abilities = data.get('abilities', {})
+            for ab_name in ['ProjectileWeaponAbility', 'WeaponAbility']:
+                if ab_name in abilities:
+                    ab_data = abilities[ab_name]
+                    if isinstance(ab_data, dict) and key in ab_data:
+                        return ab_data[key]
+            return default
+        self.projectile_speed = get_weapon_data('projectile_speed', 1200)
         
     def clone(self):
         return ProjectileWeapon(self.data)
@@ -747,8 +799,19 @@ class Generator(Component):
 class BeamWeapon(Weapon):
     def __init__(self, data):
         super().__init__(data)
-        self.base_accuracy = data.get('base_accuracy', 1.0)
-        self.accuracy_falloff = data.get('accuracy_falloff', 0.001)
+        # Helper to read from root or abilities dict
+        def get_weapon_data(key, default=0):
+            if key in data:
+                return data[key]
+            abilities = data.get('abilities', {})
+            for ab_name in ['BeamWeaponAbility', 'WeaponAbility']:
+                if ab_name in abilities:
+                    ab_data = abilities[ab_name]
+                    if isinstance(ab_data, dict) and key in ab_data:
+                        return ab_data[key]
+            return default
+        self.base_accuracy = get_weapon_data('base_accuracy', 1.0)
+        self.accuracy_falloff = get_weapon_data('accuracy_falloff', 0.001)
 
     def _apply_custom_stats(self, stats):
         super()._apply_custom_stats(stats)
