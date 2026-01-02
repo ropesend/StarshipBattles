@@ -38,7 +38,7 @@ def create_beam_ship(x, y, color):
     s.add_component(BeamWeapon(BEAM_DATA), LayerType.OUTER)
     s.recalculate_stats()
     # Fill energy
-    s.current_energy = s.max_energy
+    s.resources.set_value("energy", s.resources.get_max_value("energy"))
     return s
 
 def run_test():
