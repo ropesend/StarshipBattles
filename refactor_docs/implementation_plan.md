@@ -115,6 +115,11 @@ Move firing logic to Abilities.
     *   Use `ability.tags` (e.g. `{'pdc'}`) to identify PDC weapons.
     *   Preserve logic: Standard weapons ignore missiles; PDCs target missiles (and fighters) preferentially.
 
+#### 4.5 AI Controller Updates
+*   **Refactor `ai.py`**:
+    *   Line 369: Replace `isinstance(comp, Weapon)` with `comp.has_ability('WeaponAbility')`.
+    *   Update PDC detection to use `ability.tags` instead of `abilities.get('PointDefense', False)`.
+
 ### Phase 5: UI & Capabilities
 Data-driven UI rendering.
 

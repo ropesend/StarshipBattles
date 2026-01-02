@@ -61,6 +61,8 @@
         - [ ] Bind `fire()` logic: `BeamWeaponAbility` calls `apply_damage`, `Projectile` spawns entity <!-- id: 48 -->
         - [ ] Refactor `fire_weapons`: Add `VehicleLaunchAbility` support for launching fighters <!-- id: 72 -->
         - [ ] Refactor `_find_pdc_target`: Use `Ability.tags` instead of legacy flags <!-- id: 73 -->
+        - [ ] Refactor `ai.py`: Replace `isinstance(Weapon)` with `has_ability('WeaponAbility')` <!-- id: 82 -->
+        - [ ] Refactor `ai.py`: Update PDC detection to use `Ability.tags` instead of `abilities.get('PointDefense')` <!-- id: 83 -->
     - [ ] **Verification** <!-- id: 49 -->
         - [ ] Run `unit_tests/test_weapons.py` to verify firing mechanics <!-- id: 50 -->
 

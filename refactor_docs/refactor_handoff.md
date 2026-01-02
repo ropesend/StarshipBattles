@@ -47,7 +47,7 @@
     - Refactored `ship_stats.py` to use ability-based iteration (replaced 6 isinstance checks)
     - Refactored `ship_physics.py` to use `get_total_ability_value('CombatPropulsion')`
 *   **Phase 4 Goal**: Move weapon firing logic to `WeaponAbility.fire()`. Refactor `ship_combat.py` to iterate components with `WeaponAbility` instead of `isinstance(Weapon)`.
-*   **Key Files for Phase 4**: `ship_combat.py`, `abilities.py` (WeaponAbility classes)
+*   **Key Files for Phase 4**: `ship_combat.py`, `abilities.py` (WeaponAbility classes), `ai.py`
 *   **Caution**: PDC targeting logic uses `ability.get('PointDefense')` - this needs to use `ability.tags` like `{'pdc'}` instead.
+*   **New Finding (2026-01-02)**: `ai.py:369` also uses `isinstance(Weapon)` and legacy PDC detection - must be updated alongside `ship_combat.py`.
 *   **Test Verification**: Run `python -m unittest unit_tests.test_weapons unit_tests.test_pdc unit_tests.test_fighter_launch -v` before and after changes.
-
