@@ -10,7 +10,7 @@ Note: This is NOT a unittest module. Run simulation tests using:
 # Only export the non-importing modules
 from .test_logger import (
     ComponentTestLogger,
-    TestEventType,
+    LogEventType,
     enable_test_logging,
     set_test_log_dir,
     TEST_LOGGING_ENABLED,

@@ -12,6 +12,7 @@ from components import load_components, load_modifiers, COMPONENT_REGISTRY, MODI
 from ship import initialize_ship_data, VEHICLE_CLASSES
 
 class TestRunner:
+    __test__ = False
     def __init__(self):
         self.engine = BattleEngine()
         self.current_scenario = None

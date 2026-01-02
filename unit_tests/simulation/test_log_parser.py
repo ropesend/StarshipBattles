@@ -21,6 +21,7 @@ class LogEvent:
 
 
 class TestLogParser:
+    __test__ = False
     """
     Parse simulation logs for test verification.
     

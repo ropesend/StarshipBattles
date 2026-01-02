@@ -9,7 +9,7 @@ from typing import Optional, List, Dict, Any
 from enum import Enum
 
 
-class TestEventType(Enum):
+class LogEventType(Enum):
     """Enumeration of all log event types for component tests."""
     SHIP_SPAWN = "SHIP_SPAWN"
     TICK = "TICK"
@@ -111,12 +111,12 @@ class ComponentTestLogger:
         """Update the current tick for subsequent log entries."""
         self.current_tick = tick
     
-    def log_event(self, event_type: TestEventType, **kwargs) -> None:
+    def log_event(self, event_type: LogEventType, **kwargs) -> None:
         """
         Log a structured event.
         
         Args:
-            event_type: The type of event (from TestEventType enum)
+            event_type: The type of event (from LogEventType enum)
             **kwargs: Key-value pairs to include in the log entry
         """
         if not self.enabled or not self.file:
@@ -132,7 +132,7 @@ class ComponentTestLogger:
         parts = [f"[TICK:{self.current_tick}]"]
         
         # Use simple string for event type if it's an Enum
-        etype_str = event_type.value if isinstance(event_type, TestEventType) else str(event_type)
+        etype_str = event_type.value if isinstance(event_type, LogEventType) else str(event_type)
         parts.append(etype_str)
         
         kv_parts = []
@@ -153,20 +153,20 @@ class ComponentTestLogger:
     
     def log_sim_start(self, test_id: str, ships: List[str]) -> None:
         """Log simulation start event."""
-        self.log_event(TestEventType.SIM_START, 
+        self.log_event(LogEventType.SIM_START, 
                       test_id=test_id, 
                       ships=",".join(ships))
     
     def log_sim_end(self, ships_remaining: int) -> None:
         """Log simulation end event."""
-        self.log_event(TestEventType.SIM_END, 
+        self.log_event(LogEventType.SIM_END, 
                       final_tick=self.current_tick,
                       ships_remaining=ships_remaining)
     
     def log_ship_spawn(self, name: str, x: float, y: float, 
                        ship_class: str, mass: float, thrust: float) -> None:
         """Log ship spawn event."""
-        self.log_event(TestEventType.SHIP_SPAWN,
+        self.log_event(LogEventType.SHIP_SPAWN,
                       name=name,
                       pos=f"({x:.1f},{y:.1f})",
                       ship_class=ship_class,
@@ -176,7 +176,7 @@ class ComponentTestLogger:
     def log_ship_velocity(self, name: str, vx: float, vy: float, 
                           speed: float, heading: float) -> None:
         """Log ship velocity event."""
-        self.log_event(TestEventType.SHIP_VELOCITY,
+        self.log_event(LogEventType.SHIP_VELOCITY,
                       name=name,
                       vx=f"{float(vx):.2f}",
                       vy=f"{float(vy):.2f}",
@@ -185,7 +185,7 @@ class ComponentTestLogger:
     
     def log_ship_position(self, name: str, x: float, y: float) -> None:
         """Log ship position event."""
-        self.log_event(TestEventType.SHIP_POSITION,
+        self.log_event(LogEventType.SHIP_POSITION,
                       name=name,
                       x=f"{float(x):.1f}",
                       y=f"{float(y):.1f}")
@@ -193,7 +193,7 @@ class ComponentTestLogger:
     def log_weapon_fire(self, ship_name: str, weapon_id: str, 
                         target: str, weapon_type: str) -> None:
         """Log weapon fire event."""
-        self.log_event(TestEventType.WEAPON_FIRE,
+        self.log_event(LogEventType.WEAPON_FIRE,
                       ship=ship_name,
                       weapon=weapon_id,
                       target=target,
@@ -202,7 +202,7 @@ class ComponentTestLogger:
     def log_hit(self, attacker: str, target: str, weapon: str, 
                 damage: float) -> None:
         """Log hit event."""
-        self.log_event(TestEventType.HIT,
+        self.log_event(LogEventType.HIT,
                       attacker=attacker,
                       target=target,
                       weapon=weapon,
@@ -211,7 +211,7 @@ class ComponentTestLogger:
     def log_miss(self, attacker: str, target: str, weapon: str, 
                  reason: str) -> None:
         """Log miss event."""
-        self.log_event(TestEventType.MISS,
+        self.log_event(LogEventType.MISS,
                       attacker=attacker,
                       target=target,
                       weapon=weapon,
@@ -220,26 +220,26 @@ class ComponentTestLogger:
     def log_seeker_launch(self, seeker_id: str, origin: str, 
                           target: str) -> None:
         """Log seeker launch event."""
-        self.log_event(TestEventType.SEEKER_LAUNCH,
+        self.log_event(LogEventType.SEEKER_LAUNCH,
                       seeker_id=seeker_id,
                       origin=origin,
                       target=target)
     
     def log_seeker_impact(self, seeker_id: str, target: str) -> None:
         """Log seeker impact event."""
-        self.log_event(TestEventType.SEEKER_IMPACT,
+        self.log_event(LogEventType.SEEKER_IMPACT,
                       seeker_id=seeker_id,
                       target=target)
     
     def log_seeker_expire(self, seeker_id: str, reason: str) -> None:
         """Log seeker expiration event."""
-        self.log_event(TestEventType.SEEKER_EXPIRE,
+        self.log_event(LogEventType.SEEKER_EXPIRE,
                       seeker_id=seeker_id,
                       reason=reason)
     
     def log_seeker_destroyed(self, seeker_id: str, destroyed_by: str) -> None:
         """Log seeker destroyed by point defense."""
-        self.log_event(TestEventType.SEEKER_DESTROYED,
+        self.log_event(LogEventType.SEEKER_DESTROYED,
                       seeker_id=seeker_id,
                       destroyed_by=destroyed_by)
 
@@ -263,7 +263,7 @@ def log_event(event_type_str: str, **kwargs):
         event_type_str: String or Enum for event type
         **kwargs: Log data
     """
-    if str(event_type_str).startswith("TestEventType."):
+    if str(event_type_str).startswith("LogEventType."):
          # It's an enum, use it
          pass
     else:

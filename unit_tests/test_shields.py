@@ -2,6 +2,7 @@ import unittest
 from ship import Ship, LayerType, initialize_ship_data
 from components import Shield, ShieldRegenerator, load_components, create_component
 import pygame
+import os
 
 class TestShields(unittest.TestCase):
     def setUp(self):

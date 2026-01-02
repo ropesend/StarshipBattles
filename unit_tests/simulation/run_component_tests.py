@@ -21,7 +21,7 @@ from components import load_components, create_component
 from battle_engine import BattleEngine
 from ai import AIController
 
-from test_logger import ComponentTestLogger, TestEventType, enable_test_logging
+from test_logger import ComponentTestLogger, LogEventType, enable_test_logging
 from test_log_parser import TestLogParser
 
 

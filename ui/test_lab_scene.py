@@ -11,6 +11,7 @@ from test_framework.runner import TestRunner
 from test_framework.scenario import CombatScenario
 
 class TestLabScene:
+    __test__ = False
     def __init__(self, game):
         self.game = game
         self.font = pygame.font.SysFont(FONT_MAIN, 24)
