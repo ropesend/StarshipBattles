@@ -1,0 +1,78 @@
+# Task List: Ability System Migration
+
+- [ ] **Phase 1: Foundation (Abilities Module)** <!-- id: 0 -->
+    - [ ] **Infrastructure** <!-- id: 1 -->
+        - [ ] Create `abilities.py` module to host `Ability` classes <!-- id: 2 -->
+        - [ ] Implement `Ability` base class with `update`, `on_activation`, `get_ui_rows` methods <!-- id: 3 -->
+    - [ ] **Resource Abilities** <!-- id: 4 -->
+        - [ ] Migrate `ResourceConsumption` from `resources.py` to `abilities.py` <!-- id: 5 -->
+        - [ ] Migrate `ResourceStorage` from `resources.py` to `abilities.py` <!-- id: 6 -->
+        - [ ] Migrate `ResourceGeneration` from `resources.py` to `abilities.py` <!-- id: 7 -->
+    - [ ] **Core Mechanic Abilities** <!-- id: 8 -->
+        - [ ] Implement `CombatPropulsion` (replaces `thrust_force`) <!-- id: 9 -->
+        - [ ] Implement `ManeuveringThruster` (replaces `turn_speed`) <!-- id: 10 -->
+        - [ ] Implement `ShieldProjection` (replaces `Shield.capacity`) <!-- id: 11 -->
+        - [ ] Implement `ShieldRegeneration` (replaces `ShieldRegenerator.rate`) <!-- id: 12 -->
+        - [ ] Implement `CommandAndControl`, `CrewCapacity`, `LifeSupportCapacity` <!-- id: 13 -->
+    - [ ] **Weapon Abilities** <!-- id: 14 -->
+        - [ ] Implement `WeaponAbility` base class (cooldowns, reload, range) <!-- id: 15 -->
+        - [ ] Implement `ProjectileWeaponAbility` (spawns projectiles) <!-- id: 16 -->
+        - [ ] Implement `BeamWeaponAbility` (hitscan logic) <!-- id: 17 -->
+        - [ ] Implement `SeekerWeaponAbility` (spawns seekers) <!-- id: 18 -->
+    - [ ] **Registry & Factory** <!-- id: 19 -->
+        - [ ] Define `ABILITY_REGISTRY` in `abilities.py` <!-- id: 20 -->
+        - [ ] Implement `create_ability(name, component, data)` factory function <!-- id: 21 -->
+    - [ ] **Testing** <!-- id: 22 -->
+        - [ ] Create `unit_tests/test_abilities.py` to verify all new classes <!-- id: 23 -->
+
+- [ ] **Phase 2: Core Refactor (Components)** <!-- id: 24 -->
+    - [ ] **Component Class** <!-- id: 25 -->
+        - [ ] Refactor `Component.__init__` in `components.py` to strictly load abilities using the Factory <!-- id: 26 -->
+        - [ ] Implement `get_ability(type)` helper method <!-- id: 27 -->
+        - [ ] Refactor `update()` to iterate `self.ability_instances` and call `ab.update()` <!-- id: 28 -->
+    - [ ] **Legacy Shim (Critical)** <!-- id: 29 -->
+        - [ ] Add logic to `__init__`: If `thrust_force` in data, create `CombatPropulsion` ability <!-- id: 30 -->
+        - [ ] Add logic to `__init__`: If `turn_speed` in data, create `ManeuveringThruster` ability <!-- id: 31 -->
+        - [ ] Add logic to `__init__`: If `damage` in data, create appropriate `WeaponAbility` <!-- id: 32 -->
+    - [ ] **Testing** <!-- id: 33 -->
+        - [ ] Create `unit_tests/test_component_composition.py` to verify generic component behaves like an engine/weapon <!-- id: 34 -->
+
+- [ ] **Phase 3: Stats & Physics Integration** <!-- id: 35 -->
+    - [ ] **Ship Stats** <!-- id: 36 -->
+        - [ ] Refactor `ship_stats.py`: Replace `if isinstance(c, Engine)` with `c.get_abilities('CombatPropulsion')` <!-- id: 37 -->
+        - [ ] Refactor `ship_stats.py`: Replace `if isinstance(c, Thruster)` with `c.get_abilities('ManeuveringThruster')` <!-- id: 38 -->
+        - [ ] Refactor `ship_stats.py`: Aggregate `ShieldProjection` for max shields <!-- id: 39 -->
+    - [ ] **Ship Physics** <!-- id: 40 -->
+        - [ ] Refactor `ship_physics.py`: `update_physics_movement` sums thrust from operational `CombatPropulsion` abilities <!-- id: 41 -->
+    - [ ] **Verification** <!-- id: 42 -->
+        - [ ] Run `unit_tests/test_ship_stats.py` to ensure no regression in calculated stats <!-- id: 43 -->
+
+- [ ] **Phase 4: Combat System Migration** <!-- id: 44 -->
+    - [ ] **Weapon Logic** <!-- id: 45 -->
+        - [ ] Refactor `ship_combat.py`: `fire_weapons` iterates components with `WeaponAbility` <!-- id: 46 -->
+        - [ ] Update `WeaponAbility` to manage its own `cooldown_timer` <!-- id: 47 -->
+        - [ ] Bind `fire()` logic: `BeamWeaponAbility` calls `apply_damage`, `Projectile` spawns entity <!-- id: 48 -->
+    - [ ] **Verification** <!-- id: 49 -->
+        - [ ] Run `unit_tests/test_weapons.py` to verify firing mechanics <!-- id: 50 -->
+
+- [ ] **Phase 5: UI & Capabilities** <!-- id: 51 -->
+    - [ ] **Renderer** <!-- id: 52 -->
+        - [ ] Implement `get_ui_rows()` for `CombatPropulsion` (Returns 'Thrust') <!-- id: 53 -->
+        - [ ] Implement `get_ui_rows()` for `WeaponAbility` (Returns 'Damage', 'Range') <!-- id: 54 -->
+        - [ ] Update `Component.get_ui_rows()` to aggregate from abilities <!-- id: 55 -->
+    - [ ] **Builder UI** <!-- id: 56 -->
+        - [ ] Refactor `ui/builder/detail_panel.py` `show_component` to use `get_ui_rows()` <!-- id: 57 -->
+    - [ ] **Performance** <!-- id: 58 -->
+        - [ ] Add `Ship.cached_summary` property <!-- id: 59 -->
+        - [ ] Update `ShipStatsCalculator` to populate summary <!-- id: 60 -->
+
+- [ ] **Phase 6: Data Migration** <!-- id: 61 -->
+    - [ ] **Scripting** <!-- id: 62 -->
+        - [ ] Create `scripts/migrate_legacy_components.py` to identify and move legacy keys <!-- id: 63 -->
+        - [ ] Implement dry-run mode to preview changes <!-- id: 64 -->
+    - [ ] **Validation** <!-- id: 65 -->
+        - [ ] Update `ship_validator.py` with `EnableAbilityConstraints` rule <!-- id: 66 -->
+    - [ ] **Execution** <!-- id: 67 -->
+        - [ ] Run migration script on `data/components.json` <!-- id: 68 -->
+        - [ ] Manual check of `data/components.json` <!-- id: 69 -->
+        - [ ] Run full test suite <!-- id: 70 -->
