@@ -44,12 +44,15 @@
         - [ ] Refactor `ship_stats.py`: Replace `if isinstance(c, Thruster)` with `c.get_abilities('ManeuveringThruster')` <!-- id: 38 -->
         - [ ] Refactor `ship_stats.py`: Aggregate `ShieldProjection` for max shields <!-- id: 39 -->
     - [ ] **Ship Physics** <!-- id: 40 -->
-        - [ ] Refactor `ship_physics.py`: `update_physics_movement` sums thrust from operational `CombatPropulsion` abilities <!-- id: 41 -->
+        - [ ] Implement `Ship.get_total_ability_value(name, operational_only=True)` helper <!-- id: 74 -->
+        - [ ] Refactor `ship_physics.py`: Replace `isinstance(Engine)` loop with `get_total_ability_value('CombatPropulsion')` <!-- id: 41 -->
+        - [ ] Refactor `ship_stats.py`: Replace `isinstance(Engine)` loop with `get_total_ability_value` (unified logic) <!-- id: 75 -->
     - [ ] **Verification** <!-- id: 42 -->
         - [ ] Run `unit_tests/test_ship_stats.py` to ensure no regression in calculated stats <!-- id: 43 -->
 
 - [ ] **Phase 4: Combat System Migration** <!-- id: 44 -->
     - [ ] **Weapon Logic** <!-- id: 45 -->
+        - [ ] Refactor `Ship.max_weapon_range` in `ship.py` to use ability values <!-- id: 80 -->
         - [ ] Refactor `ship_combat.py`: `fire_weapons` iterates components with `WeaponAbility` <!-- id: 46 -->
         - [ ] Update `WeaponAbility` to manage its own `cooldown_timer` <!-- id: 47 -->
         - [ ] Bind `fire()` logic: `BeamWeaponAbility` calls `apply_damage`, `Projectile` spawns entity <!-- id: 48 -->
@@ -65,6 +68,10 @@
         - [ ] Update `Component.get_ui_rows()` to aggregate from abilities <!-- id: 55 -->
     - [ ] **Builder UI** <!-- id: 56 -->
         - [ ] Refactor `ui/builder/detail_panel.py` `show_component` to use `get_ui_rows()` <!-- id: 57 -->
+        - [ ] Refactor `ui/builder/weapons_panel.py`: Remove `isinstance` checks, use `has_ability()` <!-- id: 76 -->
+    - [ ] **Battle UI** <!-- id: 77 -->
+        - [ ] Refactor `battle_ui.py`: `draw_debug_overlay` uses `WeaponAbility` <!-- id: 78 -->
+        - [ ] Refactor `battle_panels.py`: Remove `isinstance` checks in `ShipStatsPanel` <!-- id: 79 -->
     - [ ] **Performance** <!-- id: 58 -->
         - [ ] Add `Ship.cached_summary` property <!-- id: 59 -->
         - [ ] Update `ShipStatsCalculator` to populate summary <!-- id: 60 -->

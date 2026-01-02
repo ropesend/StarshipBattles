@@ -82,12 +82,17 @@ Decouple `ShipStatsCalculator` from Component types.
     *   `Shield` -> `ShieldProjection`
 
 #### 3.2 Physics Update (`ship_physics.py`)
-*   Update `update_physics_movement`: Sum thrust from operational components with `CombatPropulsion`.
+*   **Constraint**: `ship_physics.py` currently re-iterates components to sum operational thrust, duplicating logic from `ship_stats.py`.
+*   **Refactor**:
+    *   Remove `isinstance(comp, Engine)` checks.
+    *   Implement helper `Ship.get_total_ability_value(ability_name, operational_only=True)`.
+    *   Update `update_physics_movement` to use this helper for `CombatPropulsion` and `ManeuveringThruster`.
 
 ### Phase 4: Combat System Migration
 Move firing logic to Abilities.
 
 #### 4.1 Weapon Logic Refactor
+*   **Range Calculation**: Refactor `Ship.max_weapon_range` in `ship.py` to iterate abilities instead of `isinstance(Weapon)`.
 *   **Cooldowns**: Move `cooldown_timer` from Component to `WeaponAbility`.
 *   **Update**: `Ability.update()` handles cooldown decrement.
 *   **Firing**:
@@ -125,7 +130,12 @@ Data-driven UI rendering.
 *   **Battle HUD**:
     *   Target: `battle_panels.py` class `ShipStatsPanel`.
     *   Refactor `draw_ship_details`: Use `comp.get_ui_rows()` for expanded views.
-    *   Refactor `battle_ui.py` `draw_debug_overlay`: Ensure it uses `WeaponAbility` for ranges/arcs instead of `isinstance(Weapon)`.
+    *   Refactor `battle_ui.py`:
+        *   `draw_debug_overlay`: Check `comp.has_ability('WeaponAbility')` instead of `isinstance`.
+        *   `draw_arcs`: Use `WeaponAbility` attributes (`firing_arc`, `facing_angle`).
+    *   Refactor `ui/builder/weapons_panel.py`:
+        *   Replace `isinstance(BeamWeapon)` checks with `comp.has_ability('BeamWeaponAbility')`.
+        *   Update tooltip and visualization logic to read from Ability attributes.
 *   **Caching**: Implement `Ship.cached_summary` to avoid re-calculating stats every frame in the Builder.
 
 ### Phase 6: Data Migration
