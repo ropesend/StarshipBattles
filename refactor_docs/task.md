@@ -38,18 +38,20 @@
     - [x] **Testing** <!-- id: 33 -->
         - [x] Create `unit_tests/test_component_composition.py` to verify generic component behaves like an engine/weapon <!-- id: 34 -->
 
-- [ ] **Phase 3: Stats & Physics Integration** <!-- id: 35 -->
-    - [ ] **Ship Stats** <!-- id: 36 -->
-        - [ ] Create `unit_tests/test_ship_stats.py` baseline <!-- id: 81 -->
-        - [ ] Refactor `ship_stats.py`: Replace `if isinstance(c, Engine)` with `c.get_abilities('CombatPropulsion')` <!-- id: 37 -->
-        - [ ] Refactor `ship_stats.py`: Replace `if isinstance(c, Thruster)` with `c.get_abilities('ManeuveringThruster')` <!-- id: 38 -->
-        - [ ] Refactor `ship_stats.py`: Aggregate `ShieldProjection` for max shields <!-- id: 39 -->
-    - [ ] **Ship Physics** <!-- id: 40 -->
-        - [ ] Implement `Ship.get_total_ability_value(name, operational_only=True)` helper <!-- id: 74 -->
-        - [ ] Refactor `ship_physics.py`: Replace `isinstance(Engine)` loop with `get_total_ability_value('CombatPropulsion')` <!-- id: 41 -->
-        - [ ] Refactor `ship_stats.py`: Replace `isinstance(Engine)` loop with `get_total_ability_value` (unified logic) <!-- id: 75 -->
-    - [ ] **Verification** <!-- id: 42 -->
-        - [ ] Run `unit_tests/test_ship_stats.py` to ensure no regression in calculated stats <!-- id: 43 -->
+
+- [x] **Phase 3: Stats & Physics Integration** <!-- id: 35 -->
+    - [x] **Ship Stats** <!-- id: 36 -->
+        - [x] Create `unit_tests/test_ship_stats.py` baseline <!-- id: 81 -->
+        - [x] Refactor `ship_stats.py`: Replace `if isinstance(c, Engine)` with `c.get_abilities('CombatPropulsion')` <!-- id: 37 -->
+        - [x] Refactor `ship_stats.py`: Replace `if isinstance(c, Thruster)` with `c.get_abilities('ManeuveringThruster')` <!-- id: 38 -->
+        - [x] Refactor `ship_stats.py`: Aggregate `ShieldProjection` for max shields <!-- id: 39 -->
+    - [x] **Ship Physics** <!-- id: 40 -->
+        - [x] Implement `Ship.get_total_ability_value(name, operational_only=True)` helper <!-- id: 74 -->
+        - [x] Refactor `ship_physics.py`: Replace `isinstance(Engine)` loop with `get_total_ability_value('CombatPropulsion')` <!-- id: 41 -->
+        - [x] Refactor `ship_stats.py`: Replace `isinstance(Engine)` loop with `get_total_ability_value` (unified logic) <!-- id: 75 -->
+    - [x] **Verification** <!-- id: 42 -->
+        - [x] Run `unit_tests/test_ship_stats.py` to ensure no regression in calculated stats <!-- id: 43 -->
+
 
 - [ ] **Phase 4: Combat System Migration** <!-- id: 44 -->
     - [ ] **Weapon Logic** <!-- id: 45 -->

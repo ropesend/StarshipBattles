@@ -535,6 +535,31 @@ class Component:
                      base = ab.data.get('amount', 0.0)
                      ab.rate = base * stats.get('energy_gen_mult', 1.0)
         
+        # Sync Core Ability Values with Modifiers (Phase 3 Pre-requisite)
+        from abilities import CombatPropulsion, ManeuveringThruster, ShieldProjection, ShieldRegeneration, WeaponAbility
+        
+        for ab in self.ability_instances:
+            if isinstance(ab, CombatPropulsion):
+                base = ab.data.get('value', ab.data) if isinstance(ab.data, dict) else ab.data
+                if isinstance(base, (int, float)):
+                    ab.thrust_force = float(base) * stats.get('thrust_mult', 1.0)
+            elif isinstance(ab, ManeuveringThruster):
+                base = ab.data.get('value', ab.data) if isinstance(ab.data, dict) else ab.data
+                if isinstance(base, (int, float)):
+                    ab.turn_rate = float(base) * stats.get('turn_mult', 1.0)
+            elif isinstance(ab, ShieldProjection):
+                base = ab.data.get('value', ab.data) if isinstance(ab.data, dict) else ab.data
+                if isinstance(base, (int, float)):
+                    ab.capacity = float(base) * stats.get('capacity_mult', 1.0)
+            elif isinstance(ab, ShieldRegeneration):
+                base = ab.data.get('value', ab.data) if isinstance(ab.data, dict) else ab.data
+                if isinstance(base, (int, float)):
+                    ab.rate = float(base) * stats.get('capacity_mult', 1.0)  # Regen scales with capacity
+            elif isinstance(ab, WeaponAbility):
+                ab.damage = float(ab.data.get('damage', 0)) * stats.get('damage_mult', 1.0)
+                ab.range = float(ab.data.get('range', 0)) * stats.get('range_mult', 1.0)
+                ab.reload_time = float(ab.data.get('reload', 1.0)) * stats.get('reload_mult', 1.0)
+        
         # Ensure cap
         self.current_hp = min(self.current_hp, self.max_hp)
 

@@ -68,14 +68,14 @@ class ShipStatsCalculator:
                 comp.is_active = True
                 comp.status = ComponentStatus.ACTIVE
                 
-                # Check Damage Threshold (ignore Armor)
-                if not isinstance(comp, Armor):
+                # Check Damage Threshold (ignore Armor - armor uses HP pool, not individual component threshold)
+                if comp.major_classification != "Armor":
                      if comp.max_hp > 0 and (comp.current_hp / comp.max_hp) <= 0.5:
                          comp.is_active = False
                          comp.status = ComponentStatus.DAMAGED
                 
                 # If armor is dead (0 hp), it's inactive
-                if isinstance(comp, Armor) and comp.current_hp <= 0:
+                if comp.major_classification == "Armor" and comp.current_hp <= 0:
                     comp.is_active = False
                     comp.status = ComponentStatus.DAMAGED
                 
@@ -165,33 +165,51 @@ class ShipStatsCalculator:
                         elif ability.resource_type == 'ammo':
                             total_ammo_gen += ability.rate
             
-            # Legacy / Specific Hardware Checks
-            if isinstance(comp, Engine):
-                total_thrust += comp.thrust_force
-            elif isinstance(comp, Thruster):
-                total_turn_speed += comp.turn_speed
-                ship.total_maneuver_points += comp.turn_speed
-            elif isinstance(comp, Armor):
+            # Phase 3: Ability-Based Stats Aggregation (replaces isinstance checks)
+            from abilities import CombatPropulsion, ManeuveringThruster, ShieldProjection, ShieldRegeneration
+            from resources import ResourceConsumption
+            
+            # Thrust from CombatPropulsion abilities
+            for ab in comp.get_abilities('CombatPropulsion'):
+                total_thrust += ab.thrust_force
+            
+            # Turn speed from ManeuveringThruster abilities
+            for ab in comp.get_abilities('ManeuveringThruster'):
+                total_turn_speed += ab.turn_rate
+                ship.total_maneuver_points += ab.turn_rate
+            
+            # Armor HP pool (still uses major_classification for layer assignment)
+            if comp.major_classification == "Armor":
                 if LayerType.ARMOR in ship.layers:
                     ship.layers[LayerType.ARMOR]['max_hp_pool'] += comp.max_hp
-            elif isinstance(comp, Shield):
-                total_max_shields += comp.shield_capacity
-            elif isinstance(comp, ShieldRegenerator):
-                total_shield_regen += comp.regen_rate
-                # Find energy cost from ability
-                from resources import ResourceConsumption
+            
+            # Shields from ShieldProjection abilities
+            for ab in comp.get_abilities('ShieldProjection'):
+                total_max_shields += ab.capacity
+            
+            # Shield regen from ShieldRegeneration abilities
+            for ab in comp.get_abilities('ShieldRegeneration'):
+                total_shield_regen += ab.rate
+            
+            # Shield energy cost from EnergyConsumption abilities on shield regen components
+            if comp.has_ability('ShieldRegeneration'):
                 for ab in comp.ability_instances:
                     if isinstance(ab, ResourceConsumption) and ab.resource_name == 'energy':
-                         total_shield_cost += ab.amount
-                         break
-            elif isinstance(comp, Hangar):
-                ship.fighter_capacity += comp.storage_capacity
+                        total_shield_cost += ab.amount
+                        break
+            
+            # Hangar stats (still uses VehicleLaunch ability from abilities dict)
+            if comp.has_ability('VehicleLaunch') or 'VehicleLaunch' in comp.abilities:
+                vl = comp.abilities.get('VehicleLaunch', {})
+                ship.fighter_capacity += comp.abilities.get('VehicleStorage', 0)
                 ship.fighters_per_wave += 1
-                if comp.max_launch_mass > ship.fighter_size_cap:
-                    ship.fighter_size_cap = comp.max_launch_mass
+                max_mass = vl.get('max_launch_mass', 0) if isinstance(vl, dict) else 0
+                if max_mass > ship.fighter_size_cap:
+                    ship.fighter_size_cap = max_mass
                     
-                if comp.cycle_time > ship.launch_cycle:
-                    ship.launch_cycle = comp.cycle_time
+                cycle = vl.get('cycle_time', 5.0) if isinstance(vl, dict) else 5.0
+                if cycle > ship.launch_cycle:
+                    ship.launch_cycle = cycle
             
             # Check for generic abilities that affect stats
             # MultiplexTracking
@@ -422,8 +440,8 @@ class ShipStatsCalculator:
         if t == "Bridge": return 0
         # Engines (Movement)
         if t == "Engine" or t == "Thruster": return 1
-        # Weapons (Offense)
-        if isinstance(c, Weapon): return 2
+        # Weapons (Offense) - use ability check instead of isinstance
+        if c.has_ability('WeaponAbility'): return 2
         # Others
         return 3
 

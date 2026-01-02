@@ -1,6 +1,6 @@
 import pygame
 from physics import PhysicsBody
-from components import Engine, Thruster
+# Engine, Thruster imports removed - using ability-based checks (Phase 3)
 
 class ShipPhysicsMixin:
     """
@@ -15,13 +15,8 @@ class ShipPhysicsMixin:
         """
         # Determine target speed based on input state
         if getattr(self, 'is_thrusting', False):
-            # Calculate Dynamic Thrust based on OPERATIONAL engines
-            current_total_thrust = 0.0
-            if hasattr(self, 'layers'):
-                for layer in self.layers.values():
-                    for comp in layer['components']:
-                        if isinstance(comp, Engine) and comp.is_operational:
-                            current_total_thrust += comp.thrust_force
+            # Calculate Dynamic Thrust based on OPERATIONAL engines (Phase 3: ability-based)
+            current_total_thrust = self.get_total_ability_value('CombatPropulsion', operational_only=True)
             
             # Recalculate acceleration for this frame based on available thrust
             # Mass constant for now

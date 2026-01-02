@@ -543,6 +543,37 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         totals = self.stats_calculator.calculate_ability_totals(all_components)
         return totals.get(ability_name, 0)
     
+    def get_total_ability_value(self, ability_name: str, operational_only: bool = True) -> float:
+        """
+        Sum values from all matching abilities across all components.
+        Uses ability_instances (Phase 3+ API) instead of abilities dict.
+        
+        Args:
+            ability_name: Name of ability class to sum (e.g., 'CombatPropulsion')
+            operational_only: If True, only count abilities from operational components
+            
+        Returns:
+            Sum of primary value attribute from all matching abilities
+        """
+        total = 0.0
+        for layer in self.layers.values():
+            for comp in layer['components']:
+                if operational_only and not comp.is_operational:
+                    continue
+                for ab in comp.get_abilities(ability_name):
+                    # Get the primary value attribute based on ability type
+                    if hasattr(ab, 'thrust_force'):
+                        total += ab.thrust_force
+                    elif hasattr(ab, 'turn_rate'):
+                        total += ab.turn_rate
+                    elif hasattr(ab, 'capacity'):
+                        total += ab.capacity
+                    elif hasattr(ab, 'rate'):
+                        total += ab.rate
+                    elif hasattr(ab, 'value'):
+                        total += ab.value
+        return total
+    
     def get_total_sensor_score(self) -> float:
         """Calculate total Targeting Score from all active sensors."""
         total_score = 0.0
