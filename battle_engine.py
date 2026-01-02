@@ -126,9 +126,10 @@ class BattleEngine:
 
     def _log_initial_status(self) -> None:
         for s in self.ships:
-            status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={s.current_fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f}"
+            fuel = s.resources.get_value("fuel")
+            status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f}"
             self.logger.log(status_msg)
-            
+            print(status_msg)
             # Removed Derelict Warning
             if s.total_thrust <= 0:
                 self.logger.log(f"WARNING: {s.name} has NO THRUST!")

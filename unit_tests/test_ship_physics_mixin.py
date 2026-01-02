@@ -35,7 +35,7 @@ class TestShipPhysicsThrust(unittest.TestCase):
     def test_thrust_forward_sets_flag(self):
         """Thrusting should set is_thrusting flag."""
         self.ship.is_thrusting = False
-        initial_fuel = self.ship.current_fuel
+        initial_fuel = self.ship.resources.get_value("fuel")
         
         self.ship.thrust_forward()
         
@@ -45,7 +45,7 @@ class TestShipPhysicsThrust(unittest.TestCase):
     
     def test_thrust_forward_consumes_fuel(self):
         """Thrusting implies active engine, which consumes fuel (now constant)."""
-        initial_fuel = self.ship.current_fuel
+        initial_fuel = self.ship.resources.get_value("fuel")
         self.assertGreater(initial_fuel, 0, "Ship needs fuel for this test")
         
         # In the new model, engines consume fuel CONSTANTLY if they are active components.
@@ -54,11 +54,11 @@ class TestShipPhysicsThrust(unittest.TestCase):
         self.ship.update()  # This runs Component.update() which consumes fuel (constant trigger)
         
         # Should have consumed some fuel
-        self.assertLess(self.ship.current_fuel, initial_fuel)
+        self.assertLess(self.ship.resources.get_value("fuel"), initial_fuel)
     
     def test_thrust_no_fuel_no_thrust(self):
         """Ship without fuel should not be able to sustain thrust."""
-        self.ship.current_fuel = 0
+        self.ship.resources.get_resource("fuel").current_value = 0
         
         # Run update to trigger fuel starvation check on engine
         # This marks engine as non-operational via ResourceConsumption ability

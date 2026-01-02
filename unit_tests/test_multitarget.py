@@ -173,7 +173,8 @@ class TestMultitarget(unittest.TestCase):
         context = {'projectiles': [m1, m2]}
         
         # Ensure ship has resources to fire
-        self.ship.current_energy = self.ship.max_energy
+        max_energy = self.ship.resources.get_max_value("energy")
+        self.ship.resources.set_value("energy", max_energy)
         
         # Ensure PDC is not on cooldown
         pdc.cooldown_timer = 0

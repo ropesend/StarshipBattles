@@ -40,8 +40,8 @@ class TestArcadeMovement(unittest.TestCase):
         # Verify stats populated - engine should be active with crew support
         self.assertGreater(self.ship.total_thrust, 0, 
             f"Engine should have thrust. Crew: {self.ship.crew_onboard}, Required: {self.ship.crew_required}")
-        self.assertGreater(self.ship.max_fuel, 0)
-        self.ship.current_fuel = self.ship.max_fuel
+        self.assertGreater(self.ship.resources.get_max_value("fuel"), 0)
+        self.ship.resources.get_resource("fuel").current_value = self.ship.resources.get_max_value("fuel")
 
     def test_stats(self):
         # Physics validation using tick-based INVERSE MASS SCALING model
@@ -70,7 +70,7 @@ class TestArcadeMovement(unittest.TestCase):
         self.assertGreater(self.ship.current_speed, 0)
         
         # Fuel consumed via engine's ResourceConsumption ability
-        self.assertLess(self.ship.current_fuel, self.ship.max_fuel)
+        self.assertLess(self.ship.resources.get_value("fuel"), self.ship.resources.get_max_value("fuel"))
 
     def test_movement_direction(self):
         dt = 1.0

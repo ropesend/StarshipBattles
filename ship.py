@@ -207,77 +207,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Initialize helper (lazy or eager)
         self.stats_calculator: Optional[ShipStatsCalculator] = None
 
-    @property
-    def max_energy(self):
-        r = self.resources.get_resource('energy')
-        return r.max_value if r else 0
-    @max_energy.setter
-    def max_energy(self, v):
-        if not self.resources.get_resource('energy'): self.resources.register_storage('energy', 0)
-        self.resources.get_resource('energy').set_max(v)
 
-    @property
-    def current_energy(self):
-        r = self.resources.get_resource('energy')
-        return r.current_value if r else 0.0
-    @current_energy.setter
-    def current_energy(self, v):
-        if not self.resources.get_resource('energy'): self.resources.register_storage('energy', 0)
-        self.resources.get_resource('energy').current_value = v
-
-    @property
-    def max_fuel(self):
-        r = self.resources.get_resource('fuel')
-        return r.max_value if r else 0
-    @max_fuel.setter
-    def max_fuel(self, v):
-        if not self.resources.get_resource('fuel'): self.resources.register_storage('fuel', 0)
-        self.resources.get_resource('fuel').set_max(v)
-
-    @property
-    def current_fuel(self):
-        r = self.resources.get_resource('fuel')
-        return r.current_value if r else 0.0
-    @current_fuel.setter
-    def current_fuel(self, v):
-        if not self.resources.get_resource('fuel'): self.resources.register_storage('fuel', 0)
-        self.resources.get_resource('fuel').current_value = v
-
-    @property
-    def max_ammo(self):
-        r = self.resources.get_resource('ammo')
-        return r.max_value if r else 0
-    @max_ammo.setter
-    def max_ammo(self, v):
-        if not self.resources.get_resource('ammo'): self.resources.register_storage('ammo', 0)
-        self.resources.get_resource('ammo').set_max(v)
-
-    @property
-    def current_ammo(self):
-        r = self.resources.get_resource('ammo')
-        return r.current_value if r else 0.0
-    @current_ammo.setter
-    def current_ammo(self, v):
-        if not self.resources.get_resource('ammo'): self.resources.register_storage('ammo', 0)
-        self.resources.get_resource('ammo').current_value = v
-
-    @property
-    def energy_gen_rate(self):
-        r = self.resources.get_resource('energy')
-        return r.regen_rate if r else 0
-    @energy_gen_rate.setter
-    def energy_gen_rate(self, v):
-        if not self.resources.get_resource('energy'): self.resources.register_storage('energy', 0)
-        self.resources.get_resource('energy').regen_rate = v
-    
-    @property
-    def ammo_gen_rate(self):
-        r = self.resources.get_resource('ammo')
-        return r.regen_rate if r else 0
-    @ammo_gen_rate.setter
-    def ammo_gen_rate(self, v):
-        if not self.resources.get_resource('ammo'): self.resources.register_storage('ammo', 0)
-        self.resources.get_resource('ammo').regen_rate = v
 
     @property
     def max_hp(self) -> int:
@@ -678,9 +608,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             "layers": {},
             "expected_stats": {
                 "max_hp": self.max_hp,
-                "max_fuel": self.max_fuel,
-                "max_energy": self.max_energy,
-                "max_ammo": self.max_ammo,
+                "max_fuel": self.resources.get_max_value("fuel"),
+                "max_energy": self.resources.get_max_value("energy"),
+                "max_ammo": self.resources.get_max_value("ammo"),
                 "max_speed": self.max_speed,
                 "acceleration_rate": self.acceleration_rate,
                 "turn_speed": self.turn_speed,
@@ -758,12 +688,18 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             mismatches = []
             if expected.get('max_hp') and abs(s.max_hp - expected['max_hp']) > 1:
                 mismatches.append(f"max_hp: got {s.max_hp}, expected {expected['max_hp']}")
-            if expected.get('max_fuel') and abs(s.max_fuel - expected['max_fuel']) > 1:
-                mismatches.append(f"max_fuel: got {s.max_fuel}, expected {expected['max_fuel']}")
-            if expected.get('max_energy') and abs(s.max_energy - expected['max_energy']) > 1:
-                mismatches.append(f"max_energy: got {s.max_energy}, expected {expected['max_energy']}")
-            if expected.get('max_ammo') and abs(s.max_ammo - expected['max_ammo']) > 1:
-                mismatches.append(f"max_ammo: got {s.max_ammo}, expected {expected['max_ammo']}")
+            
+            val = s.resources.get_max_value("fuel")
+            if expected.get('max_fuel') and abs(val - expected['max_fuel']) > 1:
+                mismatches.append(f"max_fuel: got {val}, expected {expected['max_fuel']}")
+            
+            val = s.resources.get_max_value("energy")
+            if expected.get('max_energy') and abs(val - expected['max_energy']) > 1:
+                mismatches.append(f"max_energy: got {val}, expected {expected['max_energy']}")
+            
+            val = s.resources.get_max_value("ammo")
+            if expected.get('max_ammo') and abs(val - expected['max_ammo']) > 1:
+                mismatches.append(f"max_ammo: got {val}, expected {expected['max_ammo']}")
             if expected.get('max_speed') and abs(s.max_speed - expected['max_speed']) > 0.1:
                 mismatches.append(f"max_speed: got {s.max_speed:.1f}, expected {expected['max_speed']:.1f}")
             if expected.get('acceleration_rate') and abs(s.acceleration_rate - expected['acceleration_rate']) > 0.001:
@@ -786,87 +722,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                     print(f"  - {m}")
         
         return s
-    @property
-    def max_fuel(self) -> float:
-        import warnings
-        warnings.warn("Use ship.resources.get_value('fuel', 'max') instead", DeprecationWarning, stacklevel=2)
-        return self.resources.get_max_value("fuel")
 
-    @max_fuel.setter
-    def max_fuel(self, value):
-        # We allow setting for now (mostly used by ShipStatsCalculator) but warn
-        # Actually ShipStatsCalculator should set directly on resources state.
-        import warnings
-        warnings.warn("Use ship.resources.get_resource('fuel').max_value = ... instead", DeprecationWarning, stacklevel=2)
-        res = self.resources.get_resource("fuel")
-        if res: res.max_value = value
-
-    @property
-    def current_fuel(self) -> float:
-        import warnings
-        warnings.warn("Use ship.resources.get_value('fuel') instead", DeprecationWarning, stacklevel=2)
-        return self.resources.get_value("fuel")
-
-    @current_fuel.setter
-    def current_fuel(self, value):
-        res = self.resources.get_resource("fuel")
-        if res: res.current_value = value
-
-    @property
-    def max_energy(self) -> float:
-        import warnings
-        warnings.warn("Use ship.resources.get_value('energy', 'max') instead", DeprecationWarning, stacklevel=2)
-        return self.resources.get_max_value("energy")
-    
-    @max_energy.setter
-    def max_energy(self, value):
-        res = self.resources.get_resource("energy")
-        if res: res.max_value = value
-
-    @property
-    def current_energy(self) -> float:
-        import warnings
-        warnings.warn("Use ship.resources.get_value('energy') instead", DeprecationWarning, stacklevel=2)
-        return self.resources.get_value("energy")
-
-    @current_energy.setter
-    def current_energy(self, value):
-        res = self.resources.get_resource("energy")
-        if res: res.current_value = value
-
-    @property
-    def max_ammo(self) -> float:
-        import warnings
-        warnings.warn("Use ship.resources.get_value('ammo', 'max') instead", DeprecationWarning, stacklevel=2)
-        return self.resources.get_max_value("ammo")
-
-    @max_ammo.setter
-    def max_ammo(self, value):
-        res = self.resources.get_resource("ammo")
-        if res: res.max_value = value
-
-    @property
-    def current_ammo(self) -> float:
-        import warnings
-        warnings.warn("Use ship.resources.get_value('ammo') instead", DeprecationWarning, stacklevel=2)
-        return self.resources.get_value("ammo")
-
-    @current_ammo.setter
-    def current_ammo(self, value):
-        res = self.resources.get_resource("ammo")
-        if res: res.current_value = value
-
-    @property
-    def energy_gen_rate(self) -> float:
-        import warnings
-        warnings.warn("Use ship.resources.get_resource('energy').regen_rate instead", DeprecationWarning, stacklevel=2)
-        res = self.resources.get_resource("energy")
-        return res.regen_rate if res else 0.0
-
-    @energy_gen_rate.setter
-    def energy_gen_rate(self, value):
-        res = self.resources.get_resource("energy")
-        if res: res.regen_rate = value
 
     @property
     def ammo_gen_rate(self) -> float:

@@ -109,12 +109,13 @@ class BattleScene:
         # DEBUG LOGGING: Check for initial derelict status
         # DEBUG LOGGING: Check for initial derelict status
         for s in self.ships:
-            status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={s.current_fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f} Derelict={s.is_derelict}"
+            fuel = s.resources.get_value("fuel")
+            status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f} Derelict={s.is_derelict}"
             self.engine.logger.log(status_msg)
             print(status_msg) # Force console output
             
             if s.is_derelict:
-                warn_msg = f"WARNING: {s.name} is DERELICT at start! (Bridge? Engines? LifeSupport? Power?)"
+                warn_msg = f"CRITICAL WARNING: Ship {s.name} is DERELICT on start! (Bridge? Engines? LifeSupport? Power?)"
                 self.engine.logger.log(warn_msg)
                 print(warn_msg)
             

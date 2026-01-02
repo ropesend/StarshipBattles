@@ -136,18 +136,21 @@ class TestAllShipDesigns(unittest.TestCase):
                 
                 # Check fuel
                 if 'max_fuel' in expected:
-                    if abs(ship.max_fuel - expected['max_fuel']) > 1:
-                        failures.append(f"{ship_name}: max_fuel expected {expected['max_fuel']}, got {ship.max_fuel}")
+                    val = ship.resources.get_max_value("fuel")
+                    if abs(val - expected['max_fuel']) > 1:
+                        failures.append(f"{ship_name}: max_fuel expected {expected['max_fuel']}, got {val}")
                 
                 # Check ammo
                 if 'max_ammo' in expected:
-                    if abs(ship.max_ammo - expected['max_ammo']) > 1:
-                        failures.append(f"{ship_name}: max_ammo expected {expected['max_ammo']}, got {ship.max_ammo}")
+                    val = ship.resources.get_max_value("ammo")
+                    if abs(val - expected['max_ammo']) > 1:
+                        failures.append(f"{ship_name}: max_ammo expected {expected['max_ammo']}, got {val}")
                 
                 # Check energy
                 if 'max_energy' in expected:
-                    if abs(ship.max_energy - expected['max_energy']) > 1:
-                        failures.append(f"{ship_name}: max_energy expected {expected['max_energy']}, got {ship.max_energy}")
+                    val = ship.resources.get_max_value("energy")
+                    if abs(val - expected['max_energy']) > 1:
+                        failures.append(f"{ship_name}: max_energy expected {expected['max_energy']}, got {val}")
                         
             except Exception as e:
                 failures.append(f"{os.path.basename(ship_path)}: Error loading - {e}")

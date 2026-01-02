@@ -43,32 +43,32 @@ class TestShipResources(unittest.TestCase):
         self.ship.recalculate_stats()
         
         self.assertTrue(self.ship._resources_initialized)
-        self.assertEqual(self.ship.current_fuel, self.ship.max_fuel)
-        self.assertEqual(self.ship.current_ammo, self.ship.max_ammo)
-        self.assertEqual(self.ship.current_energy, self.ship.max_energy)
+        self.assertEqual(self.ship.resources.get_value("fuel"), self.ship.resources.get_max_value("fuel"))
+        self.assertEqual(self.ship.resources.get_value("ammo"), self.ship.resources.get_max_value("ammo"))
+        self.assertEqual(self.ship.resources.get_value("energy"), self.ship.resources.get_max_value("energy"))
         
         # Manually reduce resources
-        self.ship.current_fuel = 10
+        self.ship.resources.get_resource("fuel").current_value = 10
         
         # Recalculate should NOT refill unless flag is reset
         self.ship.recalculate_stats()
-        self.assertEqual(self.ship.current_fuel, 10)
+        self.assertEqual(self.ship.resources.get_value("fuel"), 10)
 
     def test_capacity_increase_refill(self):
         """Increasing capacity should only add the difference to current resources."""
         self.ship.add_component(create_component('fuel_tank'), LayerType.INNER)
         self.ship.recalculate_stats()
         
-        max1 = self.ship.max_fuel
-        self.ship.current_fuel = 50
+        max1 = self.ship.resources.get_max_value("fuel")
+        self.ship.resources.get_resource("fuel").current_value = 50
         
         # Add another tank
         self.ship.add_component(create_component('fuel_tank'), LayerType.INNER)
         self.ship.recalculate_stats()
         
-        max2 = self.ship.max_fuel
+        max2 = self.ship.resources.get_max_value("fuel")
         diff = max2 - max1
-        self.assertEqual(self.ship.current_fuel, 50 + diff)
+        self.assertEqual(self.ship.resources.get_value("fuel"), 50 + diff)
 
     def test_crew_requirement_failure(self):
         """Components should deactivate if there is insufficient crew."""

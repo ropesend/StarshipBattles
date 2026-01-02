@@ -101,6 +101,27 @@ class ResourceRegistry:
         for res in self._resources.values():
             res.update()
 
+    def set_value(self, name: str, value: float):
+        """Set current value of a resource."""
+        res = self._resources.get(name)
+        if res:
+            res.current_value = value
+            # Ensure we don't exceed max if strict, but for init sometimes we want to overflow? 
+            # Usually strict.
+            if res.current_value > res.max_value:
+                 res.current_value = res.max_value
+
+    def modify_value(self, name: str, amount: float):
+        """Modify current value of a resource by amount."""
+        res = self._resources.get(name)
+        if res:
+            res.current_value += amount
+            # Clamp
+            if res.current_value > res.max_value:
+                res.current_value = res.max_value
+            elif res.current_value < 0:
+                res.current_value = 0.0
+
 # --- Ability System ---
 
 class Ability:

@@ -363,11 +363,7 @@ class Component:
             self.thrust_force = self.data.get('thrust_force', 0) * stats['thrust_mult']
         if hasattr(self, 'turn_speed'):
             self.turn_speed = self.data.get('turn_speed', 0) * stats['turn_mult']
-        if hasattr(self, 'capacity'):
-            # Capacity might be used by UI or other logic still, so we keep it if it exists in data
-            # But we rely on abilities for actual logic.
-            self.capacity = int(self.data.get('capacity', 0) * stats['capacity_mult'])
-            
+
         if hasattr(self, 'reload_time'):
              self.reload_time = self.data.get('reload', 1.0) * stats.get('reload_mult', 1.0)
 
@@ -556,14 +552,9 @@ class Thruster(Component):
 class Tank(Component):
     def __init__(self, data):
         super().__init__(data)
-        # Legacy attributes 'capacity' and 'resource_type' removed.
-        # Capability is fully handled by 'ResourceStorage' abilities now.
     
     def _apply_custom_stats(self, stats):
         super()._apply_custom_stats(stats)
-        # Note: ResourceStorage capacity scaling is now handled by the generic 
-        # _apply_base_stats -> component.ability_instances loop in Component.recalculate_stats
-        # using 'capacity_mult'.
 
     def clone(self):
         return Tank(self.data)
@@ -579,12 +570,9 @@ class Armor(Component):
 class Generator(Component):
     def __init__(self, data):
         super().__init__(data)
-        # No local attribute needed, strictly ability-based now.
 
     def _apply_custom_stats(self, stats):
         super()._apply_custom_stats(stats)
-        # Note: ResourceGeneration (including energy) is now handled by generic sync in recalculate_stats
-        # which applies 'energy_gen_mult' to any ResourceGeneration ability of type 'energy'.
 
     def clone(self):
         return Generator(self.data)

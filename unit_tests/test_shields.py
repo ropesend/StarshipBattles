@@ -40,8 +40,8 @@ class TestShields(unittest.TestCase):
         
         self.ship.recalculate_stats()
         # Set energy AFTER recalculate_stats since stats calculation resets resources
-        self.ship.max_energy = 1000
-        self.ship.current_energy = 1000 
+        self.ship.resources.get_resource("energy").max_value = 1000
+        self.ship.resources.get_resource("energy").current_value = 1000 
 
     def tearDown(self):
         pygame.quit()
@@ -79,7 +79,7 @@ class TestShields(unittest.TestCase):
 
     def test_regeneration(self):
         self.ship.current_shields = 0
-        self.ship.current_energy = 100
+        self.ship.resources.get_resource("energy").current_value = 100
         
         # Update 1 tick (dt=1.0)
         # Rate 60/s -> 0.6 per tick (60/100)
@@ -88,7 +88,7 @@ class TestShields(unittest.TestCase):
         
         self.assertAlmostEqual(self.ship.current_shields, 0.6)
         # 100 energy - 0.3 cost = 99.7
-        self.assertAlmostEqual(self.ship.current_energy, 99.7)
+        self.assertAlmostEqual(self.ship.resources.get_value("energy"), 99.7)
         
     def test_regen_capped(self):
         self.ship.current_shields = 99
@@ -98,6 +98,6 @@ class TestShields(unittest.TestCase):
 
     def test_energy_starvation(self):
         self.ship.current_shields = 0
-        self.ship.current_energy = 0
+        self.ship.resources.get_resource("energy").current_value = 0
         self.ship.update_combat_cooldowns()
         self.assertEqual(self.ship.current_shields, 0)

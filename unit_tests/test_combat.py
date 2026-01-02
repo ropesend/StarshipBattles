@@ -187,30 +187,33 @@ class TestEnergyRegeneration(unittest.TestCase):
     def test_energy_regenerates_per_tick(self):
         """Energy should regenerate each combat tick."""
         # Drain energy first, then check if it regenerates
-        self.ship.current_energy = self.ship.max_energy / 2
-        initial_energy = self.ship.current_energy
+        self.ship.resources.get_resource("energy").current_value = self.ship.resources.get_max_value("energy") / 2
+        initial_energy = self.ship.resources.get_value("energy")
         
         # Energy regeneration happens in Ship.update() via ResourceRegistry (tick-based)
         self.ship.update()
         
-        self.assertGreater(self.ship.current_energy, initial_energy)
+        self.assertGreater(self.ship.resources.get_value("energy"), initial_energy)
     
     def test_energy_capped_at_max(self):
         """Energy should not exceed max_energy."""
-        self.ship.current_energy = self.ship.max_energy
+        self.ship.resources.get_resource("energy").current_value = self.ship.resources.get_max_value("energy") - 1
         
-        self.ship.update_combat_cooldowns()
+        # Regen creates overflow
+        # Manually boost regen rate to ensure overflow (tick is 0.01s, need >1.0 change)
+        self.ship.resources.get_resource("energy").regen_rate = 200
+        self.ship.update()
         
-        self.assertEqual(self.ship.current_energy, self.ship.max_energy)
+        self.assertEqual(self.ship.resources.get_value("energy"), self.ship.resources.get_max_value("energy"))
     
     def test_dead_ship_no_regen(self):
         """Dead ship should not regenerate energy."""
         self.ship.is_alive = False
-        self.ship.current_energy = 0
+        self.ship.resources.get_resource("energy").current_value = 0
         
-        self.ship.update_combat_cooldowns()
+        self.ship.update()
         
-        self.assertEqual(self.ship.current_energy, 0)
+        self.assertEqual(self.ship.resources.get_value("energy"), 0)
 
 
 class TestWeaponCooldowns(unittest.TestCase):

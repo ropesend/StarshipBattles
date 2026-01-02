@@ -33,8 +33,7 @@ class ShipStatsCalculator:
         # Base Stats Reset
         ship.total_thrust = 0
         ship.turn_speed = 0
-        if hasattr(ship, 'resources'):
-            ship.resources.reset_stats()
+        ship.resources.reset_stats()
             
         ship.max_shields = 0
         ship.shield_regen_rate = 0
@@ -118,9 +117,6 @@ class ShipStatsCalculator:
             if ship.vehicle_type == "Satellite":
                 req_crew = 0
             
-            # Legacy fallback: Check for negative CrewCapacity if CrewRequired missing
-            if req_crew == 0:
-                 req_crew = abs(min(0, comp.abilities.get('CrewCapacity', 0)))
 
             ship.crew_required += req_crew
             
@@ -205,19 +201,11 @@ class ShipStatsCalculator:
                     ship.max_targets = mt 
 
         # Apply Accumulated Totals Atomicially
-        if hasattr(ship, 'resources'):
-            ship.resources.register_storage('fuel', total_max_fuel)
-            ship.resources.register_storage('ammo', total_max_ammo)
-            ship.resources.register_storage('energy', total_max_energy)
-            ship.resources.register_generation('energy', total_energy_gen)
-            ship.resources.register_generation('ammo', total_ammo_gen)
-        else:
-             # Fallback for tests/mocks without resources?
-             ship.max_fuel = total_max_fuel
-             ship.max_ammo = total_max_ammo
-             ship.max_energy = total_max_energy
-             ship.energy_gen_rate = total_energy_gen
-             ship.ammo_gen_rate = total_ammo_gen
+        ship.resources.register_storage('fuel', total_max_fuel)
+        ship.resources.register_storage('ammo', total_max_ammo)
+        ship.resources.register_storage('energy', total_max_energy)
+        ship.resources.register_generation('energy', total_energy_gen)
+        ship.resources.register_generation('ammo', total_ammo_gen)
         ship.total_thrust = total_thrust
         ship.turn_speed = total_turn_speed
         ship.max_shields = total_max_shields
@@ -395,19 +383,27 @@ class ShipStatsCalculator:
         energy_consumption += ship.shield_regen_cost
         
         ship.fuel_consumption = fuel_consumption
-        ship.fuel_endurance = (ship.max_fuel / fuel_consumption) if fuel_consumption > 0 else float('inf')
+        # Use registry directly
+        max_fuel = ship.resources.get_max_value('fuel')
+        ship.fuel_endurance = (max_fuel / fuel_consumption) if fuel_consumption > 0 else float('inf')
 
         ship.ammo_consumption = ammo_consumption
-        ship.ammo_endurance = (ship.max_ammo / ammo_consumption) if ammo_consumption > 0 else float('inf')
+        max_ammo = ship.resources.get_max_value('ammo')
+        ship.ammo_endurance = (max_ammo / ammo_consumption) if ammo_consumption > 0 else float('inf')
         
         ship.energy_consumption = energy_consumption
-        ship.energy_net = ship.energy_gen_rate - energy_consumption
+        # Energy Gen Rate
+        r_energy = ship.resources.get_resource('energy')
+        energy_gen_rate = r_energy.regen_rate if r_energy else 0.0
+        
+        ship.energy_net = energy_gen_rate - energy_consumption
 
+        max_energy = ship.resources.get_max_value('energy')
         
         if ship.energy_net < 0:
             # Draining
             drain_rate = abs(ship.energy_net)
-            ship.energy_endurance = ship.max_energy / drain_rate
+            ship.energy_endurance = max_energy / drain_rate
         else:
             # Sustainable
             ship.energy_endurance = float('inf')
@@ -415,8 +411,8 @@ class ShipStatsCalculator:
         # Recharge Time
         # Assume starting from 0 to Full using only Generation (no consumption)
         # Or should it be Net Recharge? Prompt says "if consumption stops". So purely Generation.
-        if ship.energy_gen_rate > 0:
-            ship.energy_recharge = ship.max_energy / ship.energy_gen_rate
+        if energy_gen_rate > 0:
+            ship.energy_recharge = max_energy / energy_gen_rate
         else:
             ship.energy_recharge = float('inf')
 
@@ -461,31 +457,41 @@ class ShipStatsCalculator:
         prev_max_energy = getattr(ship, '_prev_max_energy', 0)
         prev_max_shields = getattr(ship, '_prev_max_shields', 0)
         
+        # Get current max values directly from registry
+        curr_max_fuel = ship.resources.get_max_value('fuel')
+        curr_max_ammo = ship.resources.get_max_value('ammo')
+        curr_max_energy = ship.resources.get_max_value('energy')
+        
         if not getattr(ship, '_resources_initialized', False):
-            if ship.max_fuel > 0:
-                ship.current_fuel = ship.max_fuel
-            if ship.max_ammo > 0:
-                ship.current_ammo = ship.max_ammo
-            if ship.max_energy > 0:
-                ship.current_energy = ship.max_energy
+            # First init - fill to max
+            if curr_max_fuel > 0:
+                ship.resources.set_value('fuel', curr_max_fuel)
+            if curr_max_ammo > 0:
+                ship.resources.set_value('ammo', curr_max_ammo)
+            if curr_max_energy > 0:
+                ship.resources.set_value('energy', curr_max_energy)
             if ship.max_shields > 0:
                 ship.current_shields = ship.max_shields
             ship._resources_initialized = True
         else:
-            # Handle capacity increases
-            if ship.max_fuel > prev_max_fuel:
-                ship.current_fuel += (ship.max_fuel - prev_max_fuel)
-            if ship.max_ammo > prev_max_ammo:
-                ship.current_ammo += (ship.max_ammo - prev_max_ammo)
-            if ship.max_energy > prev_max_energy:
-                ship.current_energy += (ship.max_energy - prev_max_energy)
+            # Handle capacity increases (preserve current relative usage or just add delta?)
+            # Logic: If max increased, add difference to current.
+            if curr_max_fuel > prev_max_fuel:
+                delta = curr_max_fuel - prev_max_fuel
+                ship.resources.modify_value('fuel', delta)
+            if curr_max_ammo > prev_max_ammo:
+                delta = curr_max_ammo - prev_max_ammo
+                ship.resources.modify_value('ammo', delta)
+            if curr_max_energy > prev_max_energy:
+                delta = curr_max_energy - prev_max_energy
+                ship.resources.modify_value('energy', delta)
             if ship.max_shields > prev_max_shields:
                 ship.current_shields += (ship.max_shields - prev_max_shields)
         
         # Remember current max for next recalculate
-        ship._prev_max_fuel = ship.max_fuel
-        ship._prev_max_ammo = ship.max_ammo
-        ship._prev_max_energy = ship.max_energy
+        ship._prev_max_fuel = curr_max_fuel
+        ship._prev_max_ammo = curr_max_ammo
+        ship._prev_max_energy = curr_max_energy
         ship._prev_max_shields = ship.max_shields
 
     def calculate_ability_totals(self, components):

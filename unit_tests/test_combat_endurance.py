@@ -264,7 +264,9 @@ class TestCombatEndurance(unittest.TestCase):
         
         self.ship.recalculate_stats()
         
-        self.assertEqual(self.ship.energy_gen_rate, 25.0)
+        r = self.ship.resources.get_resource("energy")
+        rate = r.regen_rate if r else 0.0
+        self.assertEqual(rate, 25.0)
         self.assertEqual(self.ship.energy_consumption, 25.0)
         # Net 0
         self.assertEqual(self.ship.energy_net, 0.0)

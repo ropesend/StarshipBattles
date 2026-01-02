@@ -38,14 +38,9 @@ class TestSliderIncrement(unittest.TestCase):
         cls.addClassCleanup(cleanup_modules)
             
         # 3. Import module
-        try:
-            import builder_components
-            cls.module = builder_components
-        except Exception as e:
-            # If import fails (e.g. mock conflict or missing dependencies in this context), 
-            # cleanup will still run (via addClassCleanup), but we should skip the tests.
-            # We can't easily skip from setUpClass in older python, but raising SkipTest works in unitest.
-            raise unittest.SkipTest(f"Failed to import builder_components: {e}")
+        # 3. Import module
+        import builder_components
+        cls.module = builder_components
 
     def test_range_mount_increment(self):
         """Test that the Range Mount slider is initialized with 0.1 increment."""
