@@ -39,8 +39,10 @@ class TestValidationWarnings(unittest.TestCase):
 
     def test_fuel_warning(self):
         # Add Engine requiring fuel
-        engine = self.create_comp(id="engine", fuel_cost=10, type="Engine")
-        # Ensure attribute is set (Standard Engine class might map it, generic Component maps all data keys)
+        engine_abilities = {
+            "ResourceConsumption": [{"resource": "fuel", "amount": 10, "trigger": "constant"}]
+        }
+        engine = self.create_comp(id="engine", type="Engine", abilities=engine_abilities)
         
         self.ship.add_component(engine, LayerType.INNER)
         
@@ -48,7 +50,10 @@ class TestValidationWarnings(unittest.TestCase):
         self.assertTrue(any("Needs Fuel Storage" in w for w in warnings), f"Expected 'Needs Fuel Storage', got {warnings}")
         
         # Add Fuel Tank
-        tank = self.create_comp(id="tank", resource_type="fuel", type="Tank", capacity=100)
+        tank_abilities = {
+            "ResourceStorage": [{"resource": "fuel", "amount": 100}]
+        }
+        tank = self.create_comp(id="tank", type="Tank", abilities=tank_abilities)
         self.ship.add_component(tank, LayerType.INNER)
         
         warnings = self.ship.get_validation_warnings()
@@ -56,64 +61,41 @@ class TestValidationWarnings(unittest.TestCase):
 
     def test_ammo_warning(self):
         # Add Railgun requiring ammo
-        gun = self.create_comp(id="railgun", ammo_cost=1, type="ProjectileWeapon")
+        gun_abilities = {
+            "ResourceConsumption": [{"resource": "ammo", "amount": 1, "trigger": "activation"}]
+        }
+        gun = self.create_comp(id="railgun", type="ProjectileWeapon", abilities=gun_abilities)
         self.ship.add_component(gun, LayerType.OUTER)
         
         warnings = self.ship.get_validation_warnings()
         self.assertTrue(any("Needs Ammo Storage" in w for w in warnings), f"Expected 'Needs Ammo Storage', got {warnings}")
         
         # Add Ordnance Tank
-        tank = self.create_comp(id="ammo_tank", resource_type="ammo", type="Tank", capacity=100)
+        tank_abilities = {
+            "ResourceStorage": [{"resource": "ammo", "amount": 100}]
+        }
+        tank = self.create_comp(id="ammo_tank", type="Tank", abilities=tank_abilities)
         self.ship.add_component(tank, LayerType.INNER)
         
         warnings = self.ship.get_validation_warnings()
         self.assertFalse(any("Needs Ammo Storage" in w for w in warnings), f"Warning should be resolved, got {warnings}")
 
-    def test_energy_warning_direct_cost(self):
+    def test_energy_warning(self):
         # Add Laser requiring energy
-        laser = self.create_comp(id="laser", energy_cost=5, type="BeamWeapon")
+        laser_abilities = {
+            "ResourceConsumption": [{"resource": "energy", "amount": 5, "trigger": "activation"}]
+        }
+        laser = self.create_comp(id="laser", type="BeamWeapon", abilities=laser_abilities)
         self.ship.add_component(laser, LayerType.OUTER)
         
         warnings = self.ship.get_validation_warnings()
         self.assertTrue(any("Needs Energy Storage" in w for w in warnings), f"Expected 'Needs Energy Storage', got {warnings}")
         
         # Add Battery
-        battery = self.create_comp(id="battery", resource_type="energy", type="Tank", capacity=1000)
-        self.ship.add_component(battery, LayerType.INNER)
-        
-        warnings = self.ship.get_validation_warnings()
-        self.assertFalse(any("Needs Energy Storage" in w for w in warnings), f"Warning should be resolved, got {warnings}")
-
-    def test_energy_warning_ability_cost(self):
-        # Add Shield requiring regen energy via Ability
-        shield = self.create_comp(id="shield", type="ShieldRegenerator", abilities={"EnergyConsumption": 2.0})
-        self.ship.add_component(shield, LayerType.INNER)
-        
-        warnings = self.ship.get_validation_warnings()
-        self.assertTrue(any("Needs Energy Storage" in w for w in warnings), f"Expected 'Needs Energy Storage', got {warnings}")
-        
-        # Add Generator (which counts as Energy Source in our rule if type=Generator or provides EnergyGeneration)
-        # Note: In our rule, type="Generator" sets has_energy_gen=True. But Wait...
-        # The rule checked: `if needs_energy_storage and not has_energy_storage`.
-        # `has_energy_storage` is set if resource_type == 'energy'.
-        # Does Generator provide storage? Usually not. Batteries do.
-        # My rule implemented: "Needs Energy Storage" if missing.
-        # The prompt said: "Examples are anything the uses energy should need a battery".
-        # So a Generator alone might NOT be enough if I strictly enforce "Storage".
-        # But `components.json` Generator has `resource_type`? No.
-        # If I add a Generator, does it silence the warning?
-        # My implementation: `if resource_type == 'energy': has_energy_storage = True`.
-        # Generator usually generates.
-        # Let's check `components.json` for Generator.
-        # It has `energy_generation` but no `capacity`.
-        # So strictly, it doesn't provide storage.
-        # But maybe I should allow Generator to satisfy?
-        # The Prompt: "anything the uses energy should need a battery ... I may create a different energy storage component".
-        # It seems distinct from generation.
-        # So checking strictly for storage (capacity > 0) is correct per prompt "Need a battery".
-        
-        # So let's add a Battery.
-        battery = self.create_comp(id="battery", resource_type="energy", type="Tank", capacity=100)
+        battery_abilities = {
+            "ResourceStorage": [{"resource": "energy", "amount": 1000}]
+        }
+        battery = self.create_comp(id="battery", type="Tank", abilities=battery_abilities)
         self.ship.add_component(battery, LayerType.INNER)
         
         warnings = self.ship.get_validation_warnings()

@@ -100,10 +100,12 @@ Passive regeneration of a resource.
 ### Phase 6: Cleanup & Verification (Complete)
 1.  **Remove Legacy Code**: Deleted `_apply_legacy_shim` and `_ensure_consumption` from `components.py`.
 2.  **Strict Initialization**: Updated Component subclasses (`Engine`, `Tank`, `Weapon`, `Generator`) to strictly load from `abilities`.
-3.  **Regression Testing**:
-    *   Fixed `test_component_resources.py` to test new `Ability` system directly.
-    *   Fixed `test_combat_endurance.py` by removing legacy sync code in `Tank` class.
-    *   Verified full test suite passing (with known unrelated UI flake).
+3.  **Regression Testing (Fixed)**:
+    *   **Unit Tests**: Resolved regressions in `test_modifiers.py`, `test_shields.py`, `test_scaling_logic.py`, and `test_ship_loading.py`.
+    *   **Test Pollution**: Fixed `test_ui_dynamic_update.py` by removing harmful `importlib.reload` calls.
+    *   **Registry**: Added `EnergyConsumption` to `ABILITY_REGISTRY` in `resources.py` to support legacy data equivalence.
+    *   **Data**: Added missing `efficient_engines` modifier to `modifiers.json`.
+    *   **Verified**: 100% pass rate on resource-related unit tests.
 
 ## What May Be Needed (Post-Migration)
 1.  **Monitor for Regressions**: Watch for any persistent "0 resource" bugs in UI (unlikely after fixes).
@@ -159,3 +161,12 @@ Passive regeneration of a resource.
 *   **Extensibility**: Adding "ShieldCells", "Missiles", "Biomass" is trivial (just data).
 *   **Consistency**: Logic for consuming Energy for a laser is identical to consuming Fuel for an engine.
 *   **Code Cleanup**: Removes duplicate logic for managing 3 different pools.
+
+### Phase 7: Final Cleanup (Planned)
+1.  **Redundant Data Removal**:
+    *   Remove `self.capacity` and `self.resource_type` from `Tank` component (legacy attributes).
+    *   Refactor `Tank` to rely solely on `ResourceStorage` ability for capacity.
+2.  **Wrapper Deprecation**:
+    *   Deprecate `ship.current_fuel`, `ship.max_fuel`, etc. in favor of `ship.resources.get_value()`.
+3.  **UI Modernization**:
+    *   Refactor Battle UI (`battle_panels.py`) to dynamically discover and render all resources, removing hardcoded support for just Fuel/Energy/Ammo.

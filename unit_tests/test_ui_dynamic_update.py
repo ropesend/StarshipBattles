@@ -12,31 +12,14 @@ from ui.builder.right_panel import BuilderRightPanel
 
 class TestUIDynamicUpdate(unittest.TestCase):
     def setUp(self):
-        import importlib
-        import ship
-        import ui.builder.stats_config
-        import ui.builder.right_panel
-        
-        # Force reload to clear any polluted module state
-        importlib.reload(ship) # Resets VEHICLE_CLASSES
-        importlib.reload(ui.builder.stats_config) # Resets STATS_CONFIG
-        importlib.reload(ui.builder.right_panel) # Re-imports fresh classes
-        
-        # Also reload resources to reset ResourceRegistry if needed
-        import resources
-        importlib.reload(resources)
-        
-        # Capture fresh class references
-        self.ShipClass = ship.Ship
-        self.BuilderRightPanelClass = ui.builder.right_panel.BuilderRightPanel
-        
         pygame.init()
         pygame.display.set_mode((800, 600), flags=pygame.HIDDEN)
         
         self.builder = MagicMock()
         self.builder.theme_manager.get_available_themes.return_value = ["Federation"]
-        # Use fresh Ship class
-        self.builder.ship = self.ShipClass("Test Ship", 0, 0, (255,255,255))
+        
+        # Use real Ship (no reload)
+        self.builder.ship = Ship("Test Ship", 0, 0, (255,255,255))
         
         self.manager = MagicMock()
         
@@ -52,14 +35,18 @@ class TestUIDynamicUpdate(unittest.TestCase):
     def test_dynamic_row_addition(self, mock_label, mock_entry, mock_drop, mock_box, mock_img, mock_scroll_container):
         """Test that adding a resource triggers a UI rebuild to show the new row."""
         
-        # 1. Create Panel with NO resources
-        # Use fresh Panel class
-        panel = self.BuilderRightPanelClass(self.builder, self.manager, pygame.Rect(0,0,400,600))
+        # 1. Create Panel with NO resources (ensure ship is empty initially)
+        self.builder.ship.resources.reset_stats() 
+        
+        panel = BuilderRightPanel(self.builder, self.manager, pygame.Rect(0,0,400,600))
         
         # Confirm no fuel rows
         self.assertNotIn('max_fuel', panel.rows_map)
         
         # 2. Add Resource (Simulate adding a component)
+        # We need to simulate the ship logic that adds capacity.
+        # Since we use real Ship logic, we can just register storage directly on the registry,
+        # mimicking what ShipStatsCalculator would do.
         self.builder.ship.resources.register_storage('fuel', 100)
         
         # 3. Trigger Update

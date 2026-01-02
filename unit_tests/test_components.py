@@ -34,7 +34,15 @@ class TestComponents(unittest.TestCase):
         
         tank = create_component('fuel_tank')
         self.assertIsInstance(tank, Tank)
-        self.assertEqual(tank.resource_type, 'fuel')
+        
+        # Verify ResourceStorage ability exists
+        from resources import ResourceStorage
+        found_storage = False
+        for ab in tank.ability_instances:
+            if isinstance(ab, ResourceStorage) and ab.resource_type == 'fuel':
+                found_storage = True
+                break
+        self.assertTrue(found_storage, "Fuel tank should have Fuel Storage ability")
 
 
 class TestModifierStacking(unittest.TestCase):

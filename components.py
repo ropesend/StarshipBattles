@@ -62,6 +62,7 @@ class Component:
         # allowed_layers removed in refactor
         # self.allowed_layers = [LayerType.from_string(l) for l in data['allowed_layers']]
         self.allowed_vehicle_types = data.get('allowed_vehicle_types', ["Ship"])
+        self.major_classification = data.get('major_classification', "Unknown")
         self.is_active = True
         self.status = ComponentStatus.ACTIVE
         self.layer_assigned = None
@@ -555,45 +556,14 @@ class Thruster(Component):
 class Tank(Component):
     def __init__(self, data):
         super().__init__(data)
-        self.capacity = 0
-        # self.resource_type? Tank needs to know what it is?
-        # Usually inferred from abilities now. But Tank class might still store it for UI?
-        # Let's inspect abilities to find what we store.
-        self.resource_type = 'unknown' # Default
-        
-        if 'ResourceStorage' in self.abilities:
-            val = self.abilities['ResourceStorage']
-            if isinstance(val, list):
-                # Use first one?
-                if len(val) > 0:
-                    v = val[0]
-                    self.resource_type = v.get('resource', 'fuel')
-                    self.capacity = v.get('amount', 0)
-            elif isinstance(val, dict):
-                 self.resource_type = val.get('resource', 'fuel')
-                 self.capacity = val.get('amount', 0)
+        # Legacy attributes 'capacity' and 'resource_type' removed.
+        # Capability is fully handled by 'ResourceStorage' abilities now.
     
     def _apply_custom_stats(self, stats):
         super()._apply_custom_stats(stats)
-        # Fallback
-        base_cap = self.data.get('capacity', 0)
-        if base_cap == 0 and 'ResourceStorage' in self.abilities:
-             val = self.abilities['ResourceStorage']
-             if isinstance(val, list):
-                 for v in val:
-                     if v.get('resource') == self.resource_type:
-                         base_cap = v.get('amount', 0)
-                         break
-             elif isinstance(val, dict):
-                  if val.get('resource') == self.resource_type:
-                       base_cap = val.get('amount', 0)
-        self.capacity = int(base_cap * stats.get('capacity_mult', 1.0))
-        
-        # Sync to Ability (Shim) - REMOVED: Ability is now Source of Truth
-        # from resources import ResourceStorage
-        # for ab in self.ability_instances:
-        #     if isinstance(ab, ResourceStorage) and ab.resource_type == self.resource_type:
-        #         ab.max_amount = self.capacity
+        # Note: ResourceStorage capacity scaling is now handled by the generic 
+        # _apply_base_stats -> component.ability_instances loop in Component.recalculate_stats
+        # using 'capacity_mult'.
 
     def clone(self):
         return Tank(self.data)

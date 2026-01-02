@@ -33,6 +33,50 @@ class TestComponentCapabilities(unittest.TestCase):
                     found = True
         self.assertTrue(found, "Fuel Ability failed to instantiate")
 
+    def test_storage_capacity_modifier(self):
+        # TEST COMPONENT MODIFIER SCALING for ResourceStorage
+        data = {
+            "id": "test_tank",
+            "name": "Test Tank",
+            "type": "Tank",
+            "mass": 10,
+            "hp": 100,
+            "abilities": {
+                "ResourceStorage": [
+                    {"resource": "fuel", "amount": 100.0}
+                ]
+            }
+        }
+        c = Component(data)
+        
+        # Initial Check
+        from resources import ResourceStorage
+        storage = next((ab for ab in c.ability_instances if isinstance(ab, ResourceStorage)), None)
+        self.assertIsNotNone(storage)
+        self.assertEqual(storage.max_amount, 100.0)
+        
+        # Apply Modifier (Simulate 'capacity_mult')
+        # We need a defined modifier. Let's manually inject one or rely on mocking if needed.
+        # But for unit test helper 'add_modifier' needs registry. 
+        # Alternatively, we can mock the modifier logic or register a temp one.
+        # Easiest: Manually trigger _apply_base_stats with a crafted stats dict for unit testing internal logic.
+        
+        stats = {
+            'mass_mult': 1.0, 'hp_mult': 1.0, 'damage_mult': 1.0, 'range_mult': 1.0,
+            'cost_mult': 1.0, 'thrust_mult': 1.0, 'turn_mult': 1.0, 'energy_gen_mult': 1.0,
+            'capacity_mult': 2.0, # The key modifier
+            'crew_capacity_mult': 1.0, 'life_support_capacity_mult': 1.0,
+            'consumption_mult': 1.0, 'mass_add': 0.0, 'arc_add': 0.0, 'accuracy_add': 0.0,
+            'arc_set': None, 'properties': {}, 'reload_mult': 1.0, 'endurance_mult': 1.0,
+            'projectile_hp_mult': 1.0, 'projectile_damage_mult': 1.0, 'projectile_stealth_level': 0.0,
+            'crew_req_mult': 1.0
+        }
+        
+        # We can call _apply_base_stats directly to verifying the logic handles mapping stats -> ability
+        c._apply_base_stats(stats, old_max_hp=100)
+        
+        self.assertEqual(storage.max_amount, 200.0, "Capacity modifier failed to scale ResourceStorage ability")
+
     def test_energy_activation_ability(self):
         # TEST REFACTOR: Using strict ability definition
         data = {

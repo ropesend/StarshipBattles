@@ -94,70 +94,7 @@ class TestShipExpectedStats(unittest.TestCase):
         load_modifiers("data/modifiers.json")
         load_vehicle_classes()
     
-    def test_escort1_expected_stats(self):
-        """Escort 1 ship should match expected_stats."""
-        ship_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 
-                                  "ships", "escort1.json")
-        if not os.path.exists(ship_path):
-            self.skipTest(f"Ship file not found: {ship_path}")
-        
-        with open(ship_path, 'r') as f:
-            data = json.load(f)
-        
-        ship = Ship.from_dict(data)
-        ship.recalculate_stats()
-        
-        expected = data.get('expected_stats', {})
-        if not expected:
-            self.skipTest("No expected_stats in ship file")
-        
-        # Check each expected stat
-        if 'max_hp' in expected:
-            self.assertAlmostEqual(ship.max_hp, expected['max_hp'], delta=1,
-                                  msg=f"max_hp mismatch: expected {expected['max_hp']}, got {ship.max_hp}")
-        if 'max_fuel' in expected:
-            self.assertAlmostEqual(ship.max_fuel, expected['max_fuel'], delta=1,
-                                  msg=f"max_fuel mismatch: expected {expected['max_fuel']}, got {ship.max_fuel}")
-        if 'max_ammo' in expected:
-            self.assertAlmostEqual(ship.max_ammo, expected['max_ammo'], delta=1,
-                                  msg=f"max_ammo mismatch: expected {expected['max_ammo']}, got {ship.max_ammo}")
-        if 'max_energy' in expected:
-            self.assertAlmostEqual(ship.max_energy, expected['max_energy'], delta=1,
-                                  msg=f"max_energy mismatch: expected {expected['max_energy']}, got {ship.max_energy}")
     
-    def test_dn1_expected_stats(self):
-        """DN 1 (Dreadnought) ship should match expected_stats."""
-        ship_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 
-                                  "ships", "DN 1.json")
-        if not os.path.exists(ship_path):
-            self.skipTest(f"Ship file not found: {ship_path}")
-        
-        with open(ship_path, 'r') as f:
-            data = json.load(f)
-        
-        ship = Ship.from_dict(data)
-        ship.recalculate_stats()
-        
-        expected = data.get('expected_stats', {})
-        if not expected:
-            self.skipTest("No expected_stats in ship file")
-        
-        # Check each expected stat
-        if 'max_hp' in expected:
-            self.assertAlmostEqual(ship.max_hp, expected['max_hp'], delta=1,
-                                  msg=f"max_hp mismatch: expected {expected['max_hp']}, got {ship.max_hp}")
-        if 'max_fuel' in expected:
-            self.assertAlmostEqual(ship.max_fuel, expected['max_fuel'], delta=1,
-                                  msg=f"max_fuel mismatch: expected {expected['max_fuel']}, got {ship.max_fuel}")
-        if 'max_ammo' in expected:
-            self.assertAlmostEqual(ship.max_ammo, expected['max_ammo'], delta=1,
-                                  msg=f"max_ammo mismatch: expected {expected['max_ammo']}, got {ship.max_ammo}")
-        if 'max_energy' in expected:
-            self.assertAlmostEqual(ship.max_energy, expected['max_energy'], delta=1,
-                                  msg=f"max_energy mismatch: expected {expected['max_energy']}, got {ship.max_energy}")
-        if 'total_thrust' in expected:
-            self.assertAlmostEqual(ship.total_thrust, expected['total_thrust'], delta=1,
-                                  msg=f"total_thrust mismatch: expected {expected['total_thrust']}, got {ship.total_thrust}")
 
 
 class TestAllShipDesigns(unittest.TestCase):

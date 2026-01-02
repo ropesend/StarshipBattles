@@ -113,29 +113,29 @@ class TestBuilderDropValidation(unittest.TestCase):
         self.assertTrue(hasattr(result, 'is_valid'))
         self.assertTrue(hasattr(result, 'errors'))
     
-    def test_armor_blocked_in_non_armor_layer(self):
-        """Armor should be blocked in non-ARMOR layers via vehiclelayers.json rules."""
+    def test_weapon_blocked_in_core_layer(self):
+        """Weapon should be blocked in CORE layer via vehiclelayers.json rules."""
         from ship import VALIDATOR
         
-        # Find any armor component in registry
-        armor_id = None
+        # Find any weapon component in registry
+        weapon_id = None
         for comp_id, comp in COMPONENT_REGISTRY.items():
-            if getattr(comp, 'major_classification', None) == 'Armor':
-                armor_id = comp_id
+            if getattr(comp, 'major_classification', None) == 'Weapons':
+                weapon_id = comp_id
                 break
         
-        if not armor_id:
-            self.skipTest("No armor component in registry")
+        if not weapon_id:
+            self.skipTest("No weapon component in registry")
         
-        armor = COMPONENT_REGISTRY[armor_id].clone()
+        weapon = COMPONENT_REGISTRY[weapon_id].clone()
         
-        # Try to place armor in CORE (should be blocked by allow_classification:Armor rule)
-        result = VALIDATOR.validate_addition(self.ship, armor, LayerType.CORE)
+        # Try to place weapon in CORE (should be blocked by block_classification:Weapons rule)
+        result = VALIDATOR.validate_addition(self.ship, weapon, LayerType.CORE)
         
-        # Armor should fail validation in CORE
+        # Weapon should fail validation in CORE
         self.assertFalse(
             result.is_valid,
-            "Armor should not be allowed in CORE layer"
+            "Weapon should not be allowed in CORE layer"
         )
     
     def test_armor_allowed_in_armor_layer(self):

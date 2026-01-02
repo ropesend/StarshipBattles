@@ -245,39 +245,36 @@ class ResourceDependencyRule(ValidationRule):
             all_components.extend(l['components'])
             
         for c in all_components:
-            # Check Needs
-            # Check attributes first (runtime values), then data (definition values)
-            # Fuel
-            if getattr(c, 'fuel_cost', 0) > 0 or getattr(c, 'fuel_cost_per_sec', 0) > 0 or c.data.get('fuel_cost', 0) > 0:
-                needs_fuel = True
-                
-            # Ammo
-            if getattr(c, 'ammo_cost', 0) > 0 or c.data.get('ammo_cost', 0) > 0:
-                needs_ammo = True
-                
-            # Energy
-            if getattr(c, 'energy_cost', 0) > 0 or c.data.get('energy_cost', 0) > 0:
-                needs_energy_storage = True
-            
-            # Check Abilities for invisible costs
             abilities = getattr(c, 'abilities', {})
-            if 'EnergyConsumption' in abilities:
-                 val = abilities['EnergyConsumption']
-                 if isinstance(val, (int, float)) and val > 0:
-                     needs_energy_storage = True
             
-            # Check Sources (by type or capability)
-            # resource_type might be an attribute on Tank, or just in data for others
-            resource_type = getattr(c, 'resource_type', None)
-            if not resource_type:
-                resource_type = c.data.get('resource_type')
-            
-            # Fuel
-            if resource_type == 'fuel': has_fuel_storage = True
-            # Ammo
-            if resource_type == 'ammo': has_ammo_storage = True
-            # Energy
-            if resource_type == 'energy': has_energy_storage = True
+            # Check Consumption
+            if 'ResourceConsumption' in abilities:
+                for cons in abilities['ResourceConsumption']:
+                    if not isinstance(cons, dict): continue
+                    res_name = cons.get('resource')
+                    if not res_name: continue
+                    
+                    if res_name == 'fuel':
+                        needs_fuel = True
+                    elif res_name == 'ammo':
+                        needs_ammo = True
+                    elif res_name == 'energy':
+                        needs_energy_storage = True
+
+            # Check Sources (Storage)
+            if 'ResourceStorage' in abilities:
+                 for store in abilities['ResourceStorage']:
+                    if not isinstance(store, dict): continue
+                    res_name = store.get('resource')
+                    capacity = store.get('amount', 0)
+                    
+                    if capacity > 0:
+                        if res_name == 'fuel':
+                            has_fuel_storage = True
+                        elif res_name == 'ammo':
+                            has_ammo_storage = True
+                        elif res_name == 'energy':
+                            has_energy_storage = True
             
         # Warnings
         if needs_fuel and not has_fuel_storage:
