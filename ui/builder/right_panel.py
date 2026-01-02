@@ -68,6 +68,38 @@ class BuilderRightPanel:
         self.setup_stats()
         
     def on_ship_updated(self, ship):
+        # Check if resource keys match our current rows
+        # If mismatch, we must rebuild the layout to add/remove rows
+        from ui.builder.stats_config import get_logistics_rows
+        
+        current_keys = set(self.rows_map.keys())
+        
+        # Calculate expected keys for dynamic section
+        new_log_rows = get_logistics_rows(ship)
+        new_log_keys = set(r.key for r in new_log_rows)
+        
+        # We need to know if the SET of keys in new_log_rows differs from what we HAVE for logistics.
+        # But self.rows_map contains ALL rows (Main, Shield, etc).
+        # We can check if all new_log_keys are present in current_keys.
+        # AND if we have any "stale" keys that are arguably logistics keys?
+        # Simpler: If any new key is missing -> REBUILD
+        
+        missing_keys = new_log_keys - current_keys
+        if missing_keys:
+             self.rebuild_stats()
+             return
+
+        # Also check if any EXISTING key that looks like a resource key is NO LONGER valid?
+        # E.g. removed 'Biomass'.
+        # This is harder without knowing which keys are logistics.
+        # But generally, adding components is the main builder action. Removing implies set subtraction.
+        # Using self.logistics_keys stored in setup_stats would be better.
+        
+        if hasattr(self, 'current_logistics_keys'):
+            if new_log_keys != self.current_logistics_keys:
+                 self.rebuild_stats()
+                 return
+                 
         self.update_stats_display(ship)
 
     def setup_controls(self):
@@ -406,6 +438,10 @@ class BuilderRightPanel:
         
         # Helper for Dynamic Logistics
         log_rows = get_logistics_rows(self.builder.ship)
+        
+        # Store keys for dirty checking later
+        self.current_logistics_keys = set(r.key for r in log_rows)
+        
         y = build_section("Logistics", log_rows, col2_x, y)
 
         y = build_section("Crew Logistics", self.stats_config.get('crewlogistics', []), col2_x, y)

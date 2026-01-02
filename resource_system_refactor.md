@@ -1,4 +1,10 @@
-# Resource System Refactoring Plan
+
+## Status
+*   **Phase 1**: Data Schema & Utilities (Complete)
+*   **Phase 2**: Ship Logic Refactor (Complete)
+*   **Phase 3**: Physics & Combat Integration (Complete)
+*   **Phase 4**: UI & Builder Updates (Complete)
+*   **Phase 5**: Data Migration (Pending)
 
 ## Goal
 Unify the handling of Fuel, Energy, and Ammunition (and potential future resources) into a single, generic **Resource System**. This removes hardcoded fields like `fuel_cost` or `max_energy` and replaces them with data-driven "Abilities" attached to components.
@@ -54,13 +60,13 @@ Passive regeneration of a resource.
 
 ## Implementation Steps
 
-### Phase 1: Data Schema & Utilities
+### Phase 1: Data Schema & Utilities (Complete)
 1.  **Define `ResourceState` class**: Handling clamping, regeneration, and consumption checks.
 2.  **Update `Component` class**: Add helper methods to parse `ResourceConsumption`, `ResourceStorage`, and `ResourceGeneration` abilities from the `data` dictionary.
     *   `get_consumption(trigger_type)`: Returns list of required resources for that trigger.
     *   `get_storage_capacity()`: Returns dict of capacities provided.
 
-### Phase 2: Ship Logic Refactor
+### Phase 2: Ship Logic Refactor (Complete)
 1.  **Refactor `Ship.__init__`**: Initialize `self.resources` dictionary.
 2.  **Refactor `Ship.recalculate_stats()`**: 
     *   Iterate all components.
@@ -70,7 +76,7 @@ Passive regeneration of a resource.
     *   Apply regeneration for all resources in `self.resources`.
     *   Handle "constant" consumption (e.g., Life Support, Inertial Dampeners if added).
 
-### Phase 3: Physics & Combat Integration
+### Phase 3: Physics & Combat Integration (Complete)
 1.  **Physics (`ShipPhysicsMixin`)**:
     *   Modify `thrust_forward`: Get `constant` consumption from Active Engines.
     *   Call `ship.consume_resources(requirements)`. If false, deny thrust.
@@ -78,7 +84,7 @@ Passive regeneration of a resource.
     *   Modify `fire_weapons`: Get `activation` consumption from Weapon.
     *   Call `ship.consume_resources(requirements)`. If false, deny fire / set on cooldown.
 
-### Phase 4: UI & Builder Updates
+### Phase 4: UI & Builder Updates (Complete)
 1.  **Ship Builder Stats**:
     *   Remove hardcoded "Fuel", "Energy", "Ammo" rows.
     *   Dynamically generate stat rows based on `ship.resources.keys()`.
