@@ -73,21 +73,22 @@
     - [/] **Verification** <!-- id: 49 -->
         - [x] Run `unit_tests/test_weapons.py` to verify firing mechanics <!-- id: 50 -->
 
-- [ ] **Phase 5: UI & Capabilities** <!-- id: 51 -->
-    - [ ] **Renderer** <!-- id: 52 -->
-        - [ ] Implement `get_ui_rows()` for `CombatPropulsion` (Returns 'Thrust') <!-- id: 53 -->
-        - [ ] Implement `get_ui_rows()` for `WeaponAbility` (Returns 'Damage', 'Range') <!-- id: 54 -->
+- [/] **Phase 5: UI & Capabilities** <!-- id: 51 -->
+    - [x] **Renderer** <!-- id: 52 -->
+        - [x] Implement `get_ui_rows()` for `CombatPropulsion` (Returns 'Thrust') <!-- id: 53 -->
+        - [x] Implement `get_ui_rows()` for `WeaponAbility` (Returns 'Damage', 'Range') <!-- id: 54 -->
         - [ ] Update `Component.get_ui_rows()` to aggregate from abilities <!-- id: 55 -->
-        - [ ] Replace `isinstance(Engine/Weapon/Armor)` in `rendering.py:122-124` with ability checks <!-- id: 91 -->
-    - [ ] **Builder UI** (25 isinstance checks per review_ui_builder.md) <!-- id: 56 -->
+        - [x] Replace `isinstance(Engine/Weapon/Armor)` in `rendering.py:122-124` with ability checks <!-- id: 91 -->
+    - [/] **Builder UI** (25 isinstance checks per review_ui_builder.md) <!-- id: 56 -->
         - [ ] Refactor `ui/builder/detail_panel.py` `show_component` to use `get_ui_rows()` <!-- id: 57 -->
-        - [ ] Refactor `ui/builder/weapons_panel.py`: Remove 8 `isinstance` checks, use `has_ability()` <!-- id: 76 -->
-        - [ ] Refactor `ui/builder/schematic_view.py`: Remove 4 weapon `isinstance` checks <!-- id: 92 -->
-        - [ ] Update `ui/builder/modifier_logic.py`: Replace `type_str` checks with ability checks <!-- id: 93 -->
+        - [x] Refactor `ui/builder/weapons_panel.py`: Remove 8 `isinstance` checks, use `has_ability()` <!-- id: 76 -->
+        - [x] Refactor `ui/builder/schematic_view.py`: Remove 4 weapon `isinstance` checks <!-- id: 92 -->
+        - [x] Refactor `ui/builder/detail_panel.py`: Remove `isinstance(SeekerWeapon)` check <!-- id: 99 -->
+        - [x] Update `ui/builder/modifier_logic.py`: Replace `type_str` checks with ability checks <!-- id: 93 -->
         - [ ] Migrate legacy attribute access: `damage`, `range`, `firing_arc` → ability getters <!-- id: 94 -->
-    - [ ] **Battle UI** (7 isinstance checks per review_battle_ui.md) <!-- id: 77 -->
-        - [ ] Refactor `battle_ui.py`: `draw_debug_overlay` uses `WeaponAbility` (2 checks) <!-- id: 78 -->
-        - [ ] Refactor `battle_panels.py`: Remove `isinstance` checks in `ShipStatsPanel` (2 checks) <!-- id: 79 -->
+    - [x] **Battle UI** (7 isinstance checks per review_battle_ui.md) <!-- id: 77 -->
+        - [x] Refactor `battle_ui.py`: `draw_debug_overlay` uses `WeaponAbility` (2 checks) <!-- id: 78 -->
+        - [x] Refactor `battle_panels.py`: Remove `isinstance` checks in `ShipStatsPanel` (2 checks) <!-- id: 79 -->
     - [ ] **Test Coverage** (from review_test_coverage.md) <!-- id: 95 -->
         - [ ] Add tests for `BeamWeaponAbility`, `SeekerWeaponAbility`, `ResourceGeneration` <!-- id: 96 -->
         - [ ] Add tests for `get_abilities()`, `has_pdc_ability()` helper methods <!-- id: 97 -->

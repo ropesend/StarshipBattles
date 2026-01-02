@@ -3,15 +3,15 @@
 ## 1. High-Level Context
 **Refactor Goal**: Transition from Inheritance-based Components (`Engine`, `Weapon`) to Composition-based Components (`Component` + `Abilities`).
 
-**Current Phase**: Phase 4 In Progress  
+**Current Phase**: Phase 5 In Progress  
 **Tests**: 462/462 PASSED (baseline as of 2026-01-02)
 
 **Status Summary**:
 - Phase 1 ✅ Foundation (abilities.py created)
 - Phase 2 ✅ Core Refactor (Component class, Legacy Shim)
 - Phase 3 ✅ Stats & Physics Integration
-- Phase 4 🔄 Combat System Migration (PARTIAL - see remaining tasks below)
-- Phase 5 ⬜ UI & Capabilities
+- Phase 4 ✅ Combat System Migration (Completed)
+- Phase 5 🔄 UI & Capabilities (IN PROGRESS - isinstance migration done)
 - Phase 6 ⬜ Data Migration
 
 ---
@@ -72,24 +72,35 @@ energy_res.consume(cost_amount)  # Direct call at line 34
 
 ## 4. Phase 5 Scope (UI Migration)
 
-Identified by code reviews. **32 total isinstance checks** to replace:
+### COMPLETED - isinstance/type_str Migration (23 checks replaced)
 
-| File | Checks | Priority |
-|------|--------|----------|
-| weapons_panel.py | 8 | High |
-| schematic_view.py | 4 | High |
-| detail_panel.py | 1 | High |
-| battle_ui.py | 2 | Medium |
-| battle_panels.py | 2 | Medium |
-| rendering.py | 3 | Low |
-| modifier_logic.py | type_str checks | Medium |
+| File | Checks | Status |
+|------|--------|--------|
+| weapons_panel.py | 8 | ✅ Done |
+| schematic_view.py | 4 | ✅ Done |
+| detail_panel.py | 1 | ✅ Done |
+| battle_ui.py | 2 | ✅ Done |
+| battle_panels.py | 2 | ✅ Done |
+| rendering.py | 3 | ✅ Done |
+| modifier_logic.py | 3 type_str | ✅ Done |
+| **TOTAL** | **23** | ✅ |
 
-### Test Coverage Gaps
+### COMPLETED - get_ui_rows() Implementation
 
-Add tests for:
-- `BeamWeaponAbility`, `SeekerWeaponAbility`, `ResourceGeneration`
-- `get_abilities()`, `has_pdc_ability()` helper methods
-- Update `MockPDC` in test_pdc.py to use tag-based detection
+All ability classes in `abilities.py` already have `get_ui_rows()` implemented:
+- `ResourceConsumption`, `ResourceStorage`, `ResourceGeneration`
+- `CombatPropulsion`, `ManeuveringThruster`
+- `ShieldProjection`, `ShieldRegeneration`, `VehicleLaunchAbility`
+- `WeaponAbility`, `ProjectileWeaponAbility`
+
+### REMAINING Phase 5 Work
+
+| Task | Priority |
+|------|----------|
+| `Component.get_ui_rows()` aggregation | Medium |
+| detail_panel.py use `get_ui_rows()` | Medium |
+| Legacy attribute migration to ability getters | Low |
+| Add missing ability tests | Low |
 
 ---
 

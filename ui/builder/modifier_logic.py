@@ -49,8 +49,9 @@ class ModifierLogic:
         """Returns a list of modifier IDs that are mandatory for this component."""
         mandatory = ['simple_size_mount'] # Everyone gets size
         
-        is_weapon = component.type_str in ['Weapon', 'ProjectileWeapon', 'BeamWeapon', 'SeekerWeapon']
-        is_seeker = component.type_str == 'SeekerWeapon'
+        # Use ability-based weapon detection instead of type_str
+        is_weapon = component.has_ability('WeaponAbility')
+        is_seeker = component.has_ability('SeekerWeaponAbility')
         
         if is_weapon:
             # Check allowed types for specific mods before enforcing them
@@ -62,7 +63,7 @@ class ModifierLogic:
                 mandatory.append('range_mount')
                 
             # Precision Targeting: For BeamWeapon
-            if component.type_str == 'BeamWeapon' and ModifierLogic.is_modifier_allowed('precision_mount', component):
+            if component.has_ability('BeamWeaponAbility') and ModifierLogic.is_modifier_allowed('precision_mount', component):
                 mandatory.append('precision_mount')
                 
             # Facing: For all weapons

@@ -1,7 +1,6 @@
 import pygame
 import math
 from ship import VEHICLE_CLASSES, LayerType
-from components import Weapon, BeamWeapon
 
 from ui.colors import COLORS
 SHIP_VIEW_BG = COLORS['bg_deep']
@@ -108,17 +107,17 @@ class SchematicView:
         # Draw Arcs
         if show_firing_arcs:
             self.draw_all_firing_arcs(screen, ship)
-        elif hovered_component and isinstance(hovered_component, Weapon):
+        elif hovered_component and hovered_component.has_ability('WeaponAbility'):
             self.draw_component_firing_arc(screen, hovered_component)
 
     def draw_all_firing_arcs(self, screen, ship):
         for ltype, data in ship.layers.items():
             for comp in data['components']:
-                if isinstance(comp, Weapon):
+                if comp.has_ability('WeaponAbility'):
                     self.draw_weapon_arc(screen, comp)
 
     def draw_component_firing_arc(self, screen, comp):
-        if isinstance(comp, Weapon):
+        if comp.has_ability('WeaponAbility'):
             self.draw_weapon_arc(screen, comp)
 
     def _get_cached_arc(self, screen_size, weapon):
@@ -142,7 +141,7 @@ class SchematicView:
         start_angle = math.radians(90 - facing - (arc_degrees / 2))
         end_angle = math.radians(90 - facing + (arc_degrees / 2))
         
-        if isinstance(weapon, BeamWeapon):
+        if weapon.has_ability('BeamWeaponAbility'):
             color = (100, 255, 255, 100)
         else:
             color = (255, 200, 100, 100)

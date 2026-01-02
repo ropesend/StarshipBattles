@@ -1,6 +1,6 @@
 import pygame
 import math
-from components import Weapon, ComponentStatus
+from components import ComponentStatus
 from ship import LayerType
 from ai import COMBAT_STRATEGIES
 from profiling import profile_action, profile_block
@@ -237,7 +237,7 @@ class ShipStatsPanel(BattlePanel):
             if not layer: continue
             
             for comp in layer['components']:
-                if isinstance(comp, Weapon):
+                if comp.has_ability('WeaponAbility'):
                     c_color = (200, 200, 200) if comp.is_active else (150, 50, 50)
                     if not comp.is_active and getattr(comp, 'status', ComponentStatus.ACTIVE) != ComponentStatus.ACTIVE:
                          c_color = (255, 100, 100)
@@ -300,7 +300,7 @@ class ShipStatsPanel(BattlePanel):
             if not layer: continue
 
             for comp in layer['components']:
-                if isinstance(comp, Weapon): continue
+                if comp.has_ability('WeaponAbility'): continue
                 
                 hp_pct = comp.current_hp / comp.max_hp if comp.max_hp > 0 else 1.0
                 color = (150, 150, 150)

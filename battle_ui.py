@@ -1,6 +1,5 @@
 import pygame
 import math
-from components import Weapon
 from battle_panels import ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel
 
 class BattleInterface:
@@ -132,7 +131,7 @@ class BattleInterface:
             max_range = 0
             for layer in s.layers.values():
                 for comp in layer['components']:
-                    if isinstance(comp, Weapon) and comp.is_active:
+                    if comp.has_ability('WeaponAbility') and comp.is_active:
                         if comp.range > max_range:
                             max_range = comp.range
             
@@ -156,7 +155,7 @@ class BattleInterface:
             center = camera.world_to_screen(s.position)
             for layer in s.layers.values():
                 for comp in layer['components']:
-                    if isinstance(comp, Weapon) and comp.is_active:
+                    if comp.has_ability('WeaponAbility') and comp.is_active:
                         ship_angle = s.angle
                         facing = comp.facing_angle
                         arc = comp.firing_arc

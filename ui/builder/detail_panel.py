@@ -3,7 +3,6 @@ import pygame_gui
 import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
 from components import (
-    Weapon, BeamWeapon, ProjectileWeapon, SeekerWeapon, 
     Engine, Thruster, Armor, Tank, Generator, CrewQuarters, LifeSupport
 )
 import json
@@ -169,7 +168,7 @@ class ComponentDetailPanel:
         # Missile Stats
         if hasattr(comp, 'endurance'):
              add_line(f"Endurance: {comp.endurance}s", '#64C8FF')
-        if hasattr(comp, 'hp') and isinstance(comp, SeekerWeapon):
+        if hasattr(comp, 'hp') and comp.has_ability('SeekerWeaponAbility'):
              add_line(f"Missile HP: {comp.hp}", '#FF6464')
              # Show To-Hit Defense if present
              if hasattr(comp, 'to_hit_defense'):

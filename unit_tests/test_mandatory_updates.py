@@ -25,8 +25,9 @@ class TestMandatoryUpdates(unittest.TestCase):
         }
 
     def test_automation_mandatory(self):
-        # Mock Component with CrewRequired
-        comp_data = {'id': 'test', 'name': 'Test', 'type': 'Weapon', 'hp':10, 'mass':10, 'abilities': {'CrewRequired': 5}}
+        # Mock Component with CrewRequired and WeaponAbility
+        comp_data = {'id': 'test', 'name': 'Test', 'type': 'Weapon', 'hp':10, 'mass':10, 
+                     'abilities': {'CrewRequired': 5, 'WeaponAbility': {'damage': 10, 'range': 1000}}}
         comp = Component(comp_data)
         
         with patch.dict(MODIFIER_REGISTRY, self.test_registry, clear=True):
@@ -37,8 +38,9 @@ class TestMandatoryUpdates(unittest.TestCase):
             self.assertIn('simple_size_mount', mandatory)
 
     def test_automation_not_mandatory_no_crew(self):
-        # Mock Component without CrewRequired
-        comp_data = {'id': 'test', 'name': 'Test', 'type': 'Weapon', 'hp':10, 'mass':10, 'abilities': {}}
+        # Mock Component without CrewRequired but with WeaponAbility
+        comp_data = {'id': 'test', 'name': 'Test', 'type': 'Weapon', 'hp':10, 'mass':10, 
+                     'abilities': {'WeaponAbility': {'damage': 10, 'range': 1000}}}
         comp = Component(comp_data)
         
         with patch.dict(MODIFIER_REGISTRY, self.test_registry, clear=True):
@@ -52,7 +54,9 @@ class TestMandatoryUpdates(unittest.TestCase):
                              "Automation should be disallowed for component with no crew req")
 
     def test_seeker_mandatory(self):
-        comp_data = {'id': 'seeker', 'name': 'Seeker', 'type': 'SeekerWeapon', 'hp':10, 'mass':10}
+        # Mock Component with SeekerWeaponAbility (which is a subclass of WeaponAbility)
+        comp_data = {'id': 'seeker', 'name': 'Seeker', 'type': 'SeekerWeapon', 'hp':10, 'mass':10,
+                     'abilities': {'SeekerWeaponAbility': {'damage': 50, 'range': 2000, 'endurance': 5}}}
         comp = Component(comp_data)
         
         with patch.dict(MODIFIER_REGISTRY, self.test_registry, clear=True):

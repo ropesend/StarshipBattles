@@ -2,7 +2,6 @@
 import pygame
 import math
 from ship import LayerType
-from components import Weapon, Engine, Armor
 
 
 # Layer color constants
@@ -119,9 +118,9 @@ def draw_ship(surface, ship, camera):
                     comp_screen = camera.world_to_screen(comp_world_pos)
                     
                     color = (200, 200, 200)
-                    if isinstance(comp, Weapon): color = (255, 50, 50)
-                    elif isinstance(comp, Engine): color = (50, 255, 100)
-                    elif isinstance(comp, Armor): color = (100, 100, 100)
+                    if comp.has_ability('WeaponAbility'): color = (255, 50, 50)
+                    elif comp.has_ability('CombatPropulsion'): color = (50, 255, 100)
+                    elif comp.type_str == 'Armor': color = (100, 100, 100)
                     
                     pygame.draw.circle(surface, color, (int(comp_screen.x), int(comp_screen.y)), max(1, scale(3)))
                     current_angle += angle_step

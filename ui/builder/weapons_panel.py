@@ -1,7 +1,6 @@
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIButton, UIVerticalScrollBar
-from components import Weapon, BeamWeapon, SeekerWeapon, ProjectileWeapon
 from ui.colors import COLORS
 
 class WeaponsReportPanel:
@@ -241,11 +240,11 @@ class WeaponsReportPanel:
         weapons = []
         for layer_data in ship.layers.values():
             for comp in layer_data['components']:
-                if isinstance(comp, Weapon):
-                    # Filter
-                    if isinstance(comp, ProjectileWeapon) and not self.filter_states['projectile']: continue
-                    if isinstance(comp, BeamWeapon) and not self.filter_states['beam']: continue
-                    if isinstance(comp, SeekerWeapon) and not self.filter_states['seeker']: continue
+                if comp.has_ability('WeaponAbility'):
+                    # Filter by weapon ability type
+                    if comp.has_ability('ProjectileWeaponAbility') and not self.filter_states['projectile']: continue
+                    if comp.has_ability('BeamWeaponAbility') and not self.filter_states['beam']: continue
+                    if comp.has_ability('SeekerWeaponAbility') and not self.filter_states['seeker']: continue
                     
                     weapons.append(comp)
         return weapons
@@ -443,7 +442,7 @@ class WeaponsReportPanel:
         target_mod = self.target_defense_mod
         damage = getattr(weapon, 'damage', 0)
         
-        if isinstance(weapon, BeamWeapon):
+        if weapon.has_ability('BeamWeaponAbility'):
             # Sigmoid Logic
             import math
             
@@ -905,9 +904,9 @@ class WeaponsReportPanel:
                 weapon_bar_width = int((weapon_range / self._max_range) * bar_width)
                 
                 # Check weapon type to determine display style
-                is_beam = isinstance(weapon, BeamWeapon)
-                is_seeker = isinstance(weapon, SeekerWeapon)
-                is_projectile = isinstance(weapon, ProjectileWeapon)
+                is_beam = weapon.has_ability('BeamWeaponAbility')
+                is_seeker = weapon.has_ability('SeekerWeaponAbility')
+                is_projectile = weapon.has_ability('ProjectileWeaponAbility')
                 
                 if is_beam:
                     self._draw_beam_weapon_bar(screen, weapon, ship, bar_y, start_x, bar_width, weapon_bar_width, weapon_range, damage)
