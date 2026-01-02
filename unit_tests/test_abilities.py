@@ -114,6 +114,98 @@ class TestAbilities(unittest.TestCase):
         rows = ab.get_ui_rows()
         self.assertEqual(rows[0]['label'], 'Thrust')
         self.assertEqual(rows[0]['value'], '100 N')
+        self.assertEqual(rows[0]['color_hint'], '#64FF64')
+
+    def test_beam_weapon_ability(self):
+        from abilities import BeamWeaponAbility
+        data = {
+            "damage": 30,
+            "range": 2000,
+            "reload": 0.5,
+            "accuracy_falloff": 0.002,
+            "base_accuracy": 2.0
+        }
+        ab = create_ability("BeamWeaponAbility", self.mock_component, data)
+        self.assertIsInstance(ab, BeamWeaponAbility)
+        self.assertIsInstance(ab, WeaponAbility)  # Polymorphism check
+        self.assertEqual(ab.damage, 30)
+        self.assertEqual(ab.accuracy_falloff, 0.002)
+        self.assertEqual(ab.base_accuracy, 2.0)
+
+    def test_seeker_weapon_ability(self):
+        from abilities import SeekerWeaponAbility
+        data = {
+            "damage": 100,
+            "reload": 5.0,
+            "projectile_speed": 500,
+            "endurance": 10.0,
+            "turn_rate": 45.0,
+            "to_hit_defense": 1.5
+        }
+        ab = create_ability("SeekerWeaponAbility", self.mock_component, data)
+        self.assertIsInstance(ab, SeekerWeaponAbility)
+        self.assertIsInstance(ab, WeaponAbility)  # Polymorphism check
+        self.assertEqual(ab.projectile_speed, 500)
+        self.assertEqual(ab.endurance, 10.0)
+        self.assertEqual(ab.turn_rate, 45.0)
+        self.assertEqual(ab.to_hit_defense, 1.5)
+        # Range should be auto-calculated: speed * endurance
+        self.assertEqual(ab.range, 5000)
+
+    def test_get_abilities_polymorphism(self):
+        """Test that get_abilities() finds abilities by parent class."""
+        from components import Component
+        data = {
+            "id": "poly_test",
+            "name": "Polymorphism Test",
+            "type": "Generic",
+            "mass": 10,
+            "hp": 10,
+            "abilities": {
+                "BeamWeaponAbility": {"damage": 20, "range": 1000, "reload": 1.0}
+            }
+        }
+        comp = Component(data)
+        
+        # Should find via polymorphic lookup (BeamWeaponAbility IS-A WeaponAbility)
+        weapons = comp.get_abilities("WeaponAbility")
+        self.assertEqual(len(weapons), 1)
+        
+        # Should also find via exact match
+        beams = comp.get_abilities("BeamWeaponAbility")
+        self.assertEqual(len(beams), 1)
+        self.assertEqual(weapons[0], beams[0])
+
+    def test_has_pdc_ability(self):
+        """Test has_pdc_ability() with tag-based detection."""
+        from components import Component
+        # Component with 'pdc' tag
+        data = {
+            "id": "pdc_test",
+            "name": "Point Defense Gun",
+            "type": "Weapon",
+            "mass": 5,
+            "hp": 10,
+            "abilities": {
+                "ProjectileWeaponAbility": {"damage": 5, "range": 500, "reload": 0.1, "tags": ["pdc"]}
+            }
+        }
+        comp = Component(data)
+        self.assertTrue(comp.has_pdc_ability())
+        
+        # Component without 'pdc' tag
+        data2 = {
+            "id": "regular_test",
+            "name": "Regular Gun",
+            "type": "Weapon",
+            "mass": 5,
+            "hp": 10,
+            "abilities": {
+                "ProjectileWeaponAbility": {"damage": 10, "range": 1000, "reload": 1.0}
+            }
+        }
+        comp2 = Component(data2)
+        self.assertFalse(comp2.has_pdc_ability())
 
 if __name__ == '__main__':
     unittest.main()

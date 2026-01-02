@@ -2,6 +2,7 @@ import unittest
 import os
 import json
 import time
+import uuid
 from profiling import Profiler, profile_action, profile_block, PROFILER
 
 class TestProfiling(unittest.TestCase):
@@ -9,7 +10,8 @@ class TestProfiling(unittest.TestCase):
         # Reset singleton state for testing
         PROFILER.active = False
         PROFILER.records = []
-        self.test_file = "test_profiling_history.json"
+        # Use unique file name to prevent parallel test conflicts
+        self.test_file = f"test_profiling_history_{uuid.uuid4().hex[:8]}.json"
         if os.path.exists(self.test_file):
             os.remove(self.test_file)
 

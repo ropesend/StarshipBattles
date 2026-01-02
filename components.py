@@ -168,6 +168,17 @@ class Component:
             
         return False
 
+    def get_ui_rows(self):
+        """Aggregate UI rows from all ability instances.
+        
+        Returns list of dicts: [{'label': 'Thrust', 'value': '1500 N'}, ...]
+        Used by detail panels and capability scanners.
+        """
+        rows = []
+        for ab in self.ability_instances:
+            rows.extend(ab.get_ui_rows())
+        return rows
+
     def _instantiate_abilities(self):
         """Instantiate Ability objects from self.abilities dict + Legacy Shim."""
         self.ability_instances = []

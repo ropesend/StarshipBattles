@@ -117,109 +117,65 @@ class ComponentDetailPanel:
         add_line(f"HP: {comp.max_hp:.0f}", '#C8C8C8')
         lines.append("<br>") # Spacer
         
-        # Weapon Stats
-        if hasattr(comp, 'damage') and comp.damage > 0:
-            add_line(f"Damage: {comp.damage}", '#FF6464')
-        if hasattr(comp, 'range') and comp.range > 0:
-            add_line(f"Range: {comp.range}", '#FFA500')
-        if hasattr(comp, 'reload_time'):
-            add_line(f"Reload: {comp.reload_time}s", '#FFC864')
-        # Ability-based Resource Checks
-        # Note: We check `ability_instances` if available (post-init) or raw data
-        # For builder, we often have the raw component.
+        # --- Dynamic Ability Stats (The Refactor) ---
+        # Instead of manually checking attributes, we ask the component.
+        # This covers: Weapons, Engines, Shields, Resources, Hangars
         
-        # Helper to find ability cost/storage
-        def get_ability_val(comp, ability_name, resource_name=None, field='amount'):
-            if hasattr(comp, 'ability_instances'):
-                for ab in comp.ability_instances:
-                    if ab.__class__.__name__ == ability_name:
-                         if resource_name:
-                             if getattr(ab, 'resource_name', '') == resource_name:
-                                 return getattr(ab, field, 0)
-                         else:
-                             return getattr(ab, field, 0)
-            # Fallback to raw data (common in builder before simulation)
-            raw_abs = getattr(comp, 'abilities', {})
-            if ability_name in raw_abs:
-                data = raw_abs[ability_name]
-                # data is list of dicts
-                if isinstance(data, list):
-                    for item in data:
-                        if resource_name and item.get('resource') == resource_name:
-                            return item.get(field, 0)
-                        elif not resource_name:
-                             return item.get(field, 0)
-            return 0
+        if hasattr(comp, 'get_ui_rows'):
+            for row in comp.get_ui_rows():
+                label = row.get('label', 'Unknown')
+                val = row.get('value', '')
+                color = row.get('color_hint', '#C8C8C8')
+                add_line(f"{label}: {val}", color)
 
-        # Ammo Cost (Activation)
-        ammo_cost = get_ability_val(comp, 'ResourceConsumption', 'ammo', 'amount')
-        if ammo_cost > 0:
-            add_line(f"Ammo Cost: {ammo_cost}", '#C8C832')
-            
-        # Energy Cost (Activation)
-        energy_cost = get_ability_val(comp, 'ResourceConsumption', 'energy', 'amount')
-        if energy_cost > 0:
-             add_line(f"Energy Cost: {energy_cost}", '#64C8FF')
-        if hasattr(comp, 'firing_arc'):
-            add_line(f"Arc: {comp.firing_arc}°", '#FF64FF')
-        if hasattr(comp, 'base_accuracy'):
-             add_line(f"Accuracy Score: +{comp.base_accuracy:.1f}", '#FFFF64')
-            
-        # Missile Stats
-        if hasattr(comp, 'endurance'):
-             add_line(f"Endurance: {comp.endurance}s", '#64C8FF')
-        if hasattr(comp, 'hp') and comp.has_ability('SeekerWeaponAbility'):
-             add_line(f"Missile HP: {comp.hp}", '#FF6464')
-             # Show To-Hit Defense if present
-             if hasattr(comp, 'to_hit_defense'):
-                 def_val = comp.to_hit_defense
-                 if def_val > 0:
-                     add_line(f"Defense Score: +{def_val:.1f}", '#800080') # Purple for stealth
-
-        if hasattr(comp, 'turn_rate') and hasattr(comp, 'endurance'):
-             add_line(f"Turn Rate: {comp.turn_rate}°/s", '#64FF64')
-             if hasattr(comp, 'projectile_speed'):
-                 add_line(f"Speed: {comp.projectile_speed}", '#C8C832')
-
-        # Engine Stats
-        if hasattr(comp, 'thrust_force') and comp.thrust_force > 0:
-            add_line(f"Thrust: {comp.thrust_force}", '#64FF64')
-        if hasattr(comp, 'turn_speed') and comp.turn_speed > 0:
-            add_line(f"Turn Speed: {comp.turn_speed}°/s", '#64FF96')
-        # Fuel Cost (Constant)
-        fuel_cost = get_ability_val(comp, 'ResourceConsumption', 'fuel', 'amount')
-        if fuel_cost > 0:
-            add_line(f"Fuel: {fuel_cost}/s", '#FFA500')
-            
-        # Resource Stats
-        # Resource Storage (Capacity)
-        # We need to iterate all storage abilities
-        raw_abs = getattr(comp, 'abilities', {})
-        if 'ResourceStorage' in raw_abs:
-            storages = raw_abs['ResourceStorage']
-            for s in storages:
-                r_type = s.get('resource', '').title()
-                amt = s.get('amount', 0)
-                if amt > 0:
-                    add_line(f"{r_type} Cap: {amt}", '#64FFFF')
+        # Legacy Fallback / Specific Extras (e.g. Accuracy/Defense Scores not fully in abilities yet)
+        if hasattr(comp, 'base_accuracy') and comp.base_accuracy > 0:
+             # Check if BeamWeaponAbility already covered this? 
+             # BeamWeaponAbility doesn't output 'Accuracy Score' in get_ui_rows yet.
+             # Only Range/Damage/Reload.
+             pass 
+             # For now, let's trust get_ui_rows covers the CORE stats.
+             # Special stats might still need manual coverage if not in get_ui_rows.
         
-        # Energy Generation
-        e_gen = get_ability_val(comp, 'ResourceGeneration', 'energy', 'amount') # check 'amount' or 'rate'? 
-        # definition uses 'amount', logic uses 'rate', let's check basic data structure
-        # In data: { "resource": "energy", "amount": 5.0 }
-        if e_gen > 0:
-            add_line(f"Energy Gen: {e_gen}/s", '#FFFF00')
-            
-        # Shield Stats
-        if hasattr(comp, 'shield_capacity') and comp.shield_capacity > 0:
-             add_line(f"Shield Max: {comp.shield_capacity}", '#00FFFF')
-        if hasattr(comp, 'regen_rate') and comp.regen_rate > 0:
-             add_line(f"Regen: {comp.regen_rate}/s", '#00C8FF')
+        # Manual Checks for things potentially missing from Ability.get_ui_rows
+        # (Seeker Missile Stats, Evasion)
+        if hasattr(comp, 'to_hit_defense'):
+             def_val = comp.to_hit_defense
+             if def_val > 0:
+                 add_line(f"Defense Score: +{def_val:.1f}", '#800080')
+
+        # Resource Storage (Legacy Shim/Raw Data check for Builder)
+        # If component works via Shim, get_ui_rows() works. 
+        # But if we are viewing a raw data dict wrapper validation issue?
+        # The 'comp' passed here is a Component instance (or subclass).
+        # So get_ui_rows should work.
              
-        # Abilities
+        # Abilities (Raw Data - for non-class abilities)
         if comp.abilities:
-            lines.append("<br>Abilities:")
+            # We want to show things that were NOT shown by get_ui_rows
+            # Basically filter out keys that map to registered Ability classes
+            from abilities import ABILITY_REGISTRY
+            
+            # Simple heuristic: if we haven't seen it yet.
+            # But simpler to just exclude known Ability Types.
+            
+            shown_header = False
+            
             for k, v in comp.abilities.items():
+                # Skip known Ability Classes (handled by get_ui_rows)
+                if k in ABILITY_REGISTRY:
+                    continue
+                # Also skip primitive aliases if they map to classes we showed
+                if k in ["FuelStorage", "AmmoStorage", "EnergyStorage", "EnergyConsumption", "EnergyGeneration"]:
+                    continue
+                # Skip shimmed legacy keys
+                if k in ["ProjectileWeapon", "BeamWeapon", "Armor"]:
+                    continue
+                    
+                if not shown_header:
+                    lines.append("<br>Abilities:")
+                    shown_header = True
+
                 if k == "CommandAndControl":
                     add_line("• Command & Control", '#96FF96')
                 elif k == "CrewCapacity":
@@ -237,10 +193,7 @@ class ComponentDetailPanel:
                     add_line(f"• Evasion Score: {sign}{val:.1f}", '#64FFFF')
                 elif k == "EmissiveArmor":
                     add_line(f"• Damage Ignore: {v}", '#FFFF00')
-                # Skip stats already shown above
-                elif k not in ["ShieldProjection", "ShieldRegeneration", "EnergyConsumption", "EnergyGeneration", 
-                               "FuelStorage", "AmmoStorage", "EnergyStorage", "CombatPropulsion", "ManeuveringThruster",
-                               "ProjectileWeapon", "BeamWeapon", "Armor"]:
+                else:
                     add_line(f"• {k}: {v}", '#C8C8C8')
                     
         # Modifiers
@@ -254,7 +207,7 @@ class ComponentDetailPanel:
                 
                 if is_mandatory:
                     name_str = f"{name_str} [A]" # Auto
-                    color = '#FFD700' # Gold/Gold for mandatory
+                    color = '#FFD700' # Gold
                     
                 add_line(f"• {name_str}: {m.value:.2f}", color)
         

@@ -3,16 +3,31 @@
 ## 1. High-Level Context
 **Refactor Goal**: Transition from Inheritance-based Components (`Engine`, `Weapon`) to Composition-based Components (`Component` + `Abilities`).
 
-**Current Phase**: Phase 5 In Progress  
-**Tests**: 462/462 PASSED (baseline as of 2026-01-02)
+**Current Phase**: Phase 5 Complete (Core), Phase 6 Next  
+**Tests**: 467/467 PASSED (as of 2026-01-02 11:57 PST)
 
 **Status Summary**:
 - Phase 1 ✅ Foundation (abilities.py created)
 - Phase 2 ✅ Core Refactor (Component class, Legacy Shim)
 - Phase 3 ✅ Stats & Physics Integration
-- Phase 4 ✅ Combat System Migration (Completed)
-- Phase 5 🔄 UI & Capabilities (IN PROGRESS - isinstance migration done)
-- Phase 6 ⬜ Data Migration
+- **Phase 4 (Combat System)**: **Complete** ✅
+- **Phase 5 (UI & Capabilities)**: **Complete** ✅
+
+- **Phase 6 (Data Migration)**: **Ready to Start** ⏩
+  - **Pre-Condition**: Add missing `CommandAndControl` ability to `abilities.py`
+  - **Goal**: Migrate weapon stats into ability dicts, remove redundant legacy attributes
+  - **Verified by Code Reviews**: 4 audits completed (AI/Formation, Data, Game, Validator)
+
+---
+
+## Code Review Audit Findings (Jan 2, 2026)
+
+| Area | File | Status | Action |
+|------|------|--------|--------|
+| AI & Formation | `ai.py`, `ai_behaviors.py` | ✅ OK | Uses shims (low priority cleanup) |
+| Game Integration | `main.py`, `battle.py` | ✅ OK | No legacy isinstance found |
+| Validator | `ship_validator.py` | ⚠️ FIX | Add `CommandAndControl` to ABILITY_REGISTRY |
+| Data Files | `components.json` | ⏳ MIGRATE | Weapon stats at root, need to move to abilities |
 
 ---
 
@@ -95,12 +110,20 @@ All ability classes in `abilities.py` already have `get_ui_rows()` implemented:
 
 ### REMAINING Phase 5 Work
 
-| Task | Priority |
-|------|----------|
-| `Component.get_ui_rows()` aggregation | Medium |
-| detail_panel.py use `get_ui_rows()` | Medium |
-| Legacy attribute migration to ability getters | Low |
-| Add missing ability tests | Low |
+| Task | Priority | Notes |
+|------|----------|-------|
+| `detail_panel.py` use `get_ui_rows()` | Low | Complex refactor, current hardcoded approach works |
+| Legacy attribute migration | Low | Shims work, can defer |
+| Ship.cached_summary | Low | Performance optimization, not critical |
+
+### Test Coverage - COMPLETE ✅
+
+Added tests for:
+- `BeamWeaponAbility`, `SeekerWeaponAbility`
+- `get_abilities()` polymorphic lookup
+- `has_pdc_ability()` tag-based detection
+- `Component.get_ui_rows()` aggregation
+- `MockPDC` updated to use tag-based PDC with BeamWeaponAbility
 
 ---
 
@@ -154,8 +177,80 @@ All ability classes in `abilities.py` already have `get_ui_rows()` implemented:
 ## 7. Reference: Completed Phase 3 Changes
 
 | Change | Location |
-|--------|----------|
+|--------|---------|
 | Modifier-to-Ability Sync | components.py:538-564 |
 | `Ship.get_total_ability_value()` | ship.py:546-578 |
 | Engine/Thruster/Shield isinstance → ability | ship_stats.py |
 | Physics thrust → ability helper | ship_physics.py:19 |
+
+---
+
+## 8. Session Summary (Jan 2, 2026 - 11:27-11:57 PST)
+
+### Work Completed This Session
+
+| Category | Count | Details |
+|----------|-------|--------|
+| isinstance migration | 23 | 7 UI files migrated to `has_ability()` |
+| Component.get_ui_rows() | 1 | New method aggregating from ability_instances |
+| New tests added | 6 | abilities, polymorphism, PDC, get_ui_rows |
+| Bug fixes | 2 | test_profiling.py parallel conflicts, test_mandatory_updates.py ability data |
+
+### Key Methods Added
+
+- `Component.get_ui_rows()` - Aggregates UI rows from all ability_instances
+- All ability classes in `abilities.py` have `get_ui_rows()` implemented
+
+### Files Modified This Session
+
+**UI Files (isinstance → has_ability)**:
+- `ui/builder/weapons_panel.py` (8 checks)
+- `ui/builder/schematic_view.py` (4 checks)
+- `ui/builder/detail_panel.py` (1 check)
+- `ui/builder/modifier_logic.py` (3 type_str checks)
+- `battle_ui.py` (2 checks)
+- `battle_panels.py` (2 checks)
+- `rendering.py` (3 checks)
+
+**Core Files**:
+- `components.py` - Added `get_ui_rows()` method
+
+**Test Files**:
+- `test_abilities.py` - Added 5 new tests
+- `test_component_composition.py` - Added get_ui_rows test
+- `test_mandatory_updates.py` - Fixed ability data in test components
+- `test_profiling.py` - Fixed parallel execution file locking
+- `test_pdc.py` - Updated MockPDC to use tag-based PDC
+
+---
+
+## 9. Next Agent Instructions
+
+### Recommended Next Steps
+
+1. **Perform comprehensive review** of refactor documentation
+2. **Run full test suite** to verify baseline:
+   ```powershell
+   python -m pytest unit_tests/ -n 16 --tb=no -q
+   ```
+   Expected: 467 passed
+
+3. **Choose next focus**:
+   - **Phase 6 (Data Migration)** - Create migration scripts for components.json
+   - **Remaining Phase 4/5 items** - Low priority, legacy shims work fine
+
+### Critical Context
+
+- **Legacy shims are active**: `comp.damage`, `comp.range`, `comp.thrust_force` etc. all work via shim in `Component._instantiate_abilities()`
+- **PDC detection dual-mode**: `has_pdc_ability()` checks both `'pdc' in ab.tags` AND legacy `abilities.get('PointDefense')`
+- **Test parallelization**: Use `-n 16` for parallel execution with pytest-xdist
+
+### Key Reference Files
+
+| File | Purpose |
+|------|---------|
+| `abilities.py` | All Ability classes with get_ui_rows() |
+| `components.py` | Component class with has_ability(), get_ability(), get_ui_rows() |
+| `ship.py` | Ship class with get_total_ability_value() |
+| `refactor_docs/implementation_plan.md` | Full refactor plan |
+| `refactor_docs/task.md` | Detailed task checklist |

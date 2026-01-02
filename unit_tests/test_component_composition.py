@@ -78,3 +78,29 @@ class TestComponentComposition(unittest.TestCase):
         proj = comp.get_ability("ProjectileWeaponAbility")
         self.assertIsNotNone(proj)
         self.assertEqual(proj, wep)
+
+    def test_get_ui_rows_aggregation(self):
+        """Test that Component.get_ui_rows() aggregates from all abilities."""
+        data = {
+            "id": "test_ui",
+            "name": "Test Component",
+            "type": "Generic",
+            "mass": 100,
+            "hp": 50,
+            "abilities": {
+                "CombatPropulsion": 1500,
+                "ResourceConsumption": {"resource": "fuel", "amount": 5, "trigger": "constant"}
+            }
+        }
+        
+        comp = Component(data)
+        rows = comp.get_ui_rows()
+        
+        # Should have rows from both abilities
+        self.assertIsInstance(rows, list)
+        self.assertGreater(len(rows), 0)
+        
+        # Check for expected labels
+        labels = [r['label'] for r in rows]
+        self.assertIn('Thrust', labels)
+        self.assertIn('Fuel Use', labels)

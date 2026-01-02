@@ -37,7 +37,7 @@ class Ability:
     def get_ui_rows(self) -> List[Dict[str, str]]:
         """
         Return list of UI rows for the capability scanner/details panel.
-        Format: [{'label': 'Thrust', 'value': '1500 N'}]
+        Format: [{'label': 'Thrust', 'value': '1500 N', 'color_hint': '#FFFFFF'}]
         """
         return []
 
@@ -90,7 +90,15 @@ class ResourceConsumption(Ability):
         
     def get_ui_rows(self):
         trigger_str = "/s" if self.trigger == 'constant' else "/use"
-        return [{'label': f"{self.resource_name.title()} Use", 'value': f"{self.amount:.1f}{trigger_str}"}]
+        
+        # Color mapping based on resource type
+        color = '#FFFFFF'
+        if self.resource_name == 'fuel': color = '#FFA500' # Orange
+        elif self.resource_name == 'energy': color = '#64C8FF' # Light Blue
+        elif self.resource_name == 'ammo': color = '#C8C832' # Dirty Yellow
+        
+        label_text = f"{self.resource_name.title()} {'Cost' if self.trigger!='constant' else 'Use'}"
+        return [{'label': label_text, 'value': f"{self.amount:.1f}{trigger_str}", 'color_hint': color}]
 
 class ResourceStorage(Ability):
     """
@@ -103,7 +111,10 @@ class ResourceStorage(Ability):
         self.max_amount = data.get('amount', 0.0)
         
     def get_ui_rows(self):
-        return [{'label': f"{self.resource_type.title()} Cap", 'value': f"{self.max_amount:.0f}"}]
+        color = '#64FFFF' # Cyan default for caps
+        if self.resource_type == 'shield': color = '#00FFFF' # Standard Shield Cyan
+        
+        return [{'label': f"{self.resource_type.title()} Cap", 'value': f"{self.max_amount:.0f}", 'color_hint': color}]
 
 class ResourceGeneration(Ability):
     """
@@ -116,7 +127,10 @@ class ResourceGeneration(Ability):
         self.rate = data.get('amount', 0.0)
 
     def get_ui_rows(self):
-        return [{'label': f"{self.resource_type.title()} Gen", 'value': f"{self.rate:.1f}/s"}]
+        color = '#FFFFFF' 
+        if self.resource_type == 'energy': color = '#FFFF00' # Yellow
+        
+        return [{'label': f"{self.resource_type.title()} Gen", 'value': f"{self.rate:.1f}/s", 'color_hint': color}]
 
 # --- Core Mechanics ---
 
@@ -129,7 +143,7 @@ class CombatPropulsion(Ability):
         self.thrust_force = float(val)
 
     def get_ui_rows(self):
-        return [{'label': 'Thrust', 'value': f"{self.thrust_force:.0f} N"}]
+        return [{'label': 'Thrust', 'value': f"{self.thrust_force:.0f} N", 'color_hint': '#64FF64'}] # Light Green
 
 class ManeuveringThruster(Ability):
     """Provides Rotation."""
@@ -139,7 +153,7 @@ class ManeuveringThruster(Ability):
         self.turn_rate = float(val)
 
     def get_ui_rows(self):
-        return [{'label': 'Turn Speed', 'value': f"{self.turn_rate:.1f} deg/s"}]
+        return [{'label': 'Turn Speed', 'value': f"{self.turn_rate:.1f} deg/s", 'color_hint': '#64FF96'}] # Slightly different green
 
 class ShieldProjection(Ability):
     """Provides Shield Capacity."""
@@ -149,7 +163,7 @@ class ShieldProjection(Ability):
         self.capacity = float(val)
 
     def get_ui_rows(self):
-        return [{'label': 'Shield Cap', 'value': f"{self.capacity:.0f}"}]
+        return [{'label': 'Shield Cap', 'value': f"{self.capacity:.0f}", 'color_hint': '#00FFFF'}] # Cyan
 
 class ShieldRegeneration(Ability):
     """Regenerates Shields."""
@@ -159,7 +173,7 @@ class ShieldRegeneration(Ability):
         self.rate = float(val)
         
     def get_ui_rows(self):
-        return [{'label': 'Shield Regen', 'value': f"{self.rate:.1f}/s"}]
+        return [{'label': 'Regen', 'value': f"{self.rate:.1f}/s", 'color_hint': '#00C8FF'}] # Deep Sky Blue
 
 class VehicleLaunchAbility(Ability):
     """Allows storing and launching fighters."""
@@ -183,8 +197,8 @@ class VehicleLaunchAbility(Ability):
         
     def get_ui_rows(self):
         return [
-            {'label': 'Hangar', 'value': f"{self.fighter_class}"},
-            {'label': 'Cycle', 'value': f"{self.cycle_time}s"}
+            {'label': 'Hangar', 'value': f"{self.fighter_class}", 'color_hint': '#C8C8C8'},
+            {'label': 'Cycle', 'value': f"{self.cycle_time}s", 'color_hint': '#C8C8C8'}
         ]
         
 # --- Weapon Abilities ---
@@ -220,9 +234,9 @@ class WeaponAbility(Ability):
 
     def get_ui_rows(self):
         return [
-            {'label': 'Damage', 'value': f"{self.damage:.0f}"},
-            {'label': 'Range', 'value': f"{self.range:.0f}"},
-            {'label': 'Reload', 'value': f"{self.reload_time:.1f}s"}
+            {'label': 'Damage', 'value': f"{self.damage:.0f}", 'color_hint': '#FF6464'}, # Red
+            {'label': 'Range', 'value': f"{self.range:.0f}", 'color_hint': '#FFA500'}, # Orange
+            {'label': 'Reload', 'value': f"{self.reload_time:.1f}s", 'color_hint': '#FFC864'} # Gold
         ]
 
 class ProjectileWeaponAbility(WeaponAbility):
@@ -232,7 +246,7 @@ class ProjectileWeaponAbility(WeaponAbility):
 
     def get_ui_rows(self):
         rows = super().get_ui_rows()
-        rows.append({'label': 'Proj Speed', 'value': f"{self.projectile_speed:.0f}"})
+        rows.append({'label': 'Speed', 'value': f"{self.projectile_speed:.0f}", 'color_hint': '#C8C832'}) # Yellow-ish
         return rows
 
 class BeamWeaponAbility(WeaponAbility):

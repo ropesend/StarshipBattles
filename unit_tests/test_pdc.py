@@ -12,20 +12,17 @@ from game_constants import AttackType
 
 class MockPDC(BeamWeapon):
     def __init__(self):
-        # Mimic Point Defence Cannon
+        # Mimic Point Defence Cannon using new tag-based PDC system
+        from abilities import BeamWeaponAbility
+        
         self.formulas = {}
         self.name = "PDC"
         self.range = 1000
         self.damage = 10
-        # Legacy 'energy_cost' removed. 
-        # PDC energy consumption is now handled via abilities in components.json or defaults.
-        # If we need to test cost, we should modify abilities directly.
-        pass
         self.current_hp = 10
         self.max_hp = 10
         self.is_active = True
-        self.abilities = {'PointDefense': True}
-        self.firing_arc = 360 # Omni
+        self.firing_arc = 360  # Omni
         self.facing_angle = 0
         self.reload_time = 0.1
         self.cooldown_timer = 0
@@ -36,13 +33,11 @@ class MockPDC(BeamWeapon):
         self.major_classification = "Weapons"
         self.mass = 10
         self.base_mass = 10
-        self.max_hp = 10
         self.base_max_hp = 10
-        self.abilities = {'PointDefense': True}
-        self.base_abilities = {'PointDefense': True}
         self.modifiers = []
         self.shots_fired = 0
         self.shots_hit = 0
+        self.ship = None
         self.data = {
             'damage': 10,
             'range': 1000,
@@ -54,7 +49,21 @@ class MockPDC(BeamWeapon):
             'firing_arc': 360,
             'reload': 0.1
         }
-        self.ability_instances = []
+        
+        # New tag-based PDC system - create BeamWeaponAbility with 'pdc' tag
+        pdc_ability_data = {
+            'damage': 10,
+            'range': 1000,
+            'reload': 0.1,
+            'firing_arc': 360,
+            'tags': ['pdc']  # Tag-based PDC detection
+        }
+        pdc_ability = BeamWeaponAbility(self, pdc_ability_data)
+        self.ability_instances = [pdc_ability]
+        
+        # Keep legacy abilities dict for backward compatibility checks
+        self.abilities = {'PointDefense': True}
+        self.base_abilities = {'PointDefense': True}
 
     def update(self):
         dt = 0.01

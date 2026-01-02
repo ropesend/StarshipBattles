@@ -434,6 +434,28 @@ class ShipStatsCalculator:
         else:
             ship.energy_recharge = float('inf')
 
+        # Populate Cached Summary
+        dps = 0
+        from abilities import WeaponAbility
+        
+        # Calculate theoretical max DPS (all weapons)
+        for layer in ship.layers.values():
+            for c in layer['components']:
+                 # Use get_abilities to handle polymorphism
+                 for ab in c.get_abilities('WeaponAbility'):
+                     if ab.reload_time > 0:
+                         dps += ab.damage / ab.reload_time
+        
+        ship._cached_summary = {
+            'mass': ship.mass,
+            'max_hp': ship.max_hp,
+            'speed': ship.max_speed,
+            'turn': ship.turn_speed,
+            'shield': ship.max_shields,
+            'dps': dps,
+            'range': ship.max_weapon_range
+        }
+
     def _priority_sort_key(self, c):
         t = c.type_str
         # Bridge (Command)

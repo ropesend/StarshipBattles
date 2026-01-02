@@ -167,6 +167,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # New Stats
         self.mass_limits_ok: bool = True
         self.layer_status: Dict[LayerType, Dict[str, Any]] = {}
+        self._cached_summary = {}  # Performance optimization for UI
         self._loading_warnings: List[str] = []
         
         # Old init values
@@ -453,10 +454,16 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         component.ship = self
         component.recalculate_stats()
         self.current_mass += component.mass
+        self._cached_summary = {}  # Invalidate cache
         
         # Update Stats
         self.recalculate_stats()
         return True
+
+    @property
+    def cached_summary(self):
+        """Cached dictionary of high-level ship stats (DPS, Speed, etc)."""
+        return self._cached_summary
 
     def add_components_bulk(self, component: Component, layer_type: LayerType, count: int) -> int:
         """
