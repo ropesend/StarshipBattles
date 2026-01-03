@@ -180,10 +180,10 @@ class Component:
         return rows
 
     def _instantiate_abilities(self):
-        """Instantiate Ability objects from self.abilities dict + Legacy Shim."""
+        """Instantiate Ability objects from self.abilities dict."""
         self.ability_instances = []
         
-        # 1. Standard Loading
+        # Standard Loading from abilities dict
         for name, data in self.abilities.items():
             if name not in ABILITY_REGISTRY:
                 continue
@@ -194,106 +194,6 @@ class Component:
             elif isinstance(data, dict) or isinstance(data, (int, float)):
                  ab = create_ability(name, self, data)
                  if ab: self.ability_instances.append(ab)
-
-        # 2. Legacy Shim (Auto-Correction)
-        
-        def shim_has(name_frag):
-            for ab in self.ability_instances:
-                if ab.__class__.__name__ == name_frag: return True
-            return False
-
-        def get_shim_value(attr_name, default=0):
-            """Get value from attribute, data root, or abilities dict."""
-            # 1. Try resolved attribute first (from recalculate_stats loop)
-            if hasattr(self, attr_name):
-                val = getattr(self, attr_name)
-                # If it's a number, great. If strictly formula usage, might be string? 
-                # Usually resolved attributes are numbers.
-                if isinstance(val, (int, float)):
-                    return val
-            
-            # 2. Check root data
-            if attr_name in self.data:
-                return self.data[attr_name]
-            
-            # 3. Check inside ability dicts (Phase 6: weapon stats migrated here)
-            abilities = self.data.get('abilities', {})
-            for ability_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility', 'WeaponAbility']:
-                if ability_name in abilities:
-                    ab_data = abilities[ability_name]
-                    if isinstance(ab_data, dict) and attr_name in ab_data:
-                        return ab_data[attr_name]
-            
-            return default
-
-        def is_positive(val):
-            if isinstance(val, (int, float)):
-                return val > 0
-            if isinstance(val, str) and val.startswith('='):
-                return True # Assume formula yields positive
-            return False
-
-        def safe_float(val):
-            if isinstance(val, (int, float)): return float(val)
-            return 0.0 # Placeholder for formula strings
-
-        # Shim: CombatPropulsion
-        val = get_shim_value('thrust_force')
-        if not shim_has("CombatPropulsion") and is_positive(val):
-            ab = create_ability("CombatPropulsion", self, {"value": safe_float(val)})
-            if ab: self.ability_instances.append(ab)
-
-        # Shim: ManeuveringThruster
-        val = get_shim_value('turn_speed')
-        if not shim_has("ManeuveringThruster") and is_positive(val):
-            ab = create_ability("ManeuveringThruster", self, {"value": safe_float(val)})
-            if ab: self.ability_instances.append(ab)
-
-        # Shim: Weapons
-        has_weapon = False
-        from abilities import WeaponAbility
-        for ab in self.ability_instances:
-            if isinstance(ab, WeaponAbility): 
-                has_weapon = True
-                break
-        
-        # Determine strict weapon type intent (e.g. if explicit 'damage' key exists)
-        dmg = get_shim_value('damage', 0)
-        
-        if not has_weapon and is_positive(dmg):
-            # Infer type
-            wep_type = "ProjectileWeaponAbility" # Default
-            if "Beam" in self.type_str: wep_type = "BeamWeaponAbility"
-            if "Seeker" in self.type_str or "Missile" in self.type_str: wep_type = "SeekerWeaponAbility"
-            
-            wep_data = {
-                "damage": safe_float(dmg),
-                "range": safe_float(get_shim_value('range')),
-                "reload": safe_float(get_shim_value('reload', 1.0)),
-                "firing_arc": safe_float(get_shim_value('firing_arc', 20)),
-                "facing_angle": safe_float(get_shim_value('facing_angle', 0))
-            }
-            # Specifics
-            if wep_type == "ProjectileWeaponAbility":
-                wep_data["projectile_speed"] = safe_float(get_shim_value('projectile_speed', 1200))
-            elif wep_type == "BeamWeaponAbility":
-                wep_data["accuracy_falloff"] = safe_float(get_shim_value('accuracy_falloff', 0.001))
-                wep_data["base_accuracy"] = safe_float(get_shim_value('base_accuracy', 1.0))
-            
-            ab = create_ability(wep_type, self, wep_data)
-            if ab: self.ability_instances.append(ab)
-
-        # Shim: ShieldProjection (Capacity)
-        val = get_shim_value('shield_capacity')
-        if not shim_has("ShieldProjection") and is_positive(val):
-             ab = create_ability("ShieldProjection", self, {"value": safe_float(val)})
-             if ab: self.ability_instances.append(ab)
-
-        # Shim: ShieldRegeneration (Rate)
-        val = get_shim_value('shield_recharge_rate')
-        if not shim_has("ShieldRegeneration") and is_positive(val):
-             ab = create_ability("ShieldRegeneration", self, {"value": safe_float(val)})
-             if ab: self.ability_instances.append(ab)
             
     def update(self):
         """Update component state for one tick (resource consumption, cooldowns)."""
@@ -793,23 +693,27 @@ class Hangar(Component):
         return Hangar(self.data)
 
 COMPONENT_REGISTRY = {}
+# Phase 7 Simplified: Aliased types now use Component directly
+# Only types with custom logic retain their own classes
 COMPONENT_TYPE_MAP = {
-    "Bridge": Bridge,
-    "Weapon": ProjectileWeapon,
-    "ProjectileWeapon": ProjectileWeapon,
-    "Engine": Engine,
-    "Thruster": Thruster,
-    "Tank": Tank,
-    "Armor": Armor,
-    "Generator": Generator,
-    "BeamWeapon": BeamWeapon,
+    # Aliased types (all behaviors now in abilities)
+    "Bridge": Component,
+    "Weapon": Component,
+    "ProjectileWeapon": Component,
+    "Engine": Component,
+    "Thruster": Component,
+    "Tank": Component,
+    "Armor": Component,
+    "Generator": Component,
+    "BeamWeapon": Component,
+    "SeekerWeapon": Component,
+    # Types with custom logic (not yet aliased)
     "CrewQuarters": CrewQuarters,
     "LifeSupport": LifeSupport,
     "Sensor": Sensor,
     "Electronics": Electronics,
     "Shield": Shield,
     "ShieldRegenerator": ShieldRegenerator,
-    "SeekerWeapon": SeekerWeapon,
     "Hangar": Hangar
 }
 

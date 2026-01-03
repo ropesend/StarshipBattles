@@ -86,7 +86,7 @@
         - [x] Run migration script on `data/components.json` <!-- id: 68 -->
         - [x] Run full test suite (**470 passed**) <!-- id: 70 -->
 
-- [ ] **Phase 7: Legacy Removal** <!-- id: 112 -->
+- [x] **Phase 7: Legacy Removal** <!-- id: 112 -->
     - [x] **Stage 1: Critical Fixes** <!-- id: 113 -->
         - [x] Delete `ship_stats.py:325-330` (shield overwrite bug) <!-- id: 114 -->
         - [x] Delete `builder.py` (dead code) <!-- id: 131 -->
@@ -118,7 +118,7 @@
         - [x] `test_modifiers.py:113,122-123`: Replace `isinstance(Weapon)` <!-- id: 146 -->
         - [x] `test_strategy_system.py:77`: Replace `c1.damage = 10` mock <!-- id: 147 -->
         - [x] `test_builder_validation.py:53,57,69-84`: Use tags not classification <!-- id: 148 -->
-    - [/] **Stage 6: The Big Delete** <!-- id: 126 -->
+    - [x] **Stage 6: The Big Delete** <!-- id: 126 -->
         - [x] `Bridge` class → `Bridge = Component` alias <!-- id: 127 -->
         - [x] `Engine`, `Thruster` → `Component` aliases <!-- id: 149a -->
         - [x] `Tank`, `Armor`, `Generator` → `Component` aliases <!-- id: 149b -->
@@ -126,9 +126,9 @@
         - [x] `BeamWeapon`, `SeekerWeapon` → `Component` aliases <!-- id: 127d -->
         - [x] **AUDIT**: No `isinstance` checks remain for any legacy class <!-- id: 127b -->
         - [x] Fixed seeker range tests (0.8 maneuvering factor in ability) <!-- id: 127e -->
-        - [ ] Delete `_instantiate_abilities` shim logic <!-- id: 128 -->
-        - [ ] Simplify `COMPONENT_TYPE_MAP` - many entries now point to `Component` <!-- id: 150 -->
-        - [ ] Clean up unused imports across codebase <!-- id: 130 -->
+        - [x] Delete `_instantiate_abilities` shim logic <!-- id: 128 -->
+        - [x] Simplify `COMPONENT_TYPE_MAP` - many entries now point to `Component` <!-- id: 150 -->
+        - [x] Clean up unused imports across codebase <!-- id: 130 -->
     - [ ] **Future: Modifier → Ability Value Sync** <!-- id: 151 -->
         - When modifiers change stats (e.g., `endurance_mult`), ability values should recalculate
         - Currently abilities read from data dict; modifiers affect stats dict

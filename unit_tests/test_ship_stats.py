@@ -99,15 +99,15 @@ class TestShipStatsBaseline(unittest.TestCase):
     
     def test_thrust_calculation_from_engine(self):
         """Verify thrust is calculated correctly from Engine components."""
-        # Create an engine with thrust_force
+        # Create an engine with CombatPropulsion ability
         engine_data = {
             'id': 'test_engine',
             'name': 'Test Engine',
             'type': 'Engine',
             'mass': 100,
             'hp': 50,
-            'thrust_force': 1500,
             'abilities': {
+                'CombatPropulsion': {'value': 1500},
                 'ResourceConsumption': {'resource': 'fuel', 'amount': 10, 'trigger': 'constant'}
             }
         }
@@ -132,7 +132,9 @@ class TestShipStatsBaseline(unittest.TestCase):
             'type': 'Thruster',
             'mass': 50,
             'hp': 30,
-            'turn_speed': 45.0
+            'abilities': {
+                'ManeuveringThruster': {'value': 45.0}
+            }
         }
         thruster = self.Thruster(thruster_data)
         
@@ -200,7 +202,9 @@ class TestShipStatsBaseline(unittest.TestCase):
             'type': 'Engine',
             'mass': 100,
             'hp': 50,
-            'thrust_force': 2000
+            'abilities': {
+                'CombatPropulsion': {'value': 2000}
+            }
         }
         engine = self.Engine(engine_data)
         
@@ -218,7 +222,9 @@ class TestShipStatsBaseline(unittest.TestCase):
             'type': 'Engine',
             'mass': 100,
             'hp': 50,
-            'thrust_force': 1000
+            'abilities': {
+                'CombatPropulsion': {'value': 1000}
+            }
         }
         engine2_data = {
             'id': 'engine2',
@@ -226,7 +232,9 @@ class TestShipStatsBaseline(unittest.TestCase):
             'type': 'Engine',
             'mass': 100,
             'hp': 50,
-            'thrust_force': 1500
+            'abilities': {
+                'CombatPropulsion': {'value': 1500}
+            }
         }
         
         engine1 = self.Engine(engine1_data)
@@ -291,7 +299,9 @@ class TestAbilityModifierSync(unittest.TestCase):
             'type': 'Engine',
             'mass': 100,
             'hp': 50,
-            'thrust_force': 1000
+            'abilities': {
+                'CombatPropulsion': {'value': 1000}
+            }
         }
         engine = self.Engine(engine_data)
         

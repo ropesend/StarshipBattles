@@ -12,58 +12,28 @@ from game_constants import AttackType
 
 class MockPDC(BeamWeapon):
     def __init__(self):
-        # Mimic Point Defence Cannon using new tag-based PDC system
-        from abilities import BeamWeaponAbility
-        
-        self.formulas = {}
-        self.name = "PDC"
-        self.range = 1000
-        self.damage = 10
-        self.current_hp = 10
-        self.max_hp = 10
-        self.is_active = True
-        self.firing_arc = 360  # Omni
-        self.facing_angle = 0
-        self.reload_time = 0.1
-        self.cooldown_timer = 0
-        self.base_accuracy = 1.0
-        self.accuracy_falloff = 0
-        self.allowed_layers = [LayerType.OUTER]
-        self.type_str = "BeamWeapon"
-        self.major_classification = "Weapons"
-        self.mass = 10
-        self.base_mass = 10
-        self.base_max_hp = 10
-        self.modifiers = []
-        self.shots_fired = 0
-        self.shots_hit = 0
-        self.ship = None
-        self.data = {
-            'damage': 10,
-            'range': 1000,
-            'cost': 0,
-            'thrust_force': 0,
-            'turn_speed': 0,
-            'energy_generation': 0,
-            'capacity': 0,
-            'firing_arc': 360,
-            'reload': 0.1
+        # Use proper Component initialization with abilities dict
+        # This ensures abilities survive recalculate_stats()
+        data = {
+            'id': 'mock_pdc',
+            'name': 'PDC',
+            'type': 'BeamWeapon',
+            'mass': 10,
+            'hp': 10,
+            'abilities': {
+                'BeamWeaponAbility': {
+                    'damage': 10,
+                    'range': 1000,
+                    'reload': 0.1,
+                    'firing_arc': 360,
+                    'base_accuracy': 1.0,
+                    'accuracy_falloff': 0,
+                    'tags': ['pdc']  # Tag-based PDC detection
+                }
+            }
         }
-        
-        # New tag-based PDC system - create BeamWeaponAbility with 'pdc' tag
-        pdc_ability_data = {
-            'damage': 10,
-            'range': 1000,
-            'reload': 0.1,
-            'firing_arc': 360,
-            'tags': ['pdc']  # Tag-based PDC detection
-        }
-        pdc_ability = BeamWeaponAbility(self, pdc_ability_data)
-        self.ability_instances = [pdc_ability]
-        
-        # Keep legacy abilities dict for backward compatibility checks
-        self.abilities = {'PointDefense': True}
-        self.base_abilities = {'PointDefense': True}
+        super().__init__(data)
+        self.cooldown_timer = 0  # Start ready to fire
 
     def update(self):
         dt = 0.01

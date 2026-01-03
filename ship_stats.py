@@ -1,4 +1,4 @@
-from components import ComponentStatus, LayerType, Engine, Thruster, Generator, Tank, Armor, Shield, ShieldRegenerator, Weapon, Hangar  # Phase 7: Removed Bridge
+from components import ComponentStatus, LayerType, Shield, ShieldRegenerator, Hangar  # Phase 7: Removed Bridge, Engine, Thruster, Generator, Tank, Armor, Weapon (now use abilities)
 import math
 
 class ShipStatsCalculator:
