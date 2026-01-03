@@ -9,7 +9,7 @@ import math
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from ship import Ship, initialize_ship_data
-from components import Component, LayerType, COMPONENT_REGISTRY, Weapon, load_components
+from components import Component, LayerType, COMPONENT_REGISTRY, load_components
 from ai import AIController, COMBAT_STRATEGIES
 from spatial import SpatialGrid
 from projectiles import Projectile
@@ -116,8 +116,10 @@ class TestMultitarget(unittest.TestCase):
         # Add PDC: Facing 0 (Right), Arc 45
         pdc = COMPONENT_REGISTRY['point_defence_cannon'].clone()
         pdc.facing_angle = 0
-        pdc.firing_arc = 45
-        pdc.range = 800
+        limit_ab = pdc.get_ability('ProjectileWeaponAbility') or pdc.get_ability('WeaponAbility')
+        if limit_ab:
+            limit_ab.firing_arc = 45
+            limit_ab.range = 800
         res = self.ship.add_component(pdc, LayerType.OUTER)
         if not res:
             self.fail("PDC add failed")

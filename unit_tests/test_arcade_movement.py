@@ -7,7 +7,7 @@ import math
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ship import Ship, LayerType, initialize_ship_data
-from components import load_components, create_component, Engine, Thruster
+from components import load_components, create_component
 
 class TestArcadeMovement(unittest.TestCase):
     @classmethod

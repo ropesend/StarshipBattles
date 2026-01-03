@@ -208,8 +208,13 @@ class VehicleLaunchAbility(Ability):
         super().__init__(component, data)
         self.fighter_class = data.get('fighter_class', 'Fighter (Small)')
         self.capacity = data.get('capacity', 0)
+        self._base_capacity = self.capacity
         self.cycle_time = data.get('cycle_time', 5.0)
         self.cooldown = 0.0
+
+    def recalculate(self):
+        # Apply capacity mult
+        self.capacity = int(self._base_capacity * self.component.stats.get('capacity_mult', 1.0))
         
     def update(self) -> bool:
         if self.cooldown > 0:
@@ -282,6 +287,13 @@ class ToHitAttackModifier(Ability):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
         self.amount = float(val)
+        self._base_amount = self.amount
+
+    def recalculate(self):
+        # Apply generic properties or specific mult if needed. 
+        # Modifiers usually stack by addition in 'properties', but if we want mult:
+        # For now, just re-setting base in case we add multipliers later.
+        pass
 
     def get_ui_rows(self):
         val = self.amount
@@ -293,6 +305,10 @@ class ToHitDefenseModifier(Ability):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
         self.amount = float(val)
+        self._base_amount = self.amount
+
+    def recalculate(self):
+        pass
 
     def get_ui_rows(self):
         val = self.amount
@@ -304,6 +320,10 @@ class EmissiveArmor(Ability):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
         self.amount = int(val)
+        self._base_amount = self.amount
+
+    def recalculate(self):
+        pass
 
     def get_ui_rows(self):
         return [{'label': 'Dmg Ignore', 'value': f"{self.amount}", 'color_hint': '#FFFF00'}]
@@ -522,6 +542,7 @@ ABILITY_REGISTRY = {
     "ToHitAttackModifier": ToHitAttackModifier,
     "ToHitDefenseModifier": ToHitDefenseModifier,
     "EmissiveArmor": EmissiveArmor,
+    "Armor": lambda c, d: Ability(c, d), # Dummy ability for tag/existence checks
     
     # Primitive/Shortcut Factories
     "FuelStorage": lambda c, d: ResourceStorage(c, {"resource": "fuel", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "fuel"}),

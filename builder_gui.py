@@ -14,11 +14,9 @@ from pygame_gui.windows import UIConfirmationDialog
 
 from profiling import profile_action, profile_block
 
-from ship import Ship, LayerType, SHIP_CLASSES, VEHICLE_CLASSES
+from ship import Ship, LayerType, VEHICLE_CLASSES
 from components import (
-    get_all_components, MODIFIER_REGISTRY,   # Phase 7: Removed Bridge, Weapon, etc.
-    BeamWeapon, ProjectileWeapon, SeekerWeapon, Engine, Thruster, Armor, Tank, Generator,
-    CrewQuarters, LifeSupport
+    get_all_components, MODIFIER_REGISTRY
 )
 from sprites import SpriteManager
 from preset_manager import PresetManager

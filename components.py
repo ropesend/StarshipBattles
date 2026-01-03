@@ -163,10 +163,7 @@ class Component:
             if 'pdc' in ab.tags:
                 return True
         
-        # 2. Backward compatibility: check legacy abilities dict
-        if self.abilities.get('PointDefense', False):
-            return True
-            
+
         return False
 
     def get_ui_rows(self):
@@ -441,89 +438,34 @@ class Component:
         # But we need to know the class.
         return self.__class__(self.data)
 
-# Phase 7: Bridge is now an alias for Component (backward compatibility)
-Bridge = Component
 
-from logger import log_event
-
-# Phase 7: Weapon is now an alias for Component (backward compatible)
-# All weapon stats and methods are now in WeaponAbility/ProjectileWeaponAbility/BeamWeaponAbility
-Weapon = Component
-
-# Phase 7: ProjectileWeapon is now an alias for Component
-# All projectile stats are in ProjectileWeaponAbility
-ProjectileWeapon = Component
-
-# Phase 7: Engine, Thruster are now aliases for Component (backward compatible)
-# All thrust/turn stats are now managed via CombatPropulsion/ManeuveringThruster abilities
-Engine = Component
-Thruster = Component
-
-# Phase 7: Tank, Armor, Generator are now aliases for Component (backward compatible)
-Tank = Component
-Armor = Component
-Generator = Component
-
-# Phase 7: BeamWeapon is now an alias for Component
-# All beam accuracy stats and calculate_hit_chance are in BeamWeaponAbility
-BeamWeapon = Component
-
-# Phase 7: SeekerWeapon is now an alias for Component
-# All seeker stats are in SeekerWeaponAbility
-SeekerWeapon = Component
-
-# Phase 7: CrewQuarters is now an alias for Component
-# crew_capacity was never used in the codebase; abilities handle crew via 'CrewCapacity'
-CrewQuarters = Component
-
-# Phase 7: LifeSupport is now an alias for Component
-# life_support_capacity was never used; abilities handle it via 'LifeSupportCapacity'
-LifeSupport = Component
-
-# Phase 7: Sensor is now an alias for Component
-# attack_modifier was never used; abilities handle it via 'ToHitAttackModifier'
-Sensor = Component
-
-# Phase 7: Electronics is now an alias for Component
-# defense_modifier was never used; abilities handle it via 'ToHitDefenseModifier'
-Electronics = Component
-
-# Phase 7: Shield is now an alias for Component
-# shield_capacity logic migrated to ShieldProjection.recalculate()
-Shield = Component
-
-# Phase 7: ShieldRegenerator is now an alias for Component
-# regen_rate logic migrated to ShieldRegeneration.recalculate()
-ShieldRegenerator = Component
-
-# Phase 7: Hangar is now an alias for Component
-# launch logic migrated to VehicleLaunchAbility usage in ship_combat.py
-Hangar = Component
+# Legacy Aliases - REMOVED
 
 COMPONENT_REGISTRY = {}
 # Phase 7 Simplified: Aliased types now use Component directly
 # Types with custom logic (Shield, Hangar, etc.) are now also aliases
 # as their logic has been unified into the Ability system.
+
 COMPONENT_TYPE_MAP = {
-    # Aliased types (all behaviors now in abilities)
+    # All types map to generic Component
     "Bridge": Component,
     "Weapon": Component,
     "ProjectileWeapon": Component,
-    "Engine": Component,
-    "Thruster": Component,
-    "Tank": Component,
-    "Armor": Component,
-    "Generator": Component,
     "BeamWeapon": Component,
     "SeekerWeapon": Component,
-    # Also aliased (simple classes)
-    "CrewQuarters": Component,
-    "LifeSupport": Component,
-    "Sensor": Component,
-    "Electronics": Component,
+    "Engine": Component,
+    "Thruster": Component,
+    "ManeuveringThruster": Component,
     "Shield": Component,
     "ShieldRegenerator": Component,
-    "Hangar": Component
+    "Generator": Component,
+    "Hangar": Component,
+    "Armor": Component,
+    "Sensor": Component,
+    "Electronics": Component,
+    "Tank": Component,
+    "CrewQuarters": Component,
+    "LifeSupport": Component
 }
 
 def load_components(filepath="data/components.json"):

@@ -64,7 +64,7 @@ class TestCrystallineArmor(unittest.TestCase):
 
     def add_armor(self):
         print("DEBUG: Adding armor...")
-        from components import COMPONENT_REGISTRY, Shield
+        from components import COMPONENT_REGISTRY
         c = COMPONENT_REGISTRY["crystalline_armor"].clone()
         self.ship.layers[LayerType.ARMOR]['components'].append(c)
         

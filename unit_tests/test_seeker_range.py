@@ -5,7 +5,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from components import load_components, get_all_components, create_component, SeekerWeapon
+from components import load_components, get_all_components, create_component
 
 class TestSeekerRange(unittest.TestCase):
     @classmethod

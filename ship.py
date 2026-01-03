@@ -27,7 +27,7 @@ VALIDATOR = _VALIDATOR
 
 # Load Vehicle Classes from JSON
 VEHICLE_CLASSES: Dict[str, Any] = {}
-SHIP_CLASSES: Dict[str, float] = {}  # Legacy compatibility - maps class name to max_mass
+SHIP_CLASSES: Dict[str, float] = {}  # Deprecated - Use VEHICLE_CLASSES
 
 def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_filepath: Optional[str] = None) -> None:
     """
@@ -80,8 +80,9 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_file
             
             VEHICLE_CLASSES.update(raw_classes)
             
-            # Build legacy SHIP_CLASSES dict for backward compatibility
+
             SHIP_CLASSES.clear()
+            # Keep populated for now if external modules use it, but internal use is removed.
             SHIP_CLASSES.update({name: cls['max_mass'] for name, cls in VEHICLE_CLASSES.items()})
             print(f"Loaded {len(VEHICLE_CLASSES)} vehicle classes.")
     except FileNotFoundError:
@@ -138,7 +139,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.target_speed: float = 0.0 # New Target Speed Control
         
         # Budget
-        self.max_mass_budget: float = SHIP_CLASSES.get(self.ship_class, 1000)
+        self.max_mass_budget: float = class_def.get('max_mass', 1000)
         
         self.radius: float = 40.0 # Will be recalculated
         
@@ -241,8 +242,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                     if rng > max_rng:
                         max_rng = rng
                 
-                # Legacy fallback removed in Phase 9
-                pass
+
         return max_rng if max_rng > 0 else 0.0
 
     def update(self, dt: float = 0.01, context: Optional[dict] = None) -> None:
@@ -586,13 +586,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         total_score = 0.0
         for layer in self.layers.values():
             for comp in layer['components']:
-                # Phase 7: Use ability-based check instead of isinstance(Sensor)
-                if comp.is_active and 'ToHitAttackModifier' in comp.abilities:
-                    val = comp.abilities.get('ToHitAttackModifier', 0.0)
-                    if isinstance(val, dict):
-                        total_score += val.get('value', 0.0)
-                    else:
-                        total_score += float(val)
+                # Phase 7: Use ability-based check
+                for ab in comp.get_abilities('ToHitAttackModifier'):
+                    total_score += ab.value
         return total_score
 
     def get_total_ecm_score(self) -> float:
@@ -600,13 +596,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         total_score = 0.0
         for layer in self.layers.values():
             for comp in layer['components']:
-                # Phase 7: Use ability-based check instead of isinstance(Electronics/Armor)
-                if comp.is_active and 'ToHitDefenseModifier' in comp.abilities:
-                    val = comp.abilities.get('ToHitDefenseModifier', 0.0)
-                    if isinstance(val, dict):
-                        total_score += val.get('value', 0.0)
-                    else:
-                        total_score += float(val)
+                # Phase 7: Use ability-based check
+                for ab in comp.get_abilities('ToHitDefenseModifier'):
+                    total_score += ab.value
         return total_score
 
     def check_validity(self) -> bool:

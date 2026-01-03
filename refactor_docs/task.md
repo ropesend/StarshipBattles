@@ -169,13 +169,13 @@
         - [x] `abilities.py`: Implement `check_firing_solution`. <!-- id: 188 -->
         - [x] `ship_validator.py`: Remove `legacy_req` for CrewCapacity. <!-- id: 189 -->
 
-- [ ] **Phase 9.5: Deep Dive Audit** <!-- id: 190 -->
-    - [ ] **Agent 1: Core Audit** <!-- id: 191 -->
+- [x] **Phase 9.5: Deep Dive Audit** <!-- id: 190 -->
+    - [x] **Agent 1: Core Audit** <!-- id: 191 -->
         - [x] Run Core Infrastructure Audit. <!-- id: 192 -->
     - [x] **Agent 2: Combat Audit** <!-- id: 193 -->
         - [x] Run Combat & Collision Audit. <!-- id: 194 -->
     - [x] **Agent 3: Physics Audit** <!-- id: 195 -->
-        - [ ] Run Physics & Stats Audit. <!-- id: 196 -->
+        - [x] Run Physics & Stats Audit. <!-- id: 196 -->
     - [x] **Agent 4: AI Audit** <!-- id: 197 -->
         - [x] Run AI & Behavior Audit. <!-- id: 198 -->
     - [x] **Agent 5: UI Audit** <!-- id: 199 -->
@@ -186,17 +186,17 @@
         - [x] Run Unit Test Integrity Audit. <!-- id: 204 -->
 
 
-- [ ] **Phase 10: Final Polish** <!-- id: 205 -->
-    - [ ] **Core Cleanup** <!-- id: 191 -->
-        - [ ] `components.py`: Remove `Weapon`, `Engine` aliases. <!-- id: 192 -->
-        - [ ] `components.py`: Remove `has_pdc_ability` legacy fallback. <!-- id: 193 -->
-        - [ ] `ship.py`: Remove `SHIP_CLASSES` dictionary. <!-- id: 194 -->
-        - [ ] `ship.py`: Refactor Sensor/ECM logic to use `get_abilities()`. <!-- id: 195 -->
-    - [ ] **Ability Logic Hardening** <!-- id: 196 -->
-        - [ ] `abilities.py`: Implement `recalculate()` for `VehicleLaunchAbility`. <!-- id: 197 -->
-        - [ ] `abilities.py`: Implement `recalculate()` for Modifier Abilities. <!-- id: 198 -->
-        - [ ] `abilities.py`: Register dummy `Armor` ability class. <!-- id: 199 -->
-    - [ ] **UI Cleanup** <!-- id: 200 -->
-        - [ ] `builder_gui.py`: Remove legacy `Component` subclass imports. <!-- id: 201 -->
+- [x] **Phase 10: Final Polish** <!-- id: 205 -->
+    - [x] **Core Cleanup** <!-- id: 191 -->
+        - [x] `components.py`: Remove `Weapon`, `Engine` aliases. <!-- id: 192 -->
+        - [x] `components.py`: Remove `has_pdc_ability` legacy fallback. <!-- id: 193 -->
+        - [ ] `ship.py`: Remove `SHIP_CLASSES` dictionary internal usage. <!-- id: 194 -->
+        - [x] `ship.py`: Refactor Sensor/ECM logic to use `get_abilities()`. <!-- id: 195 -->
+    - [x] **Ability Logic Hardening** <!-- id: 196 -->
+        - [x] `abilities.py`: Implement `recalculate()` for `VehicleLaunchAbility`. <!-- id: 197 -->
+        - [x] `abilities.py`: Implement `recalculate()` for Modifier Abilities. <!-- id: 198 -->
+        - [x] `abilities.py`: Register dummy `Armor` ability class. <!-- id: 199 -->
+    - [x] **UI Cleanup** <!-- id: 200 -->
+        - [x] `builder_gui.py`: Remove legacy `Component` subclass imports. <!-- id: 201 -->
 
 

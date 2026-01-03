@@ -7,8 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from components import (
     load_components, load_modifiers, create_component,
-    MODIFIER_REGISTRY, COMPONENT_REGISTRY,
-    Weapon, BeamWeapon, ProjectileWeapon
+    MODIFIER_REGISTRY, COMPONENT_REGISTRY, Component
 )
 
 
@@ -112,7 +111,8 @@ class TestComponentCloning(unittest.TestCase):
         railgun = create_component('railgun')
         clone = railgun.clone()
         
-        self.assertIsInstance(clone, ProjectileWeapon)
+        self.assertIsInstance(clone, Component)
+        self.assertTrue(clone.has_ability('ProjectileWeaponAbility'))
         # Phase 7: Compare ability values, not component attributes
         clone_ab = clone.get_ability('ProjectileWeaponAbility')
         railgun_ab = railgun.get_ability('ProjectileWeaponAbility')
@@ -124,8 +124,8 @@ class TestComponentCloning(unittest.TestCase):
         laser = create_component('laser_cannon')
         clone = laser.clone()
         
-        self.assertIsInstance(clone, BeamWeapon)
-        self.assertIsInstance(clone, BeamWeapon)
+        self.assertIsInstance(clone, Component)
+        self.assertTrue(clone.has_ability('BeamWeaponAbility'))
         # Verify energy cost via abilities
         from resources import ResourceConsumption
         original_cost = 0

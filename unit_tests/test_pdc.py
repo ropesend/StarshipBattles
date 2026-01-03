@@ -2,7 +2,7 @@ import unittest
 import pygame
 import math
 from ship import Ship, LayerType
-from components import Component, Weapon, SeekerWeapon, BeamWeapon
+from components import Component
 from battle import BattleScene
 from projectiles import Projectile
 from game_constants import AttackType
@@ -10,7 +10,7 @@ from game_constants import AttackType
 # Mock definitions to avoid loading full game data if possible, 
 # or we just rely on class structure.
 
-class MockPDC(BeamWeapon):
+class MockPDC(Component):
     def __init__(self):
         # Use proper Component initialization with abilities dict
         # This ensures abilities survive recalculate_stats()

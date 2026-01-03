@@ -493,7 +493,10 @@
                     "reload": 0.04,
                     "firing_arc": 180,
                     "base_accuracy": 10.0,
-                    "accuracy_falloff": 0.003
+                    "accuracy_falloff": 0.003,
+                    "tags": [
+                        "pdc"
+                    ]
                 }
             },
             "major_classification": "Weapons"

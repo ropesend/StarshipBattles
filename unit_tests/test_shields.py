@@ -1,6 +1,6 @@
 import unittest
 from ship import Ship, LayerType, initialize_ship_data
-from components import Shield, ShieldRegenerator, load_components, create_component
+from components import Component, load_components, create_component
 import pygame
 
 class TestShields(unittest.TestCase):
@@ -25,7 +25,7 @@ class TestShields(unittest.TestCase):
             'id': 's1', 'name': 'Shield', 'type': 'Shield', 
             'mass': 10, 'hp': 10, 'allowed_layers': ['CORE'], 'abilities': {'ShieldProjection': 100}
         }
-        self.shield = Shield(self.shield_data)
+        self.shield = Component(self.shield_data)
         
         # Shield Regen: 60/sec (1/tick) for math simplicity, Cost 30/sec (0.5/tick)
         self.regen_data = {
@@ -33,7 +33,7 @@ class TestShields(unittest.TestCase):
             'mass': 10, 'hp':10, 'allowed_layers': ['CORE'], 
             'abilities': {'ShieldRegeneration': 60.0, 'EnergyConsumption': 30.0}
         }
-        self.regenerator = ShieldRegenerator(self.regen_data)
+        self.regenerator = Component(self.regen_data)
         
         self.ship.add_component(self.shield, LayerType.CORE)
         self.ship.add_component(self.regenerator, LayerType.CORE)
