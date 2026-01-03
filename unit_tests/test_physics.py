@@ -169,6 +169,79 @@ class TestPhysicsDirection(unittest.TestCase):
         self.assertAlmostEqual(forward.length(), 1.0, places=5)
 
 
+
+class TestAbilityDrivenPhysics(unittest.TestCase):
+    """Refactored Tests for Ability-Driven Physics."""
+    
+
+    def setUp(self):
+        if not pygame.get_init():
+            pygame.init()
+        # Mocking Ability System usage
+        from ship_physics import ShipPhysicsMixin
+        from physics import PhysicsBody
+        
+        class MockShip(PhysicsBody, ShipPhysicsMixin):
+            def __init__(self):
+                super().__init__(0, 0)
+                self.mass = 1000
+                self.drag = 0.5
+                self.turn_speed = 90
+                self.acceleration_rate = 100
+                self.max_speed = 500
+                self.current_speed = 0
+                self.is_active = True
+                self.is_thrusting = False
+                self.engine_throttle = 1.0
+                self.turn_throttle = 1.0
+                self.stats = {}
+                
+            def get_total_ability_value(self, name, operational_only=True):
+                if name == 'CombatPropulsion':
+                    # Return a value that results in acceleration_rate being used or calculated?
+                    # ShipPhysicsMixin uses this to CALCULATE current_accel.
+                    # current_accel = (total_thrust * 2500) / mass^2
+                    # If we want to control behavior, we return a thrust value.
+                    return getattr(self, '_mock_thrust', 100000) 
+                return 0
+                
+        self.ship = MockShip()
+        
+    def test_ability_driven_thrust(self):
+        """Test that physics uses stats derived from CombatPropulsion abilities."""
+        self.ship.angle = 0 # Facing Right
+        self.ship._mock_thrust = 200000 # High thrust
+        
+        # Apply Thrust using Mixin method
+        self.ship.thrust_forward()
+        self.ship.update_physics_movement()
+        
+        # Velocity should be > 0
+        self.assertGreater(self.ship.current_speed, 0)
+        self.assertGreater(self.ship.velocity.x, 0)
+        
+    def test_mass_dampening(self):
+        """Test that higher mass reduces effective response."""
+        # Baseline
+        self.ship.mass = 100
+        self.ship._mock_thrust = 100000
+        self.ship.current_speed = 0
+        self.ship.thrust_forward()
+        self.ship.update_physics_movement()
+        fast_speed = self.ship.current_speed
+        
+        # High Mass
+        self.ship.mass = 10000
+        self.ship.current_speed = 0
+        self.ship.velocity = pygame.math.Vector2(0,0)
+        self.ship.thrust_forward()
+        self.ship.update_physics_movement()
+        slow_speed = self.ship.current_speed
+        
+        self.assertGreater(fast_speed, slow_speed)
+
+
 if __name__ == '__main__':
     unittest.main()
+
 

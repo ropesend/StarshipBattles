@@ -229,5 +229,138 @@ class TestBuilderValidation(unittest.TestCase):
         # We'll just define the test structure.
         pass
 
+    def test_block_id_restriction(self):
+        """Step 7: Verify block_id restriction."""
+        # Inject restriction: Block 'test_comp'
+        self.ship.layers[LayerType.INNER]['restrictions'].append("block_id:test_comp")
+        
+        comp = self.create_component(id="test_comp")
+        other_comp = self.create_component(id="other_comp")
+        
+        # Test Blocked
+        self.assertFalse(self.ship.add_component(comp, LayerType.INNER), "Should block specific ID")
+        
+        # Test Allowed
+        self.assertTrue(self.ship.add_component(other_comp, LayerType.INNER), "Should allow other IDs")
+
+
+class TestComplexRules(unittest.TestCase):
+    def setUp(self):
+        if not pygame.get_init():
+            pygame.init()
+        # Initialize ship logic
+        from ship import initialize_ship_data, Ship
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        initialize_ship_data(root_dir)
+        
+        self.ship = Ship("Complex Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
+        
+        from ship_validator import ShipDesignValidator
+        self.validator = ShipDesignValidator()
+
+    def create_component_with_abilities(self, abilities: dict, name="Test Comp"):
+        data = {
+            "id": name.lower().replace(" ", "_"),
+            "name": name,
+            "type": "Component",
+            "mass": 10,
+            "hp": 100,
+            "allowed_layers": ["INNER", "OUTER"],
+            "allowed_vehicle_types": ["Ship"],
+            "abilities": abilities
+        }
+        return Component(data)
+
+    def test_class_requirements(self):
+        """Verify ClassRequirementsRule (Crew/LifeSupport)."""
+        # Patch VEHICLE_CLASSES locally to force requirements
+        mock_classes = {
+            "Cruiser": {
+                "max_mass": 1000, 
+                "requirements": {
+                    "req_crew": {"ability": "CrewRequired", "min_value": 0} # Just tracking
+                }
+            }
+        }
+        
+        # We need to test the logic in ClassRequirementsRule.validate
+        # It calculates totals from components.
+        
+        # Case 1: Insufficient Crew Housing
+        # Component needing 10 Crew
+        bridge = self.create_component_with_abilities(
+            {"CrewRequired": 10}, 
+            name="Bridge"
+        )
+        
+        # Quarters providing 5 Crew
+        quarters = self.create_component_with_abilities(
+            {"CrewCapacity": 5}, 
+            name="Quarters"
+        )
+        
+        self.ship.add_component(bridge, LayerType.INNER)
+        self.ship.add_component(quarters, LayerType.INNER)
+        
+        # Run validation
+        result = self.validator.validate_design(self.ship)
+        
+        # Should have error about crew housing (Need 5 more)
+        # Note: ClassRequirementsRule logic: if crew_capacity < crew_required
+        
+        # To make this deterministic, we need to ensure our mocked vehicle classes are used.
+        # But ShipDesignValidator imports VEHICLE_CLASSES from ship.
+        # So we patch it there.
+        with patch('ship.VEHICLE_CLASSES', mock_classes):
+             result = self.validator.validate_design(self.ship)
+             
+        # Check errors
+        found_crew_error = any("more crew housing" in e for e in result.errors)
+        self.assertTrue(found_crew_error, f"Should report crew housing shortage. Errors: {result.errors}")
+        
+        # Case 2: Insufficient Life Support
+        # Logic: life_support < crew_required
+        # We have 5 capacity, 10 required.
+        # Add Life Support for 8 people.
+        life_support = self.create_component_with_abilities(
+            {"LifeSupportCapacity": 8}, 
+            name="LifeSupport"
+        )
+        self.ship.add_component(life_support, LayerType.INNER)
+        
+        with patch('ship.VEHICLE_CLASSES', mock_classes):
+             result = self.validator.validate_design(self.ship)
+             
+        # Crew Housing: 5 cap < 10 req -> Error
+        # Life Support: 8 cap < 10 req -> Error
+        found_ls_error = any("more life support" in e for e in result.errors)
+        self.assertTrue(found_ls_error, f"Should report life support shortage. Errors: {result.errors}")
+
+    def test_resource_dependency(self):
+        """Verify ResourceDependencyRule (Ammo/Fuel)."""
+        
+        # Case 1: Ammo Consumer without Storage
+        weapon = self.create_component_with_abilities(
+            {"ResourceConsumption": [{"resource": "ammo", "amount": 1}]},
+            name="Cannon"
+        )
+        self.ship.add_component(weapon, LayerType.OUTER)
+        
+        result = self.validator.validate_design(self.ship)
+        
+        found_ammo_warn = any("Needs Ammo Storage" in w for w in result.warnings)
+        self.assertTrue(found_ammo_warn, f"Should warn about missing ammo storage. Warnings: {result.warnings}")
+        
+        # Case 2: Add Ammo Storage
+        magazine = self.create_component_with_abilities(
+            {"ResourceStorage": [{"resource": "ammo", "amount": 100}]},
+            name="Magazine"
+        )
+        self.ship.add_component(magazine, LayerType.INNER)
+        
+        result = self.validator.validate_design(self.ship)
+        found_ammo_warn = any("Needs Ammo Storage" in w for w in result.warnings)
+        self.assertFalse(found_ammo_warn, "Should NOT warn when ammo storage is present")
+
 if __name__ == '__main__':
     unittest.main()

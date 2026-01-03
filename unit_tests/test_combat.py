@@ -9,6 +9,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ship import Ship, LayerType, initialize_ship_data
 from components import load_components, create_component  # Phase 7: Removed Bridge import
+from unittest.mock import MagicMock
+
 
 
 class TestDamageLayerLogic(unittest.TestCase):
@@ -265,5 +267,63 @@ class TestWeaponCooldowns(unittest.TestCase):
         self.assertLess(weapon_ab.cooldown_timer, initial_cooldown)
 
 
-if __name__ == '__main__':
-    unittest.main()
+
+class TestCombatFlow(unittest.TestCase):
+    """Refactored Tests for Combat Flow (Projectile Creation)."""
+    
+    def setUp(self):
+        if not pygame.get_init():
+            pygame.init()
+        # Mocking Ship and Target 
+        self.ship = MagicMock()
+        self.ship.position = pygame.math.Vector2(0, 0)
+        self.ship.velocity = pygame.math.Vector2(0, 0)
+        self.ship.team_id = 0
+        
+        self.target = MagicMock()
+        self.target.position = pygame.math.Vector2(100, 0)
+        self.target.velocity = pygame.math.Vector2(10, 0) # Moving Right
+        self.target.radius = 10
+        self.target.is_active = True
+        
+    def test_projectile_creation(self):
+        """Test that firing creates a valid Projectile object."""
+        # Using real ProjectileWeaponAbility
+        from components import Component
+        from abilities import ProjectileWeaponAbility
+        from projectiles import Projectile
+        from game_constants import AttackType
+        
+        data = {
+            "projectile_speed": 200,
+            "damage": 10,
+            "range": 500
+        }
+        # Mock component
+        comp = MagicMock()
+        comp.position = pygame.math.Vector2(0,0)
+        comp.stats = {}
+        comp.ship = self.ship
+        
+        # Test direct projectile instantiation
+        # Init: owner, position, velocity, damage, range_val, endurance, proj_type, source_weapon=None, **kwargs
+        proj = Projectile(
+            owner=self.ship,
+            position=pygame.math.Vector2(0,0),
+            velocity=pygame.math.Vector2(200,0),
+            damage=10,
+            range_val=500,
+            endurance=5.0,
+            proj_type=AttackType.PROJECTILE,
+            source_id="shooter"
+        )
+        
+        self.assertEqual(proj.damage, 10)
+        self.assertEqual(proj.max_range, 500)
+        # Verify it moves
+        proj.update() # 0.01s tick inside update
+        # Projectile implementation does pos += velocity (velocity is per-tick displacement)
+        # Input was 200, so it moves 200.
+        self.assertAlmostEqual(proj.position.x, 200.0, places=2)
+
+
