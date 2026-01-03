@@ -269,61 +269,134 @@ class TestWeaponCooldowns(unittest.TestCase):
 
 
 class TestCombatFlow(unittest.TestCase):
-    """Refactored Tests for Combat Flow (Projectile Creation)."""
+    """Refactored Tests for Combat Flow (Firing and Damage)."""
     
     def setUp(self):
         if not pygame.get_init():
             pygame.init()
-        # Mocking Ship and Target 
-        self.ship = MagicMock()
-        self.ship.position = pygame.math.Vector2(0, 0)
-        self.ship.velocity = pygame.math.Vector2(0, 0)
-        self.ship.team_id = 0
+        # Initialize data for component creation
+        initialize_ship_data(os.getcwd())
+        load_components("data/components.json")
+            
+    def test_firing_solution_lead(self):
+        """Test lead calculation for moving targets."""
+        # Mixin logic requires a class instance
+        from ship_combat import ShipCombatMixin
+        class MockCombatShip(ShipCombatMixin):
+            pass
+            
+        ship = MockCombatShip()
+        ship.position = pygame.math.Vector2(0,0)
+        ship.velocity = pygame.math.Vector2(0,0)
         
-        self.target = MagicMock()
-        self.target.position = pygame.math.Vector2(100, 0)
-        self.target.velocity = pygame.math.Vector2(10, 0) # Moving Right
-        self.target.radius = 10
-        self.target.is_active = True
+        # Target moving right at 10 u/s at (100, 0)
+        target_pos = pygame.math.Vector2(100, 0)
+        target_vel = pygame.math.Vector2(10, 0)
+        proj_speed = 20.0 
         
-    def test_projectile_creation(self):
-        """Test that firing creates a valid Projectile object."""
-        # Using real ProjectileWeaponAbility
+        # Expected collision:
+        # P = Vp * t = 20t
+        # T = P0 + Vt * t = 100 + 10t
+        # Intercept when distance covered matches
+        # (20t)^2 = (100 + 10t)^2
+        # ... t = 10.0 (See calculation logic)
+        
+        # ship.solve_lead(pos, vel, t_pos, t_vel, p_speed)
+        t = ship.solve_lead(ship.position, ship.velocity, target_pos, target_vel, proj_speed)
+        self.assertAlmostEqual(t, 10.0, delta=0.1)
+
+    def test_fire_weapons_creates_projectiles(self):
+        """Test that fire_weapons returns correct projectile objects."""
+        from ship import Ship, LayerType
         from components import Component
-        from abilities import ProjectileWeaponAbility
-        from projectiles import Projectile
         from game_constants import AttackType
         
-        data = {
-            "projectile_speed": 200,
-            "damage": 10,
-            "range": 500
-        }
-        # Mock component
-        comp = MagicMock()
-        comp.position = pygame.math.Vector2(0,0)
-        comp.stats = {}
-        comp.ship = self.ship
+        ship = Ship("Shooter", 0,0, (255,255,255))
         
-        # Test direct projectile instantiation
-        # Init: owner, position, velocity, damage, range_val, endurance, proj_type, source_weapon=None, **kwargs
-        proj = Projectile(
-            owner=self.ship,
-            position=pygame.math.Vector2(0,0),
-            velocity=pygame.math.Vector2(200,0),
-            damage=10,
-            range_val=500,
-            endurance=5.0,
-            proj_type=AttackType.PROJECTILE,
-            source_id="shooter"
-        )
+        # Add a weapon component manually to ensure it has no cost issues
+        # Component needs to be 'active'
+        weapon = Component({
+            "id": "test_gun",
+            "name": "Gun", 
+            "type": "Weapon",
+            "mass": 10,
+            "hp": 50,
+            "abilities": {
+                "WeaponAbility": {"range": 1000, "fire_rate": 1, "cooldown": 0},
+                "ProjectileWeaponAbility": {"projectile_speed": 100, "damage": 10}
+            }
+        })
+        ship.add_component(weapon, LayerType.OUTER)
+        ship.recalculate_stats() # Activate component
         
-        self.assertEqual(proj.damage, 10)
-        self.assertEqual(proj.max_range, 500)
-        # Verify it moves
-        proj.update() # 0.01s tick inside update
-        # Projectile implementation does pos += velocity (velocity is per-tick displacement)
-        # Input was 200, so it moves 200.
-        self.assertAlmostEqual(proj.position.x, 200.0, places=2)
+        # Setup Target
+        target = MagicMock()
+        target.position = pygame.math.Vector2(100, 0)
+        target.velocity = pygame.math.Vector2(0,0)
+        target.is_alive = True
+        target.team_id = 1
+        target.type = 'ship'
+        
+        ship.team_id = 0
+        ship.current_target = target
+        
+        # Fire
+        attacks = ship.fire_weapons()
+        
+        self.assertEqual(len(attacks), 1)
+        self.assertEqual(attacks[0].damage, 10)
+        self.assertEqual(attacks[0].type, AttackType.PROJECTILE) # proj_type -> type
+        self.assertEqual(attacks[0].owner, ship)
+
+    def test_special_armor_interactions(self):
+        """Test Emissive and Crystalline Armor logic."""
+        from ship import Ship
+        ship = Ship("Tank", 0,0, (255,255,255))
+        
+        # 1. Emissive Armor (Flat Reduction)
+        ship.emissive_armor = 5
+        ship.is_alive = True
+        
+        # Add a dummy component to take damage
+        c = create_component('bridge')
+        ship.add_component(c, LayerType.CORE)
+        ship.recalculate_stats() 
+        ship.emissive_armor = 5
+        
+        c.is_active = True
+        c.current_hp = 100
+        initial_hp = c.current_hp
+        
+        # Take 10 damage -> Reduced by 5 -> 5 damage
+        ship.take_damage(10)
+        self.assertEqual(c.current_hp, initial_hp - 5)
+        
+        ship.emissive_armor = 5
+        
+        # Take 4 damage -> Reduced by 5 -> 0 damage
+        prev_hp = c.current_hp
+        ship.take_damage(4)
+        self.assertEqual(c.current_hp, prev_hp)
+        
+        # 2. Crystalline Armor (Absorb + Shield Recharge)
+        ship.emissive_armor = 0
+        ship.crystalline_armor = 10
+        ship.max_shields = 100
+        ship.current_shields = 50
+        
+        # Take 20 damage
+        # Absorb min(10, 20) = 10
+        # Shields += 10 -> 60
+        # Remaining Damage = 10
+        # Shield Absorption: min(60, 10) = 10 absorbed
+        # Shields -= 10 -> 50
+        # Remaining Damage = 0
+        # Component HP untouched
+        
+        prev_hp = c.current_hp
+        ship.take_damage(20)
+        
+        self.assertEqual(ship.current_shields, 50)
+        self.assertEqual(c.current_hp, prev_hp)
 
 

@@ -116,5 +116,76 @@ class TestShip(unittest.TestCase):
         # Check component types
         self.assertEqual(new_ship.layers[LayerType.CORE]['components'][0].name, "Bridge")
 
+class TestShipClassMutation(unittest.TestCase):
+    def setUp(self):
+        if not pygame.get_init():
+            pygame.init()
+        initialize_ship_data(os.getcwd())
+        load_components("data/components.json")
+        self.ship = Ship("Mutation Test", 0, 0, (255, 255, 255), ship_class="Frigate")
+
+    def test_change_class_migration(self):
+        """Verify components migrate or are removed during class change."""
+        # Add components to Frigate
+        bridge = create_component('bridge')
+        self.ship.add_component(bridge, LayerType.CORE)
+        
+        railgun = create_component('railgun')
+        self.ship.add_component(railgun, LayerType.OUTER)
+        
+        # Change to "Destroyer" with migration
+        self.ship.change_class("Destroyer", migrate_components=True)
+        
+        # Verify components remained
+        self.assertEqual(self.ship.ship_class, "Destroyer")
+        
+        # Helper to find component in layer
+        def has_comp(layer_type, comp):
+            return comp in self.ship.layers[layer_type]['components']
+            
+        self.assertTrue(has_comp(LayerType.CORE, bridge))
+        self.assertTrue(has_comp(LayerType.OUTER, railgun))
+        
+    def test_derelict_status_logic(self):
+        """Verify is_derelict update logic when key components are destroyed."""
+        # Patch vehicle class to require "Command"
+        from ship import VEHICLE_CLASSES
+        if "Frigate" in VEHICLE_CLASSES:
+            VEHICLE_CLASSES["Frigate"]["requirements"] = {"Command": 1}
+        
+        # Add Bridge (Assumed to provide Command=1)
+        bridge = create_component('bridge')
+        # Ensure it has ability for this test
+        if not bridge.get_abilities("Command"):
+             bridge.abilities["Command"] = {"value": 1} 
+        
+        # Strip resource/crew requirements to ensure it stays active without complex support
+        if "CrewRequired" in bridge.abilities: del bridge.abilities["CrewRequired"]
+        if "ResourceConsumption" in bridge.abilities: del bridge.abilities["ResourceConsumption"]
+        
+        bridge.is_active = True
+        
+        self.ship.add_component(bridge, LayerType.CORE)
+        
+        # Add Generator just in case (optional now)
+        generator = create_component('generator') 
+        generator.abilities["ResourceGeneration"] = [{"resource": "energy", "amount": 1000, "rate": 1000}]
+        # Use CORE which Frigate definitely has
+        self.ship.add_component(generator, LayerType.CORE)
+        
+        # Force re-calc but ensure bridge stays active
+        self.ship.recalculate_stats()
+        bridge.is_active = True # Force again after recalc
+        
+        self.ship.update_derelict_status()
+        self.assertFalse(self.ship.is_derelict, f"Ship should be operational (Bridge Active: {bridge.is_active}, Power: {self.ship.resources.get_value('energy')})")
+        
+        # Destroy Bridge
+        bridge.current_hp = 0
+        self.ship.recalculate_stats()
+        self.ship.update_derelict_status()
+        
+        self.assertTrue(self.ship.is_derelict, "Ship should be derelict after Command loss")
+
 if __name__ == '__main__':
     unittest.main()
