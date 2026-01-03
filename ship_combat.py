@@ -62,17 +62,17 @@ class ShipCombatMixin:
             for comp in layer['components']:
                 # Handle Hangar Launch (Phase 4: ability-based check)
                 if comp.has_ability('VehicleLaunch') and comp.is_active:
+                    vl_ability = comp.get_ability('VehicleLaunch')
                     # Auto-launch if we have a target (or maybe strategy dictates?)
                     # For now, if we have a target, we launch.
-                    if self.current_target and comp.can_launch():
-                        if comp.launch():
-                            attacks.append({
-                                'type': AttackType.LAUNCH,
-                                'source': self,
-                                'origin': self.position,
-                                'hangar': comp,
-                                'fighter_class': comp.fighter_class
-                            })
+                    if self.current_target and vl_ability.try_launch():
+                        attacks.append({
+                            'type': AttackType.LAUNCH,
+                            'source': self,
+                            'origin': self.position,
+                            'hangar': comp,
+                            'fighter_class': vl_ability.fighter_class
+                        })
                     continue
 
                 if comp.has_ability('WeaponAbility') and comp.is_active:

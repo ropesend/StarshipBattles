@@ -43,35 +43,34 @@
 | All Stage 6 items | ✅ Complete | See above |
 
 ### Classes Still Full Implementations (Not Aliased Yet)
-| Class | Lines | Reason |
-|-------|-------|--------|
-| `Shield` | ~40 | Has `_apply_custom_stats` |
-| `ShieldRegenerator` | ~20 | Has custom logic |
-| `Hangar` | ~30 | Has `can_launch()`, `launch()` methods |
+- **None!** All legacy component classes have been aliased to `Component`.
 
-### Recently Aliased (~16:30 PST)
-| Class | Lines Removed |
-|-------|---------------|
-| `CrewQuarters` | ~8 |
-| `LifeSupport` | ~8 |
-| `Sensor` | ~10 |
-| `Electronics` | ~10 |
+### Recently Aliased (~16:30-17:00 PST)
+| Class | Lines Removed | Notes |
+|-------|---------------|-------|
+| `CrewQuarters` | ~8 | |
+| `LifeSupport` | ~8 | |
+| `Sensor` | ~10 | |
+| `Electronics` | ~10 | |
+| `Shield` | ~40 | Logic migrated to `ShieldProjection.recalculate()` |
+| `ShieldRegenerator` | ~20 | Logic migrated to `ShieldRegeneration.recalculate()` |
+| `Hangar` | ~30 | Logic migrated to `VehicleLaunchAbility` usage in `ship_combat.py` |
 
 ### Future Work (Optional)
 | Item | Priority | Notes |
 |------|----------|-------|
-| Modifier → Ability value sync | LOW | Abilities don't auto-update when modifiers change |
+| Modifier → Ability value sync | MEDIUM | Implemented `recalculate()` protocol and `Component.stats` persistence. Implemented for Shield/Regen. Needs implementation for Weapons (`range`, `damage`). |
 
 ---
 
 ## 4. Known Limitations / Future Work
 
-### Modifier → Ability Value Sync (Not Implemented)
-When modifiers change stats (e.g., `endurance_mult`), ability values are NOT automatically recalculated.
-- **Why**: Abilities read from data dict; modifiers affect stats dict
-- **Gap**: Removed legacy `SeekerWeapon._apply_custom_stats` that bridged this
-- **Impact**: Range modifiers on seekers don't sync to ability values
-- **Workaround**: Test verifies modifier is registered, not ability value update
+### Modifier → Ability Value Sync (Partially Implemented)
+- **Status**: Implemented infrastructure (`Component.stats` persistence + `Ability.recalculate()` loop).
+- **Done**: `ShieldProjection` (Capacity), `ShieldRegeneration` (Rate) now sync with modifiers.
+- **Pending**: `WeaponAbility` (Range, Damage) and others still read base values from data dict.
+- **Impact**: Range modifiers on seekers don't sync to ability values (visual/logic gap remains for weapons).
+- **Fix**: Implement `recalculate()` in `WeaponAbility` to read `range_mult`, `damage_mult` from `self.component.stats`.
 
 ---
 

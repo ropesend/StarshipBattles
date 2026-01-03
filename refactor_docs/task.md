@@ -131,6 +131,8 @@
         - [x] Clean up unused imports across codebase <!-- id: 130 -->
         - [x] `CrewQuarters`, `LifeSupport` → `Component` aliases <!-- id: 152 -->
         - [x] `Sensor`, `Electronics` → `Component` aliases <!-- id: 153 -->
+        - [x] `Shield`, `ShieldRegenerator` → `Component` aliases (migrated logic to `recalculate()`) <!-- id: 154 -->
+        - [x] `Hangar` → `Component` alias (Refactored `test_fighter_launch.py` and `ship_combat.py`) <!-- id: 155 -->
     - [ ] **Future: Modifier → Ability Value Sync** <!-- id: 151 -->
         - When modifiers change stats (e.g., `endurance_mult`), ability values should recalculate
         - Currently abilities read from data dict; modifiers affect stats dict

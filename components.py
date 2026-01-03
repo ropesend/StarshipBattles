@@ -76,6 +76,7 @@ class Component:
         
         self.ship = None # Container reference
         
+        self.stats = {} # Current stats dictionary (calcualted)
         self.modifiers = [] # list of ApplicationModifier
         
         # Ability Instances (New System)
@@ -296,6 +297,7 @@ class Component:
 
         # 2. Calculate Modifier Stats (Accumulate multipliers)
         stats = self._calculate_modifier_stats()
+        self.stats = stats # Persist for introspection/ability access
 
         # 3. Apply Base Stats (Generic attributes)
         self._apply_base_stats(stats, old_max_hp)
@@ -463,6 +465,9 @@ class Component:
         from resources import ResourceConsumption, ResourceStorage, ResourceGeneration
         
         for ab in self.ability_instances:
+            # General Recalculate (Protocol for active abilities to sync with stats)
+            ab.recalculate()
+
             # ResourceConsumption (Base amount * consumption_mult)
             if isinstance(ab, ResourceConsumption):
                  base = ab.data.get('amount', 0.0)
@@ -471,12 +476,6 @@ class Component:
             # ResourceStorage (Base amount * capacity_mult)
             elif isinstance(ab, ResourceStorage):
                  base = ab.data.get('amount', 0.0)
-                 if self.__class__.__name__ == "Shield":
-                      # Special case for Shield component (not ShieldRegenerator or Tank) using simple capacity
-                      # But Shield component usually uses 'ShieldProjection' ability? 
-                      # This generic block is for ResourceStorage. Shield might not use ResourceStorage.
-                      # Proceed with generic logic.
-                      pass
                  ab.max_amount = base * stats.get('capacity_mult', 1.0)
             
             # ResourceGeneration (Base amount * energy_gen_mult)
@@ -593,86 +592,22 @@ Sensor = Component
 # defense_modifier was never used; abilities handle it via 'ToHitDefenseModifier'
 Electronics = Component
 
-class Shield(Component):
-    def __init__(self, data):
-        super().__init__(data)
-        # We might parse 'ShieldProjection' from abilities as a direct property
-        self.shield_capacity = self.abilities.get('ShieldProjection', 0)
-        self.base_shield_capacity = self.shield_capacity
-    
-    def _apply_custom_stats(self, stats):
-        super()._apply_custom_stats(stats)
-        self.shield_capacity = int(self.base_shield_capacity * stats.get('capacity_mult', 1.0))
+# Phase 7: Shield is now an alias for Component
+# shield_capacity logic migrated to ShieldProjection.recalculate()
+Shield = Component
 
-    def clone(self):
-        return Shield(self.data)
+# Phase 7: ShieldRegenerator is now an alias for Component
+# regen_rate logic migrated to ShieldRegeneration.recalculate()
+ShieldRegenerator = Component
 
-class ShieldRegenerator(Component):
-    def __init__(self, data):
-        super().__init__(data)
-        self.regen_rate = self.abilities.get('ShieldRegeneration', 0)
-        self.base_regen_rate = self.regen_rate
-    
-    def _apply_custom_stats(self, stats):
-        super()._apply_custom_stats(stats)
-        # Use energy_gen_mult for regeneration rate scaling as simple_size affects it
-        self.regen_rate = self.base_regen_rate * stats.get('energy_gen_mult', 1.0)
-        # Note: EnergyConsumption is now handled by generic sync in recalculate_stats
-
-    def clone(self):
-        return ShieldRegenerator(self.data)
-
-class Hangar(Component):
-    """Stores and launches fighter vessels."""
-    def __init__(self, data):
-        super().__init__(data)
-        self.storage_capacity = self.abilities.get('VehicleStorage', 0)
-        self.launch_config = self.abilities.get('VehicleLaunch', {})
-        self.max_launch_mass = self.launch_config.get('max_launch_mass', 0)
-        self.cycle_time = self.launch_config.get('cycle_time', 5.0)
-        
-        self.cooldown_timer = 0.0
-        # For simple implementation, storage equals capacity.
-        # In future, we might track individual stored ships.
-        # Ideally we'd have a list of stored ship definitions? 
-        # For now, we assume infinite stock or capacity-based stock? 
-        # Requirement says "launch fighters stored in the vessel".
-        # Let's assume we can launch as long as we have "mass capacity" available?
-        # OR simple "ammo" approach? The prompt implies "launch fighters stored".
-        # A simpler first pass: Infinite fighters, just gated by cooldown? 
-        # Or, treat capacity as "Hangar Space". 
-        # But where do the fighters come from? 
-        # Let's assume the component launches a specific "fighter type" configured in data?
-        # The prompt is "launch fighters stored in the vessel".
-        # Standard implementation: The SHIP stores the fighters (as cargo?).
-        # Hangar just facilitates launch.
-        # But in `ship.py`, we don't have a generic "vehicle cargo".
-        # Let's make the Hangar essentially a "Fighter Spawner" for now,
-        # perhaps using 'capacity' as 'max active fighters'?
-        from ship import VEHICLE_CLASSES
-        self.fighter_class = "Fighter (Small)" # Default
-        
-    def update(self):
-        # Tick-Based: Each call decrements cooldown by 1 tick (0.01 seconds)
-        TICK_DURATION = 0.01
-        if self.cooldown_timer > 0:
-            self.cooldown_timer -= TICK_DURATION
-
-    def can_launch(self):
-        return self.is_active and self.cooldown_timer <= 0
-
-    def launch(self):
-        if self.can_launch():
-            self.cooldown_timer = self.cycle_time
-            return True
-        return False
-
-    def clone(self):
-        return Hangar(self.data)
+# Phase 7: Hangar is now an alias for Component
+# launch logic migrated to VehicleLaunchAbility usage in ship_combat.py
+Hangar = Component
 
 COMPONENT_REGISTRY = {}
 # Phase 7 Simplified: Aliased types now use Component directly
-# Only types with custom logic retain their own classes
+# Types with custom logic (Shield, Hangar, etc.) are now also aliases
+# as their logic has been unified into the Ability system.
 COMPONENT_TYPE_MAP = {
     # Aliased types (all behaviors now in abilities)
     "Bridge": Component,
@@ -690,9 +625,9 @@ COMPONENT_TYPE_MAP = {
     "LifeSupport": Component,
     "Sensor": Component,
     "Electronics": Component,
-    "Shield": Shield,
-    "ShieldRegenerator": ShieldRegenerator,
-    "Hangar": Hangar
+    "Shield": Component,
+    "ShieldRegenerator": Component,
+    "Hangar": Component
 }
 
 def load_components(filepath="data/components.json"):

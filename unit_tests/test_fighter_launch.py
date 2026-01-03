@@ -4,7 +4,7 @@ import os
 sys.path.append(os.getcwd())
 import pygame
 from ship import Ship, initialize_ship_data
-from components import load_components, COMPONENT_REGISTRY, Hangar, LayerType
+from components import load_components, COMPONENT_REGISTRY, LayerType
 from battle_engine import BattleEngine
 from game_constants import AttackType
 from ai import STRATEGY_MANAGER
@@ -29,9 +29,13 @@ class TestFighterLaunch(unittest.TestCase):
         """Test Hangar component loads correctly."""
         hangar = COMPONENT_REGISTRY.get("fighter_launch_bay")
         self.assertIsNotNone(hangar)
-        self.assertIsInstance(hangar, Hangar)
-        self.assertEqual(hangar.max_launch_mass, 50)
-        self.assertEqual(hangar.cycle_time, 5.0)
+        self.assertEqual(hangar.type_str, "Hangar")
+        
+        # Verify ability attributes instead of legacy component attributes
+        vl = hangar.get_ability('VehicleLaunch')
+        self.assertIsNotNone(vl)
+        self.assertEqual(vl.data.get('max_launch_mass', 0), 50)
+        self.assertEqual(vl.cycle_time, 5.0)
 
     def test_launch_logic(self):
         """Test launching mechanism on a ship."""
@@ -42,7 +46,6 @@ class TestFighterLaunch(unittest.TestCase):
         bridge.abilities.pop("CrewRequired", None)
         ship.add_component(bridge, LayerType.CORE)
         bridge.current_hp = bridge.max_hp # Fix 0 HP initialization due to formula
-
         
         # Add Engine to prevent derelict status (Thrust > 0)
         ship_engine = COMPONENT_REGISTRY["standard_engine"].clone()
@@ -52,7 +55,6 @@ class TestFighterLaunch(unittest.TestCase):
         hangar.abilities.pop("CrewRequired", None)
         
         if not ship.add_component(hangar, LayerType.INNER):
-            # Failed
             pass
             
         ship.recalculate_stats()
@@ -60,7 +62,10 @@ class TestFighterLaunch(unittest.TestCase):
         # Ensure active
         self.assertTrue(ship.is_alive, f"Ship should be alive. HP: {ship.hp}/{ship.max_hp}")
         self.assertTrue(hangar.is_active, f"Hangar should be active. HP: {hangar.current_hp}/{hangar.max_hp}")
-        self.assertTrue(hangar.can_launch())
+        
+        vl = hangar.get_ability('VehicleLaunch')
+        self.assertIsNotNone(vl)
+        self.assertTrue(vl.cooldown <= 0)
         
         # Simulate Combat
         ship.current_target = Ship("Enemy", 1000, 0, (0, 0, 255))
@@ -72,9 +77,9 @@ class TestFighterLaunch(unittest.TestCase):
         launch_events = [a for a in attacks if isinstance(a, dict) and a.get('type') == AttackType.LAUNCH]
         self.assertEqual(len(launch_events), 1)
         
-        # Check cooldown
-        self.assertFalse(hangar.can_launch())
-        self.assertAlmostEqual(hangar.cooldown_timer, hangar.cycle_time)
+        # Check cooldown on ABILITY
+        self.assertTrue(vl.cooldown > 0)
+        self.assertAlmostEqual(vl.cooldown, vl.cycle_time)
 
     def test_battle_engine_launch_processing(self):
         """Test BattleEngine processes launch events and creates ships."""

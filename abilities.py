@@ -34,6 +34,13 @@ class Ability:
         """
         return True
         
+    def recalculate(self) -> None:
+        """
+        Called when component stats have changed (e.g. modifiers applied).
+        Override to update internal values derived from component stats.
+        """
+        pass
+
     def get_ui_rows(self) -> List[Dict[str, str]]:
         """
         Return list of UI rows for the capability scanner/details panel.
@@ -160,7 +167,13 @@ class ShieldProjection(Ability):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.capacity = float(val)
+        self.base_capacity = float(val)
+        self.capacity = self.base_capacity
+
+    def recalculate(self):
+        # Apply capacity_mult from component stats (populated by modifiers)
+        mult = self.component.stats.get('capacity_mult', 1.0)
+        self.capacity = self.base_capacity * mult
 
     def get_ui_rows(self):
         return [{'label': 'Shield Cap', 'value': f"{self.capacity:.0f}", 'color_hint': '#00FFFF'}] # Cyan
@@ -170,8 +183,14 @@ class ShieldRegeneration(Ability):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.rate = float(val)
+        self.base_rate = float(val)
+        self.rate = self.base_rate
         
+    def recalculate(self):
+        # Apply energy_gen_mult (legacy name used by modifiers) or regenerate_mult
+        mult = self.component.stats.get('energy_gen_mult', 1.0) 
+        self.rate = self.base_rate * mult
+
     def get_ui_rows(self):
         return [{'label': 'Regen', 'value': f"{self.rate:.1f}/s", 'color_hint': '#00C8FF'}] # Deep Sky Blue
 
