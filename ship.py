@@ -27,14 +27,14 @@ VALIDATOR = _VALIDATOR
 
 # Load Vehicle Classes from JSON
 VEHICLE_CLASSES: Dict[str, Any] = {}
-SHIP_CLASSES: Dict[str, float] = {}  # Deprecated - Use VEHICLE_CLASSES
+VEHICLE_CLASSES: Dict[str, Any] = {}
 
 def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_filepath: Optional[str] = None) -> None:
     """
     Load vehicle class definitions from JSON.
     This should be called explicitly during game initialization.
     """
-    global VEHICLE_CLASSES, SHIP_CLASSES
+    global VEHICLE_CLASSES
     
     # Check if we need to resolve path relative to this file
     if not os.path.exists(filepath):
@@ -81,9 +81,6 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_file
             VEHICLE_CLASSES.update(raw_classes)
             
 
-            SHIP_CLASSES.clear()
-            # Keep populated for now if external modules use it, but internal use is removed.
-            SHIP_CLASSES.update({name: cls['max_mass'] for name, cls in VEHICLE_CLASSES.items()})
             print(f"Loaded {len(VEHICLE_CLASSES)} vehicle classes.")
     except FileNotFoundError:
         print(f"Warning: {filepath} not found, using defaults")
@@ -99,8 +96,7 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_file
         VEHICLE_CLASSES.clear()
         VEHICLE_CLASSES.update(defaults)
         
-        SHIP_CLASSES.clear()
-        SHIP_CLASSES.update({name: cls['max_mass'] for name, cls in VEHICLE_CLASSES.items()})
+
 
 def initialize_ship_data(base_path: Optional[str] = None) -> None:
     """Facade for initializing all ship-related data."""

@@ -1,7 +1,7 @@
 import unittest
 import pygame
 import os
-from ship import initialize_ship_data, SHIP_CLASSES, VEHICLE_CLASSES
+from ship import initialize_ship_data, VEHICLE_CLASSES
 from ship_theme import ShipThemeManager
 
 class TestShipClasses(unittest.TestCase):
@@ -38,8 +38,7 @@ class TestShipClasses(unittest.TestCase):
         self.assertEqual(VEHICLE_CLASSES["Frigate"]["max_mass"], 2000)
         self.assertEqual(VEHICLE_CLASSES["Monitor"]["max_mass"], 1024000)
         
-        # Verify SHIP_CLASSES legacy mapping
-        self.assertEqual(SHIP_CLASSES["Escort"], 1000)
+
 
     def test_theme_image_loading(self):
         themes = ["Federation", "Atlantians", "Klingons", "Romulans"]

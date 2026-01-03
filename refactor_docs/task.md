@@ -190,7 +190,7 @@
     - [x] **Core Cleanup** <!-- id: 191 -->
         - [x] `components.py`: Remove `Weapon`, `Engine` aliases. <!-- id: 192 -->
         - [x] `components.py`: Remove `has_pdc_ability` legacy fallback. <!-- id: 193 -->
-        - [ ] `ship.py`: Remove `SHIP_CLASSES` dictionary internal usage. <!-- id: 194 -->
+        - [x] `ship.py`: Remove `SHIP_CLASSES` dictionary internal usage. <!-- id: 194 -->
         - [x] `ship.py`: Refactor Sensor/ECM logic to use `get_abilities()`. <!-- id: 195 -->
     - [x] **Ability Logic Hardening** <!-- id: 196 -->
         - [x] `abilities.py`: Implement `recalculate()` for `VehicleLaunchAbility`. <!-- id: 197 -->

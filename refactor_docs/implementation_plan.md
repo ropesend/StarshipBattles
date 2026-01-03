@@ -51,8 +51,8 @@
 ### 1. Core Infrastructure & Logic (`ship.py`, `components.py`)
 - **Refactor `ship.py`**:
     - [ ] **Sensor/ECM Logic:** Refactor `get_total_sensor_score` and `get_total_ecm_score` to use `comp.get_abilities()` aggregation instead of direct `comp.abilities` dictionary checks.
-    - [ ] **Legacy Dict:** Remove `SHIP_CLASSES` dictionary definition from `ship.py` and update usages in `unit_tests/test_ship_classes.py`.
-    - [ ] **Dead Code:** Remove legacy fallback comments and dead `pass` blocks.
+    - [x] **Legacy Dict:** Remove `SHIP_CLASSES` dictionary definition from `ship.py` and from usages in `unit_tests/test_ship_classes.py` (Completed).
+    - [x] **Dead Code:** Remove legacy fallback comments and dead `pass` blocks.
 - **Refactor `components.py`**:
     - [x] **PDC Fallback:** Remove `self.abilities.get('PointDefense')` check in `has_pdc_ability`.
     - [x] **Aliases:** Remove `Weapon = Component`, `Engine = Component` etc. aliases.
