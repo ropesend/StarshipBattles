@@ -1,13 +1,7 @@
-- [x] Analyze codebase structure to define logical domains <!-- id: 0 -->
-- [x] Create `unit_test_coverage_plan` directory <!-- id: 1 -->
-- [x] Generate Domain 1 Prompt: Core Architecture (`components.py`, `abilities.py`, `ship.py`) <!-- id: 2 -->
-- [x] Generate Domain 2 Prompt: Simulation Engine (`physics`, `combat`, `projectiles`) <!-- id: 3 -->
-- [x] Generate Domain 3 Prompt: AI & Behaviors (`ai.py`, `ai_behaviors.py`) <!-- id: 4 -->
-- [x] Generate Domain 4 Prompt: UI & Builder (`builder_gui.py`, `ui/`) <!-- id: 5 -->
-- [x] Generate Domain 5 Prompt: Data & Infrastructure (`io`, `validator`, `resources`) <!-- id: 6 -->
-- [x] Present prompts to user <!-- id: 7 -->
-- [x] Synthesize Master Unit Test Creation Plan <!-- id: 8 -->
-- [x] **Phase 1: High-Risk Stability** (`test_io_interactive.py`, `test_builder_validation.py`) <!-- id: 9 -->
-- [x] **Phase 2: Core Simulation** (`test_abilities_advanced.py`, `test_combat.py`, `test_physics.py`) <!-- id: 10 -->
-- [x] **Phase 3: AI & Behaviors** (`test_targeting_rules.py`, `test_advanced_behaviors.py`) <!-- id: 11 -->
-- [ ] **Phase 4: UI Polish** (`test_rendering_logic.py`, `test_builder_drag_drop_real.py`) <!-- id: 12 -->
+# Task Checklist
+
+## Phase 4: UI Polish (Blocked)
+- [x] Fix `test_rendering_logic.py` `AttributeError` with pygame patching <!-- id: 0 -->
+- [x] Fix `test_builder_drag_drop_real.py` `TypeError` (missing numeric stats) <!-- id: 1 -->
+- [x] Verify all Phase 4 tests pass <!-- id: 2 -->
+- [x] Complete Phase 4 <!-- id: 3 -->

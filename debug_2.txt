@@ -1,0 +1,117 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+created: 16/16 workers
+16 workers [3 items]
+
+.FF                                                                      [100%]
+================================== FAILURES ===================================
+____________ TestBuilderDragDropReal.test_drop_validation_success _____________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit_tests.test_builder_drag_drop_real.TestBuilderDragDropReal testMethod=test_drop_validation_success>
+
+    def test_drop_validation_success(self):
+        """Verify dropping a valid component calls ship.add_component."""
+        # Setup Drag
+        dragged = MagicMock()
+        dragged.current_hp = 100
+        dragged.max_hp = 100
+        dragged.mass = 10
+        dragged.is_active = True
+        dragged.name = "Test Component"
+        dragged.modifiers = [] # FIXED: Added modifiers list
+        self.builder.controller.dragged_item = dragged
+    
+        # Setup Validator to return Valid
+>       with patch('builder_gui.VALIDATOR') as mock_validator:
+
+unit_tests\test_builder_drag_drop_real.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1447: in __enter__
+    original, local = self.get_original()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unittest.mock._patch object at 0x0000016D1CCB5F30>
+
+    def get_original(self):
+        target = self.getter()
+        name = self.attribute
+    
+        original = DEFAULT
+        local = False
+    
+        try:
+            original = target.__dict__[name]
+        except (AttributeError, KeyError):
+            original = getattr(target, name, DEFAULT)
+        else:
+            local = True
+    
+        if name in _builtins and isinstance(target, ModuleType):
+            self.create = True
+    
+        if not self.create and original is DEFAULT:
+>           raise AttributeError(
+                "%s does not have the attribute %r" % (target, name)
+            )
+E           AttributeError: <module 'builder_gui' from 'C:\\Dev\\Starship Battles\\builder_gui.py'> does not have the attribute 'VALIDATOR'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1420: AttributeError
+____________ TestBuilderDragDropReal.test_drop_validation_failure _____________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit_tests.test_builder_drag_drop_real.TestBuilderDragDropReal testMethod=test_drop_validation_failure>
+
+    def test_drop_validation_failure(self):
+        """Verify showing error on invalid add."""
+        original = MagicMock()
+        original.modifiers = []
+        original.current_hp = 100
+        original.max_hp = 100
+        original.mass = 10
+        original.is_active = True
+        original.name = "Original Component"
+    
+        self.builder.ship.layers[LayerType.OUTER]['components'] = [original]
+    
+>       with patch('builder_gui.VALIDATOR') as mock_validator:
+
+unit_tests\test_builder_drag_drop_real.py:256: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1447: in __enter__
+    original, local = self.get_original()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unittest.mock._patch object at 0x00000188825F5ED0>
+
+    def get_original(self):
+        target = self.getter()
+        name = self.attribute
+    
+        original = DEFAULT
+        local = False
+    
+        try:
+            original = target.__dict__[name]
+        except (AttributeError, KeyError):
+            original = getattr(target, name, DEFAULT)
+        else:
+            local = True
+    
+        if name in _builtins and isinstance(target, ModuleType):
+            self.create = True
+    
+        if not self.create and original is DEFAULT:
+>           raise AttributeError(
+                "%s does not have the attribute %r" % (target, name)
+            )
+E           AttributeError: <module 'builder_gui' from 'C:\\Dev\\Starship Battles\\builder_gui.py'> does not have the attribute 'VALIDATOR'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1420: AttributeError
+=========================== short test summary info ===========================
+FAILED unit_tests/test_builder_drag_drop_real.py::TestBuilderDragDropReal::test_drop_validation_success
+FAILED unit_tests/test_builder_drag_drop_real.py::TestBuilderDragDropReal::test_drop_validation_failure
+========================= 2 failed, 1 passed in 1.76s =========================
