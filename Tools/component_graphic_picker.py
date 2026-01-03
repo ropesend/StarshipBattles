@@ -18,7 +18,7 @@ PICKER_GAP = 10
 
 BASE_DIR = r"C:\Dev\Starship Battles"
 COMPONENTS_JSON = os.path.join(BASE_DIR, "data", "components.json")
-IMAGES_DIR = os.path.join(BASE_DIR, "Resources", "Images", "Components", "Components 512")
+IMAGES_DIR = os.path.join(BASE_DIR, "assets", "Images", "Components", "Components 512")
 
 # --- Helper Classes ---
 

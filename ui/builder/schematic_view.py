@@ -1,6 +1,6 @@
 import pygame
 import math
-from ship import VEHICLE_CLASSES, LayerType
+from game.simulation.entities.ship import VEHICLE_CLASSES, LayerType
 
 from ui.colors import COLORS
 SHIP_VIEW_BG = COLORS['bg_deep']

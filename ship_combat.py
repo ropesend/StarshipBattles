@@ -1,9 +1,9 @@
 import pygame
 import math
 import random
-from components import LayerType, ComponentStatus  # Phase 7: Removed Bridge, Weapon, etc. (now use abilities)
-from logger import log_debug
-from game_constants import AttackType
+from game.simulation.components.component import LayerType, ComponentStatus  # Phase 7: Removed Bridge, Weapon, etc. (now use abilities)
+from game.core.logger import log_debug
+from game.core.constants import AttackType
 
 class ShipCombatMixin:
     """
@@ -171,7 +171,7 @@ class ShipCombatMixin:
                                     'hit': True
                                 })
                             else:
-                                from projectiles import Projectile
+                                from game.simulation.entities.projectile import Projectile
                                 
                                 # Seeker Logic
                                 

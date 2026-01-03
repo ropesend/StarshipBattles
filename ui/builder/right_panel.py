@@ -3,8 +3,8 @@ import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMenu, UITextBox, UIImage
 from pygame_gui.core import UIElement
 
-from ship import VEHICLE_CLASSES
-from ai import STRATEGY_MANAGER
+from game.simulation.entities.ship import VEHICLE_CLASSES
+from game.ai.controller import STRATEGY_MANAGER
 
 class StatRow:
     """Helper class to manage a single statistic row (Label | Value | Unit) with caching."""
@@ -290,8 +290,8 @@ class BuilderRightPanel:
         # We need absolute path or relative to CWD
         full_path = os.path.join(base_path, theme, filename)
         
-        # Check for new location: Resources/ShipThemes/{theme}/Portraits
-        new_loc = os.path.join("Resources", "ShipThemes", theme, "Portraits", filename)
+        # Check for new location: assets/ShipThemes/{theme}/Portraits
+        new_loc = os.path.join("assets", "ShipThemes", theme, "Portraits", filename)
         if os.path.exists(new_loc):
             full_path = new_loc
             
@@ -302,7 +302,7 @@ class BuilderRightPanel:
                 full_path = full_path_space
             else:
                  # Fallback to Default Portrait
-                 default_path = os.path.join("Resources", "Images", "Default_Ship_Portrait.png")
+                 default_path = os.path.join("assets", "Images", "Default_Ship_Portrait.png")
                  if os.path.exists(default_path):
                      full_path = default_path
                  else:
@@ -497,7 +497,7 @@ class BuilderRightPanel:
                 row.update(fmt_val, final_unit)
         
         # Update layer stats (Still somewhat special case due to dynamic list)
-        from ship import LayerType
+        from game.simulation.entities.ship import LayerType
         
         # Hide all first
         for row in self.layer_rows:

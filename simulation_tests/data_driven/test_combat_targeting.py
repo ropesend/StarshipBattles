@@ -7,10 +7,10 @@ import os
 # Adjust path to find modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from ship import Ship, LayerType, initialize_ship_data, load_vehicle_classes
-from components import Weapon, BeamWeapon, ProjectileWeapon, SeekerWeapon, create_component, load_components
+from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data, load_vehicle_classes
+from game.simulation.components.component import Weapon, BeamWeapon, ProjectileWeapon, SeekerWeapon, create_component, load_components
 from ship_combat import ShipCombatMixin
-from game_constants import AttackType
+from game.core.constants import AttackType
 
 class TestCombatTargeting(unittest.TestCase):
     """

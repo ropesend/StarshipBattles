@@ -5,7 +5,7 @@ import importlib.util
 import importlib
 import sys
 
-from game_constants import WHITE, BLACK, BLUE, WIDTH, HEIGHT, FONT_MAIN
+from game.core.constants import WHITE, BLACK, BLUE, WIDTH, HEIGHT, FONT_MAIN
 from ui.components import Button
 from test_framework.runner import TestRunner
 from test_framework.scenario import CombatScenario

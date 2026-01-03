@@ -7,9 +7,9 @@ import time
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from battle_engine import BattleEngine
-from components import load_components, load_modifiers, COMPONENT_REGISTRY, MODIFIER_REGISTRY
-from ship import initialize_ship_data, VEHICLE_CLASSES
+from game.simulation.systems.battle_engine import BattleEngine
+from game.simulation.components.component import load_components, load_modifiers, COMPONENT_REGISTRY, MODIFIER_REGISTRY
+from game.simulation.entities.ship import initialize_ship_data, VEHICLE_CLASSES
 
 class TestRunner:
     def __init__(self):
@@ -35,7 +35,7 @@ class TestRunner:
             load_components(paths['components'])
             
             # Helper needed in ship.py to accept direct path
-            from ship import load_vehicle_classes
+            from game.simulation.entities.ship import load_vehicle_classes
             load_vehicle_classes(paths['vehicle_classes'])
             
         except Exception as e:
@@ -58,7 +58,7 @@ class TestRunner:
         self.load_data_for_scenario(scenario)
         
         # 2. Setup Engine
-        from battle_engine import BattleLogger
+        from game.simulation.systems.battle_engine import BattleLogger
         logger = BattleLogger(enabled=True)
         self.engine = BattleEngine(logger=logger) # Fresh engine with logging
         

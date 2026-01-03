@@ -1,5 +1,5 @@
 from test_framework.scenario import CombatScenario
-from components import create_component, LayerType
+from game.simulation.components.component import create_component, LayerType
 import pygame
 import pygame
 
@@ -30,7 +30,7 @@ class GunAccuracyTest(CombatScenario):
         ]
         
         import json
-        from ship import Ship
+        from game.simulation.entities.ship import Ship
         
         # Helper to load ships from JSON
         ships_dir = os.path.join(self.data_dir, "ships")

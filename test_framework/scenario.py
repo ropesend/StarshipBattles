@@ -1,8 +1,8 @@
 import os
 import json
 from typing import List, Dict, Any, Optional
-from ship import Ship, initialize_ship_data
-from components import load_components, load_modifiers
+from game.simulation.entities.ship import Ship, initialize_ship_data
+from game.simulation.components.component import load_components, load_modifiers
 import pygame
 
 class CombatScenario:
@@ -95,7 +95,7 @@ class CombatScenario:
             
         # Add basic components if list provided
         if components:
-            from components import create_component, LayerType
+            from game.simulation.components.component import create_component, LayerType
             # Need a smarter way to install components to valid layers if "TestClass" isn't standard
             # Assume TestClass has a CORE or INNER
             

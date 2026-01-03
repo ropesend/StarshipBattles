@@ -1,4 +1,4 @@
-from components import ComponentStatus, LayerType
+from game.simulation.components.component import ComponentStatus, LayerType
 import math
 
 class ShipStatsCalculator:
@@ -14,7 +14,7 @@ class ShipStatsCalculator:
         """
         # Import local to avoid circular dep if needed, or top level if safe.
         # resources.py likely imports NOTHING from ship_stats.
-        from resources import ResourceStorage, ResourceGeneration
+        from game.simulation.systems.resource_manager import ResourceStorage, ResourceGeneration
 
         # 1. Reset Base Calculations
         ship.current_mass = 0
@@ -167,8 +167,8 @@ class ShipStatsCalculator:
                             total_ammo_gen += ability.rate
             
             # Phase 3: Ability-Based Stats Aggregation (replaces isinstance checks)
-            from abilities import CombatPropulsion, ManeuveringThruster, ShieldProjection, ShieldRegeneration
-            from resources import ResourceConsumption
+            from game.simulation.components.abilities import CombatPropulsion, ManeuveringThruster, ShieldProjection, ShieldRegeneration
+            from game.simulation.systems.resource_manager import ResourceConsumption
             
             # Thrust from CombatPropulsion abilities
             for ab in comp.get_abilities('CombatPropulsion'):
@@ -337,7 +337,7 @@ class ShipStatsCalculator:
 
     def _calculate_combat_endurance(self, ship, component_pool):
         """Calculate endurance times for Fuel, Ammo, and Energy."""
-        from resources import ResourceConsumption
+        from game.simulation.systems.resource_manager import ResourceConsumption
 
         
         # A. Fuel
@@ -430,7 +430,7 @@ class ShipStatsCalculator:
 
         # Populate Cached Summary
         dps = 0
-        from abilities import WeaponAbility
+        from game.simulation.components.abilities import WeaponAbility
         
         # Calculate theoretical max DPS (all weapons)
         for layer in ship.layers.values():

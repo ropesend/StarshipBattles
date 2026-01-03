@@ -9,7 +9,7 @@ except ImportError:
     from PIL import Image
 
 def resize_and_populate():
-    base_dir = r"C:\Dev\Starship Battles\Resources\Images\Components"
+    base_dir = r"C:\Dev\Starship Battles\assets\Images\Components"
     source_dir = os.path.join(base_dir, "Components 2048")
     
     targets = {

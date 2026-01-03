@@ -1,5 +1,5 @@
 import pygame
-from profiling import profile_action
+from game.core.profiling import profile_action
 
 class InteractionController:
     def __init__(self, builder, view):

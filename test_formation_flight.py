@@ -7,10 +7,10 @@ import sys
 # Setup paths (assuming running from root)
 sys.path.append(os.getcwd())
 
-from battle_engine import BattleEngine
-from ship import Ship, initialize_ship_data
-from components import load_components, load_modifiers
-from ai import AIController
+from game.simulation.systems.battle_engine import BattleEngine
+from game.simulation.entities.ship import Ship, initialize_ship_data
+from game.simulation.components.component import load_components, load_modifiers
+from game.ai.controller import AIController
 import json
 
 def setup_simulation():

@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from ship import Ship, LayerType, initialize_ship_data, load_vehicle_classes
-from components import create_component, Component, Modifier
+from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data, load_vehicle_classes
+from game.simulation.components.component import create_component, Component, Modifier
 
 class TestShipRequirements(unittest.TestCase):
     """
@@ -43,7 +43,7 @@ class TestShipRequirements(unittest.TestCase):
         """Helper to inject specific requirements into VEHICLE_CLASSES"""
         self.class_data['requirements'] = requirements
         
-        from ship import VEHICLE_CLASSES
+        from game.simulation.entities.ship import VEHICLE_CLASSES
         VEHICLE_CLASSES["RequirementsTest"] = self.class_data
         self.ship.ship_class = "RequirementsTest"
         self.ship.update_derelict_status()

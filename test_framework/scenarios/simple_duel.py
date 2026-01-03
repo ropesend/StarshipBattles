@@ -1,7 +1,7 @@
 import os
 import pygame
 from test_framework.scenario import CombatScenario
-from ship import Ship
+from game.simulation.entities.ship import Ship
 
 class SimpleDuel(CombatScenario):
     """

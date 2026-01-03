@@ -7,8 +7,8 @@ import math
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from ship import Ship, LayerType, initialize_ship_data, load_vehicle_classes
-from components import load_components, create_component
+from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data, load_vehicle_classes
+from game.simulation.components.component import load_components, create_component
 
 
 class TestSolveLead(unittest.TestCase):

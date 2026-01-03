@@ -1,11 +1,11 @@
 import pygame
 from typing import List, Set, Any, TYPE_CHECKING
-from game_constants import AttackType
-from logger import log_debug
+from game.core.constants import AttackType
+from game.core.logger import log_debug
 
 if TYPE_CHECKING:
-    from spatial import SpatialGrid
-    from projectiles import Projectile
+    from game.engine.spatial import SpatialGrid
+    from game.simulation.entities.projectile import Projectile
 
 class ProjectileManager:
     """

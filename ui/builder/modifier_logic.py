@@ -2,7 +2,7 @@
 Game logic for component modifiers.
 Handles validation, mandatory checks, and default value calculations.
 """
-from components import MODIFIER_REGISTRY
+from game.simulation.components.component import MODIFIER_REGISTRY
 
 class ModifierLogic:
     

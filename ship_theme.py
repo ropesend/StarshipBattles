@@ -1,8 +1,8 @@
 import os
 import json
 import pygame
-from logger import log_info, log_error
-from profiling import profile_block
+from game.core.logger import log_info, log_error
+from game.core.profiling import profile_block
 
 class ShipThemeManager:
     _instance = None

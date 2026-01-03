@@ -1,7 +1,7 @@
 
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Optional, Dict
-from components import Component, LayerType  # Phase 7: Removed unused Weapon import
+from game.simulation.components.component import Component, LayerType  # Phase 7: Removed unused Weapon import
 
 class ValidationResult:
     def __init__(self, is_valid: bool, errors: List[str] = None, warnings: List[str] = None):
@@ -178,7 +178,7 @@ class ClassRequirementsRule(ValidationRule):
         # This rule validates the whole design
         
         # Import internally to avoid circular imports
-        from ship import VEHICLE_CLASSES
+        from game.simulation.entities.ship import VEHICLE_CLASSES
         from ship_stats import ShipStatsCalculator
         
         class_def = VEHICLE_CLASSES.get(ship.ship_class, {})

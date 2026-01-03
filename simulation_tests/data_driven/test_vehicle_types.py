@@ -9,9 +9,9 @@ import os
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from ship import Ship, initialize_ship_data, load_vehicle_classes, VEHICLE_CLASSES, LayerType
-from components import load_components, load_modifiers, get_all_components, COMPONENT_REGISTRY  # Phase 7: Removed Bridge, Weapon imports
-from ai import AIController, load_combat_strategies
+from game.simulation.entities.ship import Ship, initialize_ship_data, load_vehicle_classes, VEHICLE_CLASSES, LayerType
+from game.simulation.components.component import load_components, load_modifiers, get_all_components, COMPONENT_REGISTRY  # Phase 7: Removed Bridge, Weapon imports
+from game.ai.controller import AIController, load_combat_strategies
 import pygame
 
 

@@ -2,7 +2,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIScrollingContainer, UIDropDownMenu
 
-from ship import LayerType
+from game.simulation.entities.ship import LayerType
 from ui.builder.structure_list_items import (
     LayerHeaderItem, 
     LayerComponentItem, 
@@ -15,7 +15,7 @@ from ui.builder.structure_list_items import (
 from ui.builder.grouping_strategies import DefaultGroupingStrategy, TypeGroupingStrategy, FlatGroupingStrategy
 from ui.builder.panel_layout_config import StructurePanelLayoutConfig
 from ui.builder.drop_target import DropTarget
-from ship import VALIDATOR
+from game.simulation.entities.ship import VALIDATOR
 
 class LayerPanel(DropTarget):
     def __init__(self, builder, manager, rect):

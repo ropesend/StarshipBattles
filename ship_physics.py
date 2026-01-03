@@ -1,5 +1,5 @@
 import pygame
-from physics import PhysicsBody
+from game.engine.physics import PhysicsBody
 # Engine, Thruster imports removed - using ability-based checks (Phase 3)
 
 class ShipPhysicsMixin:

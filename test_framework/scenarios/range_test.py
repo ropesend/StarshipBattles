@@ -2,7 +2,7 @@ from test_framework.scenario import CombatScenario
 import os
 import pygame
 import json
-from ship import Ship
+from game.simulation.entities.ship import Ship
 
 class RangeTest(CombatScenario):
     def __init__(self):

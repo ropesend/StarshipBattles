@@ -1,4 +1,4 @@
-from ship import LayerType
+from game.simulation.entities.ship import LayerType
 import ship_stats # Needed for accessing defaults/constants if any
 
 
@@ -102,7 +102,7 @@ def fmt_targeting(val):
 
 # --- New Getters (Logistics Update) ---
 def get_armor_hp(ship):
-    from ship import LayerType
+    from game.simulation.entities.ship import LayerType
     if LayerType.ARMOR in ship.layers:
         return ship.layers[LayerType.ARMOR].get('max_hp_pool', 0)
     return 0
@@ -152,7 +152,7 @@ def get_resource_consumption(ship, res_name):
     Calculate constant consumption for a resource across all components.
     This aggregates 'ResourceConsumption' abilities with trigger='constant'.
     """
-    from resources import ResourceConsumption
+    from game.simulation.systems.resource_manager import ResourceConsumption
     total = 0
     # Iterate all components in all layers
     for layer in ship.layers.values():

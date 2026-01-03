@@ -24,7 +24,7 @@ ACTIVE_TAG_COLOR = (70, 150, 70)
 
 TILE_SIZE = 128
 EXPORT_TILE_SIZE = 256
-SOURCE_DIR = r"C:\Dev\Starship Battles\Resources\Images\Components\New Component images"
+SOURCE_DIR = r"C:\Dev\Starship Battles\assets\Images\Components\New Component images"
 TAGS_FILE = os.path.join(SOURCE_DIR, "component_tags.json")
 
 # --- Helper Classes ---
