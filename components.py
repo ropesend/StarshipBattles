@@ -112,7 +112,7 @@ class Component:
                 # Probably keep undefined or 0 until recalculated? 
                 # Better to set a default if possible, but hard to guess.
                 # If it's mass/hp, 0 is safer than crashing.
-                if key in ['mass', 'hp', 'damage', 'range', 'cost']:
+                if key in ['mass', 'hp', 'cost']:
                      setattr(self, f"base_{key}" if key in ['mass', 'hp'] else key, 0)
                      if key == 'mass': self.mass = 0
                      if key == 'hp': 
@@ -378,31 +378,10 @@ class Component:
         return stats
 
     def _apply_base_stats(self, stats, old_max_hp):
-        # Helper to read weapon data from root OR ability dicts (Phase 6 migration)
-        def get_weapon_data_for_stats(key, default=0):
-            if key in self.data:
-                return self.data[key]
-            # Check in ability dicts
-            abilities = self.data.get('abilities', {})
-            for ab_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility', 'WeaponAbility']:
-                if ab_name in abilities:
-                    ab_data = abilities[ab_name]
-                    if isinstance(ab_data, dict) and key in ab_data:
-                        return ab_data[key]
-            return default
-
         # Apply specific property overrides
         for prop, val in stats['properties'].items():
             if hasattr(self, prop):
                 setattr(self, prop, val)
-
-        # Apply Arc effects
-        if hasattr(self, 'firing_arc'):
-            if stats['arc_set'] is not None:
-                self.firing_arc = stats['arc_set']
-            else:
-                base = get_weapon_data_for_stats('firing_arc', 3)
-                self.firing_arc = base + stats['arc_add']
 
         # Apply Base Multipliers
         self.mass = (self.base_mass + stats['mass_add']) * stats['mass_mult']
@@ -410,47 +389,10 @@ class Component:
         # Note: old_max_hp is passed in, captured before base formula reset
         self.max_hp = int(self.base_max_hp * stats['hp_mult'])
         
-        # Multipliers for generic attributes
-        self.damage_multiplier = stats['damage_mult'] # Persist for get_damage
-        
-        if hasattr(self, 'damage'):
-            # logic for handling formula-based damage is in Weapon subclass or get_damage usually,
-            # but if 'damage' is a simple int attribute, we scale it.
-            # However, Weapon class stores 'damage' as base int.
-            # To handle non-Weapon components with damage:
-            raw_damage = get_weapon_data_for_stats('damage', 0)
-            if not (isinstance(raw_damage, str) and raw_damage.startswith("=")):
-                 self.damage = int(raw_damage * stats['damage_mult'])
-
-        if hasattr(self, 'range'):
-            self.range = int(get_weapon_data_for_stats('range', 0) * stats['range_mult'])
         if hasattr(self, 'cost'):
             self.cost = int(self.data.get('cost', 0) * stats['cost_mult'])
-        if hasattr(self, 'thrust_force'):
-            self.thrust_force = self.data.get('thrust_force', 0) * stats['thrust_mult']
-        if hasattr(self, 'turn_speed'):
-            self.turn_speed = self.data.get('turn_speed', 0) * stats['turn_mult']
 
-        if hasattr(self, 'reload_time'):
-             self.reload_time = self.data.get('reload', 1.0) * stats.get('reload_mult', 1.0)
 
-        # Crew Requirement Scaling
-        # Rule: crew requirements should grow with the sqrt of mass of the component
-        # We derive this from the total mass multiplier
-        mass_scaling_factor = stats.get('mass_mult', 1.0)
-        # Avoid complex numbers if somehow negative
-        if mass_scaling_factor < 0: mass_scaling_factor = 0
-        
-        crew_mult = math.sqrt(mass_scaling_factor)
-        
-        # Apply to CrewRequired ability
-        if 'CrewRequired' in self.abilities:
-            val = self.abilities['CrewRequired']
-            if isinstance(val, (int, float)):
-                # If it's a raw number, scale it
-                # Note: We should probably use the base value if we could, but abilities dict is reset in _reset_and_evaluate_base_formulas
-                # So 'val' here is the base value from data/formula
-                self.abilities['CrewRequired'] = int(math.ceil(val * crew_mult * stats.get('crew_req_mult', 1.0)))
 
         # Handle HP update (healing/new component logic)
         if old_max_hp == 0:
@@ -485,59 +427,13 @@ class Component:
                  if ab.resource_type == 'energy':
                      base = ab.data.get('amount', 0.0)
                      ab.rate = base * stats.get('energy_gen_mult', 1.0)
-        
-        # Sync Core Ability Values with Modifiers (Phase 3 Pre-requisite)
-        from abilities import CombatPropulsion, ManeuveringThruster, ShieldProjection, ShieldRegeneration, WeaponAbility
-        
-        for ab in self.ability_instances:
-            if isinstance(ab, CombatPropulsion):
-                base = ab.data.get('value', ab.data) if isinstance(ab.data, dict) else ab.data
-                if isinstance(base, (int, float)):
-                    ab.thrust_force = float(base) * stats.get('thrust_mult', 1.0)
-            elif isinstance(ab, ManeuveringThruster):
-                base = ab.data.get('value', ab.data) if isinstance(ab.data, dict) else ab.data
-                if isinstance(base, (int, float)):
-                    ab.turn_rate = float(base) * stats.get('turn_mult', 1.0)
-            elif isinstance(ab, ShieldProjection):
-                base = ab.data.get('value', ab.data) if isinstance(ab.data, dict) else ab.data
-                if isinstance(base, (int, float)):
-                    ab.capacity = float(base) * stats.get('capacity_mult', 1.0)
-            elif isinstance(ab, ShieldRegeneration):
-                base = ab.data.get('value', ab.data) if isinstance(ab.data, dict) else ab.data
-                if isinstance(base, (int, float)):
-                    ab.rate = float(base) * stats.get('capacity_mult', 1.0)  # Regen scales with capacity
-            elif isinstance(ab, WeaponAbility):
-                # Use already-evaluated base values from ability (formulas handled in constructor)
-                base_damage = getattr(ab, '_base_damage', ab.damage)
-                base_range = getattr(ab, '_base_range', ab.range)
-                base_reload = getattr(ab, '_base_reload', ab.reload_time)
-                ab.damage = float(base_damage) * stats.get('damage_mult', 1.0)
-                ab.range = float(base_range) * stats.get('range_mult', 1.0)
-                ab.reload_time = float(base_reload) * stats.get('reload_mult', 1.0)
-        
-        # Ensure cap
-        self.current_hp = min(self.current_hp, self.max_hp)
+
+
 
     def _apply_custom_stats(self, stats):
         """Hook for subclasses to apply specific stats."""
         # Base implementation handles Crew/LifeSupport as they are somewhat generic in this system
-        if 'CrewCapacity' in self.abilities:
-            val = self.abilities['CrewCapacity']
-            if isinstance(val, (int, float)):
-                self.abilities['CrewCapacity'] = int(val * stats['crew_capacity_mult'])
-        
-        if hasattr(self, 'crew_capacity'):
-             base = self.data.get('crew_capacity', 10)
-             self.crew_capacity = int(base * stats['crew_capacity_mult'])
-
-        if 'LifeSupportCapacity' in self.abilities:
-            val = self.abilities['LifeSupportCapacity']
-            if isinstance(val, (int, float)):
-                self.abilities['LifeSupportCapacity'] = int(val * stats['life_support_capacity_mult'])
-        
-        if hasattr(self, 'life_support_capacity'):
-             base = self.data.get('life_support_capacity', 10)
-             self.life_support_capacity = int(base * stats['life_support_capacity_mult'])
+        pass
 
     def clone(self):
         # Create a new instance with the same data

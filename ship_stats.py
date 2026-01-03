@@ -1,4 +1,4 @@
-from components import ComponentStatus, LayerType, Shield, ShieldRegenerator, Hangar  # Phase 7: Removed Bridge, Engine, Thruster, Generator, Tank, Armor, Weapon (now use abilities)
+from components import ComponentStatus, LayerType
 import math
 
 class ShipStatsCalculator:
@@ -83,14 +83,13 @@ class ShipStatsCalculator:
                 if comp.is_active:
                     abilities = comp.abilities
                     # Crew Provided (Positive CrewCapacity)
-                    c_cap = abilities.get('CrewCapacity', 0)
-                    if c_cap > 0:
-                        available_crew += c_cap
+                    # Crew Provided
+                    for ab in comp.get_abilities('CrewCapacity'):
+                        available_crew += ab.amount
                         
                     # Life Support Provided
-                    ls_cap = abilities.get('LifeSupportCapacity', 0)
-                    if ls_cap > 0:
-                        available_life_support += ls_cap
+                    for ab in comp.get_abilities('LifeSupportCapacity'):
+                        available_life_support += ab.amount
 
                 component_pool.append(comp)
 
@@ -110,8 +109,10 @@ class ShipStatsCalculator:
         for comp in component_pool:
             if not comp.is_active: continue # Already damaged
             
-            # Check Crew Requirement (Use positive CrewRequired)
-            req_crew = comp.abilities.get('CrewRequired', 0)
+            # Check Crew Requirement
+            req_crew = 0
+            for ab in comp.get_abilities('CrewRequired'):
+                req_crew += ab.amount
             
             # Satellite Exception: Satellites ignore crew requirements
             if ship.vehicle_type == "Satellite":
@@ -450,12 +451,11 @@ class ShipStatsCalculator:
         }
 
     def _priority_sort_key(self, c):
-        t = c.type_str
         # Bridge (Command)
-        if t == "Bridge": return 0
+        if c.has_ability('CommandAndControl'): return 0
         # Engines (Movement)
-        if t == "Engine" or t == "Thruster": return 1
-        # Weapons (Offense) - use ability check instead of isinstance
+        if c.has_ability('CombatPropulsion') or c.has_ability('ManeuveringThruster'): return 1
+        # Weapons (Offense)
         if c.has_ability('WeaponAbility'): return 2
         # Others
         return 3
@@ -541,27 +541,56 @@ class ShipStatsCalculator:
         ability_groups = {}
 
         for comp in components:
-            abilities = getattr(comp, 'abilities', {})
-            for ability_name, raw_value in abilities.items():
-                
-                # Parse Value & Group
-                value = raw_value
-                stack_group = None
-                
-                if isinstance(raw_value, dict) and 'value' in raw_value:
-                    value = raw_value['value']
-                    stack_group = raw_value.get('stack_group')
-                
-                # Determine Group Key
-                # If no stack_group, use component instance (unique) so it behaves as individual item (stacking with everything)
-                group_key = stack_group if stack_group else comp
+            # 1. Process Ability Instances (New System - Scaled Values)
+            # Track which abilities are handled to avoid double counting from dict
+            handled_abilities = set()
+            
+            if hasattr(comp, 'ability_instances') and isinstance(comp.ability_instances, dict):
+                for ability_name, instances in comp.ability_instances.items():
+                    handled_abilities.add(ability_name)
+                    for ab in instances:
+                        # Extract value from Object
+                        value = None
+                        if hasattr(ab, 'amount'): value = ab.amount
+                        elif hasattr(ab, 'value'): value = ab.value
+                        # Special case for CommandAndControl (Flag)
+                        elif ability_name == 'CommandAndControl': value = True
+                        
+                        # Fallback for complex abilities not meant for simple aggregation?
+                        if value is None: continue
+                        
+                        stack_group = getattr(ab, 'stack_group', None)
+                        group_key = stack_group if stack_group else comp
 
-                if ability_name not in ability_groups:
-                    ability_groups[ability_name] = {}
-                if group_key not in ability_groups[ability_name]:
-                    ability_groups[ability_name][group_key] = []
-                
-                ability_groups[ability_name][group_key].append(value)
+                        if ability_name not in ability_groups: ability_groups[ability_name] = {}
+                        if group_key not in ability_groups[ability_name]: ability_groups[ability_name][group_key] = []
+                        
+                        ability_groups[ability_name][group_key].append(value)
+
+            # 2. Process Raw Dictionary (Legacy/Data-only - Unscaled Base Values)
+            abilities = getattr(comp, 'abilities', {})
+            if isinstance(abilities, dict):
+                for ability_name, raw_value in abilities.items():
+                    if ability_name in handled_abilities:
+                        continue
+                    
+                    # Parse Value & Group
+                    value = raw_value
+                    stack_group = None
+                    
+                    if isinstance(raw_value, dict) and 'value' in raw_value:
+                        value = raw_value['value']
+                        stack_group = raw_value.get('stack_group')
+                    
+                    # Determine Group Key
+                    group_key = stack_group if stack_group else comp
+
+                    if ability_name not in ability_groups:
+                        ability_groups[ability_name] = {}
+                    if group_key not in ability_groups[ability_name]:
+                        ability_groups[ability_name][group_key] = []
+                    
+                    ability_groups[ability_name][group_key].append(value)
 
         # Aggregate
         for ability_name, groups in ability_groups.items():

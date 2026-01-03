@@ -77,6 +77,11 @@ class TestScalingLogic(unittest.TestCase):
         
         self.assertAlmostEqual(new_energy, base_energy * 2, msg="Energy cost should scale linearly with size")
 
+    def _get_crew_req(self, comp):
+        ab = comp.get_ability("CrewRequired")
+        if ab: return ab.amount
+        return comp.abilities.get("CrewRequired", 0)
+
     def test_crew_requirement_scaling_size_mount(self):
         """
         Verify Crew Required scales with sqrt(mass) for Size Mount.
@@ -84,14 +89,15 @@ class TestScalingLogic(unittest.TestCase):
         """
         # Railgun has CrewRequired: 5
         rg = create_component("railgun")
-        base_crew = rg.abilities.get("CrewRequired", 0)
+        base_crew = self._get_crew_req(rg)
         self.assertEqual(base_crew, 5, "Base Railgun Crew Req should be 5")
         
         # Add Size Mount x4
         rg.add_modifier("simple_size_mount", 4.0)
+        rg.recalculate_stats()
         
         expected_crew = int(math.ceil(base_crew * math.sqrt(4.0))) # 5 * 2 = 10
-        current_crew = rg.abilities.get("CrewRequired", 0)
+        current_crew = self._get_crew_req(rg)
         
         self.assertEqual(current_crew, expected_crew, 
                          f"Crew Req should scale with sqrt(mass). Expected {expected_crew}, got {current_crew}")
@@ -103,13 +109,14 @@ class TestScalingLogic(unittest.TestCase):
         """
         # Railgun CrewReq: 5
         rg = create_component("railgun")
-        base_crew = rg.abilities.get("CrewRequired", 0)
+        base_crew = self._get_crew_req(rg)
         
         rg.add_modifier("range_mount", 1.0)
+        rg.recalculate_stats()
         
         mass_mult = 3.5 ** 1.0
         expected_crew = int(math.ceil(base_crew * math.sqrt(mass_mult)))
-        current_crew = rg.abilities.get("CrewRequired", 0)
+        current_crew = self._get_crew_req(rg)
         
         # We expect this to fail effectively until implemented
         print(f"Range Mount Test: Base {base_crew}, MassMult {mass_mult}, Expected {expected_crew}, Got {current_crew}")
@@ -123,10 +130,11 @@ class TestScalingLogic(unittest.TestCase):
         """
         # Use simple size x2 and Range Mount x1
         rg = create_component("railgun")
-        base_crew = rg.abilities.get("CrewRequired", 0)
+        base_crew = self._get_crew_req(rg)
         
         rg.add_modifier("simple_size_mount", 2.0)
         rg.add_modifier("range_mount", 1.0)
+        rg.recalculate_stats()
         
         # Mass Mults accumulate multiplicatively in current logic? 
         # range_mount: stats['mass_mult'] *= 3.5^level
@@ -134,7 +142,7 @@ class TestScalingLogic(unittest.TestCase):
         
         total_mass_mult = 2.0 * 3.5
         expected_crew = int(math.ceil(base_crew * math.sqrt(total_mass_mult)))
-        current_crew = rg.abilities.get("CrewRequired", 0)
+        current_crew = self._get_crew_req(rg)
         
         self.assertEqual(current_crew, expected_crew, "Crew Req should scale with sqrt of total mass multiplier")
 

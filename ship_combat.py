@@ -239,7 +239,7 @@ class ShipCombatMixin:
         
         # Get weapon ability for range check
         weapon_ab = comp.get_ability('WeaponAbility')
-        weapon_range = weapon_ab.range if weapon_ab else getattr(comp, 'range', 0)
+        weapon_range = weapon_ab.range if weapon_ab else 0
         
         possible_targets = []
         for p in projectiles:

@@ -33,15 +33,11 @@ class TestShipStatsBaseline(unittest.TestCase):
         sys.modules['pygame.font'] = cls.pygame_mock.font
         
         # Import after mocking
-        from components import Component, Engine, Thruster, Shield, ShieldRegenerator, load_components, load_modifiers
+        from components import Component, load_components, load_modifiers
         from ship_stats import ShipStatsCalculator
         from ship import VEHICLE_CLASSES
         
         cls.Component = Component
-        cls.Engine = Engine
-        cls.Thruster = Thruster
-        cls.Shield = Shield
-        cls.ShieldRegenerator = ShieldRegenerator
         cls.ShipStatsCalculator = ShipStatsCalculator
         cls.VEHICLE_CLASSES = VEHICLE_CLASSES
         
@@ -111,7 +107,7 @@ class TestShipStatsBaseline(unittest.TestCase):
                 'ResourceConsumption': {'resource': 'fuel', 'amount': 10, 'trigger': 'constant'}
             }
         }
-        engine = self.Engine(engine_data)
+        engine = self.Component(engine_data)
         
         ship = self._create_mock_ship([engine])
         calculator = self.ShipStatsCalculator(self.VEHICLE_CLASSES)
@@ -136,7 +132,7 @@ class TestShipStatsBaseline(unittest.TestCase):
                 'ManeuveringThruster': {'value': 45.0}
             }
         }
-        thruster = self.Thruster(thruster_data)
+        thruster = self.Component(thruster_data)
         
         ship = self._create_mock_ship([thruster])
         calculator = self.ShipStatsCalculator(self.VEHICLE_CLASSES)
@@ -175,8 +171,8 @@ class TestShipStatsBaseline(unittest.TestCase):
             }
         }
         
-        shield = self.Shield(shield_data)
-        regen = self.ShieldRegenerator(regen_data)
+        shield = self.Component(shield_data)
+        regen = self.Component(regen_data)
         
         ship = self._create_mock_ship([shield, regen])
         calculator = self.ShipStatsCalculator(self.VEHICLE_CLASSES)
@@ -206,7 +202,7 @@ class TestShipStatsBaseline(unittest.TestCase):
                 'CombatPropulsion': {'value': 2000}
             }
         }
-        engine = self.Engine(engine_data)
+        engine = self.Component(engine_data)
         
         # Phase 7: Legacy attributes no longer exist on Component
         # All stats are now accessed via abilities
@@ -237,8 +233,8 @@ class TestShipStatsBaseline(unittest.TestCase):
             }
         }
         
-        engine1 = self.Engine(engine1_data)
-        engine2 = self.Engine(engine2_data)
+        engine1 = self.Component(engine1_data)
+        engine2 = self.Component(engine2_data)
         
         ship = self._create_mock_ship([engine1, engine2])
         calculator = self.ShipStatsCalculator(self.VEHICLE_CLASSES)
@@ -265,9 +261,9 @@ class TestAbilityModifierSync(unittest.TestCase):
         sys.modules['pygame.mixer'] = cls.pygame_mock.mixer
         sys.modules['pygame.font'] = cls.pygame_mock.font
         
-        from components import Engine, load_components, load_modifiers, MODIFIER_REGISTRY
+        from components import Component, load_components, load_modifiers, MODIFIER_REGISTRY
         
-        cls.Engine = Engine
+        cls.Component = Component
         cls.MODIFIER_REGISTRY = MODIFIER_REGISTRY
         
         load_components()
@@ -303,7 +299,7 @@ class TestAbilityModifierSync(unittest.TestCase):
                 'CombatPropulsion': {'value': 1000}
             }
         }
-        engine = self.Engine(engine_data)
+        engine = self.Component(engine_data)
         
         # Before modifier
         ab = engine.get_ability('CombatPropulsion')

@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from components import (
     load_components, load_modifiers, get_all_components, create_component, 
-    COMPONENT_REGISTRY, MODIFIER_REGISTRY, Tank, Weapon, ProjectileWeapon
+    COMPONENT_REGISTRY, MODIFIER_REGISTRY, get_all_components, create_component
 )
 
 class TestComponents(unittest.TestCase):
@@ -36,7 +36,7 @@ class TestComponents(unittest.TestCase):
         self.assertEqual(weapon_ab.damage, 40)
         
         tank = create_component('fuel_tank')
-        self.assertIsInstance(tank, Tank)
+
         
         # Verify ResourceStorage ability exists
         from resources import ResourceStorage

@@ -133,8 +133,25 @@
         - [x] `Sensor`, `Electronics` → `Component` aliases <!-- id: 153 -->
         - [x] `Shield`, `ShieldRegenerator` → `Component` aliases (migrated logic to `recalculate()`) <!-- id: 154 -->
         - [x] `Hangar` → `Component` alias (Refactored `test_fighter_launch.py` and `ship_combat.py`) <!-- id: 155 -->
-    - [ ] **Future: Modifier → Ability Value Sync** <!-- id: 151 -->
-        - When modifiers change stats (e.g., `endurance_mult`), ability values should recalculate
-        - Currently abilities read from data dict; modifiers affect stats dict
-        - Removed legacy `SeekerWeapon._apply_custom_stats` that bridged this gap
+    - [x] **Future: Modifier → Ability Value Sync** <!-- id: 151 -->
+        - [x] When modifiers change stats (e.g., `endurance_mult`), ability values should recalculate
+        - [x] Currently abilities read from data dict; modifiers affect stats dict
+        - [x] Removed legacy `SeekerWeapon._apply_custom_stats` that bridged this gap
 
+- [x] **Phase 8: Final Cleanup & Hardening** <!-- id: 160 -->
+    - [x] **Core Infrastructure Hardening** <!-- id: 161 -->
+        - [x] `components.py`: Remove `base_damage`, `base_range`, `base_reload` from `__init__`. <!-- id: 162 -->
+        - [x] `abilities.py`: Implement `recalculate()` for `BeamWeaponAbility` (accuracy). <!-- id: 163 -->
+        - [x] `abilities.py`: Update `WeaponAbility.recalculate()` to sync `facing_angle` from `stats['properties']`. <!-- id: 164 -->
+        - [x] `unit_tests/test_components.py`: Remove legacy alias usage and `isinstance` checks. <!-- id: 165 -->
+    - [x] **Physics & Stats Cleanup** <!-- id: 166 -->
+        - [x] `unit_tests/test_ship_stats.py`: Replace `self.Engine` with `Component` usage. <!-- id: 167 -->
+        - [x] `ship_stats.py`: Refactor `_priority_sort_key` to use ability checks. <!-- id: 168 -->
+        - [x] Remove unused imports in `ship_stats.py` and `ship.py`. <!-- id: 169 -->
+    - [x] **Combat Logic Strictness** <!-- id: 170 -->
+        - [x] `ship_combat.py`: Remove fallback in `_find_pdc_target` (Line 242). <!-- id: 171 -->
+    - [x] **UI Modernization** <!-- id: 172 -->
+        - [x] `detail_panel.py`: Refactor `show_component` to use `get_ui_rows()`. <!-- id: 173 -->
+        - [x] `weapons_panel.py`: Remove direct `weapon.damage/range` access. <!-- id: 174 -->
+    - [x] **Data & Validation** <!-- id: 175 -->
+        - [x] `ship_validator.py`: Update `LayerRestriction` to use ability validation. <!-- id: 176 -->

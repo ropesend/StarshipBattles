@@ -183,12 +183,14 @@ class WeaponsReportPanel:
         # Helper to create a unique key for valid stacking
         def get_key(w):
             # Key: (ID, Modifiers (sorted), Facing, Arc)
-            # Modifiers need to be hashable.
+            ab = w.get_ability('WeaponAbility')
+            if not ab: return (w.id, (), 0, 0)
+            
             mods = []
             for m in w.modifiers:
                 mods.append((m.definition.id, m.value))
             mods.sort()
-            return (w.id, tuple(mods), w.facing_angle, w.firing_arc)
+            return (w.id, tuple(mods), ab.facing_angle, ab.firing_arc)
 
         # Dictionary to build stacks: key -> {'weapon': w, 'count': n}
         stacks = {}
@@ -272,10 +274,14 @@ class WeaponsReportPanel:
         import math
         
         # Get Scores
-        base_acc = getattr(weapon, 'base_accuracy', 2.0)
-        falloff = getattr(weapon, 'accuracy_falloff', 0.001)
-        max_range = getattr(weapon, 'range', 0)
-        damage = getattr(weapon, 'damage', 0)
+        # Get Scores
+        ab = weapon.get_ability('WeaponAbility')
+        if not ab: return []
+        
+        base_acc = getattr(ab, 'base_accuracy', 2.0)
+        falloff = getattr(ab, 'accuracy_falloff', 0.001)
+        max_range = ab.range
+        damage = ab.damage
         
         # Ship Scores
         attack_score = 0.0
@@ -358,7 +364,8 @@ class WeaponsReportPanel:
         self._max_range = 0
         for item in self._weapons_cache:
             weapon = item['weapon']
-            weapon_range = getattr(weapon, 'range', 0)
+            ab = weapon.get_ability('WeaponAbility')
+            weapon_range = ab.range if ab else 0
             if weapon_range > self._max_range:
                 self._max_range = weapon_range
         
@@ -436,11 +443,14 @@ class WeaponsReportPanel:
         hover_range = max(0, min(hover_range, weapon_range))
         
         # Calculate stats
-        base_acc = getattr(weapon, 'base_accuracy', 1.0)
-        falloff = getattr(weapon, 'accuracy_falloff', 0.0)
+        ab = weapon.get_ability('WeaponAbility')
+        if not ab: return None
+        
+        base_acc = getattr(ab, 'base_accuracy', 1.0)
+        falloff = getattr(ab, 'accuracy_falloff', 0.0)
         ship_mod = getattr(ship, 'baseline_to_hit_offense', 1.0)
         target_mod = self.target_defense_mod
-        damage = getattr(weapon, 'damage', 0)
+        damage = ab.damage
         
         if weapon.has_ability('BeamWeaponAbility'):
             # Sigmoid Logic
@@ -472,10 +482,8 @@ class WeaponsReportPanel:
             verbose_info = None
         
         # Calculate damage at this range
-        if hasattr(weapon, 'get_damage'):
-            hover_damage = weapon.get_damage(hover_range)
-        else:
-            hover_damage = damage
+        # Future: Use ability specific damage scaling if needed
+        hover_damage = damage
             
         return {
             'pos': current_mouse_pos,
@@ -546,8 +554,11 @@ class WeaponsReportPanel:
         # Visualizing 'facing_angle' as rotation.
         # Let's assume standard math: 0 deg = Right.
         
-        facing = weapon.facing_angle
-        arc = weapon.firing_arc
+        ab = weapon.get_ability('WeaponAbility')
+        if not ab: return
+        
+        facing = ab.facing_angle
+        arc = ab.firing_arc
         
         # Convert to radians
         import math
@@ -651,8 +662,12 @@ class WeaponsReportPanel:
         import math
         
         # Scores
-        base_acc = getattr(weapon, 'base_accuracy', 1.0)
-        falloff = getattr(weapon, 'accuracy_falloff', 0.0)
+        # Scores
+        ab = weapon.get_ability('WeaponAbility')
+        if not ab: return
+        
+        base_acc = getattr(ab, 'base_accuracy', 1.0)
+        falloff = getattr(ab, 'accuracy_falloff', 0.0)
         
         attack_score = 0.0
         if hasattr(ship, 'get_total_sensor_score'):
@@ -671,11 +686,7 @@ class WeaponsReportPanel:
         chance_at_max = 1.0 / (1.0 + math.exp(-clamped_max))
         
         # Calculate damage at start/end
-        if hasattr(weapon, 'get_damage'):
-            dmg_at_0 = weapon.get_damage(0)
-            dmg_at_max = weapon.get_damage(weapon_range)
-        else:
-            dmg_at_0 = dmg_at_max = damage
+        dmg_at_0 = dmg_at_max = damage
         
         # Draw Start: Accuracy ABOVE, Damage BELOW
         # Draw Start: Accuracy ABOVE, Damage BELOW
@@ -725,7 +736,8 @@ class WeaponsReportPanel:
             screen.blit(range_surf, (bp_x - range_surf.get_width()//2, bar_y + self.LABEL_BELOW_RANGE_OFFSET))
             
             if hasattr(weapon, 'get_damage'):
-                bp_damage = weapon.get_damage(bp_range)
+                # Handle legacy get_damage if present, else usage AB damage
+                bp_damage = damage
             else:
                 bp_damage = damage
             dmg_surf = self.small_font.render(f"D:{int(bp_damage)}", True, self.BEAM_MID_COLORS[bp_idx])
@@ -739,10 +751,7 @@ class WeaponsReportPanel:
         # Draw damage at range breakpoints
         for bp_idx, bp_pct in enumerate(self.BREAKPOINTS_FULL):
             bp_range = int(weapon_range * bp_pct)
-            if hasattr(weapon, 'get_damage'):
-                bp_damage = weapon.get_damage(bp_range)
-            else:
-                bp_damage = damage
+            bp_damage = damage
             
             bp_x = start_x + int(bp_pct * weapon_bar_width)
             bp_color = self.DAMAGE_GRADIENT_COLORS[bp_idx]

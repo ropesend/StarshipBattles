@@ -147,7 +147,11 @@ class CombatPropulsion(Ability):
         super().__init__(component, data)
         # Handle 'val' if primitive shortcut used, else explicit 'value'
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.thrust_force = float(val)
+        self.base_thrust = float(val)
+        self.thrust_force = self.base_thrust
+
+    def recalculate(self):
+        self.thrust_force = self.base_thrust * self.component.stats.get('thrust_mult', 1.0)
 
     def get_ui_rows(self):
         return [{'label': 'Thrust', 'value': f"{self.thrust_force:.0f} N", 'color_hint': '#64FF64'}] # Light Green
@@ -157,7 +161,11 @@ class ManeuveringThruster(Ability):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.turn_rate = float(val)
+        self.base_turn_rate = float(val)
+        self.turn_rate = self.base_turn_rate
+
+    def recalculate(self):
+        self.turn_rate = self.base_turn_rate * self.component.stats.get('turn_mult', 1.0)
 
     def get_ui_rows(self):
         return [{'label': 'Turn Speed', 'value': f"{self.turn_rate:.1f} deg/s", 'color_hint': '#64FF96'}] # Slightly different green
@@ -224,6 +232,81 @@ class CommandAndControl(Ability):
     """Marks component as providing ship command capability."""
     def get_ui_rows(self):
         return [{'label': 'Command', 'value': 'Active', 'color_hint': '#96FF96'}]
+
+class CrewCapacity(Ability):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.amount = int(val)
+        self._base_amount = self.amount
+
+    def recalculate(self):
+        self.amount = int(self._base_amount * self.component.stats.get('crew_capacity_mult', 1.0))
+
+    def get_ui_rows(self):
+        return [{'label': 'Crew Cap', 'value': f"{self.amount}", 'color_hint': '#96FF96'}]
+
+class LifeSupportCapacity(Ability):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.amount = int(val)
+        self._base_amount = self.amount
+
+    def recalculate(self):
+        self.amount = int(self._base_amount * self.component.stats.get('life_support_capacity_mult', 1.0))
+
+    def get_ui_rows(self):
+        return [{'label': 'Life Support', 'value': f"{self.amount}", 'color_hint': '#96FFFF'}]
+
+class CrewRequired(Ability):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.amount = int(val)
+        self._base_amount = self.amount
+
+    def recalculate(self):
+        # Crew requirements scale with mass (sqrt) AND specific multiplier
+        mass_mult = self.component.stats.get('mass_mult', 1.0)
+        if mass_mult < 0: mass_mult = 0
+        crew_mult = math.sqrt(mass_mult)
+        
+        self.amount = int(math.ceil(self._base_amount * crew_mult * self.component.stats.get('crew_req_mult', 1.0)))
+
+    def get_ui_rows(self):
+        return [{'label': 'Crew Req', 'value': f"{self.amount}", 'color_hint': '#FF9696'}]
+
+class ToHitAttackModifier(Ability):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.amount = float(val)
+
+    def get_ui_rows(self):
+        val = self.amount
+        sign = "+" if val >= 0 else ""
+        return [{'label': 'Targeting', 'value': f"{sign}{val:.1f}", 'color_hint': '#FF6464'}]
+
+class ToHitDefenseModifier(Ability):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.amount = float(val)
+
+    def get_ui_rows(self):
+        val = self.amount
+        sign = "+" if val >= 0 else ""
+        return [{'label': 'Evasion', 'value': f"{sign}{val:.1f}", 'color_hint': '#64FFFF'}]
+
+class EmissiveArmor(Ability):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.amount = int(val)
+
+    def get_ui_rows(self):
+        return [{'label': 'Dmg Ignore', 'value': f"{self.amount}", 'color_hint': '#FFFF00'}]
         
 # --- Weapon Abilities ---
 
@@ -263,11 +346,33 @@ class WeaponAbility(Ability):
         self._base_reload = self.reload_time  # Store for modifier sync
         
         self.firing_arc = float(data.get('firing_arc', 360))
+        self._base_firing_arc = self.firing_arc
         self.facing_angle = float(data.get('facing_angle', 0))
         self.cooldown_timer = 0.0
         
         # Tags for targeting logic (e.g. 'pdc')
         self._tags.update(data.get('tags', []))
+
+    def recalculate(self):
+        # Apply modifiers to base stats
+        if hasattr(self, '_base_damage'):
+            self.damage = self._base_damage * self.component.stats.get('damage_mult', 1.0)
+        if hasattr(self, '_base_range'):
+            self.range = self._base_range * self.component.stats.get('range_mult', 1.0)
+        if hasattr(self, '_base_reload'):
+            self.reload_time = self._base_reload * self.component.stats.get('reload_mult', 1.0)
+            
+        # Apply Arc Modifiers
+        if hasattr(self, '_base_firing_arc'):
+            # Check for override first (`arc_set`) then additive (`arc_add`)
+            if self.component.stats.get('arc_set') is not None:
+                self.firing_arc = self.component.stats['arc_set']
+            else:
+                self.firing_arc = self._base_firing_arc + self.component.stats.get('arc_add', 0.0)
+        
+        # Sync facing_angle from properties
+        if 'facing_angle' in self.component.stats.get('properties', {}):
+            self.facing_angle = self.component.stats['properties']['facing_angle']
 
     def update(self) -> bool:
         if self.cooldown_timer > 0:
@@ -314,6 +419,16 @@ class BeamWeaponAbility(WeaponAbility):
         super().__init__(component, data)
         self.accuracy_falloff = float(data.get('accuracy_falloff', 0.001))
         self.base_accuracy = float(data.get('base_accuracy', 1.0))
+        self._base_accuracy = self.base_accuracy
+
+    def recalculate(self):
+        super().recalculate()
+        self.base_accuracy = self._base_accuracy + self.component.stats.get('accuracy_add', 0.0)
+
+    def get_ui_rows(self):
+        rows = super().get_ui_rows()
+        rows.append({'label': 'Accuracy', 'value': f"{int(self.base_accuracy*100)}%", 'color_hint': '#FFFF00'})
+        return rows
 
     def calculate_hit_chance(self, distance: float, attack_score_bonus: float = 0.0, defense_score_penalty: float = 0.0) -> float:
         """
@@ -373,7 +488,14 @@ ABILITY_REGISTRY = {
     "ProjectileWeaponAbility": ProjectileWeaponAbility,
     "BeamWeaponAbility": BeamWeaponAbility,
     "SeekerWeaponAbility": SeekerWeaponAbility,
+    "SeekerWeaponAbility": SeekerWeaponAbility,
     "CommandAndControl": CommandAndControl,
+    "CrewCapacity": CrewCapacity,
+    "LifeSupportCapacity": LifeSupportCapacity,
+    "CrewRequired": CrewRequired,
+    "ToHitAttackModifier": ToHitAttackModifier,
+    "ToHitDefenseModifier": ToHitDefenseModifier,
+    "EmissiveArmor": EmissiveArmor,
     
     # Primitive/Shortcut Factories
     "FuelStorage": lambda c, d: ResourceStorage(c, {"resource": "fuel", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "fuel"}),

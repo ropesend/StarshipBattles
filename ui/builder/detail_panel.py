@@ -126,47 +126,17 @@ class ComponentDetailPanel:
                 color = row.get('color_hint', '#C8C8C8')
                 add_line(f"{label}: {val}", color)
 
-        # Legacy Fallback / Specific Extras (e.g. Accuracy/Defense Scores not fully in abilities yet)
-        if hasattr(comp, 'base_accuracy') and comp.base_accuracy > 0:
-             # Check if BeamWeaponAbility already covered this? 
-             # BeamWeaponAbility doesn't output 'Accuracy Score' in get_ui_rows yet.
-             # Only Range/Damage/Reload.
-             pass 
-             # For now, let's trust get_ui_rows covers the CORE stats.
-             # Special stats might still need manual coverage if not in get_ui_rows.
-        
-        # Manual Checks for things potentially missing from Ability.get_ui_rows
-        # (Seeker Missile Stats, Evasion)
-        if hasattr(comp, 'to_hit_defense'):
-             def_val = comp.to_hit_defense
-             if def_val > 0:
-                 add_line(f"Defense Score: +{def_val:.1f}", '#800080')
-
-        # Resource Storage (Legacy Shim/Raw Data check for Builder)
-        # If component works via Shim, get_ui_rows() works. 
-        # But if we are viewing a raw data dict wrapper validation issue?
-        # The 'comp' passed here is a Component instance (or subclass).
-        # So get_ui_rows should work.
-             
-        # Abilities (Raw Data - for non-class abilities)
+        # Abilities (Unregistered / Custom Data / Fallback)
         if comp.abilities:
-            # We want to show things that were NOT shown by get_ui_rows
-            # Basically filter out keys that map to registered Ability classes
             from abilities import ABILITY_REGISTRY
-            
-            # Simple heuristic: if we haven't seen it yet.
-            # But simpler to just exclude known Ability Types.
             
             shown_header = False
             
             for k, v in comp.abilities.items():
-                # Skip known Ability Classes (handled by get_ui_rows)
+                # Skip fully registered Ability Classes (handled by get_ui_rows)
                 if k in ABILITY_REGISTRY:
                     continue
-                # Also skip primitive aliases if they map to classes we showed
-                if k in ["FuelStorage", "AmmoStorage", "EnergyStorage", "EnergyConsumption", "EnergyGeneration"]:
-                    continue
-                # Skip shimmed legacy keys
+                # Skip legacy shims (if they still exist in data)
                 if k in ["ProjectileWeapon", "BeamWeapon", "Armor"]:
                     continue
                     
@@ -174,25 +144,7 @@ class ComponentDetailPanel:
                     lines.append("<br>Abilities:")
                     shown_header = True
 
-                if k == "CommandAndControl":
-                    add_line("• Command & Control", '#96FF96')
-                elif k == "CrewCapacity":
-                    if v > 0: add_line(f"• Crew Cap: {v}", '#96FF96')
-                    else: add_line(f"• Crew Req: {-v}", '#FF9696')
-                elif k == "LifeSupportCapacity":
-                    add_line(f"• Life Support: {v}", '#96FFFF')
-                elif k == "ToHitAttackModifier":
-                    val = v.get('value', 0) if isinstance(v, dict) else v
-                    sign = "+" if val >= 0 else ""
-                    add_line(f"• Targeting Score: {sign}{val:.1f}", '#FF6464')
-                elif k == "ToHitDefenseModifier":
-                    val = v.get('value', 0) if isinstance(v, dict) else v
-                    sign = "+" if val >= 0 else ""
-                    add_line(f"• Evasion Score: {sign}{val:.1f}", '#64FFFF')
-                elif k == "EmissiveArmor":
-                    add_line(f"• Damage Ignore: {v}", '#FFFF00')
-                else:
-                    add_line(f"• {k}: {v}", '#C8C8C8')
+                add_line(f"• {k}: {v}", '#C8C8C8')
                     
         # Modifiers
         if comp.modifiers:
