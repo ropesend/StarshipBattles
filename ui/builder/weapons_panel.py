@@ -903,8 +903,10 @@ class WeaponsReportPanel:
 
             # Draw range bar
             bar_y = row_y + self.BAR_Y_OFFSET
-            weapon_range = getattr(weapon, 'range', 0)
-            damage = getattr(weapon, 'damage', 0)
+            # Safe Range/Damage Access via Ability
+            ab = weapon.get_ability('WeaponAbility')
+            weapon_range = ab.range if ab else 0
+            damage = ab.damage if ab else 0
             
             weapon_bar_width = 0
             if self._max_range > 0 and weapon_range > 0:

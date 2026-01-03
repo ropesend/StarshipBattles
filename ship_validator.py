@@ -245,37 +245,57 @@ class ResourceDependencyRule(ValidationRule):
         for l in ship.layers.values():
             all_components.extend(l['components'])
             
-        for c in all_components:
-            abilities = getattr(c, 'abilities', {})
+        from game.simulation.systems.resource_manager import ResourceConsumption, ResourceStorage
             
-            # Check Consumption
-            if 'ResourceConsumption' in abilities:
-                for cons in abilities['ResourceConsumption']:
-                    if not isinstance(cons, dict): continue
-                    res_name = cons.get('resource')
-                    if not res_name: continue
-                    
-                    if res_name == 'fuel':
-                        needs_fuel = True
-                    elif res_name == 'ammo':
-                        needs_ammo = True
-                    elif res_name == 'energy':
-                        needs_energy_storage = True
-
-            # Check Sources (Storage)
-            if 'ResourceStorage' in abilities:
-                 for store in abilities['ResourceStorage']:
-                    if not isinstance(store, dict): continue
-                    res_name = store.get('resource')
-                    capacity = store.get('amount', 0)
-                    
-                    if capacity > 0:
+        for c in all_components:
+            # Use V2 Ability Instances for robust state checking
+            if hasattr(c, 'ability_instances'):
+                for ab in c.ability_instances:
+                    # Check Consumption
+                    if isinstance(ab, ResourceConsumption):
+                        res_name = ab.resource_name
+                        if not res_name: continue
+                        
                         if res_name == 'fuel':
-                            has_fuel_storage = True
+                            needs_fuel = True
                         elif res_name == 'ammo':
-                            has_ammo_storage = True
+                            needs_ammo = True
                         elif res_name == 'energy':
-                            has_energy_storage = True
+                            needs_energy_storage = True
+                            
+                    # Check Storage
+                    elif isinstance(ab, ResourceStorage):
+                        res_name = getattr(ab, 'resource_type', getattr(ab, 'resource_name', None))
+                        # Use max_amount for capacity check (V2 standard)
+                        capacity = getattr(ab, 'max_amount', 0)
+                        
+                        if capacity > 0:
+                            if res_name == 'fuel':
+                                has_fuel_storage = True
+                            elif res_name == 'ammo':
+                                has_ammo_storage = True
+                            elif res_name == 'energy':
+                                has_energy_storage = True
+            else:
+                # Fallback for raw data or uninitialized components
+                abilities = getattr(c, 'abilities', {})
+                if 'ResourceConsumption' in abilities:
+                    for cons in abilities['ResourceConsumption']:
+                        if not isinstance(cons, dict): continue
+                        res_name = cons.get('resource')
+                        if res_name == 'fuel': needs_fuel = True
+                        elif res_name == 'ammo': needs_ammo = True
+                        elif res_name == 'energy': needs_energy_storage = True
+                        
+                if 'ResourceStorage' in abilities:
+                    for store in abilities['ResourceStorage']:
+                        if not isinstance(store, dict): continue
+                        res_name = store.get('resource')
+                        capacity = store.get('amount', 0)
+                        if capacity > 0:
+                            if res_name == 'fuel': has_fuel_storage = True
+                            elif res_name == 'ammo': has_ammo_storage = True
+                            elif res_name == 'energy': has_energy_storage = True
             
         # Warnings
         if needs_fuel and not has_fuel_storage:
