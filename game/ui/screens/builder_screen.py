@@ -62,8 +62,8 @@ class BuilderSceneGUI:
         self.event_bus = EventBus()
         
         # UI Manager
-        import os
-        theme_path = os.path.join(os.path.dirname(__file__), 'builder_theme.json')
+        from game.core.constants import ROOT_DIR, DATA_DIR, ASSET_DIR
+        theme_path = os.path.join(ROOT_DIR, 'builder_theme.json')
         with profile_block("Builder: Init UIManager"):
             self.ui_manager = pygame_gui.UIManager(
                 (screen_width, screen_height),
@@ -79,11 +79,10 @@ class BuilderSceneGUI:
         self.template_modifiers = {}
         self.sprite_mgr = SpriteManager.get_instance()
         
-        base_path = os.path.dirname(os.path.abspath(__file__))
         with profile_block("Builder: Init Managers"):
-            self.preset_manager = PresetManager(os.path.join(base_path, "data", "presets.json"))
+            self.preset_manager = PresetManager(os.path.join(DATA_DIR, "presets.json"))
             self.theme_manager = ShipThemeManager.get_instance()
-            self.theme_manager.initialize(base_path)
+            self.theme_manager.initialize() # No path needed anymore
         
         # Layout
         self.left_panel_width = 450
@@ -117,8 +116,6 @@ class BuilderSceneGUI:
         self._create_ui()
         
     def _create_ui(self):
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        
         # New Layout Dimensions
         self.modifier_panel_height = 360
         avail_height = self.height - self.bottom_bar_height
@@ -183,11 +180,16 @@ class BuilderSceneGUI:
         # Detail Panel
         detail_x = self.width - self.right_panel_width - self.detail_panel_width
         avail_height = self.height - self.bottom_bar_height - self.weapons_report_height
+        
+        # Component Image Path
+        from game.core.constants import ASSET_DIR
+        comp_img_path = os.path.join(ASSET_DIR, "Images", "Components")
+        
         with profile_block("Builder: Init Detail Panel"):
             self.detail_panel = ComponentDetailPanel(
                 self.ui_manager,
                 pygame.Rect(detail_x, 0, self.detail_panel_width, avail_height),
-                os.path.join(base_path, "assets", "Images", "Components"),
+                comp_img_path,
                 event_bus=self.event_bus
             )
         

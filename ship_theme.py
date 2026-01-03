@@ -3,6 +3,7 @@ import json
 import pygame
 from game.core.logger import log_info, log_error
 from game.core.profiling import profile_block
+from game.core.constants import ASSET_DIR
 
 class ShipThemeManager:
     _instance = None
@@ -15,7 +16,7 @@ class ShipThemeManager:
         
     def __init__(self):
         if ShipThemeManager._instance is not None:
-             raise Exception("This class is a singleton!")
+            raise Exception("This class is a singleton!")
              
         # self.themes acts as the image cache: {theme_name: {class_name: surface}}
         self.themes = {}  
@@ -31,10 +32,11 @@ class ShipThemeManager:
         self.default_theme = "Federation"
         self.discovery_complete = False
         
-    def initialize(self, base_path):
-        """Discover all themes from resources/ShipThemes without loading images."""
-        self.base_path = base_path
-        themes_dir = os.path.join(base_path, "resources", "ShipThemes")
+    def initialize(self, base_path=None):
+        """Discover all themes from assets/ShipThemes without loading images."""
+        # base_path is now deprecated/ignored in favor of ASSET_DIR
+        self.base_path = base_path 
+        themes_dir = os.path.join(ASSET_DIR, "ShipThemes")
         
         if not os.path.exists(themes_dir):
             log_error(f"ShipThemes directory not found: {themes_dir}")

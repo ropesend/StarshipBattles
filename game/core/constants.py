@@ -20,3 +20,13 @@ HEIGHT = 1080
 # Fonts
 FONT_MAIN = "Arial"
 
+
+# Directory Paths
+import os
+CORE_DIR = os.path.dirname(os.path.abspath(__file__))
+GAME_DIR = os.path.dirname(CORE_DIR)
+ROOT_DIR = os.path.dirname(GAME_DIR)
+
+ASSET_DIR = os.path.join(ROOT_DIR, "assets")
+DATA_DIR = os.path.join(ROOT_DIR, "data")
+
