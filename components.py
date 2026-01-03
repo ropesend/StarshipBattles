@@ -577,43 +577,21 @@ BeamWeapon = Component
 # All seeker stats are in SeekerWeaponAbility
 SeekerWeapon = Component
 
-class CrewQuarters(Component):
-    """Provides crew capacity for the ship."""
-    def __init__(self, data):
-        super().__init__(data)
-        self.crew_capacity = data.get('crew_capacity', 10)
-    
-    def clone(self):
-        return CrewQuarters(self.data)
+# Phase 7: CrewQuarters is now an alias for Component
+# crew_capacity was never used in the codebase; abilities handle crew via 'CrewCapacity'
+CrewQuarters = Component
 
-class LifeSupport(Component):
-    """Provides life support capacity for crew."""
-    def __init__(self, data):
-        super().__init__(data)
-        self.life_support_capacity = data.get('life_support_capacity', 10)
-    
-    def clone(self):
-        return LifeSupport(self.data)
+# Phase 7: LifeSupport is now an alias for Component
+# life_support_capacity was never used; abilities handle it via 'LifeSupportCapacity'
+LifeSupport = Component
 
-class Sensor(Component):
-    """Provides sensor capabilities like attack modifiers (Score)."""
-    def __init__(self, data):
-        super().__init__(data)
-        val = self.abilities.get('ToHitAttackModifier', 0.0)
-        self.attack_modifier = val.get('value', 0.0) if isinstance(val, dict) else val
-    
-    def clone(self):
-        return Sensor(self.data)
+# Phase 7: Sensor is now an alias for Component
+# attack_modifier was never used; abilities handle it via 'ToHitAttackModifier'
+Sensor = Component
 
-class Electronics(Component):
-    """Provides electronic warfare capabilities like defense modifiers (Score)."""
-    def __init__(self, data):
-        super().__init__(data)
-        val = self.abilities.get('ToHitDefenseModifier', 0.0)
-        self.defense_modifier = val.get('value', 0.0) if isinstance(val, dict) else val
-    
-    def clone(self):
-        return Electronics(self.data)
+# Phase 7: Electronics is now an alias for Component
+# defense_modifier was never used; abilities handle it via 'ToHitDefenseModifier'
+Electronics = Component
 
 class Shield(Component):
     def __init__(self, data):
@@ -707,11 +685,11 @@ COMPONENT_TYPE_MAP = {
     "Generator": Component,
     "BeamWeapon": Component,
     "SeekerWeapon": Component,
-    # Types with custom logic (not yet aliased)
-    "CrewQuarters": CrewQuarters,
-    "LifeSupport": LifeSupport,
-    "Sensor": Sensor,
-    "Electronics": Electronics,
+    # Also aliased (simple classes)
+    "CrewQuarters": Component,
+    "LifeSupport": Component,
+    "Sensor": Component,
+    "Electronics": Component,
     "Shield": Shield,
     "ShieldRegenerator": ShieldRegenerator,
     "Hangar": Hangar

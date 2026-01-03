@@ -129,6 +129,8 @@
         - [x] Delete `_instantiate_abilities` shim logic <!-- id: 128 -->
         - [x] Simplify `COMPONENT_TYPE_MAP` - many entries now point to `Component` <!-- id: 150 -->
         - [x] Clean up unused imports across codebase <!-- id: 130 -->
+        - [x] `CrewQuarters`, `LifeSupport` → `Component` aliases <!-- id: 152 -->
+        - [x] `Sensor`, `Electronics` → `Component` aliases <!-- id: 153 -->
     - [ ] **Future: Modifier → Ability Value Sync** <!-- id: 151 -->
         - When modifiers change stats (e.g., `endurance_mult`), ability values should recalculate
         - Currently abilities read from data dict; modifiers affect stats dict

@@ -45,18 +45,21 @@
 ### Classes Still Full Implementations (Not Aliased Yet)
 | Class | Lines | Reason |
 |-------|-------|--------|
-| `CrewQuarters` | ~10 | Simple - could alias |
-| `LifeSupport` | ~10 | Simple - could alias |
-| `Sensor` | ~15 | Simple - could alias |
-| `Electronics` | ~15 | Simple - could alias |
 | `Shield` | ~40 | Has `_apply_custom_stats` |
 | `ShieldRegenerator` | ~20 | Has custom logic |
 | `Hangar` | ~30 | Has `can_launch()`, `launch()` methods |
 
+### Recently Aliased (~16:30 PST)
+| Class | Lines Removed |
+|-------|---------------|
+| `CrewQuarters` | ~8 |
+| `LifeSupport` | ~8 |
+| `Sensor` | ~10 |
+| `Electronics` | ~10 |
+
 ### Future Work (Optional)
 | Item | Priority | Notes |
 |------|----------|-------|
-| Alias remaining simple classes | LOW | CrewQuarters, LifeSupport, Sensor, Electronics |
 | Modifier → Ability value sync | LOW | Abilities don't auto-update when modifiers change |
 
 ---
