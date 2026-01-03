@@ -29,4 +29,8 @@ ROOT_DIR = os.path.dirname(GAME_DIR)
 
 ASSET_DIR = os.path.join(ROOT_DIR, "assets")
 DATA_DIR = os.path.join(ROOT_DIR, "data")
+SCREENSHOT_DIR = os.path.join(ROOT_DIR, "screenshots")
+
+# Debug Flags
+DEBUG_SCREENSHOTS = True
 

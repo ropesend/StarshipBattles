@@ -27,6 +27,7 @@ from ui.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel, 
 from ui.builder.schematic_view import SchematicView
 from ui.builder.interaction_controller import InteractionController
 from ui.builder.event_bus import EventBus
+from game.core.screenshot_manager import ScreenshotManager
 
 # Initialize Tkinter root and hide it (for simpledialog)
 try:
@@ -60,6 +61,7 @@ class BuilderSceneGUI:
         self.on_start_battle = on_start_battle
         
         self.event_bus = EventBus()
+        self.screenshot_manager = ScreenshotManager.get_instance()
         
         # UI Manager
         from game.core.constants import ROOT_DIR, DATA_DIR, ASSET_DIR
@@ -674,6 +676,22 @@ class BuilderSceneGUI:
                     logger.info(f"Deleted preset: {preset_name}")
                     break
 
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F12:
+                # Full screenshot
+                self.screenshot_manager.capture(label="full_window")
+            elif event.key == pygame.K_F11:
+                # Focused screenshot centered on mouse
+                mx, my = pygame.mouse.get_pos()
+                size = 1024
+                # Create rect entered on mouse
+                rect = pygame.Rect(0, 0, size, size)
+                rect.center = (mx, my)
+                self.screenshot_manager.capture(region=rect, label="mouse_focus")
+            elif event.key == pygame.K_F10:
+                # Debug Sequence Trigger
+                self._debug_sequence_capture()
+
     def _execute_pending_action(self):
         """Execute the action stored in self.pending_action."""
         if hasattr(self, 'pending_action') and self.pending_action:
@@ -710,6 +728,29 @@ class BuilderSceneGUI:
         else:
             # Fallback for simple clear if pending_action not set (legacy support)
             self._clear_design()
+
+    def _debug_sequence_capture(self):
+        """test sequence capture for draw order debugging."""
+        logger.info("Starting debug sequence capture...")
+        # Note: In a real scenario, this would likely be hooked into the draw loop 
+        # or a specific event. For this test, we will simulate a multi-step capture 
+        # by manually capturing the current state with different labels, 
+        # implying we would call this between draw calls.
+        
+        # 1. Capture "Start"
+        self.screenshot_manager.capture_step("1_start_sequence")
+        
+        # 2. Simulate "Draw Background" (just capturing same frame for test)
+        self.screenshot_manager.capture_step("2_draw_background")
+        
+        # 3. Simulate "Draw Ships"
+        self.screenshot_manager.capture_step("3_draw_ships")
+        
+        # 4. Simulate "Draw UI"
+        self.screenshot_manager.capture_step("4_draw_ui")
+        
+        logger.info("Debug sequence capture complete.")
+
 
     def update(self, dt):
         if self.error_timer > 0:
