@@ -875,8 +875,12 @@ class FormationEditorScene:
 
     def save_formation(self):
         if not tk_root: return
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        initial_dir = os.path.join(base_path, "data", "formations")
+        if not os.path.exists(initial_dir): os.makedirs(initial_dir)
+
         filename = filedialog.asksaveasfilename(
-            initialdir=os.getcwd(), initialfile="formation.json",
+            initialdir=initial_dir, initialfile="formation.json",
             defaultextension=".json", filetypes=[("JSON Files", "*.json")], title="Save Formation"
         )
         if filename:
@@ -884,8 +888,12 @@ class FormationEditorScene:
 
     def load_formation(self):
         if not tk_root: return
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        initial_dir = os.path.join(base_path, "data", "formations")
+        if not os.path.exists(initial_dir): os.makedirs(initial_dir)
+
         filename = filedialog.askopenfilename(
-            initialdir=os.getcwd(), filetypes=[("JSON Files", "*.json")], title="Load Formation"
+            initialdir=initial_dir, filetypes=[("JSON Files", "*.json")], title="Load Formation"
         )
         if filename:
             self.core.load_from_file(filename)

@@ -39,14 +39,19 @@ def scan_ship_designs():
 
 
 def scan_formations():
-    """Scan for available formation JSON files in root directory."""
+    """Scan for available formation JSON files in data/formations directory."""
     base_path = os.path.dirname(os.path.abspath(__file__))
-    json_files = glob.glob(os.path.join(base_path, "*.json"))
+    formations_dir = os.path.join(base_path, "data", "formations")
+    
+    if not os.path.exists(formations_dir):
+        os.makedirs(formations_dir)
+        
+    json_files = glob.glob(os.path.join(formations_dir, "*.json"))
     
     formations = []
     for filepath in json_files:
         filename = os.path.basename(filepath)
-        # Skip known non-formation files
+        # Skip known non-formation files (though they shouldn't be here anymore)
         if filename in ['builder_theme.json', 'component_presets.json']:
             continue
             
