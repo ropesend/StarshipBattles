@@ -26,8 +26,9 @@ _VALIDATOR = ShipDesignValidator()
 VALIDATOR = _VALIDATOR 
 
 # Load Vehicle Classes from JSON
+
 VEHICLE_CLASSES: Dict[str, Any] = {}
-VEHICLE_CLASSES: Dict[str, Any] = {}
+SHIP_CLASSES = VEHICLE_CLASSES  # Backward compatibility alias
 
 def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_filepath: Optional[str] = None) -> None:
     """

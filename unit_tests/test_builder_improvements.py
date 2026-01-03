@@ -14,7 +14,7 @@ class TestBuilderImprovements(unittest.TestCase):
         
         # Ensure SHIP_CLASSES populated
         if not SHIP_CLASSES:
-             SHIP_CLASSES.update({"Escort": 1000})
+             SHIP_CLASSES.update({"Escort": {"max_mass": 1000, "type": "Ship"}})
 
     def tearDown(self):
         pygame.quit()
