@@ -108,14 +108,14 @@ class LayerRestrictionDefinitionRule(ValidationRule):
                 blocked_class = r.split(":")[1]
                 if component.data.get('major_classification') == blocked_class:
                     result.add_error(f"Classification '{blocked_class}' blocked in this layer")
-            elif r.startswith("block_type:"):
-                blocked_type = r.split(":")[1]
-                if component.type_str == blocked_type:
-                     result.add_error(f"Type '{blocked_type}' blocked in this layer")
             elif r.startswith("block_id:"):
                 blocked_id = r.split(":")[1]
                 if component.id == blocked_id:
                      result.add_error(f"Component '{blocked_id}' blocked in this layer")
+            elif r.startswith("deny_ability:"):
+                denied_ability = r.split(":")[1]
+                if component.has_ability(denied_ability):
+                    result.add_error(f"Ability '{denied_ability}' blocked in this layer")
 
         # 2. Process "Allow" Rules (Whitelist)
         # Logic: If ANY allow rule exists, the component MUST match at least one of them.
@@ -131,14 +131,14 @@ class LayerRestrictionDefinitionRule(ValidationRule):
                     if component.data.get('major_classification') == target:
                         allowed = True
                         break
-                elif r.startswith("allow_type:"):
-                    target = r.split(":")[1]
-                    if component.type_str == target:
-                        allowed = True
-                        break
                 elif r.startswith("allow_id:"):
                     target = r.split(":")[1]
                     if component.id == target:
+                        allowed = True
+                        break
+                elif r.startswith("allow_ability:"):
+                    target_ability = r.split(":")[1]
+                    if component.has_ability(target_ability):
                         allowed = True
                         break
             
@@ -216,8 +216,9 @@ class ClassRequirementsRule(ValidationRule):
         life_support = ability_totals.get('LifeSupportCapacity', 0)
         crew_required = ability_totals.get('CrewRequired', 0)
         
-        legacy_req = abs(min(0, ability_totals.get('CrewCapacity', 0)))
-        crew_required += legacy_req
+        
+        # legacy_req removed in Phase 9
+        pass
         
         if crew_capacity < crew_required:
              result.add_error(f"Need {crew_required - crew_capacity} more crew housing")

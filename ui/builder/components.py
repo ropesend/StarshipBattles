@@ -88,17 +88,44 @@ class ComponentListItem:
         lines.append(f"Type: {c.type_str}")
         lines.append(f"Mass: {c.mass}t  HP: {c.max_hp}")
         
-        # Specific stats from data to be safe, or attributes if reliable
-        if 'damage' in c.data: lines.append(f"Damage: {c.data['damage']}")
-        if 'range' in c.data: lines.append(f"Range: {c.data['range']}")
-        if 'energy_generation' in c.data: lines.append(f"Gen: {c.data['energy_generation']}/s")
-        if 'capacity' in c.data: lines.append(f"Cap: {c.data['capacity']} {c.data.get('resource_type','')}")
-        if 'thrust_force' in c.data: lines.append(f"Thrust: {c.data['thrust_force']}")
-        if 'abilities' in c.data:
-            for k, v in c.data['abilities'].items():
-                if v is True: lines.append(f"Ab: {k}")
-                elif isinstance(v, (int, float)): lines.append(f"{k}: {v}")
-                
+        # Ability-based Tooltip Generation (Phase 9 Cleanup)
+        # Weapon Stats
+        if c.has_ability('WeaponAbility'):
+            ab = c.get_ability('WeaponAbility')
+            lines.append(f"Damage: {ab.damage}")
+            lines.append(f"Range: {ab.range}")
+            if hasattr(ab, 'base_accuracy'):
+                lines.append(f"Acc: {ab.base_accuracy*100:.0f}%")
+            if hasattr(ab, 'reload_time'):
+                lines.append(f"Reload: {ab.reload_time}s")
+        
+        # Propulsion
+        if c.has_ability('CombatPropulsion'):
+            total_thrust = sum(ab.thrust_force for ab in c.get_abilities('CombatPropulsion'))
+            lines.append(f"Thrust: {total_thrust}")
+
+        if c.has_ability('ManeuveringThruster'):
+             total_turn = sum(ab.turn_rate for ab in c.get_abilities('ManeuveringThruster'))
+             lines.append(f"Turn: {total_turn}/s")
+             
+        # Resources (Power/Shields)
+        if c.has_ability('ShieldProjection'):
+            ab = c.get_ability('ShieldProjection')
+            lines.append(f"Shield: {ab.capacity}")
+            
+        if c.has_ability('PowerGenerator'):
+            ab = c.get_ability('PowerGenerator')
+            lines.append(f"Power: +{ab.generation_rate}/s")
+            
+        # Generic Ability Listing (Fallback for others)
+        shown_abilities = {'WeaponAbility', 'CombatPropulsion', 'ManeuveringThruster', 'ShieldProjection', 'PowerGenerator', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility'}
+        
+        if c.abilities:
+            for k, v in c.abilities.items():
+                if k not in shown_abilities and k in c.ability_instances:
+                    # Just show name for uncategorized abilities
+                     lines.append(f"- {k}")
+
         return "<br>".join(lines)
 
     def set_selected(self, selected):

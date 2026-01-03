@@ -187,6 +187,38 @@ class TestBuilderValidation(unittest.TestCase):
             comp3 = self.create_component(mass=1)
             self.assertFalse(self.ship.add_component(comp3, LayerType.INNER), "Should reject mass exceeding budget")
         
+    def test_ability_restrictions(self):
+        """Step 6: Test ability-based restrictions (allow_ability/deny_ability)."""
+        # Create a component with 'WeaponAbility'
+        weapon_data = self.base_component_data.copy()
+        weapon_data["abilities"] = {"WeaponAbility": {"damage": 10}}
+        weapon = Component(weapon_data)
+        
+        # Create a component with 'ShieldProjection'
+        shield_data = self.base_component_data.copy()
+        shield_data["abilities"] = {"ShieldProjection": {"capacity": 100}}
+        shield = Component(shield_data)
+        
+        # 1. Test allow_ability
+        # Inject restriction: Only allow components with WeaponAbility in OUTER
+        self.ship.layers[LayerType.OUTER]['restrictions'] = ["allow_ability:WeaponAbility"]
+        
+        # Add Weapon (Should pass)
+        self.assertTrue(self.ship.add_component(weapon, LayerType.OUTER), "Should allow component with allowed ability")
+        
+        # Add Shield (Should fail)
+        self.assertFalse(self.ship.add_component(shield, LayerType.OUTER), "Should deny component without allowed ability")
+        
+        # 2. Test deny_ability
+        # Inject restriction: Deny ShieldProjection in INNER
+        self.ship.layers[LayerType.INNER]['restrictions'] = ["deny_ability:ShieldProjection"]
+        
+        # Add Weapon (Should pass - not denied)
+        self.assertTrue(self.ship.add_component(weapon, LayerType.INNER), "Should allow component without denied ability")
+        
+        # Add Shield (Should fail - denied)
+        self.assertFalse(self.ship.add_component(shield, LayerType.INNER), "Should deny component with denied ability")
+        
     def test_symmetry_enforcement(self):
         """Step 5b: Test symmetry enforcement (if enabled)."""
         # Symmetry is usually a Builder UI feature, not strict Ship validation?

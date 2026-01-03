@@ -404,6 +404,32 @@ class WeaponAbility(Ability):
             {'label': 'Reload', 'value': f"{self.reload_time:.1f}s", 'color_hint': '#FFC864'} # Gold
         ]
 
+    def check_firing_solution(self, ship_pos, ship_angle, target_pos) -> bool:
+        """
+        Check if target is within Range and Arc.
+        Encapsulates geometric logic previously done in ship_combat.py.
+        """
+        # 1. Range Check
+        dist = ship_pos.distance_to(target_pos)
+        if dist > self.range:
+            return False
+            
+        # 2. Arc Check
+        # Vector to target
+        aim_vec = target_pos - ship_pos
+        aim_angle = math.degrees(math.atan2(aim_vec.y, aim_vec.x)) % 360
+        
+        # Component Global Facing
+        comp_facing = (ship_angle + self.facing_angle) % 360
+        
+        # Shortest angular difference
+        diff = (aim_angle - comp_facing + 180) % 360 - 180
+        
+        if abs(diff) <= (self.firing_arc / 2):
+            return True
+            
+        return False
+
 class ProjectileWeaponAbility(WeaponAbility):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)

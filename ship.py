@@ -241,14 +241,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                     if rng > max_rng:
                         max_rng = rng
                 
-                # 2. Fallback: Legacy Weapon components with direct range attribute
-                if max_rng == 0.0 and hasattr(comp, 'range') and hasattr(comp, 'damage'):
-                    rng = getattr(comp, 'range', 0)
-                    if hasattr(comp, 'projectile_speed') and hasattr(comp, 'endurance'):
-                        # SeekerWeapon fallback
-                        rng = comp.projectile_speed * comp.endurance
-                    if rng > max_rng:
-                        max_rng = rng
+                # Legacy fallback removed in Phase 9
+                pass
         return max_rng if max_rng > 0 else 0.0
 
     def update(self, dt: float = 0.01, context: Optional[dict] = None) -> None:

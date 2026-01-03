@@ -43,7 +43,34 @@
 - **File:** `ship_validator.py`
     - [ ] Update `LayerRestrictionDefinitionRule` to support Ability-based validation (`allow_ability`/`deny_ability`).
 
-## Verification Plan
-1. Run `unit_tests/test_ship_stats.py` after refactoring it to ensuring no regression.
-2. Run `unit_tests/test_ui_*.py` and manually verify Builder UI after detail/weapon panel refactors.
-3. Full suite pass: `python -m pytest unit_tests/`
+
+
+## Phase 10: Final Polish (Deep Dive Audit Findings)
+**Goal:** Address specific legacy artifacts and minor logic gaps identified in the "Deep Dive" audit to achieve a 100% pure v2.0 codebase.
+
+### 1. Core Infrastructure & Logic (`ship.py`, `components.py`)
+- **Refactor `ship.py`**:
+    - [ ] **Sensor/ECM Logic:** Refactor `get_total_sensor_score` and `get_total_ecm_score` to use `comp.get_abilities()` aggregation instead of direct `comp.abilities` dictionary checks.
+    - [ ] **Legacy Dict:** Remove `SHIP_CLASSES` dictionary and update usages to `VEHICLE_CLASSES`.
+    - [ ] **Dead Code:** Remove legacy fallback comments and dead `pass` blocks.
+- **Refactor `components.py`**:
+    - [ ] **PDC Fallback:** Remove `self.abilities.get('PointDefense')` check in `has_pdc_ability`.
+    - [ ] **Aliases:** Remove `Weapon = Component`, `Engine = Component` etc. aliases.
+    - [ ] **Map Update:** Update `COMPONENT_TYPE_MAP` to use `Component` directly.
+
+### 2. Ability Logic Hardening (`abilities.py`)
+- **Implement `recalculate()`**:
+    - [ ] `VehicleLaunchAbility`: Apply `capacity_mult` from component stats to `capacity`.
+    - [ ] `ToHitAttackModifier`: Implement standard recalculate structure.
+    - [ ] `ToHitDefenseModifier`: Implement standard recalculate structure.
+    - [ ] `EmissiveArmor`: Implement standard recalculate structure.
+
+### 3. UI Cleanup (`builder_gui.py`)
+- **Import Cleanup**:
+    - [ ] Remove unused imports of legacy classes (`BeamWeapon`, `Engine`, `Shield`, etc.) from `components`.
+
+### 4. Optional / Architectural Polish
+- **Armor Ability**:
+    - [ ] Register a dummy `Armor` ability class in `abilities.py` so `has_ability('Armor')` works, allowing removal of `comp.abilities.get('Armor')` checks in `ship_stats.py`.
+
+

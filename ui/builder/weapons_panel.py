@@ -735,11 +735,8 @@ class WeaponsReportPanel:
             range_surf = self.small_font.render(f"{int(bp_range)}", True, self.COLOR_RANGE_SCALE)
             screen.blit(range_surf, (bp_x - range_surf.get_width()//2, bar_y + self.LABEL_BELOW_RANGE_OFFSET))
             
-            if hasattr(weapon, 'get_damage'):
-                # Handle legacy get_damage if present, else usage AB damage
-                bp_damage = damage
-            else:
-                bp_damage = damage
+            # Legacy shim removed - always use ability damage
+            bp_damage = damage
             dmg_surf = self.small_font.render(f"D:{int(bp_damage)}", True, self.BEAM_MID_COLORS[bp_idx])
             screen.blit(dmg_surf, (bp_x - dmg_surf.get_width()//2, bar_y + self.LABEL_BELOW_OFFSET))
 

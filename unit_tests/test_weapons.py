@@ -9,8 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ship import Ship, LayerType, initialize_ship_data
 from components import (
-    load_components, create_component,
-    Weapon, BeamWeapon, ProjectileWeapon
+    load_components, create_component
 )
 
 

@@ -153,5 +153,50 @@
     - [x] **UI Modernization** <!-- id: 172 -->
         - [x] `detail_panel.py`: Refactor `show_component` to use `get_ui_rows()`. <!-- id: 173 -->
         - [x] `weapons_panel.py`: Remove direct `weapon.damage/range` access. <!-- id: 174 -->
-    - [x] **Data & Validation** <!-- id: 175 -->
-        - [x] `ship_validator.py`: Update `LayerRestriction` to use ability validation. <!-- id: 176 -->
+    - [x] `ship_validator.py`: Update `LayerRestriction` to use ability validation. <!-- id: 176 -->
+
+- [x] **Phase 9: Post-Audit Cleanup** <!-- id: 177 -->
+    - [x] **Core Logic Cleanup** <!-- id: 178 -->
+        - [x] `ship.py`: Remove legacy fallback in `max_weapon_range` (Lines 244-251). <!-- id: 179 -->
+        - [x] `ship_combat.py`: Fix `comp.hp` bug in projectile instantiation (Line 207). <!-- id: 180 -->
+    - [x] **UI Modernization** <!-- id: 181 -->
+        - [x] `ui/builder/components.py`: Refactor `_generate_tooltip` to use ability detection instead of direct data access. <!-- id: 182 -->
+        - [x] `ui/builder/weapons_panel.py`: Remove legacy `hasattr(weapon, 'get_damage')` shim. <!-- id: 183 -->
+    - [x] **Validator & Tests** <!-- id: 184 -->
+        - [x] `ship_validator.py`: Remove `allow_type`/`block_type` legacy logic. <!-- id: 185 -->
+        - [x] `unit_tests/test_weapons.py`: Remove unused legacy imports. <!-- id: 186 -->
+    - [x] **Logic Encapsulation** <!-- id: 187 -->
+        - [x] `abilities.py`: Implement `check_firing_solution`. <!-- id: 188 -->
+        - [x] `ship_validator.py`: Remove `legacy_req` for CrewCapacity. <!-- id: 189 -->
+
+- [ ] **Phase 9.5: Deep Dive Audit** <!-- id: 190 -->
+    - [ ] **Agent 1: Core Audit** <!-- id: 191 -->
+        - [x] Run Core Infrastructure Audit. <!-- id: 192 -->
+    - [x] **Agent 2: Combat Audit** <!-- id: 193 -->
+        - [x] Run Combat & Collision Audit. <!-- id: 194 -->
+    - [x] **Agent 3: Physics Audit** <!-- id: 195 -->
+        - [ ] Run Physics & Stats Audit. <!-- id: 196 -->
+    - [x] **Agent 4: AI Audit** <!-- id: 197 -->
+        - [x] Run AI & Behavior Audit. <!-- id: 198 -->
+    - [x] **Agent 5: UI Audit** <!-- id: 199 -->
+        - [x] Run UI & Builder Audit. <!-- id: 200 -->
+    - [x] **Agent 6: Data Audit** <!-- id: 201 -->
+        - [x] Run Data Persistence Audit. <!-- id: 202 -->
+    - [x] **Agent 7: Test Audit** <!-- id: 203 -->
+        - [x] Run Unit Test Integrity Audit. <!-- id: 204 -->
+
+
+- [ ] **Phase 10: Final Polish** <!-- id: 205 -->
+    - [ ] **Core Cleanup** <!-- id: 191 -->
+        - [ ] `components.py`: Remove `Weapon`, `Engine` aliases. <!-- id: 192 -->
+        - [ ] `components.py`: Remove `has_pdc_ability` legacy fallback. <!-- id: 193 -->
+        - [ ] `ship.py`: Remove `SHIP_CLASSES` dictionary. <!-- id: 194 -->
+        - [ ] `ship.py`: Refactor Sensor/ECM logic to use `get_abilities()`. <!-- id: 195 -->
+    - [ ] **Ability Logic Hardening** <!-- id: 196 -->
+        - [ ] `abilities.py`: Implement `recalculate()` for `VehicleLaunchAbility`. <!-- id: 197 -->
+        - [ ] `abilities.py`: Implement `recalculate()` for Modifier Abilities. <!-- id: 198 -->
+        - [ ] `abilities.py`: Register dummy `Armor` ability class. <!-- id: 199 -->
+    - [ ] **UI Cleanup** <!-- id: 200 -->
+        - [ ] `builder_gui.py`: Remove legacy `Component` subclass imports. <!-- id: 201 -->
+
+

@@ -114,30 +114,27 @@ class ShipCombatMixin:
                             if t_type == 'missile' and not is_pdc:
                                 continue # Standard guns ignore missiles
                                 
-                            # Distance Check - use ability values
-                            dist = self.position.distance_to(candidate.position)
-                            max_range = weapon_ab.range
+                            # Simplified Phase 9 Logic: Delegate to Ability
+                            # Note: SeekerWeapons handle their own range/arc logic inside check_firing_solution override if needed,
+                            # or we handle special seeker logic here.
+                            
                             if comp.has_ability('SeekerWeaponAbility'):
+                                # Seeker Weapons have unique rules (infinite arc, range = speed*endurance)
                                 seeker_ab = comp.get_ability('SeekerWeaponAbility')
-                                # Approximate max range for initial check
-                                max_range = seeker_ab.projectile_speed * seeker_ab.endurance * 2.0 
-
-                            if dist <= max_range:
-                                # Solve Firing Solution
-                                aim_pos, aim_vec = self._calculate_firing_solution(comp, candidate)
-                                
-                                # ARC CHECK - use ability values
-                                aim_angle = math.degrees(math.atan2(aim_vec.y, aim_vec.x)) % 360
-                                ship_angle = self.angle
-                                comp_facing = (ship_angle + weapon_ab.facing_angle) % 360
-                                diff = (aim_angle - comp_facing + 180) % 360 - 180
-                                
-                                if abs(diff) <= (weapon_ab.firing_arc / 2):
+                                # Simple proximity check for Seekers (they chase, so arc is irrelevant for launch usually)
+                                dist = self.position.distance_to(candidate.position)
+                                max_range = seeker_ab.projectile_speed * seeker_ab.endurance * 2.0
+                                if dist <= max_range:
                                     valid_target = True
                                     target = candidate
-                                    break # Found a valid target, fire!
-                                elif comp.has_ability('SeekerWeaponAbility'):
-                                    # Seeker weapons can launch if target is out of arc
+                                    break
+                            else:
+                                # Standard Direct-Fire Weapons
+                                # 1. Solve Lead
+                                aim_pos, aim_vec = self._calculate_firing_solution(comp, candidate)
+                                
+                                # 2. Check Arc/Range using Intercept Point
+                                if weapon_ab.check_firing_solution(self.position, self.angle, aim_pos):
                                     valid_target = True
                                     target = candidate
                                     break
@@ -204,7 +201,7 @@ class ShipCombatMixin:
                                         turn_rate=seeker_ab.turn_rate,
                                         max_speed=speed,
                                         target=target,
-                                        hp=getattr(comp, 'hp', 1),  # Component-level projectile HP
+                                        hp=getattr(seeker_ab, 'missile_hp', 1),  # Use Ability stats
                                         color=(255, 50, 50),
                                         source_weapon=comp
                                     )
