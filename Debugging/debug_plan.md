@@ -12,6 +12,7 @@
 
 | BUG-11 | 2026-01-03 18:27 | Confirm Refit Dialog too small (scrolling required) | [Pending] | [`Debugging/active_bugs/BUG-11.md`](Debugging/active_bugs/BUG-11.md) |
 | BUG-12 | 2026-01-03 18:27 | Generator not generating energy (shows 0 instead of 25/s) | [Pending] | [`Debugging/active_bugs/BUG-12.md`](Debugging/active_bugs/BUG-12.md) |
+| BUG-13 | 2026-01-03 18:41 | Weapons Report: Simplify and unify damage/range/accuracy markers | [Pending] | [`Debugging/active_bugs/BUG-13.md`](Debugging/active_bugs/BUG-13.md) |
 
 ## 3. Current Focus: [BUG-08]
 * **Root Cause Hypothesis:** 
