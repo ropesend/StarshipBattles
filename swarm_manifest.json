@@ -1,0 +1,26 @@
+{
+    "swarm_name": "Test_Stabilization_Phase_1",
+    "root_objective": "Eliminate 'State Pollution' in the test suite by encapsulating global registries into a RegistryManager and enforcing strict state resets.",
+    "agents": [
+        {
+            "role": "Dependency Analyst",
+            "focus": "Infrastructure & Core Refactoring",
+            "objective": "Validate the RegistryManager infrastructure and global deprecation strategy.",
+            "instructions": "Review the plan to replace COMPONENT_REGISTRY and VEHICLE_CLASSES with RegistryManager. Identify potential circular imports in 'game/core/registry.py'. Ensure the deprecation strategy in 'game/simulation/components/component.py' and 'game/simulation/entities/ship.py' maintains backward compatibility where necessary but correctly redirects logic.",
+            "context_files": [
+                "game/simulation/components/component.py",
+                "game/simulation/entities/ship.py"
+            ]
+        },
+        {
+            "role": "Test Strategist",
+            "focus": "Verification & Test Harness",
+            "objective": "Validate the Test Harness changes and Verification Plan.",
+            "instructions": "Analyze the proposed 'reset_game_state' autouse fixture in 'tests/conftest.py'. Evaluate if it covers all necessary cleanup (components, modifiers, vehicle_classes). Review the 'test_sequence_hazard.py' design to ensure it effectively reproduces the pollution issue. Assess potential performance impact of tearing down state after every test.",
+            "context_files": [
+                "game/simulation/components/component.py",
+                "game/simulation/entities/ship.py"
+            ]
+        }
+    ]
+}

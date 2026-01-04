@@ -77,4 +77,33 @@
 * **Date Solved:** 2026-01-03 17:58
 * **Original Issue:** `ShipStatsCalculator` failed to see ammo/ordinance consumption because it checked `reload_time` on the Component instead of the WeaponAbility.
 * **Solution Implemented:** Updated `_calculate_combat_endurance` in `ship_stats.py` to iterate through abilities and retrieve `reload_time` from `WeaponAbility` instances.
-* **Test Case:** `tests/repro_issues/test_bug_10_logistics_update.py`
+
+---
+
+## [BUG-11] - Confirm Refit Dialog too small
+* **Date Solved:** 2026-01-03 19:40
+* **Original Issue:** The "Confirm Refit" dialog was too small, causing the multi-line message to be truncated and requiring scrolling.
+* **Solution Implemented:** Increased `UIConfirmationDialog` dimensions in `game/ui/screens/builder_screen.py` from `(400, 200)` to `(600, 400)`.
+---
+
+## [BUG-12] - Generator produces 0 energy
+* **Date Solved:** 2026-01-03 19:45
+* **Original Issue:** Generator shows 0 energy generation instead of 25/s.
+* **Solution Implemented:** **WORKING AS DESIGNED.** Investigation revealed the Generator was inactive due to unmet `CrewRequired: 1` requirement. The user's ship lacked Crew Quarters/Life Support.
+* **Test Case:** `tests/repro_issues/test_bug_12_energy_gen.py`
+* **Notes:** System correctly deactivates components when crew requirements are not met. User notification/validation improved in other tickets to clarify this dependency.
+
+---
+
+## [BUG-13] - Weapons Report: Simplify and unify damage/range/accuracy markers
+* **Date Solved:** 2026-01-03 19:50
+* **Original Issue:** The Weapons Report Panel lacked unified drawing methods and centralized "Points of Interest" for range and accuracy, leading to hardcoded and non-unified breakpoints.
+* **Solution Implemented:** Implemented `_draw_unified_weapon_bar` with priority-based collision detection and unified `INTEREST_POINTS_RANGE` and `INTEREST_POINTS_ACCURACY`.
+* **Test Case:** 
+---
+
+## [BUG-08] - Fuel Storage validation fails despite Fuel Tank presence
+* **Date Solved:** 2026-01-03 20:05
+* **Original Issue:** The ship builder reported "Needs Fuel Storage" even when a Fuel Tank was present.
+* **Solution Implemented:** Fixed attribute mismatch in `ShipStatsCalculator` where it was looking for the wrong attribute name when aggregating resource storage capabilities (`max_amount` vs `amount`).
+* **Test Case:** `tests/repro_issues/test_bug_08_fuel_validation.py`

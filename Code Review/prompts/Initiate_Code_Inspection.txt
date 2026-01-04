@@ -1,0 +1,15 @@
+!EXECUTE_PROTOCOL: Code Review/Protocols/02_Code_Inspection_Protocol.md
+
+# INPUT: Code to Review
+[PASTE DIFF, FILE LIST, OR GITHUB PR LINK HERE]
+
+# INSTRUCTION
+Act as the **Architect (Phase 1)** for a Code Inspection.
+1. Analyze the input above.
+2. Identify the necessary "Lenses" (e.g., Security, Performance, Logic, Safety).
+3. **EXECUTE** `write_to_file` to create `swarm_manifest.json`.
+4. **EXECUTE** `run_command` to run `python "Code Review/scripts/pack_swarm.py" swarm_manifest.json`.
+5. **STOP**. 
+   - Do NOT implement the fixes.
+   - Do NOT simulate the agents.
+   - Just confirm that the prompt files are ready in `prompts/`.

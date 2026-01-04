@@ -1,0 +1,7 @@
+!EXECUTE_PROTOCOL: Refactoring/protocols/11_execute_refactor.md
+
+LOAD active_refactor.md.
+
+READ the Migration Map.
+
+Fix the current build errors/failing tests. REMEMBER: If a test conflicts with the Map, change the test.

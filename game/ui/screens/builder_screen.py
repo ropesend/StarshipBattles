@@ -619,10 +619,10 @@ class BuilderSceneGUI:
                 
                 if has_components:
                     msg = f"Change class to {new_class}?<br><br>Warning: This will attempt to refit existing components.<br>Some items may be resized or lost if they don't fit."
-                    self.confirm_dialog = UIConfirmationDialog(pygame.Rect((self.width-400)//2, (self.height-200)//2, 400, 200),
-                                                              manager=self.ui_manager,
-                                                              action_long_desc=msg,
-                                                              window_title="Confirm Refit")
+                    self.confirm_dialog = UIConfirmationDialog(pygame.Rect((self.width-600)//2, (self.height-400)//2, 600, 400),
+                                                               manager=self.ui_manager,
+                                                               action_long_desc=msg,
+                                                               window_title="Confirm Refit")
                 else:
                     self._execute_pending_action()
                                                           

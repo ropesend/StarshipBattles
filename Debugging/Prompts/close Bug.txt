@@ -1,0 +1,12 @@
+!EXECUTE_PROTOCOL: protocols/03_close_bug.md
+
+TARGET: BUG-XX
+
+1. LOAD the attached protocol file `protocols/03_close_bug.md`.
+2. READ the active ticket `Debugging/active_bugs/BUG-XX.md` to extract the final "Solution Summary" and the key test case used.
+3. EXECUTE the Archival Process:
+   - APPEND the summary entry to `solved_bugs.md`.
+   - MOVE (do not delete) the ticket file to `Debugging/archived_tickets/`.
+   - REMOVE the entry from `debug_plan.md`.
+
+CONFIRMATION: List the 3 specific file paths that were modified/moved to confirm the operation is complete.

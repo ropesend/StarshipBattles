@@ -1,0 +1,15 @@
+!EXECUTE_PROTOCOL: Code Review/Protocols/01_Refactor_Planning_Protocol.md
+
+# INPUT: Refactor Plan
+[PASTE YOUR HIGH-LEVEL PLAN OR GOAL HERE]
+
+# INSTRUCTION
+Act as the **Architect (Phase 1)**.
+1. Analyze the plan above.
+2. Identify the necessary specialist roles (e.g., Dependency Analyst, Test Strategist).
+3. **EXECUTE** `write_to_file` to create `swarm_manifest.json`.
+4. **EXECUTE** `run_command` to run `python "Code Review/scripts/pack_swarm.py" swarm_manifest.json`.
+5. **STOP**. 
+   - Do NOT implement the code. 
+   - Do NOT simulate the agents.
+   - Just confirm that the prompt files are ready in `prompts/`.

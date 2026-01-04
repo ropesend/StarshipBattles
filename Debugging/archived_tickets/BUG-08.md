@@ -3,7 +3,7 @@ I have fuel storage on my design, but the ship stats window claims I still need 
 C:\Dev\Starship Battles\screenshots\screenshot_20260103_155657_194338_mouse_focus.png (shows that there is a Fuel Tank)
 C:\Dev\Starship Battles\screenshots\screenshot_20260103_155737_717184_mouse_focus.png (shows that there is still a need for fuel storage)
 
-## Status (Pending)
+## Status: Solved
 
 ## Work Log
 - [2026-01-03 17:35] Updated test to use `load_components` and real data. Test PASSED (failed to reproduce). Warning is correctly suppressed in test environment.
@@ -20,3 +20,7 @@ C:\Dev\Starship Battles\screenshots\screenshot_20260103_155737_717184_mouse_focu
 **Reason:** Fuel Storage is still not being recognized. QA screenshot shows Fuel on board but Requirement still listed for Fuel Storage.
 **New Constraints:** The previous aliasing fix in `ship_stats` might be correct for calculation but not for the specific validation path `ClassRequirementsRule` uses, or `Fuel Tank` might be aliased incorrectly in a different context.
 ---
+
+- [2026-01-03 19:55] Identified root cause: `ShipStatsCalculator` ignored `ResourceStorage` because of attribute mismatch (`max_amount` vs `amount`).
+- [2026-01-03 20:00] Implemented fix in `ship_stats.py`.
+- [2026-01-03 20:05] Verified fix with `tests/repro_issues/test_bug_08_fuel_validation.py` and `repro_stats_fix.py`. STATUS: SOLVED.

@@ -1,0 +1,33 @@
+{
+    "context_root": "./",
+    "agents": [
+        {
+            "role": "Core_Architect",
+            "focus": "Registry encapsulation and backward compatibility in simulation modules.",
+            "primary_files": [
+                "Reviews/2026-01-03_Test_Stabilization/goal.md",
+                "game/simulation/components/component.py",
+                "game/simulation/entities/ship.py"
+            ],
+            "allow_exploration": true
+        },
+        {
+            "role": "QA_Specialist",
+            "focus": "Deterministic test isolation and hazard test efficacy.",
+            "primary_files": [
+                "Reviews/2026-01-03_Test_Stabilization/goal.md",
+                "tests/conftest.py"
+            ],
+            "allow_exploration": true
+        },
+        {
+            "role": "Context_Specialist",
+            "focus": "Identifying all pollutable singletons and ensuring schema consistency.",
+            "primary_files": [
+                "Reviews/2026-01-03_Test_Stabilization/goal.md",
+                "Code Review/Protocols/CodeReview_Protocol_v2.md"
+            ],
+            "allow_exploration": true
+        }
+    ]
+}

@@ -1,0 +1,117 @@
+# INSTRUCTIONS FOR AGENT (Context_Specialist)
+
+**ROLE:** Context_Specialist
+**FOCUS:** Identifying all pollutable singletons and ensuring schema consistency.
+
+## YOUR GOAL
+Analyze the provided code context below.
+Isolate issues specifically related to your FOCUS (Identifying all pollutable singletons and ensuring schema consistency.).
+Ignore unrelated issues unless they are critical system failures.
+
+## OUTPUT FORMAT
+Produce a markdown report using the following headers:
+- High-Level Verdict
+- Critical Issues (blocking)
+- Questions (ambiguities)
+- Code Suggestions (diffs)
+
+---
+## CONTEXT
+
+--- START FILE: Reviews/2026-01-03_Test_Stabilization/goal.md ---
+# Refactor Goal: Test Stabilization via RegistryManager
+
+## Background
+The test suite currently suffers from "State Pollution" where global registries (`COMPONENT_REGISTRY`, `VEHICLE_CLASSES`) persist data between tests. This causes sequential test failures (e.g., `pytest -n0`).
+
+## Proposed Solution
+1. **RegistryManager Singleton**: Centralize all registries in `game/core/registry.py`. Provide a `.clear()` method.
+2. **Deprecate Globals**: Update `game/simulation/components/component.py` and `game/simulation/entities/ship.py` to point their global dicts to the `RegistryManager.instance()`.
+3. **Automated Reset**: Add an autouse fixture in `tests/conftest.py` that calls `clear()` before/after every test.
+4. **Hazard Test**: Create `tests/repro_issues/test_sequence_hazard.py` as a "canary" to verify state isolation.
+
+## Review Focus
+- **Backwards Compatibility**: Ensure that third-party code or existing tests still work if they access the global dicts directly (proxied via `RegistryManager`).
+- **Completeness**: Are there other globals (e.g., `MODIFIER_REGISTRY`) that need encapsulation?
+- **Robustness**: Does the `conftest.py` fixture cover all necessary state? Is the hazard test sufficiently "poisonous"?
+
+--- END FILE: Reviews/2026-01-03_Test_Stabilization/goal.md ---
+
+--- START FILE: Code Review/Protocols/CodeReview_Protocol_v2.md ---
+# Antigravity Swarm Review Protocol v2.0 (The "Hive" Model)
+
+## 0. Setup
+*   **Trigger:** User initiates review for complex feature/refactor.
+*   **Directory:** `Reviews/YYYY-MM-DD_[FeatureName]/`
+*   **Inputs:** `goal.md`, `changed_files.list`
+
+---
+
+## Phase 1: The Architect (Coordinator)
+**Role:** Orchestration ONLY. Do NOT perform the review.
+**Goal:** Produce the `swarm_manifest.json` and generate the prompt files.
+**Strict Protocol:**
+1.  **Analyze Context:** Read `goal.md` and the `diff`.
+2.  **Design the Swarm:** Decide which agents are needed.
+3.  **EXECUTE - Step A:** Use `write_to_file` to create `swarm_manifest.json`.
+4.  **EXECUTE - Step B:** Use `run_command` to execute `python "Code Review/scripts/pack_swarm.py" swarm_manifest.json`.
+5.  **STOP:** Do not generate reports. Do not simulate agents. Inform the user that prompts are ready in `Code Review/prompts/`.
+
+**Manifesto Structure:**
+```json
+{
+  "context_root": "./",
+  "agents": [
+    {
+      "role": "StateIntegrity_Specialist",
+      "focus": "Race conditions in GameState",
+      "primary_files": ["src/state.py", "src/manager.py"],
+      "allow_exploration": true
+    }
+  ]
+}
+```
+
+---
+
+## Phase 2: The Swarm (Specialists)
+**Operational Mode:** parallel execution.
+**Protocol:**
+1.  **Ingest Context:** Read assigned files.
+2.  **Reconnaissance (Optional):** If `allow_exploration` is true and context is missing (e.g., "Where is `BaseClass` defined?"), request 1-level deep file read of missing dependency.
+3.  **Analyze & Verify:**
+    *   *Static Analysis:* Logic checks.
+    *   *Virtual Verification:* "If I run `test_x`, it will fail because..."
+4.  **Produce Structured Report:** Save as `reports/[Role]_Report.md`.
+
+**Report Template:**
+*   **High-Level Verdict:** [Approve | Request Changes | Discuss]
+*   **Critical Issues:** (List of blocking logic errors)
+*   **Questions:** (Ambiguities preventing full review)
+*   **Code Suggestions:** (Diff blocks)
+
+---
+
+## Phase 3: The Adjudicator (Synthesizer)
+**Role:** Conflict Resolution and Final Plan.
+**Action:**
+1.  Read all `reports/*.md`.
+2.  **Cross-Reference:**
+    *   If *Security* flags X and *Perf* suggests optimizing X, **Adjudicate**. Priority usually goes to Correctness > Security > Performance.
+3.  **Synthesize:**
+    *   Merge duplicate findings.
+    *   Discard "Nitpicks" if volume is high (or move to Appendix).
+4.  **Output:** `Synthesized_Review.md`
+    *   **Executive Summary**: "Ready to merge" or "Needs rework".
+    *   **Action Plan**: Checklist of fixes.
+    *   **Adjudication Notes**: "Chose ThreadSafety interpretation over Performance suggestion because..."
+
+---
+
+## Automation Hooks
+*   `scripts/pack_swarm.py`: **(Recommended for Manual Use)** Reads `swarm_manifest.json` and generates self-contained `prompts/[Role]_Prompt.txt` files directly. You can drag-and-drop these into a new Chat Window.
+*   `scripts/spin_swarm.py`: (Requires API) Automated execution.
+*   `scripts/collate_reports.py`: Concatenates all reports for the Adjudicator.
+
+--- END FILE: Code Review/Protocols/CodeReview_Protocol_v2.md ---
+

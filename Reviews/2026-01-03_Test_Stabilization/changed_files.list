@@ -1,0 +1,5 @@
+game/simulation/components/component.py
+game/simulation/entities/ship.py
+game/core/registry.py
+tests/conftest.py
+tests/repro_issues/test_sequence_hazard.py
