@@ -557,6 +557,7 @@ class ShipStatsCalculator:
                         if hasattr(ab, 'amount'): value = ab.amount
                         elif hasattr(ab, 'value'): value = ab.value
                         elif hasattr(ab, 'capacity'): value = ab.capacity # Some use capacity
+                        elif hasattr(ab, 'thrust_force'): value = ab.thrust_force # CombatPropulsion uses thrust_force
                         # Special case for CommandAndControl (Flag)
                         elif ability_name == 'CommandAndControl': value = True
                         

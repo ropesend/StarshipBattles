@@ -185,7 +185,9 @@ class ClassRequirementsRule(ValidationRule):
         requirements = class_def.get('requirements', {})
         
         all_components = [c for layer in ship.layers.values() for c in layer['components']]
-        
+        if component:
+            all_components.append(component)
+            
         stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)
         ability_totals = stats_calculator.calculate_ability_totals(all_components)
         

@@ -180,6 +180,21 @@ def get_resource_replenish(ship, res_name):
         return float('inf')
     return capacity / regen
 
+def get_resource_max_usage(ship, res_name):
+    """
+    Get the pre-calculated max usage (constant + active) from ship stats.
+    Logic from ship_stats.py: fuel_consumption, energy_consumption, etc. include all active components max rate.
+    """
+    attr_map = {
+        'fuel': 'fuel_consumption',
+        'ammo': 'ammo_consumption',
+        'energy': 'energy_consumption'
+    }
+    attr = attr_map.get(res_name)
+    if attr:
+        return getattr(ship, attr, 0)
+    return 0
+
 # --- Config Groups ---
 
 
@@ -211,7 +226,8 @@ GETTERS = {
     'get_ammo_recharge': get_ammo_recharge,
     'get_fuel_consumption': get_fuel_consumption,
     'get_ammo_consumption': get_ammo_consumption,
-    'get_energy_consumption': get_energy_consumption
+    'get_energy_consumption': get_energy_consumption,
+    'get_resource_max_usage': get_resource_max_usage
 }
 
 FORMATTERS = {
@@ -364,20 +380,71 @@ def get_logistics_rows(ship):
             dynamic_rows.append(cap_row)
             
             # 2. Endurance/Recharge Row (if applicable)
-            # Logic: If it has consumption -> Endurance. If it has Gen but no consumption -> Recharge?
-            consumption = get_resource_consumption(ship, r_name)
+            consumption_constant = get_resource_consumption(ship, r_name)
+            consumption_max = get_resource_max_usage(ship, r_name)
             generation = get_resource_generation(ship, r_name)
             
-            if consumption > 0:
-                end_row = StatDefinition(
+            # --- New Detailed Rows (BUG-05) ---
+            
+            # Generation Row
+            if generation > 0:
+                gen_row = StatDefinition(
+                    id=f"{r_name}_gen",
+                    label=f"{label_base} Gen",
+                    getter=lambda s, n=r_name: get_resource_generation(s, n),
+                    formatter="{:.1f}",
+                    unit="/s"
+                )
+                dynamic_rows.append(gen_row)
+
+            # Constant Consumption Row
+            if consumption_constant > 0:
+                const_row = StatDefinition(
+                    id=f"{r_name}_constant",
+                    label=f"{label_base} Constant",
+                    getter=lambda s, n=r_name: get_resource_consumption(s, n),
+                    formatter="{:.1f}",
+                    unit="/s"
+                )
+                dynamic_rows.append(const_row)
+
+            # Max Usage Row (Only show if different from constant, or if active components exist)
+            # Typically if we have weapons, consumption_max > consumption_constant
+            if consumption_max > consumption_constant:
+                 max_row = StatDefinition(
+                    id=f"{r_name}_max_usage",
+                    label=f"{label_base} Max Load",
+                    getter=lambda s, n=r_name: get_resource_max_usage(s, n),
+                    formatter="{:.1f}",
+                    unit="/s"
+                )
+                 dynamic_rows.append(max_row)
+
+            # Endurance (Constant)
+            if consumption_constant > 0:
+                # Use Constant specific endurance logic (Cap / Constant)
+                 end_row = StatDefinition(
                     id=f"{r_name}_endurance",
                     label=f"{label_base} Endurance",
-                    getter=lambda s, n=r_name: get_resource_endurance(s, n),
+                    getter=lambda s, n=r_name: get_resource_storage(s, n) / get_resource_consumption(s, n) if get_resource_consumption(s, n) > 0 else float('inf'),
                     formatter=fmt_time,
                     unit=""
                 )
-                dynamic_rows.append(end_row)
-            elif generation > 0 and consumption <= 0:
+                 dynamic_rows.append(end_row)
+
+            # Endurance (Max Load) - Only if different
+            if consumption_max > consumption_constant and consumption_max > 0:
+                 end_max_row = StatDefinition(
+                    id=f"{r_name}_endurance_min", # Min time it lasts
+                    label=f"{label_base} Min Time",
+                    getter=lambda s, n=r_name: get_resource_storage(s, n) / get_resource_max_usage(s, n) if get_resource_max_usage(s, n) > 0 else float('inf'),
+                    formatter=fmt_time,
+                    unit=""
+                )
+                 dynamic_rows.append(end_max_row)
+
+            # Recharge (if Gen > Use)
+            if generation > 0 and consumption_constant <= 0:
                  # Recharge time?
                  rech_row = StatDefinition(
                     id=f"{r_name}_recharge",

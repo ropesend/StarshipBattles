@@ -9,11 +9,13 @@
 | :--- | :--- | :--- | :--- | :--- |
 
 
-| BUG-04 | 2026-01-03 22:00 | Stats Panel: Initial Resource Display is "--". | [In-Progress] | `tests/repro_issues/test_bug_04_display.py` |
-| BUG-05 | 2026-01-03 14:27 | Stats Panel: Missing detailed Logistics (Max Cap, Gen/Use Rates, Endurance) for all resources. | [Pending] | TBD |
-| BUG-06 | 2026-01-03 15:46 | Combat Propulsion Validation Error | [Pending] | TBD |
+| BUG-04 | 2026-01-03 22:00 | Stats Panel: Initial Resource Display is "--". | [Awaiting Confirmation] | `tests/repro_issues/test_bug_04_display.py` |
+| BUG-05 | 2026-01-03 15:24 | Stats Panel: Missing detailed Logistics (Max Cap, Gen/Use Rates, Endurance) for all resources | [Awaiting Confirmation] | tests/repro_issues/test_bug_05_logistics.py |
+| BUG-06 | 2026-01-03 15:46 | Combat Propulsion Validation Error | [In-Progress] | TBD |
 | BUG-07 | 2026-01-03 15:46 | Crash in Weapons Panel (AttributeError) | [Pending] | TBD |
 | BUG-08 | 2026-01-03 16:00 | Fuel Storage validation fails despite Fuel Tank presence | [Pending] | [`Debugging/active_bugs/BUG-08.md`](file:///c:/Dev/Starship%20Battles/Debugging/active_bugs/BUG-08.md) |
+| BUG-09 | 2026-01-03 16:39 | Fuel Endurance Infinite Calculation Error | [Pending] | [`Debugging/active_bugs/BUG-09.md`](file:///c:/Dev/Starship%20Battles/Debugging/active_bugs/BUG-09.md) |
+| BUG-10 | 2026-01-03 16:39 | Ship Stats not updating for Ammo/Ordinance | [Pending] | [`Debugging/active_bugs/BUG-10.md`](file:///c:/Dev/Starship%20Battles/Debugging/active_bugs/BUG-10.md) |
 
 ## 3. Current Focus: [BUG-02]
 * **Root Cause Hypothesis:** 
