@@ -14,6 +14,8 @@
 2. **Decision Point:**
    * **Issues Found?** -> Return to Protocol 11 (Execute fixes).
    * **Phase Complete?** ->
-     * **Update Plan:** Mark current phase [Complete]. **Append** details for the Next Phase.
+     * **Update Plan:** Mark current phase [Complete].
+     * **Next Phase:** **Append** DETAILED IMPLEMENTATION SPECS for the Next Phase (file paths, signatures, etc.).
+     * **Do NOT** use placeholders. The plan must be actionable now.
      * **History Preservation:** Do NOT remove completed phases or the original goal.
      * **ALL PHASES DONE?** -> **Proceed to Protocol 13 (Archive).**

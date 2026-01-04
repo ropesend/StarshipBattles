@@ -1,0 +1,1334 @@
+# INSTRUCTIONS FOR AGENT (Test Strategist)
+
+**ROLE:** Test Strategist
+**FOCUS:** Test Isolation, Fixture Safety, and Hazard Verification
+
+## YOUR GOAL
+Analyze the provided code context below.
+Isolate issues specifically related to your FOCUS (Test Isolation, Fixture Safety, and Hazard Verification).
+Ignore unrelated issues unless they are critical system failures.
+
+## PHASE STATUS
+
+--- ACTIVE REFACTOR CONTEXT ---
+# Active Refactor
+**Goal:** Test the Context Injection.
+**Status:** In Progress
+
+--- END ACTIVE REFACTOR CONTEXT ---
+
+
+## OUTPUT INSTRUCTIONS
+You are an autonomous agent.
+1. Perform your analysis.
+2. **CRITICAL:** You MUST use the `write_to_file` tool to save your report.
+   - **Target File:** `C:\Dev\Starship Battles\Refactoring\swarm_reports\Test Strategist_Report.md`
+   - **Do NOT** just print the markdown to the chat. Save it to the file.
+
+## CONTEXT
+
+--- START FILE: game/simulation/components/component.py ---
+import json
+import math
+from enum import Enum, auto
+from formula_system import evaluate_math_formula
+
+class ComponentStatus(Enum):
+    ACTIVE = auto()
+    DAMAGED = auto() # >50% damage
+    NO_CREW = auto()
+    NO_POWER = auto()
+    NO_FUEL = auto()
+    NO_AMMO = auto()
+
+class LayerType(Enum):
+    CORE = 1
+    INNER = 2
+    OUTER = 3
+    ARMOR = 4
+
+    @staticmethod
+    def from_string(s):
+        return getattr(LayerType, s.upper())
+
+class Modifier:
+    def __init__(self, data):
+        self.id = data['id']
+        self.name = data['name']
+        self.type_str = data['type'] # 'boolean' or 'linear'
+        self.description = data.get('description', '')
+        self.effects = data.get('effects', {})
+        self.restrictions = data.get('restrictions', {})
+        self.param_name = data.get('param_name', 'value')
+        self.min_val = data.get('min_val', 0)
+        self.max_val = data.get('max_val', 100)
+        self.default_val = data.get('default_val', self.min_val)
+        self.readonly = data.get('readonly', False)
+
+    def create_modifier(self, value=None):
+        return ApplicationModifier(self, value)
+
+MODIFIER_REGISTRY = {}
+
+class ApplicationModifier:
+    """Instance of a modifier applied to a component"""
+    def __init__(self, mod_def, value=None):
+        self.definition = mod_def
+        self.value = value if value is not None else mod_def.default_val
+
+# IMPORTS MOVED TO LOCAL SCOPE TO PREVENT CIRCULAR DEPENDENCY
+# from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability
+
+class Component:
+    def __init__(self, data):
+        import copy
+        self.data = copy.deepcopy(data) # Store raw data for reference/cloning
+        self.id = data['id']
+        self.name = data['name']
+        self.base_mass = data['mass']
+        self.mass = self.base_mass
+        self.base_max_hp = data['hp']
+        self.max_hp = self.base_max_hp
+        self.current_hp = self.max_hp
+        # allowed_layers removed in refactor
+        # self.allowed_layers = [LayerType.from_string(l) for l in data['allowed_layers']]
+        self.allowed_vehicle_types = data.get('allowed_vehicle_types', ["Ship"])
+        self.major_classification = data.get('major_classification', "Unknown")
+        self.is_active = True
+        self.status = ComponentStatus.ACTIVE
+        self.layer_assigned = None
+        self.type_str = data['type']
+        self.sprite_index = data.get('sprite_index', 0)
+        self.cost = data.get('cost', 0)
+        
+        # Parse abilities from data
+        self.abilities = self.data.get('abilities', {})
+        self.base_abilities = copy.deepcopy(self.abilities)
+        
+        self.ship = None # Container reference
+        
+        self.stats = {} # Current stats dictionary (calcualted)
+        self.modifiers = [] # list of ApplicationModifier
+        
+        # Ability Instances (New System)
+        self.ability_instances = []
+        self._is_operational = True # Tracks if component has resources to operate
+        
+        # Instantiate Abilities
+        self._instantiate_abilities()
+        
+        # Load default modifiers from data definition
+        if 'modifiers' in self.data:
+            for mod_data in self.data['modifiers']:
+                mod_id = mod_data['id']
+                val = mod_data.get('value', None)
+                # We need to access registry. BUT registry might not be fully loaded if simple import.
+                # Assuming MODIFIER_REGISTRY is populated by load_modifiers globally.
+                from game.simulation.components.component import MODIFIER_REGISTRY
+                if mod_id in MODIFIER_REGISTRY:
+                    mod_def = MODIFIER_REGISTRY[mod_id]
+                    self.modifiers.append(mod_def.create_modifier(val))
+                else:
+                    # If modifiers loaded later, this might fail. 
+                    # Ideally modifiers are loaded before components.
+                    pass
+                    
+        # Parse Formulas
+        self.formulas = {}
+        for key, value in self.data.items():
+            if isinstance(value, str) and value.startswith("="):
+                # It's a formula!
+                self.formulas[key] = value[1:] # Store without '='
+                # Initialize base value to something safe? Or keep it as is?
+                # Probably keep undefined or 0 until recalculated? 
+                # Better to set a default if possible, but hard to guess.
+                # If it's mass/hp, 0 is safer than crashing.
+                if key in ['mass', 'hp', 'cost']:
+                     setattr(self, f"base_{key}" if key in ['mass', 'hp'] else key, 0)
+                     if key == 'mass': self.mass = 0
+                     if key == 'hp': 
+                         self.max_hp = 0
+                         self.current_hp = 0
+
+    def get_abilities(self, ability_name: str):
+        """
+        Get all abilities of a specific type (by registry name).
+        Supports polymorphism if the registry entry is a class.
+        """
+        from game.simulation.components.abilities import ABILITY_REGISTRY
+        
+        target_class = None
+        if ability_name in ABILITY_REGISTRY:
+            val = ABILITY_REGISTRY[ability_name]
+            if isinstance(val, type):
+                target_class = val
+        
+        found = []
+        for ab in self.ability_instances:
+            # 1. Polymorphic check (preferred)
+            if target_class and isinstance(ab, target_class):
+                found.append(ab)
+            # 2. Name check (fallback)
+            elif ab.__class__.__name__ == ability_name:
+                found.append(ab)
+        return found
+
+    def get_ability(self, ability_name: str):
+        """Get first ability of type."""
+        l = self.get_abilities(ability_name)
+        return l[0] if l else None
+
+    def has_ability(self, ability_name: str):
+        """Check if component has ability."""
+        return len(self.get_abilities(ability_name)) > 0
+
+    def has_pdc_ability(self) -> bool:
+        """Check if component has a Point Defense weapon ability.
+        
+        Supports both:
+        - New system: 'pdc' in ability.tags
+        - Legacy system: abilities.get('PointDefense', False)
+        """
+        # 1. Check new tag-based system
+        for ab in self.ability_instances:
+            if 'pdc' in ab.tags:
+                return True
+        
+
+        return False
+
+    def get_ui_rows(self):
+        """Aggregate UI rows from all ability instances.
+        
+        Returns list of dicts: [{'label': 'Thrust', 'value': '1500 N'}, ...]
+        Used by detail panels and capability scanners.
+        """
+        rows = []
+        for ab in self.ability_instances:
+            rows.extend(ab.get_ui_rows())
+        return rows
+
+    def _instantiate_abilities(self):
+        """Instantiate Ability objects from self.abilities dict."""
+        self.ability_instances = []
+        
+        # Standard Loading from abilities dict
+        for name, data in self.abilities.items():
+            # Lazy import to avoid circular dependency
+            from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability
+            
+            if name not in ABILITY_REGISTRY:
+                continue
+            
+            if isinstance(data, list):
+                for item in data:
+                    ab = create_ability(name, self, item)
+                    if ab: self.ability_instances.append(ab)
+            elif isinstance(data, dict) or isinstance(data, (int, float)):
+                 ab = create_ability(name, self, data)
+                 if ab: self.ability_instances.append(ab)
+            
+    def update(self):
+        """Update component state for one tick (resource consumption, cooldowns)."""
+        # 1. Update Abilities (Constant Consumption)
+        all_satisfied = True
+        
+        for ability in self.ability_instances:
+            if not ability.update():
+                from game.simulation.systems.resource_manager import ResourceConsumption
+                if isinstance(ability, ResourceConsumption) and ability.trigger == 'constant':
+                     all_satisfied = False
+        
+        self._is_operational = all_satisfied and self.is_active
+
+    @property
+    def is_operational(self):
+        return self._is_operational and self.is_active
+
+    def can_afford_activation(self):
+        """Check if component can afford activation costs."""
+        from game.simulation.systems.resource_manager import ResourceConsumption
+        for ability in self.ability_instances:
+            if isinstance(ability, ResourceConsumption) and ability.trigger == 'activation':
+                if not ability.check_available():
+                    return False
+        return True
+
+    def consume_activation(self):
+        """Consume activation costs."""
+        from game.simulation.systems.resource_manager import ResourceConsumption
+        for ability in self.ability_instances:
+            if isinstance(ability, ResourceConsumption) and ability.trigger == 'activation':
+                ability.check_and_consume()
+
+    def try_activate(self):
+        """Analyze if we can activate, and if so, consume and return True. (Legacy/Simple usage)"""
+        if self.can_afford_activation():
+            self.consume_activation()
+            return True
+        return False
+
+
+
+
+    def take_damage(self, amount):
+        self.current_hp -= amount
+        if self.current_hp <= 0:
+            self.current_hp = 0
+            self.is_active = False
+            return True # Destroyed
+        return False
+
+    def reset_hp(self):
+        self.current_hp = self.max_hp
+        self.is_active = True
+        self.status = ComponentStatus.ACTIVE
+
+    def add_modifier(self, mod_id, value=None):
+        if mod_id not in MODIFIER_REGISTRY: return False
+        
+        # Check restrictions
+        mod_def = MODIFIER_REGISTRY[mod_id]
+        if 'deny_types' in mod_def.restrictions:
+            if self.type_str in mod_def.restrictions['deny_types']:
+                return False
+        if 'allow_types' in mod_def.restrictions:
+            if self.type_str not in mod_def.restrictions['allow_types']:
+                return False
+                
+        # Remove existing if any (replace)
+        self.remove_modifier(mod_id)
+            
+        app_mod = ApplicationModifier(mod_def, value)
+        self.modifiers.append(app_mod)
+        self.recalculate_stats()
+        return True
+
+    def remove_modifier(self, mod_id):
+        self.modifiers = [m for m in self.modifiers if m.definition.id != mod_id]
+        self.recalculate_stats()
+
+    def get_modifier(self, mod_id):
+        for m in self.modifiers:
+            if m.definition.id == mod_id:
+                return m
+        return None
+        
+
+
+    def recalculate_stats(self):
+        """Recalculate component stats with multiplicative modifier stacking."""
+        # Capture old hp for current_hp logic at end
+        old_max_hp = self.max_hp
+
+        # 1. Reset and Evaluate Base Formulas
+        self._reset_and_evaluate_base_formulas()
+        
+        # 1.5 Re-instantiate Abilities (Sync instances with new abilities dict)
+        self._instantiate_abilities()
+
+        # 2. Calculate Modifier Stats (Accumulate multipliers)
+        stats = self._calculate_modifier_stats()
+        self.stats = stats # Persist for introspection/ability access
+
+        # 3. Apply Base Stats (Generic attributes)
+        self._apply_base_stats(stats, old_max_hp)
+        
+        # 4. Apply Custom/Subclass Stats
+        self._apply_custom_stats(stats)
+
+    def _reset_and_evaluate_base_formulas(self):
+        import copy
+        # Reset abilities from raw data
+        self.abilities = copy.deepcopy(self.data.get('abilities', {}))
+        
+        # Context building
+        context = {
+            'ship_class_mass': 1000 # Default fallback
+        }
+        if self.ship:
+             context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
+
+        # Evaluate Formulas for attributes
+        for attr, formula in self.formulas.items():
+            val = evaluate_math_formula(formula, context)
+            if attr == 'mass':
+                self.base_mass = float(val)
+                self.mass = self.base_mass # Reset to base
+            elif attr == 'hp':
+                self.base_max_hp = int(val)
+                self.max_hp = self.base_max_hp # Reset to base
+            else:
+                 if hasattr(self, attr):
+                     if isinstance(getattr(self, attr), int):
+                         setattr(self, attr, int(val))
+                     else:
+                         setattr(self, attr, val)
+        
+        # Evaluate formulas in abilities
+        for ability_name, val in self.abilities.items():
+            if isinstance(val, str) and val.startswith("="):
+                new_val = evaluate_math_formula(val[1:], context)
+                self.abilities[ability_name] = new_val
+            elif isinstance(val, dict):
+                 if 'value' in val and isinstance(val['value'], str) and val['value'].startswith("="):
+                     new_val = evaluate_math_formula(val['value'][1:], context)
+                     val['value'] = new_val
+
+    def _calculate_modifier_stats(self):
+        from game.simulation.components.modifiers import apply_modifier_effects
+        stats = {
+            'mass_mult': 1.0,
+            'hp_mult': 1.0,
+            'damage_mult': 1.0,
+            'range_mult': 1.0,
+            'cost_mult': 1.0,
+            'thrust_mult': 1.0,
+            'turn_mult': 1.0,
+            'energy_gen_mult': 1.0,
+            'capacity_mult': 1.0,
+            'crew_capacity_mult': 1.0,
+            'life_support_capacity_mult': 1.0,
+            'consumption_mult': 1.0,
+            'mass_add': 0.0,
+            'arc_add': 0.0,
+            'accuracy_add': 0.0,
+            'arc_set': None,
+            'properties': {},
+            # New Modifier Support
+            'reload_mult': 1.0,
+            'endurance_mult': 1.0,
+            'projectile_hp_mult': 1.0,
+            'projectile_damage_mult': 1.0,
+            'projectile_stealth_level': 0.0,
+            'crew_req_mult': 1.0
+        }
+        
+        for m in self.modifiers:
+            apply_modifier_effects(m.definition, m.value, stats, component=self)
+            
+        return stats
+
+    def _apply_base_stats(self, stats, old_max_hp):
+        # Apply specific property overrides
+        for prop, val in stats['properties'].items():
+            if hasattr(self, prop):
+                setattr(self, prop, val)
+
+        # Apply Base Multipliers
+        self.mass = (self.base_mass + stats['mass_add']) * stats['mass_mult']
+        
+        # Note: old_max_hp is passed in, captured before base formula reset
+        self.max_hp = int(self.base_max_hp * stats['hp_mult'])
+        
+        if hasattr(self, 'cost'):
+            self.cost = int(self.data.get('cost', 0) * stats['cost_mult'])
+
+
+
+        # Handle HP update (healing/new component logic)
+        if old_max_hp == 0:
+            self.current_hp = self.max_hp
+        elif self.current_hp >= old_max_hp:
+            self.current_hp = self.max_hp
+            
+        # Ensure cap
+        self.current_hp = min(self.current_hp, self.max_hp)
+
+        # Generic Sync: Update Activation Abilities if attributes changed
+        from game.simulation.systems.resource_manager import ResourceConsumption, ResourceStorage, ResourceGeneration
+        
+        for ab in self.ability_instances:
+            # General Recalculate (Protocol for active abilities to sync with stats)
+            ab.recalculate()
+
+            # ResourceConsumption (Base amount * consumption_mult)
+            if isinstance(ab, ResourceConsumption):
+                 base = ab.data.get('amount', 0.0)
+                 ab.amount = base * stats.get('consumption_mult', 1.0)
+            
+            # ResourceStorage (Base amount * capacity_mult)
+            elif isinstance(ab, ResourceStorage):
+                 base = ab.data.get('amount', 0.0)
+                 ab.max_amount = base * stats.get('capacity_mult', 1.0)
+            
+            # ResourceGeneration (Base amount * energy_gen_mult)
+            elif isinstance(ab, ResourceGeneration):
+                 # Apply energy_gen_mult only if resource is energy, or generic 'generation_mult' if we had one.
+                 # Modifiers like "High Output Generator" affect energy_gen_mult.
+                 if ab.resource_type == 'energy':
+                     base = ab.data.get('amount', 0.0)
+                     ab.rate = base * stats.get('energy_gen_mult', 1.0)
+
+
+
+    def _apply_custom_stats(self, stats):
+        """Hook for subclasses to apply specific stats."""
+        # Base implementation handles Crew/LifeSupport as they are somewhat generic in this system
+        pass
+
+    def clone(self):
+        # Create a new instance with the same data
+        # We need a Factory, but since we are refactoring, we can just make a new instance of the same class.
+        # But we need to know the class.
+        return self.__class__(self.data)
+
+
+# Legacy Aliases - REMOVED
+
+COMPONENT_REGISTRY = {}
+# Phase 7 Simplified: Aliased types now use Component directly
+# Types with custom logic (Shield, Hangar, etc.) are now also aliases
+# as their logic has been unified into the Ability system.
+
+COMPONENT_TYPE_MAP = {
+    # All types map to generic Component
+    "Bridge": Component,
+    "Weapon": Component,
+    "ProjectileWeapon": Component,
+    "BeamWeapon": Component,
+    "SeekerWeapon": Component,
+    "Engine": Component,
+    "Thruster": Component,
+    "ManeuveringThruster": Component,
+    "Shield": Component,
+    "ShieldRegenerator": Component,
+    "Generator": Component,
+    "Hangar": Component,
+    "Armor": Component,
+    "Sensor": Component,
+    "Electronics": Component,
+    "Tank": Component,
+    "CrewQuarters": Component,
+    "LifeSupport": Component
+}
+
+def load_components(filepath="data/components.json"):
+    global COMPONENT_REGISTRY
+    import os
+
+    # Try absolute path based on this file if CWD fails
+    if not os.path.exists(filepath):
+        print(f"WARN: {filepath} not found in CWD ({os.getcwd()}).")
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        abs_path = os.path.join(base_dir, filepath)
+
+        if os.path.exists(abs_path):
+            filepath = abs_path
+        else:
+            print(f"ERROR: components file not found at {abs_path}")
+            return
+
+    try:
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+            
+        
+        for comp_def in data['components']:
+            c_type = comp_def['type']
+            try:
+                cls = COMPONENT_TYPE_MAP.get(c_type, Component)
+                obj = cls(comp_def)
+                COMPONENT_REGISTRY[comp_def['id']] = obj
+            except Exception as e:
+                print(f"ERROR creating component {comp_def.get('id')}: {e}")
+                
+    except Exception as e:
+        print(f"ERROR loading/parsing components json: {e}")
+
+def load_modifiers(filepath="data/modifiers.json"):
+    global MODIFIER_REGISTRY
+    import os
+    if not os.path.exists(filepath):
+         base_dir = os.path.dirname(os.path.abspath(__file__))
+         filepath = os.path.join(base_dir, filepath)
+    
+    try:
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+            
+        for mod_def in data['modifiers']:
+            mod = Modifier(mod_def)
+            MODIFIER_REGISTRY[mod.id] = mod
+            
+
+    except Exception as e:
+        print(f"ERROR loading modifiers: {e}")
+
+def create_component(component_id):
+    if component_id in COMPONENT_REGISTRY:
+        return COMPONENT_REGISTRY[component_id].clone()
+    print(f"Error: Component ID {component_id} not found in registry.")
+    return None
+
+def get_all_components():
+    return list(COMPONENT_REGISTRY.values())
+
+--- END FILE: game/simulation/components/component.py ---
+
+--- START FILE: game/simulation/entities/ship.py ---
+import pygame
+import random
+import math
+import json
+import os
+import typing
+from typing import List, Dict, Tuple, Optional, Any, Union, Set, TYPE_CHECKING
+
+from game.engine.physics import PhysicsBody
+from game.simulation.components.component import (
+    Component, LayerType, COMPONENT_REGISTRY, MODIFIER_REGISTRY
+)
+from game.core.logger import log_debug
+from ship_validator import ShipDesignValidator, ValidationResult
+from ship_stats import ShipStatsCalculator
+from ship_physics import ShipPhysicsMixin
+from ship_combat import ShipCombatMixin
+from game.simulation.systems.resource_manager import ResourceRegistry
+
+if TYPE_CHECKING:
+    pass
+
+# Module-level validator constant
+_VALIDATOR = ShipDesignValidator()
+# Deprecated global access for backward compatibility (lazy usage preferred)
+VALIDATOR = _VALIDATOR 
+
+# Load Vehicle Classes from JSON
+
+VEHICLE_CLASSES: Dict[str, Any] = {}
+SHIP_CLASSES = VEHICLE_CLASSES  # Backward compatibility alias
+
+def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_filepath: Optional[str] = None) -> None:
+    """
+    Load vehicle class definitions from JSON.
+    This should be called explicitly during game initialization.
+    """
+    global VEHICLE_CLASSES
+    
+    # Check if we need to resolve path relative to this file
+    if not os.path.exists(filepath):
+        # Try finding it relative to module
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        abs_path = os.path.join(base_dir, filepath)
+        if os.path.exists(abs_path):
+            filepath = abs_path
+
+    # Try to load layer definitions
+    layer_definitions = {}
+    
+    if layers_filepath:
+        layers_path = layers_filepath
+    else:
+        layers_path = os.path.join(os.path.dirname(filepath), "vehiclelayers.json")
+        
+    if os.path.exists(layers_path):
+        try:
+            with open(layers_path, 'r') as f:
+                layer_data = json.load(f)
+                layer_definitions = layer_data.get('definitions', {})
+                print(f"Loaded {len(layer_definitions)} layer configurations from {os.path.basename(layers_path)}.")
+        except Exception as e:
+            print(f"Error loading layers from {layers_path}: {e}")
+            
+    try:
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+            # Update in place to preserve references
+            VEHICLE_CLASSES.clear()
+            
+            raw_classes = data.get('classes', {})
+            
+            # Post-process to resolve layer configurations
+            for cls_name, cls_def in raw_classes.items():
+                if 'layer_config' in cls_def:
+                     config_id = cls_def['layer_config']
+                     if config_id in layer_definitions:
+                         cls_def['layers'] = layer_definitions[config_id]
+                     else:
+                         print(f"Warning: Class {cls_name} references unknown layer config {config_id}")
+            
+            VEHICLE_CLASSES.update(raw_classes)
+            
+
+            print(f"Loaded {len(VEHICLE_CLASSES)} vehicle classes.")
+    except FileNotFoundError:
+        print(f"Warning: {filepath} not found, using defaults")
+        defaults = {
+            "Escort": {"hull_mass": 50, "max_mass": 1000, "requirements": {}},
+            "Frigate": {"hull_mass": 100, "max_mass": 2000, "requirements": {}},
+            "Destroyer": {"hull_mass": 200, "max_mass": 4000, "requirements": {}},
+            "Cruiser": {"hull_mass": 400, "max_mass": 8000, "requirements": {}},
+            "Battlecruiser": {"hull_mass": 800, "max_mass": 16000, "requirements": {}},
+            "Battleship": {"hull_mass": 1600, "max_mass": 32000, "requirements": {}},
+            "Dreadnought": {"hull_mass": 3200, "max_mass": 64000, "requirements": {}}
+        }
+        VEHICLE_CLASSES.clear()
+        VEHICLE_CLASSES.update(defaults)
+        
+
+
+def initialize_ship_data(base_path: Optional[str] = None) -> None:
+    """Facade for initializing all ship-related data."""
+    if base_path:
+        path = os.path.join(base_path, "data", "vehicleclasses.json")
+        load_vehicle_classes(path)
+    else:
+        load_vehicle_classes()
+
+class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
+    def __init__(self, name: str, x: float, y: float, color: Union[Tuple[int, int, int], List[int]], 
+                 team_id: int = 0, ship_class: str = "Escort", theme_id: str = "Federation"):
+        super().__init__(x, y)
+        self.name: str = name
+        self.color: Union[Tuple[int, int, int], List[int]] = color
+        self.team_id: int = team_id
+        self.current_target: Optional[Any] = None
+        self.secondary_targets: List[Any] = []  # List of additional targets
+        self.max_targets: int = 1         # Default 1 target (primary only)
+        self.ship_class: str = ship_class
+        self.theme_id: str = theme_id
+        
+        # Get class definition
+        class_def = VEHICLE_CLASSES.get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
+
+        # Initialize Layers dynamically from class definition
+        self._initialize_layers()
+        
+        # Stats
+        self.mass: float = 0.0
+        self.base_mass: float = class_def.get('hull_mass', 50)  # Hull/Structure mass from class
+        self.vehicle_type: str = class_def.get('type', "Ship")
+        self.total_thrust: float = 0.0
+        self.max_speed: float = 0.0
+        self.turn_speed: float = 0.0
+        self.target_speed: float = 0.0 # New Target Speed Control
+        
+        # Budget
+        self.max_mass_budget: float = class_def.get('max_mass', 1000)
+        
+        self.radius: float = 40.0 # Will be recalculated
+        
+        # Resources (New System)
+        self.resources = ResourceRegistry()
+        
+        # Resource initialization tracking
+        self._resources_initialized: bool = False
+        
+        self.baseline_to_hit_offense = 0.0 # Score
+        self.to_hit_profile = 0.0 # Score
+        self.total_defense_score = 0.0 # Score (Size + Maneuver + ECM)
+        self.emissive_armor = 0
+        self.crystalline_armor = 0
+        
+        # Shield Stats (Still specific for now)
+        self.max_shields: int = 0
+        self.current_shields: float = 0.0
+        self.shield_regen_rate: float = 0.0
+        self.shield_regen_cost: float = 0.0
+        self.repair_rate: float = 0.0
+        
+        # New Stats
+        self.mass_limits_ok: bool = True
+        self.layer_status: Dict[LayerType, Dict[str, Any]] = {}
+        self._cached_summary = {}  # Performance optimization for UI
+        self._loading_warnings: List[str] = []
+        
+        # Old init values
+        self.current_mass: float = 0.0 
+        
+        self.is_alive: bool = True
+        self.is_derelict: bool = False
+        self.bridge_destroyed: bool = False
+        
+        # AI Strategy
+        self.ai_strategy: str = "standard_ranged"
+        self.source_file: Optional[str] = None
+        
+        # Formation Attributes
+        self.formation_master: Optional[Any] = None      # Reference to master ship object
+        self.formation_offset: Optional[Any] = None      # Vector2 offset relative to master
+        self.formation_rotation_mode: str = 'relative' # 'relative' or 'fixed'
+        self.formation_members: List[Any] = []       # List of followers (if this is master)
+        self.in_formation: bool = True          # Flag to track if ship is currently holding formation
+        self.turn_throttle: float = 1.0          # Multiplier for max speed (0.0 to 1.0)
+        self.engine_throttle: float = 1.0        # Multiplier for max speed (0.0 to 1.0)
+        
+        # Arcade Physics
+        self.current_speed: float = 0.0
+        self.acceleration_rate: float = 0.0
+        self.is_thrusting: bool = False
+        self.comp_trigger_pulled: bool = False
+        
+        # Aiming
+        self.aim_point: Optional[Any] = None
+        self.just_fired_projectiles: List[Any] = []
+        self.total_shots_fired: int = 0
+        
+        # To-Hit Calculation Stats
+        self.to_hit_profile: float = 1.0       # Defensive Multiplier
+        self.baseline_to_hit_offense: float = 1.0 # Offensive Multiplier
+        
+        # Initialize helper (lazy or eager)
+        self.stats_calculator: Optional[ShipStatsCalculator] = None
+
+
+
+    @property
+    def max_hp(self) -> int:
+        """Total HP of all components."""
+        total = 0
+        for layer in self.layers.values():
+            for c in layer['components']:
+                total += c.max_hp
+        return total
+
+    @property
+    def hp(self) -> int:
+        """Current HP of all components."""
+        total = 0
+        for layer in self.layers.values():
+            for c in layer['components']:
+                total += c.current_hp
+        return total
+
+    @property
+    def max_weapon_range(self) -> float:
+        """Calculate maximum range of all equipped weapons (Phase 4: ability-based with legacy fallback)."""
+        from game.simulation.components.abilities import SeekerWeaponAbility
+        max_rng = 0.0
+        for layer in self.layers.values():
+            for comp in layer['components']:
+                # 1. Check WeaponAbility instances (new system)
+                for ab in comp.get_abilities('WeaponAbility'):
+                    rng = ab.range
+                    # For SeekerWeapons, range is function of speed * endurance
+                    if isinstance(ab, SeekerWeaponAbility):
+                        rng = ab.projectile_speed * ab.endurance
+                    if rng > max_rng:
+                        max_rng = rng
+                
+
+        return max_rng if max_rng > 0 else 0.0
+
+    def update(self, dt: float = 0.01, context: Optional[dict] = None) -> None:
+        """
+        Update ship state (physics, combat, resources).
+        """
+        if not self.is_alive:
+            return
+
+        # 1. Update Resources (Regeneration) - Tick-based
+        if self.resources:
+             self.resources.update()
+
+        # 2. Update Components (Consumption, Cooldowns) - Tick-based
+        for layer in self.layers.values():
+            for comp in layer['components']:
+                if comp.is_active:
+                    comp.update()
+        
+        # 3. Physics (Thrust calc handling operational engines)
+        self.update_physics_movement()
+        
+        # PhysicsBody.update() (Applies velocity to position)
+        super().update(dt)
+        
+        # 4. Combat Cooldowns (Shields/Repair/Custom Logic)
+        self.update_combat_cooldowns()
+
+        # 5. Firing Logic (Link AI trigger to Combat System)
+        if self.comp_trigger_pulled:
+            new_attacks = self.fire_weapons(context)
+            if new_attacks:
+                self.just_fired_projectiles.extend(new_attacks)
+
+    def update_derelict_status(self) -> None:
+        """
+        Update is_derelict status based on vehicle class requirements.
+        If essential components (e.g. Bridge) are destroyed, ship becomes derelict.
+        """
+        # 1. Get Requirements
+        class_def = VEHICLE_CLASSES.get(self.ship_class, {})
+        requirements = class_def.get('requirements', {})
+        
+        # 2. If no requirements, never derelict (unless dead)
+        if not requirements:
+            self.is_derelict = False
+            return
+
+        # 3. Calculate Current Active Abilities
+        active_components = []
+        for layer in self.layers.values():
+            for c in layer['components']:
+                if c.is_active and c.current_hp > 0:
+                     active_components.append(c)
+        
+        if not self.stats_calculator:
+             self.stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)
+             
+        # Recalculate abilities based on currently living components
+        totals = self.stats_calculator.calculate_ability_totals(active_components)
+        
+        # 4. Check Requirements
+        is_derelict = False
+        for req_ability, min_val in requirements.items():
+            # Support boolean requirements (True means > 0)
+            current_val = totals.get(req_ability, 0)
+            
+            if isinstance(min_val, bool):
+                if min_val and not current_val:
+                    is_derelict = True
+                    break
+            elif isinstance(min_val, (int, float)):
+                 if current_val < min_val:
+                     is_derelict = True
+                     break
+        
+        if is_derelict and not self.is_derelict:
+            print(f"{self.name} has become DERELICT (Requirements not met)")
+            
+        self.is_derelict = is_derelict
+
+    def _initialize_layers(self) -> None:
+        """Initialize or Re-initialize layers based on current ship_class."""
+        class_def = VEHICLE_CLASSES.get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
+        self.layers = {}
+        layer_defs = class_def.get('layers', [])
+        
+        # Fallback if no layers defined (Legacy compatibility)
+        if not layer_defs:
+            layer_defs = [
+                { "type": "CORE", "radius_pct": 0.2, "restrictions": [] },
+                { "type": "INNER", "radius_pct": 0.5, "restrictions": [] },
+                { "type": "OUTER", "radius_pct": 0.8, "restrictions": [] },
+                { "type": "ARMOR", "radius_pct": 1.0, "restrictions": [] }
+            ]
+            
+        for l_def in layer_defs:
+            l_type_str = l_def.get('type')
+            try:
+                l_type = LayerType[l_type_str]
+                self.layers[l_type] = {
+                    'components': [],
+                    'radius_pct': l_def.get('radius_pct', 0.5),
+                    'restrictions': l_def.get('restrictions', []),
+                    'max_mass_pct': l_def.get('max_mass_pct', 1.0),
+                    'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0
+                }
+            except KeyError:
+                print(f"Warning: Unknown LayerType {l_type_str} in class {self.ship_class}")
+
+        # Recalculate layer radii based on max_mass_pct (Area proportional to mass capacity)
+        # Sort layers: CORE -> INNER -> OUTER -> ARMOR
+        layer_order = [LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR]
+        
+        # Filter layers present in this ship
+        present_layers = [l for l in layer_order if l in self.layers]
+        
+        # Calculate total mass capacity (sum of max_mass_pct)
+        total_capacity_pct = sum(self.layers[l]['max_mass_pct'] for l in present_layers)
+        
+        if total_capacity_pct > 0:
+            cumulative_mass_pct = 0.0
+            for l_type in present_layers:
+                cumulative_mass_pct += self.layers[l_type]['max_mass_pct']
+                # Area = pi * r^2. Mass proportional to Area.
+                # Mass_ratio = Current_Cumulative / Total
+                # Radius_ratio = sqrt(Mass_ratio)
+                self.layers[l_type]['radius_pct'] = math.sqrt(cumulative_mass_pct / total_capacity_pct)
+        else:
+            # Fallback if no mass limits defined (shouldn't happen with new data)
+            pass
+
+    def change_class(self, new_class: str, migrate_components: bool = False) -> None:
+        """
+        Change the ship class and optionally migrate components.
+        
+        Args:
+            new_class: The new class name (e.g. "Cruiser")
+            migrate_components: If True, attempts to keep components and fit them into new layers.
+                                If False, clears all components.
+        """
+        if new_class not in VEHICLE_CLASSES:
+            print(f"Error: Unknown class {new_class}")
+            return
+
+        old_components = []
+        if migrate_components:
+            # Flatten all components with their original layer
+            for l_type, data in self.layers.items():
+                for comp in data['components']:
+                    old_components.append((comp, l_type))
+        
+        # Update Class
+        self.ship_class = new_class
+        class_def = VEHICLE_CLASSES[self.ship_class]
+        self.base_mass = class_def.get('hull_mass', 50)
+        self.vehicle_type = class_def.get('type', "Ship")
+        self.max_mass_budget = class_def.get('max_mass', 1000)
+        
+        # Re-initialize Layers (clears self.layers)
+        self._initialize_layers()
+        self.current_mass = 0.0 # Reset mass accumulator
+        
+        if migrate_components:
+            # Attempt to restore components
+            for comp, old_layer in old_components:
+                added = False
+                
+                # 1. Try original layer
+                if old_layer in self.layers:
+                    if self.add_component(comp, old_layer):
+                         added = True
+                
+                # 2. If failed, try all other layers in the new ship
+                if not added:
+                    for layer_type in self.layers.keys():
+                        if layer_type == old_layer: continue 
+                        
+                        if self.add_component(comp, layer_type):
+                            added = True
+                            break
+                
+                if not added:
+                    print(f"Warning: Could not fit component {comp.name} during refit to {new_class}")
+        
+        # Finally recalculate stats
+        self.recalculate_stats()
+
+    def add_component(self, component: Component, layer_type: LayerType) -> bool:
+        """Validate and add a component to the specified layer."""
+        result = _VALIDATOR.validate_addition(self, component, layer_type)
+        
+        if not result.is_valid:
+             for err in result.errors:
+                 print(f"Error: {err}")
+             return False
+
+        self.layers[layer_type]['components'].append(component)
+        component.layer_assigned = layer_type
+        component.ship = self
+        component.recalculate_stats()
+        self.current_mass += component.mass
+        self._cached_summary = {}  # Invalidate cache
+        
+        # Update Stats
+        self.recalculate_stats()
+        return True
+
+    @property
+    def cached_summary(self):
+        """Cached dictionary of high-level ship stats (DPS, Speed, etc)."""
+        return self._cached_summary
+
+    def add_components_bulk(self, component: Component, layer_type: LayerType, count: int) -> int:
+        """
+        Add multiple copies of a component to the specified layer.
+        Performs validation for each addition but defers full ship stat recalculation until the end.
+        Returns the number of components successfully added.
+        """
+        added_count = 0
+        
+        # Loop to add
+        for _ in range(count):
+            # Must clone for each new instance
+            new_comp = component.clone()
+            
+            # Use the global validator
+            result = _VALIDATOR.validate_addition(self, new_comp, layer_type)
+            if not result.is_valid:
+                # Stop adding if we hit a limit
+                if added_count == 0:
+                    # If the very first one fails, print errors
+                    for err in result.errors:
+                        print(f"Error: {err}")
+                break
+                
+            self.layers[layer_type]['components'].append(new_comp)
+            new_comp.layer_assigned = layer_type
+            new_comp.ship = self
+            new_comp.recalculate_stats()
+            self.current_mass += new_comp.mass
+            added_count += 1
+            
+        if added_count > 0:
+            self.recalculate_stats()
+            
+        return added_count
+
+    def remove_component(self, layer_type: LayerType, index: int) -> Optional[Component]:
+        """Remove a component from the specified layer by index."""
+        if 0 <= index < len(self.layers[layer_type]['components']):
+            comp = self.layers[layer_type]['components'].pop(index)
+            self.current_mass -= comp.mass
+            self.recalculate_stats()
+            return comp
+        return None
+
+    def recalculate_stats(self) -> None:
+        """
+        Recalculates derived stats. Delegates to ShipStatsCalculator.
+        """
+        # 1. Update Base Class Specs (ensure budget is fresh for scaling modifiers)
+        if self.ship_class in VEHICLE_CLASSES:
+             cdef = VEHICLE_CLASSES[self.ship_class]
+             self.max_mass_budget = cdef.get('max_mass', 1000)
+
+        # 2. Update components with current ship context
+        for layer_data in self.layers.values():
+            for comp in layer_data['components']:
+                # Ensure ship ref is set (legacy check)
+                if not getattr(comp, 'ship', None): comp.ship = self
+                comp.recalculate_stats()
+
+        if not self.stats_calculator:
+             self.stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)
+        
+        self.stats_calculator.calculate(self)
+
+    def get_missing_requirements(self) -> List[str]:
+        """Check class requirements and return list of missing items based on abilities."""
+        # Use centralized validator
+        result = _VALIDATOR.validate_design(self)
+        if result.is_valid:
+            return []
+        # Return all errors as list of strings
+        return [f"⚠ {err}" for err in result.errors]
+
+    def get_validation_warnings(self) -> List[str]:
+        """Check class requirements and return list of warnings (soft requirements)."""
+        result = _VALIDATOR.validate_design(self)
+        return result.warnings
+    
+    def _format_ability_name(self, ability_name: str) -> str:
+        """Convert ability ID to readable name."""
+        import re
+        return re.sub(r'(?<!^)(?=[A-Z])', ' ', ability_name)
+    
+    def get_ability_total(self, ability_name: str) -> Union[float, int, bool]:
+        """Get total value of a specific ability across all components."""
+        all_components = [c for layer in self.layers.values() for c in layer['components']]
+        
+        if not self.stats_calculator:
+             self.stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)
+             
+        totals = self.stats_calculator.calculate_ability_totals(all_components)
+        return totals.get(ability_name, 0)
+    
+    def get_total_ability_value(self, ability_name: str, operational_only: bool = True) -> float:
+        """
+        Sum values from all matching abilities across all components.
+        Uses ability_instances (Phase 3+ API) instead of abilities dict.
+        
+        Args:
+            ability_name: Name of ability class to sum (e.g., 'CombatPropulsion')
+            operational_only: If True, only count abilities from operational components
+            
+        Returns:
+            Sum of primary value attribute from all matching abilities
+        """
+        total = 0.0
+        for layer in self.layers.values():
+            for comp in layer['components']:
+                if operational_only and not comp.is_operational:
+                    continue
+                for ab in comp.get_abilities(ability_name):
+                    # Get the primary value attribute based on ability type
+                    if hasattr(ab, 'thrust_force'):
+                        total += ab.thrust_force
+                    elif hasattr(ab, 'turn_rate'):
+                        total += ab.turn_rate
+                    elif hasattr(ab, 'capacity'):
+                        total += ab.capacity
+                    elif hasattr(ab, 'rate'):
+                        total += ab.rate
+                    elif hasattr(ab, 'value'):
+                        total += ab.value
+        return total
+    
+    def get_total_sensor_score(self) -> float:
+        """Calculate total Targeting Score from all active sensors."""
+        total_score = 0.0
+        for layer in self.layers.values():
+            for comp in layer['components']:
+                # Phase 7: Use ability-based check
+                for ab in comp.get_abilities('ToHitAttackModifier'):
+                    total_score += ab.value
+        return total_score
+
+    def get_total_ecm_score(self) -> float:
+        """Calculate total Evasion/Defense Score from all active ECM/Electronics."""
+        total_score = 0.0
+        for layer in self.layers.values():
+            for comp in layer['components']:
+                # Phase 7: Use ability-based check
+                for ab in comp.get_abilities('ToHitDefenseModifier'):
+                    total_score += ab.value
+        return total_score
+
+    def check_validity(self) -> bool:
+        """Check if the current ship design is valid."""
+        self.recalculate_stats()
+        result = _VALIDATOR.validate_design(self)
+        # Check for mass errors specifically for UI feedback flag
+        self.mass_limits_ok = not any("Mass budget exceeded" in e for e in result.errors)
+        return result.is_valid
+
+    @property
+    def layers_dict(self) -> Dict[str, List[Any]]:
+        """Helper for JSON serialization."""
+        d = {}
+        for l_type, data in self.layers.items():
+            d[l_type.name] = []
+            for comp in data['components']:
+                # Minimal serialization: ID + Modifiers
+                c_data = {
+                    "id": comp.id,
+                    "modifiers": []
+                }
+                for m_id, m_val in comp.modifiers.items():
+                    c_data["modifiers"].append({"id": m_id, "value": m_val})
+                d[l_type.name].append(c_data)
+        return d
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize ship to dictionary."""
+        data = {
+            "name": self.name,
+            "ship_class": self.ship_class,
+            "theme_id": self.theme_id,
+            "team_id": self.team_id,
+            "color": self.color,
+            "ai_strategy": self.ai_strategy,
+            "layers": {},
+            "expected_stats": {
+                "max_hp": self.max_hp,
+                "max_fuel": self.resources.get_max_value("fuel"),
+                "max_energy": self.resources.get_max_value("energy"),
+                "max_ammo": self.resources.get_max_value("ammo"),
+                "max_speed": self.max_speed,
+                "acceleration_rate": self.acceleration_rate,
+                "turn_speed": self.turn_speed,
+                "total_thrust": self.total_thrust,
+                "mass": self.mass,
+                "armor_hp_pool": self.layers[LayerType.ARMOR]['max_hp_pool'] if LayerType.ARMOR in self.layers else 0
+            }
+        }
+        
+        for ltype, layer_data in self.layers.items():
+            filter_comps = []
+            for comp in layer_data['components']:
+                # Save as dict with modifiers
+                c_obj = {"id": comp.id}
+                if comp.modifiers:
+                    c_obj["modifiers"] = [{"id": k, "value": v} for k, v in comp.modifiers.items()]
+                filter_comps.append(c_obj)
+                
+            data["layers"][ltype.name] = filter_comps
+        return data
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> 'Ship':
+        """Create ship from dictionary."""
+        name = data.get("name", "Unnamed")
+        color_val = data.get("color", (200, 200, 200))
+        # Ensure color is tuple
+        color: tuple
+        if isinstance(color_val, list): 
+            color = tuple(color_val)
+        else:
+            color = color_val # type: ignore
+        
+        s = Ship(name, 0, 0, color, data.get("team_id", 0), ship_class=data.get("ship_class", "Escort"), theme_id=data.get("theme_id", "Federation"))
+        s.ai_strategy = data.get("ai_strategy", "standard_ranged")
+        
+        for l_name, comps_list in data.get("layers", {}).items():
+            layer_type = None
+            try:
+                layer_type = LayerType[l_name]
+            except KeyError:
+                continue
+                
+            # If ship definition doesn't have this layer, skip it (maybe legacy import)
+            if layer_type not in s.layers:
+                 continue
+            
+            for c_entry in comps_list:
+                comp_id = ""
+                modifiers_data = []
+                
+                if isinstance(c_entry, str):
+                    comp_id = c_entry
+                elif isinstance(c_entry, dict):
+                    comp_id = c_entry.get("id", "")
+                    modifiers_data = c_entry.get("modifiers", [])
+                
+                if comp_id in COMPONENT_REGISTRY:
+                    new_comp = COMPONENT_REGISTRY[comp_id].clone()
+                    
+                    # Apply Modifiers
+                    for m_dat in modifiers_data:
+                        mid = m_dat['id']
+                        mval = m_dat['value']
+                        if mid in MODIFIER_REGISTRY:
+                            new_comp.add_modifier(mid, mval)
+
+                    s.add_component(new_comp, layer_type)
+        
+        s.recalculate_stats()
+        
+        # Verify loaded stats match expected stats (if saved)
+        expected = data.get('expected_stats', {})
+        if expected:
+            mismatches = []
+            if expected.get('max_hp') and abs(s.max_hp - expected['max_hp']) > 1:
+                mismatches.append(f"max_hp: got {s.max_hp}, expected {expected['max_hp']}")
+            
+            val = s.resources.get_max_value("fuel")
+            if expected.get('max_fuel') and abs(val - expected['max_fuel']) > 1:
+                mismatches.append(f"max_fuel: got {val}, expected {expected['max_fuel']}")
+            
+            val = s.resources.get_max_value("energy")
+            if expected.get('max_energy') and abs(val - expected['max_energy']) > 1:
+                mismatches.append(f"max_energy: got {val}, expected {expected['max_energy']}")
+            
+            val = s.resources.get_max_value("ammo")
+            if expected.get('max_ammo') and abs(val - expected['max_ammo']) > 1:
+                mismatches.append(f"max_ammo: got {val}, expected {expected['max_ammo']}")
+            if expected.get('max_speed') and abs(s.max_speed - expected['max_speed']) > 0.1:
+                mismatches.append(f"max_speed: got {s.max_speed:.1f}, expected {expected['max_speed']:.1f}")
+            if expected.get('acceleration_rate') and abs(s.acceleration_rate - expected['acceleration_rate']) > 0.001:
+                mismatches.append(f"acceleration_rate: got {s.acceleration_rate:.3f}, expected {expected['acceleration_rate']:.3f}")
+            if expected.get('turn_speed') and abs(s.turn_speed - expected['turn_speed']) > 0.1:
+                mismatches.append(f"turn_speed: got {s.turn_speed:.1f}, expected {expected['turn_speed']:.1f}")
+            if expected.get('total_thrust') and abs(s.total_thrust - expected['total_thrust']) > 1:
+                mismatches.append(f"total_thrust: got {s.total_thrust}, expected {expected['total_thrust']}")
+            if expected.get('mass') and abs(s.mass - expected['mass']) > 1:
+                mismatches.append(f"mass: got {s.mass}, expected {expected['mass']}")
+            armor_hp = s.layers[LayerType.ARMOR]['max_hp_pool'] if LayerType.ARMOR in s.layers else 0
+            if expected.get('armor_hp_pool') and abs(armor_hp - expected['armor_hp_pool']) > 1:
+                mismatches.append(f"armor_hp_pool: got {armor_hp}, expected {expected['armor_hp_pool']}")
+            
+            s._loading_warnings = mismatches
+            
+            if mismatches:
+                print(f"WARNING: Ship '{s.name}' stats mismatch after loading!")
+                for m in mismatches:
+                    print(f"  - {m}")
+        
+        return s
+
+
+    @property
+    def ammo_gen_rate(self) -> float:
+        res = self.resources.get_resource("ammo")
+        return res.regen_rate if res else 0.0
+
+    @ammo_gen_rate.setter
+    def ammo_gen_rate(self, value):
+        res = self.resources.get_resource("ammo")
+        if res: res.regen_rate = value
+
+--- END FILE: game/simulation/entities/ship.py ---
+

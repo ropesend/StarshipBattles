@@ -21,5 +21,8 @@
 3. **Synthesize:** Update `Refactoring/active_refactor.md`.
    * **Migration Map** (The Constitution)
    * **Test Triage Table** (Empty)
-   * **Phased Schedule** (Phase 1 detailed, Phase 2+ placeholders)
+   * **Phased Schedule:**
+     * **CRITICAL:** Phase 1 must contain **DETAILED IMPLEMENTATION SPECS** (e.g., exact file paths, new function signatures, class responsibilities).
+     * **Do NOT** just write "Refactor core." Write "Update `ship.py` to use `RegistryManager`."
+     * Use sub-bullets for specific file changes ( [NEW] / [MODIFY] ).
 4. **Handoff:** Request Protocol 11 (Execution).

@@ -11,6 +11,7 @@ I am reviewing the progress of the Refactor.
    - Run `python Refactoring/scripts/pack_swarm.py Refactoring/swarm_manifests/review_manifest.json`.
 5. CONSTRAINT:
    - Ensure the review focuses on the CURRENT phase.
+   - **GOAL:** If approving the phase, the `review_manifest` must lead to a `Synthesizer` report that generates DETAILED SPECS for the next phase.
 
 <context>
 Refer to `active_refactor.md` for the current status.

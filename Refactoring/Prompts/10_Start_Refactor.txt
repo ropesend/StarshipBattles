@@ -11,6 +11,7 @@ I am initiating a new Refactor.
 4. CONSTRAINT:
    - DO NOT write any implementation code.
    - DO NOT modify `active_refactor.md` yet (Phase 2 does that).
+   - **GOAL:** The resulting `plan_manifest.json` must lead to reports that allow for DETAILED SPECIFICATION in Phase 2.
 
 <refactor_goal>
 
