@@ -1,10 +1,6 @@
 """Tests for UI widget classes."""
 import unittest
-import sys
-import os
 import pygame
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from ui import Button, Label, Slider
 

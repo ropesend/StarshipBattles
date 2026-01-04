@@ -6,6 +6,15 @@ class AttackType(Enum):
     BEAM = "beam"
     LAUNCH = "launch"
 
+from enum import IntEnum
+class GameState(IntEnum):
+    MENU = 0
+    BUILDER = 1
+    BATTLE = 2
+    BATTLE_SETUP = 3
+    FORMATION = 4
+    TEST_LAB = 5
+
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)

@@ -30,11 +30,16 @@ from ui.builder.event_bus import EventBus
 from game.core.screenshot_manager import ScreenshotManager
 
 # Initialize Tkinter root and hide it (for simpledialog)
+# Initialize Tkinter root and hide it (for simpledialog)
 try:
-    tk_root = tkinter.Tk()
-    tk_root.withdraw()
+    if os.environ.get("SDL_VIDEODRIVER") == "dummy":
+        tk_root = None
+    else:
+        tk_root = tkinter.Tk()
+        tk_root.withdraw()
 except:
     tk_root = None
+
 
 # Colors
 from ui.colors import COLORS

@@ -8,10 +8,9 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 
 class TestSliderIncrement(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         # 1. Start patching sys.modules
-        cls.modules_patcher = patch.dict(sys.modules, {
+        self.modules_patcher = patch.dict(sys.modules, {
             'pygame': MagicMock(),
             'pygame_gui': MagicMock(),
             'pygame_gui.elements': MagicMock(),
@@ -20,10 +19,10 @@ class TestSliderIncrement(unittest.TestCase):
             'tkinter': MagicMock(),
             'tkinter.filedialog': MagicMock()
         })
-        cls.modules_patcher.start()
+        self.modules_patcher.start()
         
         # Ensure patcher is stopped even if import fails
-        cls.addClassCleanup(cls.modules_patcher.stop)
+        self.addCleanup(self.modules_patcher.stop)
         
         # 2. Aggressively unload target modules to ensure they reload with patched dependencies
         # We need to unload 'components' because builder_components imports it,
@@ -37,12 +36,11 @@ class TestSliderIncrement(unittest.TestCase):
              for m in to_unload:
                  del sys.modules[m]
                  
-        cls.addClassCleanup(cleanup_modules)
+        self.addCleanup(cleanup_modules)
             
         # 3. Import module
-        # 3. Import module
         import game.ui.panels.builder_widgets as builder_widgets
-        cls.module = builder_widgets
+        self.module = builder_widgets
 
     def test_range_mount_increment(self):
         """Test that the Range Mount slider is initialized with 0.1 increment."""

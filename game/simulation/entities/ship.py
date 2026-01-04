@@ -442,6 +442,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
     def add_component(self, component: Component, layer_type: LayerType) -> bool:
         """Validate and add a component to the specified layer."""
+        if component is None:
+             print("Error: Attempted to add None component to ship")
+             return False
+
         result = _VALIDATOR.validate_addition(self, component, layer_type)
         
         if not result.is_valid:

@@ -33,12 +33,16 @@ FPS = 60
 BG_COLOR = (10, 10, 20)
 
 # Scene States
-MENU = 0
-BUILDER = 1
-BATTLE = 2
-BATTLE_SETUP = 3
-FORMATION = 4
-TEST_LAB = 5
+from game.core.constants import GameState
+from game.core.input_handler import InputHandler
+
+# Scene States (Aliased for compatibility)
+MENU = GameState.MENU
+BUILDER = GameState.BUILDER
+BATTLE = GameState.BATTLE
+BATTLE_SETUP = GameState.BATTLE_SETUP
+FORMATION = GameState.FORMATION
+TEST_LAB = GameState.TEST_LAB
 
 # Initialize fonts
 pygame.font.init()
@@ -245,19 +249,7 @@ class Game:
     
     def _handle_keydown(self, event):
         """Handle key press events."""
-        if self.state == BATTLE:
-            if event.key == pygame.K_o:
-                self.battle_scene.show_overlay = not self.battle_scene.show_overlay
-            elif event.key == pygame.K_SPACE:
-                self.battle_scene.sim_paused = not self.battle_scene.sim_paused
-            elif event.key == pygame.K_COMMA:
-                self.battle_scene.sim_speed_multiplier = max(0.00390625, self.battle_scene.sim_speed_multiplier / 2.0)
-            elif event.key == pygame.K_PERIOD:
-                self.battle_scene.sim_speed_multiplier = min(16.0, self.battle_scene.sim_speed_multiplier * 2.0)
-            elif event.key == pygame.K_m:
-                 self.battle_scene.sim_speed_multiplier = 1.0
-            elif event.key == pygame.K_SLASH:
-                self.battle_scene.sim_speed_multiplier = 100.0 # Max Speed
+        InputHandler.handle_keydown(self, event)
     
     def _handle_click(self, event):
         """Handle mouse click events."""
