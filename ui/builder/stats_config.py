@@ -36,7 +36,7 @@ class StatDefinition:
 
 # --- Formatters ---
 def fmt_time(val):
-    if val == float('inf') or val > 99999:
+    if val == float('inf'):
         return "Infinite"
     if val <= 0:
         return "0.0s"

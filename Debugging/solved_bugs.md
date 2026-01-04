@@ -37,3 +37,12 @@
 * **Notes:** `ResourceDependencyRule` now handles dynamic resources strictly.
 
 ---
+
+## [BUG-04] - Stats Panel Display "--"
+* **Date Solved:** 2026-01-03 16:05
+* **Original Issue:** Immediately after a resource storage component is added, the stats panel shows "--" for values instead of updating.
+* **Solution Implemented:** Removed early returns in `ui/builder/right_panel.py` (`on_ship_updated`) that were preventing `update_stats_display` from running after `rebuild_stats`.
+* **Test Case:** `tests/repro_issues/test_bug_04_display.py`
+* **Notes:** Ensure `update_stats_display` is called whenever stats might have changed, even if strict rebuilds occurred.
+---
+

@@ -287,8 +287,8 @@ class ToHitAttackModifier(Ability):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.amount = float(val)
-        self._base_amount = self.amount
+        self.value = float(val)
+        self._base_value = self.value
 
     def recalculate(self):
         # Apply generic properties or specific mult if needed. 
@@ -297,7 +297,7 @@ class ToHitAttackModifier(Ability):
         pass
 
     def get_ui_rows(self):
-        val = self.amount
+        val = self.value
         sign = "+" if val >= 0 else ""
         return [{'label': 'Targeting', 'value': f"{sign}{val:.1f}", 'color_hint': '#FF6464'}]
 
@@ -305,14 +305,14 @@ class ToHitDefenseModifier(Ability):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.amount = float(val)
-        self._base_amount = self.amount
+        self.value = float(val)
+        self._base_value = self.value
 
     def recalculate(self):
         pass
 
     def get_ui_rows(self):
-        val = self.amount
+        val = self.value
         sign = "+" if val >= 0 else ""
         return [{'label': 'Evasion', 'value': f"{sign}{val:.1f}", 'color_hint': '#64FFFF'}]
 

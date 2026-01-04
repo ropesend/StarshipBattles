@@ -36,3 +36,9 @@ PS C:\Dev\Starship Battles>
 [Pending]
 
 ## Work Log
+- [2026-01-03 17:15] Reproduction: Confirmed using `tests/repro_issues/test_bug_07_crash.py`.
+    - Error: `AttributeError: 'ToHitAttackModifier' object has no attribute 'value'`
+    - Root Cause: `ToHitAttackModifier` class uses `self.amount` but `ship.py` accesses `ab.value`.
+- [2026-01-03 17:25] Fix: Renamed `amount` to `value` in `ToHitAttackModifier` and `ToHitDefenseModifier` classes in `game/simulation/components/abilities.py` to match API expectation.
+    - Verified with `tests/repro_issues/test_bug_07_crash.py` (Passed).
+    - Verified no regressions in `tests/unit/test_ship_stats.py` (Passed).

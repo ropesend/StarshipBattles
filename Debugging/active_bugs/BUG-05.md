@@ -26,6 +26,11 @@ In my design I have Ammo, Energy, and Fuel storage so there should be 18 lines, 
 C:\Dev\Starship Battles\screenshots\screenshot_20260103_163646_310748_mouse_focus.png (shows that there are mostly just capacity reports, also shows the endurance being miscalculated which is part or a separate bug.
 ---
 
+### 📝 User Update 2026-01-03 17:39
+BUG-05
+This is not yet solved. The 6 lines are now showing up when resource storage is added, or when continuous use items are added, however they are not showing up when items that use the resource are added.  Adding something that consumes a resource should cause the 6 lines to show up.  Examples of thes are a Shileld Regen or any of the weapons.
+---
+
 ## Work Log
 *   **[2026-01-03 16:15] Phase 1 - Reproduction:**
     *   Created test case `tests/repro_issues/test_bug_05_logistics.py`.
