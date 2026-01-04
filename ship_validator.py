@@ -233,13 +233,8 @@ class ResourceDependencyRule(ValidationRule):
     def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
         result = ValidationResult(True)
         # Scan all components to determine needs vs sources
-        needs_fuel = False
-        needs_ammo = False
-        needs_energy_storage = False 
-        
-        has_fuel_storage = False
-        has_ammo_storage = False
-        has_energy_storage = False # Battery
+        needed_resources = set()
+        stored_resources = set()
         
         all_components = []
         for l in ship.layers.values():
@@ -254,14 +249,8 @@ class ResourceDependencyRule(ValidationRule):
                     # Check Consumption
                     if isinstance(ab, ResourceConsumption):
                         res_name = ab.resource_name
-                        if not res_name: continue
-                        
-                        if res_name == 'fuel':
-                            needs_fuel = True
-                        elif res_name == 'ammo':
-                            needs_ammo = True
-                        elif res_name == 'energy':
-                            needs_energy_storage = True
+                        if res_name:
+                            needed_resources.add(res_name)
                             
                     # Check Storage
                     elif isinstance(ab, ResourceStorage):
@@ -269,13 +258,8 @@ class ResourceDependencyRule(ValidationRule):
                         # Use max_amount for capacity check (V2 standard)
                         capacity = getattr(ab, 'max_amount', 0)
                         
-                        if capacity > 0:
-                            if res_name == 'fuel':
-                                has_fuel_storage = True
-                            elif res_name == 'ammo':
-                                has_ammo_storage = True
-                            elif res_name == 'energy':
-                                has_energy_storage = True
+                        if capacity > 0 and res_name:
+                            stored_resources.add(res_name)
             else:
                 # Fallback for raw data or uninitialized components
                 abilities = getattr(c, 'abilities', {})
@@ -283,30 +267,31 @@ class ResourceDependencyRule(ValidationRule):
                     for cons in abilities['ResourceConsumption']:
                         if not isinstance(cons, dict): continue
                         res_name = cons.get('resource')
-                        if res_name == 'fuel': needs_fuel = True
-                        elif res_name == 'ammo': needs_ammo = True
-                        elif res_name == 'energy': needs_energy_storage = True
+                        if res_name:
+                            needed_resources.add(res_name)
                         
                 if 'ResourceStorage' in abilities:
                     for store in abilities['ResourceStorage']:
                         if not isinstance(store, dict): continue
                         res_name = store.get('resource')
                         capacity = store.get('amount', 0)
-                        if capacity > 0:
-                            if res_name == 'fuel': has_fuel_storage = True
-                            elif res_name == 'ammo': has_ammo_storage = True
-                            elif res_name == 'energy': has_energy_storage = True
+                        if capacity > 0 and res_name:
+                            stored_resources.add(res_name)
             
         # Warnings
-        if needs_fuel and not has_fuel_storage:
-             result.add_warning("Needs Fuel Storage")
-             
-        if needs_ammo and not has_ammo_storage:
-             result.add_warning("Needs Ammo Storage")
-             
-        if needs_energy_storage and not has_energy_storage:
-             result.add_warning("Needs Energy Storage")
-             
+        # Check specific resources we care about for UI consistency
+        # Or just generic:
+        missing = needed_resources - stored_resources
+        
+        # We can implement a filter if we only want to warn about specific ones, 
+        # but generic is better for extensibility.
+        # However, to preserve exact output format:
+        
+        for res in sorted(missing):
+            # Format nicely
+            name = res.title()
+            result.add_warning(f"Needs {name} Storage")
+              
         return result
 
 class ShipDesignValidator:

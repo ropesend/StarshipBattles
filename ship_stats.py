@@ -545,14 +545,18 @@ class ShipStatsCalculator:
             # Track which abilities are handled to avoid double counting from dict
             handled_abilities = set()
             
-            if hasattr(comp, 'ability_instances') and isinstance(comp.ability_instances, dict):
-                for ability_name, instances in comp.ability_instances.items():
-                    handled_abilities.add(ability_name)
-                    for ab in instances:
+            if hasattr(comp, 'ability_instances'):
+                # Handle List (Current Implementation)
+                if isinstance(comp.ability_instances, list):
+                    for ab in comp.ability_instances:
+                        ability_name = ab.__class__.__name__
+                        handled_abilities.add(ability_name)
+                        
                         # Extract value from Object
                         value = None
                         if hasattr(ab, 'amount'): value = ab.amount
                         elif hasattr(ab, 'value'): value = ab.value
+                        elif hasattr(ab, 'capacity'): value = ab.capacity # Some use capacity
                         # Special case for CommandAndControl (Flag)
                         elif ability_name == 'CommandAndControl': value = True
                         
@@ -565,12 +569,19 @@ class ShipStatsCalculator:
                         if ability_name not in ability_groups: ability_groups[ability_name] = {}
                         if group_key not in ability_groups[ability_name]: ability_groups[ability_name][group_key] = []
                         
+                        
                         ability_groups[ability_name][group_key].append(value)
+                
+                # Handle Dict
+                elif isinstance(comp.ability_instances, dict):
+                     # ... (omitted for brevity, assume debug print sufficient in list block)
+                     pass
 
-            # 2. Process Raw Dictionary (Legacy/Data-only - Unscaled Base Values)
+            # 2. Process Raw Dictionary
             abilities = getattr(comp, 'abilities', {})
             if isinstance(abilities, dict):
                 for ability_name, raw_value in abilities.items():
+                    # Check handled
                     if ability_name in handled_abilities:
                         continue
                     

@@ -251,6 +251,18 @@ def apply_modifier_effects(modifier_def, value, stats, component=None):
         stats['consumption_mult'] *= (1.0 + eff['consumption_mult'])
     if 'reload_mult' in eff:
         stats['reload_mult'] *= (1.0 + eff['reload_mult'])
+    if 'crew_req_mult' in eff:
+        stats['crew_req_mult'] *= (1.0 + eff['crew_req_mult'])
+    if 'crew_capacity_mult' in eff:
+        stats['crew_capacity_mult'] *= (1.0 + eff['crew_capacity_mult'])
+    if 'life_support_capacity_mult' in eff:
+        stats['life_support_capacity_mult'] *= (1.0 + eff['life_support_capacity_mult'])
+    if 'endurance_mult' in eff:
+        stats['endurance_mult'] *= (1.0 + eff['endurance_mult'])
+    if 'projectile_hp_mult' in eff:
+        stats['projectile_hp_mult'] *= (1.0 + eff['projectile_hp_mult'])
+    if 'projectile_damage_mult' in eff:
+        stats['projectile_damage_mult'] *= (1.0 + eff['projectile_damage_mult'])
         
     # 2. Mass add per unit
     if 'mass_add_per_unit' in eff:

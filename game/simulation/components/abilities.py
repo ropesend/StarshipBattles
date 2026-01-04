@@ -13,6 +13,7 @@ class Ability:
         self.component = component
         self.data = data
         self._tags = set(data.get('tags', [])) if isinstance(data, dict) else set()
+        self.stack_group = data.get('stack_group') if isinstance(data, dict) else None
     
     @property
     def tags(self):
@@ -518,6 +519,7 @@ class SeekerWeaponAbility(WeaponAbility):
         # Seekers use 80% of straight-line range to account for maneuvering
         if self.range <= 0 and self.projectile_speed > 0:
              self.range = int(self.projectile_speed * self.endurance * 0.8)
+             self._base_range = self.range
 
 # --- Registry ---
 

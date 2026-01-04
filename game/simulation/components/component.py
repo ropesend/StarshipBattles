@@ -46,7 +46,8 @@ class ApplicationModifier:
         self.definition = mod_def
         self.value = value if value is not None else mod_def.default_val
 
-from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability
+# IMPORTS MOVED TO LOCAL SCOPE TO PREVENT CIRCULAR DEPENDENCY
+# from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability
 
 class Component:
     def __init__(self, data):
@@ -183,8 +184,12 @@ class Component:
         
         # Standard Loading from abilities dict
         for name, data in self.abilities.items():
+            # Lazy import to avoid circular dependency
+            from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability
+            
             if name not in ABILITY_REGISTRY:
                 continue
+            
             if isinstance(data, list):
                 for item in data:
                     ab = create_ability(name, self, item)

@@ -87,7 +87,7 @@ class BuilderRightPanel:
         missing_keys = new_log_keys - current_keys
         if missing_keys:
              self.rebuild_stats()
-             return
+             # Fall through to update
 
         # Also check if any EXISTING key that looks like a resource key is NO LONGER valid?
         # E.g. removed 'Biomass'.
@@ -95,11 +95,11 @@ class BuilderRightPanel:
         # But generally, adding components is the main builder action. Removing implies set subtraction.
         # Using self.logistics_keys stored in setup_stats would be better.
         
-        if hasattr(self, 'current_logistics_keys'):
+        elif hasattr(self, 'current_logistics_keys'):
             if new_log_keys != self.current_logistics_keys:
                  self.rebuild_stats()
-                 return
-                 
+                 # Fall through to update
+
         self.update_stats_display(ship)
 
     def setup_controls(self):
