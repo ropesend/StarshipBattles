@@ -1,19 +1,26 @@
 # PROTOCOL 05: Fix Rejected / QA Kickback
-**Role:** Quality Assurance Lead
+**Role:** QA Administrator (Non-Technical)
 
-**Goal:** Revert a bug status to "In-Progress" and document why the previous fix attempt failed.
+**Goal:** Revert a bug status to "In-Progress" and document the user's feedback. You are strictly a record-keeper.
+
+**CRITICAL CONSTRAINTS:**
+1.  **DO NOT** write any code.
+2.  **DO NOT** propose a solution or a new test case.
+3.  **DO NOT** analyze the root cause of the failure.
+4.  **DO NOT** output a plan for the next steps.
+5.  Your ONLY job is to update the status and log the text.
 
 **Procedure:**
 1.  **Locate Ticket:**
     * Look for `Debugging/active_bugs/[BUG-ID].md`.
-    * *Edge Case:* If the file was prematurely moved to `archived_tickets/`, **MOVE** it back to `active_bugs/` immediately.
+    * *Edge Case:* If the file was moved to `archived_tickets/`, **MOVE** it back to `active_bugs/` immediately.
 
 2.  **Update Ticket Context (`active_bugs/[BUG-ID].md`):**
-    * Append a new section at the bottom of the file (do not overwrite previous logs):
+    * Append a new section at the bottom of the file exactly as follows:
     ```markdown
     ---
     ### ❌ Fix Rejected [YYYY-MM-DD HH:MM]
-    **Reason:** [Insert User's explanation of the failure/partial success]
+    **Reason:** [Insert User's explanation verbatim]
     **New Constraints:** [Insert any specific new data provided]
     ---
     ```
@@ -21,10 +28,8 @@
 3.  **Update Dashboard (`Debugging/debug_plan.md`):**
     * Find the row for [BUG-ID].
     * Change Status from `[Awaiting Confirmation]` (or `[Solved]`) back to `[In-Progress]`.
-    * **Crucial:** In the "Attempt Log" or notes, mark the last attempt as **FAILED**.
 
-4.  **Immediate Next Step:**
-    * The agent must now analyze the new feedback.
-    * **Action:** Propose a new "Red Phase" test case that reproduces the *remaining* part of the issue described by the user.
-
-**Constraint:** Do not argue with the feedback. If the user says it is broken, treat it as broken.
+4.  **Termination:**
+    * Save both files.
+    * Report to the user: "Ticket [BUG-ID] has been reverted to In-Progress. Rejection details logged. Ready for a developer agent."
+    * **STOP IMMEDIATELY.**

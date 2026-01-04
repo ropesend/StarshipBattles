@@ -182,17 +182,28 @@ def get_resource_replenish(ship, res_name):
 
 def get_resource_max_usage(ship, res_name):
     """
-    Get the pre-calculated max usage (constant + active) from ship stats.
-    Logic from ship_stats.py: fuel_consumption, energy_consumption, etc. include all active components max rate.
+    Get maximum resource usage (constant + max activation rate).
+    Uses 'potential' stats to ensure UI shows component load even if currently inactive (e.g. no crew).
     """
     attr_map = {
+        'fuel': 'potential_fuel_consumption',
+        'ammo': 'potential_ammo_consumption',
+        'energy': 'potential_energy_consumption'
+    }
+    attr = attr_map.get(res_name)
+    if attr and hasattr(ship, attr):
+        return getattr(ship, attr, 0)
+        
+    # Fallback to standard consumption if potential not calculated (backward compat)
+    fallback_map = {
         'fuel': 'fuel_consumption',
         'ammo': 'ammo_consumption',
         'energy': 'energy_consumption'
     }
-    attr = attr_map.get(res_name)
+    attr = fallback_map.get(res_name)
     if attr:
-        return getattr(ship, attr, 0)
+         return getattr(ship, attr, 0)
+         
     return 0
 
 # --- Config Groups ---

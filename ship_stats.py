@@ -340,76 +340,103 @@ class ShipStatsCalculator:
         from game.simulation.systems.resource_manager import ResourceConsumption
 
         
-        # A. Fuel
         # Rate = Sum of ResourceConsumption(fuel, constant)
+        # A. Fuel
         fuel_consumption = 0.0
+        potential_fuel = 0.0
         
         # B. Ordinance (Ammo)
-        # Rate = Sum of ResourceConsumption(ammo, activation) / reload_time
         ammo_consumption = 0.0
+        potential_ammo = 0.0
         
         # C. Energy
-        # Rate = Sum of ResourceConsumption(energy, activation) / reload_time
         energy_consumption = 0.0
+        potential_energy = 0.0
 
         for c in component_pool:
-            if not c.is_active: continue
-
+            # Local accumulators for this component
+            c_fuel = 0.0
+            c_ammo = 0.0
+            c_energy = 0.0
+            
             # Iterate Abilities for Source of Truth
             if hasattr(c, 'ability_instances'):
                 for ab in c.ability_instances:
                     # Resource Storage dealt with in Phase 3 aggregation
                     
                     if isinstance(ab, ResourceConsumption):
+                        print(f"DEBUG: Found ResConsumption {ab.resource_name} {ab.trigger}")
                         # Constant Consumption (Generic)
                         if ab.trigger == 'constant':
                             if ab.resource_name == 'fuel':
-                                fuel_consumption += ab.amount
+                                c_fuel += ab.amount
                             elif ab.resource_name == 'energy':
-                                energy_consumption += ab.amount
+                                c_energy += ab.amount
                             elif ab.resource_name == 'ammo':
-                                ammo_consumption += ab.amount
+                                c_ammo += ab.amount
                             
                         # Activation Costs (Energy/Ammo) -> Convert to Rate
                         elif ab.trigger == 'activation':
                             # Get fire rate (1/reload)
-                            # Assume component has reload_time if it has activation costs
-                            reload_t = getattr(c, 'reload_time', 1.0)
+                            # Look for associated WeaponAbility to get accurate reload time
+                            reload_t = 1.0
+                            found_weapon = False
+                            
+                            # Try to find WeaponAbility on component
+                            if hasattr(c, 'ability_instances'):
+                                from game.simulation.components.abilities import WeaponAbility
+                                for inst in c.ability_instances:
+                                    if isinstance(inst, WeaponAbility):
+                                        reload_t = inst.reload_time
+                                        found_weapon = True
+                                        break
+                            
+                            # Fallback to component attribute (Legacy)
+                            if not found_weapon:
+                                reload_t = getattr(c, 'reload_time', 1.0)
+                                
                             if reload_t > 0:
                                 rate = ab.amount / reload_t
                                 if ab.resource_name == 'ammo':
-                                    ammo_consumption += rate
+                                    c_ammo += rate
                                 elif ab.resource_name == 'energy':
-                                    energy_consumption += rate
-            
-            # Additional Energy Consumers that might not be fully in abilities yet?
-            # ShieldRegenerator cost is usually handled via generic abilities now?
-            # Note: ShieldRegen is usually 'constant' consumption in some systems, 
-            # but here it's traditionally per tick conditional. 
-            # ship_combat.py logic: if current < max, consume.
-            # Stats assume WORST CASE (continuous regeneration).
-            # OLD Logic: ship.shield_regen_cost added to energy_consumption.
-            pass
+                                    c_energy += rate
 
-        # Add aggregated shield cost (Assuming worst case continuous regen)
-        energy_consumption += ship.shield_regen_cost
-        
+            # Add to Potentials (Always)
+            potential_fuel += c_fuel
+            potential_ammo += c_ammo
+            potential_energy += c_energy
+            
+            # Add to Actuals (Only if Active)
+            if c.is_active:
+                fuel_consumption += c_fuel
+                ammo_consumption += c_ammo
+                energy_consumption += c_energy
+
+        # Store Actuals (used for physics/endurance)
         ship.fuel_consumption = fuel_consumption
+        ship.ammo_consumption = ammo_consumption
+        ship.energy_consumption = energy_consumption
+
+        # Store Potentials (used for UI projections)
+        ship.potential_fuel_consumption = potential_fuel
+        ship.potential_ammo_consumption = potential_ammo
+        ship.potential_energy_consumption = potential_energy
+        
         # Use registry directly
         max_fuel = ship.resources.get_max_value('fuel')
+        # Endurance calculation uses ACTIVE consumption
         ship.fuel_endurance = (max_fuel / fuel_consumption) if fuel_consumption > 0 else float('inf')
 
-        ship.ammo_consumption = ammo_consumption
         max_ammo = ship.resources.get_max_value('ammo')
         ship.ammo_endurance = (max_ammo / ammo_consumption) if ammo_consumption > 0 else float('inf')
         
-        ship.energy_consumption = energy_consumption
         # Energy Gen Rate
         r_energy = ship.resources.get_resource('energy')
         energy_gen_rate = r_energy.regen_rate if r_energy else 0.0
         
         ship.energy_net = energy_gen_rate - energy_consumption
-
+        
         max_energy = ship.resources.get_max_value('energy')
         
         if ship.energy_net < 0:

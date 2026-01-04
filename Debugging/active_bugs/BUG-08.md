@@ -14,3 +14,9 @@ C:\Dev\Starship Battles\screenshots\screenshot_20260103_155737_717184_mouse_focu
 - [2026-01-03 18:10] Verified fix with `pytest tests/repro_issues/test_bug_08_fuel_validation.py`. Test PASSED (assertion that no error exists succeeded).
 - [2026-01-03 18:15] BUG RESOLVED.
 
+
+---
+### ❌ Fix Rejected [2026-01-03 18:12]
+**Reason:** Fuel Storage is still not being recognized. QA screenshot shows Fuel on board but Requirement still listed for Fuel Storage.
+**New Constraints:** The previous aliasing fix in `ship_stats` might be correct for calculation but not for the specific validation path `ClassRequirementsRule` uses, or `Fuel Tank` might be aliased incorrectly in a different context.
+---

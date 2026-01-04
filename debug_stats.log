@@ -42,3 +42,11 @@ Skipping CrewRequired (Handled)
 Skipping CrewRequired (Handled)
 Skipping CrewRequired (Handled)
 Skipping CrewRequired (Handled)
+
+--- Processing Ship TestShipLC ---
+
+--- Processing Ship TestShipLC ---
+Comp Laser Cannon: Ability <class 'game.simulation.components.abilities.CrewRequired'> Res=? Trig=?
+Comp Laser Cannon: Ability <class 'game.simulation.components.abilities.ResourceConsumption'> Res=energy Trig=activation
+  ACTIVATION: Cost=5 Reload=0.2 Rate=25.0
+Comp Laser Cannon: Ability <class 'game.simulation.components.abilities.BeamWeaponAbility'> Res=? Trig=?
