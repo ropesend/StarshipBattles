@@ -10,9 +10,10 @@ structure = {
     "archives": []
 }
 
-# --- 1. THE USER'S PYTHON SCRIPTS ---
+# --- 1. THE USER'S PYTHON SCRIPTS (FIXED QUOTES) ---
 
-script_pack_swarm = r"""import json
+# We use triple-single-quotes (''') inside the script to avoid breaking the outer (""")
+script_pack_swarm = r'''import json
 import os
 import sys
 from typing import Dict, List
@@ -52,6 +53,7 @@ def pack_swarm(manifest_path: str):
     print(f"Packing swarm from {manifest_path}...")
     
     for agent in manifest["agents"]:
+        # Handle 'roles' vs 'role' typo flexibility
         role = agent["roles"] if "roles" in agent else agent["role"]
         focus = agent["focus"]
         files = agent.get("primary_files", [])
@@ -91,7 +93,7 @@ if __name__ == "__main__":
         print("Usage: python pack_swarm.py <path_to_manifest>")
     else:
         pack_swarm(sys.argv[1])
-"""
+'''
 
 script_spin_swarm = r"""import json
 import os
@@ -126,7 +128,7 @@ p10 = """# PROTOCOL 10: Swarm Planning
    * **Phased Schedule** (Phase 1 detailed, Phase 2+ placeholders)
 """
 
-p11 = """# PROTOCOL 11: Execute Phase
+p11 = """# PROTOCOL 11: Execute Refactor
 **Role:** Senior Software Engineer
 **Objective:** Execute *only* the current phase.
 
@@ -181,7 +183,7 @@ with open(os.path.join(base_dir, "scripts", "spin_swarm.py"), "w", encoding="utf
 
 # Write Protocols
 with open(os.path.join(base_dir, "protocols", "10_swarm_plan.md"), "w") as f: f.write(p10)
-with open(os.path.join(base_dir, "protocols", "11_execute_phase.md"), "w") as f: f.write(p11)
+with open(os.path.join(base_dir, "protocols", "11_execute_refactor.md"), "w") as f: f.write(p11)
 with open(os.path.join(base_dir, "protocols", "12_swarm_review.md"), "w") as f: f.write(p12)
 
 print(f"✅ Refactoring Swarm System initialized in '{os.path.abspath(base_dir)}'")
