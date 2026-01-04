@@ -70,29 +70,31 @@ def test_missing_logistics_details():
     print(f"Generated Rows: {row_data}")
 
     # 5. Assertions (The Fail Conditions)
-    # We check for Energy specific fields
+    # We check for Energy specific fields - All 6 rows required
     
-    # Capacity (Should exist already)
-    assert "max_energy" in row_data, "Capacity row missing (Regression?)"
+    # 1. Capacity (Should exist already)
+    assert "max_energy" in row_data, "Capacity row (1/6) missing"
     
-    # Generation (Missing in BUG-05)
-    assert f"energy_gen" in row_data, f"Missing Energy Generation Row. Found: {list(row_data.keys())}"
+    # 2. Generation (Missing in BUG-05)
+    assert "energy_gen" in row_data, f"Generation row (2/6) missing. Found: {list(row_data.keys())}"
 
-    # Constant Consumption (Missing in BUG-05)
-    assert f"energy_constant" in row_data, f"Missing Energy Constant Row. Found: {list(row_data.keys())}"
+    # 3. Constant Consumption (Missing in BUG-05)
+    assert "energy_constant" in row_data, f"Constant Use row (3/6) missing. Found: {list(row_data.keys())}"
     
-    # Max Usage (Missing in BUG-05)
-    # Weapon adds 5.0/s active cost. Total Max = 7.0. Constant = 2.0.
-    assert f"energy_max_usage" in row_data, f"Missing Energy Max Usage Row. Found: {list(row_data.keys())}"
-    # in this test case, constant = 2.0. Max = ?
-    # Ship stats calculator should have run.
-    # Life Support constant=2.0
-    # No weapons. So max = constant = 2.0.
-    # Logic says: "if consumption_max > consumption_constant: show max row".
-    # Since they are equal, it might NOT show max row.
-    # We should add a weapon to trigger max usage row.
+    # 4. Max Usage (Missing in BUG-05)
+    # Even if equal to constant, requirement implies checking for it.
+    assert "energy_max_usage" in row_data, f"Max Usage row (4/6) missing. Found: {list(row_data.keys())}"
 
+    # 5. Constant Endurance (Missing in BUG-05)
+    assert "energy_endurance" in row_data, f"Constant Endurance row (5/6) missing. Found: {list(row_data.keys())}"
 
-    # Verify Values (Optional, but good for robust testing)
-    # Get the row object to check value
-    # We can't easily check formatted value without the row object, but existence is the primary bug.
+    # 6. Max Endurance (Missing in BUG-05)
+    assert "energy_max_endurance" in row_data, f"Max Endurance row (6/6) missing. Found: {list(row_data.keys())}"
+    
+    # Optional Value Verification
+    # We know specific values based on the components added:
+    # Capacity: 100
+    # Generation: 5.0
+    # Constant: 2.0
+    # Max Usage: 2.0 (Constant) + (5.0 / 1.0) = 7.0
+

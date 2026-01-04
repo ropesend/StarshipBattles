@@ -62,8 +62,8 @@ Add detailed logistics rows (Generation, Constant Usage, Max Usage) to Stats Pan
     *   We will assume `Max Usage` derived from: `Constant Usage + (Sum of all Weapons Activation Cost / Reload Time)`.
 
 ## Context State
-*   **Current Status:** Verification Complete. Test Passed.
-*   **Next Step:** Close Ticket / Handoff.
+*   **Current Status:** [Pending] - Reopened due to scope expansion.
+*   **Next Step:** Analyze new requirements for Max/Endurance calculation lines.
 
 ## Work Log (Cont.)
 *   **[2026-01-03 16:25] Phase 2 & 3 - Implementation & Verification:**
@@ -71,5 +71,9 @@ Add detailed logistics rows (Generation, Constant Usage, Max Usage) to Stats Pan
     *   Updated `get_logistics_rows` to generate `_gen`, `_constant`, and `_max_usage` rows.
     *   Updated reproduction test `tests/repro_issues/test_bug_05_logistics.py` to assert new keys and include weapon load.
     *   **VERIFIED:** Test passed. New rows are correctly generated.
+    *   **[2026-01-03 16:58] Phase 3 - Verification Complete:**
+        *   Ran `pytest tests/repro_issues/test_bug_05_logistics.py`.
+        *   Test Passed. Confirmed all 6 required rows (Capacity, Gen, Constant, Max Usage, Constant Endurance, Max Endurance) are generated for Energy.
+        *   Logic enforces presence of all rows if resource exists on ship.
 
 
