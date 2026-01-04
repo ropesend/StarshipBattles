@@ -1,0 +1,23 @@
+{
+    "swarm_name": "Review Swarm - Phase 1",
+    "agents": [
+        {
+            "role": "Code_Reviewer",
+            "instructions": "Review the Phase 1 implementation for correctness and safety.\n\nFiles to Check:\n1. `game/core/registry.py`: Verify RegistryManager is a true Singleton and `clear()` resets all dictionaries. Check thread safety if applicable (though single threaded is fine for now).\n2. `game/simulation/components/component.py`: Verify `COMPONENT_REGISTRY` is correctly redirected to `RegistryManager.instance().components` or that usage is replaced. Ensure backward compatibility is maintained if intended.\n3. `game/simulation/entities/ship.py`: Verify `vehicle_classes` uses the RegistryManager.\n4. `tests/conftest.py`: Verify `reset_game_state` fixture is `autouse=True` and calls `RegistryManager.instance().clear()`.\n5. `tests/repro_issues/test_sequence_hazard.py`: Verify the test logic correctly identifies pollution (setter vs victim).\n\nGoal: Confirm Infrastructure is solid before we adapt the test suite.",
+            "input_files": [
+                "game/core/registry.py",
+                "game/simulation/components/component.py",
+                "game/simulation/entities/ship.py",
+                "tests/conftest.py",
+                "tests/repro_issues/test_sequence_hazard.py"
+            ]
+        },
+        {
+            "role": "Plan_Adjuster",
+            "instructions": "You are the Architect for Phase 2.\n\nContext:\nPhase 1 (Infrastructure) is complete, but `tests/unit/` has ~200 failures. The `active_refactor.md` attributes this to `setUpClass` usage which initializes data BEFORE the `autouse` fixture can reset it between tests, or specifically because `setUpClass` runs once per class, and the fixture wipes the registry after the first test, leaving subsequent tests in the class with empty registries.\n\nTask:\n1. Confirm the diagnosis: `setUpClass` loads data -> Test 1 runs -> Fixture cleanup (wipes registry) -> Test 2 runs (Registry empty) -> FAIL.\n2. Define the changes for Phase 2: 'Test Suite Adaptation'.\n   - Target: All files in `tests/unit/`.\n   - Action: Rename `setUpClass(cls)` to `setUp(self)`.\n   - Action: Change `cls.variable` to `self.variable` where appropriate, or keep using `self` to access class vars if python allows, but better to make them instance vars.\n3. Create a detailed spec for the Next Phase in your report.",
+            "input_files": [
+                "Refactoring/active_refactor.md"
+            ]
+        }
+    ]
+}

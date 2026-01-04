@@ -14,17 +14,12 @@ from game.simulation.components.component import load_components, create_compone
 class TestProjectileBasics(unittest.TestCase):
     """Test basic projectile initialization and properties."""
     
-    @classmethod
-    def setUpClass(cls):
+    
+    
+    def setUp(self):
         pygame.init()
         initialize_ship_data("C:\\Dev\\Starship Battles")
         load_components("data/components.json")
-    
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-    
-    def setUp(self):
         # Create a simple owner ship
         self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0)
         self.owner.add_component(create_component('bridge'), LayerType.CORE)
@@ -70,17 +65,12 @@ class TestProjectileBasics(unittest.TestCase):
 class TestProjectileMovement(unittest.TestCase):
     """Test projectile movement and lifecycle."""
     
-    @classmethod
-    def setUpClass(cls):
+    
+    
+    def setUp(self):
         pygame.init()
         initialize_ship_data("C:\\Dev\\Starship Battles")
         load_components("data/components.json")
-    
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-    
-    def setUp(self):
         self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0)
         self.owner.add_component(create_component('bridge'), LayerType.CORE)
         self.owner.recalculate_stats()
@@ -154,17 +144,12 @@ class TestProjectileMovement(unittest.TestCase):
 class TestProjectileDamage(unittest.TestCase):
     """Test projectile damage mechanics (for PDC interception)."""
     
-    @classmethod
-    def setUpClass(cls):
+    
+    
+    def setUp(self):
         pygame.init()
         initialize_ship_data("C:\\Dev\\Starship Battles")
         load_components("data/components.json")
-    
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-    
-    def setUp(self):
         self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0)
         self.owner.add_component(create_component('bridge'), LayerType.CORE)
         self.owner.recalculate_stats()
@@ -218,17 +203,12 @@ class TestProjectileDamage(unittest.TestCase):
 class TestMissileGuidance(unittest.TestCase):
     """Test guided missile tracking behavior."""
     
-    @classmethod
-    def setUpClass(cls):
+    
+    
+    def setUp(self):
         pygame.init()
         initialize_ship_data("C:\\Dev\\Starship Battles")
         load_components("data/components.json")
-    
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-    
-    def setUp(self):
         self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0)
         self.owner.add_component(create_component('bridge'), LayerType.CORE)
         self.owner.recalculate_stats()

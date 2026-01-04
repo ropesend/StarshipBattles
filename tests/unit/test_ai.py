@@ -17,13 +17,11 @@ from game.simulation.components.component import load_components, create_compone
 
 
 class TestAIController(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    
+    def setUp(self):
         load_components("data/components.json")
         from game.simulation.entities.ship import load_vehicle_classes
         load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
-    
-    def setUp(self):
         # Load test data for AI strategies to ensure reproducible tests
         test_data_path = os.path.join(os.getcwd(), "tests", "unit", "data")
         ai.STRATEGY_MANAGER.load_data(
@@ -133,13 +131,11 @@ class TestAIController(unittest.TestCase):
 class TestAIStrategyStates(unittest.TestCase):
     """Test AI attack run state machine."""
     
-    @classmethod
-    def setUpClass(cls):
+    
+    def setUp(self):
         load_components("data/components.json")
         from game.simulation.entities.ship import load_vehicle_classes
         load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
-    
-    def setUp(self):
         # Load test data for AI strategies to ensure reproducible tests
         test_data_path = os.path.join(os.getcwd(), "tests", "unit", "data")
         ai.STRATEGY_MANAGER.load_data(

@@ -22,13 +22,9 @@ class MockObject:
 class TestSpatialGridBasics(unittest.TestCase):
     """Test basic SpatialGrid initialization and operations."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_grid_initialization(self):
         """SpatialGrid should initialize with correct cell size."""
@@ -93,13 +89,9 @@ class TestSpatialGridBasics(unittest.TestCase):
 class TestSpatialGridQueries(unittest.TestCase):
     """Test SpatialGrid query_radius functionality."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_query_finds_object_in_range(self):
         """Query should return objects within specified radius."""

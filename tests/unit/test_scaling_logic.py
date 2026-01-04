@@ -10,8 +10,7 @@ sys.path.append(os.getcwd())
 from game.simulation.components.component import load_components, create_component, load_modifiers, MODIFIER_REGISTRY
 
 class TestScalingLogic(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
 

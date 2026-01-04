@@ -12,8 +12,9 @@ from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import create_component, load_components
 
 class TestBattleScene(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+
+
+    def setUp(self):
         pygame.init()
         # Mocking display set_mode to avoid window creation but we might need it for sprites?
         # Actually BattleScene uses pygame.display functionality potentially.
@@ -24,12 +25,6 @@ class TestBattleScene(unittest.TestCase):
         
         initialize_ship_data()
         load_components("data/components.json")
-
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-
-    def setUp(self):
         # Patch BattleInterface to avoid UI overhead
         with patch('game.ui.screens.battle_screen.BattleInterface') as MockUI:
             self.scene = BattleScene(800, 600)

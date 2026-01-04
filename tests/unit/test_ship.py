@@ -9,8 +9,7 @@ from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component  # Phase 7: Removed Bridge import
 
 class TestShip(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         initialize_ship_data() 
         load_components("data/components.json")
 

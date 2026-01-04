@@ -12,14 +12,10 @@ from ui import Button, Label, Slider
 class TestButton(unittest.TestCase):
     """Test Button widget."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_button_initialization(self):
         """Button should initialize with correct rect."""
@@ -78,14 +74,10 @@ class TestButton(unittest.TestCase):
 class TestLabel(unittest.TestCase):
     """Test Label widget."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_label_initialization(self):
         """Label should initialize with correct position and text."""
@@ -112,14 +104,10 @@ class TestLabel(unittest.TestCase):
 class TestSlider(unittest.TestCase):
     """Test Slider widget."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_slider_initialization(self):
         """Slider should initialize with correct values."""

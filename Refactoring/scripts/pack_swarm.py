@@ -59,6 +59,13 @@ def pack_swarm(manifest_path: str):
     else:
         print("No active_refactor.md found. Starting fresh context.")
 
+    # Clean output directory
+    if os.path.exists(output_dir):
+        print(f"Cleaning previous prompts from {output_dir}...")
+        for file in os.listdir(output_dir):
+            if file.endswith(".txt"):
+                os.remove(os.path.join(output_dir, file))
+    
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(report_dir, exist_ok=True)
 

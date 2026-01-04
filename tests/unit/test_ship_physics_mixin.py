@@ -13,17 +13,12 @@ from game.simulation.components.component import load_components, create_compone
 class TestShipPhysicsThrust(unittest.TestCase):
     """Test thrust and fuel consumption."""
     
-    @classmethod
-    def setUpClass(cls):
+    
+    
+    def setUp(self):
         pygame.init()
         initialize_ship_data("C:\\Dev\\Starship Battles")
         load_components("data/components.json")
-    
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-    
-    def setUp(self):
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
@@ -100,17 +95,12 @@ class TestShipPhysicsThrust(unittest.TestCase):
 class TestShipPhysicsRotation(unittest.TestCase):
     """Test ship rotation mechanics."""
     
-    @classmethod
-    def setUpClass(cls):
+    
+    
+    def setUp(self):
         pygame.init()
         initialize_ship_data("C:\\Dev\\Starship Battles")
         load_components("data/components.json")
-    
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-    
-    def setUp(self):
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
@@ -163,17 +153,12 @@ class TestShipPhysicsRotation(unittest.TestCase):
 class TestShipPhysicsMovement(unittest.TestCase):
     """Test ship position updates."""
     
-    @classmethod
-    def setUpClass(cls):
+    
+    
+    def setUp(self):
         pygame.init()
         initialize_ship_data("C:\\Dev\\Starship Battles")
         load_components("data/components.json")
-    
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-    
-    def setUp(self):
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)

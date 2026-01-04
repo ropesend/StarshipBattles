@@ -16,7 +16,9 @@ class TestSliderIncrement(unittest.TestCase):
             'pygame_gui': MagicMock(),
             'pygame_gui.elements': MagicMock(),
             'pygame_gui.core': MagicMock(),
-            'pygame_gui.windows': MagicMock()
+            'pygame_gui.windows': MagicMock(),
+            'tkinter': MagicMock(),
+            'tkinter.filedialog': MagicMock()
         })
         cls.modules_patcher.start()
         

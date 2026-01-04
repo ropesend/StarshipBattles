@@ -7,16 +7,11 @@ import pygame
 import pygame_gui
 
 class TestDetailPanelRendering(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        pygame.init()
-        pygame.font.init()
 
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
 
     def setUp(self):
+        pygame.init()
+        pygame.font.init()
         # Delayed import to allow pygame init
         from ui.builder.detail_panel import ComponentDetailPanel
         self.ComponentDetailPanel = ComponentDetailPanel

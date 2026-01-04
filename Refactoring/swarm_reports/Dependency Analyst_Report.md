@@ -1,76 +1,61 @@
 # Dependency Analyst Report
-
+**Focus:** Circular Import & Dependency Safety
 **Date:** 2026-01-04
-**Subject:** Dependency Analysis of `component.py` and `ship.py`
-**Focus:** Circular Imports, Global State Dependencies, Module Initialization
+**Target Files:** `game/simulation/components/component.py`, `game/simulation/entities/ship.py`
 
-## Executive Summary
-The analysis of `game/simulation/components/component.py` and `game/simulation/entities/ship.py` reveals significant architectural fragility due to **recursive dependency cycles**, **reliance on global mutable state**, and **order-dependent initialization**. 
+## 1. Executive Summary
+The analysis reveals a **High Severity** dependency tangle, particularly within `component.py`. The code relies heavily on "local imports" (imports inside methods) to bypass Python's circular import restrictions. This indicates a structural architectural flaw where "Data" classes (`Component`, `Ship`) contain "Logic" that depends on "Systems" (`ResourceManager`, `AbilityRegistry`), which in turn depend on the Data classes.
 
-The code relies heavily on local (inside function) imports to bypass top-level circular dependencies, indicating that the module boundaries are not cleanly defined. Furthermore, logic is tightly coupled to global registries (`COMPONENT_REGISTRY`, `VEHICLE_CLASSES`) which poses strict limits on testability and modularity.
+This circularity creates a fragile runtime environment where import errors may only occur when specific methods are called, rather than at startup.
 
-## Detailed Analysis: `component.py`
+## 2. Critical Issues
 
-### 1. Circular Import Evasion (High Severity)
-The `Component` class is tightly coupled to the `ResourceManager`, `Ability` system, and `Modifier` system. To avoid `ImportError` due to circular dependencies, imports are deferred to function scopes. This pattern hides dependencies and makes static analysis difficult.
+### A. Circular Import Workarounds (Runtime Imports)
+The code systematically uses imports within function scopes to avoid `ImportError: cannot import name...`. This is an accepted temporary Python workaround but a major architectural anti-pattern for production code.
 
-*   **`__init__`**: Imports `MODIFIER_REGISTRY` from itself (likely to ensure visibility if imported elsewhere).
-*   **`get_abilities`**: Imports `ABILITY_REGISTRY` locally.
-*   **`_instantiate_abilities`**: Imports `ABILITY_REGISTRY` and `create_ability` from `resource_manager`.
-*   **`update` / `can_afford_activation` / `consume_activation`**: Imports `ResourceConsumption` from `resource_manager`.
-*   **`recalculate_stats` -> `_calculate_modifier_stats`**: Imports `apply_modifier_effects` from `modifiers`.
-*   **`_apply_base_stats`**: Imports `ResourceConsumption`, `ResourceStorage`, `ResourceGeneration` from `resource_manager`.
+**`game/simulation/components/component.py` Findings:**
+1.  **`Component.__init__`**: Imports `MODIFIER_REGISTRY` from *itself* (`game.simulation.components.component`). This is bizarre and suggests `MODIFIER_REGISTRY` should be in a separate, lower-level module.
+2.  **`Component.get_abilities`**: Imports `ABILITY_REGISTRY` from `abilities`.
+3.  **`Component._instantiate_abilities`**: Imports `ABILITY_REGISTRY` and `create_ability` from `resource_manager`.
+4.  **`Component.update`**: Imports `ResourceConsumption` form `resource_manager`.
+5.  **`Component.can_afford_activation`**: Imports `ResourceConsumption` form `resource_manager`.
+6.  **`Component.consume_activation`**: Imports `ResourceConsumption` form `resource_manager`.
+7.  **`Component._calculate_modifier_stats`**: Imports `apply_modifier_effects` from `modifiers`.
+8.  **`Component._apply_base_stats`**: Imports `ResourceConsumption`, `ResourceStorage`, `ResourceGeneration` from `resource_manager`.
 
-**Impact:** The `Component` class effectively knows about too many high-level systems. It acts as a hub that pulls in logic from systems that should ideally be operating *on* components, rather than components operating on themselves via these systems.
+**`game/simulation/entities/ship.py` Findings:**
+1.  **`Ship.max_weapon_range`**: Imports `SeekerWeaponAbility` from `abilities`.
+2.  **`Ship.recalculate_stats`**: Imports `SeekerWeaponAbility` (via `max_weapon_range`).
 
-### 2. Global State Dependencies (Critical)
-*   **`MODIFIER_REGISTRY`**: A global dictionary at the module level.
-*   **`COMPONENT_REGISTRY`**: A global dictionary at the module level.
-*   **`COMPONENT_TYPE_MAP`**: Hardcoded mapping of strings to classes.
+### B. Global State & Registry Hazards
+The codebase relies on module-level global dictionaries that are mutated at runtime. This "Singleton-by-Global" pattern makes dependency injection impossible and testing difficult (state pollution).
 
-**Impact:** Tests running in parallel or sequentially without strict teardown will suffer from state pollution. If `load_components` is called twice, it modifies the global dictionary in place.
+*   **`MODIFIER_REGISTRY`** (`component.py`): Populated by `load_modifiers`. Global mutable state.
+*   **`COMPONENT_REGISTRY`** (`component.py`): Populated by `load_components`. Global mutable state.
+*   **`VEHICLE_CLASSES`** (`ship.py`): Populated by `load_vehicle_classes`. Global mutable state.
+*   **`_VALIDATOR`** (`ship.py`): Global instance of `ShipDesignValidator`.
 
-### 3. Module Initialization
-*   **`load_components` / `load_modifiers`**: These functions rely on relative file paths or `os.getcwd()`. This makes the code brittle when run from different directories (e.g., test runners vs. game launch).
-*   **Implicit Order**: Components check `MODIFIER_REGISTRY` during `__init__`. If modifiers are not loaded *before* components are instantiated, the components will spawn without modifiers, potentially silently failing or behaving incorrectly.
+### C. Hardcoded System Coupling
+`Component` is not just a data container; it performs active logic that belongs in a System.
+*   The `Component` class knows *too much* about resources. It explicitly handles `trigger == 'activation'` vs `trigger == 'constant'` logic. This logic violates the Single Responsibility Principle and couples usage to the implementation of `ResourceManager`.
 
-## Detailed Analysis: `ship.py`
+## 3. Detailed Recommendations
 
-### 1. Global State Dependencies (Critical)
-*   **`VEHICLE_CLASSES`**: A global dictionary storing ship class definitions.
-*   **`_VALIDATOR` / `VALIDATOR`**: A module-level instance of `ShipDesignValidator`.
-*   **`Ship` Class Coupling**: The `Ship` class directly accesses `VEHICLE_CLASSES` in `__init__`, `update_derelict_status`, `recalculate_stats`, and `change_class`.
+### Phase 1: Break Circular Cycles via "Forward References" & "Type Checking"
+For type hinting, use `if TYPE_CHECKING:` blocks. For runtime logic, `Component` should not import `Ability` or `Resource` logic.
 
-**Impact:** The `Ship` entity cannot be instantiated meaningfully without the global `VEHICLE_CLASSES` being populated. This makes unit testing `Ship` logic difficult without bootstrapping the entire vehicle data layer. `initialize_ship_data` is a facade that mutates this global state.
+### Phase 2: Refactor to ECS / Data-Logic Separation
+The primary cause of the circular imports is that `Component` (Data) tries to execute behavior (Logic) that requires System knowledge.
+*   **Action**: Move `update()`, `can_afford_activation()`, and `consume_activation()` **out** of `Component` and into a `ResourceSystem` or `AbilitySystem`.
+*   **Result**: `Component` becomes a simple data holder. It no longer needs to import `resource_manager`. `resource_manager` can import `Component` freely. Cycle broken.
 
-### 2. Validation Coupling
-*   The `Ship` class is coupled to a global `_VALIDATOR` instance. This makes it impossible to inject a different validator (e.g., a lax validator for testing or a strict one for gameplay) without monkey-patching the global.
+### Phase 3: Registry Encapsulation
+Move global registries to a `RegistryManager` or dedicated Registry modules (`registries/component_registry.py`) that do not import the classes they store (store Factories or configuration data instead), or use a dependency injection container.
 
-### 3. Circular Import Evasion
-*   **`max_weapon_range`**: Local import of `SeekerWeaponAbility`. This suggests `Ship` needs to know about specific Ability implementations, breaking the abstraction of the Ability system.
+### Immediate "Band-Aid" Fixes (Code Hygiene)
+*   Consolidate the repeated local imports of `ResourceConsumption` into a single `TYPE_CHECKING` import and use strict dependency injection or specific methods if full refactor is delayed.
+*   Move `MODIFIER_REGISTRY` to a dedicated `game.registries.modifiers` module to allow both `component.py` and loaders to import it without self-referential issues.
 
-## Findings & Recommendations
-
-### Issue 1: The "Registry Trap"
-**Observation:** Both files use global dictionaries (`REGISTRY = {}`) populated by `load_*` functions.
-**Risk:** High probability of test interference (State Pollution).
-**Recommendation:** 
-*   Adopt the **RegistryManager** pattern as proposed in the Refactor Plan. 
-*   Move registries into a scoped container that can be instantiated and discarded per test/session.
-
-### Issue 2: Hidden Dependencies via Local Imports
-**Observation:** `Component` imports `ResourceManager` logic inside its update loop.
-**Risk:** Performance overhead (minor) and architectural obscurity (major). Logic regarding *how* a resource is consumed is leaking into the data container (`Component`).
-**Recommendation:**
-*   Refactor `Component` to be a pure data container/state machine.
-*   Move the update/consumption logic into a `System` (e.g., `ResourceSystem` or `AbilitySystem`) that iterates over components. This resolves the circular dependency by having the System import both Component and Resource definitions, while Component remains ignorant of the System.
-
-### Issue 3: Hardcoded Data Loading
-**Observation:** `load_vehicle_classes` and `load_components` have hardcoded fallback logic for file paths.
-**Risk:** fragile initialization in CI/CD or distinct runtime environments.
-**Recommendation:**
-*   Pass configuration/data paths into the initialization system explicitly.
-*   Decouple "Data Loading" from "Registry Population".
-
-## Conclusion
-The current implementation allows for functional gameplay but presents severe blocks to reliable testing and clean refactoring. The priority must be to **encapsulate the global registries** and **break the dependency cycles** by extracting logic out of the Entity/Component classes and into Systems.
+---
+**Status**: Analysis Complete.
+**Verdict**: **High Technical Debt**. The `Component` class effectively functions as a "God Object" regarding dependency linking, acting as the nexus for disparate systems (Abilities, Resources, Modifiers) via fragile runtime imports.

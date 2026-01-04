@@ -28,18 +28,18 @@ class MockRect:
         return self
 
 class TestBattlePanels(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        # Create the mock pygame
-        cls.mock_pygame = MagicMock()
-        cls.mock_pygame.K_LSHIFT = 1
-        cls.mock_pygame.K_RSHIFT = 2
-        cls.mock_pygame.SRCALPHA = 0
-        cls.mock_pygame.Rect = MockRect
+
+
+    def setUp(self):
+        self.mock_pygame = MagicMock()
+        self.mock_pygame.K_LSHIFT = 1
+        self.mock_pygame.K_RSHIFT = 2
+        self.mock_pygame.SRCALPHA = 0
+        self.mock_pygame.Rect = MockRect
         
         # Patch sys.modules
-        cls.modules_patcher = patch.dict(sys.modules, {'pygame': cls.mock_pygame})
-        cls.modules_patcher.start()
+        self.modules_patcher = patch.dict(sys.modules, {'pygame': self.mock_pygame})
+        self.modules_patcher.start()
         
         # Prepare sys.path
         sys.path.append(os.getcwd())
@@ -52,15 +52,7 @@ class TestBattlePanels(unittest.TestCase):
              del sys.modules['game.ui.panels.battle_panels']
              
         from game.ui.panels import battle_panels
-        cls.module = battle_panels
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.modules_patcher.stop()
-        if 'battle_panels' in sys.modules:
-            del sys.modules['battle_panels']
-
-    def setUp(self):
+        self.module = battle_panels
         self.mock_scene = MagicMock()
         self.mock_scene.ships = []
         

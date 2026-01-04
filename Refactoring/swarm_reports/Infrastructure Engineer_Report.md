@@ -1,93 +1,51 @@
-# Infrastructure Engineer Report
-
-**Date:** 2026-01-04
-**Focus:** Registry Encapsulation, Singleton Management, Backward Compatibility
-**Target scope:** `game/simulation/components/component.py` and `game/simulation/entities/ship.py`
+# Infrastructure Engineer Report: Registry Management & Core Migration
 
 ## 1. Executive Summary
+The codebase currently relies heavily on **Module-Level Mutable Globals** for its core registries (`COMPONENT_REGISTRY`, `MODIFIER_REGISTRY`, `VEHICLE_CLASSES`). This architectural pattern is the primary source of **state pollution** in the test suite, as these dictionaries persist across test boundaries unless explicitly cleared. Furthermore, the extensive use of **Local Imports** (imports inside functions) to avoid circular dependencies indicates a fragile initialization order that complicates the migration to a strictly typed, dependency-injected system.
 
-The codebase currently relies heavily on module-level global dictionaries (`COMPONENT_REGISTRY`, `MODIFIER_REGISTRY`, `VEHICLE_CLASSES`, `ABILITY_REGISTRY`) acting as implicit singletons. This architectural pattern is the primary source of **state pollution**, **circular import hacks**, and **test isolation failures**.
+## 2. Analysis: `game/simulation/components/component.py`
 
-The lack of strict encapsulation means that tests cannot reliably run in parallel or sequence without rigorous setup/teardown of these global variables. Furthermore, classes like `Ship` and `Component` have hard code dependencies on these globals, preventing dependency injection and modular simulation contexts.
+### 2.1 Global/Module-Level State (CRITICAL)
+The following global dictionaries are defined at the module level:
+- `MODIFIER_REGISTRY = {}` (Line 40)
+- `COMPONENT_REGISTRY = {}` (Line 414)
 
-## 2. Detailed Analysis
+Methods like `load_modifiers` and `load_components` mutate these globals directly.
+- **Risk:** Tests running in parallel or sequentially without teardown will share these registries. If a test modifies a component definition, it pollutes subsequent tests.
+- **Migration Impact:** These must be encapsulated into a `RegistryManager` class.
 
-### 2.1 Registry Encapsulation & Singleton Management
+### 2.2 Circular Import Workarounds
+The code uses deferred imports to bypass circular dependency issues:
+- `from game.simulation.systems.resource_manager import ABILITY_REGISTRY` is imported inside `__init__`, `_instantiate_abilities`, and `get_abilities`.
+- `from game.simulation.components.component import MODIFIER_REGISTRY` is imported inside `__init__` (Line 71), which is a self-module import, indicating extreme fragility in load order.
 
-**Issue 1: Global State Arrays (Pollution Vectors)**
-The following are defined as global module-level variables:
-- `game.simulation.components.component.MODIFIER_REGISTRY`
-- `game.simulation.components.component.COMPONENT_REGISTRY`
-- `game.simulation.entities.ship.VEHICLE_CLASSES`
+### 2.3 Legacy Type Mapping
+- `COMPONENT_TYPE_MAP` (Line 423) hardcodes mappings of string types to the `Component` class.
+- **Suggestion:** This mapping effectively reduces to a single class `Component`. The registry system should be data-driven rather than hardcoded in python.
 
-**Evidence:**
-- `game/simulation/components/component.py`:
-  ```python
-  MODIFIER_REGISTRY = {}
-  ...
-  COMPONENT_REGISTRY = {}
-  ...
-  def load_components(filepath="data/components.json"):
-      global COMPONENT_REGISTRY
-  ```
-- `game/simulation/entities/ship.py`:
-  ```python
-  VEHICLE_CLASSES: Dict[str, Any] = {}
-  ...
-  def load_vehicle_classes(...):
-      global VEHICLE_CLASSES
-  ```
+## 3. Analysis: `game/simulation/entities/ship.py`
 
-**Impact:**
-- **Test Pollution:** Tests modifying these registries (e.g., adding a dummy component) affect subsequent tests unless manually cleared.
-- **Race Conditions:** Inconceivable to run concurrent simulation contexts (e.g., a "Simulation Preview" in the UI while the game runs) because they share the same datastore.
+### 3.1 Global/Module-Level State (CRITICAL)
+- `VEHICLE_CLASSES = {}` (Line 29) creates a distinct global registry for ship hulls.
+- `SHIP_CLASSES = VEHICLE_CLASSES` (Line 30) creates an alias, doubling the reference cleanup requirement.
+- `load_vehicle_classes` (Line 32) lacks safeguards against partial loading or validation during reload.
 
-**Issue 2: Hard-Coded Global Access (Tight Coupling)**
-Classes query these globals directly rather than accepting them as dependencies.
+### 3.2 Singleton Misuse
+- `_VALIDATOR = ShipDesignValidator()` (Line 25) creates a module-level singleton instance at import time.
+- `VALIDATOR` exposes this globally.
+- **Risk:** If `ShipDesignValidator` maintains any internal cache (stateful), it is a pollution vector. Even if stateless, it prevents mocking the validator for unit tests of the `Ship` class.
 
-**Evidence:**
-- `Component.__init__` does a local import to access `MODIFIER_REGISTRY`.
-- `Component.add_modifier` checks `if mod_id not in MODIFIER_REGISTRY`.
-- `Ship.__init__` directly queries `VEHICLE_CLASSES.get(self.ship_class)`.
-- `Ship.update_derelict_status` accesses `VEHICLE_CLASSES`.
-- `Ship.from_dict` accesses `COMPONENT_REGISTRY` and `MODIFIER_REGISTRY`.
+### 3.3 Implicit Coupling
+The `Ship` class specifically relies on the global `VEHICLE_CLASSES` being pre-populated:
+```python
+class_def = VEHICLE_CLASSES.get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
+```
+This requires that `initialize_ship_data` be called globally before any `Ship` object is instantiated, which is an external side-effect dependency.
 
-**Impact:**
-- **Dependency Inversion Violation:** High-level entities (`Ship`) depend on specific global state implementations.
-- **Mocking Difficulty:** Validating `Ship` logic requires side-loading data into global `VEHICLE_CLASSES` rather than passing a mock configuration.
+## 4. Recommendations for Core Migration
 
-### 2.2 Circular Dependencies & Import Hacks
-
-**Issue 3: Lazy Import Workarounds**
-To support the global registry pattern, methods often invoke imports locally to avoid import-time cycles.
-
-**Evidence:**
-- `Component.__init__` -> `from game.simulation.components.component import MODIFIER_REGISTRY`
-- `Component.get_abilities` -> `from game.simulation.components.abilities import ABILITY_REGISTRY`
-- `Component._instantiate_abilities` -> `from game.simulation.systems.resource_manager import ABILITY_REGISTRY`
-
-**Impact:**
-- **Code Smell:** Indicates that the architecture is fighting against the Python import system.
-- **Performance:** Repeated imports inside tight loops (like `_instantiate_abilities` or `update`) can have overhead, though Python caches modules.
-- **Fragility:** Moving files becomes high-risk as these string-based or deferred imports break easily.
-
-### 2.3 Backward Compatibility
-
-**Issue 4: Legacy Type Mapping**
-The system creates generic `Component` objects for distinct types (`Weapon`, `Engine`) using `COMPONENT_TYPE_MAP`.
-
-**Evidence:**
-- `COMPONENT_TYPE_MAP` maps 18 keys (e.g., "Bridge", "Shield") to the single `Component` class.
-- `Ship._initialize_layers` contains fallback logic for when layer definitions are missing (Lines 257-263).
-
-**Analysis:**
-This is actually a **good** pattern for data-driven design (Phase 7 Simplified), but the implementation relies on the global `COMPONENT_REGISTRY` to store the resulting instances. The backward compatibility logic itself is sound, but its storage mechanism is flawed.
-
-## 3. Recommendations
-
-### 3.1 Introduce `RegistryManager`
-Create a unified context object that holds the registries.
-
+### 4.1 Introduce `RegistryManager`
+Refactor the distinct global dicts into a unified manager:
 ```python
 class RegistryManager:
     def __init__(self):
@@ -95,35 +53,13 @@ class RegistryManager:
         self.modifiers = {}
         self.vehicle_classes = {}
         self.abilities = {}
-        
-    def load_data(self, path):
-        # Implementation of loading logic here
-        pass
 ```
 
-### 3.2 Context Injection
-Refactor `Ship` and `Component` to accept a `context` or `registry_source` argument, defaulting to a Proxy looking at the old Globals (for backward compatibility during refactor).
+### 4.2 Dependency Injection
+Modify `Ship` and `Component` validation logic to accept a `registry` argument, defaulting to a Proxy of the global manager (for backward compatibility) but allowing tests to inject an isolated registry.
 
-**Refactor Target:**
-```python
-# ship.py
-class Ship:
-    def __init__(self, ..., context=None):
-        self.context = context or GlobalGameContext
-        # self.context.vehicle_classes.get(...)
-```
+### 4.3 Deprecate Local Imports
+Once the `RegistryManager` is central, the circular dependency on `ABILITY_REGISTRY` can be resolved by passing the ability definitions via the manager at runtime, or initializing the manager in a centralized bootstrap module that handles import order.
 
-### 3.3 Strict "No Global Mutation" Policy
-Tests must use a fresh `RegistryManager` instance. The `load_*` functions should return data rather than mutating globals, or be methods of the Manager.
-
-### 3.4 Registry Proxy Pattern
-To fix the circular imports without rewriting every line immediately, replace the global `MODIFIER_REGISTRY = {}` with a Proxy object that redirects to the active singleton manager. This allows `from module import MODIFIER_REGISTRY` to still work, but the underlying data is managed.
-
-## 4. Critical Blockers identified in Code
-
-1.  **`Ship.from_dict` Static Method:** Being static, it has no `self` context. It relies entirely on `COMPONENT_REGISTRY`. This must be changed to `Ship.from_dict(data, context)` or the registry lookup logic effectively remains global.
-2.  **`Component` self-referential import:** The line `from game.simulation.components.component import MODIFIER_REGISTRY` inside `Component` methods is dangerous if we move `MODIFIER_REGISTRY` out of that file.
-
-## 5. Conclusion
-
-The current infrastructure is rigid and resistant to testing due to Hard-Coded Global Registries. The "Active Refactor" goal of "Test Context Injection" is strictly necessary. The immediate next step should be implementing the **RegistryProxy** to decouple the global symbols from their storage, allowing tests to inject isolated state.
+### 4.4 Validator Lifecycle
+Move `ShipDesignValidator` instantiation effectively inside the context where it is needed, or allow it to be injected into `Ship` instances, rather than relying on `_VALIDATOR`.

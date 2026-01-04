@@ -16,52 +16,34 @@ import importlib
 class TestShipStatsBaseline(unittest.TestCase):
     """Baseline tests for ShipStatsCalculator to verify before/after Phase 3."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         """Load test data once."""
         # Save original pygame modules if they exist
-        cls._original_pygame = sys.modules.get('pygame')
-        cls._original_pygame_mixer = sys.modules.get('pygame.mixer')
-        cls._original_pygame_font = sys.modules.get('pygame.font')
+        self._original_pygame = sys.modules.get('pygame')
+        self._original_pygame_mixer = sys.modules.get('pygame.mixer')
+        self._original_pygame_font = sys.modules.get('pygame.font')
         
         # Mock pygame before importing game modules
-        cls.pygame_mock = MagicMock()
-        cls.pygame_mock.mixer = MagicMock()
-        cls.pygame_mock.font = MagicMock()
-        sys.modules['pygame'] = cls.pygame_mock
-        sys.modules['pygame.mixer'] = cls.pygame_mock.mixer
-        sys.modules['pygame.font'] = cls.pygame_mock.font
+        self.pygame_mock = MagicMock()
+        self.pygame_mock.mixer = MagicMock()
+        self.pygame_mock.font = MagicMock()
+        sys.modules['pygame'] = self.pygame_mock
+        sys.modules['pygame.mixer'] = self.pygame_mock.mixer
+        sys.modules['pygame.font'] = self.pygame_mock.font
         
         # Import after mocking
         from game.simulation.components.component import Component, load_components, load_modifiers
         from ship_stats import ShipStatsCalculator
         from game.simulation.entities.ship import VEHICLE_CLASSES
         
-        cls.Component = Component
-        cls.ShipStatsCalculator = ShipStatsCalculator
-        cls.VEHICLE_CLASSES = VEHICLE_CLASSES
+        self.Component = Component
+        self.ShipStatsCalculator = ShipStatsCalculator
+        self.VEHICLE_CLASSES = VEHICLE_CLASSES
         
         # Load components and modifiers
         load_components()
         load_modifiers()
     
-    @classmethod
-    def tearDownClass(cls):
-        """Restore original pygame modules."""
-        if cls._original_pygame is not None:
-            sys.modules['pygame'] = cls._original_pygame
-        elif 'pygame' in sys.modules:
-            del sys.modules['pygame']
-            
-        if cls._original_pygame_mixer is not None:
-            sys.modules['pygame.mixer'] = cls._original_pygame_mixer
-        elif 'pygame.mixer' in sys.modules:
-            del sys.modules['pygame.mixer']
-            
-        if cls._original_pygame_font is not None:
-            sys.modules['pygame.font'] = cls._original_pygame_font
-        elif 'pygame.font' in sys.modules:
-            del sys.modules['pygame.font']
     
     def _create_mock_ship(self, components):
         """Create a mock ship with the given components."""
@@ -246,46 +228,28 @@ class TestShipStatsBaseline(unittest.TestCase):
 class TestAbilityModifierSync(unittest.TestCase):
     """Test that modifiers correctly update ability values."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         """Load test data once."""
         # Save original pygame modules if they exist
-        cls._original_pygame = sys.modules.get('pygame')
-        cls._original_pygame_mixer = sys.modules.get('pygame.mixer')
-        cls._original_pygame_font = sys.modules.get('pygame.font')
+        self._original_pygame = sys.modules.get('pygame')
+        self._original_pygame_mixer = sys.modules.get('pygame.mixer')
+        self._original_pygame_font = sys.modules.get('pygame.font')
         
-        cls.pygame_mock = MagicMock()
-        cls.pygame_mock.mixer = MagicMock()
-        cls.pygame_mock.font = MagicMock()
-        sys.modules['pygame'] = cls.pygame_mock
-        sys.modules['pygame.mixer'] = cls.pygame_mock.mixer
-        sys.modules['pygame.font'] = cls.pygame_mock.font
+        self.pygame_mock = MagicMock()
+        self.pygame_mock.mixer = MagicMock()
+        self.pygame_mock.font = MagicMock()
+        sys.modules['pygame'] = self.pygame_mock
+        sys.modules['pygame.mixer'] = self.pygame_mock.mixer
+        sys.modules['pygame.font'] = self.pygame_mock.font
         
         from game.simulation.components.component import Component, load_components, load_modifiers, MODIFIER_REGISTRY
         
-        cls.Component = Component
-        cls.MODIFIER_REGISTRY = MODIFIER_REGISTRY
+        self.Component = Component
+        self.MODIFIER_REGISTRY = MODIFIER_REGISTRY
         
         load_components()
         load_modifiers()
     
-    @classmethod
-    def tearDownClass(cls):
-        """Restore original pygame modules."""
-        if cls._original_pygame is not None:
-            sys.modules['pygame'] = cls._original_pygame
-        elif 'pygame' in sys.modules:
-            del sys.modules['pygame']
-            
-        if cls._original_pygame_mixer is not None:
-            sys.modules['pygame.mixer'] = cls._original_pygame_mixer
-        elif 'pygame.mixer' in sys.modules:
-            del sys.modules['pygame.mixer']
-            
-        if cls._original_pygame_font is not None:
-            sys.modules['pygame.font'] = cls._original_pygame_font
-        elif 'pygame.font' in sys.modules:
-            del sys.modules['pygame.font']
     
     def test_thrust_modifier_updates_ability(self):
         """Verify thrust modifiers update CombatPropulsion ability value."""

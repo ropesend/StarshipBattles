@@ -22,8 +22,7 @@ from game.simulation.components.component import (
 class TestModifierStacking(unittest.TestCase):
     """Test that modifier stacking calculates HP correctly."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
     
@@ -88,8 +87,7 @@ class TestModifierStacking(unittest.TestCase):
 class TestShipExpectedStats(unittest.TestCase):
     """Test that loaded ships match their expected_stats."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
         load_vehicle_classes()
@@ -100,8 +98,7 @@ class TestShipExpectedStats(unittest.TestCase):
 class TestAllShipDesigns(unittest.TestCase):
     """Test all ship designs in the ships/ folder."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
         from game.simulation.entities.ship import load_vehicle_classes
@@ -109,7 +106,7 @@ class TestAllShipDesigns(unittest.TestCase):
         
         # Find all ship JSON files
         ships_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ships")
-        cls.ship_files = glob.glob(os.path.join(ships_dir, "*.json"))
+        self.ship_files = glob.glob(os.path.join(ships_dir, "*.json"))
     
     def test_all_ships_match_expected_stats(self):
         """All ships should match their expected_stats if present."""

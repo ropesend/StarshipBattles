@@ -9,17 +9,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from game.ui.renderer.sprites import SpriteManager
 
 class TestSprites(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+        
+
+    def setUp(self):
         pygame.init()
         # Initialize display for convert() calls
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-
-    def setUp(self):
         # Point to the project root
         self.base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         

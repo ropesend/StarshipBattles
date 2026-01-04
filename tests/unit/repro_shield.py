@@ -10,14 +10,12 @@ from game.simulation.components.component import load_components, create_compone
 from ship_stats import ShipStatsCalculator
 
 class TestShieldRepro(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+
+    def setUp(self):
         pygame.init()
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         initialize_ship_data(base_dir)
         load_components(os.path.join(base_dir, "data", "game.simulation.components.component.json"))
-
-    def setUp(self):
         self.ship = Ship("ShieldRepro", 0, 0, (255, 255, 255), ship_class="Cruiser")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.calculator = ShipStatsCalculator(self.ship.vehicle_classes if hasattr(self.ship, 'vehicle_classes') else {})

@@ -10,12 +10,10 @@ from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component
 
 class TestArcadeMovement(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
 
     def setUp(self):
+        initialize_ship_data("C:\\Dev\\Starship Battles")
+        load_components("data/components.json")
         # Use Cruiser class which has INNER layer (Capital_Standard config)
         self.ship = Ship("TestShip", 100, 100, (255, 255, 255), ship_class="Cruiser")
         # Basic setup - need crew infrastructure for components to be active

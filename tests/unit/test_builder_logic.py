@@ -8,18 +8,13 @@ import os
 class TestBuilderLogic(unittest.TestCase):
     """Test ship validation logic used by the builder."""
     
-    @classmethod
-    def setUpClass(cls):
+        
+
+    def setUp(self):
         pygame.init()
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         initialize_ship_data(base_dir)
         load_components(os.path.join(base_dir, "data", "components.json"))
-        
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-
-    def setUp(self):
         self.ship = Ship("BuilderTarget", 0, 0, (255,255,255), ship_class="Escort")
 
     def test_mass_limit_validation(self):

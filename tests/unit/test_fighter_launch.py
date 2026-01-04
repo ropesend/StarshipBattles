@@ -10,13 +10,11 @@ from game.core.constants import AttackType
 from game.ai.controller import STRATEGY_MANAGER
 
 class TestFighterLaunch(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+
+    def setUp(self):
         initialize_ship_data()
         load_components()
         pygame.init()
-
-    def setUp(self):
         test_data_path = os.path.join(os.getcwd(), "tests", "unit", "data")
         STRATEGY_MANAGER.load_data(
              test_data_path, 

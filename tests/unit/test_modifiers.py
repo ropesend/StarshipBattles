@@ -12,8 +12,7 @@ from game.simulation.components.component import (
 
 
 class TestModifiers(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
     
@@ -90,8 +89,7 @@ class TestModifiers(unittest.TestCase):
 
 
 class TestComponentCloning(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
     

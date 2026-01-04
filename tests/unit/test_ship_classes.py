@@ -5,19 +5,15 @@ from game.simulation.entities.ship import initialize_ship_data, VEHICLE_CLASSES
 from ship_theme import ShipThemeManager
 
 class TestShipClasses(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
         # Initialize with CWD
         cwd = os.getcwd()
         initialize_ship_data(cwd)
-        cls.theme_manager = ShipThemeManager.get_instance()
+        self.theme_manager = ShipThemeManager.get_instance()
         # Initialize theme manager with CWD to load themes
-        cls.theme_manager.initialize(cwd)
+        self.theme_manager.initialize(cwd)
         
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
 
     def test_all_classes_exist(self):
         expected_classes = [

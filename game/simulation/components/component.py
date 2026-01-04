@@ -2,6 +2,7 @@ import json
 import math
 from enum import Enum, auto
 from formula_system import evaluate_math_formula
+from game.core.registry import RegistryManager
 
 class ComponentStatus(Enum):
     ACTIVE = auto()
@@ -38,7 +39,9 @@ class Modifier:
     def create_modifier(self, value=None):
         return ApplicationModifier(self, value)
 
-MODIFIER_REGISTRY = {}
+# MODIFIER_REGISTRY = {} 
+# Aliased to RegistryManager for backward compatibility (but prefer Manager access)
+MODIFIER_REGISTRY = RegistryManager.instance().modifiers
 
 class ApplicationModifier:
     """Instance of a modifier applied to a component"""
@@ -94,9 +97,10 @@ class Component:
                 val = mod_data.get('value', None)
                 # We need to access registry. BUT registry might not be fully loaded if simple import.
                 # Assuming MODIFIER_REGISTRY is populated by load_modifiers globally.
-                from game.simulation.components.component import MODIFIER_REGISTRY
-                if mod_id in MODIFIER_REGISTRY:
-                    mod_def = MODIFIER_REGISTRY[mod_id]
+                from game.core.registry import RegistryManager
+                mods = RegistryManager.instance().modifiers
+                if mod_id in mods:
+                    mod_def = mods[mod_id]
                     self.modifiers.append(mod_def.create_modifier(val))
                 else:
                     # If modifiers loaded later, this might fail. 
@@ -255,10 +259,11 @@ class Component:
         self.status = ComponentStatus.ACTIVE
 
     def add_modifier(self, mod_id, value=None):
-        if mod_id not in MODIFIER_REGISTRY: return False
+        mods = RegistryManager.instance().modifiers
+        if mod_id not in mods: return False
         
         # Check restrictions
-        mod_def = MODIFIER_REGISTRY[mod_id]
+        mod_def = mods[mod_id]
         if 'deny_types' in mod_def.restrictions:
             if self.type_str in mod_def.restrictions['deny_types']:
                 return False
@@ -444,9 +449,9 @@ class Component:
         return self.__class__(self.data)
 
 
-# Legacy Aliases - REMOVED
+# Legacy Aliases - REMOVED / Mapped to Manager
 
-COMPONENT_REGISTRY = {}
+COMPONENT_REGISTRY = RegistryManager.instance().components
 # Phase 7 Simplified: Aliased types now use Component directly
 # Types with custom logic (Shield, Hangar, etc.) are now also aliases
 # as their logic has been unified into the Ability system.
@@ -473,10 +478,24 @@ COMPONENT_TYPE_MAP = {
     "LifeSupport": Component
 }
 
-def load_components(filepath="data/components.json"):
-    global COMPONENT_REGISTRY
-    import os
+# Caching for performance (Phase 2 Test Stabilization)
+_COMPONENT_CACHE = None
+_MODIFIER_CACHE = None
 
+def load_components(filepath="data/components.json"):
+    global _COMPONENT_CACHE
+    import os
+    import copy
+    from game.core.registry import RegistryManager
+
+    # If cache exists, hydrate Registry from cache (Fast Path)
+    if _COMPONENT_CACHE is not None:
+        mgr = RegistryManager.instance()
+        for c_id, comp in _COMPONENT_CACHE.items():
+            mgr.components[c_id] = comp.clone()
+        return
+
+    # Slow Path: Load from Disk
     # Try absolute path based on this file if CWD fails
     if not os.path.exists(filepath):
         print(f"WARN: {filepath} not found in CWD ({os.getcwd()}).")
@@ -491,45 +510,76 @@ def load_components(filepath="data/components.json"):
 
     try:
         with open(filepath, 'r') as f:
+            import json
             data = json.load(f)
             
-        
+        temp_cache = {}
         for comp_def in data['components']:
             c_type = comp_def['type']
             try:
                 cls = COMPONENT_TYPE_MAP.get(c_type, Component)
                 obj = cls(comp_def)
-                COMPONENT_REGISTRY[comp_def['id']] = obj
+                temp_cache[comp_def['id']] = obj
             except Exception as e:
                 print(f"ERROR creating component {comp_def.get('id')}: {e}")
-                
+        
+        # Populate Cache
+        _COMPONENT_CACHE = temp_cache
+        
+        # Populate Registry from Cache
+        mgr = RegistryManager.instance()
+        for c_id, comp in _COMPONENT_CACHE.items():
+            mgr.components[c_id] = comp.clone()
+            
     except Exception as e:
         print(f"ERROR loading/parsing components json: {e}")
 
 def load_modifiers(filepath="data/modifiers.json"):
-    global MODIFIER_REGISTRY
+    global _MODIFIER_CACHE
     import os
+    import copy
+    from game.core.registry import RegistryManager
+    
+    # Fast Path
+    if _MODIFIER_CACHE is not None:
+        mgr = RegistryManager.instance()
+        for m_id, mod in _MODIFIER_CACHE.items():
+            mgr.modifiers[m_id] = copy.deepcopy(mod)
+        return
+
+    # Slow Path
     if not os.path.exists(filepath):
          base_dir = os.path.dirname(os.path.abspath(__file__))
          filepath = os.path.join(base_dir, filepath)
     
     try:
         with open(filepath, 'r') as f:
+            import json
             data = json.load(f)
             
+        temp_cache = {}
         for mod_def in data['modifiers']:
             mod = Modifier(mod_def)
-            MODIFIER_REGISTRY[mod.id] = mod
+            temp_cache[mod.id] = mod
+        
+        _MODIFIER_CACHE = temp_cache
+        
+        mgr = RegistryManager.instance()
+        for m_id, mod in _MODIFIER_CACHE.items():
+            mgr.modifiers[m_id] = copy.deepcopy(mod)
             
-
     except Exception as e:
         print(f"ERROR loading modifiers: {e}")
 
 def create_component(component_id):
-    if component_id in COMPONENT_REGISTRY:
-        return COMPONENT_REGISTRY[component_id].clone()
+    # Use RegistryManager instance instead of alias if possible, but alias is still mapped
+    from game.core.registry import RegistryManager
+    comps = RegistryManager.instance().components
+    if component_id in comps:
+        return comps[component_id].clone()
     print(f"Error: Component ID {component_id} not found in registry.")
     return None
 
 def get_all_components():
-    return list(COMPONENT_REGISTRY.values())
+    from game.core.registry import RegistryManager
+    return list(RegistryManager.instance().components.values())

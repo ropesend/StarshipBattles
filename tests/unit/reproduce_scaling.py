@@ -7,8 +7,7 @@ from game.simulation.components.component import load_components, create_compone
 import json
 
 class TestComponentScaling(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         # Load data
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")

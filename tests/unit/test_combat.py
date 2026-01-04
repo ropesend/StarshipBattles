@@ -16,17 +16,12 @@ from unittest.mock import MagicMock
 class TestDamageLayerLogic(unittest.TestCase):
     """Test damage distribution through ship layers."""
     
-    @classmethod
-    def setUpClass(cls):
-        pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
-    
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-    
     def setUp(self):
+        if not pygame.get_init():
+            pygame.init()
+        initialize_ship_data(os.getcwd())
+        load_components("data/components.json")
+        
         # Set deterministic random for reproducible tests
         random.seed(42)
         
@@ -167,17 +162,11 @@ class TestDamageLayerLogic(unittest.TestCase):
 class TestEnergyRegeneration(unittest.TestCase):
     """Test energy and shield regeneration mechanics."""
     
-    @classmethod
-    def setUpClass(cls):
-        pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
-    
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-    
     def setUp(self):
+        if not pygame.get_init():
+            pygame.init()
+        initialize_ship_data(os.getcwd())
+        load_components("data/components.json")
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
@@ -221,17 +210,11 @@ class TestEnergyRegeneration(unittest.TestCase):
 class TestWeaponCooldowns(unittest.TestCase):
     """Test weapon cooldown mechanics."""
     
-    @classmethod
-    def setUpClass(cls):
-        pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
-    
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-    
     def setUp(self):
+        if not pygame.get_init():
+            pygame.init()
+        initialize_ship_data(os.getcwd())
+        load_components("data/components.json")
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255))
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)

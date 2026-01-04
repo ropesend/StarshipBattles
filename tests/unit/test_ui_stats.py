@@ -9,8 +9,7 @@ from game.simulation.entities.ship import Ship, initialize_ship_data
 from ui.builder.stats_config import StatDefinition, get_logistics_rows
 
 class TestStatsConfig(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         initialize_ship_data()
 
     def test_dynamic_resource_rows(self):

@@ -17,8 +17,9 @@ from game.simulation.components.component import load_components
 from game.ai.controller import COMBAT_STRATEGIES
 
 class TestBuilderUISync(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+
+
+    def setUp(self):
         pygame.init()
         # Initialize data needed for dropdowns
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -26,12 +27,6 @@ class TestBuilderUISync(unittest.TestCase):
         load_components(os.path.join(base_dir, "data", "game.simulation.components.component.json"))
         
         pygame.display.set_mode((800, 600)) # Dummy mode
-
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-
-    def setUp(self):
         self.manager = pygame_gui.UIManager((800, 600))
         
         # Mock Builder

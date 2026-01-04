@@ -9,8 +9,7 @@ from game.simulation.components.component import load_components, load_modifiers
 from ui.builder.modifier_logic import ModifierLogic
 
 class TestModifierDefaultsRobustness(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_modifiers()
         load_components()
 

@@ -11,6 +11,7 @@ from game.simulation.components.component import (
     Component, LayerType, COMPONENT_REGISTRY, MODIFIER_REGISTRY
 )
 from game.core.logger import log_debug
+from game.core.registry import RegistryManager
 from ship_validator import ShipDesignValidator, ValidationResult
 from ship_stats import ShipStatsCalculator
 from ship_physics import ShipPhysicsMixin
@@ -21,13 +22,24 @@ if TYPE_CHECKING:
     pass
 
 # Module-level validator constant
-_VALIDATOR = ShipDesignValidator()
+# _VALIDATOR = ShipDesignValidator()
+
+class ValidatorProxy:
+    def __getattr__(self, name):
+        val = RegistryManager.instance().get_validator()
+        if not val:
+            # Lazy init
+            val = ShipDesignValidator()
+            RegistryManager.instance().set_validator(val)
+        return getattr(val, name)
+
+_VALIDATOR = ValidatorProxy()
 # Deprecated global access for backward compatibility (lazy usage preferred)
 VALIDATOR = _VALIDATOR 
 
 # Load Vehicle Classes from JSON
 
-VEHICLE_CLASSES: Dict[str, Any] = {}
+VEHICLE_CLASSES: Dict[str, Any] = RegistryManager.instance().vehicle_classes
 SHIP_CLASSES = VEHICLE_CLASSES  # Backward compatibility alias
 
 def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_filepath: Optional[str] = None) -> None:
@@ -35,7 +47,7 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_file
     Load vehicle class definitions from JSON.
     This should be called explicitly during game initialization.
     """
-    global VEHICLE_CLASSES
+    # global VEHICLE_CLASSES # No longer needed
     
     # Check if we need to resolve path relative to this file
     if not os.path.exists(filepath):

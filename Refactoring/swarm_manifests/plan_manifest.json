@@ -1,17 +1,17 @@
 {
-    "context_root": "c:/Dev/Starship Battles",
+    "context_root": ".",
     "agents": [
         {
-            "role": "Test Strategist",
-            "focus": "Test Isolation, Fixture Safety, and Hazard Verification",
+            "role": "Infrastructure Engineer",
+            "focus": "Registry Management & Core Migration",
             "primary_files": [
                 "game/simulation/components/component.py",
                 "game/simulation/entities/ship.py"
             ]
         },
         {
-            "role": "Infrastructure Engineer",
-            "focus": "Registry Encapsulation, Singleton Management, and Backward Compatibility",
+            "role": "Test Strategist",
+            "focus": "Test Isolation & Hazard Verification",
             "primary_files": [
                 "game/simulation/components/component.py",
                 "game/simulation/entities/ship.py"
@@ -19,7 +19,7 @@
         },
         {
             "role": "Dependency Analyst",
-            "focus": "Circular Imports, Global State Dependencies, and Module Initialization",
+            "focus": "Circular Import & Dependency Safety",
             "primary_files": [
                 "game/simulation/components/component.py",
                 "game/simulation/entities/ship.py"

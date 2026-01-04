@@ -1,7 +1,20 @@
+# INSTRUCTIONS FOR AGENT (Code_Reviewer)
+
+**ROLE:** Code_Reviewer
+**FOCUS:** General Analysis
+
+## YOUR GOAL
+Analyze the provided code context below.
+Isolate issues specifically related to your FOCUS (General Analysis).
+Ignore unrelated issues unless they are critical system failures.
+
+## PHASE STATUS
+
+--- ACTIVE REFACTOR CONTEXT ---
 # Refactor: Test Stabilization & Registry Encapsulation
 
 **Goal:** Eliminate "State Pollution" in the test suite by encapsulating global registries and singletons into a manageable `RegistryManager`, and enforcing strict state resets via a new root `conftest.py`.
-**Status:** Phase 2: Test Suite Adaptation (Active)
+**Status:** Phase 1 Complete
 **Start Date:** 2026-01-04
 
 ## Migration Map (The Constitution)
@@ -49,7 +62,6 @@
     - Import `RegistryManager`.
     - Update `load_vehicle_classes` to populate `RegistryManager.instance().vehicle_classes`.
     - Refactor `_VALIDATOR` to be accessed via Manager or created on demand.
-    - **Note**: `ValidatorProxy` implementation verified. Safe.
 
 #### 4. Test Harness: Strict Fixtures
 - [x] [NEW] `tests/conftest.py`
@@ -58,44 +70,20 @@
 
 ### Phase 2: Test Suite Adaptation
 
-#### 0. Performance Mitigation: Smart Caching Loaders
-- [x] [MODIFY] `game/simulation/components/component.py`
-    - Implement module-level cache `_COMPONENT_CACHE` and `_MODIFIER_CACHE`.
-    - Update `load_components` and `load_modifiers` to load from disk ONLY if cache is None.
-    - If cache exists, deepcopy data from cache to `RegistryManager.instance`.
-    - **Benefit**: Calling `load_components` 100 times in `setUp` will be fast (memory copy) vs slow (disk IO).
-
 #### 1. Bulk Migration (setUpClass -> setUp)
-- [x] [MODIFY] `tests/unit/test_combat.py` (First candidate)
-    - Replace `setUpClass` with `setUp`.
-    - Ensure `load_components` is called in `setUp`.
-- [x] [MODIFY] Remaining files in `tests/unit/`
-    - Identify tests using `setUpClass` to load data.
+- [ ] [MODIFY] All files in `tests/unit/`
+    - Identify tests using `setUpClass` to load data (components, modifiers).
     - Convert `setUpClass` methods to `setUp`.
-    - Replace `cls.` with `self.` for instance variables.
+    - Rationale: `autouse` fixture clears registry *after* `setUpClass` but *before* tests (or between tests), causing empty registries. `setUp` runs before *every* test, ensuring data is fresh.
 
 #### 2. Performance Verification
-
-#### 2. Performance Verification
-- [x] [EXECUTE] Run full test suite.
+- [ ] [EXECUTE] Run full test suite.
     - Monitor execution time. If `setUp` overhead is too high (>60s), consider a `session` scoped fixture for loading data into a *separate* cache, and then shallow copying to RegistryManager in `setUp`.
     - For now, naive `setUp` loading is the safest first step.
 
 #### 3. Final Verification
-- [x] [EXECUTE] Run `tests/repro_issues/test_sequence_hazard.py` (Must still PASS).
+- [ ] [EXECUTE] Run `tests/repro_issues/test_sequence_hazard.py` (Must still PASS).
 - [ ] [EXECUTE] Run Full Suite (Must be GREEN).
-
-### Phase 2.5: Critical Test Fixes (BLOCKER)
-- [ ] [FIX] `tests/unit/test_rendering_logic.py`
-    - Failure: `TypeError: unexpectedly NoneType object has no attribute 'layer_assigned'` in `test_component_color_coding`.
-    - Likely cause: Mock setup issue in `draw_ship`.
-- [ ] [FIX] `tests/unit/test_ship_theme_logic.py`
-    - Failure: `AssertionError` in `test_get_image_metrics`.
-    - Note: Likely environment/headless incompatibility or race condition.
-- [ ] [FIX] `tests/repro_issues/test_bug_09_endurance.py`
-    - Failure: `AssertionError` (Stats Panel shows 'Infinite' for finite fuel endurance).
-    - Action: Determine if this is a regression or correct bug reproduction. Fix test or code accordingly.
-- [ ] [EXECUTE] Run Full Suite (Must be STRICTLY GREEN).
 
 ### Phase 3: Performance Optimization (Optional)
 
@@ -121,3 +109,16 @@
 
 #### 3. Archive Refactor
 - [ ] [EXECUTE] Run Protocol 13 (Archive).
+
+--- END ACTIVE REFACTOR CONTEXT ---
+
+
+## OUTPUT INSTRUCTIONS
+You are an autonomous agent.
+1. Perform your analysis.
+2. **CRITICAL:** You MUST use the `write_to_file` tool to save your report.
+   - **Target File:** `C:\Dev\Starship Battles\Refactoring\swarm_reports\Code_Reviewer_Report.md`
+   - **Do NOT** just print the markdown to the chat. Save it to the file.
+
+## CONTEXT
+

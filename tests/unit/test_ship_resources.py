@@ -12,19 +12,14 @@ from game.simulation.components.component import load_components, create_compone
 class TestShipResources(unittest.TestCase):
     """Test resource initialization, capacity, life support, and crew logic."""
     
-    @classmethod
-    def setUpClass(cls):
+    
+        
+    def setUp(self):
         pygame.init()
         # Ensure data dir is accessible
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         initialize_ship_data(base_dir)
         load_components(os.path.join(base_dir, "data", "components.json"))
-    
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-        
-    def setUp(self):
         self.ship = Ship("ResourceTest", 0, 0, (255, 255, 255), ship_class="Cruiser")
         # Add minimal functional core
         self.ship.add_component(create_component('bridge'), LayerType.CORE)

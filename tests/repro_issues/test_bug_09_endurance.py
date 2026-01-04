@@ -11,19 +11,14 @@ from game.simulation.components.component import load_components, create_compone
 from ship_stats import ShipStatsCalculator
 
 class TestBug09Endurance(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+
+
+    def setUp(self):
         pygame.init()
         # Initialize shared data
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         initialize_ship_data(base_dir)
         load_components(os.path.join(base_dir, "data", "components.json"))
-
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-
-    def setUp(self):
         self.ship = Ship("EnduranceRepro", 0, 0, (255, 255, 255), ship_class="Cruiser")
         self.calculator = ShipStatsCalculator(self.ship.vehicle_classes if hasattr(self.ship, 'vehicle_classes') else {})
         print(f"[DEBUG] Ship Layers keys: {list(self.ship.layers.keys())}")

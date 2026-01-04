@@ -14,8 +14,7 @@ from game.simulation.components.component import (
 
 
 class TestWeaponBasics(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         initialize_ship_data("C:\\Dev\\Starship Battles")
         load_components("data/components.json")
     
@@ -94,12 +93,10 @@ class TestWeaponBasics(unittest.TestCase):
 
 
 class TestWeaponFiring(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
     
     def setUp(self):
+        initialize_ship_data("C:\\Dev\\Starship Battles")
+        load_components("data/components.json")
         # Create ship with weapons
         self.ship = Ship("Gunship", 0, 0, (255, 255, 255), team_id=0, ship_class="Cruiser")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
@@ -159,12 +156,10 @@ class TestWeaponFiring(unittest.TestCase):
 
 
 class TestLeadCalculation(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
     
     def setUp(self):
+        initialize_ship_data("C:\\Dev\\Starship Battles")
+        load_components("data/components.json")
         self.ship = Ship("Shooter", 0, 0, (255, 255, 255))
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.recalculate_stats()

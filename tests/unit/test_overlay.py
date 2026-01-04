@@ -15,16 +15,11 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 from game.app import Game
 
 class TestOverlay(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        pygame.init()
-        pygame.display.set_mode((800, 600), pygame.NOFRAME)
 
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
         
     def setUp(self):
+        pygame.init()
+        pygame.display.set_mode((800, 600), pygame.NOFRAME)
         # Patch display info to ensure valid resolution
         self.patcher = patch('pygame.display.Info')
         self.mock_info = self.patcher.start()

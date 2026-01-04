@@ -22,7 +22,8 @@
    * **Migration Map** (The Constitution)
    * **Test Triage Table** (Empty)
    * **Phased Schedule:**
-     * **CRITICAL:** Phase 1 must contain **DETAILED IMPLEMENTATION SPECS** (e.g., exact file paths, new function signatures, class responsibilities).
-     * **Do NOT** just write "Refactor core." Write "Update `ship.py` to use `RegistryManager`."
-     * Use sub-bullets for specific file changes ( [NEW] / [MODIFY] ).
+     * **CRITICAL:** The plan must cover the **ENTIRE** refactor from start to finish.
+     * **Phase 1:** Must contain **DETAILED IMPLEMENTATION SPECS** (exact file paths, signatures).
+     * **Subsequent Phases:** Must be fully defined to show the path to completion. **DO NOT** use vague placeholders.
+     * **Final Phase:** Must clearly define the "Definition of Done" (e.g., specific tests passing, legacy code removed).
 4. **Handoff:** Request Protocol 11 (Execution).

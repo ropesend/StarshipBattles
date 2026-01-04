@@ -18,15 +18,13 @@ from game.ai.controller import STRATEGY_MANAGER
 class TestBattleSetupLogic(unittest.TestCase):
     """Test SpatialGrid functionality and BattleScene setup logic."""
     
-    @classmethod
-    def setUpClass(cls):
+        
+    def setUp(self):
         pygame.init()
         # Ensure data dir is accessible
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         initialize_ship_data(base_dir)
         load_components(os.path.join(base_dir, "data", "components.json"))
-        
-    def setUp(self):
         test_data_path = os.path.join(os.getcwd(), "tests", "unit", "data")
         STRATEGY_MANAGER.load_data(
              test_data_path, 
@@ -42,9 +40,6 @@ class TestBattleSetupLogic(unittest.TestCase):
         # self.setup.width = 800
         # self.setup.height = 600
 
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
 
     def test_spatial_grid_insertion_query(self):
         """Verify SpatialGrid correctly stores and retrieves objects."""

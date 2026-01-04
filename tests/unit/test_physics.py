@@ -13,13 +13,9 @@ from game.engine.physics import PhysicsBody
 class TestPhysicsBasics(unittest.TestCase):
     """Test basic PhysicsBody initialization and properties."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_initialization(self):
         """PhysicsBody should initialize with correct position and angle."""
@@ -39,13 +35,9 @@ class TestPhysicsBasics(unittest.TestCase):
 class TestPhysicsMovement(unittest.TestCase):
     """Test PhysicsBody movement and physics update."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_update_movement(self):
         """Test basic velocity application."""
@@ -80,13 +72,9 @@ class TestPhysicsMovement(unittest.TestCase):
 class TestPhysicsForces(unittest.TestCase):
     """Test force application and acceleration."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_apply_force_accelerates(self):
         """apply_force should add to acceleration based on mass."""
@@ -129,13 +117,9 @@ class TestPhysicsForces(unittest.TestCase):
 class TestPhysicsDirection(unittest.TestCase):
     """Test forward vector calculation."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_forward_vector_angle_0(self):
         """Angle 0 should point right (1, 0)."""

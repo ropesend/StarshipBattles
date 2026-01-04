@@ -13,8 +13,7 @@ from game.simulation.components.modifiers import ModifierEffects, apply_modifier
 class TestModifierEffectsFunctions(unittest.TestCase):
     """Test individual modifier effect functions from ModifierEffects class."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
     
@@ -119,8 +118,7 @@ class TestModifierEffectsFunctions(unittest.TestCase):
 class TestApplyModifierEffects(unittest.TestCase):
     """Test the apply_modifier_effects function."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
     
@@ -153,8 +151,7 @@ class TestApplyModifierEffects(unittest.TestCase):
 class TestModifierStackingIntegration(unittest.TestCase):
     """Test modifier stacking on actual components."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
     

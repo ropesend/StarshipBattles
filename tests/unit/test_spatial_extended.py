@@ -18,13 +18,9 @@ class MockObject:
 class TestSpatialGridBasics(unittest.TestCase):
     """Test basic SpatialGrid operations."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_grid_initialization(self):
         """Grid should initialize with specified cell size."""
@@ -59,13 +55,9 @@ class TestSpatialGridBasics(unittest.TestCase):
 class TestSpatialGridQueries(unittest.TestCase):
     """Test SpatialGrid query operations."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_query_radius_empty_grid(self):
         """Empty grid should return empty list."""
@@ -102,13 +94,9 @@ class TestSpatialGridQueries(unittest.TestCase):
 class TestSpatialGridCellAssignment(unittest.TestCase):
     """Test correct cell assignment."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_same_cell_multiple_objects(self):
         """Multiple objects in same cell should all be in same bucket."""
@@ -153,13 +141,9 @@ class TestSpatialGridCellAssignment(unittest.TestCase):
 class TestSpatialGridQueryRadius(unittest.TestCase):
     """Test query_radius across cell boundaries."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_query_spans_multiple_cells(self):
         """Large radius should query multiple cells."""

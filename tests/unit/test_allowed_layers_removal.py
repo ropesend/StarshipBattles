@@ -22,8 +22,7 @@ class TestAllowedLayersRemoval(unittest.TestCase):
     from all component classes to prevent AttributeError crashes.
     """
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         initialize_ship_data()
         load_components()
     
@@ -88,12 +87,10 @@ class TestBuilderDropValidation(unittest.TestCase):
     centralized validator, not through a per-component allowed_layers check.
     """
     
-    @classmethod
-    def setUpClass(cls):
-        initialize_ship_data()
-        load_components()
     
     def setUp(self):
+        initialize_ship_data()
+        load_components()
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser")
     
     def test_validator_handles_component_placement(self):

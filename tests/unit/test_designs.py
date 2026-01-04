@@ -14,15 +14,11 @@ from designs import create_brick, create_interceptor
 class TestDesignFactories(unittest.TestCase):
     """Test programmatic ship creation functions."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
         initialize_ship_data("C:\\Dev\\Starship Battles")
         load_components("data/components.json")
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_create_brick_returns_ship(self):
         """create_brick should return a valid Ship object."""

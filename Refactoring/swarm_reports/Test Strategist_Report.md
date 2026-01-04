@@ -1,89 +1,68 @@
-# Test Strategist Report
-**Role:** Test Strategist
-**Date:** 2026-01-04
-**Focus:** Test Isolation, Fixture Safety, and Hazard Verification
+# Test Strategist Report: Isolation & Hazard Analysis
 
-## 1. High-Level Verdict
-**Status:** 🔴 **CRITICAL HAZARD**
+**Focus:** Test Isolation, State Pollution, and Verification Hazards  
+**Target:** `game/simulation/components/component.py` and `game/simulation/entities/ship.py`
 
-The analyzed codebase (`component.py` and `ship.py`) exhibits **zero isolation** for core game data. The heavy reliance on module-level global variables (`REGISTRY` dicts) and singletons ensures that unit tests cannot run deterministically in parallel or in random orders. Any test that modifies a component definition or loads a different vehicle set will pollute the state for all subsequent tests, leading to "Heisenbugs" and false negatives.
+## 1. High-Level Verdict: Critical Isolation Failure
+The current codebase relies heavily on **Module-Level Mutable Global State** for its core definitions (`COMPONENT_REGISTRY`, `MODIFIER_REGISTRY`, `VEHICLE_CLASSES`). This makes unit testing inherently **non-deterministic** and **order-dependent**. One test modifying a registry will bleed side effects into all subsequent tests in the suite. Use of specific local imports to bypass circular dependencies further complicates mocking and isolation.
 
-## 2. Global State & Registry Pollution
-The primary vector for test instability is the usage of module-level dictionaries as the single source of truth.
+## 2. Critical Isolation Hazards
 
-### A. Component & Modifier Registries (`component.py`)
-- **Code:**
-  ```python
-  MODIFIER_REGISTRY = {}
-  # ...
-  COMPONENT_REGISTRY = {}
-  ```
-- **Hazard:** These dictionaries are mutated by `load_components` and `load_modifiers`. There is no mechanism to "reset" them to a pristine state between tests.
-- **Impact:** A test that loads a mock modifiers file will leave those modifiers active for the next test. If the next test expects standard modifiers, it will crash or fail silently.
+### A. Global Registry Pollution
+The following objects are defined at the module level and mutated by "loader" functions. They act as persistent singletons across the entire test session unless explicitly reset.
 
-### B. Vehicle Classes (`ship.py`)
-- **Code:**
-  ```python
-  VEHICLE_CLASSES: Dict[str, Any] = {}
-  ```
-- **Hazard:** `Ship` instances access this global directly in `__init__`:
-  ```python
-  class_def = VEHICLE_CLASSES.get(self.ship_class, ...)
-  ```
-- **Impact:** Tests cannot easily mock a `ShipClass` without modifying the global `VEHICLE_CLASSES`. If a test adds a "TestCruiser" class and fails to clean it up, that class persists.
+*   **`COMPONENT_REGISTRY` & `MODIFIER_REGISTRY`** (`component.py`)
+    *   **Hazard:** Defined as global dicts. Populated by `load_components/modifiers`.
+    *   **Impact:** A test that loads a custom component for a scenario will leave that component in eggress for the next test. A test that involves "damaging" a registered component (if the registry holds references to live objects) breaks state.
+    *   **Path:** `game/simulation/components/component.py` (Lines 41, 257)
 
-### C. The Validator Singleton (`ship.py`)
-- **Code:**
-  ```python
-  _VALIDATOR = ShipDesignValidator()
-  # ...
-  def add_component(self, ...):
-      result = _VALIDATOR.validate_addition(self, component, layer_type)
-  ```
-- **Hazard:** The `Ship` class hardcodes a dependency on `_VALIDATOR`. If `ShipDesignValidator` maintains any internal state (caches, counters), that state leaks across tests. It also makes it impossible to assert on validation logic failure by mocking the validator, as the reference is hard-bound.
+*   **`VEHICLE_CLASSES`** (`ship.py`)
+    *   **Hazard:** Global dictionary holding ship class definitions.
+    *   **Impact:** Modifying ship class stats for a balance test persists for the duration of the process.
+    *   **Path:** `game/simulation/entities/ship.py` (Line 29)
 
-## 3. Dependency Injection & Mocking Frontiers
-The code resists isolation testing due to rigid internal dependencies (Local Import Traps).
+### B. Singleton Instance Persistence
+*   **`_VALIDATOR`** (`ship.py`)
+    *   **Hazard:** Instantiated at module level: `_VALIDATOR = ShipDesignValidator()`.
+    *   **Impact:** If `ShipDesignValidator` maintains any internal cache or state (e.g., cached hull validation results), that state leaks across tests. It prevents testing "fresh" validation logic.
+    *   **Path:** `game/simulation/entities/ship.py` (Line 18)
 
-- **Circular Import Workarounds:**
-  The code frequently uses local imports to avoid circular dependencies:
-  ```python
-  def _instantiate_abilities(self):
-      from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability
-  ```
-  **analysis:** This pattern makes it extremely difficult to mock `create_ability` or `ABILITY_REGISTRY` via `unittest.mock.patch`, because the import defines the name ref at runtime inside the function scope. Tests trying to mock this at the module level often fail to catch the local import reference.
+### C. Hidden Hard-Coded Dependencies (Mocking Barriers)
+The code frequently uses "Lazy Local Imports" to avoid circular dependencies. This pattern hides dependencies from the class interface, making them extremely difficult to mock or inject during testing.
 
-- **Hardcoded Subsystems:**
-  `Ship` explicitly instantiates `ResourceRegistry` and `ShipStatsCalculator` if they aren't found. This coupling prevents testing a `Ship` with a "MockResourceRegistry" to verify simple logic without spinning up the entire resource system.
+*   **Ability Registry Access:**
+    *   `Component.get_abilities` imports `ABILITY_REGISTRY` inside the function body.
+    *   `Component._instantiate_abilities` imports `create_ability` inside the loop.
+    *   **Impact:** To test a component in isolation, the test harness must mock `game.simulation.components.abilities` *module*, not just pass a mock object. This couples the unit test to the file structure.
+    *   **Ref:** `component.py` Line 99, 137
 
-## 4. Fixture Safety Recommendations
+*   **Component Registry Access:**
+    *   `Ship.from_dict` directly accesses `COMPONENT_REGISTRY`.
+    *   **Impact:** Cannot hydration-test a Ship without fully hydrating the global component registry first.
 
-To achieve the goal of "Context Injection" and test stabilization, the following refactoring steps are mandatory:
+## 3. Structural Verification Findings
 
-1.  **Registry Encapsulation:**
-    Refactor `COMPONENT_REGISTRY`, `MODIFIER_REGISTRY`, and `VEHICLE_CLASSES` into a `RegistryManager` class.
-    *   *Goal:* The `RegistryManager` can be instantiated per-test or reset via a `tearDown` method.
+### A. File Path Fragility
+*   `load_components` and `load_vehicle_classes` rely on `os.getcwd()` or relative path fallback logic.
+*   **Hazard:** Tests traversing directories (e.g. running from root vs running from `tests/`) will cause these loaders to fail or index different files, leading to "Works locally, fails in CI" behavior.
 
-2.  **Context Injection for Entities:**
-    Update `Ship` and `Component` to accept a `context` or `registry_provider` object in their `__init__`, rather than reaching out to globals.
-    *   *Interim Step:* Use a `RegistryProxy` singleton that can be hot-swapped in tests, maintaining the existing API surface while allowing backend redirection.
+### B. "Live" Reference Leaks
+*   `create_component` calls `COMPONENT_REGISTRY[id].clone()`.
+*   **Hazard:** If `clone()` is shallow or imperfect, the "template" object in the registry might be mutated by a test, permanently corrupting the registry for subsequent clones. The current `Component.__init__` does a `copy.deepcopy` of data, which is safe, but the architecture relies on this specific implementation detail for safety.
 
-3.  **Validator Injection:**
-    Allow `Ship` to accept a `validator` instance, defaulting to the standard one if none provided.
-    ```python
-    def __init__(self, ..., validator=None):
-        self.validator = validator or _DEFAULT_VALIDATOR
-    ```
+## 4. Recommendations for Refactoring
 
-4.  **Pytest Fixtures:**
-    Create a `reset_registries` fixture in `conftest.py` that strictly clears all registries before *and* after every test function.
+1.  **Introduce `RegistryManager`:** Moving all global dicts (`COMPONENT_REGISTRY`, `VEHICLE_CLASSES`) into a unified `RegistryManager` class.
+2.  **Context Injection:**
+    *   Update `Ship.__init__` and `Component.__init__` to accept a `registry_context` argument.
+    *   If `None`, default to the Global Manager (for backward compat), but allow tests to pass a sterile, isolated Manager.
+3.  **Strict Fixture Reset:** In `conftest.py`, implement a fixture that:
+    1.  Snapshots the state of all global registries.
+    2.  Clears them.
+    3.  Runs the test.
+    4.  Restores the snapshot.
+    *   *Better Approach:* Do not populate globals by default. Only populate a localized RegistryManager for the test scope.
+4.  **Expose Dependencies:** Convert local imports to module-level imports where possible (using `typing.TYPE_CHECKING` for static analysis) or inject factories to break circular loops.
 
-## 5. Hazard Verification Plan (Phase 1)
-To confirm these hazards, we should run the **Hazard Verification Test** (`tests/verification/test_hazard_registry_pollution.py` - *to be created during execution*).
-
-**Expected Failure Mode:**
-1.  Test A: Loads specific "Hazard" data into `VEHICLE_CLASSES`.
-2.  Test B: Expects default data.
-3.  **Result:** Test B fails because Test A's data persisted.
-
-This confirms the need for the `RegistryManager` refactor.
+## 5. Confidence Score
+**5/5** - The hazards are explicit and clearly identifiable in the provided source code.

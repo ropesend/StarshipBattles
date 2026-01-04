@@ -14,8 +14,8 @@ from game.ai.controller import AIController, STRATEGY_MANAGER
 from game.simulation.components.component import LayerType, COMPONENT_REGISTRY, load_components, load_modifiers
 
 class TestMovementAndAI(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+
+    def setUp(self):
         pygame.init()
         # Initialize vehicle class definitions FIRST (required for layer configs)
         initialize_ship_data()
@@ -30,10 +30,8 @@ class TestMovementAndAI(unittest.TestCase):
         if os.path.exists(comp_path):
             load_components(comp_path)
         if os.path.exists(mod_path):
-            cls.mod_path = mod_path
+            self.mod_path = mod_path
             load_modifiers(mod_path)
-
-    def setUp(self):
         test_data_path = os.path.join(os.getcwd(), "tests", "unit", "data")
         STRATEGY_MANAGER.load_data(
              test_data_path, 

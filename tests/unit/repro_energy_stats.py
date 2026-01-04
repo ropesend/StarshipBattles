@@ -11,8 +11,7 @@ from game.simulation.components.component import load_components, create_compone
 from ship_stats import ShipStatsCalculator
 
 class TestEnergyRepro(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         initialize_ship_data(base_dir)

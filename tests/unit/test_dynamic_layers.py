@@ -10,8 +10,7 @@ from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import Component, LayerType, load_components
 
 class TestDynamicLayers(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         # Initialize with the real data files (../../data)
         initialize_ship_data(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
         load_components(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'components.json')))

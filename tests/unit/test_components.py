@@ -10,8 +10,7 @@ from game.simulation.components.component import (
 )
 
 class TestComponents(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
 
@@ -51,8 +50,7 @@ class TestComponents(unittest.TestCase):
 class TestModifierStacking(unittest.TestCase):
     """Test that modifiers stack multiplicatively, not override each other."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
     
@@ -141,8 +139,7 @@ class TestModifierStacking(unittest.TestCase):
 class TestModifierOrder(unittest.TestCase):
     """Ensure modifier application order doesn't affect final result."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
     
@@ -167,8 +164,7 @@ class TestModifierOrder(unittest.TestCase):
 class TestTurretMount(unittest.TestCase):
     """Test turret mount logarithmic diminishing returns."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
     

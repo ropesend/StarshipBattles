@@ -12,8 +12,7 @@ from game.simulation.components.component import load_components, load_modifiers
 class TestPlanetaryComplex(unittest.TestCase):
     """Test Planetary Complex implementation."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         initialize_ship_data()
         load_components()
         load_modifiers()

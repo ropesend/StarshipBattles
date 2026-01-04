@@ -19,13 +19,9 @@ class MockTarget:
 class TestCameraBasics(unittest.TestCase):
     """Test basic camera initialization and properties."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_camera_initialization(self):
         """Camera should initialize with correct dimensions."""
@@ -48,13 +44,9 @@ class TestCameraBasics(unittest.TestCase):
 class TestCameraTransformations(unittest.TestCase):
     """Test coordinate transformation functions."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_world_to_screen_center(self):
         """World origin should map to screen center when camera at origin."""
@@ -118,13 +110,9 @@ class TestCameraTransformations(unittest.TestCase):
 class TestCameraFitObjects(unittest.TestCase):
     """Test camera fit_objects functionality."""
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         pygame.init()
     
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
     
     def test_fit_objects_centers_camera(self):
         """fit_objects should center camera on objects."""
