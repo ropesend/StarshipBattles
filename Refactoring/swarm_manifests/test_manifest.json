@@ -1,0 +1,12 @@
+{
+    "context_root": "../protocols",
+    "agents": [
+        {
+            "role": "Test_Agent",
+            "focus": "Verification",
+            "primary_files": [
+                "10_swarm_plan.md"
+            ]
+        }
+    ]
+}

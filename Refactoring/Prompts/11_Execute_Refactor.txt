@@ -1,0 +1,19 @@
+!EXECUTE_PROTOCOL: Refactoring/protocols/11_execute_refactor.md
+
+I am executing the current phase of the Refactor.
+
+1. LOAD the attached protocol file `Refactoring/protocols/11_execute_refactor.md`.
+2. LOAD the context file `Refactoring/active_refactor.md`.
+3. ADOPT the 'Senior Software Engineer' persona.
+4. TASK:
+   - Execute the checklist items for the CURRENT phase.
+   - Write/Update tests.
+   - Run the Test Gauntlet.
+5. PERSISTENCE CONSTRAINT:
+   - Mark completed items with [x].
+   - **NEVER DELETE** completed items or the Goal Description.
+   - Update `Refactoring/active_refactor.md` non-destructively.
+
+<context>
+Refer to `active_refactor.md` for the current checklist.
+</context>

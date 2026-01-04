@@ -1,7 +1,7 @@
 import json
 import os
 import sys
-from typing import Dict, List
+from typing import Dict, List, Any
 
 def load_file_context(base_path: str, files: List[str]) -> str:
     context = ""
@@ -16,22 +16,49 @@ def load_file_context(base_path: str, files: List[str]) -> str:
             context += f"\n[WARNING: File not found: {file_path}]\n"
     return context
 
+def validate_manifest(manifest: Dict[str, Any]) -> bool:
+    if "agents" not in manifest:
+        print("Error: Manifest missing 'agents' list.")
+        return False
+    # Add more validation as needed
+    return True
+
 def pack_swarm(manifest_path: str):
     if not os.path.exists(manifest_path):
         print(f"Error: Manifest not found at {manifest_path}")
         return
 
-    with open(manifest_path, 'r') as f:
-        manifest = json.load(f)
+    try:
+        with open(manifest_path, 'r', encoding='utf-8') as f:
+            manifest = json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"Error: Failed to parse manifest JSON: {e}")
+        return
+
+    if not validate_manifest(manifest):
+        return
 
     # Adjust context root relative to manifest location or CWD
     context_root = manifest.get("context_root", "./")
     
-    # OUTPUT: Refactoring/swarm_prompts/
-    # We assume manifest is in Refactoring/swarm_manifests/
+    # Paths setup
+    # Manifest assumed to be in Refactoring/swarm_manifests/
     base_path = os.path.dirname(os.path.dirname(manifest_path))
     output_dir = os.path.join(base_path, "swarm_prompts")
     report_dir = os.path.join(base_path, "swarm_reports")
+    
+    # Active Refactor Context Injection
+    active_refactor_path = os.path.join(base_path, "active_refactor.md")
+    global_context = ""
+    if os.path.exists(active_refactor_path):
+        print(f"Found active refactor context: {active_refactor_path}")
+        with open(active_refactor_path, 'r', encoding='utf-8') as f:
+            global_context += "\n--- ACTIVE REFACTOR CONTEXT ---\n"
+            global_context += f.read()
+            global_context += "\n--- END ACTIVE REFACTOR CONTEXT ---\n"
+    else:
+        print("No active_refactor.md found. Starting fresh context.")
+
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(report_dir, exist_ok=True)
 
@@ -39,8 +66,8 @@ def pack_swarm(manifest_path: str):
     
     for agent in manifest["agents"]:
         # Handle 'roles' vs 'role' typo flexibility
-        role = agent["roles"] if "roles" in agent else agent["role"]
-        focus = agent["focus"]
+        role = agent.get("roles", agent.get("role", "Unknown_Role"))
+        focus = agent.get("focus", "General Analysis")
         files = agent.get("primary_files", [])
         
         file_content = load_file_context(context_root, files)
@@ -55,6 +82,9 @@ Analyze the provided code context below.
 Isolate issues specifically related to your FOCUS ({focus}).
 Ignore unrelated issues unless they are critical system failures.
 
+## PHASE STATUS
+{global_context}
+
 ## OUTPUT INSTRUCTIONS
 You are an autonomous agent.
 1. Perform your analysis.
@@ -65,7 +95,9 @@ You are an autonomous agent.
 ## CONTEXT
 {file_content}
 """
-        output_path = os.path.join(output_dir, f"{role}_Prompt.txt")
+        # Sanitize role for filename
+        safe_role = "".join([c for c in role if c.isalnum() or c in (' ', '_', '-')]).strip()
+        output_path = os.path.join(output_dir, f"{safe_role}_Prompt.txt")
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(full_prompt)
             

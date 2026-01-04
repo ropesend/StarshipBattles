@@ -3,7 +3,7 @@
 **Objective:** Verify phase completion.
 
 **Phase 1: The Auditor**
-1. **Analyze:** Read `active_refactor.md` (Checklist & Triage).
+1. **Analyze:** Read `Refactoring/active_refactor.md` (Checklist & Triage results).
 2. **Generate Manifest:** Create `Refactoring/swarm_manifests/review_manifest.json`.
    * Roles: `Code_Reviewer`, `Plan_Adjuster`.
 3. **Execute:** `python Refactoring/scripts/pack_swarm.py Refactoring/swarm_manifests/review_manifest.json`
@@ -11,7 +11,9 @@
 
 **Phase 2: The Synthesizer**
 1. **Synthesize:** Read `Refactoring/swarm_reports/`.
-2. **Update Master Plan:**
-   * Mark Phase [Complete].
-   * Detail Next Phase.
-   * Confirm Deferrals.
+2. **Decision Point:**
+   * **Issues Found?** -> Return to Protocol 11 (Execute fixes).
+   * **Phase Complete?** ->
+     * **Update Plan:** Mark current phase [Complete]. **Append** details for the Next Phase.
+     * **History Preservation:** Do NOT remove completed phases or the original goal.
+     * **ALL PHASES DONE?** -> **Proceed to Protocol 13 (Archive).**

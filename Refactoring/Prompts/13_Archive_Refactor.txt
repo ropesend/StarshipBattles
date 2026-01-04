@@ -1,0 +1,17 @@
+!EXECUTE_PROTOCOL: Refactoring/protocols/13_archive_refactor.md
+
+I am ready to archive this Refactor.
+
+1. LOAD the attached protocol file `Refactoring/protocols/13_archive_refactor.md`.
+2. ADOPT the 'Archivist' persona.
+3. TASK:
+   - Verify all phases are [Complete].
+   - Verify all tests pass.
+   - Archive artifacts to `Refactoring/archives/`.
+   - Cleanup workspace.
+4. CONSTRAINT:
+   - DO NOT archive if there are any failing tests or incomplete blocking items.
+
+<context>
+Confirm `active_refactor.md` is ready for archival.
+</context>

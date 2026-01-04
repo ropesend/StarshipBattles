@@ -1,0 +1,19 @@
+!EXECUTE_PROTOCOL: Refactoring/protocols/10_swarm_plan.md
+
+I am initiating a new Refactor.
+
+1. LOAD the attached protocol file `Refactoring/protocols/10_swarm_plan.md`.
+2. ADOPT the 'Architect' persona.
+3. TASK:
+   - Analyze the goal below.
+   - Generate `Refactoring/swarm_manifests/plan_manifest.json`.
+   - Run `python Refactoring/scripts/pack_swarm.py Refactoring/swarm_manifests/plan_manifest.json`.
+4. CONSTRAINT:
+   - DO NOT write any implementation code.
+   - DO NOT modify `active_refactor.md` yet (Phase 2 does that).
+
+<refactor_goal>
+
+[INSERT GOAL HERE]
+
+</refactor_goal>

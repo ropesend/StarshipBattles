@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Swarm Manifest",
+    "type": "object",
+    "properties": {
+        "context_root": {
+            "type": "string",
+            "description": "Root directory for file paths, relative to the manifest file."
+        },
+        "agents": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "type": "string",
+                        "description": "The persona/role of the agent (e.g., 'Database_Architect')."
+                    },
+                    "focus": {
+                        "type": "string",
+                        "description": "Specific area of concern for this agent."
+                    },
+                    "primary_files": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "List of file paths to include in the agent's context."
+                    }
+                },
+                "required": [
+                    "role",
+                    "focus"
+                ]
+            }
+        }
+    },
+    "required": [
+        "agents"
+    ]
+}

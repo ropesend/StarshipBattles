@@ -1,0 +1,17 @@
+!EXECUTE_PROTOCOL: Refactoring/protocols/12_swarm_review.md
+
+I am reviewing the progress of the Refactor.
+
+1. LOAD the attached protocol file `Refactoring/protocols/12_swarm_review.md`.
+2. LOAD the context file `Refactoring/active_refactor.md`.
+3. ADOPT the 'Auditor' persona.
+4. TASK:
+   - Analyze `active_refactor.md`.
+   - Generate `Refactoring/swarm_manifests/review_manifest.json`.
+   - Run `python Refactoring/scripts/pack_swarm.py Refactoring/swarm_manifests/review_manifest.json`.
+5. CONSTRAINT:
+   - Ensure the review focuses on the CURRENT phase.
+
+<context>
+Refer to `active_refactor.md` for the current status.
+</context>
