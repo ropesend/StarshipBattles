@@ -11,9 +11,9 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-import pygame
 from game.simulation.entities.ship import Ship, LayerType, load_vehicle_classes
 from game.simulation.components.component import load_components, create_component
+import pytest
 
 
 # Physics constants from ship_stats.py
@@ -21,18 +21,19 @@ K_SPEED = 25
 K_THRUST = 2500
 
 
+@pytest.mark.use_custom_data
 class TestEnginePhysics(unittest.TestCase):
     """Test engine physics formulas for speed and acceleration."""
     
     @classmethod
     def setUpClass(cls):
-        pygame.init()
-        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
-        load_components("unit_tests/data/test_components.json")
+        # pygame.init() removed for session isolation
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
     
     @classmethod
     def tearDownClass(cls):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
     
     def _build_engine_ship(self, ship_class, num_engines, mass_sims_1k=0, mass_sims_10k=0):
         """Helper to build a test ship with specified engines and mass simulators."""
@@ -149,18 +150,19 @@ class TestEnginePhysics(unittest.TestCase):
                                msg=f"3x engines should give ~3x speed. Got ratio: {speed_increase_ratio}")
 
 
+@pytest.mark.use_custom_data
 class TestEnginePhysicsFormulas(unittest.TestCase):
     """Direct formula validation tests - dynamically calculates expected values."""
     
     @classmethod
     def setUpClass(cls):
-        pygame.init()
+        # pygame.init() removed for session isolation
         load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
         load_components("unit_tests/data/test_components.json")
     
     @classmethod
     def tearDownClass(cls):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
     
     def _build_and_verify(self, ship_class, engines, mass_1k=0, mass_10k=0):
         """Build ship and verify formulas match calculated values."""

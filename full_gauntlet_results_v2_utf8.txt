@@ -1,0 +1,1467 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+created: 16/16 workers
+16 workers [588 items]
+
+........................................................................ [ 12%]
+........................................................................ [ 24%]
+..F...FF......F......F.......F...F..F..........F................F....... [ 36%]
+F..F........F.......F...F.F...F...F...FF.F.....F...............F........ [ 48%]
+..........................................F............................. [ 61%]
+............................F...........................F............... [ 73%]
+........................................................................ [ 85%]
+.............................................................FF.F....F.. [ 97%]
+............                                                             [100%]
+================================== FAILURES ===================================
+_______________ TestCombatTargeting.test_target_prioritization ________________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_target_prioritization>
+
+    def test_target_prioritization(self):
+        """Test that secondary targets are checked if current target is invalid or out of arc."""
+        self.attacker.max_targets = 2
+    
+        # Weapon with narrow arc
+        weapon = ProjectileWeapon({
+            'name': 'Gun', 'id':'gun', 'firing_arc': 45, 'range': 500,
+            'projectile_speed': 1000, 'damage':10, 'ammo_cost':1,
+             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        weapon.facing_angle = 0
+        weapon.is_active = True
+        self.attacker.add_component(weapon, LayerType.OUTER)
+    
+        # Target 1: Out of Arc (Behind)
+        t1 = Ship("T1", -200, 0, (0,0,0))
+        t1.is_alive = True
+        t1.team_id = 1
+        t1.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+    
+        # Target 2: Valid (In front)
+        t2 = Ship("T2", 200, 0, (0,0,0))
+        t2.is_alive = True
+        t2.team_id = 1
+        t2.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+    
+        self.attacker.current_target = t1
+        self.attacker.secondary_targets = [t2]
+    
+        self.attacker.is_derelict = False
+        self.attacker.max_targets = 2
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1)
+E       AssertionError: 0 != 1
+
+simulation_tests\data_driven\test_combat_targeting.py:217: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+Loaded 5 layer configurations from vehiclelayers.json.
+Loaded 30 vehicle classes.
+[SessionRegistryCache] Loaded 45 components, 30 classes.
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 45 components
+Error: Component ID test_bridge_basic not found in registry.
+DEBUG: create_component('test_bridge_basic') -> None
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestComponentRestrictions.test_ship_accepts_ship_components _________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestComponentRestrictions testMethod=test_ship_accepts_ship_components>
+
+    def test_ship_accepts_ship_components(self):
+        """Standard Ship can add Ship components."""
+        ship = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestShip_S_2L")
+>       bridge = COMPONENT_REGISTRY["test_bridge_basic"].clone()
+E       KeyError: 'test_bridge_basic'
+
+simulation_tests\data_driven\test_vehicle_types.py:155: KeyError
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+Loaded 5 layer configurations from vehiclelayers.json.
+Loaded 30 vehicle classes.
+[SessionRegistryCache] Loaded 45 components, 30 classes.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestCombatTargeting.test_firing_arc_validation ________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_firing_arc_validation>
+
+    def test_firing_arc_validation(self):
+        """Test that weapons do not fire if target is outside firing arc."""
+        weapon = ProjectileWeapon({
+            'name': 'TestGun', 'id':'test_gun', 'firing_arc': 45, 'range': 500,
+            'projectile_speed': 1000, 'damage': 10, 'ammo_cost': 1, 'cooldown': 0,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        weapon.facing_angle = 0 # Right
+        weapon.is_active = True
+        weapon.cooldown_timer = 0
+        self.attacker.add_component(weapon, LayerType.OUTER)
+        self.attacker.angle = 0
+    
+        # Case 1: Target directly ahead (Valid)
+        self.target.position = pygame.math.Vector2(200, 0) # 0 degrees
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1, "Should fire at target directly ahead")
+E       AssertionError: 0 != 1 : Should fire at target directly ahead
+
+simulation_tests\data_driven\test_combat_targeting.py:143: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+Loaded 5 layer configurations from vehiclelayers.json.
+Loaded 30 vehicle classes.
+[SessionRegistryCache] Loaded 45 components, 30 classes.
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 45 components
+Error: Component ID test_bridge_basic not found in registry.
+DEBUG: create_component('test_bridge_basic') -> None
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+____________ TestShipVehicleType.test_ship_vehicle_type_assignment ____________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestShipVehicleType testMethod=test_ship_vehicle_type_assignment>
+
+    def test_ship_vehicle_type_assignment(self):
+        """Ship gets correct vehicle type from class."""
+        ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="TestShip_S_2L")
+        self.assertEqual(ship.vehicle_type, "Ship")
+    
+        fighter = Ship("Test Fighter", 0, 0, (255, 0, 0), ship_class="TestFighter")
+>       self.assertEqual(fighter.vehicle_type, "Fighter")
+E       AssertionError: 'Ship' != 'Fighter'
+E       - Ship
+E       + Fighter
+
+simulation_tests\data_driven\test_vehicle_types.py:90: AssertionError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______ TestComponentRestrictions.test_ship_rejects_fighter_components ________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestComponentRestrictions testMethod=test_ship_rejects_fighter_components>
+
+    def test_ship_rejects_fighter_components(self):
+        """Standard Ship cannot add Fighter-only components."""
+        ship = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestShip_S_2L")
+>       cockpit = COMPONENT_REGISTRY["test_cockpit_fighter"].clone()
+E       KeyError: 'test_cockpit_fighter'
+
+simulation_tests\data_driven\test_vehicle_types.py:162: KeyError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____ TestComponentRestrictions.test_component_allowed_vehicle_types_list _____
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestComponentRestrictions testMethod=test_component_allowed_vehicle_types_list>
+
+    def test_component_allowed_vehicle_types_list(self):
+        """Check component has correct allowed_vehicle_types."""
+>       bridge = COMPONENT_REGISTRY["test_bridge_basic"]
+E       KeyError: 'test_bridge_basic'
+
+simulation_tests\data_driven\test_vehicle_types.py:168: KeyError
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestCombatTargeting.test_resource_consumption_ammo ______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_resource_consumption_ammo>
+
+    def test_resource_consumption_ammo(self):
+        """Verify ammo consumption for ProjectileWeapon."""
+        gun = ProjectileWeapon({
+             'name': 'Cannon', 'id':'cannon', 'ammo_cost': 5, 'range': 500,
+            'damage': 10, 'firing_arc': 360, 'cooldown': 0, 'projectile_speed': 1000,
+             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        gun.is_active = True
+        self.attacker.add_component(gun, LayerType.OUTER)
+        self.attacker.current_ammo = 10
+        self.attacker.current_energy = 1000
+    
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        self.attacker.fire_weapons()
+>       self.assertEqual(self.attacker.current_ammo, 5)
+E       AssertionError: 10 != 5
+
+simulation_tests\data_driven\test_combat_targeting.py:292: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 45 components
+Error: Component ID test_bridge_basic not found in registry.
+DEBUG: create_component('test_bridge_basic') -> None
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestSatelliteLogic.test_satellite_ignores_crew_requirements _________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestSatelliteLogic testMethod=test_satellite_ignores_crew_requirements>
+
+    def test_satellite_ignores_crew_requirements(self):
+        """Satellite components ignore crew requirements."""
+        sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestSatellite")
+    
+        # Railgun normally requires crew (if defined in test data? test_weapon_proj_fixed doesn't have crew reqs currently?)
+        # Let's check test_weapon_proj_fixed ability definitions.
+        # Wait, my added definitions for test components didn't include CrewRequired logic explicitly for weapons?
+        # test_weapon_proj_fixed abilities: {"ProjectileWeapon": true}
+        # It needs CrewRequired ability to test this.
+        # I should probably use a mocked component or ensure the test component has crew reqs.
+        # Or I can clone and add the requirement manually for the test?
+    
+>       railgun = COMPONENT_REGISTRY["test_weapon_proj_fixed"].clone()
+E       KeyError: 'test_weapon_proj_fixed'
+
+simulation_tests\data_driven\test_vehicle_types.py:199: KeyError
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestSatelliteAI.test_satellite_ai_does_not_navigate _____________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestSatelliteAI testMethod=test_satellite_ai_does_not_navigate>
+
+    def test_satellite_ai_does_not_navigate(self):
+        """Satellite AI should NOT call navigation/movement methods."""
+        sat = Ship("Test Sat", 0, 0, (255, 0, 0), ship_class="TestSatellite")
+>       core = COMPONENT_REGISTRY["test_core_satellite"].clone()
+E       KeyError: 'test_core_satellite'
+
+simulation_tests\data_driven\test_vehicle_types.py:234: KeyError
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+----------------------------- Captured log setup ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 7 strategies, 5 targeting, 7 movement
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestCombatTargeting.test_resource_consumption_beam ______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_resource_consumption_beam>
+
+    def test_resource_consumption_beam(self):
+        """Verify energy consumption for BeamWeapon."""
+        beam = BeamWeapon({
+            'name': 'Laser', 'id':'laser', 'energy_cost': 50, 'range': 500,
+            'damage': 10, 'firing_arc': 360, 'cooldown': 0,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        beam.is_active = True
+        self.attacker.add_component(beam, LayerType.OUTER)
+        self.attacker.current_energy = 100
+    
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        self.attacker.fire_weapons()
+>       self.assertEqual(self.attacker.current_energy, 50, "Should consume 50 energy")
+E       AssertionError: 100 != 50 : Should consume 50 energy
+
+simulation_tests\data_driven\test_combat_targeting.py:263: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 45 components
+Error: Component ID test_bridge_basic not found in registry.
+DEBUG: create_component('test_bridge_basic') -> None
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestCombatTargeting.test_seeker_ignores_arc _________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_seeker_ignores_arc>
+
+    def test_seeker_ignores_arc(self):
+        """Verify SeekerWeapon fires even if target is outside arc."""
+        missile_launcher = SeekerWeapon({
+            'name': 'Missile', 'id':'test_missile', 'firing_arc': 10, 'range': 1000,
+            'projectile_speed': 500, 'ammo_cost': 1, 'damage': 10, 'endurance': 100,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        missile_launcher.facing_angle = 0
+        missile_launcher.is_active = True
+        self.attacker.add_component(missile_launcher, LayerType.OUTER)
+    
+        # Target behind
+        self.target.position = pygame.math.Vector2(-200, 0)
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+    
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1, "Seeker weapon should fire regardless of arc")
+E       AssertionError: 0 != 1 : Seeker weapon should fire regardless of arc
+
+simulation_tests\data_driven\test_combat_targeting.py:180: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 45 components
+Error: Component ID test_bridge_basic not found in registry.
+DEBUG: create_component('test_bridge_basic') -> None
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestVehicleClassLoading.test_fighter_classes_loaded _____________
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestVehicleClassLoading testMethod=test_fighter_classes_loaded>
+
+    def test_fighter_classes_loaded(self):
+        """Verify Fighter class variants are loaded."""
+        fighter_classes = [n for n, c in VEHICLE_CLASSES.items() if c.get('type') == 'Fighter']
+        self.assertGreater(len(fighter_classes), 0, "At least one Fighter class should exist")
+        # Check specific variants
+>       self.assertIn("TestFighter", VEHICLE_CLASSES)
+E       AssertionError: 'TestFighter' not found in {'Escort': {'type': 'Ship', 'code': 'ES', 'hull_mass': 50, 'max_mass': 1000, 'layer_config': 'Capital_Escort', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Frigate': {'type': 'Ship', 'code': 'FR', 'hull_mass': 100, 'max_mass': 2000, 'layer_config': 'Capital_Escort', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Destroyer': {'type': 'Ship', 'code': 'DS', 'hull_mass': 200, 'max_mass': 4000, 'layer_config': 'Capital_Escort', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Light Cruiser': {'type': 'Ship', 'code': 'LC', 'hull_mass': 300, 'max_mass': 8000, 'layer_config': 'Capital_Escort', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Cruiser': {'type': 'Ship', 'code': 'CR', 'hull_mass': 400, 'max_mass': 16000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Heavy Cruiser': {'type': 'Ship', 'code': 'HC', 'hull_mass': 600, 'max_mass': 32000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Battle Cruiser': {'type': 'Ship', 'code': 'BC', 'hull_mass': 800, 'max_mass': 64000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Battleship': {'type': 'Ship', 'code': 'BS', 'hull_mass': 1600, 'max_mass': 128000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Dreadnought': {'type': 'Ship', 'code': 'DN', 'hull_mass': 3200, 'max_mass': 256000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Superdreadnaugh': {'type': 'Ship', 'code': 'SD', 'hull_mass': 6400, 'max_mass': 512000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Monitor': {'type': 'Ship', 'code': 'MO', 'hull_mass': 12800, 'max_mass': 1024000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Fighter (Small)': {'type': 'Fighter', 'code': 'SF', 'hull_mass': 5, 'max_mass': 25, 'layer_config': 'Fighter_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 1.0}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Fighter (Medium)': {'type': 'Fighter', 'code': 'MF', 'hull_mass': 10, 'max_mass': 35, 'layer_config': 'Fighter_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 1.0}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Fighter (Large)': {'type': 'Fighter', 'code': 'LF', 'hull_mass': 15, 'max_mass': 50, 'layer_config': 'Fighter_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 1.0}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Fighter (Heavy)': {'type': 'Fighter', 'code': 'HF', 'hull_mass': 20, 'max_mass': 70, 'layer_config': 'Fighter_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 1.0}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Satellite (Small)': {'type': 'Satellite', 'code': 'SS', 'hull_mass': 50, 'max_mass': 250, 'layer_config': 'Satellite_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Satellite (Medium)': {'type': 'Satellite', 'code': 'MS', 'hull_mass': 100, 'max_mass': 500, 'layer_config': 'Satellite_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Satellite (Large)': {'type': 'Satellite', 'code': 'LS', 'hull_mass': 200, 'max_mass': 1000, 'layer_config': 'Satellite_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Satellite (Heavy)': {'type': 'Satellite', 'code': 'HS', 'hull_mass': 400, 'max_mass': 2000, 'layer_config': 'Satellite_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 1)': {'type': 'Planetary Complex', 'code': 'PC1', 'hull_mass': 0, 'max_mass': 1000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 2)': {'type': 'Planetary Complex', 'code': 'PC2', 'hull_mass': 0, 'max_mass': 2000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 3)': {'type': 'Planetary Complex', 'code': 'PC3', 'hull_mass': 0, 'max_mass': 4000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 4)': {'type': 'Planetary Complex', 'code': 'PC4', 'hull_mass': 0, 'max_mass': 8000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 5)': {'type': 'Planetary Complex', 'code': 'PC5', 'hull_mass': 0, 'max_mass': 16000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 6)': {'type': 'Planetary Complex', 'code': 'PC6', 'hull_mass': 0, 'max_mass': 32000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 7)': {'type': 'Planetary Complex', 'code': 'PC7', 'hull_mass': 0, 'max_mass': 64000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 8)': {'type': 'Planetary Complex', 'code': 'PC8', 'hull_mass': 0, 'max_mass': 128000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 9)': {'type': 'Planetary Complex', 'code': 'PC9', 'hull_mass': 0, 'max_mass': 256000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 10)': {'type': 'Planetary Complex', 'code': 'PC10', 'hull_mass': 0, 'max_mass': 512000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 11)': {'type': 'Planetary Complex', 'code': 'PC11', 'hull_mass': 0, 'max_mass': 1024000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}}
+
+simulation_tests\data_driven\test_vehicle_types.py:48: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+----------------------------- Captured log setup ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 7 strategies, 5 targeting, 7 movement
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______ TestComponentRestrictions.test_fighter_accepts_fighter_components ______
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestComponentRestrictions testMethod=test_fighter_accepts_fighter_components>
+
+    def test_fighter_accepts_fighter_components(self):
+        """Fighter can add Fighter-specific components."""
+        fighter = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestFighter")
+>       cockpit = COMPONENT_REGISTRY["test_cockpit_fighter"].clone()
+E       KeyError: 'test_cockpit_fighter'
+
+simulation_tests\data_driven\test_vehicle_types.py:114: KeyError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______ TestComponentRestrictions.test_fighter_rejects_ship_components ________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestComponentRestrictions testMethod=test_fighter_rejects_ship_components>
+
+    def test_fighter_rejects_ship_components(self):
+        """Fighter cannot add Ship-only components."""
+        fighter = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestFighter")
+>       bridge = COMPONENT_REGISTRY["test_bridge_basic"].clone()
+E       KeyError: 'test_bridge_basic'
+
+simulation_tests\data_driven\test_vehicle_types.py:121: KeyError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestEnginePhysics.test_ENG_001_base_speed_accel_calculation _________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_engine_physics.TestEnginePhysics testMethod=test_ENG_001_base_speed_accel_calculation>
+
+    def test_ENG_001_base_speed_accel_calculation(self):
+        """ENG-001: Verify base speed/acceleration formulas with minimal mass ship."""
+        # Build: 1 engine, minimal mass (TestS_2L: hull 20 + engine 20 = 40 mass)
+        ship = self._build_engine_ship("TestS_2L", num_engines=1)
+    
+        # Expected values
+        thrust = 500  # test_engine_std thrust
+        mass = 40     # hull(20) + engine(20)
+        expected_speed = (thrust * K_SPEED) / mass  # 312.5
+        expected_accel = (thrust * K_THRUST) / (mass ** 2)  # 78125
+    
+>       self.assertEqual(ship.total_thrust, thrust)
+E       AssertionError: 0 != 500
+
+simulation_tests\data_driven\test_engine_physics.py:65: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________ TestSatelliteAI.test_satellite_ai_fires_when_has_target ___________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestSatelliteAI testMethod=test_satellite_ai_fires_when_has_target>
+
+    def test_satellite_ai_fires_when_has_target(self):
+        """Satellite AI should set comp_trigger_pulled when target exists."""
+        sat = Ship("Test Sat", 100, 100, (255, 0, 0), team_id=0,
+                   ship_class="TestSatellite")
+>       core = COMPONENT_REGISTRY["test_core_satellite"].clone()
+E       KeyError: 'test_core_satellite'
+
+simulation_tests\data_driven\test_vehicle_types.py:280: KeyError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestComponentRestrictions.test_satellite_accepts_weapons ___________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestComponentRestrictions testMethod=test_satellite_accepts_weapons>
+
+    def test_satellite_accepts_weapons(self):
+        """Satellites can add allowed weapons."""
+        sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestSatellite")
+    
+>       railgun = COMPONENT_REGISTRY["test_weapon_proj_fixed"].clone()
+E       KeyError: 'test_weapon_proj_fixed'
+
+simulation_tests\data_driven\test_vehicle_types.py:144: KeyError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestToHitProfile.test_larger_ship_easier_to_hit _______________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_ship_extended.TestToHitProfile testMethod=test_larger_ship_easier_to_hit>
+
+    def test_larger_ship_easier_to_hit(self):
+        """Larger ships should have LOWER Defense Score (Easier to Hit)."""
+        # Small ship - TestShip_S_2L (Max Mass 2000)
+        small = Ship("Small", 0, 0, (255, 255, 255), ship_class="TestShip_S_2L")
+        small.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        small.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        small.add_component(create_component('test_life_support'), LayerType.CORE)
+        small.add_component(create_component('test_engine_std'), LayerType.CORE)
+        small.recalculate_stats()
+    
+        # Large ship - TestShip_L_4L (Max Mass 10000)
+        large = Ship("Large", 0, 0, (255, 255, 255), ship_class="TestShip_L_4L")
+        large.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        large.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        large.add_component(create_component('test_life_support'), LayerType.CORE)
+        large.add_component(create_component('test_engine_std'), LayerType.OUTER)
+        # Add massive bulk
+        for _ in range(20):
+             # Adding heavy structure/armor to increase mass/radius
+             large.add_component(create_component('test_armor_std'), LayerType.ARMOR)
+    
+        large.recalculate_stats()
+    
+        # Logic: Defense Score = SizeScore + ManueverScore
+        # Large Size = Negative Score. Small Size = Less Negative/Positive.
+        # So Large Ship Score < Small Ship Score
+>       self.assertLess(large.to_hit_profile, small.to_hit_profile)
+E       AssertionError: 0.8333333333333333 not less than 0.8333333333333333
+
+simulation_tests\data_driven\test_ship_extended.py:149: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______ TestEnginePhysics.test_ENG_002_speed_decreases_linearly_with_mass ______
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_engine_physics.TestEnginePhysics testMethod=test_ENG_002_speed_decreases_linearly_with_mass>
+
+    def test_ENG_002_speed_decreases_linearly_with_mass(self):
+        """ENG-002: Speed decreases linearly with mass (speed \u221d 1/mass)."""
+        # Three ships: same thrust (500), different masses
+        ship_low = self._build_engine_ship("TestS_2L", num_engines=1)  # 40 mass
+        ship_med = self._build_engine_ship("TestS_2L", num_engines=1, mass_sims_1k=2)  # 2040 mass
+        ship_high = self._build_engine_ship("TestM_2L", num_engines=1, mass_sims_10k=1)  # 10220 mass
+    
+        # Verify speed decreases
+>       self.assertGreater(ship_low.max_speed, ship_med.max_speed,
+                           "Low mass ship should be faster than medium")
+E       AssertionError: 0 not greater than 0 : Low mass ship should be faster than medium
+
+simulation_tests\data_driven\test_engine_physics.py:80: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_mass_sim_1k not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_mass_sim_1k not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_mass_sim_10k not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___ TestComponentRestrictions.test_satellite_rejects_engines_and_thrusters ____
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestComponentRestrictions testMethod=test_satellite_rejects_engines_and_thrusters>
+
+    def test_satellite_rejects_engines_and_thrusters(self):
+        """Satellites cannot add propulsion components."""
+        sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestSatellite")
+    
+>       engine = COMPONENT_REGISTRY["test_engine_std"].clone()
+E       KeyError: 'test_engine_std'
+
+simulation_tests\data_driven\test_vehicle_types.py:129: KeyError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestSatelliteAI.test_satellite_ai_still_targets _______________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestSatelliteAI testMethod=test_satellite_ai_still_targets>
+
+    def test_satellite_ai_still_targets(self):
+        """Satellite AI should still acquire targets."""
+        sat = Ship("Test Sat", 100, 100, (255, 0, 0), team_id=0,
+                   ship_class="TestSatellite")
+>       core = COMPONENT_REGISTRY["test_core_satellite"].clone()
+E       KeyError: 'test_core_satellite'
+
+simulation_tests\data_driven\test_vehicle_types.py:258: KeyError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___ TestEnginePhysics.test_ENG_003_accel_decreases_quadratically_with_mass ____
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_engine_physics.TestEnginePhysics testMethod=test_ENG_003_accel_decreases_quadratically_with_mass>
+
+    def test_ENG_003_accel_decreases_quadratically_with_mass(self):
+        """ENG-003: Acceleration decreases quadratically with mass (accel \u221d 1/mass\xb2)."""
+        # Same three ships as ENG-002
+        ship_low = self._build_engine_ship("TestS_2L", num_engines=1)  # 40 mass
+        ship_med = self._build_engine_ship("TestS_2L", num_engines=1, mass_sims_1k=2)  # 2040 mass
+        ship_high = self._build_engine_ship("TestM_2L", num_engines=1, mass_sims_10k=1)  # 10220 mass
+    
+        # Verify accel decreases
+>       self.assertGreater(ship_low.acceleration_rate, ship_med.acceleration_rate,
+                           "Low mass ship should have higher accel than medium")
+E       AssertionError: 0.0 not greater than 0.0 : Low mass ship should have higher accel than medium
+
+simulation_tests\data_driven\test_engine_physics.py:106: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_mass_sim_1k not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_mass_sim_1k not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_mass_sim_10k not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+____________ TestVehicleClassLoading.test_satellite_classes_loaded ____________
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestVehicleClassLoading testMethod=test_satellite_classes_loaded>
+
+    def test_satellite_classes_loaded(self):
+        """Verify Satellite class variants are loaded."""
+        sat_classes = [n for n, c in VEHICLE_CLASSES.items() if c.get('type') == 'Satellite']
+        self.assertGreater(len(sat_classes), 0, "At least one Satellite class should exist")
+>       self.assertIn("TestSatellite", VEHICLE_CLASSES)
+E       AssertionError: 'TestSatellite' not found in {'Escort': {'type': 'Ship', 'code': 'ES', 'hull_mass': 50, 'max_mass': 1000, 'layer_config': 'Capital_Escort', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Frigate': {'type': 'Ship', 'code': 'FR', 'hull_mass': 100, 'max_mass': 2000, 'layer_config': 'Capital_Escort', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Destroyer': {'type': 'Ship', 'code': 'DS', 'hull_mass': 200, 'max_mass': 4000, 'layer_config': 'Capital_Escort', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Light Cruiser': {'type': 'Ship', 'code': 'LC', 'hull_mass': 300, 'max_mass': 8000, 'layer_config': 'Capital_Escort', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Cruiser': {'type': 'Ship', 'code': 'CR', 'hull_mass': 400, 'max_mass': 16000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Heavy Cruiser': {'type': 'Ship', 'code': 'HC', 'hull_mass': 600, 'max_mass': 32000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Battle Cruiser': {'type': 'Ship', 'code': 'BC', 'hull_mass': 800, 'max_mass': 64000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Battleship': {'type': 'Ship', 'code': 'BS', 'hull_mass': 1600, 'max_mass': 128000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Dreadnought': {'type': 'Ship', 'code': 'DN', 'hull_mass': 3200, 'max_mass': 256000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Superdreadnaugh': {'type': 'Ship', 'code': 'SD', 'hull_mass': 6400, 'max_mass': 512000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Monitor': {'type': 'Ship', 'code': 'MO', 'hull_mass': 12800, 'max_mass': 1024000, 'layer_config': 'Capital_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': ['block_classification:Weapons', 'block_classification:Engines'], 'max_mass_pct': 0.3}, {'type': 'INNER', 'restrictions': ['block_classification:Weapons'], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Fighter (Small)': {'type': 'Fighter', 'code': 'SF', 'hull_mass': 5, 'max_mass': 25, 'layer_config': 'Fighter_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 1.0}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Fighter (Medium)': {'type': 'Fighter', 'code': 'MF', 'hull_mass': 10, 'max_mass': 35, 'layer_config': 'Fighter_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 1.0}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Fighter (Large)': {'type': 'Fighter', 'code': 'LF', 'hull_mass': 15, 'max_mass': 50, 'layer_config': 'Fighter_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 1.0}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Fighter (Heavy)': {'type': 'Fighter', 'code': 'HF', 'hull_mass': 20, 'max_mass': 70, 'layer_config': 'Fighter_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}, 'propulsion': {'ability': 'CombatPropulsion', 'min_value': 1}, 'fuel': {'ability': 'FuelStorage', 'min_value': 1}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 1.0}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Satellite (Small)': {'type': 'Satellite', 'code': 'SS', 'hull_mass': 50, 'max_mass': 250, 'layer_config': 'Satellite_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Satellite (Medium)': {'type': 'Satellite', 'code': 'MS', 'hull_mass': 100, 'max_mass': 500, 'layer_config': 'Satellite_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Satellite (Large)': {'type': 'Satellite', 'code': 'LS', 'hull_mass': 200, 'max_mass': 1000, 'layer_config': 'Satellite_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Satellite (Heavy)': {'type': 'Satellite', 'code': 'HS', 'hull_mass': 400, 'max_mass': 2000, 'layer_config': 'Satellite_Standard', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.7}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 1)': {'type': 'Planetary Complex', 'code': 'PC1', 'hull_mass': 0, 'max_mass': 1000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 2)': {'type': 'Planetary Complex', 'code': 'PC2', 'hull_mass': 0, 'max_mass': 2000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 3)': {'type': 'Planetary Complex', 'code': 'PC3', 'hull_mass': 0, 'max_mass': 4000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 4)': {'type': 'Planetary Complex', 'code': 'PC4', 'hull_mass': 0, 'max_mass': 8000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 5)': {'type': 'Planetary Complex', 'code': 'PC5', 'hull_mass': 0, 'max_mass': 16000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 6)': {'type': 'Planetary Complex', 'code': 'PC6', 'hull_mass': 0, 'max_mass': 32000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 7)': {'type': 'Planetary Complex', 'code': 'PC7', 'hull_mass': 0, 'max_mass': 64000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 8)': {'type': 'Planetary Complex', 'code': 'PC8', 'hull_mass': 0, 'max_mass': 128000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 9)': {'type': 'Planetary Complex', 'code': 'PC9', 'hull_mass': 0, 'max_mass': 256000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 10)': {'type': 'Planetary Complex', 'code': 'PC10', 'hull_mass': 0, 'max_mass': 512000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}, 'Planetary Complex (Tier 11)': {'type': 'Planetary Complex', 'code': 'PC11', 'hull_mass': 0, 'max_mass': 1024000, 'layer_config': 'Planetary_Complex', 'requirements': {'command': {'ability': 'CommandAndControl', 'min_value': True}}, 'layers': [{'type': 'CORE', 'restrictions': [], 'max_mass_pct': 0.5}, {'type': 'INNER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'OUTER', 'restrictions': [], 'max_mass_pct': 0.6}, {'type': 'ARMOR', 'restrictions': ['allow_classification:Armor'], 'max_mass_pct': 0.3}]}}
+
+simulation_tests\data_driven\test_vehicle_types.py:54: AssertionError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____ TestEnginePhysics.test_ENG_004_speed_increases_linearly_with_thrust _____
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_engine_physics.TestEnginePhysics testMethod=test_ENG_004_speed_increases_linearly_with_thrust>
+
+    def test_ENG_004_speed_increases_linearly_with_thrust(self):
+        """ENG-004: Speed increases linearly with thrust (at same mass)."""
+        # Two ships with different engine counts but same base class
+        # Using same class for similar hull mass, comparing thrust effect
+    
+        # 1 engine: thrust 500
+        ship_1x = self._build_engine_ship("TestM_3L", num_engines=1)
+        # 3 engines: thrust 1500
+        ship_3x = self._build_engine_ship("TestM_3L", num_engines=3)
+    
+        # Mass difference is small (2 extra engines = 40 mass difference)
+        # Focus on verifying thrust increase produces proportional speed increase
+    
+        # Calculate expected speeds using actual masses
+        expected_1x = (500 * K_SPEED) / ship_1x.mass
+        expected_3x = (1500 * K_SPEED) / ship_3x.mass
+    
+>       self.assertAlmostEqual(ship_1x.max_speed, expected_1x, places=1)
+E       AssertionError: 0 != 250.0 within 1 places (250.0 difference)
+
+simulation_tests\data_driven\test_engine_physics.py:141: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestMaxWeaponRange.test_max_weapon_range_multiple_weapons __________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_ship_extended.TestMaxWeaponRange testMethod=test_max_weapon_range_multiple_weapons>
+
+    def test_max_weapon_range_multiple_weapons(self):
+        """Ship with multiple weapons should return longest range."""
+        ship = Ship("HeavilyArmed", 0, 0, (255, 255, 255))
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
+    
+        # Add different weapons
+        railgun = create_component('test_weapon_proj_fixed')
+        laser = create_component('test_weapon_beam_std')
+        ship.add_component(railgun, LayerType.OUTER)
+        ship.add_component(laser, LayerType.OUTER)
+        ship.recalculate_stats()
+    
+>       expected_max = max(railgun.range, laser.range)
+E       AttributeError: 'NoneType' object has no attribute 'range'
+
+simulation_tests\data_driven\test_ship_extended.py:212: AttributeError
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_weapon_proj_fixed not found in registry.
+Error: Component ID test_weapon_beam_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________ TestMaxWeaponRange.test_max_weapon_range_single_weapon ____________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_ship_extended.TestMaxWeaponRange testMethod=test_max_weapon_range_single_weapon>
+
+    def test_max_weapon_range_single_weapon(self):
+        """Ship with one weapon should return that weapon's range."""
+        ship = Ship("Armed", 0, 0, (255, 255, 255))
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
+        railgun = create_component('test_weapon_proj_fixed')
+        ship.add_component(railgun, LayerType.OUTER)
+        ship.recalculate_stats()
+    
+>       self.assertEqual(ship.max_weapon_range, railgun.range)
+E       AttributeError: 'NoneType' object has no attribute 'range'
+
+simulation_tests\data_driven\test_ship_extended.py:196: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_weapon_proj_fixed not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________________ TestShipThemeLogic.test_get_image_metrics __________________
+[gw12] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_theme_logic.TestShipThemeLogic testMethod=test_get_image_metrics>
+mock_load = <MagicMock name='load' id='2172003664368'>
+mock_open_file = <MagicMock name='open' spec='builtin_function_or_method' id='2172003677136'>
+mock_json_load = <MagicMock name='load' id='2172003676224'>
+mock_exists = <MagicMock name='exists' id='2172002324096'>
+mock_scandir = <MagicMock name='scandir' id='2172002332544'>
+mock_log = <MagicMock name='log_error' id='2172002789472'>
+
+    @patch('ship_theme.log_error')
+    @patch('os.scandir')
+    @patch('os.path.exists')
+    @patch('ship_theme.json.load')
+    @patch('builtins.open', new_callable=mock_open)
+    @patch('pygame.image.load')
+    def test_get_image_metrics(self, mock_load, mock_open_file, mock_json_load, mock_exists, mock_scandir, mock_log):
+        """Test that bounding rect is correctly calculated and cached."""
+    
+        theme_name = "MetricsTheme"
+        ship_class = "TestShip"
+        json_content = {
+            "name": theme_name,
+            "images": {
+                ship_class: "game.simulation.entities.ship.png"
+            }
+        }
+    
+        # Mocks setup
+        mock_entry = MagicMock()
+        mock_entry.is_dir.return_value = True
+        mock_entry.path = f"/themes/{theme_name}"
+        mock_scandir.return_value = [mock_entry]
+    
+        mock_exists.return_value = True # Simplify exists checks
+        mock_json_load.return_value = json_content
+    
+        # Create a mock surface to avoid environment-specific convert_alpha behavior
+        mock_surface = MagicMock(spec=pygame.Surface)
+        mock_surface.get_size.return_value = (20, 20)
+        # Use a real Rect for the mock to return
+        mock_rect = pygame.Rect(5, 5, 10, 10)
+        mock_surface.get_bounding_rect.return_value = mock_rect
+        mock_surface.convert_alpha.return_value = mock_surface
+    
+        mock_load.return_value = mock_surface
+    
+        # Initialize
+        self.manager.initialize("/fake/base/path")
+    
+        # Verify no errors logged
+        mock_log.assert_not_called()
+    
+        # Verify metrics
+        rect = self.manager.get_image_metrics(theme_name, ship_class)
+        self.assertIsNotNone(rect)
+>       self.assertEqual(rect.x, 5)
+E       AssertionError: 0 != 5
+
+tests\unit\test_ship_theme_logic.py:152: AssertionError
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 1 ship themes: ['MetricsTheme']
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestMainIntegration.test_game_instantiation _________________
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_main_integration.TestMainIntegration testMethod=test_game_instantiation>
+mock_info = <MagicMock name='Info' id='2412940546960'>
+
+    @patch('pygame.display.Info')
+    def test_game_instantiation(self, mock_info):
+        """Test that the Game class can be instantiated."""
+        # Setup mocks for screen resolution
+        mock_info_obj = MagicMock()
+        type(mock_info_obj).current_w = unittest.mock.PropertyMock(return_value=1920)
+        type(mock_info_obj).current_h = unittest.mock.PropertyMock(return_value=1080)
+        # Fallback for direct attribute access if not property
+        mock_info_obj.current_w = 1920
+        mock_info_obj.current_h = 1080
+        mock_info.return_value = mock_info_obj
+    
+        # We allow real set_mode to run (with dummy driver defined in imports)
+        # to ensure surfaces can be converted.
+    
+        try:
+            from game import app
+>           game = app.Game()
+
+tests\unit\test_main_integration.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+game\app.py:104: in __init__
+    self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return)
+game\ui\screens\builder_screen.py:123: in __init__
+    self._create_ui()
+game\ui\screens\builder_screen.py:132: in _create_ui
+    self.left_panel = BuilderLeftPanel(
+ui\builder\left_panel.py:24: in __init__
+    UILabel(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:122: in __init__
+    self.rebuild_from_changed_theme_data()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:314: in rebuild_from_changed_theme_data
+    self.rebuild()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:210: in rebuild
+    self.drawable_shape = RectDrawableShape(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rect_drawable_shape.py:64: in __init__
+    self.full_rebuild_on_size_change()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rect_drawable_shape.py:217: in full_rebuild_on_size_change
+    self.redraw_all_states()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:480: in redraw_all_states
+    self.redraw_state(initial_state)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rect_drawable_shape.py:462: in redraw_state
+    self.finalise_images_and_text(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:630: in finalise_images_and_text
+    self.finalise_text(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:868: in finalise_text
+    self.text_box_layout.finalise_to_surf(text_surface)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:512: in finalise_to_surf
+    row.finalise(surface)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout_row.py:394: in finalise
+    text_chunk.finalise(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_line_chunk.py:213: in finalise
+    surface = self._draw_text(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_line_chunk.py:388: in _draw_text
+    text_surface = self._handle_text_selection_and_text_drawing(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_line_chunk.py:321: in _handle_text_selection_and_text_drawing
+    text_surface: pygame.Surface = self.font.render_premul_to(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <pygame_gui.core.gui_font_pygame.GUIFontPygame object at 0x00000231CE7FED10>
+text = 'Components', text_colour = Color(255, 255, 255, 255)
+surf_size = (85, 20), surf_position = (0, 15)
+
+    def render_premul_to(
+        self,
+        text: str,
+        text_colour: Color,
+        surf_size: Tuple[int, int],
+        surf_position: Tuple[int, int],
+    ) -> Surface:
+        text_surface = pygame.Surface(surf_size, depth=32, flags=pygame.SRCALPHA)
+        text_surface.fill((0, 0, 0, 0))
+        temp_surf = self.__internal_font.render(text, self.antialiased, text_colour)
+>       temp_surf = temp_surf.convert_alpha()
+E       pygame.error: No convert format has been set, try display.set_mode() or Window.get_surface().
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\gui_font_pygame.py:121: error
+
+During handling of the above exception, another exception occurred:
+
+self = <unit.test_main_integration.TestMainIntegration testMethod=test_game_instantiation>
+mock_info = <MagicMock name='Info' id='2412940546960'>
+
+    @patch('pygame.display.Info')
+    def test_game_instantiation(self, mock_info):
+        """Test that the Game class can be instantiated."""
+        # Setup mocks for screen resolution
+        mock_info_obj = MagicMock()
+        type(mock_info_obj).current_w = unittest.mock.PropertyMock(return_value=1920)
+        type(mock_info_obj).current_h = unittest.mock.PropertyMock(return_value=1080)
+        # Fallback for direct attribute access if not property
+        mock_info_obj.current_w = 1920
+        mock_info_obj.current_h = 1080
+        mock_info.return_value = mock_info_obj
+    
+        # We allow real set_mode to run (with dummy driver defined in imports)
+        # to ensure surfaces can be converted.
+    
+        try:
+            from game import app
+            game = app.Game()
+            self.assertIsNotNone(game)
+            self.assertIsNotNone(game.battle_scene)
+            self.assertIsNotNone(game.battle_scene.engine)
+    
+            # Verify the engine has a logger (instance based)
+            self.assertTrue(hasattr(game.battle_scene.engine, 'logger'))
+    
+            # Verify BATTLE_LOG is NOT a property of the battle module anymore
+            from game.ui.screens import battle_scene
+            self.assertFalse(hasattr(battle_scene, 'BATTLE_LOG'), "battle_scene module should not export global BATTLE_LOG")
+    
+        except ImportError as e:
+            self.fail(f"Game instantiation failed due to ImportError: {e}")
+        except Exception as e:
+>           self.fail(f"Game instantiation failed with exception: {e}")
+E           AssertionError: Game instantiation failed with exception: No convert format has been set, try display.set_mode() or Window.get_surface().
+
+tests\unit\test_main_integration.py:68: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loading sprites from C:\Dev\Starship Battles\assets\Images\Components\Tiles
+ERROR loading 2048Portrait_Comp_001.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_002.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_003.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_004.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_005.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_006.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_007.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_008.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_009.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_010.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_011.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_012.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_013.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_014.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_015.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_016.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_017.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_018.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_019.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_020.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_021.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_022.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_023.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_024.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_025.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_026.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_027.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_028.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_029.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_030.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_031.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_032.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_033.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_034.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_035.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_036.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_037.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_038.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_039.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_040.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_041.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_042.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_043.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_044.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_045.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_046.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_047.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_048.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_049.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_050.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_051.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_052.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_053.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_054.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_055.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_056.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_057.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_058.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_059.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_060.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_061.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_062.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_063.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_064.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_065.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_066.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_067.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_068.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_069.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_070.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_071.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_072.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_073.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_074.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_075.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_076.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_077.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_078.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_079.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_080.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_081.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_082.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_083.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_084.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_085.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_086.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_087.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_088.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_089.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_090.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_091.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_092.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_093.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_094.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_095.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_096.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_097.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_098.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_099.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_100.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_101.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_102.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_103.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_104.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_105.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_106.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_107.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_108.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_109.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_110.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_111.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_112.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_113.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_114.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_115.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_116.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_117.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_118.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_119.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_120.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_121.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_122.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_123.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_124.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_125.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_126.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_127.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_128.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_129.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_130.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_131.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_132.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_133.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_134.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_135.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_136.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_137.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_138.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_139.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_140.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_141.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_142.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_143.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_144.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_145.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_146.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_147.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_148.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_149.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_150.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_151.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_152.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_153.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_154.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_155.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_156.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_157.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_158.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_159.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_160.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_161.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_162.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_163.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_164.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_165.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_166.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_167.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_168.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_169.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_170.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_171.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_172.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_173.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_174.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_175.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_176.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_177.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_178.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_179.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_180.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_181.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_182.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_183.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_184.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_185.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_186.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_187.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_188.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_189.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_190.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_191.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_192.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_193.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_194.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_195.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_196.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_197.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_198.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_199.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_200.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_201.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_202.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_203.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_204.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_205.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_206.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_207.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_208.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_209.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_210.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_211.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_212.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_213.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_214.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_215.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_216.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_217.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_218.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_219.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_220.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_221.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_222.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_223.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_224.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_225.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_226.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_227.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_228.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_229.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_230.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_231.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_232.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_233.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_234.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_235.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_236.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_237.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_238.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_239.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_240.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_241.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_242.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+SUCCESS: Loaded 0 sprites from directory (max index -1)
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________________ TestNewThemes.test_klingon_theme_loads ____________________
+[gw12] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_theme_discovery.TestNewThemes testMethod=test_klingon_theme_loads>
+
+    def test_klingon_theme_loads(self):
+        """Verify Klingon theme loads and has images."""
+        # Note: JSON key is "Battle Cruiser" with space
+        img = self.manager.get_image("Klingons", "Battle Cruiser")
+        self.assertIsNotNone(img)
+        # Verify it's not the fallback (100x100)
+>       self.assertNotEqual(img.get_size(), (100, 100), "Should not be fallback image")
+E       AssertionError: (100, 100) == (100, 100) : Should not be fallback image
+
+tests\unit\test_theme_discovery.py:45: AssertionError
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+[1m[31mERROR   [0m StarshipBattles:logger.py:35 Lazy load failed for C:\Dev\Starship Battles\assets\ShipThemes\Klingons\Skins/battlecruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestBuilderUISync.test_refresh_controls_syncs_ui _______________
+[gw6] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_builder_ui_sync.TestBuilderUISync testMethod=test_refresh_controls_syncs_ui>
+
+    def test_refresh_controls_syncs_ui(self):
+        """Verify that refresh_controls updates UI elements to match ship state."""
+        # 1. Modify Ship State from defaults (Escort, Federation)
+        self.mock_builder.ship.name = "New Name"
+    
+        # Ensure we pick a class that definitely exists and isn't Escort
+        target_class = "Cruiser"
+        if target_class not in VEHICLE_CLASSES:
+             # Fallback if data is different
+             target_class = list(VEHICLE_CLASSES.keys())[-1]
+    
+        self.mock_builder.ship.ship_class = target_class
+        self.mock_builder.ship.theme_id = "Klingon"
+    
+        # Set AI to something non-default
+        # Default is usually optimal_firing_range
+        self.mock_builder.ship.ai_strategy = "kamikaze"
+    
+        # 2. Call Refresh (mocking portrait update to avoid side effects)
+        # 2. Call Refresh (mocking portrait update to avoid side effects)
+        with patch.object(self.panel, 'update_portrait_image') as mock_update_img:
+            self.panel.refresh_controls()
+            mock_update_img.assert_called_once()
+    
+        # 3. Assert UI values match Ship State
+    
+        # Name
+        self.assertEqual(self.panel.name_entry.get_text(), "New Name")
+    
+        # Theme
+        val = self._get_option_value(self.panel.theme_dropdown.selected_option)
+        self.assertEqual(val, "Klingon")
+    
+        # Class
+        val = self._get_option_value(self.panel.class_dropdown.selected_option)
+        self.assertEqual(val, target_class)
+    
+        # AI
+        # AI Strategy Name lookup
+        strat_name = COMBAT_STRATEGIES["kamikaze"]["name"]
+        val = self._get_option_value(self.panel.ai_dropdown.selected_option)
+>       self.assertEqual(val, strat_name)
+E       AssertionError: 'Standard Ranged' != 'Kamikaze'
+E       - Standard Ranged
+E       + Kamikaze
+
+tests\unit\test_builder_ui_sync.py:92: AssertionError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+============================== warnings summary ===============================
+test_framework\runner.py:14: 16 warnings
+  C:\Dev\Starship Battles\test_framework\runner.py:14: PytestCollectionWarning: cannot collect test class 'TestRunner' because it has a __init__ constructor (from: ui/test_lab_scene.py)
+    class TestRunner:
+
+ui\test_lab_scene.py:13: 16 warnings
+  C:\Dev\Starship Battles\ui\test_lab_scene.py:13: PytestCollectionWarning: cannot collect test class 'TestLabScene' because it has a __init__ constructor (from: ui/test_lab_scene.py)
+    class TestLabScene:
+
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_multi_selection_logic.py: 3 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:92: UserWarning: Clamping shadow_width of: 2, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_multi_selection_logic.py: 3 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:113: UserWarning: Clamping border_width of: 1, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Energy: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Energy Gen: - size diff: (-14, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Thrust: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Acceleration: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Top Speed: - size diff: (-7, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Maneuvering Points: - size diff: (-108, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Turning Rate: - size diff: (-24, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Shields: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Regen Cost: - size diff: (-13, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Armor HP: - size diff: (-37, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Dmg Ignore: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen/Hit: - size diff: (-50, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Targets: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Evasion Score: - size diff: (-28, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Targeting Score: - size diff: (-42, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew Required: - size diff: (-36, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew On Board: - size diff: (-38, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Life Support: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Fighter Support \u2500\u2500 - size diff: (-11, 5)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Cap: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Launch/Wave: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Time: - size diff: (-22, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Recommendations \u2500\u2500 - size diff: (-30, 0)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_multi_selection_logic
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_append_integration
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_homogeneity_enforcement
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_selection_integration
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_reselection_behavior
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_toggle_behavior
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_font_dictionary.py:405: UserWarning: Finding font with id: noto_sans_bold_aa_14 that is not already loaded.
+  Preload this font with {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': '1'}
+    warnings.warn(warning_string, UserWarning)
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\html_parser.py:179: UserWarning: Unsupported HTML Tag <magicmock>. Check documentation for full range of supported tags.
+    warnings.warn(warning_text, UserWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_target_prioritization
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_ship_accepts_ship_components
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_firing_arc_validation
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestShipVehicleType::test_ship_vehicle_type_assignment
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_ship_rejects_fighter_components
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_component_allowed_vehicle_types_list
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_ammo
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteLogic::test_satellite_ignores_crew_requirements
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_does_not_navigate
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_beam
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_seeker_ignores_arc
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestVehicleClassLoading::test_fighter_classes_loaded
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_fighter_accepts_fighter_components
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_fighter_rejects_ship_components
+FAILED simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_001_base_speed_accel_calculation
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_fires_when_has_target
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_satellite_accepts_weapons
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestToHitProfile::test_larger_ship_easier_to_hit
+FAILED simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_002_speed_decreases_linearly_with_mass
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_satellite_rejects_engines_and_thrusters
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_still_targets
+FAILED simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_003_accel_decreases_quadratically_with_mass
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestVehicleClassLoading::test_satellite_classes_loaded
+FAILED simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_004_speed_increases_linearly_with_thrust
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_multiple_weapons
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_single_weapon
+FAILED tests/unit/test_ship_theme_logic.py::TestShipThemeLogic::test_get_image_metrics
+FAILED tests/unit/test_main_integration.py::TestMainIntegration::test_game_instantiation
+FAILED tests/unit/test_theme_discovery.py::TestNewThemes::test_klingon_theme_loads
+FAILED tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+================ 30 failed, 558 passed, 132 warnings in 5.34s =================

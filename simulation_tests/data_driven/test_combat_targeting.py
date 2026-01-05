@@ -12,6 +12,9 @@ from game.simulation.components.component import Weapon, BeamWeapon, ProjectileW
 from ship_combat import ShipCombatMixin
 from game.core.constants import AttackType
 
+import pytest
+
+@pytest.mark.use_custom_data
 class TestCombatTargeting(unittest.TestCase):
     """
     Test suite for combat targeting logic in ship_combat.py.
@@ -25,25 +28,18 @@ class TestCombatTargeting(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        pygame.init()
-        # The data loading logic is moved to setUp to ensure it's reloaded for each test
-        # due to potential global state resets by fixtures.
+        # pygame.init() removed for session isolation
+        pass
 
     @classmethod
     def tearDownClass(cls):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
 
     def setUp(self):
-        # 1. Reload CUSTOM test data (because reset_game_state fixture wipes it)
+        # 1. Reload CUSTOM test data
         try:
-            cwd = os.getcwd()
-            # If we are in 'tests' folder, go up
-            if os.path.basename(cwd) == "tests":
-                cwd = os.path.dirname(cwd)
-            
-            # Load specific test data
-            load_vehicle_classes(os.path.join(cwd, "tests", "unit", "data", "test_vehicleclasses.json"))
-            load_components(os.path.join(cwd, "tests", "unit", "data", "test_components.json"))
+            load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+            load_components("tests/unit/data/test_components.json")
             from game.core.registry import RegistryManager
             print(f"DEBUG: Registry has {len(RegistryManager.instance().components)} components")
         except Exception as e:

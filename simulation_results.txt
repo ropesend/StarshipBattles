@@ -1,0 +1,376 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+created: 16/16 workers
+16 workers [51 items]
+
+....................FFFF.FFF.FFF.FF.FFF.FFFFFFFFFFF                      [100%]
+================================== FAILURES ===================================
+_____________ TestVehicleClassLoading.test_fighter_classes_loaded _____________
+[gw15] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:46: in test_fighter_classes_loaded
+    self.assertGreater(len(fighter_classes), 0, "At least one Fighter class should exist")
+E   AssertionError: 0 not greater than 0 : At least one Fighter class should exist
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+ERROR loading modifiers: [Errno 2] No such file or directory: 'C:\\Dev\\Starship Battles\\game\\simulation\\components\\unit_tests/data/test_modifiers.json'
+----------------------------- Captured log setup ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 7 strategies, 5 targeting, 7 movement
+____________ TestVehicleClassLoading.test_satellite_classes_loaded ____________
+[gw15] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:53: in test_satellite_classes_loaded
+    self.assertGreater(len(sat_classes), 0, "At least one Satellite class should exist")
+E   AssertionError: 0 not greater than 0 : At least one Satellite class should exist
+___ TestEnginePhysics.test_ENG_003_accel_decreases_quadratically_with_mass ____
+[gw6] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_engine_physics.py:106: in test_ENG_003_accel_decreases_quadratically_with_mass
+    self.assertGreater(ship_low.acceleration_rate, ship_med.acceleration_rate,
+E   AssertionError: 0.0 not greater than 0.0 : Low mass ship should have higher accel than medium
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_mass_sim_1k not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_mass_sim_1k not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_mass_sim_10k not found in registry.
+Error: Attempted to add None component to ship
+_____ TestEnginePhysics.test_ENG_004_speed_increases_linearly_with_thrust _____
+[gw6] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_engine_physics.py:141: in test_ENG_004_speed_increases_linearly_with_thrust
+    self.assertAlmostEqual(ship_1x.max_speed, expected_1x, places=1)
+E   AssertionError: 0 != 250.0 within 1 places (250.0 difference)
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+_____________ TestCombatTargeting.test_resource_consumption_beam ______________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_combat_targeting.py:263: in test_resource_consumption_beam
+    self.assertEqual(self.attacker.current_energy, 50, "Should consume 50 energy")
+E   AssertionError: 100 != 50 : Should consume 50 energy
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x000001A6BFB4AF80>
+DEBUG: Add bridge success: True, total core: 1
+_________________ TestCombatTargeting.test_seeker_ignores_arc _________________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_combat_targeting.py:180: in test_seeker_ignores_arc
+    self.assertEqual(len(attacks), 1, "Seeker weapon should fire regardless of arc")
+E   AssertionError: 0 != 1 : Seeker weapon should fire regardless of arc
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x000001A6EF263130>
+DEBUG: Add bridge success: True, total core: 1
+_______________ TestVehicleClassLoading.test_ship_types_defined _______________
+[gw8] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:40: in test_ship_types_defined
+    self.assertIn("Fighter", types)
+E   AssertionError: 'Fighter' not found in {'Ship'}
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+ERROR loading modifiers: [Errno 2] No such file or directory: 'C:\\Dev\\Starship Battles\\game\\simulation\\components\\unit_tests/data/test_modifiers.json'
+----------------------------- Captured log setup ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 7 strategies, 5 targeting, 7 movement
+_____________ TestCombatTargeting.test_resource_consumption_ammo ______________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_combat_targeting.py:292: in test_resource_consumption_ammo
+    self.assertEqual(self.attacker.current_ammo, 5)
+E   AssertionError: 10 != 5
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x000001E300A40280>
+DEBUG: Add bridge success: True, total core: 1
+_________ TestEnginePhysics.test_ENG_001_base_speed_accel_calculation _________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_engine_physics.py:65: in test_ENG_001_base_speed_accel_calculation
+    self.assertEqual(ship.total_thrust, thrust)
+E   AssertionError: 0 != 500
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+______ TestEnginePhysics.test_ENG_002_speed_decreases_linearly_with_mass ______
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_engine_physics.py:80: in test_ENG_002_speed_decreases_linearly_with_mass
+    self.assertGreater(ship_low.max_speed, ship_med.max_speed,
+E   AssertionError: 0 not greater than 0 : Low mass ship should be faster than medium
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_mass_sim_1k not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_mass_sim_1k not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_mass_sim_10k not found in registry.
+Error: Attempted to add None component to ship
+_______________ TestCombatTargeting.test_target_prioritization ________________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_combat_targeting.py:217: in test_target_prioritization
+    self.assertEqual(len(attacks), 1)
+E   AssertionError: 0 != 1
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000012DBF8C00A0>
+DEBUG: Add bridge success: True, total core: 1
+_______________ TestCombatTargeting.test_firing_arc_validation ________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_combat_targeting.py:143: in test_firing_arc_validation
+    self.assertEqual(len(attacks), 1, "Should fire at target directly ahead")
+E   AssertionError: 0 != 1 : Should fire at target directly ahead
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x000002169084AF20>
+DEBUG: Add bridge success: True, total core: 1
+___________ TestMaxWeaponRange.test_max_weapon_range_single_weapon ____________
+[gw12] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_ship_extended.py:196: in test_max_weapon_range_single_weapon
+    self.assertEqual(ship.max_weapon_range, railgun.range)
+E   AttributeError: 'NoneType' object has no attribute 'range'
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_weapon_proj_fixed not found in registry.
+Error: Attempted to add None component to ship
+_______________ TestToHitProfile.test_larger_ship_easier_to_hit _______________
+[gw10] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_ship_extended.py:149: in test_larger_ship_easier_to_hit
+    self.assertLess(large.to_hit_profile, small.to_hit_profile)
+E   AssertionError: 0.8333333333333333 not less than 0.8333333333333333
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+___________ TestSatelliteAI.test_satellite_ai_fires_when_has_target ___________
+[gw15] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:280: in test_satellite_ai_fires_when_has_target
+    core = COMPONENT_REGISTRY["test_core_satellite"].clone()
+E   KeyError: 'test_core_satellite'
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+----------------------------- Captured log setup ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 7 strategies, 5 targeting, 7 movement
+_____ TestComponentRestrictions.test_component_allowed_vehicle_types_list _____
+[gw13] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:168: in test_component_allowed_vehicle_types_list
+    bridge = COMPONENT_REGISTRY["test_bridge_basic"]
+E   KeyError: 'test_bridge_basic'
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+______ TestComponentRestrictions.test_fighter_accepts_fighter_components ______
+[gw13] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:114: in test_fighter_accepts_fighter_components
+    cockpit = COMPONENT_REGISTRY["test_cockpit_fighter"].clone()
+E   KeyError: 'test_cockpit_fighter'
+__________ TestComponentRestrictions.test_satellite_accepts_weapons ___________
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:144: in test_satellite_accepts_weapons
+    railgun = COMPONENT_REGISTRY["test_weapon_proj_fixed"].clone()
+E   KeyError: 'test_weapon_proj_fixed'
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+____________ TestShipVehicleType.test_ship_vehicle_type_assignment ____________
+[gw8] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:90: in test_ship_vehicle_type_assignment
+    self.assertEqual(fighter.vehicle_type, "Fighter")
+E   AssertionError: 'Ship' != 'Fighter'
+E   - Ship
+E   + Fighter
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+_______ TestComponentRestrictions.test_fighter_rejects_ship_components ________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:123: in test_fighter_rejects_ship_components
+    self.assertFalse(result, "Fighter should reject standard Bridge")
+E   AssertionError: True is not false : Fighter should reject standard Bridge
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+_________ TestComponentRestrictions.test_ship_accepts_ship_components _________
+[gw7] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:155: in test_ship_accepts_ship_components
+    bridge = COMPONENT_REGISTRY["test_bridge_basic"].clone()
+E   KeyError: 'test_bridge_basic'
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+_______________ TestSatelliteAI.test_satellite_ai_still_targets _______________
+[gw7] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:258: in test_satellite_ai_still_targets
+    core = COMPONENT_REGISTRY["test_core_satellite"].clone()
+E   KeyError: 'test_core_satellite'
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+----------------------------- Captured log setup ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 7 strategies, 5 targeting, 7 movement
+___ TestComponentRestrictions.test_satellite_rejects_engines_and_thrusters ____
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:134: in test_satellite_rejects_engines_and_thrusters
+    self.assertFalse(result, "Satellite should reject Engine")
+E   AssertionError: True is not false : Satellite should reject Engine
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+_______ TestComponentRestrictions.test_ship_rejects_fighter_components ________
+[gw12] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:162: in test_ship_rejects_fighter_components
+    cockpit = COMPONENT_REGISTRY["test_cockpit_fighter"].clone()
+E   KeyError: 'test_cockpit_fighter'
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+__________ TestMaxWeaponRange.test_max_weapon_range_multiple_weapons __________
+[gw11] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_ship_extended.py:212: in test_max_weapon_range_multiple_weapons
+    expected_max = max(railgun.range, laser.range)
+E   AttributeError: 'NoneType' object has no attribute 'range'
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_weapon_proj_fixed not found in registry.
+Error: Component ID test_weapon_beam_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Attempted to add None component to ship
+_________ TestSatelliteLogic.test_satellite_ignores_crew_requirements _________
+[gw10] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:199: in test_satellite_ignores_crew_requirements
+    railgun = COMPONENT_REGISTRY["test_weapon_proj_fixed"].clone()
+E   KeyError: 'test_weapon_proj_fixed'
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+=========================== short test summary info ===========================
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestVehicleClassLoading::test_fighter_classes_loaded
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestVehicleClassLoading::test_satellite_classes_loaded
+FAILED simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_003_accel_decreases_quadratically_with_mass
+FAILED simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_004_speed_increases_linearly_with_thrust
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_beam
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_seeker_ignores_arc
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestVehicleClassLoading::test_ship_types_defined
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_ammo
+FAILED simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_001_base_speed_accel_calculation
+FAILED simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_002_speed_decreases_linearly_with_mass
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_target_prioritization
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_firing_arc_validation
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_single_weapon
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestToHitProfile::test_larger_ship_easier_to_hit
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_fires_when_has_target
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_component_allowed_vehicle_types_list
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_fighter_accepts_fighter_components
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_satellite_accepts_weapons
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestShipVehicleType::test_ship_vehicle_type_assignment
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_fighter_rejects_ship_components
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_ship_accepts_ship_components
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_still_targets
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_satellite_rejects_engines_and_thrusters
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_ship_rejects_fighter_components
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_multiple_weapons
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteLogic::test_satellite_ignores_crew_requirements
+======================== 26 failed, 25 passed in 1.92s ========================

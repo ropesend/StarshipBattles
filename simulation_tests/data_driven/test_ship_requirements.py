@@ -2,14 +2,16 @@
 import unittest
 import sys
 import os
-import pygame
 from unittest.mock import MagicMock, patch
+import pytest
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data, load_vehicle_classes
+from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data, load_vehicle_classes
 from game.simulation.components.component import create_component, Component, Modifier
 
+@pytest.mark.use_custom_data
 class TestShipRequirements(unittest.TestCase):
     """
     Data-driven tests for ship operational requirements.
@@ -18,14 +20,12 @@ class TestShipRequirements(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        pygame.init()
-        # Ensure we have clean data loading
-        # We will be patching VEHICLE_CLASSES heavily in these tests
+        # pygame.init() removed for session isolation
         pass
 
     @classmethod
     def tearDownClass(cls):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
 
     def setUp(self):
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255))

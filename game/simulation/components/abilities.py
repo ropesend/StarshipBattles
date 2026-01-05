@@ -422,32 +422,31 @@ class WeaponAbility(Ability):
         # We update the _base_ values from data if they exist.
         if 'damage' in data:
             raw = data['damage']
-            if not (isinstance(raw, str) and raw.startswith('=')):
+            if isinstance(raw, str) and raw.startswith('='):
+                 from formula_system import evaluate_math_formula
+                 self._base_damage = float(max(0, evaluate_math_formula(raw[1:], {})))
+            else:
                  self._base_damage = float(raw)
-                 self.damage = self._base_damage
+            self.damage = self._base_damage
         if 'range' in data:
             raw = data['range']
-            if not (isinstance(raw, str) and raw.startswith('=')):
+            if isinstance(raw, str) and raw.startswith('='):
+                 from formula_system import evaluate_math_formula
+                 self._base_range = float(max(0, evaluate_math_formula(raw[1:], {})))
+            else:
                  self._base_range = float(raw)
-                 self.range = self._base_range
+            self.range = self._base_range
         if 'reload' in data:
             raw = data['reload']
-            if not (isinstance(raw, str) and raw.startswith('=')):
+            if isinstance(raw, str) and raw.startswith('='):
+                 from formula_system import evaluate_math_formula
+                 self._base_reload = float(max(0.0, evaluate_math_formula(raw[1:], {})))
+            else:
                  self._base_reload = float(raw)
-                 self.reload_time = self._base_reload
+            self.reload_time = self._base_reload
 
     def recalculate(self):
-        # 0. Legacy Override Sync (Phase 6 Regression Triage)
-        # Check if the component object itself has individual attribute overrides
-        # and sync them into the ability's base stats.
-        for attr in ['range', 'damage', 'reload_time', 'firing_arc', 'facing_angle']:
-            if hasattr(self.component, attr):
-                val = getattr(self.component, attr)
-                if attr == 'range': self._base_range = float(val)
-                elif attr == 'damage': self._base_damage = float(val)
-                elif attr == 'reload_time': self._base_reload = float(val)
-                elif attr == 'firing_arc': self._base_firing_arc = float(val)
-                elif attr == 'facing_angle': self.facing_angle = float(val)
+        pass
 
         # Apply modifiers to base stats
         if hasattr(self, '_base_damage'):
@@ -634,7 +633,8 @@ ABILITY_REGISTRY = {
     "EnergyStorage": lambda c, d: ResourceStorage(c, {"resource": "energy", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "energy"}),
     "AmmoStorage": lambda c, d: ResourceStorage(c, {"resource": "ammo", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "ammo"}),
     "EnergyGeneration": lambda c, d: ResourceGeneration(c, {"resource": "energy", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "energy"}),
-    "EnergyConsumption": lambda c, d: ResourceConsumption(c, {"resource": "energy", "amount": d, "trigger": "constant"} if isinstance(d, (int, float)) else {**d, "resource": "energy"})
+    "EnergyConsumption": lambda c, d: ResourceConsumption(c, {"resource": "energy", "amount": d, "trigger": "constant"} if isinstance(d, (int, float)) else {**d, "resource": "energy"}),
+    "AmmoConsumption": lambda c, d: ResourceConsumption(c, {"resource": "ammo", "amount": d, "trigger": "activation"} if isinstance(d, (int, float)) else {**d, "resource": "ammo"})
 }
 
 def create_ability(name: str, component, data: Any) -> Optional[Ability]:

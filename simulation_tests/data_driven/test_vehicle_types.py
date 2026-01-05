@@ -10,19 +10,21 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from game.simulation.entities.ship import Ship, initialize_ship_data, load_vehicle_classes, VEHICLE_CLASSES, LayerType
-from game.simulation.components.component import load_components, load_modifiers, get_all_components, COMPONENT_REGISTRY  # Phase 7: Removed Bridge, Weapon imports
+from game.simulation.components.component import load_components, load_modifiers, get_all_components, COMPONENT_REGISTRY # Phase 7: Removed Bridge, Weapon imports
 from game.ai.controller import AIController, load_combat_strategies
 import pygame
+import pytest
 
 
+@pytest.mark.use_custom_data
 class TestVehicleClassLoading(unittest.TestCase):
     """Test vehicle class definitions load correctly."""
     
     @classmethod
     def setUpClass(cls):
         # Load from TEST data explicitly
-        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
-        load_components("unit_tests/data/test_components.json")
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
         # Modifiers don't have a test file yet, assume production or none needed?
         # Many tests need modifiers loaded. 
         # For now, load production modifiers if no test modifiers exist.
@@ -71,15 +73,16 @@ class TestVehicleClassLoading(unittest.TestCase):
                                "Satellites should not require propulsion")
 
 
+@pytest.mark.use_custom_data
 class TestShipVehicleType(unittest.TestCase):
     """Test Ship class vehicle type handling."""
     
     @classmethod
     def setUpClass(cls):
-        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
-        load_components("unit_tests/data/test_components.json")
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
         load_modifiers()
-        pygame.init()
+        # pygame.init() removed for session isolation
 
     def test_ship_vehicle_type_assignment(self):
         """Ship gets correct vehicle type from class."""
@@ -98,15 +101,16 @@ class TestShipVehicleType(unittest.TestCase):
         self.assertEqual(ship.vehicle_type, "Ship")
 
 
+@pytest.mark.use_custom_data
 class TestComponentRestrictions(unittest.TestCase):
     """Test component allowed_vehicle_types enforcement."""
     
     @classmethod
     def setUpClass(cls):
-        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
-        load_components("unit_tests/data/test_components.json")
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
         load_modifiers()
-        pygame.init()
+        # pygame.init() removed for session isolation
 
     def test_fighter_accepts_fighter_components(self):
         """Fighter can add Fighter-specific components."""
@@ -118,7 +122,8 @@ class TestComponentRestrictions(unittest.TestCase):
     def test_fighter_rejects_ship_components(self):
         """Fighter cannot add Ship-only components."""
         fighter = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestFighter")
-        bridge = COMPONENT_REGISTRY["test_bridge_basic"].clone()
+        from game.core.registry import RegistryManager
+        bridge = RegistryManager.instance().components["test_bridge_basic"].clone()
         result = fighter.add_component(bridge, LayerType.CORE)
         self.assertFalse(result, "Fighter should reject standard Bridge")
 
@@ -174,13 +179,14 @@ class TestComponentRestrictions(unittest.TestCase):
         self.assertNotIn("Ship", sat_core.allowed_vehicle_types)
 
 
+@pytest.mark.use_custom_data
 class TestSatelliteLogic(unittest.TestCase):
     """Test Satellite-specific game logic."""
     
     @classmethod
     def setUpClass(cls):
-        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
-        load_components("unit_tests/data/test_components.json")
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
         load_modifiers()
         pygame.init()
 
@@ -210,13 +216,14 @@ class TestSatelliteLogic(unittest.TestCase):
                        "Railgun on Satellite should be active despite no crew")
 
 
+@pytest.mark.use_custom_data
 class TestSatelliteAI(unittest.TestCase):
     """Test AI behavior specific to Satellites."""
     
     @classmethod
     def setUpClass(cls):
-        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
-        load_components("unit_tests/data/test_components.json")
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
         load_modifiers()
         load_combat_strategies()
         pygame.init()
@@ -300,19 +307,20 @@ class TestSatelliteAI(unittest.TestCase):
                        "Satellite AI should pull trigger when target exists")
 
 
+@pytest.mark.use_custom_data
 class TestFighterLogic(unittest.TestCase):
     """Test Fighter-specific game logic."""
     
     @classmethod
     def setUpClass(cls):
-        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
-        load_components("unit_tests/data/test_components.json")
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
         load_modifiers()
         pygame.init()
 
     @classmethod
     def tearDownClass(cls):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
 
 
 if __name__ == '__main__':

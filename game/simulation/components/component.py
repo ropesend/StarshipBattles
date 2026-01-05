@@ -63,6 +63,12 @@ class Component:
         self.base_max_hp = data['hp']
         self.max_hp = self.base_max_hp
         self.current_hp = self.max_hp
+        
+        # Attribute shims for weapon compatibility (Phase 7)
+        self._range = data.get('range', 0)
+        self._damage = data.get('damage', 0)
+        self._firing_arc = data.get('firing_arc', 360)
+        self._projectile_speed = data.get('projectile_speed', 0)
         # allowed_layers removed in refactor
         # self.allowed_layers = [LayerType.from_string(l) for l in data['allowed_layers']]
         self.allowed_vehicle_types = data.get('allowed_vehicle_types', ["Ship"])
@@ -80,35 +86,26 @@ class Component:
         # Legacy Attribute Shim (Phase 6 Regression Triage)
         # Convert old flat weapon attributes into the new Ability format if abilities dict is empty
         if not self.abilities:
-            if 'range' in self.data or 'damage' in self.data:
-                # Detect which ability to create
-                is_seeker = 'endurance' in self.data
-                is_beam = 'energy_cost' in self.data and 'ammo_cost' not in self.data
-                
-                ab_data = {
-                    'range': self.data.get('range', 0.0),
-                    'damage': self.data.get('damage', 0.0),
-                    'reload': self.data.get('reload', self.data.get('cooldown', 1.0)),
-                    'firing_arc': self.data.get('firing_arc', 360),
-                    'facing_angle': self.data.get('facing_angle', 0)
-                }
-                
-                if is_seeker:
-                    ab_data['projectile_speed'] = self.data.get('projectile_speed', 500)
-                    ab_data['endurance'] = self.data.get('endurance', 3.0)
-                    self.abilities['SeekerWeaponAbility'] = ab_data
-                elif is_beam:
-                    ab_data['accuracy_falloff'] = self.data.get('accuracy_falloff', 0.001)
-                    self.abilities['BeamWeaponAbility'] = ab_data
-                else:
-                    ab_data['projectile_speed'] = self.data.get('projectile_speed', 1000)
-                    self.abilities['ProjectileWeaponAbility'] = ab_data
-
-                # Also map resource consumption if present
-                if 'energy_cost' in self.data:
-                    self.abilities['EnergyConsumption'] = {'amount': self.data['energy_cost'], 'trigger': 'activation', 'resource': 'energy'}
-                if 'ammo_cost' in self.data:
-                    self.abilities['AmmoConsumption'] = {'amount': self.data['ammo_cost'], 'trigger': 'activation', 'resource': 'ammo'}
+            self._convert_legacy_data_to_abilities()
+        else:
+            # Sync base attributes FROM abilities if they exist (Phase 7 initialization sync)
+            # This ensures comp.range returns correct value even if not in top-level data
+            for ab_name in ['WeaponAbility', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility']:
+                if ab_name in self.abilities:
+                    ab_data = self.abilities[ab_name]
+                    # Helper to safely set float or skip formula
+                    def set_stat(attr, val):
+                        if isinstance(val, (int, float)):
+                            setattr(self, attr, float(val))
+                        elif isinstance(val, str) and not val.startswith('='):
+                            try: setattr(self, attr, float(val))
+                            except: pass
+                            
+                    if 'range' in ab_data: set_stat('_range', ab_data['range'])
+                    if 'damage' in ab_data: set_stat('_damage', ab_data['damage'])
+                    if 'firing_arc' in ab_data: set_stat('_firing_arc', ab_data['firing_arc'])
+                    if 'projectile_speed' in ab_data: set_stat('_projectile_speed', ab_data['projectile_speed'])
+                    break
         
         self.base_abilities = copy.deepcopy(self.abilities)
         
@@ -208,6 +205,84 @@ class Component:
         
 
         return False
+
+    @property
+    def range(self):
+        ab = self.get_ability('WeaponAbility')
+        if ab and hasattr(ab, 'range'):
+            return ab.range
+        return self.stats.get('range', self._range)
+    
+    @range.setter
+    def range(self, value):
+        self._range = float(value)
+        self.stats['range'] = self._range
+        # Push to ability
+        ab = self.get_ability('WeaponAbility')
+        if ab:
+            ab.sync_data({'range': value})
+            ab.recalculate()
+    
+    @property
+    def damage(self):
+        ab = self.get_ability('WeaponAbility')
+        if ab and hasattr(ab, 'damage'):
+            return ab.damage
+        return self.stats.get('damage', self._damage)
+        
+    @damage.setter
+    def damage(self, value):
+        self._damage = float(value)
+        self.stats['damage'] = self._damage
+        # Push to ability
+        ab = self.get_ability('WeaponAbility')
+        if ab:
+            ab.sync_data({'damage': value})
+            ab.recalculate()
+
+    @property
+    def firing_arc(self):
+        ab = self.get_ability('WeaponAbility')
+        if ab and hasattr(ab, 'firing_arc'):
+            return ab.firing_arc
+        return self.stats.get('firing_arc', self._firing_arc)
+        
+    @firing_arc.setter
+    def firing_arc(self, value):
+        self._firing_arc = float(value)
+        self.stats['firing_arc'] = self._firing_arc
+        # Push to ability
+        ab = self.get_ability('WeaponAbility')
+        if ab:
+            ab.sync_data({'firing_arc': value})
+            ab.recalculate()
+        
+    @property
+    def projectile_speed(self):
+        return self.stats.get('projectile_speed', self._projectile_speed)
+        
+    @projectile_speed.setter
+    def projectile_speed(self, value):
+        self._projectile_speed = float(value)
+        self.stats['projectile_speed'] = self._projectile_speed
+        # Push to ability
+        from game.simulation.components.abilities import ProjectileWeaponAbility, SeekerWeaponAbility
+        for ab in self.ability_instances:
+            if isinstance(ab, (ProjectileWeaponAbility, SeekerWeaponAbility)):
+                ab.projectile_speed = self._projectile_speed
+                ab.recalculate()
+
+    @property
+    def cooldown_timer(self):
+        # Map to first weapon ability if present
+        ab = self.get_ability('WeaponAbility')
+        if ab: return ab.cooldown_timer
+        return 0.0
+        
+    @cooldown_timer.setter
+    def cooldown_timer(self, value):
+        ab = self.get_ability('WeaponAbility')
+        if ab: ab.cooldown_timer = float(value)
 
     def get_ui_rows(self):
         """Aggregate UI rows from all ability instances.
@@ -394,10 +469,52 @@ class Component:
         # 4. Apply Custom/Subclass Stats
         self._apply_custom_stats(stats)
 
+    def _convert_legacy_data_to_abilities(self):
+        """Phase 6: Convert flat attributes back to ability dict for runtime processing."""
+        # Only run if not already converted/populated or if forced (recalculate_stats)
+        if hasattr(self, '_legacy_converted') and self._legacy_converted:
+            # Sync existing abilities from modified flat data if needed?
+            # Usually flat data (self.range) is pushed to ability via property setters.
+            return
+            
+        self._legacy_converted = True
+        """Helper to convert flat data format to abilities dict."""
+        if 'range' in self.data or 'damage' in self.data:
+            # Detect which ability to create
+            is_seeker = 'endurance' in self.data
+            is_beam = 'energy_cost' in self.data and 'ammo_cost' not in self.data
+            
+            ab_data = {
+                'range': self.data.get('range', 0.0),
+                'damage': self.data.get('damage', 0.0),
+                'reload': self.data.get('reload', self.data.get('cooldown', 1.0)),
+                'firing_arc': self.data.get('firing_arc', 360),
+                'facing_angle': self.data.get('facing_angle', 0)
+            }
+            
+            if is_seeker:
+                ab_data['projectile_speed'] = self.data.get('projectile_speed', 500)
+                ab_data['endurance'] = self.data.get('endurance', 3.0)
+                self.abilities['SeekerWeaponAbility'] = ab_data
+            elif is_beam:
+                ab_data['accuracy_falloff'] = self.data.get('accuracy_falloff', 0.001)
+                self.abilities['BeamWeaponAbility'] = ab_data
+            else:
+                ab_data['projectile_speed'] = self.data.get('projectile_speed', 1000)
+                self.abilities['ProjectileWeaponAbility'] = ab_data
+
+            # Also map resource consumption if present
+            if 'energy_cost' in self.data:
+                self.abilities['EnergyConsumption'] = {'amount': self.data['energy_cost'], 'trigger': 'activation', 'resource': 'energy'}
+            if 'ammo_cost' in self.data:
+                self.abilities['AmmoConsumption'] = {'amount': self.data['ammo_cost'], 'trigger': 'activation', 'resource': 'ammo'}
+
     def _reset_and_evaluate_base_formulas(self):
         import copy
         # Reset abilities from raw data
         self.abilities = copy.deepcopy(self.data.get('abilities', {}))
+        if not self.abilities:
+            self._convert_legacy_data_to_abilities()
         
         # Context building
         context = {
@@ -428,9 +545,11 @@ class Component:
                 new_val = evaluate_math_formula(val[1:], context)
                 self.abilities[ability_name] = new_val
             elif isinstance(val, dict):
-                 if 'value' in val and isinstance(val['value'], str) and val['value'].startswith("="):
-                     new_val = evaluate_math_formula(val['value'][1:], context)
-                     val['value'] = new_val
+                 # Phase 7: Generically evaluate formulas in any key of the ability dict
+                 for key, sub_val in val.items():
+                     if isinstance(sub_val, str) and sub_val.startswith("="):
+                         new_val = evaluate_math_formula(sub_val[1:], context)
+                         val[key] = new_val
 
     def _calculate_modifier_stats(self):
         from game.simulation.components.modifiers import apply_modifier_effects
@@ -576,15 +695,17 @@ COMPONENT_TYPE_MAP = {
 # Caching for performance (Phase 2 Test Stabilization)
 _COMPONENT_CACHE = None
 _MODIFIER_CACHE = None
+_LAST_COMPONENT_FILE = None
+_LAST_MODIFIER_FILE = None
 
 def load_components(filepath="data/components.json"):
-    global _COMPONENT_CACHE
+    global _COMPONENT_CACHE, _LAST_COMPONENT_FILE
     import os
     import copy
     from game.core.registry import RegistryManager
 
-    # If cache exists, hydrate Registry from cache (Fast Path)
-    if _COMPONENT_CACHE is not None:
+    # If cache exists and matches filepath, hydrate Registry from cache (Fast Path)
+    if _COMPONENT_CACHE is not None and _LAST_COMPONENT_FILE == filepath:
         mgr = RegistryManager.instance()
         for c_id, comp in _COMPONENT_CACHE.items():
             mgr.components[c_id] = comp.clone()
@@ -620,6 +741,7 @@ def load_components(filepath="data/components.json"):
         
         # Populate Cache
         _COMPONENT_CACHE = temp_cache
+        _LAST_COMPONENT_FILE = filepath
         
         # Populate Registry from Cache
         mgr = RegistryManager.instance()
@@ -630,13 +752,13 @@ def load_components(filepath="data/components.json"):
         print(f"ERROR loading/parsing components json: {e}")
 
 def load_modifiers(filepath="data/modifiers.json"):
-    global _MODIFIER_CACHE
+    global _MODIFIER_CACHE, _LAST_MODIFIER_FILE
     import os
     import copy
     from game.core.registry import RegistryManager
     
     # Fast Path
-    if _MODIFIER_CACHE is not None:
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
         mgr = RegistryManager.instance()
         for m_id, mod in _MODIFIER_CACHE.items():
             mgr.modifiers[m_id] = copy.deepcopy(mod)
@@ -658,6 +780,7 @@ def load_modifiers(filepath="data/modifiers.json"):
             temp_cache[mod.id] = mod
         
         _MODIFIER_CACHE = temp_cache
+        _LAST_MODIFIER_FILE = filepath
         
         mgr = RegistryManager.instance()
         for m_id, mod in _MODIFIER_CACHE.items():

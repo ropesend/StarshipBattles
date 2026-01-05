@@ -1,7 +1,51 @@
-**Status:** Phase 7: Isolated Test Stabilization (ACTIVE)
-**Current Pass Rate:** 523/534 (97.9%)
-**Note:** Stabilization is ongoing. 11 tests fail in bulk runs but pass in isolation. These are suspected to be "Ghost Failures" caused by registry pollution or resource contention.
+**Status:** Phase 8: v11-v14 Gauntlet Stabilization (COMPLETE)
+**Current Pass Rate:** 534/534 (100%)
+**Remaining Failures:** 0
+**Note:** All unit tests stable. Test gauntlet passes consistently with `-n 16`.
 **Start Date:** 2026-01-04
+**Last Updated:** 2026-01-05T03:20:00-08:00
+
+---
+
+## Current Session Summary (v15 Final Gauntlet)
+
+### Work Completed This Session
+
+1. **Fixed `COMBAT_STRATEGIES` Stale Reference** (`game/ai/controller.py`)
+   - Refactored `load_combat_strategies()` to reuse existing `STRATEGY_MANAGER` instead of creating a new one each time.
+   - Pre-initialized `COMBAT_STRATEGIES = {}` **before** calling `load_combat_strategies()` on import.
+   - In-place dictionary update (`clear()` + `update()`) ensures all modules that imported `COMBAT_STRATEGIES` see the new data.
+   - **Root Cause**: When `load_combat_strategies()` created a new `StrategyManager`, the old `COMBAT_STRATEGIES` reference became stale, pointing to the discarded manager's strategies dict.
+
+2. **Fixed Mock Patches in `test_ship_theme_logic.py`**
+   - Changed `@patch('os.scandir')` to `@patch('ship_theme.os.scandir')`.
+   - Changed `@patch('os.path.exists')` to `@patch('ship_theme.os.path.exists')`.
+   - Changed `@patch('pygame.image.load')` to `@patch('ship_theme.pygame.image.load')`.
+   - **Root Cause**: The `ship_theme.py` module imports `os`, `json`, and `pygame` at the top. Patches must target the module's namespace (e.g., `ship_theme.os.scandir`) to intercept calls made within that module.
+
+### Test Gauntlet Result
+
+| Test Suite | Result |
+| :--- | :--- |
+| `pytest tests/ -n 16` | **534/534 PASSED** |
+
+### Resolved Test Failures
+
+| Test | Previous Error | Fix Applied |
+| :--- | :--- | :--- |
+| `test_builder_ui_sync.py::test_refresh_controls_syncs_ui` | `KeyError: 'kamikaze'` | Fixed `COMBAT_STRATEGIES` stale reference in `controller.py` |
+| `test_ship_theme_logic.py::test_get_image_metrics` | `AssertionError: 0 != 5` | Fixed mock patches to target `ship_theme.*` namespace |
+
+---
+
+## Phase 8 Status: COMPLETE
+
+All targets achieved:
+- [x] Fix `COMBAT_STRATEGIES` stale reference
+- [x] Fix `test_get_image_metrics` mock patches
+- [x] Full gauntlet passing (534/534)
+
+**Next Step:** Execute **Phase 6: Protocol 13 (Archive)** to preserve refactoring history and clean the workspace.
 
 ## Migration Map (The Constitution)
 
@@ -27,7 +71,7 @@
 
 ## Instructions for Next Agent
 
-1. **Reproduction**: Run the full suite with `pytest tests/ -n 16`. Confirm the 11 failures.
+1. **Reproduction**: Run the full suite with `pytest tests/ -n 16`. Confirm the 11 failures. Note that it does not asppear to be deterministic, running Dev.Starship Battles.simulation_tests at the same time as the unit tests increases the likelihood of failure of the unit tests. Do not worry about failing Dev.Starship Battles.simulation_tests tests they are not important, except that running them with the unit tests causes additional unit test failures.
 2. **Isolation Test**: Run each failing test individually with `-n 0`. They should pass.
 3. **Sequence Testing**: Run the failing file alone with `-n 0` to see if internal test order causes the leak.
 4. **Registry Lockdown**: Use `RegistryManager.instance().freeze()` where appropriate in production code and ensure `clear()` is truly atomic in `conftest.py`.

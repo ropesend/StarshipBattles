@@ -1,0 +1,3793 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+created: 16/16 workers
+16 workers [588 items]
+
+........................................................................ [ 12%]
+........................................................................ [ 24%]
+......................F..............F.FF.....E..FE.F.F...E.EF..F....... [ 36%]
+...E...E.........E......F...F...EF...F....E............FF.............F. [ 48%]
+..F..F..F.F..FF..F....FF.FF.FFF.FFF.F.F....F..F.F.F....F.F....F......FFF [ 61%]
+F..F.FF.FFFF...FFF......F.......FF.........F..........FF..F...F.F...F..F [ 73%]
+...FFF...F.F......F...........FF.....F.....F.F.....F..FF................ [ 85%]
+..................F...........F......F..F......F......F.F...F...F....F.. [ 97%]
+.......F....                                                             [100%]
+=================================== ERRORS ====================================
+_ ERROR at setup of TestComponentRestrictions.test_component_allowed_vehicle_types_list _
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestComponentRestrictions'>
+
+    @classmethod
+    def setUpClass(cls):
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
+>       load_modifiers()
+
+simulation_tests\data_driven\test_vehicle_types.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+Loaded 14 vehicle classes.
+_ ERROR at setup of TestSatelliteLogic.test_satellite_ignores_crew_requirements _
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestSatelliteLogic'>
+
+    @classmethod
+    def setUpClass(cls):
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
+>       load_modifiers()
+
+simulation_tests\data_driven\test_vehicle_types.py:190: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+Loaded 14 vehicle classes.
+_ ERROR at setup of TestComponentRestrictions.test_fighter_accepts_fighter_components _
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestComponentRestrictions'>
+
+    @classmethod
+    def setUpClass(cls):
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
+>       load_modifiers()
+
+simulation_tests\data_driven\test_vehicle_types.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+____ ERROR at setup of TestSatelliteAI.test_satellite_ai_does_not_navigate ____
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestSatelliteAI'>
+
+    @classmethod
+    def setUpClass(cls):
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
+>       load_modifiers()
+
+simulation_tests\data_driven\test_vehicle_types.py:227: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+Loaded 14 vehicle classes.
+__ ERROR at setup of TestSatelliteAI.test_satellite_ai_fires_when_has_target __
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestSatelliteAI'>
+
+    @classmethod
+    def setUpClass(cls):
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
+>       load_modifiers()
+
+simulation_tests\data_driven\test_vehicle_types.py:227: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+______ ERROR at setup of TestSatelliteAI.test_satellite_ai_still_targets ______
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestSatelliteAI'>
+
+    @classmethod
+    def setUpClass(cls):
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
+>       load_modifiers()
+
+simulation_tests\data_driven\test_vehicle_types.py:227: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+_ ERROR at setup of TestComponentRestrictions.test_fighter_rejects_ship_components _
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestComponentRestrictions'>
+
+    @classmethod
+    def setUpClass(cls):
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
+>       load_modifiers()
+
+simulation_tests\data_driven\test_vehicle_types.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+_ ERROR at setup of TestComponentRestrictions.test_satellite_accepts_weapons __
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestComponentRestrictions'>
+
+    @classmethod
+    def setUpClass(cls):
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
+>       load_modifiers()
+
+simulation_tests\data_driven\test_vehicle_types.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+_ ERROR at setup of TestComponentRestrictions.test_satellite_rejects_engines_and_thrusters _
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestComponentRestrictions'>
+
+    @classmethod
+    def setUpClass(cls):
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
+>       load_modifiers()
+
+simulation_tests\data_driven\test_vehicle_types.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+================================== FAILURES ===================================
+_______________ TestCombatTargeting.test_target_prioritization ________________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_target_prioritization>
+
+    def test_target_prioritization(self):
+        """Test that secondary targets are checked if current target is invalid or out of arc."""
+        self.attacker.max_targets = 2
+    
+        # Weapon with narrow arc
+        weapon = ProjectileWeapon({
+            'name': 'Gun', 'id':'gun', 'firing_arc': 45, 'range': 500,
+            'projectile_speed': 1000, 'damage':10, 'ammo_cost':1,
+             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        weapon.facing_angle = 0
+        weapon.is_active = True
+        self.attacker.add_component(weapon, LayerType.OUTER)
+    
+        # Target 1: Out of Arc (Behind)
+        t1 = Ship("T1", -200, 0, (0,0,0))
+        t1.is_alive = True
+        t1.team_id = 1
+        t1.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+    
+        # Target 2: Valid (In front)
+        t2 = Ship("T2", 200, 0, (0,0,0))
+        t2.is_alive = True
+        t2.team_id = 1
+        t2.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+    
+        self.attacker.current_target = t1
+        self.attacker.secondary_targets = [t2]
+    
+        self.attacker.is_derelict = False
+        self.attacker.max_targets = 2
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1)
+E       AssertionError: 0 != 1
+
+simulation_tests\data_driven\test_combat_targeting.py:213: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000022761B386D0>
+DEBUG: Add bridge success: True, total core: 1
+_________ TestComponentRestrictions.test_ship_accepts_ship_components _________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestComponentRestrictions testMethod=test_ship_accepts_ship_components>
+
+    def test_ship_accepts_ship_components(self):
+        """Standard Ship can add Ship components."""
+        ship = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestShip_S_2L")
+>       bridge = COMPONENT_REGISTRY["test_bridge_basic"].clone()
+E       NameError: name 'COMPONENT_REGISTRY' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:160: NameError
+---------------------------- Captured stdout setup ----------------------------
+Loaded 14 vehicle classes.
+_______________ TestCombatTargeting.test_firing_arc_validation ________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_firing_arc_validation>
+
+    def test_firing_arc_validation(self):
+        """Test that weapons do not fire if target is outside firing arc."""
+        weapon = ProjectileWeapon({
+            'name': 'TestGun', 'id':'test_gun', 'firing_arc': 45, 'range': 500,
+            'projectile_speed': 1000, 'damage': 10, 'ammo_cost': 1, 'cooldown': 0,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        weapon.facing_angle = 0 # Right
+        weapon.is_active = True
+        weapon.cooldown_timer = 0
+        self.attacker.add_component(weapon, LayerType.OUTER)
+        self.attacker.angle = 0
+    
+        # Case 1: Target directly ahead (Valid)
+        self.target.position = pygame.math.Vector2(200, 0) # 0 degrees
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1, "Should fire at target directly ahead")
+E       AssertionError: 0 != 1 : Should fire at target directly ahead
+
+simulation_tests\data_driven\test_combat_targeting.py:139: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000024BC0338760>
+DEBUG: Add bridge success: True, total core: 1
+_______ TestComponentRestrictions.test_ship_rejects_fighter_components ________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_vehicle_types.TestComponentRestrictions testMethod=test_ship_rejects_fighter_components>
+
+    def test_ship_rejects_fighter_components(self):
+        """Standard Ship cannot add Fighter-only components."""
+        ship = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestShip_S_2L")
+>       cockpit = COMPONENT_REGISTRY["test_cockpit_fighter"].clone()
+E       NameError: name 'COMPONENT_REGISTRY' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:167: NameError
+__________ TestMaxWeaponRange.test_max_weapon_range_multiple_weapons __________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_ship_extended.TestMaxWeaponRange testMethod=test_max_weapon_range_multiple_weapons>
+
+    def test_max_weapon_range_multiple_weapons(self):
+        """Ship with multiple weapons should return longest range."""
+        ship = Ship("HeavilyArmed", 0, 0, (255, 255, 255))
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
+    
+        # Add different weapons
+        railgun = create_component('test_weapon_proj_fixed')
+        laser = create_component('test_weapon_beam_std')
+        ship.add_component(railgun, LayerType.OUTER)
+        ship.add_component(laser, LayerType.OUTER)
+        ship.recalculate_stats()
+    
+>       expected_max = max(railgun.range, laser.range)
+E       AttributeError: 'Component' object has no attribute 'range'
+
+simulation_tests\data_driven\test_ship_extended.py:223: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+_____________ TestCombatTargeting.test_resource_consumption_ammo ______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_resource_consumption_ammo>
+
+    def test_resource_consumption_ammo(self):
+        """Verify ammo consumption for ProjectileWeapon."""
+        gun = ProjectileWeapon({
+             'name': 'Cannon', 'id':'cannon', 'ammo_cost': 5, 'range': 500,
+            'damage': 10, 'firing_arc': 360, 'cooldown': 0, 'projectile_speed': 1000,
+             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        gun.is_active = True
+        self.attacker.add_component(gun, LayerType.OUTER)
+        self.attacker.current_ammo = 10
+        self.attacker.current_energy = 1000
+    
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        self.attacker.fire_weapons()
+>       self.assertEqual(self.attacker.current_ammo, 5)
+E       AssertionError: 10 != 5
+
+simulation_tests\data_driven\test_combat_targeting.py:288: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000024BCB721EA0>
+DEBUG: Add bridge success: True, total core: 1
+___________ TestMaxWeaponRange.test_max_weapon_range_single_weapon ____________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_ship_extended.TestMaxWeaponRange testMethod=test_max_weapon_range_single_weapon>
+
+    def test_max_weapon_range_single_weapon(self):
+        """Ship with one weapon should return that weapon's range."""
+        ship = Ship("Armed", 0, 0, (255, 255, 255))
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
+        railgun = create_component('test_weapon_proj_fixed')
+        ship.add_component(railgun, LayerType.OUTER)
+        ship.recalculate_stats()
+    
+>       self.assertEqual(ship.max_weapon_range, railgun.range)
+E       AttributeError: 'Component' object has no attribute 'range'
+
+simulation_tests\data_driven\test_ship_extended.py:207: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+_____________ TestCombatTargeting.test_resource_consumption_beam ______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_resource_consumption_beam>
+
+    def test_resource_consumption_beam(self):
+        """Verify energy consumption for BeamWeapon."""
+        beam = BeamWeapon({
+            'name': 'Laser', 'id':'laser', 'energy_cost': 50, 'range': 500,
+            'damage': 10, 'firing_arc': 360, 'cooldown': 0,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        beam.is_active = True
+        self.attacker.add_component(beam, LayerType.OUTER)
+        self.attacker.current_energy = 100
+    
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        self.attacker.fire_weapons()
+>       self.assertEqual(self.attacker.current_energy, 50, "Should consume 50 energy")
+E       AssertionError: 100 != 50 : Should consume 50 energy
+
+simulation_tests\data_driven\test_combat_targeting.py:259: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000024BCB6EAB30>
+DEBUG: Add bridge success: True, total core: 1
+_________________ TestCombatTargeting.test_seeker_ignores_arc _________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_seeker_ignores_arc>
+
+    def test_seeker_ignores_arc(self):
+        """Verify SeekerWeapon fires even if target is outside arc."""
+        missile_launcher = SeekerWeapon({
+            'name': 'Missile', 'id':'test_missile', 'firing_arc': 10, 'range': 1000,
+            'projectile_speed': 500, 'ammo_cost': 1, 'damage': 10, 'endurance': 100,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        missile_launcher.facing_angle = 0
+        missile_launcher.is_active = True
+        self.attacker.add_component(missile_launcher, LayerType.OUTER)
+    
+        # Target behind
+        self.target.position = pygame.math.Vector2(-200, 0)
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+    
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1, "Seeker weapon should fire regardless of arc")
+E       AssertionError: 0 != 1 : Seeker weapon should fire regardless of arc
+
+simulation_tests\data_driven\test_combat_targeting.py:176: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000024BCB723730>
+DEBUG: Add bridge success: True, total core: 1
+______________ TestLayerRefinements.test_all_layers_filter_logic ______________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_layer_refinements.TestLayerRefinements testMethod=test_all_layers_filter_logic>
+
+    def test_all_layers_filter_logic(self):
+        """Verify the logic for 'All Layers' filter."""
+        # Simulation of the logic in left_panel.py
+    
+        # Component allowed in CORE only
+        comp_core = MagicMock()
+        comp_core.allowed_layers = [LayerType.CORE]
+    
+        # Component allowed in OUTER only
+        comp_outer = MagicMock()
+        comp_outer.allowed_layers = [LayerType.OUTER]
+    
+        # Fighter has CORE, ARMOR. No OUTER.
+        valid_layers_fighter = set(self.fighter.layers.keys())
+    
+        # Check Core Comp -> Should be visible
+        self.assertTrue(any(l in valid_layers_fighter for l in comp_core.allowed_layers))
+    
+        # Check Outer Comp -> Should NOT be visible on Fighter
+>       self.assertFalse(any(l in valid_layers_fighter for l in comp_outer.allowed_layers))
+E       AssertionError: True is not false
+
+tests\unit\test_layer_refinements.py:104: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+____________ TestLayerRefinements.test_dynamic_radius_calculation _____________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_layer_refinements.TestLayerRefinements testMethod=test_dynamic_radius_calculation>
+
+    def test_dynamic_radius_calculation(self):
+        """Verify layer radii are calculated based on area proportional to mass."""
+        # For Fighter:
+        # CORE: 1.0 Mass Pct
+        # ARMOR: 0.3 Mass Pct
+        # Total Capacity = 1.3
+    
+        # Expected Radii:
+        # Core Radius = sqrt(1.0 / 1.3) = sqrt(0.769) ~= 0.877
+        # Armor Radius = sqrt((1.0 + 0.3) / 1.3) = sqrt(1.0) = 1.0
+    
+        core_r = self.fighter.layers[LayerType.CORE]['radius_pct']
+        armor_r = self.fighter.layers[LayerType.ARMOR]['radius_pct']
+    
+>       self.assertAlmostEqual(core_r, 0.877, places=3, msg=f"Fighter Core Radius mismatch. Got {core_r}")
+E       AssertionError: 0.5 != 0.877 within 3 places (0.377 difference) : Fighter Core Radius mismatch. Got 0.5
+
+tests\unit\test_layer_refinements.py:125: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestLayerRefinements.test_layer_mass_limits_loaded ______________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_layer_refinements.TestLayerRefinements testMethod=test_layer_mass_limits_loaded>
+
+    def test_layer_mass_limits_loaded(self):
+        """Verify max_mass_pct is loaded correctly from JSON."""
+        # Fighter: 2 layers -> CORE: 1.0, ARMOR: 0.3
+        core = self.fighter.layers[LayerType.CORE]
+        armor = self.fighter.layers[LayerType.ARMOR]
+    
+        self.assertEqual(core['max_mass_pct'], 1.0, "Fighter CORE should be 100%")
+>       self.assertAlmostEqual(armor['max_mass_pct'], 0.3, places=2, msg="Fighter ARMOR should be 30%")
+E       AssertionError: 1.0 != 0.3 within 2 places (0.7 difference) : Fighter ARMOR should be 30%
+
+tests\unit\test_layer_refinements.py:31: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestLayerRefinements.test_mass_budget_enforcement ______________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_layer_refinements.TestLayerRefinements testMethod=test_mass_budget_enforcement>
+
+    def test_mass_budget_enforcement(self):
+        """Verify mass_budget_exceeded logic via VALIDATOR."""
+        # Fighter Max Mass = 250 (from JSON usually)
+        max_mass = self.fighter.max_mass_budget
+    
+        # Armor Limit = 30% of max_mass
+        armor_limit = max_mass * 0.3
+    
+        # Mock component
+        heavy_armor = MagicMock(spec=Component)
+        heavy_armor.mass = armor_limit + 10
+        heavy_armor.allowed_layers = [LayerType.ARMOR]
+        heavy_armor.allowed_vehicle_types = ["Fighter"]
+        heavy_armor.data = {'major_classification': 'Armor'}
+        # Specific attributes needed for checks
+        heavy_armor.type_str = "Armor"
+        heavy_armor.id = "heavy_armor"
+        # Since we use validate_addition, we need to ensure other checks pass or we focus on mass
+        from ship_validator import MassBudgetRule
+    
+        rule = MassBudgetRule()
+    
+        # Check budget check directly using strict rule check to Isolate test
+        res = rule.validate(self.fighter, heavy_armor, LayerType.ARMOR)
+>       self.assertFalse(res.is_valid, "Should fail mass budget")
+E       AssertionError: True is not false : Should fail mass budget
+
+tests\unit\test_layer_refinements.py:70: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestBridgeScaling.test_bridge_scaling_4000 __________________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_bridge_scaling.TestBridgeScaling testMethod=test_bridge_scaling_4000>
+
+    def test_bridge_scaling_4000(self):
+        # 4000 mass -> scale = sqrt(4) = 2
+        # Mass = 50 * 2 = 100
+        # HP = 200 * 2 = 400
+        # Crew = ceil(5 * 2) = 10
+    
+>       comp = self.bridge_def.clone()
+E       AttributeError: 'NoneType' object has no attribute 'clone'
+
+tests\unit\test_bridge_scaling.py:47: AttributeError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________________ TestBridgeScaling.test_bridge_scaling_odd __________________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_bridge_scaling.TestBridgeScaling testMethod=test_bridge_scaling_odd>
+
+    def test_bridge_scaling_odd(self):
+        # 2000 mass -> scale = sqrt(2) = 1.4142...
+        # Mass = 50 * 1.414 = 70.71...
+        # HP = 200 * 1.414 = 282.84... -> int(282)
+        # Crew = ceil(5 * 1.414) = ceil(7.07) = 8
+    
+        scale = math.sqrt(2000 / 1000)
+    
+>       comp = self.bridge_def.clone()
+E       AttributeError: 'NoneType' object has no attribute 'clone'
+
+tests\unit\test_bridge_scaling.py:65: AttributeError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__ TestModifierStackingIntegration.test_multiple_modifiers_order_independent __
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_component_modifiers_extended.TestModifierStackingIntegration testMethod=test_multiple_modifiers_order_independent>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_component_modifiers_extended.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________ TestModifierGroupPropagation.test_add_modifier_default_value _________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifier_propagation.TestModifierGroupPropagation testMethod=test_add_modifier_default_value>
+
+    def setUp(self):
+        # Load modifiers to ensure registry is populated
+>       load_modifiers('data/modifiers.json')
+
+tests\unit\test_modifier_propagation.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__ TestModifierStackingIntegration.test_range_mount_increases_component_mass __
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_component_modifiers_extended.TestModifierStackingIntegration testMethod=test_range_mount_increases_component_mass>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_component_modifiers_extended.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestModifierGroupPropagation.test_propagation ________________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifier_propagation.TestModifierGroupPropagation testMethod=test_propagation>
+
+    def setUp(self):
+        # Load modifiers to ensure registry is populated
+>       load_modifiers('data/modifiers.json')
+
+tests\unit\test_modifier_propagation.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestModifiers.test_add_modifier_to_component _________________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestModifiers testMethod=test_add_modifier_to_component>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_modifiers.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestModifierGroupPropagation.test_value_change_propagation __________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifier_propagation.TestModifierGroupPropagation testMethod=test_value_change_propagation>
+
+    def setUp(self):
+        # Load modifiers to ensure registry is populated
+>       load_modifiers('data/modifiers.json')
+
+tests\unit\test_modifier_propagation.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestModifierStacking.test_single_range_modifier _______________
+[gw6] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_single_range_modifier>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestModifiers.test_get_modifier_returns_none_for_missing ___________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestModifiers testMethod=test_get_modifier_returns_none_for_missing>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_modifiers.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestModifiers.test_modifier_effects_on_stats _________________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestModifiers testMethod=test_modifier_effects_on_stats>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_modifiers.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestComponents.test_create_component_types __________________
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestComponents testMethod=test_create_component_types>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestModifierStacking.test_single_size_modifier ________________
+[gw6] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_single_size_modifier>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestModifiers.test_modifier_value_persistence ________________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestModifiers testMethod=test_modifier_value_persistence>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_modifiers.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestModifierDefaultsRobustness.test_pdc_defaults_robustness _________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifier_defaults_robustness.TestModifierDefaultsRobustness testMethod=test_pdc_defaults_robustness>
+
+    def setUp(self):
+>       load_modifiers()
+
+tests\unit\test_modifier_defaults_robustness.py:13: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________________ TestModifiers.test_modifier_restrictions ___________________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestModifiers testMethod=test_modifier_restrictions>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_modifiers.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________________ TestComponents.test_load_components _____________________
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestComponents testMethod=test_load_components>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestModifierStacking.test_triple_modifier_stacking ______________
+[gw6] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_triple_modifier_stacking>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________ TestModifierEffectsFunctions.test_facing_sets_property ____________
+[gw11] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_component_modifiers_extended.TestModifierEffectsFunctions testMethod=test_facing_sets_property>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_component_modifiers_extended.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________________ TestModifiers.test_modifiers_loaded _____________________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestModifiers testMethod=test_modifiers_loaded>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_modifiers.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestTurretMount.test_turret_diminishing_returns _______________
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestTurretMount testMethod=test_turret_diminishing_returns>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________________ TestModifierOrder.test_order_independence __________________
+[gw6] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierOrder testMethod=test_order_independence>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:144: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestTurretMount.test_turret_stacks_with_size _________________
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestTurretMount testMethod=test_turret_stacks_with_size>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestComponentCloning.test_clone_creates_independent_copy ___________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestComponentCloning testMethod=test_clone_creates_independent_copy>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_modifiers.py:94: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________ TestModifierEffectsFunctions.test_range_mount_increases_mass _________
+[gw11] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_component_modifiers_extended.TestModifierEffectsFunctions testMethod=test_range_mount_increases_mass>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_component_modifiers_extended.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+____________________ TestModifierStacking.test_hp_stacking ____________________
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_hp_stacking>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________________ TestModifiers.test_remove_modifier ______________________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestModifiers testMethod=test_remove_modifier>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_modifiers.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+____________ TestModifierEffectsFunctions.test_range_mount_level_2 ____________
+[gw7] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_component_modifiers_extended.TestModifierEffectsFunctions testMethod=test_range_mount_level_2>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_component_modifiers_extended.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________ TestModifierEffectsFunctions.test_range_mount_increases_range ________
+[gw11] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_component_modifiers_extended.TestModifierEffectsFunctions testMethod=test_range_mount_increases_range>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_component_modifiers_extended.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____ TestModifierStacking.test_multiplicative_stacking_size_and_hardened _____
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_multiplicative_stacking_size_and_hardened>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestComponentCloning.test_clone_preserves_type ________________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestComponentCloning testMethod=test_clone_preserves_type>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_modifiers.py:94: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestTurretMount.test_turret_0_degrees_no_change _______________
+[gw6] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestTurretMount testMethod=test_turret_0_degrees_no_change>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestPlanetaryComplex.test_accepts_ship_components ______________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_planetary_complex.TestPlanetaryComplex testMethod=test_accepts_ship_components>
+
+    def setUp(self):
+        initialize_ship_data()
+        load_components()
+>       load_modifiers()
+
+tests\unit\test_planetary_complex.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________ TestPlanetaryComplex.test_planetary_complex_tiers_exist ___________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_planetary_complex.TestPlanetaryComplex testMethod=test_planetary_complex_tiers_exist>
+
+    def setUp(self):
+        initialize_ship_data()
+        load_components()
+>       load_modifiers()
+
+tests\unit\test_planetary_complex.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestPlanetaryComplex.test_add_central_command ________________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_planetary_complex.TestPlanetaryComplex testMethod=test_add_central_command>
+
+    def setUp(self):
+        initialize_ship_data()
+        load_components()
+>       load_modifiers()
+
+tests\unit\test_planetary_complex.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______ TestModifierEffectsFunctions.test_simple_size_scales_all_stats ________
+[gw7] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_component_modifiers_extended.TestModifierEffectsFunctions testMethod=test_simple_size_scales_all_stats>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_component_modifiers_extended.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestComponentCloning.test_beam_weapon_clone _________________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestComponentCloning testMethod=test_beam_weapon_clone>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_modifiers.py:94: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestPlanetaryComplex.test_rejects_propulsion _________________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_planetary_complex.TestPlanetaryComplex testMethod=test_rejects_propulsion>
+
+    def setUp(self):
+        initialize_ship_data()
+        load_components()
+>       load_modifiers()
+
+tests\unit\test_planetary_complex.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestPlanetaryComplex.test_movement_capabilities _______________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_planetary_complex.TestPlanetaryComplex testMethod=test_movement_capabilities>
+
+    def setUp(self):
+        initialize_ship_data()
+        load_components()
+>       load_modifiers()
+
+tests\unit\test_planetary_complex.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______ TestModifierStacking.test_multiplicative_stacking_size_and_range _______
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_multiplicative_stacking_size_and_range>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________ TestMovementAndAI.test_ai_target_acquisition_long_range ___________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_movement_and_ai.TestMovementAndAI testMethod=test_ai_target_acquisition_long_range>
+
+    def setUp(self):
+        pygame.init()
+        # Initialize vehicle class definitions FIRST (required for layer configs)
+        initialize_ship_data()
+        # Load data once
+        base_path = os.getcwd()
+        if not os.path.exists(os.path.join(base_path, "data", "components.json")):
+             base_path = os.path.dirname(os.getcwd())
+    
+        comp_path = os.path.join(base_path, "data", "components.json")
+        mod_path = os.path.join(base_path, "data", "modifiers.json")
+    
+        if os.path.exists(comp_path):
+            load_components(comp_path)
+        if os.path.exists(mod_path):
+            self.mod_path = mod_path
+>           load_modifiers(mod_path)
+
+tests\unit\test_movement_and_ai.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'C:\\Dev\\Starship Battles\\data\\modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestPlanetaryComplex.test_rejects_ship_bridge ________________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_planetary_complex.TestPlanetaryComplex testMethod=test_rejects_ship_bridge>
+
+    def setUp(self):
+        initialize_ship_data()
+        load_components()
+>       load_modifiers()
+
+tests\unit\test_planetary_complex.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestTurretMount.test_turret_180_only_slightly_more_than_90 __________
+[gw6] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestTurretMount testMethod=test_turret_180_only_slightly_more_than_90>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____ TestModifierEffectsFunctions.test_turret_mount_logarithmic_scaling ______
+[gw7] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_component_modifiers_extended.TestModifierEffectsFunctions testMethod=test_turret_mount_logarithmic_scaling>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_component_modifiers_extended.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestRegressions.test_ship_classes_update_in_place ______________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_regressions.TestRegressions testMethod=test_ship_classes_update_in_place>
+
+    def test_ship_classes_update_in_place(self):
+        """
+        Regression Test for Builder Dropdown Bug:
+        Verify that load_vehicle_classes updates the SHIP_CLASSES dict in-place
+        instead of replacing the reference.
+        """
+        # Store original reference
+        original_ref = SHIP_CLASSES
+        original_id = id(SHIP_CLASSES)
+    
+        # Call loader
+        ship.load_vehicle_classes()
+    
+        # Verify reference is identical
+        self.assertEqual(id(ship.SHIP_CLASSES), original_id,
+                         "SHIP_CLASSES reference changed! Imports in other modules will be stale.")
+        self.assertIs(ship.SHIP_CLASSES, original_ref)
+    
+        # Verify it has content
+>       self.assertTrue(len(ship.SHIP_CLASSES) > 0, "SHIP_CLASSES should not be empty")
+E       AssertionError: False is not true : SHIP_CLASSES should not be empty
+
+tests\unit\test_regressions.py:34: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestDetailPanelRendering.test_html_modifiers _________________
+[gw8] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1248: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+self = <unit.test_detail_panel_rendering.TestDetailPanelRendering testMethod=test_html_modifiers>
+
+    def setUp(self):
+        pygame.init()
+        pygame.font.init()
+        # Delayed import to allow pygame init
+        from ui.builder.detail_panel import ComponentDetailPanel
+        self.ComponentDetailPanel = ComponentDetailPanel
+    
+        # Mock Pygame and UI Manager
+        self.mock_manager = MagicMock(spec=pygame_gui.UIManager)
+    
+        # Patch pygame.Rect to behave like a real Rect for layout logic
+        self.rect_patcher = patch('pygame.Rect')
+        self.MockRect = self.rect_patcher.start()
+        # Side effect to return a mock that stores x,y,w,h
+        def mock_rect(*args):
+            r = MagicMock()
+            if len(args) == 4:
+                r.x, r.y, r.width, r.height = args
+            elif len(args) == 1 and isinstance(args[0], tuple) and len(args[0]) == 4:
+                r.x, r.y, r.width, r.height = args[0]
+            else:
+                 # Default fallback
+                 r.x, r.y, r.width, r.height = 0, 0, 100, 100
+    
+            r.bottom = r.y + r.height
+            return r
+        self.MockRect.side_effect = mock_rect
+    
+        # Patch UI elements to avoid actual GUI creation
+        self.uipanel_patch = patch('ui.builder.detail_panel.UIPanel')
+        self.uilabel_patch = patch('ui.builder.detail_panel.UILabel')
+        self.uiimage_patch = patch('ui.builder.detail_panel.UIImage')
+        self.uibutton_patch = patch('ui.builder.detail_panel.UIButton')
+    
+        # Patch both possible import locations for UITextBox to catch local import
+        self.uitextbox_patch = patch('pygame_gui.elements.UITextBox')
+        self.uitextbox_patch_real = patch('pygame_gui.elements.ui_text_box.UITextBox')
+    
+>       self.uipanel_patch.start()
+
+tests\unit\test_detail_panel_rendering.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1595: in start
+    result = self.__enter__()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1431: in __enter__
+    self.target = self.getter()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1618: in <lambda>
+    getter = lambda: _importer(target)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1261: in _importer
+    thing = _dot_lookup(thing, comp, import_path)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+            return getattr(thing, comp)
+        except AttributeError:
+            __import__(import_path)
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1251: AttributeError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________ TestModifierEffectsFunctions.test_turret_mount_sets_arc ___________
+[gw7] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_component_modifiers_extended.TestModifierEffectsFunctions testMethod=test_turret_mount_sets_arc>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_component_modifiers_extended.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestScalingLogic.test_consumption_scaling_linear _______________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_consumption_scaling_linear>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_scaling_logic.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______ TestModifierEffectsFunctions.test_turret_mount_zero_arc_no_change ______
+[gw7] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_component_modifiers_extended.TestModifierEffectsFunctions testMethod=test_turret_mount_zero_arc_no_change>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_component_modifiers_extended.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________ TestScalingLogic.test_crew_requirement_scaling_combined ___________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_combined>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_scaling_logic.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestMovementAndAI.test_ai_thrust_command_generation _____________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_movement_and_ai.TestMovementAndAI testMethod=test_ai_thrust_command_generation>
+
+    def setUp(self):
+        pygame.init()
+        # Initialize vehicle class definitions FIRST (required for layer configs)
+        initialize_ship_data()
+        # Load data once
+        base_path = os.getcwd()
+        if not os.path.exists(os.path.join(base_path, "data", "components.json")):
+             base_path = os.path.dirname(os.getcwd())
+    
+        comp_path = os.path.join(base_path, "data", "components.json")
+        mod_path = os.path.join(base_path, "data", "modifiers.json")
+    
+        if os.path.exists(comp_path):
+            load_components(comp_path)
+        if os.path.exists(mod_path):
+            self.mod_path = mod_path
+>           load_modifiers(mod_path)
+
+tests\unit\test_movement_and_ai.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'C:\\Dev\\Starship Battles\\data\\modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestScalingLogic.test_crew_requirement_scaling_size_mount __________
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_size_mount>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_scaling_logic.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestScalingLogic.test_crew_requirement_scaling_range_mount __________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_range_mount>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_scaling_logic.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______ TestModifierDefaultsRobustness.test_pdc_min_constraint_robustness ______
+[gw15] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifier_defaults_robustness.TestModifierDefaultsRobustness testMethod=test_pdc_min_constraint_robustness>
+
+    def setUp(self):
+>       load_modifiers()
+
+tests\unit\test_modifier_defaults_robustness.py:13: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________________ TestShip.test_add_component_constraints ___________________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship.TestShip testMethod=test_add_component_constraints>
+
+    def test_add_component_constraints(self):
+        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+    
+        # Bridge is allowed in CORE
+        bridge = create_component('bridge')
+        ship.add_component(bridge, LayerType.CORE)
+>       self.assertIn(bridge, ship.layers[LayerType.CORE]['components'])
+E       AssertionError: None not found in []
+
+tests\unit\test_ship.py:22: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID bridge not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestApplyModifierEffects.test_special_effect_handlers_exist _________
+[gw7] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_component_modifiers_extended.TestApplyModifierEffects testMethod=test_special_effect_handlers_exist>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_component_modifiers_extended.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________________ TestModifierStacking.test_range_stacking ___________________
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_range_stacking>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_components.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestMainIntegration.test_game_instantiation _________________
+[gw10] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_main_integration.TestMainIntegration testMethod=test_game_instantiation>
+mock_info = <MagicMock name='Info' id='2766042319792'>
+
+    @patch('pygame.display.Info')
+    def test_game_instantiation(self, mock_info):
+        """Test that the Game class can be instantiated."""
+        # Setup mocks for screen resolution
+        mock_info_obj = MagicMock()
+        type(mock_info_obj).current_w = unittest.mock.PropertyMock(return_value=1920)
+        type(mock_info_obj).current_h = unittest.mock.PropertyMock(return_value=1080)
+        # Fallback for direct attribute access if not property
+        mock_info_obj.current_w = 1920
+        mock_info_obj.current_h = 1080
+        mock_info.return_value = mock_info_obj
+    
+        # We allow real set_mode to run (with dummy driver defined in imports)
+        # to ensure surfaces can be converted.
+    
+        try:
+            from game import app
+>           game = app.Game()
+
+tests\unit\test_main_integration.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+game\app.py:90: in __init__
+    load_modifiers(os.path.join(base_path, "data", "modifiers.json"))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'C:\\Dev\\Starship Battles\\data\\modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+
+During handling of the above exception, another exception occurred:
+
+self = <unit.test_main_integration.TestMainIntegration testMethod=test_game_instantiation>
+mock_info = <MagicMock name='Info' id='2766042319792'>
+
+    @patch('pygame.display.Info')
+    def test_game_instantiation(self, mock_info):
+        """Test that the Game class can be instantiated."""
+        # Setup mocks for screen resolution
+        mock_info_obj = MagicMock()
+        type(mock_info_obj).current_w = unittest.mock.PropertyMock(return_value=1920)
+        type(mock_info_obj).current_h = unittest.mock.PropertyMock(return_value=1080)
+        # Fallback for direct attribute access if not property
+        mock_info_obj.current_w = 1920
+        mock_info_obj.current_h = 1080
+        mock_info.return_value = mock_info_obj
+    
+        # We allow real set_mode to run (with dummy driver defined in imports)
+        # to ensure surfaces can be converted.
+    
+        try:
+            from game import app
+            game = app.Game()
+            self.assertIsNotNone(game)
+            self.assertIsNotNone(game.battle_scene)
+            self.assertIsNotNone(game.battle_scene.engine)
+    
+            # Verify the engine has a logger (instance based)
+            self.assertTrue(hasattr(game.battle_scene.engine, 'logger'))
+    
+            # Verify BATTLE_LOG is NOT a property of the battle module anymore
+            from game.ui.screens import battle_scene
+            self.assertFalse(hasattr(battle_scene, 'BATTLE_LOG'), "battle_scene module should not export global BATTLE_LOG")
+    
+        except ImportError as e:
+            self.fail(f"Game instantiation failed due to ImportError: {e}")
+        except Exception as e:
+>           self.fail(f"Game instantiation failed with exception: {e}")
+E           AssertionError: Game instantiation failed with exception: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+tests\unit\test_main_integration.py:68: AssertionError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestSeekerRange.test_seeker_range_with_modifier _______________
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_seeker_range.TestSeekerRange testMethod=test_seeker_range_with_modifier>
+
+    def test_seeker_range_with_modifier(self):
+        """Test that range modifier works on top of 80% calculation.
+    
+        Note: Phase 7 aliased SeekerWeapon to Component, so the old
+        _apply_custom_stats logic that recalculated range is gone.
+        This test now verifies the modifier affects endurance_mult stat.
+        """
+        missile = create_component('capital_missile')
+    
+        from game.simulation.components.component import load_modifiers
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_seeker_range.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______ TestModifierDefaultsRobustness.test_railgun_defaults_robustness _______
+[gw15] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifier_defaults_robustness.TestModifierDefaultsRobustness testMethod=test_railgun_defaults_robustness>
+
+    def setUp(self):
+>       load_modifiers()
+
+tests\unit\test_modifier_defaults_robustness.py:13: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestDetailPanelRendering.test_html_stats_dynamic_abilities __________
+[gw8] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1248: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+self = <unit.test_detail_panel_rendering.TestDetailPanelRendering testMethod=test_html_stats_dynamic_abilities>
+
+    def setUp(self):
+        pygame.init()
+        pygame.font.init()
+        # Delayed import to allow pygame init
+        from ui.builder.detail_panel import ComponentDetailPanel
+        self.ComponentDetailPanel = ComponentDetailPanel
+    
+        # Mock Pygame and UI Manager
+        self.mock_manager = MagicMock(spec=pygame_gui.UIManager)
+    
+        # Patch pygame.Rect to behave like a real Rect for layout logic
+        self.rect_patcher = patch('pygame.Rect')
+        self.MockRect = self.rect_patcher.start()
+        # Side effect to return a mock that stores x,y,w,h
+        def mock_rect(*args):
+            r = MagicMock()
+            if len(args) == 4:
+                r.x, r.y, r.width, r.height = args
+            elif len(args) == 1 and isinstance(args[0], tuple) and len(args[0]) == 4:
+                r.x, r.y, r.width, r.height = args[0]
+            else:
+                 # Default fallback
+                 r.x, r.y, r.width, r.height = 0, 0, 100, 100
+    
+            r.bottom = r.y + r.height
+            return r
+        self.MockRect.side_effect = mock_rect
+    
+        # Patch UI elements to avoid actual GUI creation
+        self.uipanel_patch = patch('ui.builder.detail_panel.UIPanel')
+        self.uilabel_patch = patch('ui.builder.detail_panel.UILabel')
+        self.uiimage_patch = patch('ui.builder.detail_panel.UIImage')
+        self.uibutton_patch = patch('ui.builder.detail_panel.UIButton')
+    
+        # Patch both possible import locations for UITextBox to catch local import
+        self.uitextbox_patch = patch('pygame_gui.elements.UITextBox')
+        self.uitextbox_patch_real = patch('pygame_gui.elements.ui_text_box.UITextBox')
+    
+>       self.uipanel_patch.start()
+
+tests\unit\test_detail_panel_rendering.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1595: in start
+    result = self.__enter__()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1431: in __enter__
+    self.target = self.getter()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1618: in <lambda>
+    getter = lambda: _importer(target)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1261: in _importer
+    thing = _dot_lookup(thing, comp, import_path)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+            return getattr(thing, comp)
+        except AttributeError:
+            __import__(import_path)
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1251: AttributeError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestModifierStacking.test_simple_size_mount_hp_multiplier __________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_loading.TestModifierStacking testMethod=test_simple_size_mount_hp_multiplier>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_ship_loading.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestModifierStacking.test_stacked_modifiers_multiplicative __________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_loading.TestModifierStacking testMethod=test_stacked_modifiers_multiplicative>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_ship_loading.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________ TestShipStatsBaseline.test_multiple_engines_sum_thrust ____________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_stats.TestShipStatsBaseline testMethod=test_multiple_engines_sum_thrust>
+
+    def setUp(self):
+        """Load test data once."""
+        # Save original pygame modules if they exist
+        self._original_pygame = sys.modules.get('pygame')
+        self._original_pygame_mixer = sys.modules.get('pygame.mixer')
+        self._original_pygame_font = sys.modules.get('pygame.font')
+    
+        # Mock pygame before importing game modules
+        self.pygame_mock = MagicMock()
+        self.pygame_mock.mixer = MagicMock()
+        self.pygame_mock.font = MagicMock()
+        sys.modules['pygame'] = self.pygame_mock
+        sys.modules['pygame.mixer'] = self.pygame_mock.mixer
+        sys.modules['pygame.font'] = self.pygame_mock.font
+    
+        # Import after mocking
+        from game.simulation.components.component import Component, load_components, load_modifiers
+        from ship_stats import ShipStatsCalculator
+        from game.simulation.entities.ship import VEHICLE_CLASSES
+    
+        self.Component = Component
+        self.ShipStatsCalculator = ShipStatsCalculator
+        self.VEHICLE_CLASSES = VEHICLE_CLASSES
+    
+        # Load components and modifiers
+        load_components()
+>       load_modifiers()
+
+tests\unit\test_ship_stats.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______ TestShipStatsBaseline.test_ability_values_match_legacy_attributes ______
+[gw7] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_stats.TestShipStatsBaseline testMethod=test_ability_values_match_legacy_attributes>
+
+    def setUp(self):
+        """Load test data once."""
+        # Save original pygame modules if they exist
+        self._original_pygame = sys.modules.get('pygame')
+        self._original_pygame_mixer = sys.modules.get('pygame.mixer')
+        self._original_pygame_font = sys.modules.get('pygame.font')
+    
+        # Mock pygame before importing game modules
+        self.pygame_mock = MagicMock()
+        self.pygame_mock.mixer = MagicMock()
+        self.pygame_mock.font = MagicMock()
+        sys.modules['pygame'] = self.pygame_mock
+        sys.modules['pygame.mixer'] = self.pygame_mock.mixer
+        sys.modules['pygame.font'] = self.pygame_mock.font
+    
+        # Import after mocking
+        from game.simulation.components.component import Component, load_components, load_modifiers
+        from ship_stats import ShipStatsCalculator
+        from game.simulation.entities.ship import VEHICLE_CLASSES
+    
+        self.Component = Component
+        self.ShipStatsCalculator = ShipStatsCalculator
+        self.VEHICLE_CLASSES = VEHICLE_CLASSES
+    
+        # Load components and modifiers
+        load_components()
+>       load_modifiers()
+
+tests\unit\test_ship_stats.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______ TestShipStatsBaseline.test_turn_speed_calculation_from_thruster _______
+[gw6] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_stats.TestShipStatsBaseline testMethod=test_turn_speed_calculation_from_thruster>
+
+    def setUp(self):
+        """Load test data once."""
+        # Save original pygame modules if they exist
+        self._original_pygame = sys.modules.get('pygame')
+        self._original_pygame_mixer = sys.modules.get('pygame.mixer')
+        self._original_pygame_font = sys.modules.get('pygame.font')
+    
+        # Mock pygame before importing game modules
+        self.pygame_mock = MagicMock()
+        self.pygame_mock.mixer = MagicMock()
+        self.pygame_mock.font = MagicMock()
+        sys.modules['pygame'] = self.pygame_mock
+        sys.modules['pygame.mixer'] = self.pygame_mock.mixer
+        sys.modules['pygame.font'] = self.pygame_mock.font
+    
+        # Import after mocking
+        from game.simulation.components.component import Component, load_components, load_modifiers
+        from ship_stats import ShipStatsCalculator
+        from game.simulation.entities.ship import VEHICLE_CLASSES
+    
+        self.Component = Component
+        self.ShipStatsCalculator = ShipStatsCalculator
+        self.VEHICLE_CLASSES = VEHICLE_CLASSES
+    
+        # Load components and modifiers
+        load_components()
+>       load_modifiers()
+
+tests\unit\test_ship_stats.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________ TestAbilityModifierSync.test_thrust_modifier_updates_ability _________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_stats.TestAbilityModifierSync testMethod=test_thrust_modifier_updates_ability>
+
+    def setUp(self):
+        """Load test data once."""
+        # Save original pygame modules if they exist
+        self._original_pygame = sys.modules.get('pygame')
+        self._original_pygame_mixer = sys.modules.get('pygame.mixer')
+        self._original_pygame_font = sys.modules.get('pygame.font')
+    
+        self.pygame_mock = MagicMock()
+        self.pygame_mock.mixer = MagicMock()
+        self.pygame_mock.font = MagicMock()
+        sys.modules['pygame'] = self.pygame_mock
+        sys.modules['pygame.mixer'] = self.pygame_mock.mixer
+        sys.modules['pygame.font'] = self.pygame_mock.font
+    
+        from game.simulation.components.component import Component, load_components, load_modifiers, MODIFIER_REGISTRY
+    
+        self.Component = Component
+        self.MODIFIER_REGISTRY = MODIFIER_REGISTRY
+    
+        load_components()
+>       load_modifiers()
+
+tests\unit\test_ship_stats.py:251: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestShipStatsBaseline.test_thrust_calculation_from_engine __________
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_stats.TestShipStatsBaseline testMethod=test_thrust_calculation_from_engine>
+
+    def setUp(self):
+        """Load test data once."""
+        # Save original pygame modules if they exist
+        self._original_pygame = sys.modules.get('pygame')
+        self._original_pygame_mixer = sys.modules.get('pygame.mixer')
+        self._original_pygame_font = sys.modules.get('pygame.font')
+    
+        # Mock pygame before importing game modules
+        self.pygame_mock = MagicMock()
+        self.pygame_mock.mixer = MagicMock()
+        self.pygame_mock.font = MagicMock()
+        sys.modules['pygame'] = self.pygame_mock
+        sys.modules['pygame.mixer'] = self.pygame_mock.mixer
+        sys.modules['pygame.font'] = self.pygame_mock.font
+    
+        # Import after mocking
+        from game.simulation.components.component import Component, load_components, load_modifiers
+        from ship_stats import ShipStatsCalculator
+        from game.simulation.entities.ship import VEHICLE_CLASSES
+    
+        self.Component = Component
+        self.ShipStatsCalculator = ShipStatsCalculator
+        self.VEHICLE_CLASSES = VEHICLE_CLASSES
+    
+        # Load components and modifiers
+        load_components()
+>       load_modifiers()
+
+tests\unit\test_ship_stats.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________________ TestShipThemeLogic.test_get_image_metrics __________________
+[gw7] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_theme_logic.TestShipThemeLogic testMethod=test_get_image_metrics>
+mock_load = <MagicMock name='load' id='2392292119200'>
+mock_open_file = <MagicMock name='open' spec='builtin_function_or_method' id='2392291649440'>
+mock_json_load = <MagicMock name='load' id='2392291648768'>
+mock_exists = <MagicMock name='exists' id='2392292776048'>
+mock_scandir = <MagicMock name='scandir' id='2392292783776'>
+mock_log = <MagicMock name='log_error' id='2392292480368'>
+
+    @patch('ship_theme.log_error')
+    @patch('os.scandir')
+    @patch('os.path.exists')
+    @patch('ship_theme.json.load')
+    @patch('builtins.open', new_callable=mock_open)
+    @patch('pygame.image.load')
+    def test_get_image_metrics(self, mock_load, mock_open_file, mock_json_load, mock_exists, mock_scandir, mock_log):
+        """Test that bounding rect is correctly calculated and cached."""
+    
+        theme_name = "MetricsTheme"
+        ship_class = "TestShip"
+        json_content = {
+            "name": theme_name,
+            "images": {
+                ship_class: "game.simulation.entities.ship.png"
+            }
+        }
+    
+        # Mocks setup
+        mock_entry = MagicMock()
+        mock_entry.is_dir.return_value = True
+        mock_entry.path = f"/themes/{theme_name}"
+        mock_scandir.return_value = [mock_entry]
+    
+        mock_exists.return_value = True # Simplify exists checks
+        mock_json_load.return_value = json_content
+    
+        # Create a mock surface to avoid environment-specific convert_alpha behavior
+        mock_surface = MagicMock(spec=pygame.Surface)
+        mock_surface.get_size.return_value = (20, 20)
+        # Use a real Rect for the mock to return
+        mock_rect = pygame.Rect(5, 5, 10, 10)
+        mock_surface.get_bounding_rect.return_value = mock_rect
+        mock_surface.convert_alpha.return_value = mock_surface
+    
+        mock_load.return_value = mock_surface
+    
+        # Initialize
+        self.manager.initialize("/fake/base/path")
+    
+        # Verify no errors logged
+        mock_log.assert_not_called()
+    
+        # Verify metrics
+        rect = self.manager.get_image_metrics(theme_name, ship_class)
+        self.assertIsNotNone(rect)
+>       self.assertEqual(rect.x, 5)
+E       AssertionError: 0 != 5
+
+tests\unit\test_ship_theme_logic.py:152: AssertionError
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 1 ship themes: ['MetricsTheme']
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestShipStatsBaseline.test_shield_stats_calculation _____________
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_stats.TestShipStatsBaseline testMethod=test_shield_stats_calculation>
+
+    def setUp(self):
+        """Load test data once."""
+        # Save original pygame modules if they exist
+        self._original_pygame = sys.modules.get('pygame')
+        self._original_pygame_mixer = sys.modules.get('pygame.mixer')
+        self._original_pygame_font = sys.modules.get('pygame.font')
+    
+        # Mock pygame before importing game modules
+        self.pygame_mock = MagicMock()
+        self.pygame_mock.mixer = MagicMock()
+        self.pygame_mock.font = MagicMock()
+        sys.modules['pygame'] = self.pygame_mock
+        sys.modules['pygame.mixer'] = self.pygame_mock.mixer
+        sys.modules['pygame.font'] = self.pygame_mock.font
+    
+        # Import after mocking
+        from game.simulation.components.component import Component, load_components, load_modifiers
+        from ship_stats import ShipStatsCalculator
+        from game.simulation.entities.ship import VEHICLE_CLASSES
+    
+        self.Component = Component
+        self.ShipStatsCalculator = ShipStatsCalculator
+        self.VEHICLE_CLASSES = VEHICLE_CLASSES
+    
+        # Load components and modifiers
+        load_components()
+>       load_modifiers()
+
+tests\unit\test_ship_stats.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestWeaponBasics.test_beam_accuracy_clamped _________________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_weapons.TestWeaponBasics testMethod=test_beam_accuracy_clamped>
+
+    def test_beam_accuracy_clamped(self):
+        """Beam accuracy should be clamped between 0 and 1 (via ability)."""
+        laser = create_component('laser_cannon')
+    
+        # Phase 7: Use ability-based access
+>       beam_ab = laser.get_ability('BeamWeaponAbility')
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_weapons.py:81: AttributeError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID laser_cannon not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+____________________ TestWeaponBasics.test_weapon_cooldown ____________________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_weapons.TestWeaponBasics testMethod=test_weapon_cooldown>
+
+    def test_weapon_cooldown(self):
+        """Weapon should respect cooldown timer via ability."""
+        railgun = create_component('railgun')
+    
+        # Phase 7: Use ability-based access
+>       weapon_ab = railgun.get_ability('ProjectileWeaponAbility') or railgun.get_ability('WeaponAbility')
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_weapons.py:38: AttributeError
+---------------------------- Captured stdout setup ----------------------------
+[SessionRegistryCache] CRITICAL ERROR loading data: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stderr setup ----------------------------
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\tests\infrastructure\session_cache.py", line 58, in load_all_data
+    load_modifiers(mod_path)
+  File "C:\Dev\Starship Battles\game\simulation\components\component.py", line 642, in load_modifiers
+    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________________ TestNewThemes.test_klingon_theme_loads ____________________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_theme_discovery.TestNewThemes testMethod=test_klingon_theme_loads>
+
+    def test_klingon_theme_loads(self):
+        """Verify Klingon theme loads and has images."""
+        # Note: JSON key is "Battle Cruiser" with space
+        img = self.manager.get_image("Klingons", "Battle Cruiser")
+        self.assertIsNotNone(img)
+        # Verify it's not the fallback (100x100)
+>       self.assertNotEqual(img.get_size(), (100, 100), "Should not be fallback image")
+E       AssertionError: (100, 100) == (100, 100) : Should not be fallback image
+
+tests\unit\test_theme_discovery.py:45: AssertionError
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+[31m[1mERROR   [0m StarshipBattles:logger.py:35 Lazy load failed for C:\Dev\Starship Battles\assets\ShipThemes\Klingons\Skins/battlecruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestDetailPanelRendering.test_html_stats_generation_basic __________
+[gw8] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1248: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+self = <unit.test_detail_panel_rendering.TestDetailPanelRendering testMethod=test_html_stats_generation_basic>
+
+    def setUp(self):
+        pygame.init()
+        pygame.font.init()
+        # Delayed import to allow pygame init
+        from ui.builder.detail_panel import ComponentDetailPanel
+        self.ComponentDetailPanel = ComponentDetailPanel
+    
+        # Mock Pygame and UI Manager
+        self.mock_manager = MagicMock(spec=pygame_gui.UIManager)
+    
+        # Patch pygame.Rect to behave like a real Rect for layout logic
+        self.rect_patcher = patch('pygame.Rect')
+        self.MockRect = self.rect_patcher.start()
+        # Side effect to return a mock that stores x,y,w,h
+        def mock_rect(*args):
+            r = MagicMock()
+            if len(args) == 4:
+                r.x, r.y, r.width, r.height = args
+            elif len(args) == 1 and isinstance(args[0], tuple) and len(args[0]) == 4:
+                r.x, r.y, r.width, r.height = args[0]
+            else:
+                 # Default fallback
+                 r.x, r.y, r.width, r.height = 0, 0, 100, 100
+    
+            r.bottom = r.y + r.height
+            return r
+        self.MockRect.side_effect = mock_rect
+    
+        # Patch UI elements to avoid actual GUI creation
+        self.uipanel_patch = patch('ui.builder.detail_panel.UIPanel')
+        self.uilabel_patch = patch('ui.builder.detail_panel.UILabel')
+        self.uiimage_patch = patch('ui.builder.detail_panel.UIImage')
+        self.uibutton_patch = patch('ui.builder.detail_panel.UIButton')
+    
+        # Patch both possible import locations for UITextBox to catch local import
+        self.uitextbox_patch = patch('pygame_gui.elements.UITextBox')
+        self.uitextbox_patch_real = patch('pygame_gui.elements.ui_text_box.UITextBox')
+    
+>       self.uipanel_patch.start()
+
+tests\unit\test_detail_panel_rendering.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1595: in start
+    result = self.__enter__()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1431: in __enter__
+    self.target = self.getter()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1618: in <lambda>
+    getter = lambda: _importer(target)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1261: in _importer
+    thing = _dot_lookup(thing, comp, import_path)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+            return getattr(thing, comp)
+        except AttributeError:
+            __import__(import_path)
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1251: AttributeError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestModifierStacking.test_turret_mount_no_hp_change _____________
+[gw12] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_loading.TestModifierStacking testMethod=test_turret_mount_no_hp_change>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_ship_loading.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________ TestAllShipDesigns.test_all_ships_match_expected_stats ____________
+[gw12] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_loading.TestAllShipDesigns testMethod=test_all_ships_match_expected_stats>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_ship_loading.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestDetailPanelRendering.test_html_unregistered_abilities __________
+[gw8] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1248: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+self = <unit.test_detail_panel_rendering.TestDetailPanelRendering testMethod=test_html_unregistered_abilities>
+
+    def setUp(self):
+        pygame.init()
+        pygame.font.init()
+        # Delayed import to allow pygame init
+        from ui.builder.detail_panel import ComponentDetailPanel
+        self.ComponentDetailPanel = ComponentDetailPanel
+    
+        # Mock Pygame and UI Manager
+        self.mock_manager = MagicMock(spec=pygame_gui.UIManager)
+    
+        # Patch pygame.Rect to behave like a real Rect for layout logic
+        self.rect_patcher = patch('pygame.Rect')
+        self.MockRect = self.rect_patcher.start()
+        # Side effect to return a mock that stores x,y,w,h
+        def mock_rect(*args):
+            r = MagicMock()
+            if len(args) == 4:
+                r.x, r.y, r.width, r.height = args
+            elif len(args) == 1 and isinstance(args[0], tuple) and len(args[0]) == 4:
+                r.x, r.y, r.width, r.height = args[0]
+            else:
+                 # Default fallback
+                 r.x, r.y, r.width, r.height = 0, 0, 100, 100
+    
+            r.bottom = r.y + r.height
+            return r
+        self.MockRect.side_effect = mock_rect
+    
+        # Patch UI elements to avoid actual GUI creation
+        self.uipanel_patch = patch('ui.builder.detail_panel.UIPanel')
+        self.uilabel_patch = patch('ui.builder.detail_panel.UILabel')
+        self.uiimage_patch = patch('ui.builder.detail_panel.UIImage')
+        self.uibutton_patch = patch('ui.builder.detail_panel.UIButton')
+    
+        # Patch both possible import locations for UITextBox to catch local import
+        self.uitextbox_patch = patch('pygame_gui.elements.UITextBox')
+        self.uitextbox_patch_real = patch('pygame_gui.elements.ui_text_box.UITextBox')
+    
+>       self.uipanel_patch.start()
+
+tests\unit\test_detail_panel_rendering.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1595: in start
+    result = self.__enter__()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1431: in __enter__
+    self.target = self.getter()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1618: in <lambda>
+    getter = lambda: _importer(target)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1261: in _importer
+    thing = _dot_lookup(thing, comp, import_path)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+            return getattr(thing, comp)
+        except AttributeError:
+            __import__(import_path)
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1251: AttributeError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestBuilderUISync.test_refresh_controls_syncs_ui _______________
+[gw13] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_builder_ui_sync.TestBuilderUISync testMethod=test_refresh_controls_syncs_ui>
+
+    def test_refresh_controls_syncs_ui(self):
+        """Verify that refresh_controls updates UI elements to match ship state."""
+        # 1. Modify Ship State from defaults (Escort, Federation)
+        self.mock_builder.ship.name = "New Name"
+    
+        # Ensure we pick a class that definitely exists and isn't Escort
+        target_class = "Cruiser"
+        if target_class not in VEHICLE_CLASSES:
+             # Fallback if data is different
+             target_class = list(VEHICLE_CLASSES.keys())[-1]
+    
+        self.mock_builder.ship.ship_class = target_class
+        self.mock_builder.ship.theme_id = "Klingon"
+    
+        # Set AI to something non-default
+        # Default is usually optimal_firing_range
+        self.mock_builder.ship.ai_strategy = "kamikaze"
+    
+        # 2. Call Refresh (mocking portrait update to avoid side effects)
+        # 2. Call Refresh (mocking portrait update to avoid side effects)
+        with patch.object(self.panel, 'update_portrait_image') as mock_update_img:
+            self.panel.refresh_controls()
+            mock_update_img.assert_called_once()
+    
+        # 3. Assert UI values match Ship State
+    
+        # Name
+        self.assertEqual(self.panel.name_entry.get_text(), "New Name")
+    
+        # Theme
+        val = self._get_option_value(self.panel.theme_dropdown.selected_option)
+        self.assertEqual(val, "Klingon")
+    
+        # Class
+        val = self._get_option_value(self.panel.class_dropdown.selected_option)
+        self.assertEqual(val, target_class)
+    
+        # AI
+        # AI Strategy Name lookup
+        strat_name = COMBAT_STRATEGIES["kamikaze"]["name"]
+        val = self._get_option_value(self.panel.ai_dropdown.selected_option)
+>       self.assertEqual(val, strat_name)
+E       AssertionError: 'Standard Ranged' != 'Kamikaze'
+E       - Standard Ranged
+E       + Kamikaze
+
+tests\unit\test_builder_ui_sync.py:92: AssertionError
+---------------------------- Captured stdout call -----------------------------
+WARN: C:\Dev\Starship Battles\data\game.simulation.components.component.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\data\game.simulation.components.component.json
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestModifierStacking.test_range_mount_hp_multiplier _____________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_loading.TestModifierStacking testMethod=test_range_mount_hp_multiplier>
+
+    def setUp(self):
+        load_components("data/components.json")
+>       load_modifiers("data/modifiers.json")
+
+tests\unit\test_ship_loading.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+filepath = 'data/modifiers.json'
+
+    def load_modifiers(filepath="data/modifiers.json"):
+        global _MODIFIER_CACHE
+        import os
+        import copy
+        from game.core.registry import RegistryManager
+    
+        # Fast Path
+>       if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+E       UnboundLocalError: local variable '_LAST_MODIFIER_FILE' referenced before assignment
+
+game\simulation\components\component.py:642: UnboundLocalError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+============================== warnings summary ===============================
+simulation_tests\data_driven\test_combat_targeting.py:17: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_combat_targeting.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_engine_physics.py:24: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_engine_physics.py:24: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_engine_physics.py:153: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_engine_physics.py:153: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_extended.py:15: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_extended.py:15: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_extended.py:100: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_extended.py:100: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_extended.py:170: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_extended.py:170: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_requirements.py:14: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_requirements.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:19: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:19: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:76: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:76: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:104: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:104: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:182: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:182: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:219: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:219: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:310: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:310: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+test_framework\runner.py:14: 16 warnings
+  C:\Dev\Starship Battles\test_framework\runner.py:14: PytestCollectionWarning: cannot collect test class 'TestRunner' because it has a __init__ constructor (from: ui/test_lab_scene.py)
+    class TestRunner:
+
+ui\test_lab_scene.py:13: 16 warnings
+  C:\Dev\Starship Battles\ui\test_lab_scene.py:13: PytestCollectionWarning: cannot collect test class 'TestLabScene' because it has a __init__ constructor (from: ui/test_lab_scene.py)
+    class TestLabScene:
+
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+tests/unit/test_multi_selection_logic.py: 3 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:92: UserWarning: Clamping shadow_width of: 2, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+tests/unit/test_multi_selection_logic.py: 3 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:113: UserWarning: Clamping border_width of: 1, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Energy: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Energy Gen: - size diff: (-14, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Thrust: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Acceleration: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Top Speed: - size diff: (-7, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Maneuvering Points: - size diff: (-108, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Turning Rate: - size diff: (-24, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Shields: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Regen Cost: - size diff: (-13, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Armor HP: - size diff: (-37, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Dmg Ignore: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen/Hit: - size diff: (-50, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Targets: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Evasion Score: - size diff: (-28, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Targeting Score: - size diff: (-42, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew Required: - size diff: (-36, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew On Board: - size diff: (-38, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Life Support: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Fighter Support \u2500\u2500 - size diff: (-11, 5)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Cap: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Launch/Wave: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Time: - size diff: (-22, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Recommendations \u2500\u2500 - size diff: (-30, 0)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_multi_selection_logic
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_homogeneity_enforcement
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_append_integration
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_reselection_behavior
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_selection_integration
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_toggle_behavior
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_font_dictionary.py:405: UserWarning: Finding font with id: noto_sans_bold_aa_14 that is not already loaded.
+  Preload this font with {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': '1'}
+    warnings.warn(warning_string, UserWarning)
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\html_parser.py:179: UserWarning: Unsupported HTML Tag <magicmock>. Check documentation for full range of supported tags.
+    warnings.warn(warning_text, UserWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_target_prioritization
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_ship_accepts_ship_components
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_firing_arc_validation
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_ship_rejects_fighter_components
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_multiple_weapons
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_ammo
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_single_weapon
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_beam
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_seeker_ignores_arc
+FAILED tests/unit/test_layer_refinements.py::TestLayerRefinements::test_all_layers_filter_logic
+FAILED tests/unit/test_layer_refinements.py::TestLayerRefinements::test_dynamic_radius_calculation
+FAILED tests/unit/test_layer_refinements.py::TestLayerRefinements::test_layer_mass_limits_loaded
+FAILED tests/unit/test_layer_refinements.py::TestLayerRefinements::test_mass_budget_enforcement
+FAILED tests/unit/test_bridge_scaling.py::TestBridgeScaling::test_bridge_scaling_4000
+FAILED tests/unit/test_bridge_scaling.py::TestBridgeScaling::test_bridge_scaling_odd
+FAILED tests/unit/test_component_modifiers_extended.py::TestModifierStackingIntegration::test_multiple_modifiers_order_independent
+FAILED tests/unit/test_modifier_propagation.py::TestModifierGroupPropagation::test_add_modifier_default_value
+FAILED tests/unit/test_component_modifiers_extended.py::TestModifierStackingIntegration::test_range_mount_increases_component_mass
+FAILED tests/unit/test_modifier_propagation.py::TestModifierGroupPropagation::test_propagation
+FAILED tests/unit/test_modifiers.py::TestModifiers::test_add_modifier_to_component
+FAILED tests/unit/test_modifier_propagation.py::TestModifierGroupPropagation::test_value_change_propagation
+FAILED tests/unit/test_components.py::TestModifierStacking::test_single_range_modifier
+FAILED tests/unit/test_modifiers.py::TestModifiers::test_get_modifier_returns_none_for_missing
+FAILED tests/unit/test_modifiers.py::TestModifiers::test_modifier_effects_on_stats
+FAILED tests/unit/test_components.py::TestComponents::test_create_component_types
+FAILED tests/unit/test_components.py::TestModifierStacking::test_single_size_modifier
+FAILED tests/unit/test_modifiers.py::TestModifiers::test_modifier_value_persistence
+FAILED tests/unit/test_modifier_defaults_robustness.py::TestModifierDefaultsRobustness::test_pdc_defaults_robustness
+FAILED tests/unit/test_modifiers.py::TestModifiers::test_modifier_restrictions
+FAILED tests/unit/test_components.py::TestComponents::test_load_components - ...
+FAILED tests/unit/test_components.py::TestModifierStacking::test_triple_modifier_stacking
+FAILED tests/unit/test_component_modifiers_extended.py::TestModifierEffectsFunctions::test_facing_sets_property
+FAILED tests/unit/test_modifiers.py::TestModifiers::test_modifiers_loaded - U...
+FAILED tests/unit/test_components.py::TestTurretMount::test_turret_diminishing_returns
+FAILED tests/unit/test_components.py::TestModifierOrder::test_order_independence
+FAILED tests/unit/test_components.py::TestTurretMount::test_turret_stacks_with_size
+FAILED tests/unit/test_modifiers.py::TestComponentCloning::test_clone_creates_independent_copy
+FAILED tests/unit/test_component_modifiers_extended.py::TestModifierEffectsFunctions::test_range_mount_increases_mass
+FAILED tests/unit/test_components.py::TestModifierStacking::test_hp_stacking
+FAILED tests/unit/test_modifiers.py::TestModifiers::test_remove_modifier - Un...
+FAILED tests/unit/test_component_modifiers_extended.py::TestModifierEffectsFunctions::test_range_mount_level_2
+FAILED tests/unit/test_component_modifiers_extended.py::TestModifierEffectsFunctions::test_range_mount_increases_range
+FAILED tests/unit/test_components.py::TestModifierStacking::test_multiplicative_stacking_size_and_hardened
+FAILED tests/unit/test_modifiers.py::TestComponentCloning::test_clone_preserves_type
+FAILED tests/unit/test_components.py::TestTurretMount::test_turret_0_degrees_no_change
+FAILED tests/unit/test_planetary_complex.py::TestPlanetaryComplex::test_accepts_ship_components
+FAILED tests/unit/test_planetary_complex.py::TestPlanetaryComplex::test_planetary_complex_tiers_exist
+FAILED tests/unit/test_planetary_complex.py::TestPlanetaryComplex::test_add_central_command
+FAILED tests/unit/test_component_modifiers_extended.py::TestModifierEffectsFunctions::test_simple_size_scales_all_stats
+FAILED tests/unit/test_modifiers.py::TestComponentCloning::test_beam_weapon_clone
+FAILED tests/unit/test_planetary_complex.py::TestPlanetaryComplex::test_rejects_propulsion
+FAILED tests/unit/test_planetary_complex.py::TestPlanetaryComplex::test_movement_capabilities
+FAILED tests/unit/test_components.py::TestModifierStacking::test_multiplicative_stacking_size_and_range
+FAILED tests/unit/test_movement_and_ai.py::TestMovementAndAI::test_ai_target_acquisition_long_range
+FAILED tests/unit/test_planetary_complex.py::TestPlanetaryComplex::test_rejects_ship_bridge
+FAILED tests/unit/test_components.py::TestTurretMount::test_turret_180_only_slightly_more_than_90
+FAILED tests/unit/test_component_modifiers_extended.py::TestModifierEffectsFunctions::test_turret_mount_logarithmic_scaling
+FAILED tests/unit/test_regressions.py::TestRegressions::test_ship_classes_update_in_place
+FAILED tests/unit/test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_modifiers
+FAILED tests/unit/test_component_modifiers_extended.py::TestModifierEffectsFunctions::test_turret_mount_sets_arc
+FAILED tests/unit/test_scaling_logic.py::TestScalingLogic::test_consumption_scaling_linear
+FAILED tests/unit/test_component_modifiers_extended.py::TestModifierEffectsFunctions::test_turret_mount_zero_arc_no_change
+FAILED tests/unit/test_scaling_logic.py::TestScalingLogic::test_crew_requirement_scaling_combined
+FAILED tests/unit/test_movement_and_ai.py::TestMovementAndAI::test_ai_thrust_command_generation
+FAILED tests/unit/test_scaling_logic.py::TestScalingLogic::test_crew_requirement_scaling_size_mount
+FAILED tests/unit/test_scaling_logic.py::TestScalingLogic::test_crew_requirement_scaling_range_mount
+FAILED tests/unit/test_modifier_defaults_robustness.py::TestModifierDefaultsRobustness::test_pdc_min_constraint_robustness
+FAILED tests/unit/test_ship.py::TestShip::test_add_component_constraints - As...
+FAILED tests/unit/test_component_modifiers_extended.py::TestApplyModifierEffects::test_special_effect_handlers_exist
+FAILED tests/unit/test_components.py::TestModifierStacking::test_range_stacking
+FAILED tests/unit/test_main_integration.py::TestMainIntegration::test_game_instantiation
+FAILED tests/unit/test_seeker_range.py::TestSeekerRange::test_seeker_range_with_modifier
+FAILED tests/unit/test_modifier_defaults_robustness.py::TestModifierDefaultsRobustness::test_railgun_defaults_robustness
+FAILED tests/unit/test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_stats_dynamic_abilities
+FAILED tests/unit/test_ship_loading.py::TestModifierStacking::test_simple_size_mount_hp_multiplier
+FAILED tests/unit/test_ship_loading.py::TestModifierStacking::test_stacked_modifiers_multiplicative
+FAILED tests/unit/test_ship_stats.py::TestShipStatsBaseline::test_multiple_engines_sum_thrust
+FAILED tests/unit/test_ship_stats.py::TestShipStatsBaseline::test_ability_values_match_legacy_attributes
+FAILED tests/unit/test_ship_stats.py::TestShipStatsBaseline::test_turn_speed_calculation_from_thruster
+FAILED tests/unit/test_ship_stats.py::TestAbilityModifierSync::test_thrust_modifier_updates_ability
+FAILED tests/unit/test_ship_stats.py::TestShipStatsBaseline::test_thrust_calculation_from_engine
+FAILED tests/unit/test_ship_theme_logic.py::TestShipThemeLogic::test_get_image_metrics
+FAILED tests/unit/test_ship_stats.py::TestShipStatsBaseline::test_shield_stats_calculation
+FAILED tests/unit/test_weapons.py::TestWeaponBasics::test_beam_accuracy_clamped
+FAILED tests/unit/test_weapons.py::TestWeaponBasics::test_weapon_cooldown - A...
+FAILED tests/unit/test_theme_discovery.py::TestNewThemes::test_klingon_theme_loads
+FAILED tests/unit/test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_stats_generation_basic
+FAILED tests/unit/test_ship_loading.py::TestModifierStacking::test_turret_mount_no_hp_change
+FAILED tests/unit/test_ship_loading.py::TestAllShipDesigns::test_all_ships_match_expected_stats
+FAILED tests/unit/test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_unregistered_abilities
+FAILED tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+FAILED tests/unit/test_ship_loading.py::TestModifierStacking::test_range_mount_hp_multiplier
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_component_allowed_vehicle_types_list
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteLogic::test_satellite_ignores_crew_requirements
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_fighter_accepts_fighter_components
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_does_not_navigate
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_fires_when_has_target
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_still_targets
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_fighter_rejects_ship_components
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_satellite_accepts_weapons
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_satellite_rejects_engines_and_thrusters
+=========== 92 failed, 487 passed, 340 warnings, 9 errors in 5.38s ============

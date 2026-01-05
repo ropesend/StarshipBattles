@@ -46,11 +46,11 @@ class TestShipThemeLogic(unittest.TestCase):
         self.assertEqual(img.get_size(), (100, 100))
 
     @patch('ship_theme.log_error')
-    @patch('os.scandir')
-    @patch('os.path.exists')
+    @patch('ship_theme.os.scandir')
+    @patch('ship_theme.os.path.exists')
     @patch('ship_theme.json.load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('pygame.image.load')
+    @patch('ship_theme.pygame.image.load')
     def test_manual_scaling_and_loading(self, mock_load, mock_open_file, mock_json_load, mock_exists, mock_scandir, mock_log):
         """Test loading a theme with manual scaling configured."""
         
@@ -104,11 +104,11 @@ class TestShipThemeLogic(unittest.TestCase):
         self.assertEqual(scale_default, 1.0)
 
     @patch('ship_theme.log_error')
-    @patch('os.scandir')
-    @patch('os.path.exists')
+    @patch('ship_theme.os.scandir')
+    @patch('ship_theme.os.path.exists')
     @patch('ship_theme.json.load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('pygame.image.load')
+    @patch('ship_theme.pygame.image.load')
     def test_get_image_metrics(self, mock_load, mock_open_file, mock_json_load, mock_exists, mock_scandir, mock_log):
         """Test that bounding rect is correctly calculated and cached."""
         
@@ -125,19 +125,20 @@ class TestShipThemeLogic(unittest.TestCase):
         mock_entry = MagicMock()
         mock_entry.is_dir.return_value = True
         mock_entry.path = f"/themes/{theme_name}"
+        mock_entry.name = theme_name
         mock_scandir.return_value = [mock_entry]
         
         mock_exists.return_value = True # Simplify exists checks
         mock_json_load.return_value = json_content
         
-        # Create a surface with specific transparency
-        # 20x20 surface
-        # Rect at (5, 5) size 10x10 is opaque
-        mock_surface = pygame.Surface((20, 20), pygame.SRCALPHA)
-        mock_surface.fill((0, 0, 0, 0)) # Transparent
-        pygame.draw.rect(mock_surface, (255, 255, 255, 255), (5, 5, 10, 10))
+        # Use a Mock Surface since real ones are immutable and can't have convert_alpha patched
+        surf = MagicMock(spec=pygame.Surface)
+        # Use side_effect to catch any get_bounding_rect call regardless of arg types
+        surf.get_bounding_rect.side_effect = lambda *args, **kwargs: pygame.Rect(5, 5, 10, 10)
+        surf.convert_alpha.return_value = surf
+        surf.get_size.return_value = (20, 20)
         
-        mock_load.return_value = mock_surface
+        mock_load.return_value = surf
         
         # Initialize
         self.manager.initialize("/fake/base/path")
@@ -154,8 +155,8 @@ class TestShipThemeLogic(unittest.TestCase):
         self.assertEqual(rect.height, 10)
 
     @patch('ship_theme.log_error')
-    @patch('os.scandir')
-    @patch('os.path.exists')
+    @patch('ship_theme.os.scandir')
+    @patch('ship_theme.os.path.exists')
     @patch('ship_theme.json.load')
     @patch('builtins.open', new_callable=mock_open)
     def test_malformed_theme_json(self, mock_open_file, mock_json_load, mock_exists, mock_scandir, mock_log):

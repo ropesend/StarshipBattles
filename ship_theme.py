@@ -34,6 +34,17 @@ class ShipThemeManager:
         self.default_theme = "Federation"
         self.discovery_complete = False
         self._init_lock = threading.Lock()
+        self._io_lock = threading.Lock() # For on-demand loading
+        
+    def clear(self):
+        """Reset all caches and state. Used for test isolation."""
+        with self._init_lock:
+            with self._io_lock:
+                self.themes = {}
+                self.theme_data = {}
+                self.image_metrics = {}
+                self.discovery_complete = False
+                log_info("ShipThemeManager caches cleared.")
         
     def initialize(self, base_path=None):
         """Discover all themes from assets/ShipThemes without loading images."""
@@ -121,26 +132,31 @@ class ShipThemeManager:
 
     def _load_single_image(self, theme_name, ship_class):
         """Load a single image from disk and cache it."""
-        data = self.theme_data[theme_name][ship_class]
-        path = data['path']
-        
-        try:
-            with profile_block(f"Theme: Lazy Load ({ship_class})"):
-                surf = pygame.image.load(path).convert_alpha()
+        with self._io_lock:
+            # Double-check cache after acquiring lock
+            if theme_name in self.themes and ship_class in self.themes[theme_name]:
+                return self.themes[theme_name][ship_class]
                 
-                # Update Cache
-                if theme_name not in self.themes: self.themes[theme_name] = {}
-                self.themes[theme_name][ship_class] = surf
-                
-                # Update Metrics
-                rect = surf.get_bounding_rect(min_alpha=20)
-                if theme_name not in self.image_metrics: self.image_metrics[theme_name] = {}
-                self.image_metrics[theme_name][ship_class] = rect
-                
-                return surf
-        except Exception as e:
-            log_error(f"Lazy load failed for {path}: {e}")
-            return self._create_fallback_image(ship_class)
+            data = self.theme_data[theme_name][ship_class]
+            path = data['path']
+            
+            try:
+                with profile_block(f"Theme: Lazy Load ({ship_class})"):
+                    surf = pygame.image.load(path).convert_alpha()
+                    
+                    # Update Cache
+                    if theme_name not in self.themes: self.themes[theme_name] = {}
+                    self.themes[theme_name][ship_class] = surf
+                    
+                    # Update Metrics
+                    rect = surf.get_bounding_rect(min_alpha=20)
+                    if theme_name not in self.image_metrics: self.image_metrics[theme_name] = {}
+                    self.image_metrics[theme_name][ship_class] = rect
+                    
+                    return surf
+            except Exception as e:
+                log_error(f"Lazy load failed for {path}: {e}")
+                return self._create_fallback_image(ship_class)
 
     def get_image_metrics(self, theme_name, ship_class):
         """Get the visible bounding rect for the image."""
@@ -149,15 +165,26 @@ class ShipThemeManager:
         if theme_name not in self.theme_data: theme_name = self.default_theme
         
         # Check cache
-        if theme_name in self.image_metrics and ship_class in self.image_metrics[theme_name]:
-            return self.image_metrics[theme_name][ship_class]
-            
-        # If not cached, trigger load (which calculates metrics)
-        self.get_image(theme_name, ship_class)
+        with self._io_lock:
+            if theme_name in self.image_metrics and ship_class in self.image_metrics[theme_name]:
+                return self.image_metrics[theme_name][ship_class]
+
+        # Call get_image (which handles locking internally and calculates metrics if successful)
+        surf = self.get_image(theme_name, ship_class)
         
-        # Re-check cache
-        if theme_name in self.image_metrics and ship_class in self.image_metrics[theme_name]:
-             return self.image_metrics[theme_name][ship_class]
+        # Re-check cache with lock
+        with self._io_lock:
+            if theme_name in self.image_metrics and ship_class in self.image_metrics[theme_name]:
+                 return self.image_metrics[theme_name][ship_class]
+            
+            # If still not in metrics (e.g. fallback image), calculate on the fly
+            # This ensures we never return None if discovery is complete
+            if surf:
+                rect = surf.get_bounding_rect(min_alpha=1)
+                # Cache it for the fallback case too to prevent re-calc
+                if theme_name not in self.image_metrics: self.image_metrics[theme_name] = {}
+                self.image_metrics[theme_name][ship_class] = rect
+                return rect
         
         return None
 

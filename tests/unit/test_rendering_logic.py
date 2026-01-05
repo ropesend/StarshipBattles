@@ -14,11 +14,11 @@ from game.simulation.entities.ship import LayerType
 class TestRenderingLogic(unittest.TestCase):
 
     def setUp(self):
-        # Patch Pygame using patch() to avoid AttributeError on module attributes
-        self.patcher_draw = patch('pygame.draw')
+        # Patch Pygame specifically in the module under test to ensure full isolation
+        self.patcher_draw = patch('game.ui.renderer.game_renderer.pygame.draw')
         self.mock_draw = self.patcher_draw.start()
         
-        self.patcher_font = patch('pygame.font')
+        self.patcher_font = patch('game.ui.renderer.game_renderer.pygame.font')
         self.mock_font = self.patcher_font.start()
         
         # Setup common mocks

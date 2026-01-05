@@ -1,0 +1,657 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+created: 16/16 workers
+16 workers [588 items]
+
+........................................................................ [ 12%]
+........................................................................ [ 24%]
+..............................................F...F...................F. [ 36%]
+..F........F..F........F................................................ [ 48%]
+........................................................................ [ 61%]
+........................................................................ [ 73%]
+.............................F........................F................. [ 85%]
+......................................................................F. [ 97%]
+............                                                             [100%]
+================================== FAILURES ===================================
+_______________ TestCombatTargeting.test_target_prioritization ________________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_target_prioritization>
+
+    def test_target_prioritization(self):
+        """Test that secondary targets are checked if current target is invalid or out of arc."""
+        self.attacker.max_targets = 2
+    
+        # Weapon with narrow arc
+        weapon = ProjectileWeapon({
+            'name': 'Gun', 'id':'gun', 'firing_arc': 45, 'range': 500,
+            'projectile_speed': 1000, 'damage':10, 'ammo_cost':1,
+             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        weapon.facing_angle = 0
+        weapon.is_active = True
+        self.attacker.add_component(weapon, LayerType.OUTER)
+    
+        # Target 1: Out of Arc (Behind)
+        t1 = Ship("T1", -200, 0, (0,0,0))
+        t1.is_alive = True
+        t1.team_id = 1
+        t1.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+    
+        # Target 2: Valid (In front)
+        t2 = Ship("T2", 200, 0, (0,0,0))
+        t2.is_alive = True
+        t2.team_id = 1
+        t2.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+    
+        self.attacker.current_target = t1
+        self.attacker.secondary_targets = [t2]
+    
+        self.attacker.is_derelict = False
+        self.attacker.max_targets = 2
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1)
+E       AssertionError: 0 != 1
+
+simulation_tests\data_driven\test_combat_targeting.py:213: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x00000147D6B7C640>
+DEBUG: Add bridge success: True, total core: 1
+_______________ TestCombatTargeting.test_firing_arc_validation ________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_firing_arc_validation>
+
+    def test_firing_arc_validation(self):
+        """Test that weapons do not fire if target is outside firing arc."""
+        weapon = ProjectileWeapon({
+            'name': 'TestGun', 'id':'test_gun', 'firing_arc': 45, 'range': 500,
+            'projectile_speed': 1000, 'damage': 10, 'ammo_cost': 1, 'cooldown': 0,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        weapon.facing_angle = 0 # Right
+        weapon.is_active = True
+        weapon.cooldown_timer = 0
+        self.attacker.add_component(weapon, LayerType.OUTER)
+        self.attacker.angle = 0
+    
+        # Case 1: Target directly ahead (Valid)
+        self.target.position = pygame.math.Vector2(200, 0) # 0 degrees
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1, "Should fire at target directly ahead")
+E       AssertionError: 0 != 1 : Should fire at target directly ahead
+
+simulation_tests\data_driven\test_combat_targeting.py:139: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x000001A19BBFC5E0>
+DEBUG: Add bridge success: True, total core: 1
+_____________ TestCombatTargeting.test_resource_consumption_ammo ______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_resource_consumption_ammo>
+
+    def test_resource_consumption_ammo(self):
+        """Verify ammo consumption for ProjectileWeapon."""
+        gun = ProjectileWeapon({
+             'name': 'Cannon', 'id':'cannon', 'ammo_cost': 5, 'range': 500,
+            'damage': 10, 'firing_arc': 360, 'cooldown': 0, 'projectile_speed': 1000,
+             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        gun.is_active = True
+        self.attacker.add_component(gun, LayerType.OUTER)
+        self.attacker.current_ammo = 10
+        self.attacker.current_energy = 1000
+    
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        self.attacker.fire_weapons()
+>       self.assertEqual(self.attacker.current_ammo, 5)
+E       AssertionError: 10 != 5
+
+simulation_tests\data_driven\test_combat_targeting.py:288: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x000001A1A600D5A0>
+DEBUG: Add bridge success: True, total core: 1
+__________ TestMaxWeaponRange.test_max_weapon_range_multiple_weapons __________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_ship_extended.TestMaxWeaponRange testMethod=test_max_weapon_range_multiple_weapons>
+
+    def test_max_weapon_range_multiple_weapons(self):
+        """Ship with multiple weapons should return longest range."""
+        ship = Ship("HeavilyArmed", 0, 0, (255, 255, 255))
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
+    
+        # Add different weapons
+        railgun = create_component('test_weapon_proj_fixed')
+        laser = create_component('test_weapon_beam_std')
+        ship.add_component(railgun, LayerType.OUTER)
+        ship.add_component(laser, LayerType.OUTER)
+        ship.recalculate_stats()
+    
+        expected_max = max(railgun.range, laser.range)
+>       self.assertEqual(ship.max_weapon_range, expected_max)
+E       AssertionError: 0.0 != 1000
+
+simulation_tests\data_driven\test_ship_extended.py:224: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+_____________ TestCombatTargeting.test_resource_consumption_beam ______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_resource_consumption_beam>
+
+    def test_resource_consumption_beam(self):
+        """Verify energy consumption for BeamWeapon."""
+        beam = BeamWeapon({
+            'name': 'Laser', 'id':'laser', 'energy_cost': 50, 'range': 500,
+            'damage': 10, 'firing_arc': 360, 'cooldown': 0,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        beam.is_active = True
+        self.attacker.add_component(beam, LayerType.OUTER)
+        self.attacker.current_energy = 100
+    
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        self.attacker.fire_weapons()
+>       self.assertEqual(self.attacker.current_energy, 50, "Should consume 50 energy")
+E       AssertionError: 100 != 50 : Should consume 50 energy
+
+simulation_tests\data_driven\test_combat_targeting.py:259: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x000001A1A5FDAF80>
+DEBUG: Add bridge success: True, total core: 1
+___________ TestMaxWeaponRange.test_max_weapon_range_single_weapon ____________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_ship_extended.TestMaxWeaponRange testMethod=test_max_weapon_range_single_weapon>
+
+    def test_max_weapon_range_single_weapon(self):
+        """Ship with one weapon should return that weapon's range."""
+        ship = Ship("Armed", 0, 0, (255, 255, 255))
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
+        railgun = create_component('test_weapon_proj_fixed')
+        ship.add_component(railgun, LayerType.OUTER)
+        ship.recalculate_stats()
+    
+>       self.assertEqual(ship.max_weapon_range, railgun.range)
+E       AssertionError: 0.0 != 1000
+
+simulation_tests\data_driven\test_ship_extended.py:207: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+_________________ TestCombatTargeting.test_seeker_ignores_arc _________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_seeker_ignores_arc>
+
+    def test_seeker_ignores_arc(self):
+        """Verify SeekerWeapon fires even if target is outside arc."""
+        missile_launcher = SeekerWeapon({
+            'name': 'Missile', 'id':'test_missile', 'firing_arc': 10, 'range': 1000,
+            'projectile_speed': 500, 'ammo_cost': 1, 'damage': 10, 'endurance': 100,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        missile_launcher.facing_angle = 0
+        missile_launcher.is_active = True
+        self.attacker.add_component(missile_launcher, LayerType.OUTER)
+    
+        # Target behind
+        self.target.position = pygame.math.Vector2(-200, 0)
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+    
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1, "Seeker weapon should fire regardless of arc")
+E       AssertionError: 0 != 1 : Seeker weapon should fire regardless of arc
+
+simulation_tests\data_driven\test_combat_targeting.py:176: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x000001A1A600A920>
+DEBUG: Add bridge success: True, total core: 1
+_________________ TestMainIntegration.test_game_instantiation _________________
+[gw15] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_main_integration.TestMainIntegration testMethod=test_game_instantiation>
+
+    def test_game_instantiation(self):
+        """Test that the Game class can be instantiated."""
+        # Use real pygame.display.Info() in headless mode rather than mocking it,
+        # as over-mocking display globals can break pygame_gui's internal state.
+    
+        # We allow real set_mode to run (with dummy driver defined in imports)
+        # to ensure surfaces can be converted.
+    
+        try:
+            from game import app
+            # Mock display Info and ensure set_mode is called for convert_alpha
+>           if not pygame.display.get_surface():
+E           NameError: name 'pygame' is not defined
+
+tests\unit\test_main_integration.py:47: NameError
+
+During handling of the above exception, another exception occurred:
+
+self = <unit.test_main_integration.TestMainIntegration testMethod=test_game_instantiation>
+
+    def test_game_instantiation(self):
+        """Test that the Game class can be instantiated."""
+        # Use real pygame.display.Info() in headless mode rather than mocking it,
+        # as over-mocking display globals can break pygame_gui's internal state.
+    
+        # We allow real set_mode to run (with dummy driver defined in imports)
+        # to ensure surfaces can be converted.
+    
+        try:
+            from game import app
+            # Mock display Info and ensure set_mode is called for convert_alpha
+            if not pygame.display.get_surface():
+                pygame.display.set_mode((1440, 900), pygame.NOFRAME)
+            with patch('pygame.display.Info', return_value=MagicMock(current_w=1920, current_h=1080)):
+                game = app.Game()
+                self.assertIsNotNone(game)
+            self.assertIsNotNone(game.battle_scene)
+            self.assertIsNotNone(game.battle_scene.engine)
+    
+            # Verify the engine has a logger (instance based)
+            self.assertTrue(hasattr(game.battle_scene.engine, 'logger'))
+    
+            # Verify BATTLE_LOG is NOT a property of the battle module anymore
+            from game.ui.screens import battle_scene
+            self.assertFalse(hasattr(battle_scene, 'BATTLE_LOG'), "battle_scene module should not export global BATTLE_LOG")
+    
+        except ImportError as e:
+            self.fail(f"Game instantiation failed due to ImportError: {e}")
+        except Exception as e:
+>           self.fail(f"Game instantiation failed with exception: {e}")
+E           AssertionError: Game instantiation failed with exception: name 'pygame' is not defined
+
+tests\unit\test_main_integration.py:65: AssertionError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________________ TestShipThemeLogic.test_get_image_metrics __________________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_theme_logic.TestShipThemeLogic testMethod=test_get_image_metrics>
+mock_load = <MagicMock name='load' id='1408230965456'>
+mock_open_file = <MagicMock name='open' spec='builtin_function_or_method' id='1408230973520'>
+mock_json_load = <MagicMock name='load' id='1408230978848'>
+mock_exists = <MagicMock name='exists' id='1408231054240'>
+mock_scandir = <MagicMock name='scandir' id='1408231062064'>
+mock_log = <MagicMock name='log_error' id='1408231069952'>
+
+    @patch('ship_theme.log_error')
+    @patch('os.scandir')
+    @patch('os.path.exists')
+    @patch('ship_theme.json.load')
+    @patch('builtins.open', new_callable=mock_open)
+    @patch('pygame.image.load')
+    def test_get_image_metrics(self, mock_load, mock_open_file, mock_json_load, mock_exists, mock_scandir, mock_log):
+        """Test that bounding rect is correctly calculated and cached."""
+    
+        theme_name = "MetricsTheme"
+        ship_class = "TestShip"
+        json_content = {
+            "name": theme_name,
+            "images": {
+                ship_class: "game.simulation.entities.ship.png"
+            }
+        }
+    
+        # Mocks setup
+        mock_entry = MagicMock()
+        mock_entry.is_dir.return_value = True
+        mock_entry.path = f"/themes/{theme_name}"
+        mock_scandir.return_value = [mock_entry]
+    
+        mock_exists.return_value = True # Simplify exists checks
+        mock_json_load.return_value = json_content
+    
+        # Use a Mock Surface since real ones are immutable and can't have convert_alpha patched
+        surf = MagicMock(spec=pygame.Surface)
+        surf.get_bounding_rect.return_value = pygame.Rect(5, 5, 10, 10)
+        surf.convert_alpha.return_value = surf
+        surf.get_size.return_value = (20, 20)
+    
+        mock_load.return_value = surf
+    
+        # Initialize
+        self.manager.initialize("/fake/base/path")
+    
+        # Verify no errors logged
+        mock_log.assert_not_called()
+    
+        # Verify metrics
+        rect_data = self.manager.get_image_metrics(theme_name, ship_class)
+        self.assertIsNotNone(rect_data)
+>       rect = rect_data['bounding_rect']
+E       TypeError: Invalid Rect slice
+
+tests\unit\test_ship_theme_logic.py:150: TypeError
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 1 ship themes: ['MetricsTheme']
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestBuilderUISync.test_refresh_controls_syncs_ui _______________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_builder_ui_sync.TestBuilderUISync testMethod=test_refresh_controls_syncs_ui>
+
+    def test_refresh_controls_syncs_ui(self):
+        """Verify that refresh_controls updates UI elements to match ship state."""
+        # 1. Modify Ship State from defaults (Escort, Federation)
+        self.mock_builder.ship.name = "New Name"
+    
+        # Ensure we pick a class that definitely exists and isn't Escort
+        target_class = "Cruiser"
+        if target_class not in VEHICLE_CLASSES:
+             # Fallback if data is different
+             target_class = list(VEHICLE_CLASSES.keys())[-1]
+    
+        self.mock_builder.ship.ship_class = target_class
+        self.mock_builder.ship.theme_id = "Klingon"
+    
+        # Set AI to something non-default
+        # Default is usually optimal_firing_range
+        self.mock_builder.ship.ai_strategy = "kamikaze"
+    
+        # 2. Call Refresh (mocking portrait update to avoid side effects)
+        # 2. Call Refresh (mocking portrait update to avoid side effects)
+        with patch.object(self.panel, 'update_portrait_image') as mock_update_img:
+            self.panel.refresh_controls()
+            mock_update_img.assert_called_once()
+    
+        # 3. Assert UI values match Ship State
+    
+        # Name
+        self.assertEqual(self.panel.name_entry.get_text(), "New Name")
+    
+        # Theme
+        val = self._get_option_value(self.panel.theme_dropdown.selected_option)
+        self.assertEqual(val, "Klingon")
+    
+        # Class
+        val = self._get_option_value(self.panel.class_dropdown.selected_option)
+        self.assertEqual(val, target_class)
+    
+        # AI
+        # AI Strategy Name lookup
+        strat_name = COMBAT_STRATEGIES["kamikaze"]["name"]
+        val = self._get_option_value(self.panel.ai_dropdown.selected_option)
+>       self.assertEqual(val, strat_name)
+E       AssertionError: 'Standard Ranged' != 'Kamikaze'
+E       - Standard Ranged
+E       + Kamikaze
+
+tests\unit\test_builder_ui_sync.py:94: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Warning: targeting_policies.json not found in C:\Dev\Starship Battles
+Warning: movement_policies.json not found in C:\Dev\Starship Battles
+Warning: combat_strategies.json not found in C:\Dev\Starship Battles
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 0 strategies, 0 targeting, 0 movement
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+============================== warnings summary ===============================
+simulation_tests\data_driven\test_combat_targeting.py:17: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_combat_targeting.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_engine_physics.py:24: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_engine_physics.py:24: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_engine_physics.py:153: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_engine_physics.py:153: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_extended.py:15: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_extended.py:15: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_extended.py:100: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_extended.py:100: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_extended.py:170: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_extended.py:170: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_requirements.py:14: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_requirements.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:19: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:19: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:76: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:76: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:104: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:104: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:182: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:182: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:219: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:219: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:310: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:310: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+test_framework\runner.py:14: 16 warnings
+  C:\Dev\Starship Battles\test_framework\runner.py:14: PytestCollectionWarning: cannot collect test class 'TestRunner' because it has a __init__ constructor (from: ui/test_lab_scene.py)
+    class TestRunner:
+
+ui\test_lab_scene.py:13: 16 warnings
+  C:\Dev\Starship Battles\ui\test_lab_scene.py:13: PytestCollectionWarning: cannot collect test class 'TestLabScene' because it has a __init__ constructor (from: ui/test_lab_scene.py)
+    class TestLabScene:
+
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_multi_selection_logic.py: 3 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:92: UserWarning: Clamping shadow_width of: 2, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_multi_selection_logic.py: 3 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:113: UserWarning: Clamping border_width of: 1, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Energy: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Energy Gen: - size diff: (-14, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Thrust: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Acceleration: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Top Speed: - size diff: (-7, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Maneuvering Points: - size diff: (-108, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Turning Rate: - size diff: (-24, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Shields: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Regen Cost: - size diff: (-13, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Armor HP: - size diff: (-37, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Dmg Ignore: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen/Hit: - size diff: (-50, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Targets: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Evasion Score: - size diff: (-28, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Targeting Score: - size diff: (-42, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew Required: - size diff: (-36, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew On Board: - size diff: (-38, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Life Support: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Fighter Support \u2500\u2500 - size diff: (-11, 5)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Cap: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Launch/Wave: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Time: - size diff: (-22, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Recommendations \u2500\u2500 - size diff: (-30, 0)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_multi_selection_logic
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_append_integration
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_homogeneity_enforcement
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_selection_integration
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_reselection_behavior
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_toggle_behavior
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_font_dictionary.py:405: UserWarning: Finding font with id: noto_sans_bold_aa_14 that is not already loaded.
+  Preload this font with {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': '1'}
+    warnings.warn(warning_string, UserWarning)
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\html_parser.py:179: UserWarning: Unsupported HTML Tag <magicmock>. Check documentation for full range of supported tags.
+    warnings.warn(warning_text, UserWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_target_prioritization
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_firing_arc_validation
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_ammo
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_multiple_weapons
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_beam
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_single_weapon
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_seeker_ignores_arc
+FAILED tests/unit/test_main_integration.py::TestMainIntegration::test_game_instantiation
+FAILED tests/unit/test_ship_theme_logic.py::TestShipThemeLogic::test_get_image_metrics
+FAILED tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+================ 10 failed, 578 passed, 340 warnings in 4.93s =================

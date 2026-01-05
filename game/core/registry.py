@@ -1,4 +1,5 @@
 from typing import Dict, Any, Optional
+import threading
 
 class RegistryManager:
     """
@@ -6,6 +7,7 @@ class RegistryManager:
     Replaces module-level globals to allow for clean state resets in testing.
     """
     _instance: Optional['RegistryManager'] = None
+    _lock = threading.Lock()
 
     def __init__(self):
         if RegistryManager._instance is not None:
@@ -20,7 +22,9 @@ class RegistryManager:
     @classmethod
     def instance(cls) -> 'RegistryManager':
         if cls._instance is None:
-            cls._instance = cls()
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
         return cls._instance
     
     @classmethod

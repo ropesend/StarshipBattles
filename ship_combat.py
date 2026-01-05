@@ -81,8 +81,13 @@ class ShipCombatMixin:
                     
                     # Tracer
                     dist = 0
+                    diff = 0
+                    comp_facing = self.angle + getattr(comp, 'facing_angle', 0)
                     if self.current_target:
-                        dist = self.position.distance_to(self.current_target.position)
+                        rel_pos = self.current_target.position - self.position
+                        target_angle = math.degrees(math.atan2(rel_pos.y, rel_pos.x))
+                        diff = (target_angle - comp_facing + 180) % 360 - 180
+                        dist = rel_pos.length()
                     
                     if has_resource and weapon_ab.can_fire():
                         # TARGETING logic
@@ -147,8 +152,8 @@ class ShipCombatMixin:
                             if not hasattr(comp, 'shots_fired'): comp.shots_fired = 0
                             comp.shots_fired += 1
                             
-                            # Deduct Resource generically
-                            comp.consume_activation()
+                            # Deduct Resource generically - REMOVED (Ability handles it)
+                            # comp.consume_activation()
                             
                             # Deduct Resource
                             if comp.has_ability('BeamWeaponAbility'):
@@ -182,10 +187,12 @@ class ShipCombatMixin:
                                     seeker_ab = comp.get_ability('SeekerWeaponAbility')
                                     
                                     # Launch vector
+                                    comp_facing = self.angle + getattr(comp, 'facing_angle', 0)
+                                    # Use target angle if we have a valid targeting solution
                                     rad = math.radians(comp_facing)
                                     launch_vec = pygame.math.Vector2(math.cos(rad), math.sin(rad))
                                     
-                                    # If target in arc, launch at target
+                                    # If target in arc, launch at target (diff calculated in Tracer)
                                     if abs(diff) <= (weapon_ab.firing_arc / 2):
                                         launch_vec = aim_vec.normalize() if aim_vec.length() > 0 else launch_vec
 

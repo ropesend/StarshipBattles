@@ -104,8 +104,9 @@ class TestBugFixRegressions(unittest.TestCase):
         }
         c = Component(comp_data)
         
-        # Verify Component does NOT have range
-        self.assertFalse(hasattr(c, 'range'), "Component should not have 'range' attribute")
+        # Verify Component HAS range (now as a shim property)
+        self.assertTrue(hasattr(c, 'range'), "Component should have 'range' attribute shim")
+        self.assertEqual(c.range, 1000)
         
         # Verify Ability access works
         ab = c.get_ability('WeaponAbility')

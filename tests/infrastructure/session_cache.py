@@ -49,10 +49,14 @@ class SessionRegistryCache:
                 mgr.clear()
 
                 # 3. Trigger Loaders (They populate Registry)
-                # Note: We rely on default paths or relative path logic in loaders
-                # We suppress print output to avoid clutter? No, visibility is good.
-                load_modifiers() 
-                load_components()
+                # Ensure we use absolute paths from constants
+                from game.core.constants import DATA_DIR
+                
+                comp_path = os.path.join(DATA_DIR, "components.json")
+                mod_path = os.path.join(DATA_DIR, "modifiers.json")
+                
+                load_modifiers(mod_path) 
+                load_components(comp_path)
                 load_vehicle_classes()
 
                 # 4. Capture State (Deep Copy)

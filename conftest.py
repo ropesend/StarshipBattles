@@ -6,7 +6,7 @@ import pytest
 from game.core.registry import RegistryManager
 
 @pytest.fixture(autouse=True)
-def reset_game_state(monkeypatch):
+def reset_game_state(monkeypatch, request):
     """
     Context manager for strict test isolation using Fast Hydration.
     Ensures global registries are populated from memory (Session Cache) before each test,
@@ -14,6 +14,11 @@ def reset_game_state(monkeypatch):
     """
     from tests.infrastructure.session_cache import SessionRegistryCache
     
+    # 0. Skip production hydration if test uses custom data
+    if "use_custom_data" in request.keywords:
+        yield
+        return
+
     # 1. Ensure Session Cache is loaded (Once per session effectively, via singleton check)
     cache = SessionRegistryCache.instance()
     cache.load_all_data()
@@ -26,10 +31,8 @@ def reset_game_state(monkeypatch):
     )
 
     # 3. Patch Loaders/Caches to prevent Disk I/O during test execution
-    # If a test calls load_components(), it should find the cache populated or be intercepted.
     
     # A. Component Cache: Inject data so load_components() returns early
-    # Note: We inject a deepcopy from session cache to avoid test pollution
     monkeypatch.setattr("game.simulation.components.component._COMPONENT_CACHE", cache.get_components())
     monkeypatch.setattr("game.simulation.components.component._MODIFIER_CACHE", cache.get_modifiers())
 
@@ -40,6 +43,15 @@ def reset_game_state(monkeypatch):
     
     # Post-test cleanup
     RegistryManager.instance().clear()
+    
+    # Reset AI Strategy Manager
+    from game.ai.controller import STRATEGY_MANAGER
+    if STRATEGY_MANAGER:
+        STRATEGY_MANAGER.clear()
+        
+    # Reset Ship Theme Manager
+    from ship_theme import ShipThemeManager
+    ShipThemeManager.get_instance().clear()
 
 @pytest.fixture(scope="session", autouse=True)
 def enforce_headless():

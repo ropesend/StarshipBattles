@@ -24,7 +24,9 @@ class TestBuilderUISync(unittest.TestCase):
         # Initialize data needed for dropdowns
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         initialize_ship_data(base_dir)
-        load_components(os.path.join(base_dir, "data", "game.simulation.components.component.json"))
+        load_components(os.path.join(base_dir, "data", "components.json"))
+        from game.ai.controller import load_combat_strategies
+        load_combat_strategies(os.path.join(base_dir, "data"))
         
         pygame.display.set_mode((800, 600)) # Dummy mode
         self.manager = pygame_gui.UIManager((800, 600))

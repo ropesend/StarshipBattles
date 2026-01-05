@@ -23,6 +23,12 @@ class StrategyManager:
             'strategy': {'name': 'Default', 'targeting_policy': 'standard', 'movement_policy': 'kite_max'}
         }
 
+    def clear(self):
+        """Reset all policies. Used for test isolation."""
+        self.targeting_policies = {}
+        self.movement_policies = {}
+        self.strategies = {}
+
     def load_data(self, base_path="data", targeting_file="targeting_policies.json", movement_file="movement_policies.json", strategy_file="combat_strategies.json"):
         # Load Targeting Policies
         try:
@@ -71,16 +77,37 @@ class StrategyManager:
 
 def load_combat_strategies(filepath=None):
     """Entry point for loading. Filepath arg is legacy/optional override for base path."""
-    global STRATEGY_MANAGER
-    STRATEGY_MANAGER = StrategyManager()
+    global STRATEGY_MANAGER, COMBAT_STRATEGIES
+    
+    # Create manager if it doesn't exist, but preserve strategies dict reference
+    if STRATEGY_MANAGER is None:
+        STRATEGY_MANAGER = StrategyManager()
+    else:
+        # Clear existing data before reload
+        STRATEGY_MANAGER.clear()
     
     # Determine base path from filepath or default
     if filepath:
-        base_dir = os.path.dirname(filepath)
+        if os.path.isdir(filepath):
+            base_dir = filepath
+        else:
+            base_dir = os.path.dirname(filepath)
     else:
         base_dir = "data"
         
     STRATEGY_MANAGER.load_data(base_dir)
+    
+    # CRITICAL: Update COMBAT_STRATEGIES reference to point to the actual strategies dict.
+    # We update in-place if COMBAT_STRATEGIES exists and is a dict, else reassign.
+    # This ensures other modules that imported COMBAT_STRATEGIES before see the new data.
+    if 'COMBAT_STRATEGIES' in globals() and isinstance(globals()['COMBAT_STRATEGIES'], dict):
+        globals()['COMBAT_STRATEGIES'].clear()
+        globals()['COMBAT_STRATEGIES'].update(STRATEGY_MANAGER.strategies)
+    else:
+        COMBAT_STRATEGIES = STRATEGY_MANAGER.strategies
+
+# Legacy support: Initialize the dict BEFORE load_combat_strategies() so it can be updated in-place
+COMBAT_STRATEGIES = {}
 
 # Initialize on import
 load_combat_strategies()
@@ -90,10 +117,6 @@ def get_strategy_names():
     if STRATEGY_MANAGER:
          return list(STRATEGY_MANAGER.strategies.keys())
     return []
-
-# Legacy support for tests/other modules accessing strategies directly
-# We expose a proxy or just the internal dict if needed, but better to use Manager
-COMBAT_STRATEGIES = STRATEGY_MANAGER.strategies if STRATEGY_MANAGER else {}
 
 
 class TargetEvaluator:

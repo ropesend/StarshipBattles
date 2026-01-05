@@ -1,0 +1,2391 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+created: 16/16 workers
+16 workers [588 items]
+
+.........FFF.FF.FF.FFFFFFFFFFF...F.F.................................... [ 12%]
+..................................F................................F.... [ 24%]
+...F...F...F.................................................F........F. [ 36%]
+..........F.......F...F.......F.....F.......F........................... [ 48%]
+.........................................s.............................. [ 61%]
+........................................................................ [ 73%]
+...............................................F........................ [ 85%]
+..........................................F.............F............... [ 97%]
+............                                                             [100%]
+=================================== ERRORS ====================================
+_______________ ERROR collecting Tools/check_rendering_attrs.py _______________
+ImportError while importing test module 'C:\Dev\Starship Battles\Tools\check_rendering_attrs.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+Tools\check_rendering_attrs.py:5: in <module>
+    import rendering
+E   ModuleNotFoundError: No module named 'rendering'
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+________________________ ERROR collecting test_out.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_output.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_output_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_report.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+______________________ ERROR collecting test_result.txt _______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_2.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_3.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_4.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_5.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_6.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_7.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_____________________ ERROR collecting test_result_8.txt ______________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+___________________ ERROR collecting test_result_Verify.txt ___________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________________ ERROR collecting tests_res.txt ________________________
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+================================== FAILURES ===================================
+_________ TestComponentRestrictions.test_ship_accepts_ship_components _________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:155: in test_ship_accepts_ship_components
+    bridge = COMPONENT_REGISTRY["test_bridge_basic"].clone()
+E   KeyError: 'test_bridge_basic'
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+_______________ TestVehicleClassLoading.test_ship_types_defined _______________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:40: in test_ship_types_defined
+    self.assertIn("Fighter", types)
+E   AssertionError: 'Fighter' not found in {'Ship'}
+_______________ TestCombatTargeting.test_target_prioritization ________________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_combat_targeting.py:217: in test_target_prioritization
+    self.assertEqual(len(attacks), 1)
+E   AssertionError: 0 != 1
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x000001C00EDBA9E0>
+DEBUG: Add bridge success: True, total core: 1
+_______ TestComponentRestrictions.test_ship_rejects_fighter_components ________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:162: in test_ship_rejects_fighter_components
+    cockpit = COMPONENT_REGISTRY["test_cockpit_fighter"].clone()
+E   KeyError: 'test_cockpit_fighter'
+_______________ TestCombatTargeting.test_firing_arc_validation ________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_combat_targeting.py:143: in test_firing_arc_validation
+    self.assertEqual(len(attacks), 1, "Should fire at target directly ahead")
+E   AssertionError: 0 != 1 : Should fire at target directly ahead
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000020900D22920>
+DEBUG: Add bridge success: True, total core: 1
+____________ TestShipVehicleType.test_ship_vehicle_type_assignment ____________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:90: in test_ship_vehicle_type_assignment
+    self.assertEqual(fighter.vehicle_type, "Fighter")
+E   AssertionError: 'Ship' != 'Fighter'
+E   - Ship
+E   + Fighter
+_________ TestSatelliteLogic.test_satellite_ignores_crew_requirements _________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:199: in test_satellite_ignores_crew_requirements
+    railgun = COMPONENT_REGISTRY["test_weapon_proj_fixed"].clone()
+E   KeyError: 'test_weapon_proj_fixed'
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+_____ TestComponentRestrictions.test_component_allowed_vehicle_types_list _____
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:168: in test_component_allowed_vehicle_types_list
+    bridge = COMPONENT_REGISTRY["test_bridge_basic"]
+E   KeyError: 'test_bridge_basic'
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+_____________ TestSatelliteAI.test_satellite_ai_does_not_navigate _____________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:234: in test_satellite_ai_does_not_navigate
+    core = COMPONENT_REGISTRY["test_core_satellite"].clone()
+E   KeyError: 'test_core_satellite'
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+----------------------------- Captured log setup ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 7 strategies, 5 targeting, 7 movement
+_____________ TestCombatTargeting.test_resource_consumption_ammo ______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_combat_targeting.py:292: in test_resource_consumption_ammo
+    self.assertEqual(self.attacker.current_ammo, 5)
+E   AssertionError: 10 != 5
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000020900D211E0>
+DEBUG: Add bridge success: True, total core: 1
+______ TestComponentRestrictions.test_fighter_accepts_fighter_components ______
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:114: in test_fighter_accepts_fighter_components
+    cockpit = COMPONENT_REGISTRY["test_cockpit_fighter"].clone()
+E   KeyError: 'test_cockpit_fighter'
+___________ TestSatelliteAI.test_satellite_ai_fires_when_has_target ___________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:280: in test_satellite_ai_fires_when_has_target
+    core = COMPONENT_REGISTRY["test_core_satellite"].clone()
+E   KeyError: 'test_core_satellite'
+_______ TestComponentRestrictions.test_fighter_rejects_ship_components ________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:121: in test_fighter_rejects_ship_components
+    bridge = COMPONENT_REGISTRY["test_bridge_basic"].clone()
+E   KeyError: 'test_bridge_basic'
+_____________ TestCombatTargeting.test_resource_consumption_beam ______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_combat_targeting.py:263: in test_resource_consumption_beam
+    self.assertEqual(self.attacker.current_energy, 50, "Should consume 50 energy")
+E   AssertionError: 100 != 50 : Should consume 50 energy
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000020900EBBA90>
+DEBUG: Add bridge success: True, total core: 1
+_______________ TestSatelliteAI.test_satellite_ai_still_targets _______________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:258: in test_satellite_ai_still_targets
+    core = COMPONENT_REGISTRY["test_core_satellite"].clone()
+E   KeyError: 'test_core_satellite'
+__________ TestComponentRestrictions.test_satellite_accepts_weapons ___________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:144: in test_satellite_accepts_weapons
+    railgun = COMPONENT_REGISTRY["test_weapon_proj_fixed"].clone()
+E   KeyError: 'test_weapon_proj_fixed'
+_________________ TestCombatTargeting.test_seeker_ignores_arc _________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_combat_targeting.py:180: in test_seeker_ignores_arc
+    self.assertEqual(len(attacks), 1, "Seeker weapon should fire regardless of arc")
+E   AssertionError: 0 != 1 : Seeker weapon should fire regardless of arc
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000020900EF2F50>
+DEBUG: Add bridge success: True, total core: 1
+___ TestComponentRestrictions.test_satellite_rejects_engines_and_thrusters ____
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:129: in test_satellite_rejects_engines_and_thrusters
+    engine = COMPONENT_REGISTRY["test_engine_std"].clone()
+E   KeyError: 'test_engine_std'
+_____________ TestVehicleClassLoading.test_fighter_classes_loaded _____________
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:46: in test_fighter_classes_loaded
+    self.assertGreater(len(fighter_classes), 0, "At least one Fighter class should exist")
+E   AssertionError: 0 not greater than 0 : At least one Fighter class should exist
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+ERROR loading modifiers: [Errno 2] No such file or directory: 'C:\\Dev\\Starship Battles\\game\\simulation\\components\\unit_tests/data/test_modifiers.json'
+----------------------------- Captured log setup ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 7 strategies, 5 targeting, 7 movement
+____________ TestVehicleClassLoading.test_satellite_classes_loaded ____________
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_vehicle_types.py:53: in test_satellite_classes_loaded
+    self.assertGreater(len(sat_classes), 0, "At least one Satellite class should exist")
+E   AssertionError: 0 not greater than 0 : At least one Satellite class should exist
+_______________ TestToHitProfile.test_larger_ship_easier_to_hit _______________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_ship_extended.py:149: in test_larger_ship_easier_to_hit
+    self.assertLess(large.to_hit_profile, small.to_hit_profile)
+E   AssertionError: 0.8333333333333333 not less than 0.8333333333333333
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+_________ TestEnginePhysics.test_ENG_001_base_speed_accel_calculation _________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_engine_physics.py:66: in test_ENG_001_base_speed_accel_calculation
+    self.assertEqual(ship.mass, mass)
+E   AssertionError: 70.0 != 40
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+______ TestEnginePhysics.test_ENG_002_speed_decreases_linearly_with_mass ______
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_engine_physics.py:80: in test_ENG_002_speed_decreases_linearly_with_mass
+    self.assertGreater(ship_low.max_speed, ship_med.max_speed,
+E   AssertionError: 178.57142857142858 not greater than 178.57142857142858 : Low mass ship should be faster than medium
+---------------------------- Captured stdout call -----------------------------
+Error: Mass budget exceeded for EngineTest
+Error: Mass budget exceeded for CORE
+Error: Mass budget exceeded for EngineTest
+Error: Mass budget exceeded for CORE
+Error: Mass budget exceeded for EngineTest
+Error: Mass budget exceeded for CORE
+___ TestEnginePhysics.test_ENG_003_accel_decreases_quadratically_with_mass ____
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_engine_physics.py:106: in test_ENG_003_accel_decreases_quadratically_with_mass
+    self.assertGreater(ship_low.acceleration_rate, ship_med.acceleration_rate,
+E   AssertionError: 255.10204081632654 not greater than 255.10204081632654 : Low mass ship should have higher accel than medium
+---------------------------- Captured stdout call -----------------------------
+Error: Mass budget exceeded for EngineTest
+Error: Mass budget exceeded for CORE
+Error: Mass budget exceeded for EngineTest
+Error: Mass budget exceeded for CORE
+Error: Mass budget exceeded for EngineTest
+Error: Mass budget exceeded for CORE
+_____ TestEnginePhysics.test_ENG_004_speed_increases_linearly_with_thrust _____
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_engine_physics.py:148: in test_ENG_004_speed_increases_linearly_with_thrust
+    self.assertAlmostEqual(speed_increase_ratio, thrust_ratio, delta=0.5,
+E   AssertionError: 1.9090909090909092 != 3.0 within 0.5 delta (1.0909090909090908 difference) : 3x engines should give ~3x speed. Got ratio: 1.9090909090909092
+_________________ TestBuilderLogic.test_mass_limit_validation _________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+tests\unit\test_builder_logic.py:50: in test_mass_limit_validation
+    huge_plate.mass = 2000 # Way over budget
+E   AttributeError: 'NoneType' object has no attribute 'mass'
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID armor_plate not found in registry.
+______________ TestBuilderLogic.test_missing_bridge_requirement _______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+tests\unit\test_builder_logic.py:69: in test_missing_bridge_requirement
+    self.assertFalse(any("Command And Control" in m for m in missing))
+E   AssertionError: True is not false
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID bridge not found in registry.
+Error: Attempted to add None component to ship
+__________ TestMaxWeaponRange.test_max_weapon_range_multiple_weapons __________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_ship_extended.py:212: in test_max_weapon_range_multiple_weapons
+    expected_max = max(railgun.range, laser.range)
+E   AttributeError: 'NoneType' object has no attribute 'range'
+---------------------------- Captured stdout setup ----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_weapon_proj_fixed not found in registry.
+Error: Component ID test_weapon_beam_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Attempted to add None component to ship
+___________ TestMaxWeaponRange.test_max_weapon_range_single_weapon ____________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+simulation_tests\data_driven\test_ship_extended.py:196: in test_max_weapon_range_single_weapon
+    self.assertEqual(ship.max_weapon_range, railgun.range)
+E   AttributeError: 'NoneType' object has no attribute 'range'
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_weapon_proj_fixed not found in registry.
+Error: Attempted to add None component to ship
+___________ TestFighterLaunch.test_battle_engine_launch_processing ____________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+tests\unit\test_fighter_launch.py:89: in test_battle_engine_launch_processing
+    bridge = COMPONENT_REGISTRY["bridge"].clone()
+E   KeyError: 'bridge'
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 11 strategies, 2 targeting, 12 movement
+________________ TestFighterLaunch.test_hangar_initialization _________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+tests\unit\test_fighter_launch.py:29: in test_hangar_initialization
+    self.assertIsNotNone(hangar)
+E   AssertionError: unexpectedly None
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 11 strategies, 2 targeting, 12 movement
+_____________________ TestFighterLaunch.test_launch_logic _____________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+tests\unit\test_fighter_launch.py:41: in test_launch_logic
+    hangar = COMPONENT_REGISTRY["fighter_launch_bay"].clone()
+E   KeyError: 'fighter_launch_bay'
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 11 strategies, 2 targeting, 12 movement
+__________________ TestFighterLaunch.test_stats_aggregation ___________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+tests\unit\test_fighter_launch.py:133: in test_stats_aggregation
+    hangar = COMPONENT_REGISTRY["fighter_launch_bay"].clone()
+E   KeyError: 'fighter_launch_bay'
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 11 strategies, 2 targeting, 12 movement
+__________________ TestShipThemeLogic.test_get_image_metrics __________________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+tests\unit\test_ship_theme_logic.py:152: in test_get_image_metrics
+    self.assertEqual(rect.x, 5)
+E   AssertionError: 0 != 5
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 1 ship themes: ['MetricsTheme']
+_________________ TestWeaponBasics.test_beam_accuracy_clamped _________________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+tests\unit\test_weapons.py:81: in test_beam_accuracy_clamped
+    beam_ab = laser.get_ability('BeamWeaponAbility')
+E   AttributeError: 'NoneType' object has no attribute 'get_ability'
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID laser_cannon not found in registry.
+___________________ TestNewThemes.test_klingon_theme_loads ____________________
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+tests\unit\test_theme_discovery.py:45: in test_klingon_theme_loads
+    self.assertNotEqual(img.get_size(), (100, 100), "Should not be fallback image")
+E   AssertionError: (100, 100) == (100, 100) : Should not be fallback image
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+[1m[31mERROR   [0m StarshipBattles:logger.py:35 Lazy load failed for C:\Dev\Starship Battles\assets\ShipThemes\Klingons\Skins/battlecruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+============================== warnings summary ===============================
+test_framework\runner.py:14: 16 warnings
+  C:\Dev\Starship Battles\test_framework\runner.py:14: PytestCollectionWarning: cannot collect test class 'TestRunner' because it has a __init__ constructor (from: ui/test_lab_scene.py)
+    class TestRunner:
+
+ui\test_lab_scene.py:13: 16 warnings
+  C:\Dev\Starship Battles\ui\test_lab_scene.py:13: PytestCollectionWarning: cannot collect test class 'TestLabScene' because it has a __init__ constructor (from: ui/test_lab_scene.py)
+    class TestLabScene:
+
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_multi_selection_logic.py: 3 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:92: UserWarning: Clamping shadow_width of: 2, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_multi_selection_logic.py: 3 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:113: UserWarning: Clamping border_width of: 1, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Energy: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Energy Gen: - size diff: (-14, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Thrust: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Acceleration: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Top Speed: - size diff: (-7, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Maneuvering Points: - size diff: (-108, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Turning Rate: - size diff: (-24, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Shields: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Regen Cost: - size diff: (-13, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Armor HP: - size diff: (-37, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Dmg Ignore: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen/Hit: - size diff: (-50, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Targets: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Evasion Score: - size diff: (-28, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Targeting Score: - size diff: (-42, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew Required: - size diff: (-36, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew On Board: - size diff: (-38, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Life Support: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Fighter Support \u2500\u2500 - size diff: (-11, 5)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Cap: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Launch/Wave: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Time: - size diff: (-22, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Recommendations \u2500\u2500 - size diff: (-30, 0)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_multi_selection_logic
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_append_integration
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_homogeneity_enforcement
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_selection_integration
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_reselection_behavior
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_toggle_behavior
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_font_dictionary.py:405: UserWarning: Finding font with id: noto_sans_bold_aa_14 that is not already loaded.
+  Preload this font with {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': '1'}
+    warnings.warn(warning_string, UserWarning)
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\html_parser.py:179: UserWarning: Unsupported HTML Tag <magicmock>. Check documentation for full range of supported tags.
+    warnings.warn(warning_text, UserWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_ship_accepts_ship_components
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestVehicleClassLoading::test_ship_types_defined
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_target_prioritization
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_ship_rejects_fighter_components
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_firing_arc_validation
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestShipVehicleType::test_ship_vehicle_type_assignment
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteLogic::test_satellite_ignores_crew_requirements
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_component_allowed_vehicle_types_list
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_does_not_navigate
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_ammo
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_fighter_accepts_fighter_components
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_fires_when_has_target
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_fighter_rejects_ship_components
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_beam
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_still_targets
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_satellite_accepts_weapons
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_seeker_ignores_arc
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_satellite_rejects_engines_and_thrusters
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestVehicleClassLoading::test_fighter_classes_loaded
+FAILED simulation_tests/data_driven/test_vehicle_types.py::TestVehicleClassLoading::test_satellite_classes_loaded
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestToHitProfile::test_larger_ship_easier_to_hit
+FAILED simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_001_base_speed_accel_calculation
+FAILED simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_002_speed_decreases_linearly_with_mass
+FAILED simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_003_accel_decreases_quadratically_with_mass
+FAILED simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_004_speed_increases_linearly_with_thrust
+FAILED tests/unit/test_builder_logic.py::TestBuilderLogic::test_mass_limit_validation
+FAILED tests/unit/test_builder_logic.py::TestBuilderLogic::test_missing_bridge_requirement
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_multiple_weapons
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_single_weapon
+FAILED tests/unit/test_fighter_launch.py::TestFighterLaunch::test_battle_engine_launch_processing
+FAILED tests/unit/test_fighter_launch.py::TestFighterLaunch::test_hangar_initialization
+FAILED tests/unit/test_fighter_launch.py::TestFighterLaunch::test_launch_logic
+FAILED tests/unit/test_fighter_launch.py::TestFighterLaunch::test_stats_aggregation
+FAILED tests/unit/test_ship_theme_logic.py::TestShipThemeLogic::test_get_image_metrics
+FAILED tests/unit/test_weapons.py::TestWeaponBasics::test_beam_accuracy_clamped
+FAILED tests/unit/test_theme_discovery.py::TestNewThemes::test_klingon_theme_loads
+ERROR Tools/check_rendering_attrs.py - ImportError while importing test modul...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_out.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_output_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_report.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_result_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR test_result_3.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_4.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_5.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_6.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR test_result_7.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR test_result_8.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR test_result_Verify.txt - UnicodeDecodeError: 'utf-8' codec can't decode...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+ERROR tests_res.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf...
+===== 36 failed, 551 passed, 1 skipped, 132 warnings, 241 errors in 5.66s =====

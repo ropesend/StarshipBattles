@@ -24,6 +24,11 @@ class TestNewThemes(unittest.TestCase):
         # (Though in a fresh process it shouldn't matter, but good for interactive testing)
         self.manager.themes = {} 
         self.manager.loaded = False
+        
+        # Ensure display is initialized for convert_alpha
+        if not pygame.display.get_surface():
+            pygame.display.set_mode((1, 1), pygame.NOFRAME)
+            
         self.manager.initialize()
     def tearDown(self):
         # Clean up singleton

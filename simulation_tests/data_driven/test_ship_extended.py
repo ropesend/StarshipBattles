@@ -9,22 +9,25 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data, load_vehicle_classes
 from game.simulation.components.component import load_components, create_component
+import pytest
 
 
+@pytest.mark.use_custom_data
 class TestSolveLead(unittest.TestCase):
     """Test lead calculation for projectile interception."""
     
     @classmethod
     def setUpClass(cls):
-        pygame.init()
-        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
-        load_components("unit_tests/data/test_components.json")
-    
+        # pygame.init() removed for session isolation
+        pass
+
     @classmethod
     def tearDownClass(cls):
-        pygame.quit()
-    
+        pass # pygame.quit() removed for session isolation
+
     def setUp(self):
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
         self.ship = Ship("Shooter", 0, 0, (255, 255, 255))
         self.ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
         self.ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
@@ -94,18 +97,22 @@ class TestSolveLead(unittest.TestCase):
         self.assertLess(t, stationary_time)
 
 
+@pytest.mark.use_custom_data
 class TestToHitProfile(unittest.TestCase):
     """Test defensive to-hit profile calculation (Defense Score)."""
     
     @classmethod
     def setUpClass(cls):
-        pygame.init()
-        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
-        load_components("unit_tests/data/test_components.json")
-    
+        # pygame.init() removed for session isolation
+        pass
+
     @classmethod
     def tearDownClass(cls):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
+
+    def setUp(self):
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
     
     def test_to_hit_profile_exists(self):
         """Ship should have a to_hit_profile attribute after recalculate_stats."""
@@ -160,18 +167,22 @@ class TestToHitProfile(unittest.TestCase):
         self.assertIsInstance(ship.baseline_to_hit_offense, (float, int))
 
 
+@pytest.mark.use_custom_data
 class TestMaxWeaponRange(unittest.TestCase):
     """Test max weapon range property."""
     
     @classmethod
     def setUpClass(cls):
-        pygame.init()
-        load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
-        load_components("unit_tests/data/test_components.json")
-    
+        # pygame.init() removed for session isolation
+        pass
+
     @classmethod
     def tearDownClass(cls):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
+
+    def setUp(self):
+        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_components("tests/unit/data/test_components.json")
     
     def test_max_weapon_range_no_weapons(self):
         """Ship with no weapons should have 0 max range."""

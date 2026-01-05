@@ -238,16 +238,29 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     @property
     def max_weapon_range(self) -> float:
         """Calculate maximum range of all equipped weapons (Phase 4: ability-based with legacy fallback)."""
-        from game.simulation.components.abilities import SeekerWeaponAbility
+        from game.simulation.components.abilities import SeekerWeaponAbility, WeaponAbility
         max_rng = 0.0
         for layer in self.layers.values():
             for comp in layer['components']:
                 # 1. Check WeaponAbility instances (new system)
-                for ab in comp.get_abilities('WeaponAbility'):
-                    rng = ab.range
-                    # For SeekerWeapons, range is function of speed * endurance
-                    if isinstance(ab, SeekerWeaponAbility):
-                        rng = ab.projectile_speed * ab.endurance
+                for ab in comp.ability_instances:
+                    # Check for any WeaponAbility variant via MRO-style name check
+                    is_weapon = False
+                    for cls in ab.__class__.mro():
+                        if cls.__name__ == 'WeaponAbility':
+                            is_weapon = True
+                            break
+                    
+                    if not is_weapon: continue
+                    
+                    rng = getattr(ab, 'range', 0.0)
+                    # For SeekerWeapons, ensure we use their calculated range if not already reported
+                    # SeekerWeaponAbility name check
+                    if ab.__class__.__name__ == 'SeekerWeaponAbility' or 'SeekerWeaponAbility' in [c.__name__ for c in ab.__class__.mro()]:
+                         # Only override if range is 0 or less, as property might already be correct
+                         if rng <= 0 and hasattr(ab, 'projectile_speed') and hasattr(ab, 'endurance'):
+                             rng = ab.projectile_speed * ab.endurance
+                             
                     if rng > max_rng:
                         max_rng = rng
                 

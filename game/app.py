@@ -76,7 +76,11 @@ class Game:
              # Fallback for smaller screens (e.g. 1920x1080)
              WIDTH, HEIGHT = int(monitor_w * 0.9), int(monitor_h * 0.9)
 
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+        if not pygame.display.get_surface():
+            self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+        else:
+            self.screen = pygame.display.get_surface()
+            
         pygame.display.set_caption(f"Starship Battles ({WIDTH}x{HEIGHT})")
         
         self.clock = pygame.time.Clock()
@@ -505,6 +509,11 @@ class Game:
 
 def main():
     game = Game()
+    
+    # Freeze Registry to prevent accidental runtime modifications in producton
+    from game.core.registry import RegistryManager
+    RegistryManager.instance().freeze()
+    
     game.run()
     # Save profiling data
     PROFILER.save_history()

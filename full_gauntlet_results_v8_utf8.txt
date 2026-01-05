@@ -1,0 +1,1553 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+created: 16/16 workers
+16 workers [588 items]
+
+........................................................................ [ 12%]
+........................................................................ [ 24%]
+..................................................................F...F. [ 36%]
+..F........F..................F....................................F...s [ 48%]
+...F..F.......F.F.....FFF.FF....F..FF...FFF....F.F...FF.F.....F......... [ 61%]
+..................F...................................FF......F.......F. [ 73%]
+.F.F.F..F.F.F..F..FFF......F.........F.......................F.......... [ 85%]
+..F............................................F.F.F..............F..F.. [ 97%]
+.......F....                                                             [100%]
+================================== FAILURES ===================================
+_____________ TestCombatTargeting.test_resource_consumption_ammo ______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_resource_consumption_ammo>
+
+    def test_resource_consumption_ammo(self):
+        """Verify ammo consumption for ProjectileWeapon."""
+        gun = ProjectileWeapon({
+             'name': 'Cannon', 'id':'cannon', 'ammo_cost': 5, 'range': 500,
+            'damage': 10, 'firing_arc': 360, 'cooldown': 0, 'projectile_speed': 1000,
+             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        gun.is_active = True
+        self.attacker.add_component(gun, LayerType.OUTER)
+        self.attacker.current_ammo = 10
+        self.attacker.current_energy = 1000
+    
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        self.attacker.fire_weapons()
+>       self.assertEqual(self.attacker.current_ammo, 5)
+E       AssertionError: 0.0 != 5
+
+simulation_tests\data_driven\test_combat_targeting.py:288: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x000002BD2C858B20>
+DEBUG: Add bridge success: True, total core: 1
+_____________ TestCombatTargeting.test_resource_consumption_beam ______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_resource_consumption_beam>
+
+    def test_resource_consumption_beam(self):
+        """Verify energy consumption for BeamWeapon."""
+        beam = BeamWeapon({
+            'name': 'Laser', 'id':'laser', 'energy_cost': 50, 'range': 500,
+            'damage': 10, 'firing_arc': 360, 'cooldown': 0,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        beam.is_active = True
+        self.attacker.add_component(beam, LayerType.OUTER)
+        self.attacker.current_energy = 100
+    
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        self.attacker.fire_weapons()
+>       self.assertEqual(self.attacker.current_energy, 50, "Should consume 50 energy")
+E       AssertionError: 0.0 != 50 : Should consume 50 energy
+
+simulation_tests\data_driven\test_combat_targeting.py:259: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x000002BD37BD3220>
+DEBUG: Add bridge success: True, total core: 1
+__________ TestMaxWeaponRange.test_max_weapon_range_multiple_weapons __________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_ship_extended.TestMaxWeaponRange testMethod=test_max_weapon_range_multiple_weapons>
+
+    def test_max_weapon_range_multiple_weapons(self):
+        """Ship with multiple weapons should return longest range."""
+        ship = Ship("HeavilyArmed", 0, 0, (255, 255, 255))
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
+    
+        # Add different weapons
+        railgun = create_component('test_weapon_proj_fixed')
+        laser = create_component('test_weapon_beam_std')
+        ship.add_component(railgun, LayerType.OUTER)
+        ship.add_component(laser, LayerType.OUTER)
+        ship.recalculate_stats()
+    
+        expected_max = max(railgun.range, laser.range)
+>       self.assertEqual(ship.max_weapon_range, expected_max)
+E       AssertionError: 0.0 != 1000
+
+simulation_tests\data_driven\test_ship_extended.py:224: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+___________ TestMaxWeaponRange.test_max_weapon_range_single_weapon ____________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_ship_extended.TestMaxWeaponRange testMethod=test_max_weapon_range_single_weapon>
+
+    def test_max_weapon_range_single_weapon(self):
+        """Ship with one weapon should return that weapon's range."""
+        ship = Ship("Armed", 0, 0, (255, 255, 255))
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
+        railgun = create_component('test_weapon_proj_fixed')
+        ship.add_component(railgun, LayerType.OUTER)
+        ship.recalculate_stats()
+    
+>       self.assertEqual(ship.max_weapon_range, railgun.range)
+E       AssertionError: 0.0 != 1000
+
+simulation_tests\data_driven\test_ship_extended.py:207: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+_________ TestAIStrategyStates.test_attack_run_transitions_to_retreat _________
+[gw11] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ai.TestAIStrategyStates testMethod=test_attack_run_transitions_to_retreat>
+
+    def test_attack_run_transitions_to_retreat(self):
+        """Attack run should transition to retreat when close."""
+        self.ship.ai_strategy = 'attack_run'
+        self.ship.position = pygame.math.Vector2(0, 0)
+        self.target.position = pygame.math.Vector2(150, 0)  # Very close
+    
+        self.ai.update()
+        # After being very close, should switch to retreat
+        self.assertIsNotNone(self.ai.current_behavior)
+>       self.assertEqual(self.ai.current_behavior.attack_state, 'retreat')
+E       AssertionError: 'approach' != 'retreat'
+E       - approach
+E       + retreat
+
+tests\unit\test_ai.py:199: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+Error: Attempted to add None component to ship
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 StrategyManager loaded: 11 strategies, 2 targeting, 12 movement
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__ TestModifierStackingIntegration.test_multiple_modifiers_order_independent __
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_component_modifiers_extended.TestModifierStackingIntegration testMethod=test_multiple_modifiers_order_independent>
+
+    def test_multiple_modifiers_order_independent(self):
+        """Adding modifiers in different order should give same result."""
+        # Create two weapons, add modifiers in different order
+        w1 = create_component('railgun')
+>       w1.add_modifier('size_mount', 2)
+E       AttributeError: 'NoneType' object has no attribute 'add_modifier'
+
+tests\unit\test_component_modifiers_extended.py:176: AttributeError
+---------------------------- Captured stdout call -----------------------------
+ERROR creating component railgun: could not convert string to float: '=40 - (0.01 * range_to_target)'
+ERROR creating component laser_cannon: could not convert string to float: '=15 * (1 - 0.00005 * range_to_target)'
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__ TestModifierStackingIntegration.test_range_mount_increases_component_mass __
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_component_modifiers_extended.TestModifierStackingIntegration testMethod=test_range_mount_increases_component_mass>
+
+    def test_range_mount_increases_component_mass(self):
+        """Range mount modifier should increase component mass."""
+        # Create base railgun
+        railgun_base = create_component('railgun')
+>       base_mass = railgun_base.mass
+E       AttributeError: 'NoneType' object has no attribute 'mass'
+
+tests\unit\test_component_modifiers_extended.py:162: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestModifierStacking.test_single_range_modifier _______________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_single_range_modifier>
+
+    def test_single_range_modifier(self):
+        """Range mount level 1 should increase mass by 3.5x."""
+        railgun = create_component('railgun')
+>       base_mass = railgun.base_mass  # 100
+E       AttributeError: 'NoneType' object has no attribute 'base_mass'
+
+tests\unit\test_components.py:69: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestModifierStacking.test_single_size_modifier ________________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_single_size_modifier>
+
+    def test_single_size_modifier(self):
+        """Size mount 2x should double mass."""
+        railgun = create_component('railgun')
+>       base_mass = railgun.base_mass  # 100
+E       AttributeError: 'NoneType' object has no attribute 'base_mass'
+
+tests\unit\test_components.py:60: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestModifiers.test_add_modifier_to_component _________________
+[gw11] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestModifiers testMethod=test_add_modifier_to_component>
+
+    def test_add_modifier_to_component(self):
+        """Test adding a modifier to a component."""
+        railgun = create_component('railgun')
+>       initial_mass = railgun.mass
+E       AttributeError: 'NoneType' object has no attribute 'mass'
+
+tests\unit\test_modifiers.py:26: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestComponents.test_create_component_types __________________
+[gw10] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestComponents testMethod=test_create_component_types>
+
+    def test_create_component_types(self):
+        railgun = create_component('railgun')
+        # Phase 7: Check weapon has ability, not legacy class
+>       self.assertTrue(railgun.has_ability('WeaponAbility'))
+E       AttributeError: 'NoneType' object has no attribute 'has_ability'
+
+tests\unit\test_components.py:32: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestWeaponCooldowns.test_weapon_cooldown_decreases ______________
+[gw6] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_combat.TestWeaponCooldowns testMethod=test_weapon_cooldown_decreases>
+
+    def test_weapon_cooldown_decreases(self):
+        """Weapon cooldown should decrease each tick."""
+        # Phase 7: Use ability-based weapon detection
+    
+        weapon = None
+        for c in self.ship.layers[LayerType.OUTER]['components']:
+            if c.has_ability('WeaponAbility') and c.is_active:
+                weapon = c
+                break
+    
+>       self.assertIsNotNone(weapon, "No active weapon found in OUTER layer")
+E       AssertionError: unexpectedly None : No active weapon found in OUTER layer
+
+tests\unit\test_combat.py:236: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID laser_cannon not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestCombatEndurance.test_energy_endurance_drain _______________
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_combat_endurance.TestCombatEndurance testMethod=test_energy_endurance_drain>
+
+    def test_energy_endurance_drain(self):
+        # Add Generator: generator (25/s)
+        gen = create_component('generator')
+        import copy
+        gen.data = copy.deepcopy(gen.data)
+        if 'abilities' not in gen.data: gen.data['abilities'] = {}
+        # Clear base ResourceGeneration to ensure exact value
+        if 'ResourceGeneration' in gen.data['abilities']:
+            del gen.data['abilities']['ResourceGeneration']
+        gen.data['abilities']['EnergyGeneration'] = 50 # Or use ResourceGeneration list
+        # Support fallback logic
+    
+        # REFRESH ABILITIES
+        gen.abilities = gen.data['abilities']
+        gen._instantiate_abilities()
+    
+        self.ship.add_component(gen, LayerType.INNER)
+    
+        # Add Battery: 1000 capacity
+        bat = create_component('battery')
+        bat.data = copy.deepcopy(bat.data)
+        if 'abilities' not in bat.data: bat.data['abilities'] = {}
+        # Override ResourceStorage to 1000 (was 2000 in file)
+        bat.data['abilities']['ResourceStorage'] = [{
+            "resource": "energy",
+            "amount": 1000
+        }]
+    
+        # REFRESH ABILITIES
+        bat.abilities = bat.data['abilities']
+        bat._instantiate_abilities()
+    
+        self.ship.add_component(bat, LayerType.INNER)
+    
+        # Add Beam Weapon: laser_cannon
+        beam = create_component('laser_cannon')
+        # Simulate constant firing for endurance test
+        # Cost 100, Reload 1.0 = 100/s
+>       beam.data = copy.deepcopy(beam.data)
+E       AttributeError: 'NoneType' object has no attribute 'data'
+
+tests\unit\test_combat_endurance.py:160: AttributeError
+---------------------------- Captured stdout call -----------------------------
+ERROR creating component railgun: could not convert string to float: '=40 - (0.01 * range_to_target)'
+ERROR creating component laser_cannon: could not convert string to float: '=15 * (1 - 0.00005 * range_to_target)'
+Error: Component ID laser_cannon not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestModifiers.test_get_modifier_returns_none_for_missing ___________
+[gw11] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestModifiers testMethod=test_get_modifier_returns_none_for_missing>
+
+    def test_get_modifier_returns_none_for_missing(self):
+        """get_modifier should return None for non-existent modifier."""
+        railgun = create_component('railgun')
+>       result = railgun.get_modifier('nonexistent_modifier')
+E       AttributeError: 'NoneType' object has no attribute 'get_modifier'
+
+tests\unit\test_modifiers.py:72: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestModifierStacking.test_triple_modifier_stacking ______________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_triple_modifier_stacking>
+
+    def test_triple_modifier_stacking(self):
+        """Size 2x + Range level 1 (3.5x) + Hardened (1.25x) = 8.75x mass."""
+        railgun = create_component('railgun')
+>       base_mass = railgun.base_mass  # 100
+E       AttributeError: 'NoneType' object has no attribute 'base_mass'
+
+tests\unit\test_components.py:102: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestModifiers.test_modifier_effects_on_stats _________________
+[gw11] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestModifiers testMethod=test_modifier_effects_on_stats>
+
+    def test_modifier_effects_on_stats(self):
+        """Test that modifier effects are applied to stats."""
+        railgun = create_component('railgun')
+        # Phase 7: Get firing_arc from ability
+>       weapon_ab = railgun.get_ability('ProjectileWeaponAbility') or railgun.get_ability('WeaponAbility')
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_modifiers.py:60: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________________ TestModifierOrder.test_order_independence __________________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierOrder testMethod=test_order_independence>
+
+    def test_order_independence(self):
+        """Adding modifiers in different order should give same result."""
+        # Order A: size first, then range
+        railgun_a = create_component('railgun')
+>       railgun_a.add_modifier('simple_size_mount', 2.0)
+E       AttributeError: 'NoneType' object has no attribute 'add_modifier'
+
+tests\unit\test_components.py:150: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+____________________ TestModifierStacking.test_hp_stacking ____________________
+[gw10] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_hp_stacking>
+
+    def test_hp_stacking(self):
+        """Size 2x + Hardened (2x HP) should give 4x HP."""
+        railgun = create_component('railgun')
+>       base_hp = railgun.base_max_hp  # 150
+E       AttributeError: 'NoneType' object has no attribute 'base_max_hp'
+
+tests\unit\test_components.py:115: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestTurretMount.test_turret_diminishing_returns _______________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestTurretMount testMethod=test_turret_diminishing_returns>
+
+    def test_turret_diminishing_returns(self):
+        """Mass increase should diminish as arc increases."""
+        import math
+    
+        railgun_45 = create_component('railgun')
+        railgun_90 = create_component('railgun')
+        railgun_180 = create_component('railgun')
+>       base_mass = railgun_45.base_mass
+E       AttributeError: 'NoneType' object has no attribute 'base_mass'
+
+tests\unit\test_components.py:187: AttributeError
+---------------------------- Captured stdout call -----------------------------
+ERROR creating component railgun: could not convert string to float: '=40 - (0.01 * range_to_target)'
+ERROR creating component laser_cannon: could not convert string to float: '=15 * (1 - 0.00005 * range_to_target)'
+Error: Component ID railgun not found in registry.
+Error: Component ID railgun not found in registry.
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestTurretMount.test_turret_0_degrees_no_change _______________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestTurretMount testMethod=test_turret_0_degrees_no_change>
+
+    def test_turret_0_degrees_no_change(self):
+        """0 degree turret should not increase mass."""
+        railgun = create_component('railgun')
+>       base_mass = railgun.base_mass
+E       AttributeError: 'NoneType' object has no attribute 'base_mass'
+
+tests\unit\test_components.py:174: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____ TestModifierStacking.test_multiplicative_stacking_size_and_hardened _____
+[gw10] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_multiplicative_stacking_size_and_hardened>
+
+    def test_multiplicative_stacking_size_and_hardened(self):
+        """Size 2x + Hardened (+25% mass) should give 2.5x total mass."""
+        railgun = create_component('railgun')
+>       base_mass = railgun.base_mass  # 100
+E       AttributeError: 'NoneType' object has no attribute 'base_mass'
+
+tests\unit\test_components.py:90: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestCombatEndurance.test_ordnance_endurance _________________
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_combat_endurance.TestCombatEndurance testMethod=test_ordnance_endurance>
+
+    def test_ordnance_endurance(self):
+        # Add Ammo Tank: 500 capacity
+        tank = create_component('ordnance_tank')
+        import copy
+        tank.data = copy.deepcopy(tank.data)
+        if 'abilities' not in tank.data: tank.data['abilities'] = {}
+        tank.data['abilities']['ResourceStorage'] = [{
+            "resource": "ammo",
+            "amount": 500
+        }]
+        # REFRESH ABILITIES
+        tank.abilities = tank.data['abilities']
+        tank._instantiate_abilities()
+        self.ship.add_component(tank, LayerType.INNER)
+    
+        # Add Weapon: railgun
+        weapon = create_component('railgun')
+>       weapon.data['reload'] = 2.0
+E       AttributeError: 'NoneType' object has no attribute 'data'
+
+tests\unit\test_combat_endurance.py:86: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______ TestModifierStacking.test_multiplicative_stacking_size_and_range _______
+[gw10] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_multiplicative_stacking_size_and_range>
+
+    def test_multiplicative_stacking_size_and_range(self):
+        """Size 2x + Range level 1 (3.5x) should give 7x total mass."""
+        railgun = create_component('railgun')
+>       base_mass = railgun.base_mass  # 100
+E       AttributeError: 'NoneType' object has no attribute 'base_mass'
+
+tests\unit\test_components.py:78: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestTurretMount.test_turret_stacks_with_size _________________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestTurretMount testMethod=test_turret_stacks_with_size>
+
+    def test_turret_stacks_with_size(self):
+        """Turret mount should stack multiplicatively with size mount."""
+        railgun = create_component('railgun')
+>       base_mass = railgun.base_mass
+E       AttributeError: 'NoneType' object has no attribute 'base_mass'
+
+tests\unit\test_components.py:222: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestTurretMount.test_turret_180_only_slightly_more_than_90 __________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestTurretMount testMethod=test_turret_180_only_slightly_more_than_90>
+
+    def test_turret_180_only_slightly_more_than_90(self):
+        """180 degree turret should only cost slightly more than 90."""
+        railgun_90 = create_component('railgun')
+        railgun_180 = create_component('railgun')
+>       base_mass = railgun_90.base_mass
+E       AttributeError: 'NoneType' object has no attribute 'base_mass'
+
+tests\unit\test_components.py:209: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+____________ TestCombatEndurance.test_standard_components_defaults ____________
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_combat_endurance.TestCombatEndurance testMethod=test_standard_components_defaults>
+
+    def test_standard_components_defaults(self):
+        """Verify standard components (Laser, Generator) work without manual data tweaking."""
+        # Add Generator (25 gen)
+        self.ship.add_component(create_component('generator'), LayerType.INNER)
+        # Add Battery
+        self.ship.add_component(create_component('battery'), LayerType.INNER)
+    
+        # Add Laser (5 cost, 0.2 reload -> 25 cost/sec)
+        # NOTE: Standard laser is ACTIVATION based (trigger='activation').
+        # The Generic Stat Calculator for 'Energy Consumption' (constant) will return 0 for it unless firing.
+        # But this test checks 'stats' which implies a "Combat Stat" view often assuming firing.
+        # The legacy ShipStatsCalculator likely summed energy_cost/reload.
+        # If the new code fails here, it implies strict 'constant' trigger logic.
+    
+        # BUT: In migrate_data.py, we mapped energy_cost -> ResourceConsumption(trigger='activation').
+        # The Shim in ship.py or Stats Config must handle this difference.
+        # The failure log suggests this test failed.
+        # Update expectation: "Default Idle State" -> Consumption 0 (if valid)
+        # OR Update component to force constant for this 'static analysis' test.
+        # Let's assume we want to test "Firing State" equivalence.
+    
+        laser = create_component('laser_cannon')
+        import copy
+>       laser.data = copy.deepcopy(laser.data)
+E       AttributeError: 'NoneType' object has no attribute 'data'
+
+tests\unit\test_combat_endurance.py:236: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID laser_cannon not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________________ TestModifierStacking.test_range_stacking ___________________
+[gw10] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_components.TestModifierStacking testMethod=test_range_stacking>
+
+    def test_range_stacking(self):
+        """Range mount level 2 should give 4x range."""
+        railgun = create_component('railgun')
+        # Phase 7: Get range from ability
+>       weapon_ab = railgun.get_ability('ProjectileWeaponAbility')
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_components.py:128: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestPlanetaryComplex.test_accepts_ship_components ______________
+[gw11] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_planetary_complex.TestPlanetaryComplex testMethod=test_accepts_ship_components>
+
+    def test_accepts_ship_components(self):
+        """Verify it accepts standard ship weapons and sensors."""
+        complex_ship = Ship("Test Complex", 0, 0, (255, 255, 255),
+                          ship_class="Planetary Complex (Tier 1)")
+    
+        # Weapons
+>       railgun = COMPONENT_REGISTRY["railgun"].clone()
+E       KeyError: 'railgun'
+
+tests\unit\test_planetary_complex.py:52: KeyError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestScalingLogic.test_crew_requirement_scaling_size_mount __________
+[gw10] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_size_mount>
+
+    def test_crew_requirement_scaling_size_mount(self):
+        """
+        Verify Crew Required scales with sqrt(mass) for Size Mount.
+        Size Mount x4 -> Mass x4 -> Sqrt(4) = 2x Crew Req.
+        """
+        # Railgun has CrewRequired: 5
+        rg = create_component("railgun")
+>       base_crew = self._get_crew_req(rg)
+
+tests\unit\test_scaling_logic.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_size_mount>
+comp = None
+
+    def _get_crew_req(self, comp):
+>       ab = comp.get_ability("CrewRequired")
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_scaling_logic.py:80: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________ TestDesignFactories.test_create_interceptor_has_weapons ___________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_designs.TestDesignFactories testMethod=test_create_interceptor_has_weapons>
+
+    def test_create_interceptor_has_weapons(self):
+        """create_interceptor ship should have weapons."""
+        ship = create_interceptor(0, 0)
+    
+        outer_components = ship.layers[LayerType.OUTER]['components']
+        # Should have railguns in OUTER layer
+        has_weapons = any(c.has_ability('WeaponAbility') for c in outer_components)
+    
+>       self.assertTrue(has_weapons, "Interceptor should have weapons")
+E       AssertionError: False is not true : Interceptor should have weapons
+
+tests\unit\test_designs.py:85: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID railgun not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestScalingLogic.test_consumption_scaling_linear _______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_consumption_scaling_linear>
+
+    def test_consumption_scaling_linear(self):
+        """Test linear consumption scaling."""
+        engine = create_component('standard_engine')
+    
+        # Get base consumption
+        base_cons = 0
+        from game.simulation.systems.resource_manager import ResourceConsumption
+        for ab in engine.ability_instances:
+             if isinstance(ab, ResourceConsumption) and ab.resource_name == 'fuel':
+                 base_cons = ab.amount
+                 break
+    
+        engine.add_modifier('efficient_engines') # 0.8x mul
+        engine.recalculate_stats()
+    
+        new_cons = 0
+        for ab in engine.ability_instances:
+             if isinstance(ab, ResourceConsumption) and ab.resource_name == 'fuel':
+                 new_cons = ab.amount
+                 break
+    
+        self.assertAlmostEqual(new_cons, base_cons * 0.8, msg="Fuel cost should scale linearly with size")
+    
+        # 2. Railgun - Ammo Cost
+        rg = create_component("railgun")
+        base_ammo = 0
+        from game.simulation.systems.resource_manager import ResourceConsumption
+>       for ab in rg.ability_instances:
+E       AttributeError: 'NoneType' object has no attribute 'ability_instances'
+
+tests\unit\test_scaling_logic.py:44: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________________ TestShip.test_serialization _________________________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship.TestShip testMethod=test_serialization>
+
+    def test_serialization(self):
+        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+        # Add components
+        ship.add_component(create_component('bridge'), LayerType.CORE)
+        ship.add_component(create_component('railgun'), LayerType.OUTER)
+    
+        data = ship.to_dict()
+    
+        self.assertEqual(data['name'], "TestShip")
+        self.assertTrue("layers" in data)
+        self.assertTrue("CORE" in data["layers"])
+        self.assertTrue(len(data["layers"]["CORE"]) > 0)
+    
+        # Reconstruct
+        new_ship = Ship.from_dict(data)
+    
+        self.assertEqual(new_ship.name, "TestShip")
+        self.assertEqual(len(new_ship.layers[LayerType.CORE]['components']), 1)
+>       self.assertEqual(len(new_ship.layers[LayerType.OUTER]['components']), 1)
+E       AssertionError: 0 != 1
+
+tests\unit\test_ship.py:114: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________ TestScalingLogic.test_crew_requirement_scaling_combined ___________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_combined>
+
+    def test_crew_requirement_scaling_combined(self):
+        """
+        Verify scaling works if multiple modifiers affect mass.
+        """
+        # Use simple size x2 and Range Mount x1
+        rg = create_component("railgun")
+>       base_crew = self._get_crew_req(rg)
+
+tests\unit\test_scaling_logic.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_combined>
+comp = None
+
+    def _get_crew_req(self, comp):
+>       ab = comp.get_ability("CrewRequired")
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_scaling_logic.py:80: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestShipClassMutation.test_change_class_migration ______________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship.TestShipClassMutation testMethod=test_change_class_migration>
+
+    def test_change_class_migration(self):
+        """Verify components migrate or are removed during class change."""
+        # Add components to Frigate
+        bridge = create_component('bridge')
+        self.ship.add_component(bridge, LayerType.CORE)
+    
+        railgun = create_component('railgun')
+        self.ship.add_component(railgun, LayerType.OUTER)
+    
+        # Change to "Destroyer" with migration
+        self.ship.change_class("Destroyer", migrate_components=True)
+    
+        # Verify components remained
+        self.assertEqual(self.ship.ship_class, "Destroyer")
+    
+        # Helper to find component in layer
+        def has_comp(layer_type, comp):
+            return comp in self.ship.layers[layer_type]['components']
+    
+        self.assertTrue(has_comp(LayerType.CORE, bridge))
+>       self.assertTrue(has_comp(LayerType.OUTER, railgun))
+E       AssertionError: False is not true
+
+tests\unit\test_ship.py:146: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestMainIntegration.test_game_instantiation _________________
+[gw7] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_main_integration.TestMainIntegration testMethod=test_game_instantiation>
+
+    def test_game_instantiation(self):
+        """Test that the Game class can be instantiated."""
+        # Use real pygame.display.Info() in headless mode rather than mocking it,
+        # as over-mocking display globals can break pygame_gui's internal state.
+    
+        # We allow real set_mode to run (with dummy driver defined in imports)
+        # to ensure surfaces can be converted.
+    
+        try:
+            from game import app
+>           game = app.Game()
+
+tests\unit\test_main_integration.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <game.app.Game object at 0x0000019033FCAF80>
+
+    def __init__(self):
+        pygame.init()
+    
+        # Monitor detection
+        info = pygame.display.Info()
+        monitor_w = info.current_w
+        monitor_h = info.current_h
+    
+        global WIDTH, HEIGHT
+    
+        # Check for forced resolution
+        if args.force_resolution:
+            WIDTH, HEIGHT = 2560, 1600
+        # Logic: Use 4K if available, else 2560x1600, else smaller?
+>       elif monitor_w >= 3840 and monitor_h >= 2160:
+E       TypeError: '>=' not supported between instances of 'MagicMock' and 'int'
+
+game\app.py:71: TypeError
+
+During handling of the above exception, another exception occurred:
+
+self = <unit.test_main_integration.TestMainIntegration testMethod=test_game_instantiation>
+
+    def test_game_instantiation(self):
+        """Test that the Game class can be instantiated."""
+        # Use real pygame.display.Info() in headless mode rather than mocking it,
+        # as over-mocking display globals can break pygame_gui's internal state.
+    
+        # We allow real set_mode to run (with dummy driver defined in imports)
+        # to ensure surfaces can be converted.
+    
+        try:
+            from game import app
+            game = app.Game()
+            self.assertIsNotNone(game)
+            self.assertIsNotNone(game.battle_scene)
+            self.assertIsNotNone(game.battle_scene.engine)
+    
+            # Verify the engine has a logger (instance based)
+            self.assertTrue(hasattr(game.battle_scene.engine, 'logger'))
+    
+            # Verify BATTLE_LOG is NOT a property of the battle module anymore
+            from game.ui.screens import battle_scene
+            self.assertFalse(hasattr(battle_scene, 'BATTLE_LOG'), "battle_scene module should not export global BATTLE_LOG")
+    
+        except ImportError as e:
+            self.fail(f"Game instantiation failed due to ImportError: {e}")
+        except Exception as e:
+>           self.fail(f"Game instantiation failed with exception: {e}")
+E           AssertionError: Game instantiation failed with exception: '>=' not supported between instances of 'MagicMock' and 'int'
+
+tests\unit\test_main_integration.py:61: AssertionError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestScalingLogic.test_crew_requirement_scaling_range_mount __________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_range_mount>
+
+    def test_crew_requirement_scaling_range_mount(self):
+        """
+        Verify Crew Required scales with sqrt(mass) for Range Mount.
+        Range Mount Level 1 -> Mass x3.5 -> Sqrt(3.5).
+        """
+        # Railgun CrewReq: 5
+        rg = create_component("railgun")
+>       base_crew = self._get_crew_req(rg)
+
+tests\unit\test_scaling_logic.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_range_mount>
+comp = None
+
+    def _get_crew_req(self, comp):
+>       ab = comp.get_ability("CrewRequired")
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_scaling_logic.py:80: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________________ TestShip.test_add_component_constraints ___________________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship.TestShip testMethod=test_add_component_constraints>
+
+    def test_add_component_constraints(self):
+        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+    
+        # Bridge is allowed in CORE
+        bridge = create_component('bridge')
+        ship.add_component(bridge, LayerType.CORE)
+        self.assertIn(bridge, ship.layers[LayerType.CORE]['components'])
+    
+        # Railgun allowed in OUTER. Try adding to CORE (should fail or be allowed if logic checks?)
+        # Ship.add_component definition:
+        # if not layer_type in component.allowed_layers: return False
+        railgun = create_component('railgun') # allowed: OUTER
+        result = ship.add_component(railgun, LayerType.CORE)
+        self.assertFalse(result, "Should not allow Railgun in CORE")
+    
+        result_ok = ship.add_component(railgun, LayerType.OUTER)
+>       self.assertTrue(result_ok)
+E       AssertionError: False is not true
+
+tests\unit\test_ship.py:32: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+Error: Attempted to add None component to ship
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestModifierStacking.test_simple_size_mount_hp_multiplier __________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_loading.TestModifierStacking testMethod=test_simple_size_mount_hp_multiplier>
+
+    def test_simple_size_mount_hp_multiplier(self):
+        """simple_size_mount should multiply HP by the scale value."""
+        laser = create_component('laser_cannon')
+>       base_hp = laser.max_hp
+E       AttributeError: 'NoneType' object has no attribute 'max_hp'
+
+tests\unit\test_ship_loading.py:32: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID laser_cannon not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestModifiers.test_modifier_value_persistence ________________
+[gw8] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestModifiers testMethod=test_modifier_value_persistence>
+
+    def test_modifier_value_persistence(self):
+        """Modifier values should persist after recalculate."""
+        if 'facing' in MODIFIER_REGISTRY:
+            railgun = create_component('railgun')
+>           railgun.add_modifier('facing', 90)  # 90 degree facing
+E           AttributeError: 'NoneType' object has no attribute 'add_modifier'
+
+tests\unit\test_modifiers.py:79: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestComponentCloning.test_clone_creates_independent_copy ___________
+[gw12] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestComponentCloning testMethod=test_clone_creates_independent_copy>
+
+    def test_clone_creates_independent_copy(self):
+        """Cloned component should be independent."""
+        original = create_component('railgun')
+>       clone = original.clone()
+E       AttributeError: 'NoneType' object has no attribute 'clone'
+
+tests\unit\test_modifiers.py:99: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestModifierStacking.test_stacked_modifiers_multiplicative __________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_loading.TestModifierStacking testMethod=test_stacked_modifiers_multiplicative>
+
+    def test_stacked_modifiers_multiplicative(self):
+        """Multiple modifiers should stack multiplicatively."""
+        laser = create_component('laser_cannon')
+>       base_hp = laser.max_hp
+E       AttributeError: 'NoneType' object has no attribute 'max_hp'
+
+tests\unit\test_ship_loading.py:59: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID laser_cannon not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestModifierStacking.test_turret_mount_no_hp_change _____________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_loading.TestModifierStacking testMethod=test_turret_mount_no_hp_change>
+
+    def test_turret_mount_no_hp_change(self):
+        """turret_mount should not affect HP (only mass)."""
+        laser = create_component('laser_cannon')
+>       base_hp = laser.max_hp
+E       AttributeError: 'NoneType' object has no attribute 'max_hp'
+
+tests\unit\test_ship_loading.py:75: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID laser_cannon not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestComponentCloning.test_clone_preserves_type ________________
+[gw12] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestComponentCloning testMethod=test_clone_preserves_type>
+
+    def test_clone_preserves_type(self):
+        """Cloned component should be same type."""
+        railgun = create_component('railgun')
+>       clone = railgun.clone()
+E       AttributeError: 'NoneType' object has no attribute 'clone'
+
+tests\unit\test_modifiers.py:110: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestShipResources.test_crew_requirement_failure _______________
+[gw14] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_resources.TestShipResources testMethod=test_crew_requirement_failure>
+
+    def test_crew_requirement_failure(self):
+        """Components should deactivate if there is insufficient crew."""
+        # Add a weapon that requires crew
+        weapon = create_component('railgun') # Usually requires 5 crew
+        self.ship.add_component(weapon, LayerType.OUTER)
+    
+        # Setup: 1 Bridge (5 housing), 1 Crew Quarters (20 housing), 1 Life Support (25 capacity)
+        # Total housing: 25. Total requirement: Bridge (5) + Railgun (5) = 10.
+        # Should be fine.
+        self.ship.recalculate_stats()
+>       self.assertTrue(weapon.is_active)
+E       AttributeError: 'NoneType' object has no attribute 'is_active'
+
+tests\unit\test_ship_resources.py:78: AttributeError
+---------------------------- Captured stdout call -----------------------------
+ERROR creating component railgun: could not convert string to float: '=40 - (0.01 * range_to_target)'
+ERROR creating component laser_cannon: could not convert string to float: '=15 * (1 - 0.00005 * range_to_target)'
+Error: Component ID railgun not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestComponentCloning.test_beam_weapon_clone _________________
+[gw8] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_modifiers.TestComponentCloning testMethod=test_beam_weapon_clone>
+
+    def test_beam_weapon_clone(self):
+        """BeamWeapon should clone correctly."""
+        laser = create_component('laser_cannon')
+>       clone = laser.clone()
+E       AttributeError: 'NoneType' object has no attribute 'clone'
+
+tests\unit\test_modifiers.py:123: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID laser_cannon not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________________ TestShipThemeLogic.test_get_image_metrics __________________
+[gw6] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_theme_logic.TestShipThemeLogic testMethod=test_get_image_metrics>
+mock_load = <MagicMock name='load' id='2098630370416'>
+mock_open_file = <MagicMock name='open' spec='builtin_function_or_method' id='2098630362304'>
+mock_json_load = <MagicMock name='load' id='2098630361728'>
+mock_exists = <MagicMock name='exists' id='2098630319104'>
+mock_scandir = <MagicMock name='scandir' id='2098630309632'>
+mock_log = <MagicMock name='log_error' id='2098630285808'>
+
+    @patch('ship_theme.log_error')
+    @patch('os.scandir')
+    @patch('os.path.exists')
+    @patch('ship_theme.json.load')
+    @patch('builtins.open', new_callable=mock_open)
+    @patch('pygame.image.load')
+    def test_get_image_metrics(self, mock_load, mock_open_file, mock_json_load, mock_exists, mock_scandir, mock_log):
+        """Test that bounding rect is correctly calculated and cached."""
+    
+        theme_name = "MetricsTheme"
+        ship_class = "TestShip"
+        json_content = {
+            "name": theme_name,
+            "images": {
+                ship_class: "game.simulation.entities.ship.png"
+            }
+        }
+    
+        # Mocks setup
+        mock_entry = MagicMock()
+        mock_entry.is_dir.return_value = True
+        mock_entry.path = f"/themes/{theme_name}"
+        mock_scandir.return_value = [mock_entry]
+    
+        mock_exists.return_value = True # Simplify exists checks
+        mock_json_load.return_value = json_content
+    
+        # Create a real surface to avoid MagicMock issues with rects
+        surf = pygame.Surface((20, 20), pygame.SRCALPHA)
+        # Mock convert_alpha to return itself so bounding rect works
+>       surf.convert_alpha = MagicMock(return_value=surf)
+E       AttributeError: 'pygame.surface.Surface' object attribute 'convert_alpha' is read-only
+
+tests\unit\test_ship_theme_logic.py:136: AttributeError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestWeaponBasics.test_beam_weapon_accuracy __________________
+[gw6] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_weapons.TestWeaponBasics testMethod=test_beam_weapon_accuracy>
+
+    def test_beam_weapon_accuracy(self):
+        """Beam weapon accuracy should fall off with distance (via ability)."""
+        laser = create_component('laser_cannon')
+    
+        # Phase 7: Use ability-based access
+>       beam_ab = laser.get_ability('BeamWeaponAbility')
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_weapons.py:64: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID laser_cannon not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+____________________ TestWeaponBasics.test_weapon_cooldown ____________________
+[gw8] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_weapons.TestWeaponBasics testMethod=test_weapon_cooldown>
+
+    def test_weapon_cooldown(self):
+        """Weapon should respect cooldown timer via ability."""
+        railgun = create_component('railgun')
+    
+        # Phase 7: Use ability-based access
+>       weapon_ab = railgun.get_ability('ProjectileWeaponAbility') or railgun.get_ability('WeaponAbility')
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_weapons.py:38: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestWeaponBasics.test_beam_accuracy_clamped _________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_weapons.TestWeaponBasics testMethod=test_beam_accuracy_clamped>
+
+    def test_beam_accuracy_clamped(self):
+        """Beam accuracy should be clamped between 0 and 1 (via ability)."""
+        laser = create_component('laser_cannon')
+    
+        # Phase 7: Use ability-based access
+>       beam_ab = laser.get_ability('BeamWeaponAbility')
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_weapons.py:81: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID laser_cannon not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestWeaponBasics.test_weapon_initialization _________________
+[gw15] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_weapons.TestWeaponBasics testMethod=test_weapon_initialization>
+
+    def test_weapon_initialization(self):
+        """Weapon should initialize with correct stats via ability."""
+        railgun = create_component('railgun')
+    
+        # Phase 7: Use ability-based access
+>       weapon_ab = railgun.get_ability('ProjectileWeaponAbility')
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_weapons.py:26: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestBuilderUISync.test_refresh_controls_syncs_ui _______________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_builder_ui_sync.TestBuilderUISync testMethod=test_refresh_controls_syncs_ui>
+
+    def test_refresh_controls_syncs_ui(self):
+        """Verify that refresh_controls updates UI elements to match ship state."""
+        # 1. Modify Ship State from defaults (Escort, Federation)
+        self.mock_builder.ship.name = "New Name"
+    
+        # Ensure we pick a class that definitely exists and isn't Escort
+        target_class = "Cruiser"
+        if target_class not in VEHICLE_CLASSES:
+             # Fallback if data is different
+             target_class = list(VEHICLE_CLASSES.keys())[-1]
+    
+        self.mock_builder.ship.ship_class = target_class
+        self.mock_builder.ship.theme_id = "Klingon"
+    
+        # Set AI to something non-default
+        # Default is usually optimal_firing_range
+        self.mock_builder.ship.ai_strategy = "kamikaze"
+    
+        # 2. Call Refresh (mocking portrait update to avoid side effects)
+        # 2. Call Refresh (mocking portrait update to avoid side effects)
+        with patch.object(self.panel, 'update_portrait_image') as mock_update_img:
+            self.panel.refresh_controls()
+            mock_update_img.assert_called_once()
+    
+        # 3. Assert UI values match Ship State
+    
+        # Name
+        self.assertEqual(self.panel.name_entry.get_text(), "New Name")
+    
+        # Theme
+        val = self._get_option_value(self.panel.theme_dropdown.selected_option)
+        self.assertEqual(val, "Klingon")
+    
+        # Class
+        val = self._get_option_value(self.panel.class_dropdown.selected_option)
+        self.assertEqual(val, target_class)
+    
+        # AI
+        # AI Strategy Name lookup
+        strat_name = COMBAT_STRATEGIES["kamikaze"]["name"]
+        val = self._get_option_value(self.panel.ai_dropdown.selected_option)
+>       self.assertEqual(val, strat_name)
+E       AssertionError: 'Standard Ranged' != 'Kamikaze'
+E       - Standard Ranged
+E       + Kamikaze
+
+tests\unit\test_builder_ui_sync.py:92: AssertionError
+---------------------------- Captured stdout call -----------------------------
+WARN: C:\Dev\Starship Battles\data\game.simulation.components.component.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\data\game.simulation.components.component.json
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestModifierStacking.test_range_mount_hp_multiplier _____________
+[gw10] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_loading.TestModifierStacking testMethod=test_range_mount_hp_multiplier>
+
+    def test_range_mount_hp_multiplier(self):
+        """range_mount should multiply HP by 3.5^level."""
+        laser = create_component('laser_cannon')
+>       base_hp = laser.max_hp
+E       AttributeError: 'NoneType' object has no attribute 'max_hp'
+
+tests\unit\test_ship_loading.py:45: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID laser_cannon not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+============================== warnings summary ===============================
+simulation_tests\data_driven\test_combat_targeting.py:17: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_combat_targeting.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_engine_physics.py:24: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_engine_physics.py:24: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_engine_physics.py:153: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_engine_physics.py:153: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_extended.py:15: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_extended.py:15: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_extended.py:100: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_extended.py:100: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_extended.py:170: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_extended.py:170: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_requirements.py:14: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_requirements.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:19: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:19: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:76: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:76: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:104: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:104: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:182: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:182: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:219: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:219: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:310: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:310: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+test_framework\runner.py:14: 16 warnings
+  C:\Dev\Starship Battles\test_framework\runner.py:14: PytestCollectionWarning: cannot collect test class 'TestRunner' because it has a __init__ constructor (from: ui/test_lab_scene.py)
+    class TestRunner:
+
+ui\test_lab_scene.py:13: 16 warnings
+  C:\Dev\Starship Battles\ui\test_lab_scene.py:13: PytestCollectionWarning: cannot collect test class 'TestLabScene' because it has a __init__ constructor (from: ui/test_lab_scene.py)
+    class TestLabScene:
+
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_multi_selection_logic.py: 3 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:92: UserWarning: Clamping shadow_width of: 2, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_multi_selection_logic.py: 3 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:113: UserWarning: Clamping border_width of: 1, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Energy: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Energy Gen: - size diff: (-14, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Thrust: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Acceleration: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Top Speed: - size diff: (-7, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Maneuvering Points: - size diff: (-108, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Turning Rate: - size diff: (-24, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Shields: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Regen Cost: - size diff: (-13, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Armor HP: - size diff: (-37, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Dmg Ignore: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen/Hit: - size diff: (-50, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Targets: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Evasion Score: - size diff: (-28, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Targeting Score: - size diff: (-42, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew Required: - size diff: (-36, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew On Board: - size diff: (-38, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Life Support: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Fighter Support \u2500\u2500 - size diff: (-11, 5)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Cap: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Launch/Wave: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Time: - size diff: (-22, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Recommendations \u2500\u2500 - size diff: (-30, 0)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_multi_selection_logic
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_append_integration
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_homogeneity_enforcement
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_selection_integration
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_reselection_behavior
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_toggle_behavior
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_font_dictionary.py:405: UserWarning: Finding font with id: noto_sans_bold_aa_14 that is not already loaded.
+  Preload this font with {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': '1'}
+    warnings.warn(warning_string, UserWarning)
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\html_parser.py:179: UserWarning: Unsupported HTML Tag <magicmock>. Check documentation for full range of supported tags.
+    warnings.warn(warning_text, UserWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_ammo
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_beam
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_multiple_weapons
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_single_weapon
+FAILED tests/unit/test_ai.py::TestAIStrategyStates::test_attack_run_transitions_to_retreat
+FAILED tests/unit/test_component_modifiers_extended.py::TestModifierStackingIntegration::test_multiple_modifiers_order_independent
+FAILED tests/unit/test_component_modifiers_extended.py::TestModifierStackingIntegration::test_range_mount_increases_component_mass
+FAILED tests/unit/test_components.py::TestModifierStacking::test_single_range_modifier
+FAILED tests/unit/test_components.py::TestModifierStacking::test_single_size_modifier
+FAILED tests/unit/test_modifiers.py::TestModifiers::test_add_modifier_to_component
+FAILED tests/unit/test_components.py::TestComponents::test_create_component_types
+FAILED tests/unit/test_combat.py::TestWeaponCooldowns::test_weapon_cooldown_decreases
+FAILED tests/unit/test_combat_endurance.py::TestCombatEndurance::test_energy_endurance_drain
+FAILED tests/unit/test_modifiers.py::TestModifiers::test_get_modifier_returns_none_for_missing
+FAILED tests/unit/test_components.py::TestModifierStacking::test_triple_modifier_stacking
+FAILED tests/unit/test_modifiers.py::TestModifiers::test_modifier_effects_on_stats
+FAILED tests/unit/test_components.py::TestModifierOrder::test_order_independence
+FAILED tests/unit/test_components.py::TestModifierStacking::test_hp_stacking
+FAILED tests/unit/test_components.py::TestTurretMount::test_turret_diminishing_returns
+FAILED tests/unit/test_components.py::TestTurretMount::test_turret_0_degrees_no_change
+FAILED tests/unit/test_components.py::TestModifierStacking::test_multiplicative_stacking_size_and_hardened
+FAILED tests/unit/test_combat_endurance.py::TestCombatEndurance::test_ordnance_endurance
+FAILED tests/unit/test_components.py::TestModifierStacking::test_multiplicative_stacking_size_and_range
+FAILED tests/unit/test_components.py::TestTurretMount::test_turret_stacks_with_size
+FAILED tests/unit/test_components.py::TestTurretMount::test_turret_180_only_slightly_more_than_90
+FAILED tests/unit/test_combat_endurance.py::TestCombatEndurance::test_standard_components_defaults
+FAILED tests/unit/test_components.py::TestModifierStacking::test_range_stacking
+FAILED tests/unit/test_planetary_complex.py::TestPlanetaryComplex::test_accepts_ship_components
+FAILED tests/unit/test_scaling_logic.py::TestScalingLogic::test_crew_requirement_scaling_size_mount
+FAILED tests/unit/test_designs.py::TestDesignFactories::test_create_interceptor_has_weapons
+FAILED tests/unit/test_scaling_logic.py::TestScalingLogic::test_consumption_scaling_linear
+FAILED tests/unit/test_ship.py::TestShip::test_serialization - AssertionError...
+FAILED tests/unit/test_scaling_logic.py::TestScalingLogic::test_crew_requirement_scaling_combined
+FAILED tests/unit/test_ship.py::TestShipClassMutation::test_change_class_migration
+FAILED tests/unit/test_main_integration.py::TestMainIntegration::test_game_instantiation
+FAILED tests/unit/test_scaling_logic.py::TestScalingLogic::test_crew_requirement_scaling_range_mount
+FAILED tests/unit/test_ship.py::TestShip::test_add_component_constraints - As...
+FAILED tests/unit/test_ship_loading.py::TestModifierStacking::test_simple_size_mount_hp_multiplier
+FAILED tests/unit/test_modifiers.py::TestModifiers::test_modifier_value_persistence
+FAILED tests/unit/test_modifiers.py::TestComponentCloning::test_clone_creates_independent_copy
+FAILED tests/unit/test_ship_loading.py::TestModifierStacking::test_stacked_modifiers_multiplicative
+FAILED tests/unit/test_ship_loading.py::TestModifierStacking::test_turret_mount_no_hp_change
+FAILED tests/unit/test_modifiers.py::TestComponentCloning::test_clone_preserves_type
+FAILED tests/unit/test_ship_resources.py::TestShipResources::test_crew_requirement_failure
+FAILED tests/unit/test_modifiers.py::TestComponentCloning::test_beam_weapon_clone
+FAILED tests/unit/test_ship_theme_logic.py::TestShipThemeLogic::test_get_image_metrics
+FAILED tests/unit/test_weapons.py::TestWeaponBasics::test_beam_weapon_accuracy
+FAILED tests/unit/test_weapons.py::TestWeaponBasics::test_weapon_cooldown - A...
+FAILED tests/unit/test_weapons.py::TestWeaponBasics::test_beam_accuracy_clamped
+FAILED tests/unit/test_weapons.py::TestWeaponBasics::test_weapon_initialization
+FAILED tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+FAILED tests/unit/test_ship_loading.py::TestModifierStacking::test_range_mount_hp_multiplier
+=========== 52 failed, 535 passed, 1 skipped, 340 warnings in 5.01s ===========

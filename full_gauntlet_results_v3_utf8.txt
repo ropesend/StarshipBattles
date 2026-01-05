@@ -1,0 +1,2085 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+created: 16/16 workers
+16 workers [588 items]
+
+......................................E.E...E.....E..E.....EE..EE....... [ 12%]
+..EE.E..E..E.................................E.......................... [ 24%]
+..................................E......FE.F.F...E.....F.E......F.FE... [ 36%]
+.F..E..E.F.E.....E...................................................... [ 48%]
+........................................................................ [ 61%]
+..............F...........F...............................F.F...F....F.. [ 73%]
+F...F....F........F................F.................F.F................ [ 85%]
+.......................................F.......F...F.......F..FF...F..F. [ 97%]
+.......F....                                                             [100%]
+=================================== ERRORS ====================================
+_ ERROR at setup of TestVehicleClassLoading.test_satellite_has_no_propulsion_requirement _
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestVehicleClassLoading'>
+
+    @classmethod
+    def setUpClass(cls):
+        # Load from TEST data explicitly
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:25: NameError
+_ ERROR at setup of TestComponentRestrictions.test_ship_accepts_ship_components _
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestComponentRestrictions'>
+
+    @classmethod
+    def setUpClass(cls):
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:109: NameError
+______ ERROR at setup of TestVehicleClassLoading.test_ship_types_defined ______
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestVehicleClassLoading'>
+
+    @classmethod
+    def setUpClass(cls):
+        # Load from TEST data explicitly
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:25: NameError
+_ ERROR at setup of TestComponentRestrictions.test_ship_rejects_fighter_components _
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestComponentRestrictions'>
+
+    @classmethod
+    def setUpClass(cls):
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:109: NameError
+_______ ERROR at setup of TestShipVehicleType.test_default_vehicle_type _______
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestShipVehicleType'>
+
+    @classmethod
+    def setUpClass(cls):
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:81: NameError
+___ ERROR at setup of TestShipVehicleType.test_ship_vehicle_type_assignment ___
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestShipVehicleType'>
+
+    @classmethod
+    def setUpClass(cls):
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:81: NameError
+_ ERROR at setup of TestSatelliteLogic.test_satellite_ignores_crew_requirements _
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestSatelliteLogic'>
+
+    @classmethod
+    def setUpClass(cls):
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:187: NameError
+____ ERROR at setup of TestSatelliteAI.test_satellite_ai_does_not_navigate ____
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestSatelliteAI'>
+
+    @classmethod
+    def setUpClass(cls):
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:224: NameError
+_ ERROR at setup of TestComponentRestrictions.test_component_allowed_vehicle_types_list _
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestComponentRestrictions'>
+
+    @classmethod
+    def setUpClass(cls):
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:109: NameError
+_ ERROR at setup of TestComponentRestrictions.test_fighter_accepts_fighter_components _
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestComponentRestrictions'>
+
+    @classmethod
+    def setUpClass(cls):
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:109: NameError
+__ ERROR at setup of TestSatelliteAI.test_satellite_ai_fires_when_has_target __
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestSatelliteAI'>
+
+    @classmethod
+    def setUpClass(cls):
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:224: NameError
+_ ERROR at setup of TestComponentRestrictions.test_fighter_rejects_ship_components _
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestComponentRestrictions'>
+
+    @classmethod
+    def setUpClass(cls):
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:109: NameError
+______ ERROR at setup of TestSatelliteAI.test_satellite_ai_still_targets ______
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestSatelliteAI'>
+
+    @classmethod
+    def setUpClass(cls):
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:224: NameError
+_ ERROR at setup of TestComponentRestrictions.test_satellite_accepts_weapons __
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestComponentRestrictions'>
+
+    @classmethod
+    def setUpClass(cls):
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:109: NameError
+_ ERROR at setup of TestComponentRestrictions.test_satellite_rejects_engines_and_thrusters _
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestComponentRestrictions'>
+
+    @classmethod
+    def setUpClass(cls):
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:109: NameError
+____ ERROR at setup of TestVehicleClassLoading.test_fighter_classes_loaded ____
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestVehicleClassLoading'>
+
+    @classmethod
+    def setUpClass(cls):
+        # Load from TEST data explicitly
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:25: NameError
+_____ ERROR at setup of TestVehicleClassLoading.test_fighter_mass_ranges ______
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestVehicleClassLoading'>
+
+    @classmethod
+    def setUpClass(cls):
+        # Load from TEST data explicitly
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:25: NameError
+___ ERROR at setup of TestVehicleClassLoading.test_satellite_classes_loaded ___
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_vehicle_types.TestVehicleClassLoading'>
+
+    @classmethod
+    def setUpClass(cls):
+        # Load from TEST data explicitly
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_vehicle_types.py:25: NameError
+_ ERROR at setup of TestEnginePhysics.test_ENG_001_base_speed_accel_calculation _
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_engine_physics.TestEnginePhysics'>
+
+    @classmethod
+    def setUpClass(cls):
+        # pygame.init() removed for session isolation
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_engine_physics.py:30: NameError
+_ ERROR at setup of TestEnginePhysics.test_ENG_002_speed_decreases_linearly_with_mass _
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_engine_physics.TestEnginePhysics'>
+
+    @classmethod
+    def setUpClass(cls):
+        # pygame.init() removed for session isolation
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_engine_physics.py:30: NameError
+_ ERROR at setup of TestEnginePhysics.test_ENG_003_accel_decreases_quadratically_with_mass _
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_engine_physics.TestEnginePhysics'>
+
+    @classmethod
+    def setUpClass(cls):
+        # pygame.init() removed for session isolation
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_engine_physics.py:30: NameError
+_ ERROR at setup of TestEnginePhysics.test_ENG_004_speed_increases_linearly_with_thrust _
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_engine_physics.TestEnginePhysics'>
+
+    @classmethod
+    def setUpClass(cls):
+        # pygame.init() removed for session isolation
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_engine_physics.py:30: NameError
+____ ERROR at setup of TestEnginePhysicsFormulas.test_formula_acceleration ____
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_engine_physics.TestEnginePhysicsFormulas'>
+
+    @classmethod
+    def setUpClass(cls):
+        # pygame.init() removed for session isolation
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_engine_physics.py:159: NameError
+_____ ERROR at setup of TestEnginePhysicsFormulas.test_formula_max_speed ______
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+cls = <class 'test_engine_physics.TestEnginePhysicsFormulas'>
+
+    @classmethod
+    def setUpClass(cls):
+        # pygame.init() removed for session isolation
+>       load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
+E       NameError: name 'load_vehicle_classes' is not defined
+
+simulation_tests\data_driven\test_engine_physics.py:159: NameError
+================================== FAILURES ===================================
+_______________ TestToHitProfile.test_larger_ship_easier_to_hit _______________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_ship_extended.TestToHitProfile testMethod=test_larger_ship_easier_to_hit>
+
+    def test_larger_ship_easier_to_hit(self):
+        """Larger ships should have LOWER Defense Score (Easier to Hit)."""
+        # Small ship - TestShip_S_2L (Max Mass 2000)
+        small = Ship("Small", 0, 0, (255, 255, 255), ship_class="TestShip_S_2L")
+        small.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        small.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        small.add_component(create_component('test_life_support'), LayerType.CORE)
+        small.add_component(create_component('test_engine_std'), LayerType.CORE)
+        small.recalculate_stats()
+    
+        # Large ship - TestShip_L_4L (Max Mass 10000)
+        large = Ship("Large", 0, 0, (255, 255, 255), ship_class="TestShip_L_4L")
+        large.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        large.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        large.add_component(create_component('test_life_support'), LayerType.CORE)
+        large.add_component(create_component('test_engine_std'), LayerType.OUTER)
+        # Add massive bulk
+        for _ in range(20):
+             # Adding heavy structure/armor to increase mass/radius
+             large.add_component(create_component('test_armor_std'), LayerType.ARMOR)
+    
+        large.recalculate_stats()
+    
+        # Logic: Defense Score = SizeScore + ManueverScore
+        # Large Size = Negative Score. Small Size = Less Negative/Positive.
+        # So Large Ship Score < Small Ship Score
+>       self.assertLess(large.to_hit_profile, small.to_hit_profile)
+E       AssertionError: 0.8333333333333333 not less than 0.8333333333333333
+
+simulation_tests\data_driven\test_ship_extended.py:156: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_engine_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_armor_std not found in registry.
+Error: Attempted to add None component to ship
+_______________ TestCombatTargeting.test_firing_arc_validation ________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_firing_arc_validation>
+
+    def test_firing_arc_validation(self):
+        """Test that weapons do not fire if target is outside firing arc."""
+        weapon = ProjectileWeapon({
+            'name': 'TestGun', 'id':'test_gun', 'firing_arc': 45, 'range': 500,
+            'projectile_speed': 1000, 'damage': 10, 'ammo_cost': 1, 'cooldown': 0,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        weapon.facing_angle = 0 # Right
+        weapon.is_active = True
+        weapon.cooldown_timer = 0
+        self.attacker.add_component(weapon, LayerType.OUTER)
+        self.attacker.angle = 0
+    
+        # Case 1: Target directly ahead (Valid)
+        self.target.position = pygame.math.Vector2(200, 0) # 0 degrees
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1, "Should fire at target directly ahead")
+E       AssertionError: 0 != 1 : Should fire at target directly ahead
+
+simulation_tests\data_driven\test_combat_targeting.py:145: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000015B15078730>
+DEBUG: Add bridge success: True, total core: 1
+_______________ TestCombatTargeting.test_target_prioritization ________________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_target_prioritization>
+
+    def test_target_prioritization(self):
+        """Test that secondary targets are checked if current target is invalid or out of arc."""
+        self.attacker.max_targets = 2
+    
+        # Weapon with narrow arc
+        weapon = ProjectileWeapon({
+            'name': 'Gun', 'id':'gun', 'firing_arc': 45, 'range': 500,
+            'projectile_speed': 1000, 'damage':10, 'ammo_cost':1,
+             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        weapon.facing_angle = 0
+        weapon.is_active = True
+        self.attacker.add_component(weapon, LayerType.OUTER)
+    
+        # Target 1: Out of Arc (Behind)
+        t1 = Ship("T1", -200, 0, (0,0,0))
+        t1.is_alive = True
+        t1.team_id = 1
+        t1.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+    
+        # Target 2: Valid (In front)
+        t2 = Ship("T2", 200, 0, (0,0,0))
+        t2.is_alive = True
+        t2.team_id = 1
+        t2.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+    
+        self.attacker.current_target = t1
+        self.attacker.secondary_targets = [t2]
+    
+        self.attacker.is_derelict = False
+        self.attacker.max_targets = 2
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1)
+E       AssertionError: 0 != 1
+
+simulation_tests\data_driven\test_combat_targeting.py:219: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x00000193991746D0>
+DEBUG: Add bridge success: True, total core: 1
+__________ TestMaxWeaponRange.test_max_weapon_range_multiple_weapons __________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_ship_extended.TestMaxWeaponRange testMethod=test_max_weapon_range_multiple_weapons>
+
+    def test_max_weapon_range_multiple_weapons(self):
+        """Ship with multiple weapons should return longest range."""
+        ship = Ship("HeavilyArmed", 0, 0, (255, 255, 255))
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
+    
+        # Add different weapons
+        railgun = create_component('test_weapon_proj_fixed')
+        laser = create_component('test_weapon_beam_std')
+        ship.add_component(railgun, LayerType.OUTER)
+        ship.add_component(laser, LayerType.OUTER)
+        ship.recalculate_stats()
+    
+>       expected_max = max(railgun.range, laser.range)
+E       AttributeError: 'NoneType' object has no attribute 'range'
+
+simulation_tests\data_driven\test_ship_extended.py:223: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_weapon_proj_fixed not found in registry.
+Error: Component ID test_weapon_beam_std not found in registry.
+Error: Attempted to add None component to ship
+Error: Attempted to add None component to ship
+_____________ TestCombatTargeting.test_resource_consumption_ammo ______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_resource_consumption_ammo>
+
+    def test_resource_consumption_ammo(self):
+        """Verify ammo consumption for ProjectileWeapon."""
+        gun = ProjectileWeapon({
+             'name': 'Cannon', 'id':'cannon', 'ammo_cost': 5, 'range': 500,
+            'damage': 10, 'firing_arc': 360, 'cooldown': 0, 'projectile_speed': 1000,
+             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        gun.is_active = True
+        self.attacker.add_component(gun, LayerType.OUTER)
+        self.attacker.current_ammo = 10
+        self.attacker.current_energy = 1000
+    
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        self.attacker.fire_weapons()
+>       self.assertEqual(self.attacker.current_ammo, 5)
+E       AssertionError: 10 != 5
+
+simulation_tests\data_driven\test_combat_targeting.py:294: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000015B204597B0>
+DEBUG: Add bridge success: True, total core: 1
+___________ TestMaxWeaponRange.test_max_weapon_range_single_weapon ____________
+[gw2] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_ship_extended.TestMaxWeaponRange testMethod=test_max_weapon_range_single_weapon>
+
+    def test_max_weapon_range_single_weapon(self):
+        """Ship with one weapon should return that weapon's range."""
+        ship = Ship("Armed", 0, 0, (255, 255, 255))
+        ship.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+        ship.add_component(create_component('test_crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('test_life_support'), LayerType.CORE)
+        railgun = create_component('test_weapon_proj_fixed')
+        ship.add_component(railgun, LayerType.OUTER)
+        ship.recalculate_stats()
+    
+>       self.assertEqual(ship.max_weapon_range, railgun.range)
+E       AttributeError: 'NoneType' object has no attribute 'range'
+
+simulation_tests\data_driven\test_ship_extended.py:207: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Warning: unit_tests/data/test_vehicleclasses.json not found, using defaults
+WARN: unit_tests/data/test_components.json not found in CWD (C:\Dev\Starship Battles).
+ERROR: components file not found at C:\Dev\Starship Battles\game\simulation\components\unit_tests/data/test_components.json
+Error: Component ID test_bridge_basic not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID test_weapon_proj_fixed not found in registry.
+Error: Attempted to add None component to ship
+_____________ TestCombatTargeting.test_resource_consumption_beam ______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_resource_consumption_beam>
+
+    def test_resource_consumption_beam(self):
+        """Verify energy consumption for BeamWeapon."""
+        beam = BeamWeapon({
+            'name': 'Laser', 'id':'laser', 'energy_cost': 50, 'range': 500,
+            'damage': 10, 'firing_arc': 360, 'cooldown': 0,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        beam.is_active = True
+        self.attacker.add_component(beam, LayerType.OUTER)
+        self.attacker.current_energy = 100
+    
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        self.attacker.fire_weapons()
+>       self.assertEqual(self.attacker.current_energy, 50, "Should consume 50 energy")
+E       AssertionError: 100 != 50 : Should consume 50 energy
+
+simulation_tests\data_driven\test_combat_targeting.py:265: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000015B20422CB0>
+DEBUG: Add bridge success: True, total core: 1
+_________________ TestCombatTargeting.test_seeker_ignores_arc _________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_seeker_ignores_arc>
+
+    def test_seeker_ignores_arc(self):
+        """Verify SeekerWeapon fires even if target is outside arc."""
+        missile_launcher = SeekerWeapon({
+            'name': 'Missile', 'id':'test_missile', 'firing_arc': 10, 'range': 1000,
+            'projectile_speed': 500, 'ammo_cost': 1, 'damage': 10, 'endurance': 100,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        missile_launcher.facing_angle = 0
+        missile_launcher.is_active = True
+        self.attacker.add_component(missile_launcher, LayerType.OUTER)
+    
+        # Target behind
+        self.target.position = pygame.math.Vector2(-200, 0)
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+    
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1, "Seeker weapon should fire regardless of arc")
+E       AssertionError: 0 != 1 : Seeker weapon should fire regardless of arc
+
+simulation_tests\data_driven\test_combat_targeting.py:182: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x0000015B2045E950>
+DEBUG: Add bridge success: True, total core: 1
+________________ TestPlanetaryComplex.test_rejects_propulsion _________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_planetary_complex.TestPlanetaryComplex testMethod=test_rejects_propulsion>
+
+    def test_rejects_propulsion(self):
+        """Verify it rejects engines and thrusters."""
+        complex_ship = Ship("Test Complex", 0, 0, (255, 255, 255),
+                          ship_class="Planetary Complex (Tier 1)")
+    
+>       engine = COMPONENT_REGISTRY["standard_engine"].clone()
+E       KeyError: 'standard_engine'
+
+tests\unit\test_planetary_complex.py:71: KeyError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestPlanetaryComplex.test_rejects_ship_bridge ________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_planetary_complex.TestPlanetaryComplex testMethod=test_rejects_ship_bridge>
+
+    def test_rejects_ship_bridge(self):
+        """Verify it rejects standard Ship Bridge."""
+        complex_ship = Ship("Test Complex", 0, 0, (255, 255, 255),
+                          ship_class="Planetary Complex (Tier 1)")
+    
+>       bridge = COMPONENT_REGISTRY["bridge"].clone()
+E       KeyError: 'bridge'
+
+tests\unit\test_planetary_complex.py:84: KeyError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestScalingLogic.test_crew_requirement_scaling_size_mount __________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_size_mount>
+
+    def test_crew_requirement_scaling_size_mount(self):
+        """
+        Verify Crew Required scales with sqrt(mass) for Size Mount.
+        Size Mount x4 -> Mass x4 -> Sqrt(4) = 2x Crew Req.
+        """
+        # Railgun has CrewRequired: 5
+        rg = create_component("railgun")
+>       base_crew = self._get_crew_req(rg)
+
+tests\unit\test_scaling_logic.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_size_mount>
+comp = None
+
+    def _get_crew_req(self, comp):
+>       ab = comp.get_ability("CrewRequired")
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_scaling_logic.py:80: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestScalingLogic.test_consumption_scaling_linear _______________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_consumption_scaling_linear>
+
+    def test_consumption_scaling_linear(self):
+        """Test linear consumption scaling."""
+        engine = create_component('standard_engine')
+    
+        # Get base consumption
+        base_cons = 0
+        from game.simulation.systems.resource_manager import ResourceConsumption
+>       for ab in engine.ability_instances:
+E       AttributeError: 'NoneType' object has no attribute 'ability_instances'
+
+tests\unit\test_scaling_logic.py:24: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID standard_engine not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________ TestSeekerRange.test_seeker_initial_range_is_80_percent ___________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_seeker_range.TestSeekerRange testMethod=test_seeker_initial_range_is_80_percent>
+
+    def test_seeker_initial_range_is_80_percent(self):
+        """Test that seeker weapon range is 80% of speed * endurance (via ability)."""
+        missile = create_component('capital_missile')
+    
+        # Phase 7: Use ability-based access
+>       self.assertTrue(missile.has_ability('SeekerWeaponAbility'))
+E       AttributeError: 'NoneType' object has no attribute 'has_ability'
+
+tests\unit\test_seeker_range.py:19: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID capital_missile not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________ TestScalingLogic.test_crew_requirement_scaling_combined ___________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_combined>
+
+    def test_crew_requirement_scaling_combined(self):
+        """
+        Verify scaling works if multiple modifiers affect mass.
+        """
+        # Use simple size x2 and Range Mount x1
+        rg = create_component("railgun")
+>       base_crew = self._get_crew_req(rg)
+
+tests\unit\test_scaling_logic.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_combined>
+comp = None
+
+    def _get_crew_req(self, comp):
+>       ab = comp.get_ability("CrewRequired")
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_scaling_logic.py:80: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______________ TestSeekerRange.test_seeker_range_with_modifier _______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_seeker_range.TestSeekerRange testMethod=test_seeker_range_with_modifier>
+
+    def test_seeker_range_with_modifier(self):
+        """Test that range modifier works on top of 80% calculation.
+    
+        Note: Phase 7 aliased SeekerWeapon to Component, so the old
+        _apply_custom_stats logic that recalculated range is gone.
+        This test now verifies the modifier affects endurance_mult stat.
+        """
+        missile = create_component('capital_missile')
+    
+        from game.simulation.components.component import load_modifiers
+        load_modifiers("data/modifiers.json")
+    
+        # Get base values
+>       seeker_ab = missile.get_ability('SeekerWeaponAbility')
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_seeker_range.py:42: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID capital_missile not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestScalingLogic.test_crew_requirement_scaling_range_mount __________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_range_mount>
+
+    def test_crew_requirement_scaling_range_mount(self):
+        """
+        Verify Crew Required scales with sqrt(mass) for Range Mount.
+        Range Mount Level 1 -> Mass x3.5 -> Sqrt(3.5).
+        """
+        # Railgun CrewReq: 5
+        rg = create_component("railgun")
+>       base_crew = self._get_crew_req(rg)
+
+tests\unit\test_scaling_logic.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unit.test_scaling_logic.TestScalingLogic testMethod=test_crew_requirement_scaling_range_mount>
+comp = None
+
+    def _get_crew_req(self, comp):
+>       ab = comp.get_ability("CrewRequired")
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_scaling_logic.py:80: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID railgun not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________________ TestShip.test_serialization _________________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship.TestShip testMethod=test_serialization>
+
+    def test_serialization(self):
+        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+        # Add components
+        ship.add_component(create_component('bridge'), LayerType.CORE)
+        ship.add_component(create_component('railgun'), LayerType.OUTER)
+    
+        data = ship.to_dict()
+    
+        self.assertEqual(data['name'], "TestShip")
+        self.assertTrue("layers" in data)
+        self.assertTrue("CORE" in data["layers"])
+>       self.assertTrue(len(data["layers"]["CORE"]) > 0)
+E       AssertionError: False is not true
+
+tests\unit\test_ship.py:107: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID bridge not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID railgun not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestShipClassMutation.test_change_class_migration ______________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship.TestShipClassMutation testMethod=test_change_class_migration>
+
+    def test_change_class_migration(self):
+        """Verify components migrate or are removed during class change."""
+        # Add components to Frigate
+        bridge = create_component('bridge')
+        self.ship.add_component(bridge, LayerType.CORE)
+    
+        railgun = create_component('railgun')
+        self.ship.add_component(railgun, LayerType.OUTER)
+    
+        # Change to "Destroyer" with migration
+        self.ship.change_class("Destroyer", migrate_components=True)
+    
+        # Verify components remained
+        self.assertEqual(self.ship.ship_class, "Destroyer")
+    
+        # Helper to find component in layer
+        def has_comp(layer_type, comp):
+            return comp in self.ship.layers[layer_type]['components']
+    
+>       self.assertTrue(has_comp(LayerType.CORE, bridge))
+E       AssertionError: False is not true
+
+tests\unit\test_ship.py:145: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID bridge not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID railgun not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+____ TestShipPhysicsThrust.test_update_physics_accelerates_when_thrusting _____
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_physics_mixin.TestShipPhysicsThrust testMethod=test_update_physics_accelerates_when_thrusting>
+
+    def test_update_physics_accelerates_when_thrusting(self):
+        """Speed should increase toward max when thrusting."""
+        initial_speed = self.ship.current_speed
+        self.assertEqual(initial_speed, 0)
+    
+        # Thrust and update
+        self.ship.thrust_forward()
+        self.ship.update_physics_movement()
+    
+        # Speed should have increased
+>       self.assertGreater(self.ship.current_speed, initial_speed)
+E       AssertionError: 0.0 not greater than 0.0
+
+tests\unit\test_ship_physics_mixin.py:80: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID bridge not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID crew_quarters not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID life_support not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID standard_engine not found in registry.
+Error: Attempted to add None component to ship
+Error: Component ID fuel_tank not found in registry.
+Error: Attempted to add None component to ship
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+________________ TestDetailPanelRendering.test_html_modifiers _________________
+[gw8] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1248: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+self = <unit.test_detail_panel_rendering.TestDetailPanelRendering testMethod=test_html_modifiers>
+
+    def setUp(self):
+        pygame.init()
+        pygame.font.init()
+        # Delayed import to allow pygame init
+        from ui.builder.detail_panel import ComponentDetailPanel
+        self.ComponentDetailPanel = ComponentDetailPanel
+    
+        # Mock Pygame and UI Manager
+        self.mock_manager = MagicMock(spec=pygame_gui.UIManager)
+    
+        # Patch pygame.Rect to behave like a real Rect for layout logic
+        self.rect_patcher = patch('pygame.Rect')
+        self.MockRect = self.rect_patcher.start()
+        # Side effect to return a mock that stores x,y,w,h
+        def mock_rect(*args):
+            r = MagicMock()
+            if len(args) == 4:
+                r.x, r.y, r.width, r.height = args
+            elif len(args) == 1 and isinstance(args[0], tuple) and len(args[0]) == 4:
+                r.x, r.y, r.width, r.height = args[0]
+            else:
+                 # Default fallback
+                 r.x, r.y, r.width, r.height = 0, 0, 100, 100
+    
+            r.bottom = r.y + r.height
+            return r
+        self.MockRect.side_effect = mock_rect
+    
+        # Patch UI elements to avoid actual GUI creation
+        self.uipanel_patch = patch('ui.builder.detail_panel.UIPanel')
+        self.uilabel_patch = patch('ui.builder.detail_panel.UILabel')
+        self.uiimage_patch = patch('ui.builder.detail_panel.UIImage')
+        self.uibutton_patch = patch('ui.builder.detail_panel.UIButton')
+    
+        # Patch both possible import locations for UITextBox to catch local import
+        self.uitextbox_patch = patch('pygame_gui.elements.UITextBox')
+        self.uitextbox_patch_real = patch('pygame_gui.elements.ui_text_box.UITextBox')
+    
+>       self.uipanel_patch.start()
+
+tests\unit\test_detail_panel_rendering.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1595: in start
+    result = self.__enter__()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1431: in __enter__
+    self.target = self.getter()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1618: in <lambda>
+    getter = lambda: _importer(target)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1261: in _importer
+    thing = _dot_lookup(thing, comp, import_path)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+            return getattr(thing, comp)
+        except AttributeError:
+            __import__(import_path)
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1251: AttributeError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________________ TestShipThemeLogic.test_get_image_metrics __________________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_theme_logic.TestShipThemeLogic testMethod=test_get_image_metrics>
+mock_load = <MagicMock name='load' id='2244067548688'>
+mock_open_file = <MagicMock name='open' spec='builtin_function_or_method' id='2244067556752'>
+mock_json_load = <MagicMock name='load' id='2244067688896'>
+mock_exists = <MagicMock name='exists' id='2244067784928'>
+mock_scandir = <MagicMock name='scandir' id='2244066887328'>
+mock_log = <MagicMock name='log_error' id='2244066054768'>
+
+    @patch('ship_theme.log_error')
+    @patch('os.scandir')
+    @patch('os.path.exists')
+    @patch('ship_theme.json.load')
+    @patch('builtins.open', new_callable=mock_open)
+    @patch('pygame.image.load')
+    def test_get_image_metrics(self, mock_load, mock_open_file, mock_json_load, mock_exists, mock_scandir, mock_log):
+        """Test that bounding rect is correctly calculated and cached."""
+    
+        theme_name = "MetricsTheme"
+        ship_class = "TestShip"
+        json_content = {
+            "name": theme_name,
+            "images": {
+                ship_class: "game.simulation.entities.ship.png"
+            }
+        }
+    
+        # Mocks setup
+        mock_entry = MagicMock()
+        mock_entry.is_dir.return_value = True
+        mock_entry.path = f"/themes/{theme_name}"
+        mock_scandir.return_value = [mock_entry]
+    
+        mock_exists.return_value = True # Simplify exists checks
+        mock_json_load.return_value = json_content
+    
+        # Create a mock surface to avoid environment-specific convert_alpha behavior
+        mock_surface = MagicMock(spec=pygame.Surface)
+        mock_surface.get_size.return_value = (20, 20)
+        # Use a real Rect for the mock to return
+        mock_rect = pygame.Rect(5, 5, 10, 10)
+        mock_surface.get_bounding_rect.return_value = mock_rect
+        mock_surface.convert_alpha.return_value = mock_surface
+    
+        mock_load.return_value = mock_surface
+    
+        # Initialize
+        self.manager.initialize("/fake/base/path")
+    
+        # Verify no errors logged
+        mock_log.assert_not_called()
+    
+        # Verify metrics
+        rect = self.manager.get_image_metrics(theme_name, ship_class)
+        self.assertIsNotNone(rect)
+>       self.assertEqual(rect.x, 5)
+E       AssertionError: 0 != 5
+
+tests\unit\test_ship_theme_logic.py:152: AssertionError
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 1 ship themes: ['MetricsTheme']
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestWeaponBasics.test_beam_accuracy_clamped _________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_weapons.TestWeaponBasics testMethod=test_beam_accuracy_clamped>
+
+    def test_beam_accuracy_clamped(self):
+        """Beam accuracy should be clamped between 0 and 1 (via ability)."""
+        laser = create_component('laser_cannon')
+    
+        # Phase 7: Use ability-based access
+>       beam_ab = laser.get_ability('BeamWeaponAbility')
+E       AttributeError: 'NoneType' object has no attribute 'get_ability'
+
+tests\unit\test_weapons.py:81: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID laser_cannon not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestDetailPanelRendering.test_html_stats_dynamic_abilities __________
+[gw8] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1248: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+self = <unit.test_detail_panel_rendering.TestDetailPanelRendering testMethod=test_html_stats_dynamic_abilities>
+
+    def setUp(self):
+        pygame.init()
+        pygame.font.init()
+        # Delayed import to allow pygame init
+        from ui.builder.detail_panel import ComponentDetailPanel
+        self.ComponentDetailPanel = ComponentDetailPanel
+    
+        # Mock Pygame and UI Manager
+        self.mock_manager = MagicMock(spec=pygame_gui.UIManager)
+    
+        # Patch pygame.Rect to behave like a real Rect for layout logic
+        self.rect_patcher = patch('pygame.Rect')
+        self.MockRect = self.rect_patcher.start()
+        # Side effect to return a mock that stores x,y,w,h
+        def mock_rect(*args):
+            r = MagicMock()
+            if len(args) == 4:
+                r.x, r.y, r.width, r.height = args
+            elif len(args) == 1 and isinstance(args[0], tuple) and len(args[0]) == 4:
+                r.x, r.y, r.width, r.height = args[0]
+            else:
+                 # Default fallback
+                 r.x, r.y, r.width, r.height = 0, 0, 100, 100
+    
+            r.bottom = r.y + r.height
+            return r
+        self.MockRect.side_effect = mock_rect
+    
+        # Patch UI elements to avoid actual GUI creation
+        self.uipanel_patch = patch('ui.builder.detail_panel.UIPanel')
+        self.uilabel_patch = patch('ui.builder.detail_panel.UILabel')
+        self.uiimage_patch = patch('ui.builder.detail_panel.UIImage')
+        self.uibutton_patch = patch('ui.builder.detail_panel.UIButton')
+    
+        # Patch both possible import locations for UITextBox to catch local import
+        self.uitextbox_patch = patch('pygame_gui.elements.UITextBox')
+        self.uitextbox_patch_real = patch('pygame_gui.elements.ui_text_box.UITextBox')
+    
+>       self.uipanel_patch.start()
+
+tests\unit\test_detail_panel_rendering.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1595: in start
+    result = self.__enter__()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1431: in __enter__
+    self.target = self.getter()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1618: in <lambda>
+    getter = lambda: _importer(target)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1261: in _importer
+    thing = _dot_lookup(thing, comp, import_path)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+            return getattr(thing, comp)
+        except AttributeError:
+            __import__(import_path)
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1251: AttributeError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________________ TestNewThemes.test_klingon_theme_loads ____________________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_theme_discovery.TestNewThemes testMethod=test_klingon_theme_loads>
+
+    def test_klingon_theme_loads(self):
+        """Verify Klingon theme loads and has images."""
+        # Note: JSON key is "Battle Cruiser" with space
+        img = self.manager.get_image("Klingons", "Battle Cruiser")
+        self.assertIsNotNone(img)
+        # Verify it's not the fallback (100x100)
+>       self.assertNotEqual(img.get_size(), (100, 100), "Should not be fallback image")
+E       AssertionError: (100, 100) == (100, 100) : Should not be fallback image
+
+tests\unit\test_theme_discovery.py:45: AssertionError
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+[31m[1mERROR   [0m StarshipBattles:logger.py:35 Lazy load failed for C:\Dev\Starship Battles\assets\ShipThemes\Klingons\Skins/battlecruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________________ TestMainIntegration.test_game_instantiation _________________
+[gw13] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_main_integration.TestMainIntegration testMethod=test_game_instantiation>
+mock_info = <MagicMock name='Info' id='2471123039088'>
+
+    @patch('pygame.display.Info')
+    def test_game_instantiation(self, mock_info):
+        """Test that the Game class can be instantiated."""
+        # Setup mocks for screen resolution
+        mock_info_obj = MagicMock()
+        type(mock_info_obj).current_w = unittest.mock.PropertyMock(return_value=1920)
+        type(mock_info_obj).current_h = unittest.mock.PropertyMock(return_value=1080)
+        # Fallback for direct attribute access if not property
+        mock_info_obj.current_w = 1920
+        mock_info_obj.current_h = 1080
+        mock_info.return_value = mock_info_obj
+    
+        # We allow real set_mode to run (with dummy driver defined in imports)
+        # to ensure surfaces can be converted.
+    
+        try:
+            from game import app
+>           game = app.Game()
+
+tests\unit\test_main_integration.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+game\app.py:104: in __init__
+    self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return)
+game\ui\screens\builder_screen.py:123: in __init__
+    self._create_ui()
+game\ui\screens\builder_screen.py:132: in _create_ui
+    self.left_panel = BuilderLeftPanel(
+ui\builder\left_panel.py:24: in __init__
+    UILabel(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:122: in __init__
+    self.rebuild_from_changed_theme_data()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:314: in rebuild_from_changed_theme_data
+    self.rebuild()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:210: in rebuild
+    self.drawable_shape = RectDrawableShape(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rect_drawable_shape.py:64: in __init__
+    self.full_rebuild_on_size_change()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rect_drawable_shape.py:217: in full_rebuild_on_size_change
+    self.redraw_all_states()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:480: in redraw_all_states
+    self.redraw_state(initial_state)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rect_drawable_shape.py:462: in redraw_state
+    self.finalise_images_and_text(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:630: in finalise_images_and_text
+    self.finalise_text(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:868: in finalise_text
+    self.text_box_layout.finalise_to_surf(text_surface)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:512: in finalise_to_surf
+    row.finalise(surface)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout_row.py:394: in finalise
+    text_chunk.finalise(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_line_chunk.py:213: in finalise
+    surface = self._draw_text(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_line_chunk.py:388: in _draw_text
+    text_surface = self._handle_text_selection_and_text_drawing(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_line_chunk.py:321: in _handle_text_selection_and_text_drawing
+    text_surface: pygame.Surface = self.font.render_premul_to(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <pygame_gui.core.gui_font_pygame.GUIFontPygame object at 0x0000023F5A623100>
+text = 'Components', text_colour = Color(255, 255, 255, 255)
+surf_size = (85, 20), surf_position = (0, 15)
+
+    def render_premul_to(
+        self,
+        text: str,
+        text_colour: Color,
+        surf_size: Tuple[int, int],
+        surf_position: Tuple[int, int],
+    ) -> Surface:
+        text_surface = pygame.Surface(surf_size, depth=32, flags=pygame.SRCALPHA)
+        text_surface.fill((0, 0, 0, 0))
+        temp_surf = self.__internal_font.render(text, self.antialiased, text_colour)
+>       temp_surf = temp_surf.convert_alpha()
+E       pygame.error: No convert format has been set, try display.set_mode() or Window.get_surface().
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\gui_font_pygame.py:121: error
+
+During handling of the above exception, another exception occurred:
+
+self = <unit.test_main_integration.TestMainIntegration testMethod=test_game_instantiation>
+mock_info = <MagicMock name='Info' id='2471123039088'>
+
+    @patch('pygame.display.Info')
+    def test_game_instantiation(self, mock_info):
+        """Test that the Game class can be instantiated."""
+        # Setup mocks for screen resolution
+        mock_info_obj = MagicMock()
+        type(mock_info_obj).current_w = unittest.mock.PropertyMock(return_value=1920)
+        type(mock_info_obj).current_h = unittest.mock.PropertyMock(return_value=1080)
+        # Fallback for direct attribute access if not property
+        mock_info_obj.current_w = 1920
+        mock_info_obj.current_h = 1080
+        mock_info.return_value = mock_info_obj
+    
+        # We allow real set_mode to run (with dummy driver defined in imports)
+        # to ensure surfaces can be converted.
+    
+        try:
+            from game import app
+            game = app.Game()
+            self.assertIsNotNone(game)
+            self.assertIsNotNone(game.battle_scene)
+            self.assertIsNotNone(game.battle_scene.engine)
+    
+            # Verify the engine has a logger (instance based)
+            self.assertTrue(hasattr(game.battle_scene.engine, 'logger'))
+    
+            # Verify BATTLE_LOG is NOT a property of the battle module anymore
+            from game.ui.screens import battle_scene
+            self.assertFalse(hasattr(battle_scene, 'BATTLE_LOG'), "battle_scene module should not export global BATTLE_LOG")
+    
+        except ImportError as e:
+            self.fail(f"Game instantiation failed due to ImportError: {e}")
+        except Exception as e:
+>           self.fail(f"Game instantiation failed with exception: {e}")
+E           AssertionError: Game instantiation failed with exception: No convert format has been set, try display.set_mode() or Window.get_surface().
+
+tests\unit\test_main_integration.py:68: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loading sprites from C:\Dev\Starship Battles\assets\Images\Components\Tiles
+ERROR loading 2048Portrait_Comp_001.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_002.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_003.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_004.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_005.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_006.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_007.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_008.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_009.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_010.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_011.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_012.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_013.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_014.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_015.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_016.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_017.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_018.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_019.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_020.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_021.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_022.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_023.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_024.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_025.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_026.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_027.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_028.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_029.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_030.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_031.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_032.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_033.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_034.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_035.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_036.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_037.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_038.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_039.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_040.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_041.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_042.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_043.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_044.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_045.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_046.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_047.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_048.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_049.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_050.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_051.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_052.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_053.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_054.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_055.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_056.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_057.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_058.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_059.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_060.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_061.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_062.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_063.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_064.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_065.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_066.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_067.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_068.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_069.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_070.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_071.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_072.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_073.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_074.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_075.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_076.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_077.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_078.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_079.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_080.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_081.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_082.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_083.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_084.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_085.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_086.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_087.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_088.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_089.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_090.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_091.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_092.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_093.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_094.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_095.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_096.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_097.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_098.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_099.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_100.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_101.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_102.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_103.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_104.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_105.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_106.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_107.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_108.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_109.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_110.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_111.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_112.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_113.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_114.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_115.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_116.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_117.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_118.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_119.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_120.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_121.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_122.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_123.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_124.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_125.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_126.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_127.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_128.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_129.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_130.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_131.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_132.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_133.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_134.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_135.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_136.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_137.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_138.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_139.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_140.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_141.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_142.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_143.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_144.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_145.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_146.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_147.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_148.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_149.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_150.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_151.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_152.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_153.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_154.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_155.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_156.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_157.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_158.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_159.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_160.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_161.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_162.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_163.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_164.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_165.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_166.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_167.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_168.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_169.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_170.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_171.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_172.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_173.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_174.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_175.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_176.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_177.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_178.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_179.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_180.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_181.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_182.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_183.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_184.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_185.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_186.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_187.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_188.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_189.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_190.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_191.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_192.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_193.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_194.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_195.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_196.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_197.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_198.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_199.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_200.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_201.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_202.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_203.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_204.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_205.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_206.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_207.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_208.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_209.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_210.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_211.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_212.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_213.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_214.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_215.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_216.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_217.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_218.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_219.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_220.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_221.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_222.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_223.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_224.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_225.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_226.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_227.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_228.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_229.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_230.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_231.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_232.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_233.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_234.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_235.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_236.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_237.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_238.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_239.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_240.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_241.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+ERROR loading 2048Portrait_Comp_242.jpg: No convert format has been set, try display.set_mode() or Window.get_surface().
+SUCCESS: Loaded 0 sprites from directory (max index -1)
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___________________ TestNewThemes.test_romulan_theme_loads ____________________
+[gw11] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_theme_discovery.TestNewThemes testMethod=test_romulan_theme_loads>
+
+    def test_romulan_theme_loads(self):
+        """Verify Romulan theme loads and has images."""
+        # Note: JSON key is "Battle Cruiser" with space
+        img = self.manager.get_image("Romulans", "Battle Cruiser")
+        self.assertIsNotNone(img)
+        # Verify it's not the fallback (100x100)
+>       self.assertNotEqual(img.get_size(), (100, 100), "Should not be fallback image")
+E       AssertionError: (100, 100) == (100, 100) : Should not be fallback image
+
+tests\unit\test_theme_discovery.py:53: AssertionError
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+[31m[1mERROR   [0m StarshipBattles:logger.py:35 Lazy load failed for C:\Dev\Starship Battles\assets\ShipThemes\Romulans\Skins/Battlecruiser.png: No convert format has been set, try display.set_mode() or Window.get_surface().
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestDetailPanelRendering.test_html_stats_generation_basic __________
+[gw8] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1248: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+self = <unit.test_detail_panel_rendering.TestDetailPanelRendering testMethod=test_html_stats_generation_basic>
+
+    def setUp(self):
+        pygame.init()
+        pygame.font.init()
+        # Delayed import to allow pygame init
+        from ui.builder.detail_panel import ComponentDetailPanel
+        self.ComponentDetailPanel = ComponentDetailPanel
+    
+        # Mock Pygame and UI Manager
+        self.mock_manager = MagicMock(spec=pygame_gui.UIManager)
+    
+        # Patch pygame.Rect to behave like a real Rect for layout logic
+        self.rect_patcher = patch('pygame.Rect')
+        self.MockRect = self.rect_patcher.start()
+        # Side effect to return a mock that stores x,y,w,h
+        def mock_rect(*args):
+            r = MagicMock()
+            if len(args) == 4:
+                r.x, r.y, r.width, r.height = args
+            elif len(args) == 1 and isinstance(args[0], tuple) and len(args[0]) == 4:
+                r.x, r.y, r.width, r.height = args[0]
+            else:
+                 # Default fallback
+                 r.x, r.y, r.width, r.height = 0, 0, 100, 100
+    
+            r.bottom = r.y + r.height
+            return r
+        self.MockRect.side_effect = mock_rect
+    
+        # Patch UI elements to avoid actual GUI creation
+        self.uipanel_patch = patch('ui.builder.detail_panel.UIPanel')
+        self.uilabel_patch = patch('ui.builder.detail_panel.UILabel')
+        self.uiimage_patch = patch('ui.builder.detail_panel.UIImage')
+        self.uibutton_patch = patch('ui.builder.detail_panel.UIButton')
+    
+        # Patch both possible import locations for UITextBox to catch local import
+        self.uitextbox_patch = patch('pygame_gui.elements.UITextBox')
+        self.uitextbox_patch_real = patch('pygame_gui.elements.ui_text_box.UITextBox')
+    
+>       self.uipanel_patch.start()
+
+tests\unit\test_detail_panel_rendering.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1595: in start
+    result = self.__enter__()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1431: in __enter__
+    self.target = self.getter()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1618: in <lambda>
+    getter = lambda: _importer(target)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1261: in _importer
+    thing = _dot_lookup(thing, comp, import_path)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+            return getattr(thing, comp)
+        except AttributeError:
+            __import__(import_path)
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1251: AttributeError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestDetailPanelRendering.test_html_unregistered_abilities __________
+[gw8] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1248: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+self = <unit.test_detail_panel_rendering.TestDetailPanelRendering testMethod=test_html_unregistered_abilities>
+
+    def setUp(self):
+        pygame.init()
+        pygame.font.init()
+        # Delayed import to allow pygame init
+        from ui.builder.detail_panel import ComponentDetailPanel
+        self.ComponentDetailPanel = ComponentDetailPanel
+    
+        # Mock Pygame and UI Manager
+        self.mock_manager = MagicMock(spec=pygame_gui.UIManager)
+    
+        # Patch pygame.Rect to behave like a real Rect for layout logic
+        self.rect_patcher = patch('pygame.Rect')
+        self.MockRect = self.rect_patcher.start()
+        # Side effect to return a mock that stores x,y,w,h
+        def mock_rect(*args):
+            r = MagicMock()
+            if len(args) == 4:
+                r.x, r.y, r.width, r.height = args
+            elif len(args) == 1 and isinstance(args[0], tuple) and len(args[0]) == 4:
+                r.x, r.y, r.width, r.height = args[0]
+            else:
+                 # Default fallback
+                 r.x, r.y, r.width, r.height = 0, 0, 100, 100
+    
+            r.bottom = r.y + r.height
+            return r
+        self.MockRect.side_effect = mock_rect
+    
+        # Patch UI elements to avoid actual GUI creation
+        self.uipanel_patch = patch('ui.builder.detail_panel.UIPanel')
+        self.uilabel_patch = patch('ui.builder.detail_panel.UILabel')
+        self.uiimage_patch = patch('ui.builder.detail_panel.UIImage')
+        self.uibutton_patch = patch('ui.builder.detail_panel.UIButton')
+    
+        # Patch both possible import locations for UITextBox to catch local import
+        self.uitextbox_patch = patch('pygame_gui.elements.UITextBox')
+        self.uitextbox_patch_real = patch('pygame_gui.elements.ui_text_box.UITextBox')
+    
+>       self.uipanel_patch.start()
+
+tests\unit\test_detail_panel_rendering.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1595: in start
+    result = self.__enter__()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1431: in __enter__
+    self.target = self.getter()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1618: in <lambda>
+    getter = lambda: _importer(target)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1261: in _importer
+    thing = _dot_lookup(thing, comp, import_path)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+thing = <module 'ui.builder' from 'C:\\Dev\\Starship Battles\\ui\\builder\\__init__.py'>
+comp = 'detail_panel', import_path = 'ui.builder.detail_panel'
+
+    def _dot_lookup(thing, comp, import_path):
+        try:
+            return getattr(thing, comp)
+        except AttributeError:
+            __import__(import_path)
+>           return getattr(thing, comp)
+E           AttributeError: module 'ui.builder' has no attribute 'detail_panel'
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1251: AttributeError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+______________ TestBuilderUISync.test_refresh_controls_syncs_ui _______________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_builder_ui_sync.TestBuilderUISync testMethod=test_refresh_controls_syncs_ui>
+
+    def test_refresh_controls_syncs_ui(self):
+        """Verify that refresh_controls updates UI elements to match ship state."""
+        # 1. Modify Ship State from defaults (Escort, Federation)
+        self.mock_builder.ship.name = "New Name"
+    
+        # Ensure we pick a class that definitely exists and isn't Escort
+        target_class = "Cruiser"
+        if target_class not in VEHICLE_CLASSES:
+             # Fallback if data is different
+             target_class = list(VEHICLE_CLASSES.keys())[-1]
+    
+        self.mock_builder.ship.ship_class = target_class
+        self.mock_builder.ship.theme_id = "Klingon"
+    
+        # Set AI to something non-default
+        # Default is usually optimal_firing_range
+        self.mock_builder.ship.ai_strategy = "kamikaze"
+    
+        # 2. Call Refresh (mocking portrait update to avoid side effects)
+        # 2. Call Refresh (mocking portrait update to avoid side effects)
+        with patch.object(self.panel, 'update_portrait_image') as mock_update_img:
+            self.panel.refresh_controls()
+            mock_update_img.assert_called_once()
+    
+        # 3. Assert UI values match Ship State
+    
+        # Name
+        self.assertEqual(self.panel.name_entry.get_text(), "New Name")
+    
+        # Theme
+        val = self._get_option_value(self.panel.theme_dropdown.selected_option)
+        self.assertEqual(val, "Klingon")
+    
+        # Class
+        val = self._get_option_value(self.panel.class_dropdown.selected_option)
+        self.assertEqual(val, target_class)
+    
+        # AI
+        # AI Strategy Name lookup
+        strat_name = COMBAT_STRATEGIES["kamikaze"]["name"]
+        val = self._get_option_value(self.panel.ai_dropdown.selected_option)
+>       self.assertEqual(val, strat_name)
+E       AssertionError: 'Standard Ranged' != 'Kamikaze'
+E       - Standard Ranged
+E       + Kamikaze
+
+tests\unit\test_builder_ui_sync.py:92: AssertionError
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_____________ TestModifierStacking.test_range_mount_hp_multiplier _____________
+[gw1] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <unit.test_ship_loading.TestModifierStacking testMethod=test_range_mount_hp_multiplier>
+
+    def test_range_mount_hp_multiplier(self):
+        """range_mount should multiply HP by 3.5^level."""
+        laser = create_component('laser_cannon')
+>       base_hp = laser.max_hp
+E       AttributeError: 'NoneType' object has no attribute 'max_hp'
+
+tests\unit\test_ship_loading.py:45: AttributeError
+---------------------------- Captured stdout call -----------------------------
+Error: Component ID laser_cannon not found in registry.
+---------------------------- Captured log teardown ----------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+============================== warnings summary ===============================
+simulation_tests\data_driven\test_combat_targeting.py:17: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_combat_targeting.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_engine_physics.py:23: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_engine_physics.py:23: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_engine_physics.py:152: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_engine_physics.py:152: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_extended.py:15: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_extended.py:15: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_extended.py:100: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_extended.py:100: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_extended.py:170: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_extended.py:170: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_ship_requirements.py:13: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_ship_requirements.py:13: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:18: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:18: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:75: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:75: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:103: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:103: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:181: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:181: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:218: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:218: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+simulation_tests\data_driven\test_vehicle_types.py:309: 16 warnings
+  c:\Dev\Starship Battles\simulation_tests\data_driven\test_vehicle_types.py:309: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+test_framework\runner.py:14: 16 warnings
+  C:\Dev\Starship Battles\test_framework\runner.py:14: PytestCollectionWarning: cannot collect test class 'TestRunner' because it has a __init__ constructor (from: ui/test_lab_scene.py)
+    class TestRunner:
+
+ui\test_lab_scene.py:13: 16 warnings
+  C:\Dev\Starship Battles\ui\test_lab_scene.py:13: PytestCollectionWarning: cannot collect test class 'TestLabScene' because it has a __init__ constructor (from: ui/test_lab_scene.py)
+    class TestLabScene:
+
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_multi_selection_logic.py: 3 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:92: UserWarning: Clamping shadow_width of: 2, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_multi_selection_logic.py: 3 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:113: UserWarning: Clamping border_width of: 1, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Energy: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Energy Gen: - size diff: (-14, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Thrust: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Acceleration: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Top Speed: - size diff: (-7, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Maneuvering Points: - size diff: (-108, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Turning Rate: - size diff: (-24, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Shields: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Regen Cost: - size diff: (-13, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Armor HP: - size diff: (-37, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Dmg Ignore: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen/Hit: - size diff: (-50, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Targets: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Evasion Score: - size diff: (-28, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Targeting Score: - size diff: (-42, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew Required: - size diff: (-36, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew On Board: - size diff: (-38, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Life Support: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Fighter Support \u2500\u2500 - size diff: (-11, 5)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Cap: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Launch/Wave: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Time: - size diff: (-22, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Recommendations \u2500\u2500 - size diff: (-30, 0)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_multi_selection_logic
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_append_integration
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_homogeneity_enforcement
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_selection_integration
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_reselection_behavior
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_toggle_behavior
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_font_dictionary.py:405: UserWarning: Finding font with id: noto_sans_bold_aa_14 that is not already loaded.
+  Preload this font with {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': '1'}
+    warnings.warn(warning_string, UserWarning)
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\html_parser.py:179: UserWarning: Unsupported HTML Tag <magicmock>. Check documentation for full range of supported tags.
+    warnings.warn(warning_text, UserWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestToHitProfile::test_larger_ship_easier_to_hit
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_firing_arc_validation
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_target_prioritization
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_multiple_weapons
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_ammo
+FAILED simulation_tests/data_driven/test_ship_extended.py::TestMaxWeaponRange::test_max_weapon_range_single_weapon
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_beam
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_seeker_ignores_arc
+FAILED tests/unit/test_planetary_complex.py::TestPlanetaryComplex::test_rejects_propulsion
+FAILED tests/unit/test_planetary_complex.py::TestPlanetaryComplex::test_rejects_ship_bridge
+FAILED tests/unit/test_scaling_logic.py::TestScalingLogic::test_crew_requirement_scaling_size_mount
+FAILED tests/unit/test_scaling_logic.py::TestScalingLogic::test_consumption_scaling_linear
+FAILED tests/unit/test_seeker_range.py::TestSeekerRange::test_seeker_initial_range_is_80_percent
+FAILED tests/unit/test_scaling_logic.py::TestScalingLogic::test_crew_requirement_scaling_combined
+FAILED tests/unit/test_seeker_range.py::TestSeekerRange::test_seeker_range_with_modifier
+FAILED tests/unit/test_scaling_logic.py::TestScalingLogic::test_crew_requirement_scaling_range_mount
+FAILED tests/unit/test_ship.py::TestShip::test_serialization - AssertionError...
+FAILED tests/unit/test_ship.py::TestShipClassMutation::test_change_class_migration
+FAILED tests/unit/test_ship_physics_mixin.py::TestShipPhysicsThrust::test_update_physics_accelerates_when_thrusting
+FAILED tests/unit/test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_modifiers
+FAILED tests/unit/test_ship_theme_logic.py::TestShipThemeLogic::test_get_image_metrics
+FAILED tests/unit/test_weapons.py::TestWeaponBasics::test_beam_accuracy_clamped
+FAILED tests/unit/test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_stats_dynamic_abilities
+FAILED tests/unit/test_theme_discovery.py::TestNewThemes::test_klingon_theme_loads
+FAILED tests/unit/test_main_integration.py::TestMainIntegration::test_game_instantiation
+FAILED tests/unit/test_theme_discovery.py::TestNewThemes::test_romulan_theme_loads
+FAILED tests/unit/test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_stats_generation_basic
+FAILED tests/unit/test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_unregistered_abilities
+FAILED tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+FAILED tests/unit/test_ship_loading.py::TestModifierStacking::test_range_mount_hp_multiplier
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestVehicleClassLoading::test_satellite_has_no_propulsion_requirement
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_ship_accepts_ship_components
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestVehicleClassLoading::test_ship_types_defined
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_ship_rejects_fighter_components
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestShipVehicleType::test_default_vehicle_type
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestShipVehicleType::test_ship_vehicle_type_assignment
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteLogic::test_satellite_ignores_crew_requirements
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_does_not_navigate
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_component_allowed_vehicle_types_list
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_fighter_accepts_fighter_components
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_fires_when_has_target
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_fighter_rejects_ship_components
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestSatelliteAI::test_satellite_ai_still_targets
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_satellite_accepts_weapons
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestComponentRestrictions::test_satellite_rejects_engines_and_thrusters
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestVehicleClassLoading::test_fighter_classes_loaded
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestVehicleClassLoading::test_fighter_mass_ranges
+ERROR simulation_tests/data_driven/test_vehicle_types.py::TestVehicleClassLoading::test_satellite_classes_loaded
+ERROR simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_001_base_speed_accel_calculation
+ERROR simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_002_speed_decreases_linearly_with_mass
+ERROR simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_003_accel_decreases_quadratically_with_mass
+ERROR simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysics::test_ENG_004_speed_increases_linearly_with_thrust
+ERROR simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysicsFormulas::test_formula_acceleration
+ERROR simulation_tests/data_driven/test_engine_physics.py::TestEnginePhysicsFormulas::test_formula_max_speed
+=========== 30 failed, 534 passed, 340 warnings, 24 errors in 5.10s ===========

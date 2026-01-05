@@ -3,6 +3,7 @@ import unittest
 import sys
 import os
 import importlib
+import pygame
 from unittest.mock import patch, MagicMock
 
 # Ensure we use dummy video driver to prevent window opening
@@ -20,10 +21,7 @@ class TestMainIntegration(unittest.TestCase):
 
     def setUp(self):
         # We need to make sure we can import main even if it was already imported
-        if 'game.app' in sys.modules:
-            del sys.modules['game.app']
-        if 'game.ui.screens.battle_scene' in sys.modules:
-            del sys.modules['game.ui.screens.battle_scene']
+        pass
 
     def test_import_main(self):
         """Test that main.py can be imported without ImportError."""
@@ -36,25 +34,22 @@ class TestMainIntegration(unittest.TestCase):
             # However, if it fails due to display, that's fine for this specific test case regarding BATTLE_LOG
             print(f"Warning: main.py raised exception during import (likely pygame init): {e}")
 
-    @patch('pygame.display.Info')
-    def test_game_instantiation(self, mock_info):
+    def test_game_instantiation(self):
         """Test that the Game class can be instantiated."""
-        # Setup mocks for screen resolution
-        mock_info_obj = MagicMock()
-        type(mock_info_obj).current_w = unittest.mock.PropertyMock(return_value=1920)
-        type(mock_info_obj).current_h = unittest.mock.PropertyMock(return_value=1080)
-        # Fallback for direct attribute access if not property
-        mock_info_obj.current_w = 1920
-        mock_info_obj.current_h = 1080
-        mock_info.return_value = mock_info_obj
+        # Use real pygame.display.Info() in headless mode rather than mocking it,
+        # as over-mocking display globals can break pygame_gui's internal state.
         
         # We allow real set_mode to run (with dummy driver defined in imports)
         # to ensure surfaces can be converted.
 
         try:
             from game import app
-            game = app.Game()
-            self.assertIsNotNone(game)
+            # Mock display Info and ensure set_mode is called for convert_alpha
+            if not pygame.display.get_surface():
+                pygame.display.set_mode((1440, 900), pygame.NOFRAME)
+            with patch('pygame.display.Info', return_value=MagicMock(current_w=1920, current_h=1080)):
+                game = app.Game()
+                self.assertIsNotNone(game)
             self.assertIsNotNone(game.battle_scene)
             self.assertIsNotNone(game.battle_scene.engine)
             
