@@ -24,17 +24,27 @@ def test_missing_logistics_details():
     - Max Consumption Rate (if applicable)
     - Endurance estimates
     """
-    # 1. Setup Ship
-    ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255))
-    ship.ship_class = "TestClass"
+    # 1. Setup Ship and Registry
+    from game.core.registry import RegistryManager
+    mgr = RegistryManager.instance()
+    # Ensure clean state for this specific test class setup
+    mgr.vehicle_classes["TestClass"] = {'max_mass': 1000, 'type': 'Ship'}
+
+    ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="TestClass")
     
-    # Mock Vehicle Classes for Calc
-    vehicle_classes = {"TestClass": {'max_mass': 1000, 'type': 'Ship'}}
+    print(f"Ship Layers: {list(ship.layers.keys())}")
     
     # 2. Add Components
     # A. Battery (Storage)
     battery = Component({"id": "batt", "name": "Battery", "mass": 10, "hp": 20, "type": "Internal"})
     battery.ability_instances = [ResourceStorage(battery, {'resource': 'energy', 'amount': 100})]
+    
+    from game.simulation.components.component import LayerType as LT
+    print(f"Test LayerType.INNER: {LayerType.INNER} (id: {id(LayerType.INNER)})")
+    if ship.layers:
+        first_key = list(ship.layers.keys())[0]
+        print(f"Ship Layer Key type: {type(first_key)} (id: {id(first_key)})")
+
     ship.layers[LayerType.INNER]['components'].append(battery)
 
     # B. Reactor (Generation)
@@ -59,7 +69,7 @@ def test_missing_logistics_details():
     ship.layers[LayerType.INNER]['components'].append(weapon)
 
     # 3. Calculate Stats
-    calc = ShipStatsCalculator(vehicle_classes)
+    calc = ShipStatsCalculator(mgr.vehicle_classes)
     calc.calculate(ship)
 
     # 4. Get Logistics Rows (The function being tested)

@@ -183,24 +183,61 @@ class Component:
         return rows
 
     def _instantiate_abilities(self):
-        """Instantiate Ability objects from self.abilities dict."""
-        self.ability_instances = []
+        """Instantiate or Sync Ability objects from self.abilities dict."""
+        # We want to preserve existing instances to maintain runtime state (cooldowns, energy)
+        # but also add new ones or remove obsolete ones.
+        
+        # 1. Map existing instances for quick lookup
+        # Key: (ability_type_name, index_in_that_type)
+        existing_map = {}
+        for ab in self.ability_instances:
+            # We track by class name
+            cls_name = ab.__class__.__name__
+            if cls_name not in existing_map:
+                existing_map[cls_name] = []
+            existing_map[cls_name].append(ab)
+
+        new_instances = []
         
         # Standard Loading from abilities dict
+        from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability
+        
         for name, data in self.abilities.items():
-            # Lazy import to avoid circular dependency
-            from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability
-            
             if name not in ABILITY_REGISTRY:
                 continue
             
-            if isinstance(data, list):
-                for item in data:
+            items = data if isinstance(data, list) else [data]
+            
+            # Get the target class for this registry entry (could be class or lambda)
+            target = ABILITY_REGISTRY[name]
+            target_cls_name = None
+            if isinstance(target, type):
+                target_cls_name = target.__name__
+            elif name in ["FuelStorage", "EnergyStorage", "AmmoStorage"]:
+                 target_cls_name = "ResourceStorage"
+            elif name == "EnergyGeneration":
+                 target_cls_name = "ResourceGeneration"
+            elif name == "EnergyConsumption":
+                 target_cls_name = "ResourceConsumption"
+
+            for item in items:
+                # Heuristic: Match by Target Class Name if known, otherwise fallback to registry name
+                match_name = target_cls_name or name
+                
+                found_existing = False
+                if match_name in existing_map and existing_map[match_name]:
+                    ab = existing_map[match_name].pop(0)
+                    # Support live data sync if ability supports it
+                    if hasattr(ab, 'sync_data'):
+                        ab.sync_data(item)
+                    new_instances.append(ab)
+                    found_existing = True
+                
+                if not found_existing:
                     ab = create_ability(name, self, item)
-                    if ab: self.ability_instances.append(ab)
-            elif isinstance(data, dict) or isinstance(data, (int, float)):
-                 ab = create_ability(name, self, data)
-                 if ab: self.ability_instances.append(ab)
+                    if ab: new_instances.append(ab)
+        
+        self.ability_instances = new_instances
             
     def update(self):
         """Update component state for one tick (resource consumption, cooldowns)."""
@@ -247,10 +284,17 @@ class Component:
 
     def take_damage(self, amount):
         self.current_hp -= amount
+        
+        # Update Status
         if self.current_hp <= 0:
             self.current_hp = 0
             self.is_active = False
             return True # Destroyed
+        
+        # Logic Repair: Update status to DAMAGED if below 50%
+        if self.current_hp < (self.max_hp * 0.5):
+            self.status = ComponentStatus.DAMAGED
+            
         return False
 
     def reset_hp(self):
@@ -416,23 +460,33 @@ class Component:
         for ab in self.ability_instances:
             # General Recalculate (Protocol for active abilities to sync with stats)
             ab.recalculate()
+            
+            ab_cls = ab.__class__.__name__
+            ab_data = ab.data
+            
+            # Helper to get base value safely from dict or primitive
+            def get_base(data, key, default=0.0):
+                if isinstance(data, dict):
+                    return data.get(key, default)
+                if isinstance(data, (int, float)):
+                    return float(data)
+                return default
 
             # ResourceConsumption (Base amount * consumption_mult)
-            if isinstance(ab, ResourceConsumption):
-                 base = ab.data.get('amount', 0.0)
+            if ab_cls == 'ResourceConsumption':
+                 base = get_base(ab_data, 'amount')
                  ab.amount = base * stats.get('consumption_mult', 1.0)
             
             # ResourceStorage (Base amount * capacity_mult)
-            elif isinstance(ab, ResourceStorage):
-                 base = ab.data.get('amount', 0.0)
+            elif ab_cls == 'ResourceStorage':
+                 base = get_base(ab_data, 'amount')
                  ab.max_amount = base * stats.get('capacity_mult', 1.0)
             
             # ResourceGeneration (Base amount * energy_gen_mult)
-            elif isinstance(ab, ResourceGeneration):
+            elif ab_cls == 'ResourceGeneration':
                  # Apply energy_gen_mult only if resource is energy, or generic 'generation_mult' if we had one.
-                 # Modifiers like "High Output Generator" affect energy_gen_mult.
-                 if ab.resource_type == 'energy':
-                     base = ab.data.get('amount', 0.0)
+                 if getattr(ab, 'resource_type', '') == 'energy':
+                     base = get_base(ab_data, 'amount')
                      ab.rate = base * stats.get('energy_gen_mult', 1.0)
 
 

@@ -1,46 +1,62 @@
-# Code Review Report: Refactor Phase 1 - General Analysis
+# Code Reviewer Report: Phase 3 Infrastructure & Logic Analysis
 
 **Date:** 2026-01-04
-**Reviewer:** Code_Reviewer Protocol
-**Focus:** General Analysis (Architecture & Implementation Integrity)
+**Reviewer:** Code_Reviewer Agent
+**Focus:** Phase 3 Infrastructure (SessionCache, RegistryManager) & Logic Flaws
 
-## 1. Executive Summary
-Phase 1 of the "Test Stabilization & Registry Encapsulation" refactor has been successfully implemented. The introduction of `RegistryManager` and the strict `reset_game_state` fixture in `conftest.py` provides the necessary infrastructure to eliminate state pollution. The implementation adheres to the "Migration Map" and correctly deprecates direct global management in favor of a managed singleton approach.
+## Executive Summary
 
-## 2. Component Analysis
+Phase 3 Infrastructure (`RegistryManager`, `SessionRegistryCache`, `conftest.py`) is **ARCHITECTURALLY SOUND** and correctly implements the "Fast Hydration" pattern to solve IO contention. Test isolation is preserved via deep-copying and module patching.
 
-### A. Registry Manager (`game/core/registry.py`)
-- **Status:** **PASS**
-- **Implementation:** Correctly implements the Singleton pattern.
-- **State Management:** The `clear()` method correctly uses `dict.clear()` (in-place clearing) rather than reassignment (e.g., `self.components = {}`). This is critical for maintaining valid references across the application.
+However, a **CRITICAL LOGIC FLAW** was detected in `Component.recalculate_stats()`, which causes complete loss of runtime state (cooldowns, stored energy) whenever modifiers are applied. This also explains the failure in `test_bug_05_logistics.py`.
 
-### B. Global Deprecation (`component.py`, `ship.py`)
-- **Status:** **PASS with OBSERVATION**
-- **Refactoring:** Key loading functions (`load_components`, `load_modifiers`, `load_vehicle_classes`) have been correctly updated to populate `RegistryManager.instance()` directly.
-- **ValidatorRefactor:** The use of `ValidatorProxy` in `ship.py` is an excellent pattern. It ensures that accessing `_VALIDATOR` or `VALIDATOR` always delegates to the current `RegistryManager` state, preventing stale references if the validator is reset.
+## Key Findings
 
-### C. Fragile Aliases (Observation)
-The legacy aliases are implemented as direct references:
-```python
-# game/simulation/components/component.py
-MODIFIER_REGISTRY = RegistryManager.instance().modifiers
-COMPONENT_REGISTRY = RegistryManager.instance().components
-```
-**Risk:** These aliases capture the *specific dictionary objects* that exist when the module is first imported.
-- **Safety Condition:** As long as `RegistryManager` clears these dictionaries in-place (which it currently does) and the `RegistryManager` singleton is never re-instantiated (which `reset_game_state` avoids by calling `clear()` instead of `reset()`), these aliases remain valid.
-- **Hazard:** If `RegistryManager.reset()` is called (destroying the singleton) or `self.components` is reassigned, these global aliases will point to "stale" or disconnected dictionaries, leading to silent failures ("Ghost Writes").
-- **Recommendation:** Proceed with Phase 4 (Legacy Alias Removal) as planned. Do not use `RegistryManager.reset()` in standard testing; stick to `.clear()`.
+### 1. Infrastructure (PASSED)
+The new Registry Infrastructure is robust:
+- **RegistryManager**: Correctly uses in-place dictionary updates (`clear()` + `update()`) in `hydrate()`. This preserves referential identity for modules aliasing `COMPONENT_REGISTRY = RegistryManager.instance().components`, preventing stale reference bugs.
+- **SessionRegistryCache**: Correctly utilizes `copy.deepcopy()` to serve fresh objects to `RegistryManager`, ensuring one test cannot pollute the next.
+- **Conftest**: The fixture `reset_game_state` correctly patches `load_vehicle_classes` and `_COMPONENT_CACHE` to prevent disk I/O, ensuring strict isolation.
 
-### D. Test Infrastructure (`tests/conftest.py`)
-- **Status:** **PASS**
-- **Mechanism:** The use of `autouse=True` with `RegistryManager.instance().clear()` before and after yields significantly reduces the risk of cross-test pollution.
+### 2. Critical Logic Flaw: State wiping in `recalculate_stats`
+**Severity:** Critical
+**Location:** `game/simulation/components/component.py`
+**Method:** `recalculate_stats` -> `_reset_and_evaluate_base_formulas` -> `_instantiate_abilities`
 
-### E. Verification Canary (`test_sequence_hazard.py`)
-- **Status:** **PASS**
-- **Coverage:** The test correctly verifies that writes to the global aliases are reflected in the registry and subsequently cleared, proving that the aliases and the manager are currently synchronized.
+**The Defect:**
+When `recalculate_stats()` is called (e.g., when adding a modifier), it calls `_instantiate_abilities()`. This method destroys the existing `self.ability_instances` list and recreates them from raw data.
+**Consequences:**
+1.  **Runtime State Loss:** If a Battery has 50/100 energy, and a modifier is applied, the Battery ability is re-instantiated, resetting energy to default (100/100). Cooldowns and ammo are similarly reset.
+2.  **Test Fragility:** `test_bug_05_logistics.py` manually injects `ability_instances` into the component. When `ShipStatsCalculator` runs, it triggers `recalculate_stats`, which **wipes out the manually injected abilities** and replaces them with defaults from `self.data` (which are empty or basic). This causes the assertion failure (missing "energy_gen" rows).
 
-## 3. Conclusion & Next Steps
-The architectural foundation for Test Stabilization is solid. Use of `setUpClass` in existing unit tests is the remaining vector for state pollution (as it may execute before the `autouse` fixture clears state, or the `autouse` fixture clears state between the class setup and the test method).
+### 3. Logic Flaw: `take_damage` Status Inconsistency
+**Severity:** Minor
+**Location:** `game/simulation/components/component.py`
+**Method:** `take_damage`
 
-**Approval:** Phase 1 implementation is approved.
-**Next Action:** Proceed to Phase 2 (Bulk Migration of `setUpClass` -> `setUp`).
+**The Defect:**
+`take_damage` updates `current_hp` and `is_active` (on destruction), but fails to update `self.status`. It does not transition to `ComponentStatus.DAMAGED` or other states defined in the Enum.
+
+## Recommendations
+
+### Immediate Actions (Phase 4 Logic Repair)
+
+1.  **Refactor `recalculate_stats` Ability Handling:**
+    *   **Do NOT** blindly destroy ability instances.
+    *   Implement a `sync_abilities` method that:
+        *   Check if ability exists.
+        *   If it exists, `recalculate()` its stats (capacity, rate) based on new multipliers.
+        *   **Preserve** current state (current energy, cooldown timer).
+        *   Only instantiate NEW abilities if they were added by the modifier (unlikely but possible).
+
+2.  **Fix `test_bug_05_logistics.py`:**
+    *   Update the test to set up components correctly via `data` dict or `abilities` dict, NOT by overwriting `ability_instances` directly, OR patch `request_recalc` to be no-op if focusing on UI only.
+    *   *Best Practice:* Define component data properly so proper hydration works.
+
+### Validated Code Patterns
+The following patterns are verified safe and should be retained:
+*   `RegistryManager.instance().hydrate(...)`
+*   `SessionRegistryCache.instance().get_components()` (Deep Copy)
+
+## Conclusion
+Proceed to **Phase 4**, prioritized on fixing `Component.recalculate_stats`. The infrastructure is ready.

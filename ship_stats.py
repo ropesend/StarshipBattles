@@ -150,25 +150,27 @@ class ShipStatsCalculator:
             # Using Ability Instances (New System)
             if hasattr(comp, 'ability_instances'):
                 for ability in comp.ability_instances:
-                    # Resource Storage
-                    if isinstance(ability, ResourceStorage):
-                        if ability.resource_type == 'fuel':
-                            total_max_fuel += ability.max_amount
-                        elif ability.resource_type == 'ammo':
-                            total_max_ammo += ability.max_amount
-                        elif ability.resource_type == 'energy':
-                            total_max_energy += ability.max_amount
+                    ab_cls = ability.__class__.__name__
+                    if ab_cls == 'ResourceStorage':
+                        res_type = getattr(ability, 'resource_type', '')
+                        max_amt = getattr(ability, 'max_amount', 0.0)
+                        if res_type == 'fuel':
+                            total_max_fuel += max_amt
+                        elif res_type == 'ammo':
+                            total_max_ammo += max_amt
+                        elif res_type == 'energy':
+                            total_max_energy += max_amt
                     
                     # Resource Generation
-                    elif isinstance(ability, ResourceGeneration):
-                        if ability.resource_type == 'energy':
-                            total_energy_gen += ability.rate
-                        elif ability.resource_type == 'ammo':
-                            total_ammo_gen += ability.rate
+                    elif ab_cls == 'ResourceGeneration':
+                        res_type = getattr(ability, 'resource_type', '')
+                        rate = getattr(ability, 'rate', 0.0)
+                        if res_type == 'energy':
+                            total_energy_gen += rate
+                        elif res_type == 'ammo':
+                            total_ammo_gen += rate
             
-            # Phase 3: Ability-Based Stats Aggregation (replaces isinstance checks)
-            from game.simulation.components.abilities import CombatPropulsion, ManeuveringThruster, ShieldProjection, ShieldRegeneration
-            from game.simulation.systems.resource_manager import ResourceConsumption
+            # Phase 3: Ability-Based Stats Aggregation
             
             # Thrust from CombatPropulsion abilities
             for ab in comp.get_abilities('CombatPropulsion'):
@@ -195,8 +197,8 @@ class ShipStatsCalculator:
             # Shield energy cost from EnergyConsumption abilities on shield regen components
             if comp.has_ability('ShieldRegeneration'):
                 for ab in comp.ability_instances:
-                    if isinstance(ab, ResourceConsumption) and ab.resource_name == 'energy':
-                        total_shield_cost += ab.amount
+                    if ab.__class__.__name__ == 'ResourceConsumption' and getattr(ab, 'resource_name', '') == 'energy':
+                        total_shield_cost += getattr(ab, 'amount', 0.0)
                         break
             
             # Hangar stats (still uses VehicleLaunch ability from abilities dict)
@@ -362,21 +364,25 @@ class ShipStatsCalculator:
             # Iterate Abilities for Source of Truth
             if hasattr(c, 'ability_instances'):
                 for ab in c.ability_instances:
+                    ab_cls = ab.__class__.__name__
                     # Resource Storage dealt with in Phase 3 aggregation
                     
-                    if isinstance(ab, ResourceConsumption):
-                        print(f"DEBUG: Found ResConsumption {ab.resource_name} {ab.trigger}")
+                    if ab_cls == 'ResourceConsumption':
                         # Constant Consumption (Generic)
-                        if ab.trigger == 'constant':
-                            if ab.resource_name == 'fuel':
-                                c_fuel += ab.amount
-                            elif ab.resource_name == 'energy':
-                                c_energy += ab.amount
-                            elif ab.resource_name == 'ammo':
-                                c_ammo += ab.amount
+                        trigger = getattr(ab, 'trigger', 'constant')
+                        resource_name = getattr(ab, 'resource_name', '')
+                        amount = getattr(ab, 'amount', 0.0)
+                        
+                        if trigger == 'constant':
+                            if resource_name == 'fuel':
+                                c_fuel += amount
+                            elif resource_name == 'energy':
+                                c_energy += amount
+                            elif resource_name == 'ammo':
+                                c_ammo += amount
                             
                         # Activation Costs (Energy/Ammo) -> Convert to Rate
-                        elif ab.trigger == 'activation':
+                        elif trigger == 'activation':
                             # Get fire rate (1/reload)
                             # Look for associated WeaponAbility to get accurate reload time
                             reload_t = 1.0
@@ -384,10 +390,9 @@ class ShipStatsCalculator:
                             
                             # Try to find WeaponAbility on component
                             if hasattr(c, 'ability_instances'):
-                                from game.simulation.components.abilities import WeaponAbility
                                 for inst in c.ability_instances:
-                                    if isinstance(inst, WeaponAbility):
-                                        reload_t = inst.reload_time
+                                    if inst.__class__.__name__ in ['WeaponAbility', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility']:
+                                        reload_t = getattr(inst, 'reload_time', 1.0)
                                         found_weapon = True
                                         break
                             

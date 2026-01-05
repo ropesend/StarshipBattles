@@ -19,9 +19,12 @@ def test_usage_only_visibility():
     Ensure logistics rows appear even if a resource is ONLY used (no storage/gen).
     Scenario: Ship with just a Weapon consuming Energy.
     """
-    ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255))
-    ship.ship_class = "TestClass"
-    vehicle_classes = {"TestClass": {'max_mass': 1000, 'type': 'Ship'}}
+    # 1. Setup Ship and Registry
+    from game.core.registry import RegistryManager
+    mgr = RegistryManager.instance()
+    mgr.vehicle_classes["TestClass"] = {'max_mass': 1000, 'type': 'Ship'}
+
+    ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="TestClass")
     
     # Weapon: Consumes 5 Energy per activation, Reload 1.0s (Max Usage = 5.0/s)
     weapon = Component({"id": "laser", "name": "Laser", "mass": 10, "hp": 50, "type": "Internal"})
@@ -31,8 +34,8 @@ def test_usage_only_visibility():
     ]
     ship.layers[LayerType.INNER]['components'].append(weapon)
 
-    # Calc stats (to ensure any cache is built, though stats_config might access direct)
-    calc = ShipStatsCalculator(vehicle_classes)
+    # Calc stats
+    calc = ShipStatsCalculator(mgr.vehicle_classes)
     calc.calculate(ship)
 
     rows = get_logistics_rows(ship)
@@ -47,9 +50,12 @@ def test_max_usage_calculation():
     Verify Max Usage includes active weapon consumption correctly.
     Max Rate = Constant Usage + Sum(Weapon Cost / Reload Time)
     """
-    ship = Ship(name="TestShip2", x=0, y=0, color=(255, 255, 255))
-    ship.ship_class = "TestClass"
-    vehicle_classes = {"TestClass": {'max_mass': 1000, 'type': 'Ship'}}
+    # 1. Setup Ship and Registry
+    from game.core.registry import RegistryManager
+    mgr = RegistryManager.instance()
+    mgr.vehicle_classes["TestClass"] = {'max_mass': 1000, 'type': 'Ship'}
+
+    ship = Ship(name="TestShip2", x=0, y=0, color=(255, 255, 255), ship_class="TestClass")
 
     # 1. Constant Draw: 2.0/s
     life_support = Component({"id": "ls", "name": "LifeSupport", "mass": 20, "hp": 50, "type": "Internal"})
@@ -74,7 +80,7 @@ def test_max_usage_calculation():
 
     # Total Expected: 2.0 + 5.0 + 5.0 = 12.0
     
-    calc = ShipStatsCalculator(vehicle_classes)
+    calc = ShipStatsCalculator(mgr.vehicle_classes)
     calc.calculate(ship)
 
     rows = get_logistics_rows(ship)

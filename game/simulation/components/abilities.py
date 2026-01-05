@@ -15,6 +15,15 @@ class Ability:
         self._tags = set(data.get('tags', [])) if isinstance(data, dict) else set()
         self.stack_group = data.get('stack_group') if isinstance(data, dict) else None
     
+    def sync_data(self, data: Any):
+        """Update internal state when component data changes."""
+        self.data = data
+        if isinstance(data, dict):
+            self._tags = set(data.get('tags', []))
+            self.stack_group = data.get('stack_group')
+        else:
+            pass
+    
     @property
     def tags(self):
         return self._tags
@@ -61,6 +70,16 @@ class ResourceConsumption(Ability):
         self.resource_name = data.get('resource', '')
         self.amount = data.get('amount', 0.0)
         self.trigger = data.get('trigger', 'constant') # 'constant' or 'activation'
+
+    def sync_data(self, data: Any):
+        super().sync_data(data)
+        if isinstance(data, dict):
+            self.resource_name = data.get('resource', self.resource_name)
+            self.amount = data.get('amount', 0.0)
+            self.trigger = data.get('trigger', 'constant')
+        elif isinstance(data, (int, float)):
+            self.amount = float(data)
+            self.trigger = 'constant' # Default for shortcut
 
     def update(self) -> bool:
         TICK_DURATION = 0.01  # Fixed tick duration
@@ -117,6 +136,14 @@ class ResourceStorage(Ability):
         super().__init__(component, data)
         self.resource_type = data.get('resource', '')
         self.max_amount = data.get('amount', 0.0)
+
+    def sync_data(self, data: Any):
+        super().sync_data(data)
+        if isinstance(data, dict):
+            self.resource_type = data.get('resource', self.resource_type)
+            self.max_amount = data.get('amount', 0.0)
+        elif isinstance(data, (int, float)):
+            self.max_amount = float(data)
         
     def get_ui_rows(self):
         color = '#64FFFF' # Cyan default for caps
@@ -133,6 +160,14 @@ class ResourceGeneration(Ability):
         super().__init__(component, data)
         self.resource_type = data.get('resource', '')
         self.rate = data.get('amount', 0.0)
+
+    def sync_data(self, data: Any):
+        super().sync_data(data)
+        if isinstance(data, dict):
+            self.resource_type = data.get('resource', self.resource_type)
+            self.rate = data.get('amount', 0.0)
+        elif isinstance(data, (int, float)):
+            self.rate = float(data)
 
     def get_ui_rows(self):
         color = '#FFFFFF' 
@@ -373,6 +408,33 @@ class WeaponAbility(Ability):
         
         # Tags for targeting logic (e.g. 'pdc')
         self._tags.update(data.get('tags', []))
+
+    def sync_data(self, data: Any):
+        super().sync_data(data)
+        if not isinstance(data, dict): return
+        
+        # Syncing fields that might change in data
+        self.firing_arc = float(data.get('firing_arc', self.firing_arc))
+        self.facing_angle = float(data.get('facing_angle', self.facing_angle))
+        
+        # Damage/Range/Reload might be formulas, but usually they are base values in data 
+        # which recalculate() then uses to apply multipliers.
+        # We update the _base_ values from data if they exist.
+        if 'damage' in data:
+            raw = data['damage']
+            if not (isinstance(raw, str) and raw.startswith('=')):
+                 self._base_damage = float(raw)
+                 self.damage = self._base_damage
+        if 'range' in data:
+            raw = data['range']
+            if not (isinstance(raw, str) and raw.startswith('=')):
+                 self._base_range = float(raw)
+                 self.range = self._base_range
+        if 'reload' in data:
+            raw = data['reload']
+            if not (isinstance(raw, str) and raw.startswith('=')):
+                 self._base_reload = float(raw)
+                 self.reload_time = self._base_reload
 
     def recalculate(self):
         # Apply modifiers to base stats
