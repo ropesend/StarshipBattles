@@ -1,7 +1,8 @@
 import unittest
 import pygame
 import os
-from game.simulation.entities.ship import initialize_ship_data, VEHICLE_CLASSES
+from game.simulation.entities.ship import initialize_ship_data
+from game.core.registry import RegistryManager
 from ship_theme import ShipThemeManager
 
 class TestShipClasses(unittest.TestCase):
@@ -23,16 +24,16 @@ class TestShipClasses(unittest.TestCase):
             "Superdreadnaugh", "Monitor"
         ]
         
-        self.assertTrue(len(VEHICLE_CLASSES) >= 11, f"Expected at least 11 classes, found {len(VEHICLE_CLASSES)}")
+        classes = RegistryManager.instance().vehicle_classes
+        self.assertTrue(len(classes) >= 11, f"Expected at least 11 classes, found {len(classes)}")
         
-        for cls_name in expected_classes:
-            self.assertIn(cls_name, VEHICLE_CLASSES, f"Class '{cls_name}' missing from VEHICLE_CLASSES")
+        for cls_name in ["Escort", "Frigate", "Destroyer", "Cruiser", "Battleship", "Dreadnought"]:
+            self.assertIn(cls_name, classes, f"Class '{cls_name}' missing from vehicle_classes")
             
-    def test_mass_limits(self):
-        # Verify a selection of mass limits in VEHICLE_CLASSES
-        self.assertEqual(VEHICLE_CLASSES["Escort"]["max_mass"], 1000)
-        self.assertEqual(VEHICLE_CLASSES["Frigate"]["max_mass"], 2000)
-        self.assertEqual(VEHICLE_CLASSES["Monitor"]["max_mass"], 1024000)
+        # Verify a selection of mass limits in vehicle_classes
+        self.assertEqual(classes["Escort"]["max_mass"], 1000)
+        self.assertEqual(classes["Frigate"]["max_mass"], 2000)
+        self.assertEqual(classes["Monitor"]["max_mass"], 1024000)
         
 
 

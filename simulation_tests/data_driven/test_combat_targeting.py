@@ -135,6 +135,12 @@ class TestCombatTargeting(unittest.TestCase):
         self.target.position = pygame.math.Vector2(200, 0) # 0 degrees
         self.attacker.current_target = self.target
         self.attacker.is_derelict = False
+        # 3. Fire
+        print(f"DEBUG: Attacker is_alive={self.attacker.is_alive}, layers={list(self.attacker.layers.keys())}")
+        for lt, l in self.attacker.layers.items():
+            for c in l['components']:
+                print(f"DEBUG: Comp {c.name} (type {c.type_str}) is_active={c.is_active}, has_WeaponAbility={c.has_ability('WeaponAbility')}")
+        
         attacks = self.attacker.fire_weapons()
         self.assertEqual(len(attacks), 1, "Should fire at target directly ahead")
 

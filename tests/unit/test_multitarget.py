@@ -9,7 +9,8 @@ import math
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
-from game.simulation.components.component import Component, LayerType, COMPONENT_REGISTRY, load_components
+from game.simulation.components.component import Component, LayerType, load_components
+from game.core.registry import RegistryManager
 from game.ai.controller import AIController, COMBAT_STRATEGIES
 from game.engine.spatial import SpatialGrid
 from game.simulation.entities.projectile import Projectile
@@ -28,60 +29,63 @@ class TestMultitarget(unittest.TestCase):
         
         # Add Infrastructure to avoid derelict status and allow components to work
         # 1. Bridge (required for non-derelict)
-        if 'bridge' in COMPONENT_REGISTRY:
-            bridge = COMPONENT_REGISTRY['bridge'].clone()
+        comps = RegistryManager.instance().components
+        if 'bridge' in comps:
+            bridge = comps['bridge'].clone()
             self.ship.add_component(bridge, LayerType.CORE)
         
         # 2. Engine (required for non-derelict on Ships)
-        if 'standard_engine' in COMPONENT_REGISTRY:
-            engine = COMPONENT_REGISTRY['standard_engine'].clone()
+        if 'standard_engine' in comps:
+            engine = comps['standard_engine'].clone()
             self.ship.add_component(engine, LayerType.INNER)
             
         # 3. Generator
-        if 'generator' in COMPONENT_REGISTRY:
-            gen = COMPONENT_REGISTRY['generator'].clone()
+        if 'generator' in comps:
+            gen = comps['generator'].clone()
             self.ship.add_component(gen, LayerType.CORE)
         
         # 4. Battery (for energy storage - required for beam weapons)
-        if 'battery' in COMPONENT_REGISTRY:
-            bat = COMPONENT_REGISTRY['battery'].clone()
+        if 'battery' in comps:
+            bat = comps['battery'].clone()
             self.ship.add_component(bat, LayerType.INNER)
             
         # 4. Crew Quarters (Need enough for Multi-tracker + weapons + bridge)
-        if 'crew_quarters' in COMPONENT_REGISTRY:
-            cq1 = COMPONENT_REGISTRY['crew_quarters'].clone()
+        if 'crew_quarters' in comps:
+            cq1 = comps['crew_quarters'].clone()
             self.ship.add_component(cq1, LayerType.INNER)
-            cq2 = COMPONENT_REGISTRY['crew_quarters'].clone()
+            cq2 = comps['crew_quarters'].clone()
             self.ship.add_component(cq2, LayerType.INNER)
-            cq3 = COMPONENT_REGISTRY['crew_quarters'].clone()
+            cq3 = comps['crew_quarters'].clone()
             self.ship.add_component(cq3, LayerType.INNER)
         
         # 5. Life Support
-        if 'life_support' in COMPONENT_REGISTRY:
-            ls = COMPONENT_REGISTRY['life_support'].clone()
+        if 'life_support' in comps:
+            ls = comps['life_support'].clone()
             self.ship.add_component(ls, LayerType.INNER)
-            ls2 = COMPONENT_REGISTRY['life_support'].clone()
+            ls2 = comps['life_support'].clone()
             self.ship.add_component(ls2, LayerType.INNER)
         
         self.ship.recalculate_stats()
         
     def test_multiplex_tracking_stats(self):
         # Add Multiplex Tracking
-        if 'multiplex_tracking' not in COMPONENT_REGISTRY:
+        comps = RegistryManager.instance().components
+        if 'multiplex_tracking' not in comps:
             return # Skip if not defined
             
-        comp = COMPONENT_REGISTRY['multiplex_tracking'].clone()
+        comp = comps['multiplex_tracking'].clone()
         self.ship.add_component(comp, LayerType.OUTER)
         self.ship.recalculate_stats()
         
         self.assertEqual(self.ship.max_targets, 10)
         
     def test_secondary_target_acquisition(self):
-        if 'multiplex_tracking' not in COMPONENT_REGISTRY:
+        # Add Multiplex
+        comps = RegistryManager.instance().components
+        if 'multiplex_tracking' not in comps:
             return
 
-        # Add Multiplex
-        comp = COMPONENT_REGISTRY['multiplex_tracking'].clone()
+        comp = comps['multiplex_tracking'].clone()
         self.ship.add_component(comp, LayerType.OUTER)
         self.ship.recalculate_stats()
         
@@ -103,18 +107,19 @@ class TestMultitarget(unittest.TestCase):
         self.assertIn(e3, self.ship.secondary_targets)
         
     def test_pdc_missile_logic(self):
-        if 'multiplex_tracking' not in COMPONENT_REGISTRY:
+        comps = RegistryManager.instance().components
+        if 'multiplex_tracking' not in comps:
             return
             
         # Add Multiplex
-        comp = COMPONENT_REGISTRY['multiplex_tracking'].clone()
+        comp = comps['multiplex_tracking'].clone()
         res = self.ship.add_component(comp, LayerType.OUTER)
         # self.assertTrue(res.is_valid if hasattr(res, 'is_valid') else res) # Handle boolean return
         if not res:
             self.fail("Multiplex add failed")
         
         # Add PDC: Facing 0 (Right), Arc 45
-        pdc = COMPONENT_REGISTRY['point_defence_cannon'].clone()
+        pdc = comps['point_defence_cannon'].clone()
         pdc.facing_angle = 0
         limit_ab = pdc.get_ability('ProjectileWeaponAbility') or pdc.get_ability('WeaponAbility')
         if limit_ab:

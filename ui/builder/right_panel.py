@@ -3,7 +3,7 @@ import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMenu, UITextBox, UIImage
 from pygame_gui.core import UIElement
 
-from game.simulation.entities.ship import VEHICLE_CLASSES
+from game.core.registry import RegistryManager
 from game.ai.controller import STRATEGY_MANAGER
 
 class StatRow:
@@ -125,7 +125,7 @@ class BuilderRightPanel:
         # Vehicle Type
         UILabel(pygame.Rect(10, y, 60, 25), "Type:", manager=self.manager, container=self.panel)
         # Get unique types
-        types = sorted(list(set(c.get('type', 'Ship') for c in VEHICLE_CLASSES.values())))
+        types = sorted(list(set(c.get('type', 'Ship') for c in RegistryManager.instance().vehicle_classes.values())))
         if not types: types = ["Ship"]
         
         curr_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
@@ -137,7 +137,7 @@ class BuilderRightPanel:
         # Class
         UILabel(pygame.Rect(10, y, 60, 25), "Class:", manager=self.manager, container=self.panel)
         # Filter classes by current type and sort by max_mass (smallest to largest)
-        class_options = [(name, cls.get('max_mass', 0)) for name, cls in VEHICLE_CLASSES.items() if cls.get('type', 'Ship') == curr_type]
+        class_options = [(name, cls.get('max_mass', 0)) for name, cls in RegistryManager.instance().vehicle_classes.items() if cls.get('type', 'Ship') == curr_type]
         class_options.sort(key=lambda x: x[1])  # Sort by max_mass
         class_options = [name for name, _ in class_options]  # Extract just names
         if not class_options: class_options = ["Escort"]
@@ -213,12 +213,12 @@ class BuilderRightPanel:
         
         # 3. Recreate Type
         # Get unique types
-        types = sorted(list(set(c.get('type', 'Ship') for c in VEHICLE_CLASSES.values())))
+        types = sorted(list(set(c.get('type', 'Ship') for c in RegistryManager.instance().vehicle_classes.values())))
         if not types: types = ["Ship"]
         
         curr_type = getattr(s, 'vehicle_type', "Ship")
         # Ensure consistency from class if vehicle_type not set or mismatched
-        class_def = VEHICLE_CLASSES.get(s.ship_class, {})
+        class_def = RegistryManager.instance().vehicle_classes.get(s.ship_class, {})
         if class_def:
              curr_type = class_def.get('type', curr_type)
         
@@ -227,14 +227,14 @@ class BuilderRightPanel:
         self.vehicle_type_dropdown = UIDropDownMenu(types, curr_type, type_rect, manager=self.manager, container=self.panel)
         
         # 4. Recreate Class
-        class_options = [(name, cls.get('max_mass', 0)) for name, cls in VEHICLE_CLASSES.items() if cls.get('type', 'Ship') == curr_type]
+        class_options = [(name, cls.get('max_mass', 0)) for name, cls in RegistryManager.instance().vehicle_classes.items() if cls.get('type', 'Ship') == curr_type]
         class_options.sort(key=lambda x: x[1])  # Sort by max_mass
         class_options = [name for name, _ in class_options]  # Extract just names
         if not class_options: class_options = ["Escort"]
 
         curr_class = s.ship_class
         if curr_class not in class_options: 
-            if curr_class in VEHICLE_CLASSES:
+            if curr_class in RegistryManager.instance().vehicle_classes: 
                  curr_class = class_options[0]
         
         self.class_dropdown = UIDropDownMenu(class_options, curr_class, class_rect, manager=self.manager, container=self.panel)

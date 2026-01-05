@@ -4,7 +4,8 @@ import pygame_gui
 from unittest.mock import MagicMock, patch
 from game.ui.screens import builder_screen
 from game.ui.screens.builder_screen import BuilderSceneGUI
-from game.simulation.entities.ship import Ship, SHIP_CLASSES
+from game.simulation.entities.ship import Ship
+from game.core.registry import RegistryManager
 
 class TestBuilderImprovements(unittest.TestCase):
     def setUp(self):
@@ -12,9 +13,9 @@ class TestBuilderImprovements(unittest.TestCase):
         # Create a hidden window for UI Manager
         self.window = pygame.display.set_mode((1200, 800), flags=pygame.HIDDEN)
         
-        # Ensure SHIP_CLASSES populated
-        if not SHIP_CLASSES:
-             SHIP_CLASSES.update({"Escort": {"max_mass": 1000, "type": "Ship"}})
+        # Ensure vehicle_classes populated
+        if not RegistryManager.instance().vehicle_classes:
+             RegistryManager.instance().vehicle_classes.update({"Escort": {"max_mass": 1000, "type": "Ship"}})
 
     def tearDown(self):
         pass # pygame.quit() removed for session isolation

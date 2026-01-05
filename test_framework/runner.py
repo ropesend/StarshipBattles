@@ -7,9 +7,10 @@ import time
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from game.core.registry import RegistryManager
 from game.simulation.systems.battle_engine import BattleEngine
-from game.simulation.components.component import load_components, load_modifiers, COMPONENT_REGISTRY, MODIFIER_REGISTRY
-from game.simulation.entities.ship import initialize_ship_data, VEHICLE_CLASSES
+from game.simulation.components.component import load_components, load_modifiers
+from game.simulation.entities.ship import initialize_ship_data
 
 class TestRunner:
     def __init__(self):
@@ -25,9 +26,7 @@ class TestRunner:
         paths = scenario.get_data_paths()
         
         # Reset Globals
-        COMPONENT_REGISTRY.clear()
-        MODIFIER_REGISTRY.clear()
-        VEHICLE_CLASSES.clear()
+        RegistryManager.instance().clear()
         
         # Load New Data
         try:

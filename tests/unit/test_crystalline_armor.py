@@ -42,11 +42,12 @@ class TestCrystallineArmor(unittest.TestCase):
         }
         
         # Mock Registry
-        from game.simulation.components.component import COMPONENT_REGISTRY, Component
+        from game.core.registry import RegistryManager
+        from game.simulation.components.component import Component
         self.ship.max_mass_budget = 1000
         
         c = Component(self.armor_data)
-        COMPONENT_REGISTRY["crystalline_armor"] = c
+        RegistryManager.instance().components["crystalline_armor"] = c
         
         # Add Armor Layer
         if LayerType.ARMOR not in self.ship.layers:
@@ -64,8 +65,8 @@ class TestCrystallineArmor(unittest.TestCase):
 
     def add_armor(self):
         print("DEBUG: Adding armor...")
-        from game.simulation.components.component import COMPONENT_REGISTRY
-        c = COMPONENT_REGISTRY["crystalline_armor"].clone()
+        from game.core.registry import RegistryManager
+        c = RegistryManager.instance().components["crystalline_armor"].clone()
         self.ship.layers[LayerType.ARMOR]['components'].append(c)
         
         # Also need a shield generator so max_shields > 0

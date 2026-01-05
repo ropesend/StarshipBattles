@@ -3,7 +3,8 @@ Reproduction test for BUG-06: Combat Propulsion Validation Error.
 Uses 'Manual Headless Assembly' pattern to avoid state pollution from registry reloads.
 """
 import pytest
-from game.simulation.entities.ship import Ship, LayerType, VEHICLE_CLASSES
+from game.simulation.entities.ship import Ship, LayerType
+from game.core.registry import RegistryManager
 from game.simulation.components.component import Component
 from game.simulation.components.abilities import (
     CombatPropulsion, CommandAndControl, ResourceStorage
@@ -46,16 +47,18 @@ class TestBug06CombatPropulsion:
 
     def _create_ship_with_layers(self, ship_class="TestClass"):
         """Create a ship with properly initialized layers."""
-        # Temporarily update VEHICLE_CLASSES for Ship initialization
-        original_classes = dict(VEHICLE_CLASSES)
-        VEHICLE_CLASSES.clear()
-        VEHICLE_CLASSES.update(self.vehicle_classes)
+        # Temporarily update vehicle_classes for Ship initialization
+        classes = RegistryManager.instance().vehicle_classes
+        original_classes = dict(classes)
+        classes.clear()
+        classes.update(self.vehicle_classes)
         
         ship = Ship(name="Test Ship", x=0, y=0, color=(255, 255, 255), ship_class=ship_class)
         
         # Restore original classes
-        VEHICLE_CLASSES.clear()
-        VEHICLE_CLASSES.update(original_classes)
+        classes = RegistryManager.instance().vehicle_classes
+        classes.clear()
+        classes.update(original_classes)
         
         return ship
 

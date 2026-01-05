@@ -79,3 +79,23 @@ class RegistryManager:
         """Helper to raise error if modifications are attempted while frozen."""
         if self._frozen:
             raise RuntimeError("RegistryManager is frozen and cannot be modified")
+
+def get_component_registry() -> Dict[str, Any]:
+    """Get the component registry dictionary.
+    
+    Returns a reference to the live dictionary managed by RegistryManager.
+    Prefer this over direct RegistryManager.instance().components access.
+    """
+    return RegistryManager.instance().components
+
+def get_modifier_registry() -> Dict[str, Any]:
+    """Get the modifier registry dictionary."""
+    return RegistryManager.instance().modifiers
+
+def get_vehicle_classes() -> Dict[str, Any]:
+    """Get the vehicle classes dictionary."""
+    return RegistryManager.instance().vehicle_classes
+
+def get_validator():
+    """Get the ship design validator (lazy-loaded)."""
+    return RegistryManager.instance().get_validator()

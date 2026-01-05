@@ -1,6 +1,7 @@
 import pygame
 import math
-from game.simulation.entities.ship import VEHICLE_CLASSES, LayerType
+from game.simulation.entities.ship import LayerType
+from game.core.registry import RegistryManager
 
 from ui.colors import COLORS
 SHIP_VIEW_BG = COLORS['bg_deep']
@@ -27,7 +28,7 @@ class SchematicView:
         self.arc_cache = {}
 
     def _calculate_max_r(self, ship):
-        class_def = VEHICLE_CLASSES.get(ship.ship_class, {})
+        class_def = RegistryManager.instance().vehicle_classes.get(ship.ship_class, {})
         ref_mass = class_def.get('max_mass', 1000)
         # Scale: Dreadnought(64000)->40->280px. Escort(1000)->10->70px.
         PIXELS_PER_MASS_ROOT = 7.0 

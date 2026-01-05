@@ -14,8 +14,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from game.simulation.entities.ship import Ship, load_vehicle_classes
 from game.simulation.components.component import (
-    load_components, load_modifiers, create_component,
-    MODIFIER_REGISTRY, COMPONENT_REGISTRY
+    load_components, load_modifiers, create_component
 )
 
 

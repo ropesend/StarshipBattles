@@ -69,7 +69,8 @@ class TestSliderIncrement(unittest.TestCase):
             )
         }
         
-        with patch('game.ui.panels.builder_widgets.MODIFIER_REGISTRY', mock_registry):
+        from game.core.registry import RegistryManager
+        with patch.object(RegistryManager.instance(), 'modifiers', mock_registry):
             with patch('ui.builder.modifier_row.UIHorizontalSlider') as MockSlider:
                 panel.rebuild(None, template_modifiers)
                 panel.layout(0)

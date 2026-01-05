@@ -1,8 +1,7 @@
 
 import pytest
 try:
-    from game.simulation.components.component import COMPONENT_REGISTRY, MODIFIER_REGISTRY
-    from game.simulation.entities.ship import VEHICLE_CLASSES
+    from game.core.registry import RegistryManager
 except ImportError:
     pytest.skip("Could not import registries", allow_module_level=True)
 
@@ -11,15 +10,23 @@ except ImportError:
 
 def test_a_pollution_setter():
     """Injects 'poison' into global registries."""
-    COMPONENT_REGISTRY["POISON_COMPONENT"] = {"name": "Poison"}
-    MODIFIER_REGISTRY["POISON_MOD"] = {"effect": "Toxic"}
-    VEHICLE_CLASSES["POISON_SHIP"] = {"class": "Hazard"}
+    comps = RegistryManager.instance().components
+    mods = RegistryManager.instance().modifiers
+    classes = RegistryManager.instance().vehicle_classes
     
-    assert "POISON_COMPONENT" in COMPONENT_REGISTRY
+    comps["POISON_COMPONENT"] = {"name": "Poison"}
+    mods["POISON_MOD"] = {"effect": "Toxic"}
+    classes["POISON_SHIP"] = {"class": "Hazard"}
+    
+    assert "POISON_COMPONENT" in comps
 
 def test_b_pollution_victim():
     """Asserts that the environment is clean (fails if pollution persists)."""
     # If no isolation mechanism is in place, these asserts will FAIL.
-    assert "POISON_COMPONENT" not in COMPONENT_REGISTRY, "Pollution detected: COMPONENT_REGISTRY leaked state!"
-    assert "POISON_MOD" not in MODIFIER_REGISTRY, "Pollution detected: MODIFIER_REGISTRY leaked state!"
-    assert "POISON_SHIP" not in VEHICLE_CLASSES, "Pollution detected: VEHICLE_CLASSES leaked state!"
+    comps = RegistryManager.instance().components
+    mods = RegistryManager.instance().modifiers
+    classes = RegistryManager.instance().vehicle_classes
+    
+    assert "POISON_COMPONENT" not in comps, "Pollution detected: components leaked state!"
+    assert "POISON_MOD" not in mods, "Pollution detected: modifiers leaked state!"
+    assert "POISON_SHIP" not in classes, "Pollution detected: vehicle_classes leaked state!"

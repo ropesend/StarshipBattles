@@ -32,13 +32,13 @@ class TestShipStatsBaseline(unittest.TestCase):
         sys.modules['pygame.font'] = self.pygame_mock.font
         
         # Import after mocking
+        from game.core.registry import RegistryManager
         from game.simulation.components.component import Component, load_components, load_modifiers
         from ship_stats import ShipStatsCalculator
-        from game.simulation.entities.ship import VEHICLE_CLASSES
         
         self.Component = Component
         self.ShipStatsCalculator = ShipStatsCalculator
-        self.VEHICLE_CLASSES = VEHICLE_CLASSES
+        self.vehicle_classes = RegistryManager.instance().vehicle_classes
         
         # Load components and modifiers
         load_components()
@@ -92,7 +92,7 @@ class TestShipStatsBaseline(unittest.TestCase):
         engine = self.Component(engine_data)
         
         ship = self._create_mock_ship([engine])
-        calculator = self.ShipStatsCalculator(self.VEHICLE_CLASSES)
+        calculator = self.ShipStatsCalculator(self.vehicle_classes)
         calculator.calculate(ship)
         
         self.assertEqual(ship.total_thrust, 1500)
@@ -117,7 +117,7 @@ class TestShipStatsBaseline(unittest.TestCase):
         thruster = self.Component(thruster_data)
         
         ship = self._create_mock_ship([thruster])
-        calculator = self.ShipStatsCalculator(self.VEHICLE_CLASSES)
+        calculator = self.ShipStatsCalculator(self.vehicle_classes)
         calculator.calculate(ship)
         
         # Raw turn speed before mass scaling
@@ -157,7 +157,7 @@ class TestShipStatsBaseline(unittest.TestCase):
         regen = self.Component(regen_data)
         
         ship = self._create_mock_ship([shield, regen])
-        calculator = self.ShipStatsCalculator(self.VEHICLE_CLASSES)
+        calculator = self.ShipStatsCalculator(self.vehicle_classes)
         calculator.calculate(ship)
         
         self.assertEqual(ship.max_shields, 500.0)
@@ -219,7 +219,7 @@ class TestShipStatsBaseline(unittest.TestCase):
         engine2 = self.Component(engine2_data)
         
         ship = self._create_mock_ship([engine1, engine2])
-        calculator = self.ShipStatsCalculator(self.VEHICLE_CLASSES)
+        calculator = self.ShipStatsCalculator(self.vehicle_classes)
         calculator.calculate(ship)
         
         self.assertEqual(ship.total_thrust, 2500)
@@ -242,10 +242,11 @@ class TestAbilityModifierSync(unittest.TestCase):
         sys.modules['pygame.mixer'] = self.pygame_mock.mixer
         sys.modules['pygame.font'] = self.pygame_mock.font
         
-        from game.simulation.components.component import Component, load_components, load_modifiers, MODIFIER_REGISTRY
+        from game.simulation.components.component import Component, load_components, load_modifiers
+        from game.core.registry import RegistryManager
         
         self.Component = Component
-        self.MODIFIER_REGISTRY = MODIFIER_REGISTRY
+        self.modifiers = RegistryManager.instance().modifiers
         
         load_components()
         load_modifiers()
@@ -271,7 +272,7 @@ class TestAbilityModifierSync(unittest.TestCase):
         
         # Apply 2x size modifier (if it affects thrust)
         # Check if there's a thrust-affecting modifier
-        if 'size_mount' in self.MODIFIER_REGISTRY:
+        if 'size_mount' in self.modifiers:
             engine.add_modifier('size_mount', 2)  # Example modifier
             engine.recalculate_stats()
             

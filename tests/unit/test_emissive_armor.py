@@ -32,13 +32,14 @@ class TestEmissiveArmor(unittest.TestCase):
             }
         }
         # Register it so it can be cloned if needed, or just use it directly
-        from game.simulation.components.component import COMPONENT_REGISTRY, Component
+        from game.core.registry import RegistryManager
+        from game.simulation.components.component import Component
         
         # Ensure ship has mass budget for formula eval when added
         self.ship.max_mass_budget = 1000
         
         c = Component(self.armor_data)
-        COMPONENT_REGISTRY["emissive_armor"] = c
+        RegistryManager.instance().components["emissive_armor"] = c
         
         # Add to ship
         self.emissive_comp = c.clone()

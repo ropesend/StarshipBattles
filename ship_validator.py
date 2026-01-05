@@ -178,17 +178,18 @@ class ClassRequirementsRule(ValidationRule):
         # This rule validates the whole design
         
         # Import internally to avoid circular imports
-        from game.simulation.entities.ship import VEHICLE_CLASSES
+        from game.core.registry import RegistryManager
         from ship_stats import ShipStatsCalculator
         
-        class_def = VEHICLE_CLASSES.get(ship.ship_class, {})
+        classes = RegistryManager.instance().vehicle_classes
+        class_def = classes.get(ship.ship_class, {})
         requirements = class_def.get('requirements', {})
         
         all_components = [c for layer in ship.layers.values() for c in layer['components']]
         if component:
             all_components.append(component)
             
-        stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)
+        stats_calculator = ShipStatsCalculator(classes)
         ability_totals = stats_calculator.calculate_ability_totals(all_components)
         
         for req_name, req_def in requirements.items():

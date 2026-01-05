@@ -7,7 +7,7 @@ import math
 # Add project root to path
 sys.path.append(os.getcwd())
 
-from game.simulation.components.component import load_components, create_component, load_modifiers, MODIFIER_REGISTRY
+from game.simulation.components.component import load_components, create_component, load_modifiers
 
 class TestScalingLogic(unittest.TestCase):
     def setUp(self):

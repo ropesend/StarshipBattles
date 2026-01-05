@@ -3,7 +3,8 @@ import sys
 import os
 sys.path.append(os.getcwd())
 import unittest
-from game.simulation.components.component import load_components, create_component, load_modifiers, MODIFIER_REGISTRY
+from game.simulation.components.component import load_components, create_component, load_modifiers
+from game.core.registry import RegistryManager
 import json
 
 class TestComponentScaling(unittest.TestCase):

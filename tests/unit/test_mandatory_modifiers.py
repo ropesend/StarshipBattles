@@ -9,7 +9,8 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from game.ui.screens.builder_screen import ModifierEditorPanel
-from game.simulation.components.component import MODIFIER_REGISTRY, Modifier
+from game.core.registry import RegistryManager
+from game.simulation.components.component import Modifier
 
 class TestMandatoryModifiers(unittest.TestCase):
     def setUp(self):
@@ -19,13 +20,13 @@ class TestMandatoryModifiers(unittest.TestCase):
         self.container = pygame_gui.elements.UIPanel(pygame.Rect(0,0,100,100), manager=self.manager)
         
         # Ensure registry has our mods
-        # We might need to mock MODIFIER_REGISTRY if it isn't populated
-        if 'simple_size' not in MODIFIER_REGISTRY:
-            MODIFIER_REGISTRY['simple_size'] = Modifier({'id': 'simple_size', 'name': 'Size', 'type': 'linear', 'min_val': 1, 'max_val': 100})
-        if 'range_mount' not in MODIFIER_REGISTRY:
-            MODIFIER_REGISTRY['range_mount'] = Modifier({'id': 'range_mount', 'name': 'Range', 'type': 'linear', 'min_val': 0, 'max_val': 10})
-        if 'facing' not in MODIFIER_REGISTRY:
-             MODIFIER_REGISTRY['facing'] = Modifier({'id': 'facing', 'name': 'Facing', 'type': 'linear', 'min_val': 0, 'max_val': 360})
+        mods = RegistryManager.instance().modifiers
+        if 'simple_size' not in mods:
+            mods['simple_size'] = Modifier({'id': 'simple_size', 'name': 'Size', 'type': 'linear', 'min_val': 1, 'max_val': 100})
+        if 'range_mount' not in mods:
+            mods['range_mount'] = Modifier({'id': 'range_mount', 'name': 'Range', 'type': 'linear', 'min_val': 0, 'max_val': 10})
+        if 'facing' not in mods:
+             mods['facing'] = Modifier({'id': 'facing', 'name': 'Facing', 'type': 'linear', 'min_val': 0, 'max_val': 360})
 
     def tearDown(self):
         pass # pygame.quit() removed for session isolation
@@ -64,7 +65,7 @@ class TestMandatoryModifiers(unittest.TestCase):
             'turret_mount': Modifier({'id': 'turret_mount', 'name': 'Turret', 'type': 'linear', 'min_val': 0, 'max_val': 360, 'restrictions': {'allow_types': ['ProjectileWeapon']}})
         }
         
-        with patch.dict(MODIFIER_REGISTRY, test_registry, clear=True):
+        with patch.dict(RegistryManager.instance().modifiers, test_registry, clear=True):
              panel.rebuild(mock_comp, {})
              panel.layout(10)
         
@@ -82,7 +83,7 @@ class TestMandatoryModifiers(unittest.TestCase):
             'turret_mount': Modifier({'id': 'turret_mount', 'name': 'Turret', 'type': 'linear', 'min_val': 0, 'max_val': 360, 'restrictions': {'allow_types': ['ProjectileWeapon']}})
         }
         
-        with patch.dict(MODIFIER_REGISTRY, test_registry, clear=True):
+        with patch.dict(RegistryManager.instance().modifiers, test_registry, clear=True):
              panel.rebuild(mock_comp, {})
              panel.layout(10)
              
@@ -164,7 +165,7 @@ class TestMandatoryModifiers(unittest.TestCase):
             # Note: Seeker NOT in allow_types (mimicking modifiers.json update)
         }
         
-        with patch.dict(MODIFIER_REGISTRY, test_registry, clear=True):
+        with patch.dict(RegistryManager.instance().modifiers, test_registry, clear=True):
              panel.rebuild(mock_comp, {})
              panel.layout(10)
              
@@ -174,7 +175,7 @@ class TestMandatoryModifiers(unittest.TestCase):
         panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
         mock_comp, mods = self._setup_mock_comp('reactor')
         # Ensure registry has simple_size_mount
-        with patch.dict(MODIFIER_REGISTRY, {'simple_size_mount': Modifier({'id': 'simple_size_mount', 'name': 'Size', 'type': 'linear', 'min_val': 1, 'max_val': 100})}, clear=True):
+        with patch.dict(RegistryManager.instance().modifiers, {'simple_size_mount': Modifier({'id': 'simple_size_mount', 'name': 'Size', 'type': 'linear', 'min_val': 1, 'max_val': 100})}, clear=True):
              # Run layout
              panel.rebuild(mock_comp, {})
              panel.layout(10)
@@ -199,7 +200,7 @@ class TestMandatoryModifiers(unittest.TestCase):
             })
         }
         
-        with patch.dict(MODIFIER_REGISTRY, test_registry, clear=True):
+        with patch.dict(RegistryManager.instance().modifiers, test_registry, clear=True):
             # Run layout
             panel.rebuild(mock_comp, {})
             panel.layout(10)
@@ -220,7 +221,7 @@ class TestMandatoryModifiers(unittest.TestCase):
             })
         }
 
-        with patch.dict(MODIFIER_REGISTRY, test_registry, clear=True):
+        with patch.dict(RegistryManager.instance().modifiers, test_registry, clear=True):
             panel.rebuild(mock_comp, {})
             panel.layout(10)
         
@@ -240,7 +241,7 @@ class TestMandatoryModifiers(unittest.TestCase):
             'simple_size_mount': Modifier({'id': 'simple_size_mount', 'name': 'Size', 'type': 'linear', 'min_val': 1, 'max_val': 100})
         }
         
-        with patch.dict(MODIFIER_REGISTRY, test_registry, clear=True):
+        with patch.dict(RegistryManager.instance().modifiers, test_registry, clear=True):
             panel.rebuild(mock_comp, {})
             panel.layout(10)
             

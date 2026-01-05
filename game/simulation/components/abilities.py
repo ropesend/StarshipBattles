@@ -372,7 +372,13 @@ class WeaponAbility(Ability):
         super().__init__(component, data)
         
         # Handle damage (may be number or formula string)
-        raw_damage = data.get('damage', 0)
+        if isinstance(data, dict):
+            raw_damage = data.get('damage', 0)
+        else:
+            # Fallback to component base stats if data is not a dict (e.g. shortcut 'true')
+            raw_damage = self.component.data.get('damage', 0)
+            if not raw_damage: raw_damage = self.component.data.get('base_damage', 0)
+            
         if isinstance(raw_damage, str) and raw_damage.startswith('='):
             from formula_system import evaluate_math_formula
             self.damage_formula = raw_damage[1:]  # Store without '='
@@ -384,7 +390,12 @@ class WeaponAbility(Ability):
         self._base_damage = self.damage  # Store for modifier sync
         
         # Handle range (may be number or formula string)
-        raw_range = data.get('range', 0)
+        if isinstance(data, dict):
+            raw_range = data.get('range', 0)
+        else:
+            raw_range = self.component.data.get('range', 0)
+            if not raw_range: raw_range = self.component.data.get('base_range', 0)
+            
         if isinstance(raw_range, str) and raw_range.startswith('='):
             from formula_system import evaluate_math_formula
             self.range = float(max(0, evaluate_math_formula(raw_range[1:], {})))
@@ -393,7 +404,12 @@ class WeaponAbility(Ability):
         self._base_range = self.range  # Store for modifier sync
         
         # Handle reload (may be number or formula string)  
-        raw_reload = data.get('reload', 1.0)
+        if isinstance(data, dict):
+            raw_reload = data.get('reload', 1.0)
+        else:
+            raw_reload = self.component.data.get('reload', 1.0)
+            if not raw_reload: raw_reload = self.component.data.get('base_reload', 1.0)
+            
         if isinstance(raw_reload, str) and raw_reload.startswith('='):
             from formula_system import evaluate_math_formula
             self.reload_time = float(max(0.0, evaluate_math_formula(raw_reload[1:], {})))
@@ -401,21 +417,28 @@ class WeaponAbility(Ability):
             self.reload_time = float(raw_reload) if raw_reload is not None else 1.0
         self._base_reload = self.reload_time  # Store for modifier sync
         
-        self.firing_arc = float(data.get('firing_arc', 360))
-        self._base_firing_arc = self.firing_arc
-        self.facing_angle = float(data.get('facing_angle', 0))
         self.cooldown_timer = 0.0
         
-        # Tags for targeting logic (e.g. 'pdc')
-        self._tags.update(data.get('tags', []))
+        if isinstance(data, dict):
+            self.firing_arc = float(data.get('firing_arc', 360))
+            self.facing_angle = float(data.get('facing_angle', 0))
+            self._tags.update(data.get('tags', []))
+        else:
+            self.firing_arc = float(self.component.data.get('firing_arc', 360))
+            self.facing_angle = float(self.component.data.get('facing_angle', 0))
+        
+        self._base_firing_arc = self.firing_arc
 
     def sync_data(self, data: Any):
         super().sync_data(data)
         if not isinstance(data, dict): return
         
         # Syncing fields that might change in data
-        self.firing_arc = float(data.get('firing_arc', self.firing_arc))
-        self.facing_angle = float(data.get('facing_angle', self.facing_angle))
+        if 'firing_arc' in data:
+            self.firing_arc = float(data['firing_arc'])
+            self._base_firing_arc = self.firing_arc
+        if 'facing_angle' in data:
+            self.facing_angle = float(data['facing_angle'])
         
         # Damage/Range/Reload might be formulas, but usually they are base values in data 
         # which recalculate() then uses to apply multipliers.
@@ -480,12 +503,15 @@ class WeaponAbility(Ability):
     def fire(self, target: Any) -> bool:
         """Execute weapon fire logic. Returns True if successfully fired."""
         if self.can_fire():
+            print(f"DEBUG: {self.__class__.__name__}.fire() called for {self.component.name}", flush=True)
             # Consume resources via Component (Bridge to ResourceRegistry)
             if self.component:
                 self.component.consume_activation()
                 
             self.cooldown_timer = self.reload_time
             return True
+        # else:
+        #     print(f"DEBUG: {self.__class__.__name__}.fire() BLOCKED by cooldown for {self.component.name}: {self.cooldown_timer}")
         return False
 
     def get_damage(self, range_to_target: float = 0) -> float:
@@ -511,6 +537,7 @@ class WeaponAbility(Ability):
         # 1. Range Check
         dist = ship_pos.distance_to(target_pos)
         if dist > self.range:
+            print(f"DEBUG: check_firing_solution Range FAIL: dist {dist} > range {self.range}")
             return False
             
         # 2. Arc Check
@@ -524,15 +551,21 @@ class WeaponAbility(Ability):
         # Shortest angular difference
         diff = (aim_angle - comp_facing + 180) % 360 - 180
         
-        if abs(diff) <= (self.firing_arc / 2):
+        # Phase 7: Use epsilon for boundary floating point stability
+        if abs(diff) <= (self.firing_arc / 2) + 0.01:
             return True
             
+        print(f"DEBUG: check_firing_solution Arc FAIL: diff {abs(diff)} > {self.firing_arc/2}")
         return False
 
 class ProjectileWeaponAbility(WeaponAbility):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        self.projectile_speed = float(data.get('projectile_speed', 500))
+        # Handle dict vs primitive shortcut
+        if isinstance(data, dict):
+            self.projectile_speed = float(data.get('projectile_speed', 500))
+        else:
+            self.projectile_speed = float(getattr(self.component, 'projectile_speed', 500))
 
     def get_ui_rows(self):
         rows = super().get_ui_rows()
@@ -542,8 +575,12 @@ class ProjectileWeaponAbility(WeaponAbility):
 class BeamWeaponAbility(WeaponAbility):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        self.accuracy_falloff = float(data.get('accuracy_falloff', 0.001))
-        self.base_accuracy = float(data.get('base_accuracy', 1.0))
+        if isinstance(data, dict):
+             self.accuracy_falloff = float(data.get('accuracy_falloff', 0.001))
+             self.base_accuracy = float(data.get('base_accuracy', 1.0))
+        else:
+             self.accuracy_falloff = float(getattr(self.component, 'accuracy_falloff', 0.001))
+             self.base_accuracy = float(getattr(self.component, 'base_accuracy', 1.0))
         self._base_accuracy = self.base_accuracy
 
     def recalculate(self):
@@ -588,10 +625,16 @@ class BeamWeaponAbility(WeaponAbility):
 class SeekerWeaponAbility(WeaponAbility):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        self.projectile_speed = float(data.get('projectile_speed', 500))
-        self.endurance = float(data.get('endurance', 3.0))
-        self.turn_rate = float(data.get('turn_rate', 30.0))
-        self.to_hit_defense = float(data.get('to_hit_defense', 0.0))
+        if isinstance(data, dict):
+            self.projectile_speed = float(data.get('projectile_speed', 500))
+            self.endurance = float(data.get('endurance', 3.0))
+            self.turn_rate = float(data.get('turn_rate', 30.0))
+            self.to_hit_defense = float(data.get('to_hit_defense', 0.0))
+        else:
+            self.projectile_speed = float(getattr(self.component, 'projectile_speed', 500))
+            self.endurance = float(getattr(self.component, 'endurance', 3.0))
+            self.turn_rate = float(getattr(self.component, 'turn_rate', 30.0))
+            self.to_hit_defense = float(getattr(self.component, 'to_hit_defense', 0.0))
         
         # Recalculate range based on endurance if basic range not set or derived
         # Seekers use 80% of straight-line range to account for maneuvering
@@ -627,6 +670,12 @@ ABILITY_REGISTRY = {
     "ToHitDefenseModifier": ToHitDefenseModifier,
     "EmissiveArmor": EmissiveArmor,
     "Armor": lambda c, d: Ability(c, d), # Dummy ability for tag/existence checks
+    
+    # Legacy Shims
+    "ProjectileWeapon": ProjectileWeaponAbility,
+    "BeamWeapon": BeamWeaponAbility,
+    "SeekerWeapon": SeekerWeaponAbility,
+    "PointDefense": lambda c, d: Ability(c, {"tags": ["pdc"]} if d is True else {**d, "tags": ["pdc"]}),
     
     # Primitive/Shortcut Factories
     "FuelStorage": lambda c, d: ResourceStorage(c, {"resource": "fuel", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "fuel"}),

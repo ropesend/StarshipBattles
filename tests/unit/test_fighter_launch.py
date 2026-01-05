@@ -4,7 +4,8 @@ import os
 sys.path.append(os.getcwd())
 import pygame
 from game.simulation.entities.ship import Ship, initialize_ship_data
-from game.simulation.components.component import load_components, COMPONENT_REGISTRY, LayerType
+from game.simulation.components.component import load_components, LayerType
+from game.core.registry import RegistryManager
 from game.simulation.systems.battle_engine import BattleEngine
 from game.core.constants import AttackType
 from game.ai.controller import STRATEGY_MANAGER
@@ -25,7 +26,7 @@ class TestFighterLaunch(unittest.TestCase):
 
     def test_hangar_initialization(self):
         """Test Hangar component loads correctly."""
-        hangar = COMPONENT_REGISTRY.get("fighter_launch_bay")
+        hangar = RegistryManager.instance().components.get("fighter_launch_bay")
         self.assertIsNotNone(hangar)
         self.assertEqual(hangar.type_str, "Hangar")
         
@@ -38,15 +39,16 @@ class TestFighterLaunch(unittest.TestCase):
     def test_launch_logic(self):
         """Test launching mechanism on a ship."""
         ship = Ship("Carrier", 0, 0, (255, 0, 0), ship_class="Cruiser")
-        hangar = COMPONENT_REGISTRY["fighter_launch_bay"].clone()
+        comps = RegistryManager.instance().components
+        hangar = comps["fighter_launch_bay"].clone()
         # Add Bridge to prevent derelict status
-        bridge = COMPONENT_REGISTRY["bridge"].clone()
+        bridge = comps["bridge"].clone()
         bridge.abilities.pop("CrewRequired", None)
         ship.add_component(bridge, LayerType.CORE)
         bridge.current_hp = bridge.max_hp # Fix 0 HP initialization due to formula
         
         # Add Engine to prevent derelict status (Thrust > 0)
-        ship_engine = COMPONENT_REGISTRY["standard_engine"].clone()
+        ship_engine = RegistryManager.instance().components["standard_engine"].clone()
         ship.add_component(ship_engine, LayerType.INNER)
 
         # Remove crew requirement for test
@@ -86,17 +88,18 @@ class TestFighterLaunch(unittest.TestCase):
         carrier = Ship("Carrier", 0, 0, (255, 0, 0), team_id=0, ship_class="Cruiser")
         
         # Add Bridge
-        bridge = COMPONENT_REGISTRY["bridge"].clone()
+        bridge = RegistryManager.instance().components["bridge"].clone()
         bridge.abilities.pop("CrewRequired", None)
         carrier.add_component(bridge, LayerType.CORE)
         bridge.current_hp = bridge.max_hp # Fix 0 HP initialization
 
         
         # Add Engine
-        ship_engine = COMPONENT_REGISTRY["standard_engine"].clone()
+        comps = RegistryManager.instance().components
+        ship_engine = comps["standard_engine"].clone()
         carrier.add_component(ship_engine, LayerType.INNER)
 
-        hangar = COMPONENT_REGISTRY["fighter_launch_bay"].clone()
+        hangar = comps["fighter_launch_bay"].clone()
         # Remove crew requirement for test
         hangar.abilities.pop("CrewRequired", None)
         
@@ -130,15 +133,16 @@ class TestFighterLaunch(unittest.TestCase):
     def test_stats_aggregation(self):
         """Test ShipStatsCalculator aggregates Hangar stats."""
         ship = Ship("Carrier", 0, 0, (255, 0, 0), ship_class="Cruiser")
-        hangar = COMPONENT_REGISTRY["fighter_launch_bay"].clone()
-        ship.add_component(hangar, LayerType.INNER)
+        comps = RegistryManager.instance().components
+        hangar = comps["fighter_launch_bay"].clone()
         
         # Add Bridge & Engine for validity (optional for stats but good practice)
-        bridge = COMPONENT_REGISTRY["bridge"].clone()
+        bridge = comps["bridge"].clone()
         bridge.abilities.pop("CrewRequired", None)
         ship.add_component(bridge, LayerType.CORE)
-        engine = COMPONENT_REGISTRY["standard_engine"].clone()
+        engine = comps["standard_engine"].clone()
         ship.add_component(engine, LayerType.INNER)
+        ship.add_component(hangar, LayerType.INNER)
         
         # Remove crew requirement for test coverage of stats
         # Must modify data because recalculate_stats reloads abilities from data!

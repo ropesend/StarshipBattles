@@ -7,7 +7,8 @@ import os
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from game.simulation.entities.ship import Ship, LayerType, VEHICLE_CLASSES
+from game.simulation.entities.ship import Ship, LayerType
+from game.core.registry import RegistryManager
 from game.simulation.components.component import Component
 
 class TestBug03Validation(unittest.TestCase):
@@ -15,8 +16,9 @@ class TestBug03Validation(unittest.TestCase):
         if not pygame.get_init():
             pygame.init()
         # Ensure 'Cruiser' exists
-        if "Cruiser" not in VEHICLE_CLASSES:
-             VEHICLE_CLASSES["Cruiser"] = {"max_mass": 16000, "hull_mass": 400}
+        classes = RegistryManager.instance().vehicle_classes
+        if "Cruiser" not in classes:
+             classes["Cruiser"] = {"max_mass": 16000, "hull_mass": 400}
 
         self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
         

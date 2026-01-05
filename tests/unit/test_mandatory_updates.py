@@ -6,7 +6,8 @@ import os
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from game.simulation.components.component import Component, Modifier, MODIFIER_REGISTRY
+from game.simulation.components.component import Component, Modifier
+from game.core.registry import RegistryManager
 from ui.builder.modifier_logic import ModifierLogic
 
 class TestMandatoryUpdates(unittest.TestCase):
@@ -30,7 +31,7 @@ class TestMandatoryUpdates(unittest.TestCase):
                      'abilities': {'CrewRequired': 5, 'WeaponAbility': {'damage': 10, 'range': 1000}}}
         comp = Component(comp_data)
         
-        with patch.dict(MODIFIER_REGISTRY, self.test_registry, clear=True):
+        with patch.dict(RegistryManager.instance().modifiers, self.test_registry, clear=True):
             mandatory = ModifierLogic.get_mandatory_modifiers(comp)
             
             self.assertIn('automation', mandatory)
@@ -43,7 +44,7 @@ class TestMandatoryUpdates(unittest.TestCase):
                      'abilities': {'WeaponAbility': {'damage': 10, 'range': 1000}}}
         comp = Component(comp_data)
         
-        with patch.dict(MODIFIER_REGISTRY, self.test_registry, clear=True):
+        with patch.dict(RegistryManager.instance().modifiers, self.test_registry, clear=True):
             mandatory = ModifierLogic.get_mandatory_modifiers(comp)
             
             self.assertNotIn('automation', mandatory)
@@ -59,7 +60,7 @@ class TestMandatoryUpdates(unittest.TestCase):
                      'abilities': {'SeekerWeaponAbility': {'damage': 50, 'range': 2000, 'endurance': 5}}}
         comp = Component(comp_data)
         
-        with patch.dict(MODIFIER_REGISTRY, self.test_registry, clear=True):
+        with patch.dict(RegistryManager.instance().modifiers, self.test_registry, clear=True):
             mandatory = ModifierLogic.get_mandatory_modifiers(comp)
             
             self.assertIn('seeker_endurance', mandatory)

@@ -31,9 +31,9 @@ class TestDamageLayerLogic(unittest.TestCase):
         self.ship.add_component(create_component('life_support'), LayerType.CORE)
         self.ship.add_component(create_component('armor_plate'), LayerType.ARMOR)
         
-        # Ensure TestShip class exists in VEHICLE_CLASSES with correct layers
-        from game.simulation.entities.ship import VEHICLE_CLASSES
-        VEHICLE_CLASSES["TestShip"] = {
+        # Ensure TestShip class exists in RegistryManager with correct layers
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().vehicle_classes["TestShip"] = {
             "hull_mass": 50, "max_mass": 1000,
             "layers": [
                 {"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 0.5},
@@ -128,8 +128,8 @@ class TestDamageLayerLogic(unittest.TestCase):
     def test_bridge_requirement_kills_ship(self):
         """Destroying the bridge SHOULD kill the ship IF required."""
         # Inject requirement
-        from game.simulation.entities.ship import VEHICLE_CLASSES
-        VEHICLE_CLASSES["TestShip"] = {
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().vehicle_classes["TestShip"] = {
             "hull_mass": 50, "max_mass": 1000,
             "requirements": {"CommandAndControl": True}
         }

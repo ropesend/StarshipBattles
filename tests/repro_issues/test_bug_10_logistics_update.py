@@ -3,7 +3,8 @@ Reproduction Test for BUG-10: Ship stats not updating for ammo/ordnance.
 Uses 'Manual Headless Assembly' pattern for test isolation.
 """
 import pytest
-from game.simulation.entities.ship import Ship, LayerType, VEHICLE_CLASSES
+from game.simulation.entities.ship import Ship, LayerType
+from game.core.registry import RegistryManager
 from game.simulation.components.component import Component
 from game.simulation.components.abilities import ResourceConsumption, WeaponAbility
 from ui.builder.stats_config import get_logistics_rows
@@ -40,10 +41,11 @@ def test_ammo_usage_triggers_logistics_row():
         }
     }
     
-    # Temporarily set up VEHICLE_CLASSES for Ship initialization
-    original_classes = dict(VEHICLE_CLASSES)
-    VEHICLE_CLASSES.clear()
-    VEHICLE_CLASSES.update(test_vehicle_classes)
+    # Temporarily set up vehicle_classes for Ship initialization
+    classes = RegistryManager.instance().vehicle_classes
+    original_classes = dict(classes)
+    classes.clear()
+    classes.update(test_vehicle_classes)
     
     try:
         ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="TestClass")
@@ -114,5 +116,6 @@ def test_ammo_usage_triggers_logistics_row():
         
     finally:
         # Restore original classes to prevent pollution of subsequent tests
-        VEHICLE_CLASSES.clear()
-        VEHICLE_CLASSES.update(original_classes)
+        classes = RegistryManager.instance().vehicle_classes
+        classes.clear()
+        classes.update(original_classes)

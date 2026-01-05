@@ -4,19 +4,20 @@ import os
 # Ensure component path
 sys.path.append(os.getcwd())
 
-from game.simulation.components.component import load_modifiers, MODIFIER_REGISTRY, Component, load_components
+from game.simulation.components.component import load_modifiers, Component, load_components
+from game.core.registry import RegistryManager
 from ui.builder.modifier_logic import ModifierLogic
 
 # Load Data
 print("Loading Modifiers...")
 load_modifiers()
-print(f"Registry Size: {len(MODIFIER_REGISTRY)}")
+mods = RegistryManager.instance().modifiers
+print(f"Registry Size: {len(mods)}")
 
-if 'automation' not in MODIFIER_REGISTRY:
-    print("ERROR: 'automation' not found in registry!")
-    sys.exit(1)
-
-mod = MODIFIER_REGISTRY['automation']
+if 'automation' not in mods:
+    print("Error: automation modifier missing from registry")
+else:
+    mod = mods['automation']
 print(f"Automation Modifier: {mod.name}")
 print(f"Min: {mod.min_val}, Max: {mod.max_val}")
 print(f"Def: {mod.default_val}")

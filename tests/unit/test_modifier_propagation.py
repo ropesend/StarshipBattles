@@ -1,6 +1,7 @@
 
 import unittest
-from game.simulation.components.component import Component, MODIFIER_REGISTRY, load_modifiers
+from game.simulation.components.component import Component, load_modifiers
+from game.core.registry import RegistryManager
 from game.simulation.entities.ship import Ship, LayerType
 import pygame
 
@@ -63,7 +64,7 @@ class TestModifierGroupPropagation(unittest.TestCase):
         """Test that adding specific modifier respects min_val if default is not set or 0."""
         # Specifically checking simple_size_mount which had the issue
         mod_id = 'simple_size_mount'
-        if mod_id not in MODIFIER_REGISTRY:
+        if mod_id not in RegistryManager.instance().modifiers:
             self.skipTest("simple_size_mount not found")
             
         # Add to leader

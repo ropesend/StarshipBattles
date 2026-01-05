@@ -15,8 +15,9 @@ import sys
 import os
 sys.path.append(os.getcwd())
 
-from game.simulation.entities.ship import Ship, LayerType, VEHICLE_CLASSES
-from game.simulation.components.component import Component, load_components, COMPONENT_REGISTRY, create_component
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.components.component import Component, load_components, create_component
+from game.core.registry import RegistryManager
 from ship_stats import ShipStatsCalculator
 
 
@@ -40,14 +41,15 @@ def test_generator_without_crew_is_inactive():
     Demonstrates the 'bug' behavior: Generator shows 0 energy when ship has no crew.
     This is EXPECTED behavior - Generator requires crew to operate.
     """
-    if not COMPONENT_REGISTRY:
+    if not RegistryManager.instance().components:
         load_components()
     
     # Setup test-specific vehicle classes
     test_vehicle_classes = {"Cruiser": {'max_mass': 5000, 'type': 'Ship'}}
-    original_classes = dict(VEHICLE_CLASSES)
-    VEHICLE_CLASSES.clear()
-    VEHICLE_CLASSES.update(test_vehicle_classes)
+    classes = RegistryManager.instance().vehicle_classes
+    original_classes = dict(classes)
+    classes.clear()
+    classes.update(test_vehicle_classes)
     
     try:
         ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="Cruiser")
@@ -74,22 +76,24 @@ def test_generator_without_crew_is_inactive():
         assert energy_resource is None or energy_resource.regen_rate == 0.0, \
             "Energy gen should be 0 when generator is inactive"
     finally:
-        VEHICLE_CLASSES.clear()
-        VEHICLE_CLASSES.update(original_classes)
+        classes = RegistryManager.instance().vehicle_classes
+        classes.clear()
+        classes.update(original_classes)
 
 
 def test_generator_with_crew_is_active():
     """
     Demonstrates correct behavior: Generator works when crew is available.
     """
-    if not COMPONENT_REGISTRY:
+    if not RegistryManager.instance().components:
         load_components()
     
     # Setup test-specific vehicle classes
     test_vehicle_classes = {"Cruiser": {'max_mass': 5000, 'type': 'Ship'}}
-    original_classes = dict(VEHICLE_CLASSES)
-    VEHICLE_CLASSES.clear()
-    VEHICLE_CLASSES.update(test_vehicle_classes)
+    classes = RegistryManager.instance().vehicle_classes
+    original_classes = dict(classes)
+    classes.clear()
+    classes.update(test_vehicle_classes)
     
     try:
         ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="Cruiser")
@@ -122,8 +126,9 @@ def test_generator_with_crew_is_active():
         assert energy_resource is not None, "Energy resource not registered"
         assert energy_resource.regen_rate == 25.0, f"Energy gen rate should be 25.0, got {energy_resource.regen_rate}"
     finally:
-        VEHICLE_CLASSES.clear()
-        VEHICLE_CLASSES.update(original_classes)
+        classes = RegistryManager.instance().vehicle_classes
+        classes.clear()
+        classes.update(original_classes)
 
 
 if __name__ == "__main__":

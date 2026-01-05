@@ -1,8 +1,8 @@
-
 import unittest
 from unittest.mock import MagicMock
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import Component, COMPONENT_REGISTRY 
+from game.simulation.components.component import Component
+from game.core.registry import RegistryManager
 # Assuming registry is populated or we mock it. 
 # Better to mock components or use a minimal test case without full registry dependency if possible.
 

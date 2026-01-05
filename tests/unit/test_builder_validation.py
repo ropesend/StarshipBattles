@@ -168,8 +168,8 @@ class TestBuilderValidation(unittest.TestCase):
         
     def test_mass_validation(self):
         """Step 5a: Test complex mass addition boundary condition."""
-        # Patch VEHICLE_CLASSES to enforce a small limit for the 'Cruiser' class
-        with patch('game.simulation.entities.ship.VEHICLE_CLASSES', {"Cruiser": {"max_mass": 100, "hull_mass": 0, "layers": []}}):
+        from game.core.registry import RegistryManager
+        with patch.object(RegistryManager.instance(), 'vehicle_classes', {"Cruiser": {"max_mass": 100, "hull_mass": 0, "layers": []}}):
             # Re-init ship to pick up new class limit
             self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
             # Force explicit override just in case update overwrites it with 100
@@ -273,7 +273,7 @@ class TestComplexRules(unittest.TestCase):
 
     def test_class_requirements(self):
         """Verify ClassRequirementsRule (Crew/LifeSupport)."""
-        # Patch VEHICLE_CLASSES locally to force requirements
+        # Patch vehicle_classes locally to force requirements
         mock_classes = {
             "Cruiser": {
                 "max_mass": 1000, 
@@ -309,9 +309,10 @@ class TestComplexRules(unittest.TestCase):
         # Note: ClassRequirementsRule logic: if crew_capacity < crew_required
         
         # To make this deterministic, we need to ensure our mocked vehicle classes are used.
-        # But ShipDesignValidator imports VEHICLE_CLASSES from ship.
+        # But ShipDesignValidator reads from vehicle_classes.
         # So we patch it there.
-        with patch('game.simulation.entities.ship.VEHICLE_CLASSES', mock_classes):
+        from game.core.registry import RegistryManager
+        with patch.object(RegistryManager.instance(), 'vehicle_classes', mock_classes):
              result = self.validator.validate_design(self.ship)
              
         # Check errors
@@ -328,7 +329,7 @@ class TestComplexRules(unittest.TestCase):
         )
         self.ship.add_component(life_support, LayerType.INNER)
         
-        with patch('game.simulation.entities.ship.VEHICLE_CLASSES', mock_classes):
+        with patch.object(RegistryManager.instance(), 'vehicle_classes', mock_classes):
              result = self.validator.validate_design(self.ship)
              
         # Crew Housing: 5 cap < 10 req -> Error

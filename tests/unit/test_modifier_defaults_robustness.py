@@ -5,7 +5,8 @@ import os
 # Add project root to path
 sys.path.append(os.getcwd())
 
-from game.simulation.components.component import load_components, load_modifiers, COMPONENT_REGISTRY, MODIFIER_REGISTRY, create_component
+from game.simulation.components.component import load_components, load_modifiers, create_component
+from game.core.registry import RegistryManager
 from ui.builder.modifier_logic import ModifierLogic
 
 class TestModifierDefaultsRobustness(unittest.TestCase):
@@ -19,7 +20,7 @@ class TestModifierDefaultsRobustness(unittest.TestCase):
         even if the component's runtime firing_arc has been modified/corrupted.
         """
         # 1. Get a Railgun
-        if 'railgun' not in COMPONENT_REGISTRY:
+        if 'railgun' not in RegistryManager.instance().components:
             self.skipTest("Railgun not found in registry")
             
         comp = create_component('railgun')
@@ -48,7 +49,7 @@ class TestModifierDefaultsRobustness(unittest.TestCase):
         """
         Verify PDC defaults (180) are robust against runtime changes.
         """
-        if 'point_defence_cannon' not in COMPONENT_REGISTRY:
+        if 'point_defence_cannon' not in RegistryManager.instance().components:
             self.skipTest("PDC not found")
             
         comp = create_component('point_defence_cannon')

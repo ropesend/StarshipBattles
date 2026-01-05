@@ -10,7 +10,7 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.ui.screens.builder_screen import BuilderSceneGUI
-from game.simulation.entities.ship import VEHICLE_CLASSES
+from game.core.registry import RegistryManager
 
 class TestBuilderWarningLogic(unittest.TestCase):
     def setUp(self):
@@ -108,7 +108,8 @@ class TestBuilderWarningLogic(unittest.TestCase):
         event.text = "Station"
         
         # Mock getattr for checking current type
-        with patch('game.ui.screens.builder_screen.VEHICLE_CLASSES', {'Station': {'type': 'Station', 'max_mass': 5000}}):
+        from game.core.registry import RegistryManager
+        with patch.object(RegistryManager.instance(), 'vehicle_classes', {'Station': {'type': 'Station', 'max_mass': 5000}}):
             with patch.object(self.builder, '_execute_pending_action') as mock_execute:
                 self.builder.handle_event(event)
                 
@@ -128,7 +129,8 @@ class TestBuilderWarningLogic(unittest.TestCase):
         event.ui_element = self.builder.right_panel.vehicle_type_dropdown
         event.text = "Station"
         
-        with patch('game.ui.screens.builder_screen.VEHICLE_CLASSES', {'Station': {'type': 'Station', 'max_mass': 5000}}):
+        from game.core.registry import RegistryManager
+        with patch.object(RegistryManager.instance(), 'vehicle_classes', {'Station': {'type': 'Station', 'max_mass': 5000}}):
             with patch.object(self.builder, '_execute_pending_action') as mock_execute:
                 self.builder.handle_event(event)
                 

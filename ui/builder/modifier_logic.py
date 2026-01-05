@@ -2,7 +2,7 @@
 Game logic for component modifiers.
 Handles validation, mandatory checks, and default value calculations.
 """
-from game.simulation.components.component import MODIFIER_REGISTRY
+from game.core.registry import RegistryManager
 
 class ModifierLogic:
     
@@ -12,10 +12,10 @@ class ModifierLogic:
     @staticmethod
     def is_modifier_allowed(mod_id, component):
         """Check if a modifier is allowed for the given component."""
-        if mod_id not in MODIFIER_REGISTRY:
+        if mod_id not in RegistryManager.instance().modifiers:
             return False
             
-        mod_def = MODIFIER_REGISTRY[mod_id]
+        mod_def = RegistryManager.instance().modifiers[mod_id]
         if not mod_def.restrictions:
             return True
             
@@ -106,7 +106,7 @@ class ModifierLogic:
     @staticmethod
     def get_initial_value(mod_id, component):
         """Get the initial value for a newly applied modifier."""
-        mod_def = MODIFIER_REGISTRY.get(mod_id)
+        mod_def = RegistryManager.instance().modifiers.get(mod_id)
         if not mod_def: return 0
         
         if mod_id == 'simple_size_mount':
@@ -149,7 +149,7 @@ class ModifierLogic:
     @staticmethod
     def get_local_min_max(mod_id, component):
         """Returns (min, max) for a modifier, accounting for component-specific constraints."""
-        mod_def = MODIFIER_REGISTRY.get(mod_id)
+        mod_def = RegistryManager.instance().modifiers.get(mod_id)
         if not mod_def: return (0, 100)
         
         local_min = float(mod_def.min_val)

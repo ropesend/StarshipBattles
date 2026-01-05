@@ -6,7 +6,7 @@ import os
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from game.simulation.components.component import Component, Modifier, MODIFIER_REGISTRY
+from game.simulation.components.component import Component, Modifier
 from game.simulation.components.modifiers import apply_modifier_effects, ModifierEffects
 
 class TestNewModifiers(unittest.TestCase):

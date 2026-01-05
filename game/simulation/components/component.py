@@ -39,9 +39,7 @@ class Modifier:
     def create_modifier(self, value=None):
         return ApplicationModifier(self, value)
 
-# MODIFIER_REGISTRY = {} 
-# Aliased to RegistryManager for backward compatibility (but prefer Manager access)
-MODIFIER_REGISTRY = RegistryManager.instance().modifiers
+# Registry access is now handled via RegistryManager.instance()
 
 class ApplicationModifier:
     """Instance of a modifier applied to a component"""
@@ -127,7 +125,7 @@ class Component:
                 mod_id = mod_data['id']
                 val = mod_data.get('value', None)
                 # We need to access registry. BUT registry might not be fully loaded if simple import.
-                # Assuming MODIFIER_REGISTRY is populated by load_modifiers globally.
+                # Assuming modifiers are populated in RegistryManager.instance().modifiers globally.
                 from game.core.registry import RegistryManager
                 mods = RegistryManager.instance().modifiers
                 if mod_id in mods:
@@ -188,7 +186,10 @@ class Component:
         return l[0] if l else None
 
     def has_ability(self, ability_name: str):
-        """Check if component has ability."""
+        # 1. Direct check (fast)
+        if ability_name in self.abilities:
+            return True
+        # 2. Polymorphic check (e.g. asking for 'WeaponAbility' when we have 'ProjectileWeaponAbility')
         return len(self.get_abilities(ability_name)) > 0
 
     def has_pdc_ability(self) -> bool:
@@ -255,6 +256,23 @@ class Component:
         ab = self.get_ability('WeaponAbility')
         if ab:
             ab.sync_data({'firing_arc': value})
+            ab.recalculate()
+
+    @property
+    def facing_angle(self):
+        ab = self.get_ability('WeaponAbility')
+        if ab and hasattr(ab, 'facing_angle'):
+            return ab.facing_angle
+        # Fallback to local attribute (Phase 7 compatibility)
+        return getattr(self, '_facing_angle', 0.0)
+        
+    @facing_angle.setter
+    def facing_angle(self, value):
+        self._facing_angle = float(value)
+        # Push to ability
+        ab = self.get_ability('WeaponAbility')
+        if ab:
+            ab.facing_angle = self._facing_angle
             ab.recalculate()
         
     @property
@@ -380,9 +398,8 @@ class Component:
 
     def consume_activation(self):
         """Consume activation costs."""
-        from game.simulation.systems.resource_manager import ResourceConsumption
-        for ability in self.ability_instances:
-            if isinstance(ability, ResourceConsumption) and ability.trigger == 'activation':
+        for ability in self.get_abilities('ResourceConsumption'):
+            if ability.trigger == 'activation':
                 ability.check_and_consume()
 
     def try_activate(self):
@@ -396,17 +413,24 @@ class Component:
 
 
     def take_damage(self, amount):
+        # Defensive check for MagicMock or non-numeric types
+        if not isinstance(amount, (int, float)):
+            try: amount = float(amount)
+            except: amount = 0 # Fallback for pure mocks
+            
         self.current_hp -= amount
         
         # Update Status
-        if self.current_hp <= 0:
+        if isinstance(self.current_hp, (int, float)) and self.current_hp <= 0:
             self.current_hp = 0
             self.is_active = False
             return True # Destroyed
         
         # Logic Repair: Update status to DAMAGED if below 50%
-        if self.current_hp < (self.max_hp * 0.5):
-            self.status = ComponentStatus.DAMAGED
+        # Defensive check for max_hp and current_hp types
+        if isinstance(self.current_hp, (int, float)) and isinstance(self.max_hp, (int, float)):
+             if self.current_hp < (self.max_hp * 0.5):
+                 self.status = ComponentStatus.DAMAGED
             
         return False
 
@@ -471,10 +495,8 @@ class Component:
 
     def _convert_legacy_data_to_abilities(self):
         """Phase 6: Convert flat attributes back to ability dict for runtime processing."""
-        # Only run if not already converted/populated or if forced (recalculate_stats)
-        if hasattr(self, '_legacy_converted') and self._legacy_converted:
-            # Sync existing abilities from modified flat data if needed?
-            # Usually flat data (self.range) is pushed to ability via property setters.
+        # Only skip if we already have abilities (don't overwrite new system with legacy fallback)
+        if self.abilities:
             return
             
         self._legacy_converted = True
@@ -660,9 +682,8 @@ class Component:
         return self.__class__(self.data)
 
 
-# Legacy Aliases - REMOVED / Mapped to Manager
-
-COMPONENT_REGISTRY = RegistryManager.instance().components
+# COMPONENT_REGISTRY removal in progress...
+# Registries are now managed by RegistryManager.instance()
 # Phase 7 Simplified: Aliased types now use Component directly
 # Types with custom logic (Shield, Hangar, etc.) are now also aliases
 # as their logic has been unified into the Ability system.

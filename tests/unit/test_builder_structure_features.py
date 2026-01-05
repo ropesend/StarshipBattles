@@ -5,7 +5,8 @@ import pygame_gui
 from ui.builder.layer_panel import LayerComponentItem, IndividualComponentItem, LayerPanel
 from game.ui.screens.builder_screen import BuilderSceneGUI
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import Component, MODIFIER_REGISTRY, ApplicationModifier
+from game.simulation.components.component import Component, ApplicationModifier
+from game.core.registry import RegistryManager
 
 class TestBuilderStructureFeatures(unittest.TestCase):
     def setUp(self):

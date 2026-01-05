@@ -51,17 +51,18 @@ def generate_test_ships():
         print(f"Saved Test_Target.json to {output_dir}")
 
 if __name__ == "__main__":
-    from game.simulation.components.component import COMPONENT_REGISTRY, load_components
-    from game.simulation.entities.ship import VEHICLE_CLASSES
+    from game.core.registry import RegistryManager
+    from game.simulation.components.component import load_components
     
     def load_test_data():
-        COMPONENT_REGISTRY.clear()
-        load_components("tests/unit/data/test_components.json")
-
-        class_data = load_json_data("tests/unit/data/test_vehicleclasses.json")
-        VEHICLE_CLASSES.clear()
-        for k, v in class_data.items():
-            VEHICLE_CLASSES[k] = v
+        RegistryManager.instance().components.clear()
+        load_components()
+        
+        vehicle_classes_data = load_json_data("tests/unit/data/test_vehicleclasses.json")
+        classes = RegistryManager.instance().vehicle_classes
+        classes.clear()
+        for k, v in vehicle_classes_data.items():
+            classes[k] = v
             
     try:
         load_test_data()

@@ -49,16 +49,10 @@ class ShipCombatMixin:
         pass
 
     def fire_weapons(self, context=None):
-        """
-        Attempts to fire all ready weapons.
-        Args:
-            context (dict): Optional combat context dict containing 'projectiles' list, 'grid', etc.
-        Returns a list of Projectile objects or dicts (for beams).
-        """
         attacks = []
         if not self.is_alive or getattr(self, 'is_derelict', False): return attacks
-
-        for layer in self.layers.values():
+        
+        for layer_type, layer in self.layers.items():
             for comp in layer['components']:
                 # Handle Hangar Launch (Phase 4: ability-based check)
                 if comp.has_ability('VehicleLaunch') and comp.is_active:
@@ -75,9 +69,11 @@ class ShipCombatMixin:
                         })
                     continue
 
+                print(f"DEBUG: Checking {comp.name}, is_active={comp.is_active}, has_WeaponAbility={comp.has_ability('WeaponAbility')}", flush=True)
                 if comp.has_ability('WeaponAbility') and comp.is_active:
                     weapon_ab = comp.get_ability('WeaponAbility')
                     has_resource = comp.can_afford_activation()
+                    # if not has_resource: print(f"DEBUG: {comp.name} cannot afford activation", flush=True)
                     
                     # Tracer
                     dist = 0
@@ -145,6 +141,8 @@ class ShipCombatMixin:
                                     valid_target = True
                                     target = candidate
                                     break
+                                # else:
+                                #     print(f"DEBUG: fire_weapons Solution FAIL for {comp.name} against {candidate.name}", flush=True)
 
                         if valid_target and target and weapon_ab.fire(target):
                             self.total_shots_fired += 1

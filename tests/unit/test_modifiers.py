@@ -6,9 +6,9 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.components.component import (
-    load_components, load_modifiers, create_component,
-    MODIFIER_REGISTRY, COMPONENT_REGISTRY, Component
+    load_components, load_modifiers, create_component, Component
 )
+from game.core.registry import RegistryManager
 
 
 class TestModifiers(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestModifiers(unittest.TestCase):
     
     def test_modifiers_loaded(self):
         """Verify modifiers.json is loaded correctly."""
-        self.assertGreater(len(MODIFIER_REGISTRY), 0, "No modifiers loaded")
+        self.assertGreater(len(RegistryManager.instance().modifiers), 0, "No modifiers loaded")
     
     def test_add_modifier_to_component(self):
         """Test adding a modifier to a component."""
@@ -26,7 +26,7 @@ class TestModifiers(unittest.TestCase):
         initial_mass = railgun.mass
         
         # Check if 'reinforced' modifier exists
-        if 'reinforced' in MODIFIER_REGISTRY:
+        if 'reinforced' in RegistryManager.instance().modifiers:
             result = railgun.add_modifier('reinforced')
             self.assertTrue(result)
             # Reinforced typically adds mass
@@ -37,7 +37,7 @@ class TestModifiers(unittest.TestCase):
         """Test removing a modifier from a component."""
         railgun = create_component('railgun')
         
-        if 'reinforced' in MODIFIER_REGISTRY:
+        if 'reinforced' in RegistryManager.instance().modifiers:
             railgun.add_modifier('reinforced')
             self.assertIsNotNone(railgun.get_modifier('reinforced'))
             
@@ -47,7 +47,7 @@ class TestModifiers(unittest.TestCase):
     def test_modifier_restrictions(self):
         """Test that modifiers respect type restrictions."""
         # Facing modifier should only apply to weapons
-        if 'facing' in MODIFIER_REGISTRY:
+        if 'facing' in RegistryManager.instance().modifiers:
             bridge = create_component('bridge')
             result = bridge.add_modifier('facing')
             # Should fail if restrictions are applied
@@ -61,7 +61,7 @@ class TestModifiers(unittest.TestCase):
         base_arc = weapon_ab.firing_arc if weapon_ab else 20
         
         # Check for arc-modifying modifier
-        if 'wide_arc' in MODIFIER_REGISTRY:
+        if 'wide_arc' in RegistryManager.instance().modifiers:
             railgun.add_modifier('wide_arc')
             railgun.recalculate_stats()
             # Arc should be different after applying modifier
@@ -74,7 +74,7 @@ class TestModifiers(unittest.TestCase):
     
     def test_modifier_value_persistence(self):
         """Modifier values should persist after recalculate."""
-        if 'facing' in MODIFIER_REGISTRY:
+        if 'facing' in RegistryManager.instance().modifiers:
             railgun = create_component('railgun')
             railgun.add_modifier('facing', 90)  # 90 degree facing
             

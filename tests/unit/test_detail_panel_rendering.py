@@ -12,31 +12,6 @@ class TestDetailPanelRendering(unittest.TestCase):
     def setUp(self):
         pygame.init()
         pygame.font.init()
-        # Delayed import to allow pygame init
-        from ui.builder.detail_panel import ComponentDetailPanel
-        self.ComponentDetailPanel = ComponentDetailPanel
-
-        # Mock Pygame and UI Manager
-        self.mock_manager = MagicMock(spec=pygame_gui.UIManager)
-        
-        # Patch pygame.Rect to behave like a real Rect for layout logic
-        self.rect_patcher = patch('pygame.Rect')
-        self.MockRect = self.rect_patcher.start()
-        # Side effect to return a mock that stores x,y,w,h
-        def mock_rect(*args):
-            r = MagicMock()
-            if len(args) == 4:
-                r.x, r.y, r.width, r.height = args
-            elif len(args) == 1 and isinstance(args[0], tuple) and len(args[0]) == 4:
-                r.x, r.y, r.width, r.height = args[0]
-            else:
-                 # Default fallback
-                 r.x, r.y, r.width, r.height = 0, 0, 100, 100
-            
-            r.bottom = r.y + r.height
-            return r
-        self.MockRect.side_effect = mock_rect
-        
         # Patch UI elements to avoid actual GUI creation
         self.uipanel_patch = patch('ui.builder.detail_panel.UIPanel')
         self.uilabel_patch = patch('ui.builder.detail_panel.UILabel')
@@ -53,6 +28,13 @@ class TestDetailPanelRendering(unittest.TestCase):
         self.uibutton_patch.start()
         self.MockUITextBox = self.uitextbox_patch.start()
         self.MockUITextBoxReal = self.uitextbox_patch_real.start()
+
+        # Delayed import to allow pygame init
+        from ui.builder.detail_panel import ComponentDetailPanel
+        self.ComponentDetailPanel = ComponentDetailPanel
+
+        # Mock Pygame and UI Manager
+        self.mock_manager = MagicMock(spec=pygame_gui.UIManager)
         
         # Create the panel under test
         self.panel_rect = pygame.Rect(0, 0, 300, 600)
@@ -62,7 +44,6 @@ class TestDetailPanelRendering(unittest.TestCase):
         self.MockUITextBox.reset_mock()
 
     def tearDown(self):
-        self.rect_patcher.stop()
         self.uipanel_patch.stop()
         self.uilabel_patch.stop()
         self.uiimage_patch.stop()
@@ -76,6 +57,7 @@ class TestDetailPanelRendering(unittest.TestCase):
         mock_comp.type_str = "Weapon"
         mock_comp.mass = 50.5
         mock_comp.max_hp = 100
+        mock_comp.current_hp = 100
         mock_comp.get_ui_rows.return_value = [] # No extra stats
         mock_comp.abilities = {}
         mock_comp.modifiers = []
@@ -101,6 +83,7 @@ class TestDetailPanelRendering(unittest.TestCase):
         mock_comp.type_str = "Weapon"
         mock_comp.mass = 10
         mock_comp.max_hp = 50
+        mock_comp.current_hp = 50
         mock_comp.abilities = {}
         mock_comp.modifiers = []
         mock_comp.sprite_index = 1
@@ -124,6 +107,7 @@ class TestDetailPanelRendering(unittest.TestCase):
         mock_comp.type_str = "Unknown"
         mock_comp.mass = 1
         mock_comp.max_hp = 1
+        mock_comp.current_hp = 1
         mock_comp.get_ui_rows.return_value = []
         mock_comp.modifiers = []
         mock_comp.sprite_index = 1
@@ -150,6 +134,7 @@ class TestDetailPanelRendering(unittest.TestCase):
         mock_comp.type_str = "Engine"
         mock_comp.mass = 10
         mock_comp.max_hp = 10
+        mock_comp.current_hp = 10
         mock_comp.get_ui_rows.return_value = []
         mock_comp.abilities = {}
         mock_comp.sprite_index = 1

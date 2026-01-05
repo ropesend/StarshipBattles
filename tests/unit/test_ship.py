@@ -42,8 +42,8 @@ class TestShip(unittest.TestCase):
 
     def test_damage_armor_absorption(self):
         # Inject TestShip definition strictly
-        from game.simulation.entities.ship import VEHICLE_CLASSES
-        VEHICLE_CLASSES["TestShip"] = {
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().vehicle_classes["TestShip"] = {
             "hull_mass": 50, "max_mass": 1000,
             "layers": [
                 {"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 0.5},
@@ -148,9 +148,10 @@ class TestShipClassMutation(unittest.TestCase):
     def test_derelict_status_logic(self):
         """Verify is_derelict update logic when key components are destroyed."""
         # Patch vehicle class to require "Command"
-        from game.simulation.entities.ship import VEHICLE_CLASSES
-        if "Frigate" in VEHICLE_CLASSES:
-            VEHICLE_CLASSES["Frigate"]["requirements"] = {"Command": 1}
+        from game.core.registry import RegistryManager
+        classes = RegistryManager.instance().vehicle_classes
+        if "Frigate" in classes:
+            classes["Frigate"]["requirements"] = {"Command": 1}
         
         # Add Bridge (Assumed to provide Command=1)
         bridge = create_component('bridge')

@@ -10,7 +10,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 # Import necessary classes
 from ship_validator import ShipDesignValidator, ValidationResult
-from game.simulation.entities.ship import Ship, VEHICLE_CLASSES, LayerType
+from game.simulation.entities.ship import Ship, LayerType
+from game.core.registry import RegistryManager
 from game.simulation.components.component import Component
 
 class TestBridgeRequirementRemoval(unittest.TestCase):
@@ -20,17 +21,19 @@ class TestBridgeRequirementRemoval(unittest.TestCase):
         with open(self.test_data_path, "r") as f:
             self.vehicle_data = json.load(f)["classes"]
             
-        # Mock global VEHICLE_CLASSES with our test data for the scope of this test
-        self.original_vehicle_classes = VEHICLE_CLASSES.copy()
-        VEHICLE_CLASSES.clear()
-        VEHICLE_CLASSES.update(self.vehicle_data)
+        # Mock global vehicle_classes with our test data for the scope of this test
+        classes = RegistryManager.instance().vehicle_classes
+        self.original_vehicle_classes = classes.copy()
+        classes.clear()
+        classes.update(self.vehicle_data)
         
         self.validator = ShipDesignValidator()
 
     def tearDown(self):
-        # Restore global VEHICLE_CLASSES
-        VEHICLE_CLASSES.clear()
-        VEHICLE_CLASSES.update(self.original_vehicle_classes)
+        # Restore global vehicle_classes
+        classes = RegistryManager.instance().vehicle_classes
+        classes.clear()
+        classes.update(self.original_vehicle_classes)
 
     def test_valid_class_without_bridge(self):
         """Test that a class defined without bridge requirement is valid without one."""
@@ -61,7 +64,7 @@ class TestBridgeRequirementRemoval(unittest.TestCase):
         """Test that a class WITH command requirement still fails if no bridge/command provider."""
         # We need to simulate a class that DOES require command
         # Let's inject one into the mock data
-        VEHICLE_CLASSES["CommandShip"] = {
+        RegistryManager.instance().vehicle_classes["CommandShip"] = {
             "requirements": {
                 "command": {
                     "ability": "CommandAndControl",

@@ -9,7 +9,8 @@ import pytest
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 
-from game.simulation.entities.ship import Ship, LayerType, VEHICLE_CLASSES, load_vehicle_classes
+from game.simulation.entities.ship import Ship, LayerType, load_vehicle_classes
+from game.core.registry import RegistryManager
 from game.simulation.components.component import load_components, create_component
 
 class TestBug08FuelValidation(unittest.TestCase):
@@ -31,7 +32,7 @@ class TestBug08FuelValidation(unittest.TestCase):
         ship = Ship("Test Fighter", 0, 0, (255, 255, 255), ship_class="Fighter (Medium)")
         
         # Verify it has the requirement (Sanity Check)
-        class_def = VEHICLE_CLASSES.get("Fighter (Medium)", {})
+        class_def = RegistryManager.instance().vehicle_classes.get("Fighter (Medium)", {})
         reqs = class_def.get('requirements', {})
         self.assertIn("fuel", reqs, "Test Setup Failure: Fighter (Medium) should have a fuel requirement")
         

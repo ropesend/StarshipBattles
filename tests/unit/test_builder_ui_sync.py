@@ -12,7 +12,8 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from game.simulation.entities.ship import Ship, initialize_ship_data, VEHICLE_CLASSES
+from game.simulation.entities.ship import Ship, initialize_ship_data
+from game.core.registry import RegistryManager
 from game.simulation.components.component import load_components
 from game.ai.controller import COMBAT_STRATEGIES
 
@@ -57,9 +58,9 @@ class TestBuilderUISync(unittest.TestCase):
         
         # Ensure we pick a class that definitely exists and isn't Escort
         target_class = "Cruiser" 
-        if target_class not in VEHICLE_CLASSES:
-             # Fallback if data is different
-             target_class = list(VEHICLE_CLASSES.keys())[-1]
+        classes = RegistryManager.instance().vehicle_classes
+        if target_class not in classes:
+             target_class = list(classes.keys())[-1]
              
         self.mock_builder.ship.ship_class = target_class
         self.mock_builder.ship.theme_id = "Klingon"
@@ -101,7 +102,7 @@ class TestBuilderUISync(unittest.TestCase):
         
         # Group classes by type
         type_map = {}
-        for name, data in VEHICLE_CLASSES.items():
+        for name, data in RegistryManager.instance().vehicle_classes.items():
             ctype = data.get('type', 'Ship')
             if ctype not in type_map: type_map[ctype] = []
             type_map[ctype].append(name)
@@ -144,7 +145,7 @@ class TestBuilderUISync(unittest.TestCase):
              # Check if option is a valid class of this type
              # option might be tuple
              opt_val = self._get_option_value(option)
-             c_def = VEHICLE_CLASSES.get(opt_val)
+             c_def = RegistryManager.instance().vehicle_classes.get(opt_val)
              if c_def:
                  self.assertEqual(c_def.get('type', 'Ship'), target_type, f"Class {opt_val} should be type {target_type}")
 

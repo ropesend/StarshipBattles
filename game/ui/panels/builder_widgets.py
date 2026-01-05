@@ -1,7 +1,7 @@
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIHorizontalSlider
-from game.simulation.components.component import MODIFIER_REGISTRY
+from game.core.registry import RegistryManager
 from game.core.logger import log_info, log_debug
 
 from ui.builder.modifier_logic import ModifierLogic
@@ -72,7 +72,7 @@ class ModifierEditorPanel:
         # 2. Reconcile Rows
         current_mod_ids = []
         
-        for mod_id, mod_def in MODIFIER_REGISTRY.items():
+        for mod_id, mod_def in RegistryManager.instance().modifiers.items():
             # Check availability
             allowed = False
             if self.editing_component:

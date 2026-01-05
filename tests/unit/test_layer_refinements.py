@@ -6,7 +6,7 @@ import os
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data, VEHICLE_CLASSES
+from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import Component
 
 class TestLayerRefinements(unittest.TestCase):

@@ -40,11 +40,11 @@ class TestShipRequirements(unittest.TestCase):
         }
         
     def _inject_class_data(self, requirements):
-        """Helper to inject specific requirements into VEHICLE_CLASSES"""
+        """Helper to inject specific requirements into vehicle_classes"""
         self.class_data['requirements'] = requirements
         
-        from game.simulation.entities.ship import VEHICLE_CLASSES
-        VEHICLE_CLASSES["RequirementsTest"] = self.class_data
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().vehicle_classes["RequirementsTest"] = self.class_data
         self.ship.ship_class = "RequirementsTest"
         self.ship.update_derelict_status()
 

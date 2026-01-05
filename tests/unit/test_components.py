@@ -5,9 +5,9 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.components.component import (
-    load_components, load_modifiers, get_all_components, create_component, 
-    COMPONENT_REGISTRY, MODIFIER_REGISTRY, get_all_components, create_component
+    load_components, load_modifiers, get_all_components, create_component
 )
+from game.core.registry import RegistryManager
 
 class TestComponents(unittest.TestCase):
     def setUp(self):

@@ -11,7 +11,8 @@ sys.path.append(os.getcwd())
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.ui.screens.battle_scene import BattleScene
 from game.ai.controller import AIController, STRATEGY_MANAGER
-from game.simulation.components.component import LayerType, COMPONENT_REGISTRY, load_components, load_modifiers
+from game.simulation.components.component import LayerType, load_components, load_modifiers
+from game.core.registry import RegistryManager
 
 class TestMovementAndAI(unittest.TestCase):
 
@@ -42,8 +43,9 @@ class TestMovementAndAI(unittest.TestCase):
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser")
 
     def get_component_clone(self, id):
-        if id in COMPONENT_REGISTRY:
-            return COMPONENT_REGISTRY[id].clone()
+        comps = RegistryManager.instance().components
+        if id in comps:
+            return comps[id].clone()
         return None
 
     def test_ai_target_acquisition_long_range(self):

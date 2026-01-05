@@ -6,8 +6,9 @@ import os
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
-from game.simulation.entities.ship import Ship, initialize_ship_data, VEHICLE_CLASSES, LayerType
-from game.simulation.components.component import load_components, load_modifiers, get_all_components, COMPONENT_REGISTRY
+from game.simulation.entities.ship import Ship, initialize_ship_data, LayerType
+from game.simulation.components.component import load_components, load_modifiers, get_all_components
+from game.core.registry import RegistryManager
 
 class TestPlanetaryComplex(unittest.TestCase):
     """Test Planetary Complex implementation."""
@@ -17,14 +18,13 @@ class TestPlanetaryComplex(unittest.TestCase):
         load_components()
         load_modifiers()
 
-    def test_planetary_complex_tiers_exist(self):
-        """Verify all 11 tiers of Planetary Complex exist."""
+        classes = RegistryManager.instance().vehicle_classes
         for i in range(1, 12):
             class_name = f"Planetary Complex (Tier {i})"
-            self.assertIn(class_name, VEHICLE_CLASSES, f"{class_name} missing")
+            self.assertIn(class_name, classes, f"{class_name} missing")
             
             # Check mass doubling
-            vehicle_def = VEHICLE_CLASSES[class_name]
+            vehicle_def = classes[class_name]
             expected_mass = 1000 * (2**(i-1))
             self.assertEqual(vehicle_def['max_mass'], expected_mass, 
                             f"{class_name} mass incorrect")
@@ -35,7 +35,8 @@ class TestPlanetaryComplex(unittest.TestCase):
         complex_ship = Ship("Test Complex", 0, 0, (255, 255, 255), 
                           ship_class="Planetary Complex (Tier 1)")
         
-        command = COMPONENT_REGISTRY["central_complex_command"].clone()
+        comps = RegistryManager.instance().components
+        command = comps["central_complex_command"].clone()
         result = complex_ship.add_component(command, LayerType.CORE)
         self.assertTrue(result, "Should accept Central Complex Command")
         
@@ -49,17 +50,18 @@ class TestPlanetaryComplex(unittest.TestCase):
                           ship_class="Planetary Complex (Tier 1)")
         
         # Weapons
-        railgun = COMPONENT_REGISTRY["railgun"].clone()
+        comps = RegistryManager.instance().components
+        railgun = comps["railgun"].clone()
         result = complex_ship.add_component(railgun, LayerType.OUTER)
         self.assertTrue(result, "Should accept Railgun")
         
         # Sensors
-        sensor = COMPONENT_REGISTRY["combat_sensor"].clone()
+        sensor = comps["combat_sensor"].clone()
         result = complex_ship.add_component(sensor, LayerType.OUTER)
         self.assertTrue(result, "Should accept Combat Sensor")
         
         # Shields
-        shield = COMPONENT_REGISTRY["shield_generator"].clone()
+        shield = comps["shield_generator"].clone()
         result = complex_ship.add_component(shield, LayerType.INNER)
         self.assertTrue(result, "Should accept Shield Generator")
 
@@ -68,11 +70,12 @@ class TestPlanetaryComplex(unittest.TestCase):
         complex_ship = Ship("Test Complex", 0, 0, (255, 255, 255), 
                           ship_class="Planetary Complex (Tier 1)")
         
-        engine = COMPONENT_REGISTRY["standard_engine"].clone()
+        comps = RegistryManager.instance().components
+        engine = comps["standard_engine"].clone()
         result = complex_ship.add_component(engine, LayerType.INNER)
         self.assertFalse(result, "Should REJECT Standard Engine")
         
-        thruster = COMPONENT_REGISTRY["thruster"].clone()
+        thruster = comps["thruster"].clone()
         result = complex_ship.add_component(thruster, LayerType.OUTER)
         self.assertFalse(result, "Should REJECT Thruster")
 
@@ -81,7 +84,8 @@ class TestPlanetaryComplex(unittest.TestCase):
         complex_ship = Ship("Test Complex", 0, 0, (255, 255, 255), 
                           ship_class="Planetary Complex (Tier 1)")
         
-        bridge = COMPONENT_REGISTRY["bridge"].clone()
+        comps = RegistryManager.instance().components
+        bridge = comps["bridge"].clone()
         result = complex_ship.add_component(bridge, LayerType.CORE)
         self.assertFalse(result, "Should REJECT standard Ship Bridge")
 
@@ -90,7 +94,8 @@ class TestPlanetaryComplex(unittest.TestCase):
         complex_ship = Ship("Test Complex", 0, 0, (255, 255, 255), 
                           ship_class="Planetary Complex (Tier 1)")
         
-        command = COMPONENT_REGISTRY["central_complex_command"].clone()
+        comps = RegistryManager.instance().components
+        command = comps["central_complex_command"].clone()
         complex_ship.add_component(command, LayerType.CORE)
         complex_ship.recalculate_stats()
         

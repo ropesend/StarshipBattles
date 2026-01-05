@@ -9,8 +9,9 @@ import os
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from game.simulation.entities.ship import Ship, initialize_ship_data, load_vehicle_classes, VEHICLE_CLASSES, LayerType
-from game.simulation.components.component import load_components, load_modifiers, get_all_components, COMPONENT_REGISTRY # Phase 7: Removed Bridge, Weapon imports
+from game.simulation.entities.ship import Ship, initialize_ship_data, load_vehicle_classes, LayerType
+from game.simulation.components.component import load_components, load_modifiers, get_all_components
+from game.core.registry import RegistryManager # Phase 7: Removed Bridge, Weapon imports
 from game.ai.controller import AIController, load_combat_strategies
 import pygame
 import pytest
@@ -37,33 +38,38 @@ class TestVehicleClassLoading(unittest.TestCase):
 
     def test_ship_types_defined(self):
         """Verify all expected types exist."""
-        types = set(c.get('type', 'Ship') for c in VEHICLE_CLASSES.values())
+        classes = RegistryManager.instance().vehicle_classes
+        types = set(c.get('type', 'Ship') for c in classes.values())
         self.assertIn("Ship", types)
         self.assertIn("Fighter", types)
         self.assertIn("Satellite", types)
 
     def test_fighter_classes_loaded(self):
         """Verify Fighter class variants are loaded."""
-        fighter_classes = [n for n, c in VEHICLE_CLASSES.items() if c.get('type') == 'Fighter']
+        classes = RegistryManager.instance().vehicle_classes
+        fighter_classes = [n for n, c in classes.items() if c.get('type') == 'Fighter']
         self.assertGreater(len(fighter_classes), 0, "At least one Fighter class should exist")
         # Check specific variants
-        self.assertIn("TestFighter", VEHICLE_CLASSES)
+        self.assertIn("TestFighter", classes)
     
     def test_satellite_classes_loaded(self):
         """Verify Satellite class variants are loaded."""
-        sat_classes = [n for n, c in VEHICLE_CLASSES.items() if c.get('type') == 'Satellite']
+        classes = RegistryManager.instance().vehicle_classes
+        sat_classes = [n for n, c in classes.items() if c.get('type') == 'Satellite']
         self.assertGreater(len(sat_classes), 0, "At least one Satellite class should exist")
-        self.assertIn("TestSatellite", VEHICLE_CLASSES)
+        self.assertIn("TestSatellite", classes)
 
     def test_fighter_mass_ranges(self):
         """Check Fighter mass ranges are appropriate."""
-        small = VEHICLE_CLASSES.get("TestFighter", {})
+        classes = RegistryManager.instance().vehicle_classes
+        small = classes.get("TestFighter", {})
         # Fighters should be light
         self.assertLessEqual(small.get('max_mass', 0), 100)  
 
     def test_satellite_has_no_propulsion_requirement(self):
         """Verify Satellites do NOT require propulsion."""
-        sat = VEHICLE_CLASSES.get("TestSatellite", {})
+        classes = RegistryManager.instance().vehicle_classes
+        sat = classes.get("TestSatellite", {})
         # Our test class explicitly has no requirements defined in JSON, so this passes implicitly
         reqs = sat.get('requirements', {})
         # Should NOT have CombatPropulsion requirement
@@ -115,30 +121,32 @@ class TestComponentRestrictions(unittest.TestCase):
     def test_fighter_accepts_fighter_components(self):
         """Fighter can add Fighter-specific components."""
         fighter = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestFighter")
-        cockpit = COMPONENT_REGISTRY["test_cockpit_fighter"].clone()
+        comps = RegistryManager.instance().components
+        cockpit = comps["test_cockpit_fighter"].clone()
         result = fighter.add_component(cockpit, LayerType.CORE)
         self.assertTrue(result, "Fighter should accept Fighter Cockpit")
 
     def test_fighter_rejects_ship_components(self):
         """Fighter cannot add Ship-only components."""
         fighter = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestFighter")
-        from game.core.registry import RegistryManager
-        bridge = RegistryManager.instance().components["test_bridge_basic"].clone()
+        comps = RegistryManager.instance().components
+        bridge = comps["test_bridge_basic"].clone()
         result = fighter.add_component(bridge, LayerType.CORE)
         self.assertFalse(result, "Fighter should reject standard Bridge")
 
     def test_satellite_rejects_engines_and_thrusters(self):
         """Satellites cannot add propulsion components."""
         sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestSatellite")
+        comps = RegistryManager.instance().components
         
-        engine = COMPONENT_REGISTRY["test_engine_std"].clone()
+        engine = comps["test_engine_std"].clone()
         # Satellite S only has CORE ("radius_pct": 1.0). 
         # But wait, layer defs matter? No, add_component checks allowed_vehicle_types.
         # Ensure we add to a valid layer. TestSatellite has only CORE.
         result = sat.add_component(engine, LayerType.CORE)
         self.assertFalse(result, "Satellite should reject Engine")
         
-        thruster = COMPONENT_REGISTRY["test_thruster_std"].clone()
+        thruster = comps["test_thruster_std"].clone()
         result = sat.add_component(thruster, LayerType.CORE)
         self.assertFalse(result, "Satellite should reject Thruster")
 
@@ -146,35 +154,39 @@ class TestComponentRestrictions(unittest.TestCase):
         """Satellites can add allowed weapons."""
         sat = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestSatellite")
         
-        railgun = COMPONENT_REGISTRY["test_weapon_proj_fixed"].clone()
+        comps = RegistryManager.instance().components
+        railgun = comps["test_weapon_proj_fixed"].clone()
         result = sat.add_component(railgun, LayerType.CORE)
         self.assertTrue(result, "Satellite should accept Railgun (Fixed)")
         
-        laser = COMPONENT_REGISTRY["test_weapon_beam_std"].clone()
+        laser = comps["test_weapon_beam_std"].clone()
         result = sat.add_component(laser, LayerType.CORE)
         self.assertTrue(result, "Satellite should accept Laser Cannon")
 
     def test_ship_accepts_ship_components(self):
         """Standard Ship can add Ship components."""
         ship = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestShip_S_2L")
-        bridge = COMPONENT_REGISTRY["test_bridge_basic"].clone()
+        comps = RegistryManager.instance().components
+        bridge = comps["test_bridge_basic"].clone()
         result = ship.add_component(bridge, LayerType.CORE)
         self.assertTrue(result, "Ship should accept standard Bridge")
 
     def test_ship_rejects_fighter_components(self):
         """Standard Ship cannot add Fighter-only components."""
         ship = Ship("Test", 0, 0, (255, 0, 0), ship_class="TestShip_S_2L")
-        cockpit = COMPONENT_REGISTRY["test_cockpit_fighter"].clone()
+        comps = RegistryManager.instance().components
+        cockpit = comps["test_cockpit_fighter"].clone()
         result = ship.add_component(cockpit, LayerType.CORE)
         self.assertFalse(result, "Ship should reject Fighter Cockpit")
 
     def test_component_allowed_vehicle_types_list(self):
         """Check component has correct allowed_vehicle_types."""
-        bridge = COMPONENT_REGISTRY["test_bridge_basic"]
+        comps = RegistryManager.instance().components
+        bridge = comps["test_bridge_basic"]
         self.assertIn("Ship", bridge.allowed_vehicle_types)
         self.assertNotIn("Fighter", bridge.allowed_vehicle_types)
         
-        sat_core = COMPONENT_REGISTRY["test_core_satellite"]
+        sat_core = comps["test_core_satellite"]
         self.assertIn("Satellite", sat_core.allowed_vehicle_types)
         self.assertNotIn("Ship", sat_core.allowed_vehicle_types)
 
@@ -202,7 +214,7 @@ class TestSatelliteLogic(unittest.TestCase):
         # I should probably use a mocked component or ensure the test component has crew reqs.
         # Or I can clone and add the requirement manually for the test?
         
-        railgun = COMPONENT_REGISTRY["test_weapon_proj_fixed"].clone()
+        railgun = RegistryManager.instance().components["test_weapon_proj_fixed"].clone()
         railgun.abilities["CrewRequired"] = 5
         
         sat.add_component(railgun, LayerType.CORE)
@@ -238,7 +250,8 @@ class TestSatelliteAI(unittest.TestCase):
     def test_satellite_ai_does_not_navigate(self):
         """Satellite AI should NOT call navigation/movement methods."""
         sat = Ship("Test Sat", 0, 0, (255, 0, 0), ship_class="TestSatellite")
-        core = COMPONENT_REGISTRY["test_core_satellite"].clone()
+        comps = RegistryManager.instance().components
+        core = comps["test_core_satellite"].clone()
         sat.add_component(core, LayerType.CORE)
         sat.recalculate_stats()
         
@@ -262,7 +275,8 @@ class TestSatelliteAI(unittest.TestCase):
         """Satellite AI should still acquire targets."""
         sat = Ship("Test Sat", 100, 100, (255, 0, 0), team_id=0, 
                    ship_class="TestSatellite")
-        core = COMPONENT_REGISTRY["test_core_satellite"].clone()
+        comps = RegistryManager.instance().components
+        core = comps["test_core_satellite"].clone()
         sat.add_component(core, LayerType.CORE)
         sat.recalculate_stats()
         
@@ -284,10 +298,11 @@ class TestSatelliteAI(unittest.TestCase):
         """Satellite AI should set comp_trigger_pulled when target exists."""
         sat = Ship("Test Sat", 100, 100, (255, 0, 0), team_id=0,
                    ship_class="TestSatellite")
-        core = COMPONENT_REGISTRY["test_core_satellite"].clone()
+        comps = RegistryManager.instance().components
+        core = comps["test_core_satellite"].clone()
         sat.add_component(core, LayerType.CORE)
         
-        railgun = COMPONENT_REGISTRY["test_weapon_proj_fixed"].clone()
+        railgun = comps["test_weapon_proj_fixed"].clone()
         sat.add_component(railgun, LayerType.CORE)
         sat.recalculate_stats()
         
