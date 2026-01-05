@@ -1,19 +1,22 @@
 import os
 import json
 import pygame
+import threading
 from game.core.logger import log_info, log_error
 from game.core.profiling import profile_block
 from game.core.constants import ASSET_DIR
 
 class ShipThemeManager:
     _instance = None
+    _singleton_lock = threading.Lock()
     
     @classmethod
     def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = ShipThemeManager()
-        return cls._instance
-        
+        with cls._singleton_lock:
+            if cls._instance is None:
+                cls._instance = ShipThemeManager()
+            return cls._instance
+            
     def __init__(self):
         if ShipThemeManager._instance is not None:
             raise Exception("This class is a singleton!")
@@ -21,8 +24,7 @@ class ShipThemeManager:
         # self.themes acts as the image cache: {theme_name: {class_name: surface}}
         self.themes = {}  
         
-        # New: Store paths and metadata for lazy loading
-        # {theme_name: {class_name: {'path': str, 'scale': float}}}
+        # Store paths and metadata for lazy loading
         self.theme_data = {}
         
         # Cache for metrics
@@ -31,25 +33,32 @@ class ShipThemeManager:
         self.base_path = None
         self.default_theme = "Federation"
         self.discovery_complete = False
+        self._init_lock = threading.Lock()
         
     def initialize(self, base_path=None):
         """Discover all themes from assets/ShipThemes without loading images."""
-        # base_path is now deprecated/ignored in favor of ASSET_DIR
-        self.base_path = base_path 
-        themes_dir = os.path.join(ASSET_DIR, "ShipThemes")
-        
-        if not os.path.exists(themes_dir):
-            log_error(f"ShipThemes directory not found: {themes_dir}")
-            return
-            
-        # Walk directories (Fast discovery)
-        with profile_block("Theme: Discover All"):
-            for entry in os.scandir(themes_dir):
-                if entry.is_dir():
-                    self._discover_theme(entry.path)
+        with self._init_lock:
+            if self.discovery_complete and self.theme_data:
+                return # Already initialized
                 
-        self.discovery_complete = True
-        log_info(f"Discovered {len(self.theme_data)} ship themes: {list(self.theme_data.keys())}")
+            # base_path is now deprecated/ignored in favor of ASSET_DIR
+            self.base_path = base_path 
+            themes_dir = os.path.join(ASSET_DIR, "ShipThemes")
+            
+            if not os.path.exists(themes_dir):
+                log_error(f"ShipThemes directory not found: {themes_dir}")
+                return
+                
+            # Walk directories (Fast discovery)
+            with profile_block("Theme: Discover All"):
+                # Clear existing data before re-discovery to ensure consistency
+                self.theme_data = {}
+                for entry in os.scandir(themes_dir):
+                    if entry.is_dir():
+                        self._discover_theme(entry.path)
+                    
+            self.discovery_complete = True
+            log_info(f"Discovered {len(self.theme_data)} ship themes: {list(self.theme_data.keys())}")
 
     def _discover_theme(self, theme_dir):
         """Read theme.json and store paths/metadata."""

@@ -1,6 +1,6 @@
-**Status:** Phase 6: Regression Triage (HANDOFF READY)
-**Current Pass Rate:** 532/534 (99.6%)
-**Handoff Note:** Core regressions and infrastructure fixes complete. 2 environmental failures remain in high-concurrency parallel runs.
+**Status:** Phase 7: Isolated Test Stabilization (ACTIVE)
+**Current Pass Rate:** 523/534 (97.9%)
+**Note:** Stabilization is ongoing. 11 tests fail in bulk runs but pass in isolation. These are suspected to be "Ghost Failures" caused by registry pollution or resource contention.
 **Start Date:** 2026-01-04
 
 ## Migration Map (The Constitution)
@@ -12,18 +12,36 @@
 | `game.simulation.entities.ship.VEHICLE_CLASSES` | `RegistryManager.instance().vehicle_classes` |
 | `game.simulation.entities.ship._VALIDATOR` | `RegistryManager.instance().get_validator()` |
 
-## Test Triage Table
+## Current Pollution Triage (Phase 7)
 
-| `tests/repro_issues/test_sequence_hazard.py` | [PASSED] | Canary test verified pollution cleanup. |
-| `tests/unit/test_components.py` | [PASSED] | Refactored `setUpClass` -> `setUp` to fix isolation regression. |
-| `tests/unit/*` | [PASSED] | 534 tests passed. Gauntlet Green. |
-| `tests/unit/repro_issues/test_slider_increment.py` | [FIXED] | Converted `setUpClass` to `setUp`. |
-| `tests/unit/test_overlay.py` | [PASSED] | UI isolation verified. |
-| `tests/unit/test_ui_widgets.py` | [PASSED] | UI isolation verified. |
+| Failing Test | Primary Suspect | Debugging Lead |
+| :--- | :--- | :--- |
+| `tests/unit/test_rendering_logic.py::TestRenderingLogic::test_component_color_coding` | Registry Pollution | Check if `RegistryManager` hydration in `setUp` is colliding with previous worker state. |
+| `tests/unit/test_rendering_logic.py::TestRenderingLogic::test_draw_hud_stats` | Pygame Display | Verification of surface dimensions in headless mode. |
+| `tests/unit/test_ship_theme_logic.py::TestShipThemeLogic::test_get_image_metrics` | Singleton Race | `ShipThemeManager.discovery_complete` flag may be toggled prematurely. |
+| `tests/unit/test_component_modifiers_extended.py::*` | Modifier Stacking | Inspect if `MODIFIER_REGISTRY` contains stale mocks from previous tests. |
+| `tests/unit/test_modifier_row.py::*` | Module Reloading | **CRITICAL**: Tests use `importlib.reload`. This breaks class identity (isinstance checks) for other tests. |
+| `tests/unit/test_ship_loading.py::*` | Registry State | Loading logic might be hitting disk where it should hit `SessionRegistryCache`. |
+| `tests/unit/test_ship_physics_mixin.py` | Global Context | Check if `pygame.time` or related global state is leaking. |
+| `tests/unit/test_ship_resources.py` | Resource Registry | Check if `ResourceRegistry` static state is cleared between tests. |
+
+## Instructions for Next Agent
+
+1. **Reproduction**: Run the full suite with `pytest tests/ -n 16`. Confirm the 11 failures.
+2. **Isolation Test**: Run each failing test individually with `-n 0`. They should pass.
+3. **Sequence Testing**: Run the failing file alone with `-n 0` to see if internal test order causes the leak.
+4. **Registry Lockdown**: Use `RegistryManager.instance().freeze()` where appropriate in production code and ensure `clear()` is truly atomic in `conftest.py`.
+5. **Eliminate Reloads**: Refactor `test_modifier_row.py` to avoid `importlib.reload`. Use dependency injection or mocking instead.
+
+---
 
 ## Phased Schedule
 
-### Phase 1: Test Stabilization
+### Phase 7: Isolated Test Stabilization [/]
+... (Working on the 11 ghost failures identified by the USER)
+
+### Phase 1-6: [COMPLETED]
+... (History archived in Refactoring/archive/2026-01-04_test_stabilization/)
 
 #### 1. Verification Test (The Canary)
 - [x] [NEW] `tests/repro_issues/test_sequence_hazard.py`
@@ -181,20 +199,7 @@
 - [x] [EXECUTE] Run full Gauntlet (Must be GREEN).
     - Status: **GREEN** (534/534 tests passed).
 
-### Phase 5: Protocol 13 (Archive)
-*Goal: Preserve refactoring history and clean the workspace.*
-
-#### 1. Snapshot History
-- [ ] [CREATE] `Refactoring/archive/2026-01-04_test_stabilization/`
-- [ ] [MOVE] Move all files from `Refactoring/swarm_prompts/` to archive.
-- [ ] [MOVE] Move all files from `Refactoring/swarm_reports/` to archive.
-- [ ] [MOVE] Move `Refactoring/swarm_manifests/` to archive.
-
-#### 2. Final Cleanup
-- [ ] [DELETE] Remove any temporary `.tmp` or `.bak` files created during refactoring.
-- [ ] [FINALIZE] Set `active_refactor.md` status to [ARCHIVED].
-
-### Phase 6: Regression Triage (STABILIZATION COMPLETE)
+### Phase 5: Regression Triage (STABILIZATION COMPLETE)
 *Goal: Resolve the regressions introduced by the transition to RegistryManager and Ability v2.*
 
 #### 1. Core Logic & Data-Layer Bridges
@@ -215,6 +220,19 @@ The following tests pass in isolation but fail in the bulk `pytest tests/` run (
 - `tests/unit/test_main_integration.py::test_game_instantiation` (RecursionError)
     - *Context*: Occurs during `pygame_gui` layout in `LayerPanel.rebuild`. Potentially sensitive to global z-order state leakage.
 
+### Phase 6: Protocol 13 (Archive)
+*Goal: Preserve refactoring history and clean the workspace.*
+
+#### 1. Snapshot History
+- [ ] [CREATE] `Refactoring/archive/2026-01-04_test_stabilization/`
+- [ ] [MOVE] Move all files from `Refactoring/swarm_prompts/` to archive.
+- [ ] [MOVE] Move all files from `Refactoring/swarm_reports/` to archive.
+- [ ] [MOVE] Move `Refactoring/swarm_manifests/` to archive.
+
+#### 2. Final Cleanup
+- [ ] [DELETE] Remove any temporary `.tmp` or `.bak` files created during refactoring.
+- [ ] [FINALIZE] Set `active_refactor.md` status to [ARCHIVED].
+
 ---
 
 ## Handoff Plan: Final Stabilization Instructions
@@ -226,12 +244,14 @@ The following tests pass in isolation but fail in the bulk `pytest tests/` run (
 ### 2. Execution Path
 1. Run `pytest tests/unit/test_ship_theme_logic.py tests/unit/test_main_integration.py -n 0` to verify they pass in serial.
 2. Run `pytest tests/ -n 16` (Maintain the Green Gauntlet).
-3. Once **534/534** is achieved, execute **Phase 5: Protocol 13 (Archive)**.
+3. Once **534/534** is achieved, execute **Phase 6: Protocol 13 (Archive)**.
 
 ### 3. Protocol 13: Archival
 Move all files in the following directories to `Refactoring/archive/2026-01-04_test_stabilization/`:
 - `Refactoring/swarm_manifests/`
 - `Refactoring/swarm_prompts/`
 - `Refactoring/swarm_reports/`
+
+
 
 **Status:** Ready for archival once final 2 tests are green.

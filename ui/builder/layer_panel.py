@@ -43,6 +43,7 @@ class LayerPanel(DropTarget):
         self.grouping_strategy = self.grouping_strategies[self.current_strategy_name]
         
         self.toggle_suppress_timer = 0.0
+        self._rebuilding = False
         
         self.panel = UIPanel(
             relative_rect=rect,
@@ -99,150 +100,158 @@ class LayerPanel(DropTarget):
         """
         Rebuilds the list using reconciliation to preserve UI instances.
         """
-        y_pos = 0
-        container_rect = self.scroll_container.get_container().get_rect()
-        content_width = container_rect.width
+        if self._rebuilding:
+            return
+        self._rebuilding = True
         
-        layer_order = [LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR]
-        ship = self.builder.ship
-        
-        # 1. Generate Logical List of Items needed
-        # We process logical items and immediately reconcile them with the cache
-        
-        new_items_list = []
-        visited_keys = set()
-        
-        for l_type in layer_order:
-            if l_type not in ship.layers: continue
+        try:
+            y_pos = 0
+            container_rect = self.scroll_container.get_container().get_rect()
+            content_width = container_rect.width
             
-            data = ship.layers[l_type]
-            components = data['components']
+            layer_order = [LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR]
+            ship = self.builder.ship
             
-            current_mass = sum(c.mass for c in components)
-            layer_max_mass = ship.max_mass_budget * data.get('max_mass_pct', 1.0)
-            total_max_mass = ship.max_mass_budget
+            # 1. Generate Logical List of Items needed
+            # We process logical items and immediately reconcile them with the cache
             
-            # --- HEADER ---
-            header_key = ("header", l_type)
-            visited_keys.add(header_key)
+            new_items_list = []
+            visited_keys = set()
             
-            header = self.ui_cache.get(header_key)
-            if header:
-                header.update(current_mass, layer_max_mass, self.expanded_layers.get(l_type, True))
-                header.panel.set_relative_position((0, y_pos))
-            else:
-                header = LayerHeaderItem(
-                    self.manager,
-                    self.scroll_container,
-                    l_type,
-                    current_mass,
-                    layer_max_mass,
-                    self.expanded_layers.get(l_type, True),
-                    self, # Event Handler
-                    y_pos,
-                    content_width,
-                    self.config
-                )
-                self.ui_cache[header_key] = header
+            for l_type in layer_order:
+                if l_type not in ship.layers: continue
                 
-            new_items_list.append(header)
-            y_pos += header.height
-            
-            if self.expanded_layers.get(l_type, True):
-                groups = self.grouping_strategy.group_components(components)
-                for comp_list, count, mass_total, group_key in groups:
-                    pct_val = (mass_total / total_max_mass * 100) if total_max_mass > 0 else 0
+                data = ship.layers[l_type]
+                components = data['components']
+                
+                current_mass = sum(c.mass for c in components)
+                layer_max_mass = ship.max_mass_budget * data.get('max_mass_pct', 1.0)
+                total_max_mass = ship.max_mass_budget
+                
+                # --- HEADER ---
+                header_key = ("header", l_type)
+                visited_keys.add(header_key)
+                
+                header = self.ui_cache.get(header_key)
+                if header:
+                    header.update(current_mass, layer_max_mass, self.expanded_layers.get(l_type, True))
+                    header.panel.set_relative_position((0, y_pos))
+                else:
+                    header = LayerHeaderItem(
+                        self.manager,
+                        self.scroll_container,
+                        l_type,
+                        current_mass,
+                        layer_max_mass,
+                        self.expanded_layers.get(l_type, True),
+                        self, # Event Handler
+                        y_pos,
+                        content_width,
+                        self.config
+                    )
+                    self.ui_cache[header_key] = header
                     
-                    if count <= 1:
-                        is_expanded = False
-                    else:
-                        is_expanded = self.expanded_groups.get(group_key, False)
-                    
-                    is_selected_group = False
-                    if self.builder.selected_components:
-                         selected_objs = [x[2] for x in self.builder.selected_components]
-                         if comp_list[0] in selected_objs:
-                             is_selected_group = True
-                             
-                    comp_template = comp_list[0]
-                    
-                    # --- GROUP ITEM ---
-                    item_key = ("group", group_key)
-                    visited_keys.add(item_key)
-                    
-                    item = self.ui_cache.get(item_key)
-                    if item:
-                        item.update(count, mass_total, pct_val, is_expanded, is_selected_group, comp_template.name)
-                        item.panel.set_relative_position((0, y_pos))
-                    else:
-                        item = LayerComponentItem(
-                            self.manager,
-                            self.scroll_container,
-                            comp_template,
-                            count,
-                            mass_total,
-                            pct_val,
-                            is_expanded,
-                            group_key,
-                            is_selected_group,
-                            y_pos,
-                            content_width,
-                            self.builder.sprite_mgr,
-                            self,
-                            self.config
-                        )
-                        self.ui_cache[item_key] = item
+                new_items_list.append(header)
+                y_pos += header.height
+                
+                if self.expanded_layers.get(l_type, True):
+                    groups = self.grouping_strategy.group_components(components)
+                    for comp_list, count, mass_total, group_key in groups:
+                        pct_val = (mass_total / total_max_mass * 100) if total_max_mass > 0 else 0
                         
-                    new_items_list.append(item)
-                    y_pos += item.height
-                    
-                    if is_expanded:
-                        for idx, comp in enumerate(comp_list):
-                             is_last = (idx == len(comp_list) - 1)
-                             is_sel_ind = False
-                             if self.builder.selected_components:
-                                 if any(x[2] is comp for x in self.builder.selected_components):
-                                     is_sel_ind = True
-                                     
-                             # --- INDIVIDUAL ITEM ---
-                             ind_key = ("ind", comp)
-                             visited_keys.add(ind_key)
-                             
-                             ind_item = self.ui_cache.get(ind_key)
-                             if ind_item:
-                                 ind_item.update(comp, total_max_mass, is_sel_ind, is_last)
-                                 ind_item.panel.set_relative_position((0, y_pos))
-                             else:
-                                 ind_item = IndividualComponentItem(
-                                    self.manager,
-                                    self.scroll_container,
-                                    comp,
-                                    total_max_mass,
-                                    y_pos,
-                                    content_width,
-                                    self.builder.sprite_mgr,
-                                    self,
-                                    is_sel_ind,
-                                    is_last,
-                                    self.config
-                                 )
-                                 self.ui_cache[ind_key] = ind_item
+                        if count <= 1:
+                            is_expanded = False
+                        else:
+                            is_expanded = self.expanded_groups.get(group_key, False)
+                        
+                        is_selected_group = False
+                        if self.builder.selected_components:
+                             selected_objs = [x[2] for x in self.builder.selected_components]
+                             if comp_list[0] in selected_objs:
+                                 is_selected_group = True
                                  
-                             new_items_list.append(ind_item)
-                             y_pos += ind_item.height
+                        comp_template = comp_list[0]
+                        
+                        # --- GROUP ITEM ---
+                        item_key = ("group", group_key)
+                        visited_keys.add(item_key)
+                        
+                        item = self.ui_cache.get(item_key)
+                        if item:
+                            item.update(count, mass_total, pct_val, is_expanded, is_selected_group, comp_template.name)
+                            item.panel.set_relative_position((0, y_pos))
+                        else:
+                            item = LayerComponentItem(
+                                self.manager,
+                                self.scroll_container,
+                                comp_template,
+                                count,
+                                mass_total,
+                                pct_val,
+                                is_expanded,
+                                group_key,
+                                is_selected_group,
+                                y_pos,
+                                content_width,
+                                self.builder.sprite_mgr,
+                                self,
+                                self.config
+                            )
+                            self.ui_cache[item_key] = item
+                            
+                        new_items_list.append(item)
+                        y_pos += item.height
+                        
+                        if is_expanded:
+                            for idx, comp in enumerate(comp_list):
+                                 is_last = (idx == len(comp_list) - 1)
+                                 is_sel_ind = False
+                                 if self.builder.selected_components:
+                                     if any(x[2] is comp for x in self.builder.selected_components):
+                                         is_sel_ind = True
+                                         
+                                 # --- INDIVIDUAL ITEM ---
+                                 ind_key = ("ind", comp)
+                                 visited_keys.add(ind_key)
+                                 
+                                 ind_item = self.ui_cache.get(ind_key)
+                                 if ind_item:
+                                     ind_item.update(comp, total_max_mass, is_sel_ind, is_last)
+                                     ind_item.panel.set_relative_position((0, y_pos))
+                                 else:
+                                     ind_item = IndividualComponentItem(
+                                        self.manager,
+                                        self.scroll_container,
+                                        comp,
+                                        total_max_mass,
+                                        y_pos,
+                                        content_width,
+                                        self.builder.sprite_mgr,
+                                        self,
+                                        is_sel_ind,
+                                        is_last,
+                                        self.config
+                                     )
+                                     self.ui_cache[ind_key] = ind_item
+                                     
+                                 new_items_list.append(ind_item)
+                                 y_pos += ind_item.height
+                
+            # Cleanup Unvisited
+            keys_to_remove = []
+            for key, item in self.ui_cache.items():
+                if key not in visited_keys:
+                    item.kill()
+                    keys_to_remove.append(key)
             
-        # Cleanup Unvisited
-        keys_to_remove = []
-        for key, item in self.ui_cache.items():
-            if key not in visited_keys:
-                item.kill()
-                keys_to_remove.append(key)
-        
-        for k in keys_to_remove:
-            del self.ui_cache[k]
+            for k in keys_to_remove:
+                del self.ui_cache[k]
+                
+            self.items = new_items_list
+            self.scroll_container.set_scrollable_area_dimensions((content_width, y_pos))
             
-        self.items = new_items_list
-        self.scroll_container.set_scrollable_area_dimensions((content_width, y_pos))
+        finally:
+            self._rebuilding = False
 
     def handle_item_action(self, action, payload):
         """Unified Action Handler (Command Pattern)"""
