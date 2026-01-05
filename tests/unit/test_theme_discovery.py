@@ -7,11 +7,9 @@ from game.core.constants import ASSET_DIR
 
 class TestNewThemes(unittest.TestCase):
     def setUp(self):
-        pygame.init()
         # Initialize manager with base path (cwd)
+        ShipThemeManager._instance = None
         self.manager = ShipThemeManager.get_instance()
-        # Create dummy display for image loading
-        pygame.display.set_mode((1, 1), pygame.HIDDEN)
         
         # Verify resources exist
         klingon_json = os.path.join(ASSET_DIR, "ShipThemes", "Klingons", "theme.json")
@@ -27,7 +25,9 @@ class TestNewThemes(unittest.TestCase):
         self.manager.themes = {} 
         self.manager.loaded = False
         self.manager.initialize()
-
+    def tearDown(self):
+        # Clean up singleton
+        ShipThemeManager._instance = None
 
     def test_theme_discovery(self):
         """Verify themes are discovered."""

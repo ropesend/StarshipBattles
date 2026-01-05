@@ -2,18 +2,17 @@
   "agents": [
     {
       "role": "Code_Reviewer",
-      "focus": "Phase 3 Infrastructure (SessionCache, RegistryManager) & Logic Flaws",
+      "focus": "Phase 4 Logic Repairs: Ability Sync, Registry Freeze, and ship_stats.py string comparisons.",
       "primary_files": [
         "game/core/registry.py",
-        "tests/infrastructure/session_cache.py",
-        "tests/conftest.py",
         "game/simulation/components/component.py",
-        "tests/repro_issues/test_bug_05_logistics.py"
+        "game/simulation/components/abilities.py",
+        "ship_stats.py"
       ]
     },
     {
       "role": "Plan_Adjuster",
-      "focus": "Strategy Assessment: Phase 3 Success vs. Remaining Logic Failures",
+      "focus": "Final Verification: Assessing Green Gauntlet (534/534) and readiness for Archival (Protocol 13).",
       "primary_files": [
         "Refactoring/active_refactor.md"
       ]

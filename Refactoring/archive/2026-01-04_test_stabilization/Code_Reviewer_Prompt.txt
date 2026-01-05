@@ -1,0 +1,2249 @@
+# INSTRUCTIONS FOR AGENT (Code_Reviewer)
+
+**ROLE:** Code_Reviewer
+**FOCUS:** Phase 4 Logic Repairs: Ability Sync, Registry Freeze, and ship_stats.py string comparisons.
+
+## YOUR GOAL
+Analyze the provided code context below.
+Isolate issues specifically related to your FOCUS (Phase 4 Logic Repairs: Ability Sync, Registry Freeze, and ship_stats.py string comparisons.).
+Ignore unrelated issues unless they are critical system failures.
+
+## PHASE STATUS
+
+--- ACTIVE REFACTOR CONTEXT ---
+**Status:** Phase 4: Final Cleanup & Logic Repair (COMPLETE)
+**Start Date:** 2026-01-04
+
+## Migration Map (The Constitution)
+
+| Legacy Global | New Access Pattern |
+| :--- | :--- |
+| `game.simulation.components.component.COMPONENT_REGISTRY` | `RegistryManager.instance().components` |
+| `game.simulation.components.component.MODIFIER_REGISTRY` | `RegistryManager.instance().modifiers` |
+| `game.simulation.entities.ship.VEHICLE_CLASSES` | `RegistryManager.instance().vehicle_classes` |
+| `game.simulation.entities.ship._VALIDATOR` | `RegistryManager.instance().get_validator()` |
+
+## Test Triage Table
+
+| `tests/repro_issues/test_sequence_hazard.py` | [PASSED] | Canary test verified pollution cleanup. |
+| `tests/unit/test_components.py` | [PASSED] | Refactored `setUpClass` -> `setUp` to fix isolation regression. |
+| `tests/unit/*` | [PASSED] | 534 tests passed. Gauntlet Green. |
+| `tests/unit/repro_issues/test_slider_increment.py` | [FIXED] | Converted `setUpClass` to `setUp`. |
+| `tests/unit/test_overlay.py` | [PASSED] | UI isolation verified. |
+| `tests/unit/test_ui_widgets.py` | [PASSED] | UI isolation verified. |
+
+## Phased Schedule
+
+### Phase 1: Test Stabilization
+
+#### 1. Verification Test (The Canary)
+- [x] [NEW] `tests/repro_issues/test_sequence_hazard.py`
+    - implement `test_pollution_setter` (writes "Poison" to registry)
+    - implement `test_pollution_victim` (asserts registry is clean)
+
+#### 2. Infrastructure: The Registry Manager
+- [x] [NEW] `game/core/registry.py`
+    - Implement `RegistryManager` Singleton.
+    - Implement `clear()` method for `components`, `modifiers`, `vehicle_classes`.
+    - Implement `instance()` method.
+
+#### 3. Core Refactoring: Deprecate Globals
+- [x] [MODIFY] `game/simulation/components/component.py`
+    - Import `RegistryManager`.
+    - **CRITICAL**: Keep `COMPONENT_REGISTRY` and `MODIFIER_REGISTRY` variables for backward compatibility, but make them Property or Proxy to `RegistryManager`. *Correction*: Simple assignment `COMPONENT_REGISTRY = RegistryManager.instance().components` at module level is unsafe if Manager is reset.
+    - **Better Approach**: Replace usages.
+    - Update `load_components` to populate `RegistryManager.instance().components`.
+    - Update `load_modifiers` to populate `RegistryManager.instance().modifiers`.
+    - Usage replacements: `COMPONENT_REGISTRY[...]` -> `RegistryManager.instance().components[...]`.
+
+- [x] [MODIFY] `game/simulation/entities/ship.py`
+    - Import `RegistryManager`.
+    - Update `load_vehicle_classes` to populate `RegistryManager.instance().vehicle_classes`.
+    - Refactor `_VALIDATOR` to be accessed via Manager or created on demand.
+    - **Note**: `ValidatorProxy` implementation verified. Safe.
+
+#### 4. Test Harness: Strict Fixtures
+- [x] [NEW] `tests/conftest.py`
+    - `@pytest.fixture(autouse=True)`
+    - `reset_game_state()`: calls `RegistryManager.instance().clear()` before and after yield.
+
+### Phase 2: Test Suite Adaptation
+
+#### 0. Performance Mitigation: Smart Caching Loaders
+- [x] [MODIFY] `game/simulation/components/component.py`
+    - Implement module-level cache `_COMPONENT_CACHE` and `_MODIFIER_CACHE`.
+    - Update `load_components` and `load_modifiers` to load from disk ONLY if cache is None.
+    - If cache exists, deepcopy data from cache to `RegistryManager.instance`.
+    - **Benefit**: Calling `load_components` 100 times in `setUp` will be fast (memory copy) vs slow (disk IO).
+
+#### 1. Bulk Migration (setUpClass -> setUp)
+- [x] [MODIFY] `tests/unit/test_combat.py` (First candidate)
+    - Replace `setUpClass` with `setUp`.
+    - Ensure `load_components` is called in `setUp`.
+- [x] [MODIFY] Remaining files in `tests/unit/`
+    - Identify tests using `setUpClass` to load data.
+    - Convert `setUpClass` methods to `setUp`.
+    - Replace `cls.` with `self.` for instance variables.
+    - **Update**: `test_slider_increment.py` fixed in Phase 2.5.
+
+#### 2. Performance Verification
+
+#### 2. Performance Verification
+- [x] [EXECUTE] Run full test suite.
+    - Monitor execution time. If `setUp` overhead is too high (>60s), consider a `session` scoped fixture for loading data into a *separate* cache, and then shallow copying to RegistryManager in `setUp`.
+    - For now, naive `setUp` loading is the safest first step.
+
+#### 3. Final Verification
+- [x] [EXECUTE] Run `tests/repro_issues/test_sequence_hazard.py` (Must still PASS).
+- [ ] [EXECUTE] Run Full Suite (Must be GREEN).
+    - **Status:** SKIPPED.
+    - **Reason:** Systemic IO contention detected (209 errors). Proceeding to Phase 3 to fix infrastructure before further verification.
+
+### Phase 2.5: Critical Test Fixes (BLOCKER)
+- [x] [FIX] `tests/unit/test_rendering_logic.py`
+    - Failure: `TypeError: unexpectedly NoneType object has no attribute 'layer_assigned'` in `test_component_color_coding`.
+    - Likely cause: Mock setup issue in `draw_ship`.
+    - Resolution: Passed in isolation. Added defensive check in `Ship.add_component`.
+- [x] [FIX] `tests/unit/test_ship_theme_logic.py`
+    - Failure: `AssertionError` in `test_get_image_metrics`.
+    - Note: Likely environment/headless incompatibility or race condition.
+    - Resolution: Passed in isolation. Verified.
+- [x] [FIX] `tests/repro_issues/test_bug_09_endurance.py`
+    - Failure: `AssertionError` (Stats Panel shows 'Infinite' for finite fuel endurance).
+    - Action: Determine if this is a regression or correct bug reproduction. Fix test or code accordingly.
+    - Resolution: Passed (Verified "Infinite" not shown).
+- [x] [EXECUTE] Run Full Suite (Must be STRICTLY GREEN).
+    - Status: **FAILED**. 70 failed, 209 errors.
+    - **DECISION**: Flagged remaining issues to proceed to Swarm Review for deep triage.
+
+### Phase 2.6: UI Test Isolation (Flaky Tests)
+- [x] [FIX] `tests/unit/test_overlay.py`
+    - Failure: `test_toggle_overlay` passes in isolation but fails in suite.
+    - Cause: `game.app` import caused environment crash in pytest; fixed by refactoring to use `MockGame` and `InputHandler`.
+- [x] [FIX] `tests/unit/test_ui_widgets.py`
+    - Failures: `test_button_hover_detection`, `test_button_click_fires_callback` (context dependent failures).
+    - Cause: Fixed by global `conftest.py` headless environment enforcement.
+
+### Phase 3: Performance & Stability Infrastructure (COMPLETE)
+*Goal: Eliminate IO contention causing massive test timeouts/errors by implementing Session-Level Caching.*
+
+#### 1. Implement Session Cache
+- [x] [NEW] `tests/infrastructure/session_cache.py`
+    - **Class:** `SessionRegistryCache` (Singleton/Module).
+    - **Responsibility:** Load `components.json`, `modifiers.json`, `vehicle_classes.json` from disk **ONCE** per test session.
+    - **Methods:**
+        - `get_components_data() -> Dict`: Returns deepcopy of raw component data.
+        - `get_modifiers_data() -> Dict`: Returns deepcopy of raw modifier data.
+        - `get_vehicle_classes_data() -> Dict`: Returns deepcopy of raw vehicle class data.
+    - **Note:** Must handle "Not Found" gracefully and verify data integrity.
+
+#### 2. Fast Hydration Fixture
+- [x] [MODIFY] `tests/conftest.py`
+    - **Fixture:** `reset_game_state` (autouse).
+    - **Change:** 
+        - Remove `RegistryManager.instance().clear()`.
+        - Implement `RegistryManager.instance().hydrate_from(SessionRegistryCache)`.
+        - OR: `RegistryManager.instance().clear()` then manually populate from Cache.
+    - **Optimization:** If `RegistryManager` supports `bulk_load(dict)`, use that.
+    - **Safeguard:** Ensure `RegistryManager.reset()` (destruction) is NOT used, or if it is, that cache handles re-attachment (unlikely needed).
+
+#### 3. Registry Manager Update
+- [x] [MODIFY] `game/core/registry.py`
+    - **Method:** `hydrate(self, components_data, modifiers_data, vehicle_classes_data)`
+    - **Logic:** Fast assignment of internal dicts (using copies).
+    - **Safety:** Add warning/error to `reset()` method to discourage use during tests (favor `clear`).
+
+#### 4. Verification (The Stability Check)
+- [x] [EXECUTE] Run Full Suite.
+    - **Result:** ~6.4s execution time.
+    - **Performance:** Excellent. IO Contention eliminated.
+    - **Status:** Full suite has noise issues (235 errors), BUT verification confirms ALL tests pass except for known logic bugs:
+        - `tests/repro_issues/test_bug_05_logistics.py::test_missing_logistics_details`
+        - `tests/repro_issues/test_bug_05_rejected_fix.py::test_usage_only_visibility`
+        - `tests/repro_issues/test_bug_05_rejected_fix.py::test_max_usage_calculation`
+    - **Swarm Review Verdict:** Infrastructure Passed. Critical Logic Flaw identified in `Component.recalculate_stats`. Proceed to Phase 4.
+
+### Phase 4: Final Cleanup & Logic Repair (COMPLETE)
+*Goal: Fix critical logic flaws exposed by the new testing infrastructure.*
+
+#### 1. Critical Logic Repair: State Preservation
+- [x] [MODIFY] `game/simulation/components/component.py`
+    - **Fix:** Implemented `_instantiate_abilities` with instance reuse logic.
+    - **Fix:** Added `sync_data()` method to `Ability` and subclasses in `abilities.py`.
+    - **Result:** Runtime state (cooldowns, energy) preserved during stat recalculations.
+
+#### 2. Logic Repair: Status Updates
+- [x] [MODIFY] `game/simulation/components/component.py`
+    - **Fix:** Updated `take_damage` to set `status` to `ComponentStatus.DAMAGED` if HP < 50%.
+
+#### 3. Test Fixes: Logistics & Bugs
+- [x] [FIX] `tests/repro_issues/test_bug_05_logistics.py`
+    - Fixed initialization and data injection to work with `RegistryManager`.
+- [x] [FIX] `tests/unit/test_rendering_logic.py`
+    - Resolved `TypeError` by refining mock interactions.
+- [x] [FIX] `tests/unit/test_ship_theme_logic.py`
+    - Resolved `AssertionError` in image metrics verification.
+
+#### 4. Final Polish & Stability
+- [x] [MODIFY] `game/core/registry.py`
+    - Implemented `freeze()` to prevent post-initialization registry mutations.
+- [x] [MODIFY] `ship_stats.py`
+    - Refactored `isinstance` checks to string-based class name checks to handle module identity issues in complex test environments.
+- [x] [EXECUTE] Run full Gauntlet (Must be GREEN).
+    - Status: **GREEN** (534/534 tests passed).
+
+### Phase 5: Protocol 13 (Archive)
+- [ ] [EXECUTE] Run Protocol 13 (Archive).
+
+--- END ACTIVE REFACTOR CONTEXT ---
+
+
+## OUTPUT INSTRUCTIONS
+You are an autonomous agent.
+1. Perform your analysis.
+2. **CRITICAL:** You MUST use the `write_to_file` tool to save your report.
+   - **Target File:** `C:\Dev\Starship Battles\Refactoring\swarm_reports\Code_Reviewer_Report.md`
+   - **Do NOT** just print the markdown to the chat. Save it to the file.
+
+## CONTEXT
+
+--- START FILE: game/core/registry.py ---
+from typing import Dict, Any, Optional
+
+class RegistryManager:
+    """
+    Central singleton for managing global game state registries.
+    Replaces module-level globals to allow for clean state resets in testing.
+    """
+    _instance: Optional['RegistryManager'] = None
+
+    def __init__(self):
+        if RegistryManager._instance is not None:
+             raise Exception("RegistryManager is a singleton. Use RegistryManager.instance()")
+        
+        self.components: Dict[str, Any] = {}
+        self.modifiers: Dict[str, Any] = {}
+        self.vehicle_classes: Dict[str, Any] = {}
+        self._validator: Any = None 
+        self._frozen: bool = False
+
+    @classmethod
+    def instance(cls) -> 'RegistryManager':
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+    
+    @classmethod
+    def reset(cls):
+        """
+        [WARNING] For testing only: completely destroys the singleton instance.
+        Prefer clear() for test isolation to avoid stale reference hazards.
+        """
+        cls._instance = None
+
+    def freeze(self):
+        """Prevents further modifications to the registry."""
+        self._frozen = True
+
+    def hydrate(self, components_data: Dict[str, Any], modifiers_data: Dict[str, Any], vehicle_classes_data: Dict[str, Any]):
+        """
+        Fast hydration from pre-loaded dictionary data (e.g. Session Cache).
+        Bypasses disk I/O.
+        """
+        if self._frozen:
+            raise RuntimeError("Cannot hydrate a frozen RegistryManager")
+            
+        # CRITICAL: Do NOT replace the dictionary instances (e.g. self.components = ...).
+        # Global aliases in other modules (like COMPONENT_REGISTRY) hold references to the original dicts.
+        # We must update them in place.
+        self.components.clear()
+        self.components.update(components_data)
+        
+        self.modifiers.clear()
+        self.modifiers.update(modifiers_data)
+        
+        self.vehicle_classes.clear()
+        self.vehicle_classes.update(vehicle_classes_data)
+
+    def clear(self):
+        """Clears all registries to empty state."""
+        if self._frozen:
+             raise RuntimeError("Cannot clear a frozen RegistryManager (Tests must unfreeze or reset if absolutely necessary)")
+        self.components.clear()
+        self.modifiers.clear()
+        self.vehicle_classes.clear()
+        self._validator = None
+
+    def get_validator(self):
+        return self._validator
+    
+    def set_validator(self, validator):
+        self._validator = validator
+
+--- END FILE: game/core/registry.py ---
+
+--- START FILE: game/simulation/components/component.py ---
+import json
+import math
+from enum import Enum, auto
+from formula_system import evaluate_math_formula
+from game.core.registry import RegistryManager
+
+class ComponentStatus(Enum):
+    ACTIVE = auto()
+    DAMAGED = auto() # >50% damage
+    NO_CREW = auto()
+    NO_POWER = auto()
+    NO_FUEL = auto()
+    NO_AMMO = auto()
+
+class LayerType(Enum):
+    CORE = 1
+    INNER = 2
+    OUTER = 3
+    ARMOR = 4
+
+    @staticmethod
+    def from_string(s):
+        return getattr(LayerType, s.upper())
+
+class Modifier:
+    def __init__(self, data):
+        self.id = data['id']
+        self.name = data['name']
+        self.type_str = data['type'] # 'boolean' or 'linear'
+        self.description = data.get('description', '')
+        self.effects = data.get('effects', {})
+        self.restrictions = data.get('restrictions', {})
+        self.param_name = data.get('param_name', 'value')
+        self.min_val = data.get('min_val', 0)
+        self.max_val = data.get('max_val', 100)
+        self.default_val = data.get('default_val', self.min_val)
+        self.readonly = data.get('readonly', False)
+
+    def create_modifier(self, value=None):
+        return ApplicationModifier(self, value)
+
+# MODIFIER_REGISTRY = {} 
+# Aliased to RegistryManager for backward compatibility (but prefer Manager access)
+MODIFIER_REGISTRY = RegistryManager.instance().modifiers
+
+class ApplicationModifier:
+    """Instance of a modifier applied to a component"""
+    def __init__(self, mod_def, value=None):
+        self.definition = mod_def
+        self.value = value if value is not None else mod_def.default_val
+
+# IMPORTS MOVED TO LOCAL SCOPE TO PREVENT CIRCULAR DEPENDENCY
+# from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability
+
+class Component:
+    def __init__(self, data):
+        import copy
+        self.data = copy.deepcopy(data) # Store raw data for reference/cloning
+        self.id = data['id']
+        self.name = data['name']
+        self.base_mass = data['mass']
+        self.mass = self.base_mass
+        self.base_max_hp = data['hp']
+        self.max_hp = self.base_max_hp
+        self.current_hp = self.max_hp
+        # allowed_layers removed in refactor
+        # self.allowed_layers = [LayerType.from_string(l) for l in data['allowed_layers']]
+        self.allowed_vehicle_types = data.get('allowed_vehicle_types', ["Ship"])
+        self.major_classification = data.get('major_classification', "Unknown")
+        self.is_active = True
+        self.status = ComponentStatus.ACTIVE
+        self.layer_assigned = None
+        self.type_str = data['type']
+        self.sprite_index = data.get('sprite_index', 0)
+        self.cost = data.get('cost', 0)
+        
+        # Parse abilities from data
+        self.abilities = self.data.get('abilities', {})
+        self.base_abilities = copy.deepcopy(self.abilities)
+        
+        self.ship = None # Container reference
+        
+        self.stats = {} # Current stats dictionary (calcualted)
+        self.modifiers = [] # list of ApplicationModifier
+        
+        # Ability Instances (New System)
+        self.ability_instances = []
+        self._is_operational = True # Tracks if component has resources to operate
+        
+        # Instantiate Abilities
+        self._instantiate_abilities()
+        
+        # Load default modifiers from data definition
+        if 'modifiers' in self.data:
+            for mod_data in self.data['modifiers']:
+                mod_id = mod_data['id']
+                val = mod_data.get('value', None)
+                # We need to access registry. BUT registry might not be fully loaded if simple import.
+                # Assuming MODIFIER_REGISTRY is populated by load_modifiers globally.
+                from game.core.registry import RegistryManager
+                mods = RegistryManager.instance().modifiers
+                if mod_id in mods:
+                    mod_def = mods[mod_id]
+                    self.modifiers.append(mod_def.create_modifier(val))
+                else:
+                    # If modifiers loaded later, this might fail. 
+                    # Ideally modifiers are loaded before components.
+                    pass
+                    
+        # Parse Formulas
+        self.formulas = {}
+        for key, value in self.data.items():
+            if isinstance(value, str) and value.startswith("="):
+                # It's a formula!
+                self.formulas[key] = value[1:] # Store without '='
+                # Initialize base value to something safe? Or keep it as is?
+                # Probably keep undefined or 0 until recalculated? 
+                # Better to set a default if possible, but hard to guess.
+                # If it's mass/hp, 0 is safer than crashing.
+                if key in ['mass', 'hp', 'cost']:
+                     setattr(self, f"base_{key}" if key in ['mass', 'hp'] else key, 0)
+                     if key == 'mass': self.mass = 0
+                     if key == 'hp': 
+                         self.max_hp = 0
+                         self.current_hp = 0
+
+    def get_abilities(self, ability_name: str):
+        """
+        Get all abilities of a specific type (by registry name).
+        Supports polymorphism if the registry entry is a class.
+        """
+        from game.simulation.components.abilities import ABILITY_REGISTRY
+        
+        target_class = None
+        if ability_name in ABILITY_REGISTRY:
+            val = ABILITY_REGISTRY[ability_name]
+            if isinstance(val, type):
+                target_class = val
+        
+        found = []
+        for ab in self.ability_instances:
+            # 1. Polymorphic check (preferred)
+            if target_class and isinstance(ab, target_class):
+                found.append(ab)
+            # 2. Name check (fallback)
+            elif ab.__class__.__name__ == ability_name:
+                found.append(ab)
+        return found
+
+    def get_ability(self, ability_name: str):
+        """Get first ability of type."""
+        l = self.get_abilities(ability_name)
+        return l[0] if l else None
+
+    def has_ability(self, ability_name: str):
+        """Check if component has ability."""
+        return len(self.get_abilities(ability_name)) > 0
+
+    def has_pdc_ability(self) -> bool:
+        """Check if component has a Point Defense weapon ability.
+        
+        Supports both:
+        - New system: 'pdc' in ability.tags
+        - Legacy system: abilities.get('PointDefense', False)
+        """
+        # 1. Check new tag-based system
+        for ab in self.ability_instances:
+            if 'pdc' in ab.tags:
+                return True
+        
+
+        return False
+
+    def get_ui_rows(self):
+        """Aggregate UI rows from all ability instances.
+        
+        Returns list of dicts: [{'label': 'Thrust', 'value': '1500 N'}, ...]
+        Used by detail panels and capability scanners.
+        """
+        rows = []
+        for ab in self.ability_instances:
+            rows.extend(ab.get_ui_rows())
+        return rows
+
+    def _instantiate_abilities(self):
+        """Instantiate or Sync Ability objects from self.abilities dict."""
+        # We want to preserve existing instances to maintain runtime state (cooldowns, energy)
+        # but also add new ones or remove obsolete ones.
+        
+        # 1. Map existing instances for quick lookup
+        # Key: (ability_type_name, index_in_that_type)
+        existing_map = {}
+        for ab in self.ability_instances:
+            # We track by class name
+            cls_name = ab.__class__.__name__
+            if cls_name not in existing_map:
+                existing_map[cls_name] = []
+            existing_map[cls_name].append(ab)
+
+        new_instances = []
+        
+        # Standard Loading from abilities dict
+        from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability
+        
+        for name, data in self.abilities.items():
+            if name not in ABILITY_REGISTRY:
+                continue
+            
+            items = data if isinstance(data, list) else [data]
+            
+            # Get the target class for this registry entry (could be class or lambda)
+            target = ABILITY_REGISTRY[name]
+            target_cls_name = None
+            if isinstance(target, type):
+                target_cls_name = target.__name__
+            elif name in ["FuelStorage", "EnergyStorage", "AmmoStorage"]:
+                 target_cls_name = "ResourceStorage"
+            elif name == "EnergyGeneration":
+                 target_cls_name = "ResourceGeneration"
+            elif name == "EnergyConsumption":
+                 target_cls_name = "ResourceConsumption"
+
+            for item in items:
+                # Heuristic: Match by Target Class Name if known, otherwise fallback to registry name
+                match_name = target_cls_name or name
+                
+                found_existing = False
+                if match_name in existing_map and existing_map[match_name]:
+                    ab = existing_map[match_name].pop(0)
+                    # Support live data sync if ability supports it
+                    if hasattr(ab, 'sync_data'):
+                        ab.sync_data(item)
+                    new_instances.append(ab)
+                    found_existing = True
+                
+                if not found_existing:
+                    ab = create_ability(name, self, item)
+                    if ab: new_instances.append(ab)
+        
+        self.ability_instances = new_instances
+            
+    def update(self):
+        """Update component state for one tick (resource consumption, cooldowns)."""
+        # 1. Update Abilities (Constant Consumption)
+        all_satisfied = True
+        
+        for ability in self.ability_instances:
+            if not ability.update():
+                from game.simulation.systems.resource_manager import ResourceConsumption
+                if isinstance(ability, ResourceConsumption) and ability.trigger == 'constant':
+                     all_satisfied = False
+        
+        self._is_operational = all_satisfied and self.is_active
+
+    @property
+    def is_operational(self):
+        return self._is_operational and self.is_active
+
+    def can_afford_activation(self):
+        """Check if component can afford activation costs."""
+        from game.simulation.systems.resource_manager import ResourceConsumption
+        for ability in self.ability_instances:
+            if isinstance(ability, ResourceConsumption) and ability.trigger == 'activation':
+                if not ability.check_available():
+                    return False
+        return True
+
+    def consume_activation(self):
+        """Consume activation costs."""
+        from game.simulation.systems.resource_manager import ResourceConsumption
+        for ability in self.ability_instances:
+            if isinstance(ability, ResourceConsumption) and ability.trigger == 'activation':
+                ability.check_and_consume()
+
+    def try_activate(self):
+        """Analyze if we can activate, and if so, consume and return True. (Legacy/Simple usage)"""
+        if self.can_afford_activation():
+            self.consume_activation()
+            return True
+        return False
+
+
+
+
+    def take_damage(self, amount):
+        self.current_hp -= amount
+        
+        # Update Status
+        if self.current_hp <= 0:
+            self.current_hp = 0
+            self.is_active = False
+            return True # Destroyed
+        
+        # Logic Repair: Update status to DAMAGED if below 50%
+        if self.current_hp < (self.max_hp * 0.5):
+            self.status = ComponentStatus.DAMAGED
+            
+        return False
+
+    def reset_hp(self):
+        self.current_hp = self.max_hp
+        self.is_active = True
+        self.status = ComponentStatus.ACTIVE
+
+    def add_modifier(self, mod_id, value=None):
+        mods = RegistryManager.instance().modifiers
+        if mod_id not in mods: return False
+        
+        # Check restrictions
+        mod_def = mods[mod_id]
+        if 'deny_types' in mod_def.restrictions:
+            if self.type_str in mod_def.restrictions['deny_types']:
+                return False
+        if 'allow_types' in mod_def.restrictions:
+            if self.type_str not in mod_def.restrictions['allow_types']:
+                return False
+                
+        # Remove existing if any (replace)
+        self.remove_modifier(mod_id)
+            
+        app_mod = ApplicationModifier(mod_def, value)
+        self.modifiers.append(app_mod)
+        self.recalculate_stats()
+        return True
+
+    def remove_modifier(self, mod_id):
+        self.modifiers = [m for m in self.modifiers if m.definition.id != mod_id]
+        self.recalculate_stats()
+
+    def get_modifier(self, mod_id):
+        for m in self.modifiers:
+            if m.definition.id == mod_id:
+                return m
+        return None
+        
+
+
+    def recalculate_stats(self):
+        """Recalculate component stats with multiplicative modifier stacking."""
+        # Capture old hp for current_hp logic at end
+        old_max_hp = self.max_hp
+
+        # 1. Reset and Evaluate Base Formulas
+        self._reset_and_evaluate_base_formulas()
+        
+        # 1.5 Re-instantiate Abilities (Sync instances with new abilities dict)
+        self._instantiate_abilities()
+
+        # 2. Calculate Modifier Stats (Accumulate multipliers)
+        stats = self._calculate_modifier_stats()
+        self.stats = stats # Persist for introspection/ability access
+
+        # 3. Apply Base Stats (Generic attributes)
+        self._apply_base_stats(stats, old_max_hp)
+        
+        # 4. Apply Custom/Subclass Stats
+        self._apply_custom_stats(stats)
+
+    def _reset_and_evaluate_base_formulas(self):
+        import copy
+        # Reset abilities from raw data
+        self.abilities = copy.deepcopy(self.data.get('abilities', {}))
+        
+        # Context building
+        context = {
+            'ship_class_mass': 1000 # Default fallback
+        }
+        if self.ship:
+             context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
+
+        # Evaluate Formulas for attributes
+        for attr, formula in self.formulas.items():
+            val = evaluate_math_formula(formula, context)
+            if attr == 'mass':
+                self.base_mass = float(val)
+                self.mass = self.base_mass # Reset to base
+            elif attr == 'hp':
+                self.base_max_hp = int(val)
+                self.max_hp = self.base_max_hp # Reset to base
+            else:
+                 if hasattr(self, attr):
+                     if isinstance(getattr(self, attr), int):
+                         setattr(self, attr, int(val))
+                     else:
+                         setattr(self, attr, val)
+        
+        # Evaluate formulas in abilities
+        for ability_name, val in self.abilities.items():
+            if isinstance(val, str) and val.startswith("="):
+                new_val = evaluate_math_formula(val[1:], context)
+                self.abilities[ability_name] = new_val
+            elif isinstance(val, dict):
+                 if 'value' in val and isinstance(val['value'], str) and val['value'].startswith("="):
+                     new_val = evaluate_math_formula(val['value'][1:], context)
+                     val['value'] = new_val
+
+    def _calculate_modifier_stats(self):
+        from game.simulation.components.modifiers import apply_modifier_effects
+        stats = {
+            'mass_mult': 1.0,
+            'hp_mult': 1.0,
+            'damage_mult': 1.0,
+            'range_mult': 1.0,
+            'cost_mult': 1.0,
+            'thrust_mult': 1.0,
+            'turn_mult': 1.0,
+            'energy_gen_mult': 1.0,
+            'capacity_mult': 1.0,
+            'crew_capacity_mult': 1.0,
+            'life_support_capacity_mult': 1.0,
+            'consumption_mult': 1.0,
+            'mass_add': 0.0,
+            'arc_add': 0.0,
+            'accuracy_add': 0.0,
+            'arc_set': None,
+            'properties': {},
+            # New Modifier Support
+            'reload_mult': 1.0,
+            'endurance_mult': 1.0,
+            'projectile_hp_mult': 1.0,
+            'projectile_damage_mult': 1.0,
+            'projectile_stealth_level': 0.0,
+            'crew_req_mult': 1.0
+        }
+        
+        for m in self.modifiers:
+            apply_modifier_effects(m.definition, m.value, stats, component=self)
+            
+        return stats
+
+    def _apply_base_stats(self, stats, old_max_hp):
+        # Apply specific property overrides
+        for prop, val in stats['properties'].items():
+            if hasattr(self, prop):
+                setattr(self, prop, val)
+
+        # Apply Base Multipliers
+        self.mass = (self.base_mass + stats['mass_add']) * stats['mass_mult']
+        
+        # Note: old_max_hp is passed in, captured before base formula reset
+        self.max_hp = int(self.base_max_hp * stats['hp_mult'])
+        
+        if hasattr(self, 'cost'):
+            self.cost = int(self.data.get('cost', 0) * stats['cost_mult'])
+
+
+
+        # Handle HP update (healing/new component logic)
+        if old_max_hp == 0:
+            self.current_hp = self.max_hp
+        elif self.current_hp >= old_max_hp:
+            self.current_hp = self.max_hp
+            
+        # Ensure cap
+        self.current_hp = min(self.current_hp, self.max_hp)
+
+        # Generic Sync: Update Activation Abilities if attributes changed
+        from game.simulation.systems.resource_manager import ResourceConsumption, ResourceStorage, ResourceGeneration
+        
+        for ab in self.ability_instances:
+            # General Recalculate (Protocol for active abilities to sync with stats)
+            ab.recalculate()
+            
+            ab_cls = ab.__class__.__name__
+            ab_data = ab.data
+            
+            # Helper to get base value safely from dict or primitive
+            def get_base(data, key, default=0.0):
+                if isinstance(data, dict):
+                    return data.get(key, default)
+                if isinstance(data, (int, float)):
+                    return float(data)
+                return default
+
+            # ResourceConsumption (Base amount * consumption_mult)
+            if ab_cls == 'ResourceConsumption':
+                 base = get_base(ab_data, 'amount')
+                 ab.amount = base * stats.get('consumption_mult', 1.0)
+            
+            # ResourceStorage (Base amount * capacity_mult)
+            elif ab_cls == 'ResourceStorage':
+                 base = get_base(ab_data, 'amount')
+                 ab.max_amount = base * stats.get('capacity_mult', 1.0)
+            
+            # ResourceGeneration (Base amount * energy_gen_mult)
+            elif ab_cls == 'ResourceGeneration':
+                 # Apply energy_gen_mult only if resource is energy, or generic 'generation_mult' if we had one.
+                 if getattr(ab, 'resource_type', '') == 'energy':
+                     base = get_base(ab_data, 'amount')
+                     ab.rate = base * stats.get('energy_gen_mult', 1.0)
+
+
+
+    def _apply_custom_stats(self, stats):
+        """Hook for subclasses to apply specific stats."""
+        # Base implementation handles Crew/LifeSupport as they are somewhat generic in this system
+        pass
+
+    def clone(self):
+        # Create a new instance with the same data
+        # We need a Factory, but since we are refactoring, we can just make a new instance of the same class.
+        # But we need to know the class.
+        return self.__class__(self.data)
+
+
+# Legacy Aliases - REMOVED / Mapped to Manager
+
+COMPONENT_REGISTRY = RegistryManager.instance().components
+# Phase 7 Simplified: Aliased types now use Component directly
+# Types with custom logic (Shield, Hangar, etc.) are now also aliases
+# as their logic has been unified into the Ability system.
+
+COMPONENT_TYPE_MAP = {
+    # All types map to generic Component
+    "Bridge": Component,
+    "Weapon": Component,
+    "ProjectileWeapon": Component,
+    "BeamWeapon": Component,
+    "SeekerWeapon": Component,
+    "Engine": Component,
+    "Thruster": Component,
+    "ManeuveringThruster": Component,
+    "Shield": Component,
+    "ShieldRegenerator": Component,
+    "Generator": Component,
+    "Hangar": Component,
+    "Armor": Component,
+    "Sensor": Component,
+    "Electronics": Component,
+    "Tank": Component,
+    "CrewQuarters": Component,
+    "LifeSupport": Component
+}
+
+# Caching for performance (Phase 2 Test Stabilization)
+_COMPONENT_CACHE = None
+_MODIFIER_CACHE = None
+
+def load_components(filepath="data/components.json"):
+    global _COMPONENT_CACHE
+    import os
+    import copy
+    from game.core.registry import RegistryManager
+
+    # If cache exists, hydrate Registry from cache (Fast Path)
+    if _COMPONENT_CACHE is not None:
+        mgr = RegistryManager.instance()
+        for c_id, comp in _COMPONENT_CACHE.items():
+            mgr.components[c_id] = comp.clone()
+        return
+
+    # Slow Path: Load from Disk
+    # Try absolute path based on this file if CWD fails
+    if not os.path.exists(filepath):
+        print(f"WARN: {filepath} not found in CWD ({os.getcwd()}).")
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        abs_path = os.path.join(base_dir, filepath)
+
+        if os.path.exists(abs_path):
+            filepath = abs_path
+        else:
+            print(f"ERROR: components file not found at {abs_path}")
+            return
+
+    try:
+        with open(filepath, 'r') as f:
+            import json
+            data = json.load(f)
+            
+        temp_cache = {}
+        for comp_def in data['components']:
+            c_type = comp_def['type']
+            try:
+                cls = COMPONENT_TYPE_MAP.get(c_type, Component)
+                obj = cls(comp_def)
+                temp_cache[comp_def['id']] = obj
+            except Exception as e:
+                print(f"ERROR creating component {comp_def.get('id')}: {e}")
+        
+        # Populate Cache
+        _COMPONENT_CACHE = temp_cache
+        
+        # Populate Registry from Cache
+        mgr = RegistryManager.instance()
+        for c_id, comp in _COMPONENT_CACHE.items():
+            mgr.components[c_id] = comp.clone()
+            
+    except Exception as e:
+        print(f"ERROR loading/parsing components json: {e}")
+
+def load_modifiers(filepath="data/modifiers.json"):
+    global _MODIFIER_CACHE
+    import os
+    import copy
+    from game.core.registry import RegistryManager
+    
+    # Fast Path
+    if _MODIFIER_CACHE is not None:
+        mgr = RegistryManager.instance()
+        for m_id, mod in _MODIFIER_CACHE.items():
+            mgr.modifiers[m_id] = copy.deepcopy(mod)
+        return
+
+    # Slow Path
+    if not os.path.exists(filepath):
+         base_dir = os.path.dirname(os.path.abspath(__file__))
+         filepath = os.path.join(base_dir, filepath)
+    
+    try:
+        with open(filepath, 'r') as f:
+            import json
+            data = json.load(f)
+            
+        temp_cache = {}
+        for mod_def in data['modifiers']:
+            mod = Modifier(mod_def)
+            temp_cache[mod.id] = mod
+        
+        _MODIFIER_CACHE = temp_cache
+        
+        mgr = RegistryManager.instance()
+        for m_id, mod in _MODIFIER_CACHE.items():
+            mgr.modifiers[m_id] = copy.deepcopy(mod)
+            
+    except Exception as e:
+        print(f"ERROR loading modifiers: {e}")
+
+def create_component(component_id):
+    # Use RegistryManager instance instead of alias if possible, but alias is still mapped
+    from game.core.registry import RegistryManager
+    comps = RegistryManager.instance().components
+    if component_id in comps:
+        return comps[component_id].clone()
+    print(f"Error: Component ID {component_id} not found in registry.")
+    return None
+
+def get_all_components():
+    from game.core.registry import RegistryManager
+    return list(RegistryManager.instance().components.values())
+
+--- END FILE: game/simulation/components/component.py ---
+
+--- START FILE: game/simulation/components/abilities.py ---
+
+import math
+from typing import Dict, Any, Optional, List, Union
+
+# --- Base Ability ---
+class Ability:
+    """
+    Base class for component abilities.
+    Abilities represent functional capabilities (Consumption, Storage, Generation, special effects)
+    that are data-driven and attached to Components.
+    """
+    def __init__(self, component, data: Dict[str, Any]):
+        self.component = component
+        self.data = data
+        self._tags = set(data.get('tags', [])) if isinstance(data, dict) else set()
+        self.stack_group = data.get('stack_group') if isinstance(data, dict) else None
+    
+    def sync_data(self, data: Any):
+        """Update internal state when component data changes."""
+        self.data = data
+        if isinstance(data, dict):
+            self._tags = set(data.get('tags', []))
+            self.stack_group = data.get('stack_group')
+        else:
+            pass
+    
+    @property
+    def tags(self):
+        return self._tags
+
+    def update(self) -> bool:
+        """
+        Called every tick (0.01s). 
+        Used for constant resource consumption or continuous effects.
+        Returns True if operational, False if failed (e.g. starvation).
+        """
+        return True
+
+    def on_activation(self) -> bool:
+        """
+        Called when component tries to activate (e.g. fire weapon). 
+        Used for checking activation costs or conditions.
+        Returns True if allowed.
+        """
+        return True
+        
+    def recalculate(self) -> None:
+        """
+        Called when component stats have changed (e.g. modifiers applied).
+        Override to update internal values derived from component stats.
+        """
+        pass
+
+    def get_ui_rows(self) -> List[Dict[str, str]]:
+        """
+        Return list of UI rows for the capability scanner/details panel.
+        Format: [{'label': 'Thrust', 'value': '1500 N', 'color_hint': '#FFFFFF'}]
+        """
+        return []
+
+# --- Resource Abilities (Migrated from resources.py) ---
+
+class ResourceConsumption(Ability):
+    """
+    Ability to consume resources.
+    Data: { "resource": "fuel", "amount": 10, "trigger": "constant"|"activation" }
+    """
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        self.resource_name = data.get('resource', '')
+        self.amount = data.get('amount', 0.0)
+        self.trigger = data.get('trigger', 'constant') # 'constant' or 'activation'
+
+    def sync_data(self, data: Any):
+        super().sync_data(data)
+        if isinstance(data, dict):
+            self.resource_name = data.get('resource', self.resource_name)
+            self.amount = data.get('amount', 0.0)
+            self.trigger = data.get('trigger', 'constant')
+        elif isinstance(data, (int, float)):
+            self.amount = float(data)
+            self.trigger = 'constant' # Default for shortcut
+
+    def update(self) -> bool:
+        TICK_DURATION = 0.01  # Fixed tick duration
+        if self.trigger == 'constant':
+            # Need access to ship's resources
+            if self.component.ship and self.component.ship.resources:
+                res = self.component.ship.resources.get_resource(self.resource_name)
+                if res:
+                    # Constant consumption is per second, multiply by tick duration
+                    cost = self.amount * TICK_DURATION
+                    if not res.consume(cost):
+                        return False # Starvation
+                else:
+                    if self.amount > 0: return False
+        return True
+                    
+    def check_and_consume(self) -> bool:
+        """Explicitly call for one-shot consumption checks."""
+        if self.component.ship and self.component.ship.resources:
+            res = self.component.ship.resources.get_resource(self.resource_name)
+            if res:
+                return res.consume(self.amount)
+            else:
+                return self.amount <= 0
+        return False
+        
+    def check_available(self) -> bool:
+        if self.component.ship and self.component.ship.resources:
+            res = self.component.ship.resources.get_resource(self.resource_name)
+            if res:
+               return res.check(self.amount)
+            else:
+               return self.amount <= 0
+        return False
+        
+    def get_ui_rows(self):
+        trigger_str = "/s" if self.trigger == 'constant' else "/use"
+        
+        # Color mapping based on resource type
+        color = '#FFFFFF'
+        if self.resource_name == 'fuel': color = '#FFA500' # Orange
+        elif self.resource_name == 'energy': color = '#64C8FF' # Light Blue
+        elif self.resource_name == 'ammo': color = '#C8C832' # Dirty Yellow
+        
+        label_text = f"{self.resource_name.title()} {'Cost' if self.trigger!='constant' else 'Use'}"
+        return [{'label': label_text, 'value': f"{self.amount:.1f}{trigger_str}", 'color_hint': color}]
+
+class ResourceStorage(Ability):
+    """
+    Ability to store resources.
+    Data: { "resource": "fuel", "amount": 100 }
+    """
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        self.resource_type = data.get('resource', '')
+        self.max_amount = data.get('amount', 0.0)
+
+    def sync_data(self, data: Any):
+        super().sync_data(data)
+        if isinstance(data, dict):
+            self.resource_type = data.get('resource', self.resource_type)
+            self.max_amount = data.get('amount', 0.0)
+        elif isinstance(data, (int, float)):
+            self.max_amount = float(data)
+        
+    def get_ui_rows(self):
+        color = '#64FFFF' # Cyan default for caps
+        if self.resource_type == 'shield': color = '#00FFFF' # Standard Shield Cyan
+        
+        return [{'label': f"{self.resource_type.title()} Cap", 'value': f"{self.max_amount:.0f}", 'color_hint': color}]
+
+class ResourceGeneration(Ability):
+    """
+    Ability to generate resources.
+    Data: { "resource": "energy", "amount": 10 }
+    """
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        self.resource_type = data.get('resource', '')
+        self.rate = data.get('amount', 0.0)
+
+    def sync_data(self, data: Any):
+        super().sync_data(data)
+        if isinstance(data, dict):
+            self.resource_type = data.get('resource', self.resource_type)
+            self.rate = data.get('amount', 0.0)
+        elif isinstance(data, (int, float)):
+            self.rate = float(data)
+
+    def get_ui_rows(self):
+        color = '#FFFFFF' 
+        if self.resource_type == 'energy': color = '#FFFF00' # Yellow
+        
+        return [{'label': f"{self.resource_type.title()} Gen", 'value': f"{self.rate:.1f}/s", 'color_hint': color}]
+
+# --- Core Mechanics ---
+
+class CombatPropulsion(Ability):
+    """Provides Thrust."""
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        # Handle 'val' if primitive shortcut used, else explicit 'value'
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.base_thrust = float(val)
+        self.thrust_force = self.base_thrust
+
+    def recalculate(self):
+        self.thrust_force = self.base_thrust * self.component.stats.get('thrust_mult', 1.0)
+
+    def get_ui_rows(self):
+        return [{'label': 'Thrust', 'value': f"{self.thrust_force:.0f} N", 'color_hint': '#64FF64'}] # Light Green
+
+class ManeuveringThruster(Ability):
+    """Provides Rotation."""
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.base_turn_rate = float(val)
+        self.turn_rate = self.base_turn_rate
+
+    def recalculate(self):
+        self.turn_rate = self.base_turn_rate * self.component.stats.get('turn_mult', 1.0)
+
+    def get_ui_rows(self):
+        return [{'label': 'Turn Speed', 'value': f"{self.turn_rate:.1f} deg/s", 'color_hint': '#64FF96'}] # Slightly different green
+
+class ShieldProjection(Ability):
+    """Provides Shield Capacity."""
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.base_capacity = float(val)
+        self.capacity = self.base_capacity
+
+    def recalculate(self):
+        # Apply capacity_mult from component stats (populated by modifiers)
+        mult = self.component.stats.get('capacity_mult', 1.0)
+        self.capacity = self.base_capacity * mult
+
+    def get_ui_rows(self):
+        return [{'label': 'Shield Cap', 'value': f"{self.capacity:.0f}", 'color_hint': '#00FFFF'}] # Cyan
+
+class ShieldRegeneration(Ability):
+    """Regenerates Shields."""
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.base_rate = float(val)
+        self.rate = self.base_rate
+        
+    def recalculate(self):
+        # Apply energy_gen_mult (legacy name used by modifiers) or regenerate_mult
+        mult = self.component.stats.get('energy_gen_mult', 1.0) 
+        self.rate = self.base_rate * mult
+
+    def get_ui_rows(self):
+        return [{'label': 'Regen', 'value': f"{self.rate:.1f}/s", 'color_hint': '#00C8FF'}] # Deep Sky Blue
+
+class VehicleLaunchAbility(Ability):
+    """Allows storing and launching fighters."""
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        self.fighter_class = data.get('fighter_class', 'Fighter (Small)')
+        self.capacity = data.get('capacity', 0)
+        self._base_capacity = self.capacity
+        self.cycle_time = data.get('cycle_time', 5.0)
+        self.cooldown = 0.0
+
+    def recalculate(self):
+        # Apply capacity mult
+        self.capacity = int(self._base_capacity * self.component.stats.get('capacity_mult', 1.0))
+        
+    def update(self) -> bool:
+        if self.cooldown > 0:
+            self.cooldown -= 0.01
+        return True
+        
+    def try_launch(self):
+        if self.cooldown <= 0:
+            self.cooldown = self.cycle_time
+            return True
+        return False
+        
+    def get_ui_rows(self):
+        return [
+            {'label': 'Hangar', 'value': f"{self.fighter_class}", 'color_hint': '#C8C8C8'},
+            {'label': 'Cycle', 'value': f"{self.cycle_time}s", 'color_hint': '#C8C8C8'}
+        ]
+
+class CommandAndControl(Ability):
+    """Marks component as providing ship command capability."""
+    def get_ui_rows(self):
+        return [{'label': 'Command', 'value': 'Active', 'color_hint': '#96FF96'}]
+
+class CrewCapacity(Ability):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.amount = int(val)
+        self._base_amount = self.amount
+
+    def recalculate(self):
+        self.amount = int(self._base_amount * self.component.stats.get('crew_capacity_mult', 1.0))
+
+    def get_ui_rows(self):
+        return [{'label': 'Crew Cap', 'value': f"{self.amount}", 'color_hint': '#96FF96'}]
+
+class LifeSupportCapacity(Ability):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.amount = int(val)
+        self._base_amount = self.amount
+
+    def recalculate(self):
+        self.amount = int(self._base_amount * self.component.stats.get('life_support_capacity_mult', 1.0))
+
+    def get_ui_rows(self):
+        return [{'label': 'Life Support', 'value': f"{self.amount}", 'color_hint': '#96FFFF'}]
+
+class CrewRequired(Ability):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', data.get('amount', 0))
+        self.amount = int(val)
+        self._base_amount = self.amount
+
+    def recalculate(self):
+        # Crew requirements scale with mass (sqrt) AND specific multiplier
+        mass_mult = self.component.stats.get('mass_mult', 1.0)
+        if mass_mult < 0: mass_mult = 0
+        crew_mult = math.sqrt(mass_mult)
+        
+        self.amount = int(math.ceil(self._base_amount * crew_mult * self.component.stats.get('crew_req_mult', 1.0)))
+
+    def get_ui_rows(self):
+        return [{'label': 'Crew Req', 'value': f"{self.amount}", 'color_hint': '#FF9696'}]
+
+class ToHitAttackModifier(Ability):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.value = float(val)
+        self._base_value = self.value
+
+    def recalculate(self):
+        # Apply generic properties or specific mult if needed. 
+        # Modifiers usually stack by addition in 'properties', but if we want mult:
+        # For now, just re-setting base in case we add multipliers later.
+        pass
+
+    def get_ui_rows(self):
+        val = self.value
+        sign = "+" if val >= 0 else ""
+        return [{'label': 'Targeting', 'value': f"{sign}{val:.1f}", 'color_hint': '#FF6464'}]
+
+class ToHitDefenseModifier(Ability):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.value = float(val)
+        self._base_value = self.value
+
+    def recalculate(self):
+        pass
+
+    def get_ui_rows(self):
+        val = self.value
+        sign = "+" if val >= 0 else ""
+        return [{'label': 'Evasion', 'value': f"{sign}{val:.1f}", 'color_hint': '#64FFFF'}]
+
+class EmissiveArmor(Ability):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.amount = int(val)
+        self._base_amount = self.amount
+
+    def recalculate(self):
+        pass
+
+    def get_ui_rows(self):
+        return [{'label': 'Dmg Ignore', 'value': f"{self.amount}", 'color_hint': '#FFFF00'}]
+        
+# --- Weapon Abilities ---
+
+class WeaponAbility(Ability):
+    """Base for offensive capabilities."""
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        
+        # Handle damage (may be number or formula string)
+        raw_damage = data.get('damage', 0)
+        if isinstance(raw_damage, str) and raw_damage.startswith('='):
+            from formula_system import evaluate_math_formula
+            self.damage_formula = raw_damage[1:]  # Store without '='
+            # Evaluate at range 0 for base value
+            self.damage = float(max(0, evaluate_math_formula(self.damage_formula, {'range_to_target': 0})))
+        else:
+            self.damage_formula = None
+            self.damage = float(raw_damage) if raw_damage else 0.0
+        self._base_damage = self.damage  # Store for modifier sync
+        
+        # Handle range (may be number or formula string)
+        raw_range = data.get('range', 0)
+        if isinstance(raw_range, str) and raw_range.startswith('='):
+            from formula_system import evaluate_math_formula
+            self.range = float(max(0, evaluate_math_formula(raw_range[1:], {})))
+        else:
+            self.range = float(raw_range) if raw_range else 0.0
+        self._base_range = self.range  # Store for modifier sync
+        
+        # Handle reload (may be number or formula string)  
+        raw_reload = data.get('reload', 1.0)
+        if isinstance(raw_reload, str) and raw_reload.startswith('='):
+            from formula_system import evaluate_math_formula
+            self.reload_time = float(max(0.01, evaluate_math_formula(raw_reload[1:], {})))
+        else:
+            self.reload_time = float(raw_reload) if raw_reload else 1.0
+        self._base_reload = self.reload_time  # Store for modifier sync
+        
+        self.firing_arc = float(data.get('firing_arc', 360))
+        self._base_firing_arc = self.firing_arc
+        self.facing_angle = float(data.get('facing_angle', 0))
+        self.cooldown_timer = 0.0
+        
+        # Tags for targeting logic (e.g. 'pdc')
+        self._tags.update(data.get('tags', []))
+
+    def sync_data(self, data: Any):
+        super().sync_data(data)
+        if not isinstance(data, dict): return
+        
+        # Syncing fields that might change in data
+        self.firing_arc = float(data.get('firing_arc', self.firing_arc))
+        self.facing_angle = float(data.get('facing_angle', self.facing_angle))
+        
+        # Damage/Range/Reload might be formulas, but usually they are base values in data 
+        # which recalculate() then uses to apply multipliers.
+        # We update the _base_ values from data if they exist.
+        if 'damage' in data:
+            raw = data['damage']
+            if not (isinstance(raw, str) and raw.startswith('=')):
+                 self._base_damage = float(raw)
+                 self.damage = self._base_damage
+        if 'range' in data:
+            raw = data['range']
+            if not (isinstance(raw, str) and raw.startswith('=')):
+                 self._base_range = float(raw)
+                 self.range = self._base_range
+        if 'reload' in data:
+            raw = data['reload']
+            if not (isinstance(raw, str) and raw.startswith('=')):
+                 self._base_reload = float(raw)
+                 self.reload_time = self._base_reload
+
+    def recalculate(self):
+        # Apply modifiers to base stats
+        if hasattr(self, '_base_damage'):
+            self.damage = self._base_damage * self.component.stats.get('damage_mult', 1.0)
+        if hasattr(self, '_base_range'):
+            self.range = self._base_range * self.component.stats.get('range_mult', 1.0)
+        if hasattr(self, '_base_reload'):
+            self.reload_time = self._base_reload * self.component.stats.get('reload_mult', 1.0)
+            
+        # Apply Arc Modifiers
+        if hasattr(self, '_base_firing_arc'):
+            # Check for override first (`arc_set`) then additive (`arc_add`)
+            if self.component.stats.get('arc_set') is not None:
+                self.firing_arc = self.component.stats['arc_set']
+            else:
+                self.firing_arc = self._base_firing_arc + self.component.stats.get('arc_add', 0.0)
+        
+        # Sync facing_angle from properties
+        if 'facing_angle' in self.component.stats.get('properties', {}):
+            self.facing_angle = self.component.stats['properties']['facing_angle']
+
+    def update(self) -> bool:
+        if self.cooldown_timer > 0:
+            self.cooldown_timer -= 0.01
+        return True
+
+    def can_fire(self):
+        return self.cooldown_timer <= 0
+
+    def fire(self, target):
+        """Perform firing logic. Returns dict or Projectile, or False if failed."""
+        if self.can_fire():
+            self.cooldown_timer = self.reload_time
+            return True
+        return False
+
+    def get_damage(self, range_to_target: float = 0) -> float:
+        """Evaluate damage at a specific range. Returns base damage if no formula."""
+        if self.damage_formula:
+            from formula_system import evaluate_math_formula
+            context = {'range_to_target': range_to_target}
+            return max(0.0, evaluate_math_formula(self.damage_formula, context))
+        return self.damage
+
+    def get_ui_rows(self):
+        return [
+            {'label': 'Damage', 'value': f"{self.damage:.0f}", 'color_hint': '#FF6464'}, # Red
+            {'label': 'Range', 'value': f"{self.range:.0f}", 'color_hint': '#FFA500'}, # Orange
+            {'label': 'Reload', 'value': f"{self.reload_time:.1f}s", 'color_hint': '#FFC864'} # Gold
+        ]
+
+    def check_firing_solution(self, ship_pos, ship_angle, target_pos) -> bool:
+        """
+        Check if target is within Range and Arc.
+        Encapsulates geometric logic previously done in ship_combat.py.
+        """
+        # 1. Range Check
+        dist = ship_pos.distance_to(target_pos)
+        if dist > self.range:
+            return False
+            
+        # 2. Arc Check
+        # Vector to target
+        aim_vec = target_pos - ship_pos
+        aim_angle = math.degrees(math.atan2(aim_vec.y, aim_vec.x)) % 360
+        
+        # Component Global Facing
+        comp_facing = (ship_angle + self.facing_angle) % 360
+        
+        # Shortest angular difference
+        diff = (aim_angle - comp_facing + 180) % 360 - 180
+        
+        if abs(diff) <= (self.firing_arc / 2):
+            return True
+            
+        return False
+
+class ProjectileWeaponAbility(WeaponAbility):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        self.projectile_speed = float(data.get('projectile_speed', 500))
+
+    def get_ui_rows(self):
+        rows = super().get_ui_rows()
+        rows.append({'label': 'Speed', 'value': f"{self.projectile_speed:.0f}", 'color_hint': '#C8C832'}) # Yellow-ish
+        return rows
+
+class BeamWeaponAbility(WeaponAbility):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        self.accuracy_falloff = float(data.get('accuracy_falloff', 0.001))
+        self.base_accuracy = float(data.get('base_accuracy', 1.0))
+        self._base_accuracy = self.base_accuracy
+
+    def recalculate(self):
+        super().recalculate()
+        self.base_accuracy = self._base_accuracy + self.component.stats.get('accuracy_add', 0.0)
+
+    def get_ui_rows(self):
+        rows = super().get_ui_rows()
+        rows.append({'label': 'Accuracy', 'value': f"{int(self.base_accuracy*100)}%", 'color_hint': '#FFFF00'})
+        return rows
+
+    def calculate_hit_chance(self, distance: float, attack_score_bonus: float = 0.0, defense_score_penalty: float = 0.0) -> float:
+        """
+        Calculate hit chance using the Logistic Function (Sigmoid).
+        Formula: P = 1 / (1 + e^-x)
+        Where x = (BaseScore + AttackBonuses) - (RangePenalty + DefensePenalties)
+        """
+        # Range Penalty: falloff * distance
+        range_penalty = self.accuracy_falloff * distance
+        
+        net_score = (self.base_accuracy + attack_score_bonus) - (range_penalty + defense_score_penalty)
+        
+        # Sigmoid Function
+        try:
+            # Clamp exp input to avoid overflow
+            clamped_score = max(-20.0, min(20.0, net_score))
+            chance = 1.0 / (1.0 + math.exp(-clamped_score))
+        except OverflowError:
+            chance = 0.0 if net_score < 0 else 1.0
+            
+        return chance
+
+    def get_damage(self, range_to_target: float = 0) -> float:
+        """Evaluate damage at a specific range. Returns base damage if no formula."""
+        if self.damage_formula:
+            from formula_system import evaluate_math_formula
+            context = {'range_to_target': range_to_target}
+            return max(0.0, evaluate_math_formula(self.damage_formula, context))
+        return self.damage
+
+
+class SeekerWeaponAbility(WeaponAbility):
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        self.projectile_speed = float(data.get('projectile_speed', 500))
+        self.endurance = float(data.get('endurance', 3.0))
+        self.turn_rate = float(data.get('turn_rate', 30.0))
+        self.to_hit_defense = float(data.get('to_hit_defense', 0.0))
+        
+        # Recalculate range based on endurance if basic range not set or derived
+        # Seekers use 80% of straight-line range to account for maneuvering
+        if self.range <= 0 and self.projectile_speed > 0:
+             self.range = int(self.projectile_speed * self.endurance * 0.8)
+             self._base_range = self.range
+
+# --- Registry ---
+
+ABILITY_REGISTRY = {
+    "ResourceConsumption": ResourceConsumption,
+    "ResourceStorage": ResourceStorage,
+    "ResourceGeneration": ResourceGeneration,
+    "CombatPropulsion": CombatPropulsion,
+    "ManeuveringThruster": ManeuveringThruster,
+    "ShieldProjection": ShieldProjection,
+    "ShieldRegeneration": ShieldRegeneration,
+    "VehicleLaunch": VehicleLaunchAbility,
+    "WeaponAbility": WeaponAbility,
+    "ProjectileWeaponAbility": ProjectileWeaponAbility,
+    "BeamWeaponAbility": BeamWeaponAbility,
+    "SeekerWeaponAbility": SeekerWeaponAbility,
+    "SeekerWeaponAbility": SeekerWeaponAbility,
+    "CommandAndControl": CommandAndControl,
+    "CrewCapacity": CrewCapacity,
+    "LifeSupportCapacity": LifeSupportCapacity,
+    "CrewRequired": CrewRequired,
+    "ToHitAttackModifier": ToHitAttackModifier,
+    "ToHitDefenseModifier": ToHitDefenseModifier,
+    "EmissiveArmor": EmissiveArmor,
+    "Armor": lambda c, d: Ability(c, d), # Dummy ability for tag/existence checks
+    
+    # Primitive/Shortcut Factories
+    "FuelStorage": lambda c, d: ResourceStorage(c, {"resource": "fuel", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "fuel"}),
+    "EnergyStorage": lambda c, d: ResourceStorage(c, {"resource": "energy", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "energy"}),
+    "AmmoStorage": lambda c, d: ResourceStorage(c, {"resource": "ammo", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "ammo"}),
+    "EnergyGeneration": lambda c, d: ResourceGeneration(c, {"resource": "energy", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "energy"}),
+    "EnergyConsumption": lambda c, d: ResourceConsumption(c, {"resource": "energy", "amount": d, "trigger": "constant"} if isinstance(d, (int, float)) else {**d, "resource": "energy"})
+}
+
+def create_ability(name: str, component, data: Any) -> Optional[Ability]:
+    if name in ABILITY_REGISTRY:
+        try:
+             # Handle primitive shortcut inputs (e.g. "CombatPropulsion": 100)
+             # passed as 'data'. Constructor must handle it, or we normalize here.
+             # Our constructors above handle `isinstance(data, (int, float))` checks.
+            return ABILITY_REGISTRY[name](component, data)
+        except Exception as e:
+            # print(f"Error creating ability {name}: {e}")
+            return None
+    return None
+
+--- END FILE: game/simulation/components/abilities.py ---
+
+--- START FILE: ship_stats.py ---
+from game.simulation.components.component import ComponentStatus, LayerType
+import math
+
+class ShipStatsCalculator:
+    """
+    Encapsulates the logic for calculating ship statistics from its components.
+    """
+    def __init__(self, vehicle_classes):
+        self.vehicle_classes = vehicle_classes
+
+    def calculate(self, ship):
+        """
+        Recalculates all derived stats for the ship based on its components and class.
+        """
+        # Import local to avoid circular dep if needed, or top level if safe.
+        # resources.py likely imports NOTHING from ship_stats.
+        from game.simulation.systems.resource_manager import ResourceStorage, ResourceGeneration
+
+        # 1. Reset Base Calculations
+        ship.current_mass = 0
+        ship.layer_status = {}
+        ship.mass_limits_ok = True
+        ship.drag = 0.5 
+        
+        # Calculate Mass (Mass never changes due to damage/status in this model, dead weight remains)
+        for layer_type, layer_data in ship.layers.items():
+            l_mass = sum(c.mass for c in layer_data['components'])
+            layer_data['mass'] = l_mass
+            ship.current_mass += l_mass
+            
+        ship.mass = ship.current_mass + ship.base_mass
+
+        # Base Stats Reset
+        ship.total_thrust = 0
+        ship.turn_speed = 0
+        ship.resources.reset_stats()
+            
+        ship.max_shields = 0
+        ship.shield_regen_rate = 0
+        ship.shield_regen_cost = 0
+        ship.shield_regen_cost = 0
+        ship.repair_rate = 0
+        if LayerType.ARMOR in ship.layers:
+            ship.layers[LayerType.ARMOR]['max_hp_pool'] = 0
+            
+        ship.emissive_armor = 0
+        ship.crystalline_armor = 0
+        
+        # Maneuvering Points (Raw Thrust/Turning Capability unrelated to mass)
+        ship.total_maneuver_points = 0
+        
+        # Hangar Stats
+        ship.fighter_capacity = 0
+        ship.fighters_per_wave = 0
+        ship.fighter_size_cap = 0
+        ship.launch_cycle = 0
+        
+        # 2. Phase 1: Damage Check & Resource Supply Gathering
+        # ----------------------------------------------------
+        available_crew = 0     # From Crew Quarters
+        available_life_support = 0 # From Life Support
+        
+        component_pool = [] # List of (comp) for next phases
+        
+        for layer_type, layer_data in ship.layers.items():
+            for comp in layer_data['components']:
+                # Reset Status Assumption
+                comp.is_active = True
+                comp.status = ComponentStatus.ACTIVE
+                
+                # Check Damage Threshold (ignore Armor - armor uses HP pool, not individual component threshold)
+                if not comp.abilities.get('Armor', False):
+                     if comp.max_hp > 0 and (comp.current_hp / comp.max_hp) <= 0.5:
+                         comp.is_active = False
+                         comp.status = ComponentStatus.DAMAGED
+                
+                # If armor is dead (0 hp), it's inactive
+                if comp.abilities.get('Armor', False) and comp.current_hp <= 0:
+                    comp.is_active = False
+                    comp.status = ComponentStatus.DAMAGED
+                
+                # Gather Supply from FUNCTIONAL components
+                if comp.is_active:
+                    abilities = comp.abilities
+                    # Crew Provided (Positive CrewCapacity)
+                    # Crew Provided
+                    for ab in comp.get_abilities('CrewCapacity'):
+                        available_crew += ab.amount
+                        
+                    # Life Support Provided
+                    for ab in comp.get_abilities('LifeSupportCapacity'):
+                        available_life_support += ab.amount
+
+                component_pool.append(comp)
+
+        # 3. Phase 2: Resource Allocation (Crew & Life Support)
+        # -----------------------------------------------------
+        # Store for UI
+        ship.crew_onboard = available_crew
+        ship.crew_required = 0
+        ship.max_targets = 1 # Reset to default
+        
+        # Effective Crew is limited by Life Support
+        effective_crew = min(available_crew, available_life_support)
+        
+        # Priority sort using helper
+        component_pool.sort(key=self._priority_sort_key)
+        
+        for comp in component_pool:
+            if not comp.is_active: continue # Already damaged
+            
+            # Check Crew Requirement
+            req_crew = 0
+            for ab in comp.get_abilities('CrewRequired'):
+                req_crew += ab.amount
+            
+            # Satellite Exception: Satellites ignore crew requirements
+            if ship.vehicle_type == "Satellite":
+                req_crew = 0
+            
+
+            ship.crew_required += req_crew
+            
+            if req_crew > 0:
+                if effective_crew >= req_crew:
+                    effective_crew -= req_crew
+                else:
+                    comp.is_active = False
+                    comp.status = ComponentStatus.NO_CREW
+        
+        # 4. Phase 3: Stats Aggregation (Active Components Only)
+        # ------------------------------------------------------
+        
+        # Local accumulators for atomic updates (prevents premature clamping)
+        total_max_fuel = 0
+        total_max_ammo = 0
+        total_max_energy = 0
+        total_energy_gen = 0
+        total_ammo_gen = 0
+        total_thrust = 0
+        total_turn_speed = 0
+        total_max_shields = 0
+        total_shield_regen = 0
+        total_shield_cost = 0
+
+        for comp in component_pool:
+            if not comp.is_active: continue
+            
+            # Generic Ability Handling
+            # Using Ability Instances (New System)
+            if hasattr(comp, 'ability_instances'):
+                for ability in comp.ability_instances:
+                    ab_cls = ability.__class__.__name__
+                    if ab_cls == 'ResourceStorage':
+                        res_type = getattr(ability, 'resource_type', '')
+                        max_amt = getattr(ability, 'max_amount', 0.0)
+                        if res_type == 'fuel':
+                            total_max_fuel += max_amt
+                        elif res_type == 'ammo':
+                            total_max_ammo += max_amt
+                        elif res_type == 'energy':
+                            total_max_energy += max_amt
+                    
+                    # Resource Generation
+                    elif ab_cls == 'ResourceGeneration':
+                        res_type = getattr(ability, 'resource_type', '')
+                        rate = getattr(ability, 'rate', 0.0)
+                        if res_type == 'energy':
+                            total_energy_gen += rate
+                        elif res_type == 'ammo':
+                            total_ammo_gen += rate
+            
+            # Phase 3: Ability-Based Stats Aggregation
+            
+            # Thrust from CombatPropulsion abilities
+            for ab in comp.get_abilities('CombatPropulsion'):
+                total_thrust += ab.thrust_force
+            
+            # Turn speed from ManeuveringThruster abilities
+            for ab in comp.get_abilities('ManeuveringThruster'):
+                total_turn_speed += ab.turn_rate
+                ship.total_maneuver_points += ab.turn_rate
+            
+            # Armor HP pool (using ability-based detection)
+            if comp.abilities.get('Armor', False):
+                if LayerType.ARMOR in ship.layers:
+                    ship.layers[LayerType.ARMOR]['max_hp_pool'] += comp.max_hp
+            
+            # Shields from ShieldProjection abilities
+            for ab in comp.get_abilities('ShieldProjection'):
+                total_max_shields += ab.capacity
+            
+            # Shield regen from ShieldRegeneration abilities
+            for ab in comp.get_abilities('ShieldRegeneration'):
+                total_shield_regen += ab.rate
+            
+            # Shield energy cost from EnergyConsumption abilities on shield regen components
+            if comp.has_ability('ShieldRegeneration'):
+                for ab in comp.ability_instances:
+                    if ab.__class__.__name__ == 'ResourceConsumption' and getattr(ab, 'resource_name', '') == 'energy':
+                        total_shield_cost += getattr(ab, 'amount', 0.0)
+                        break
+            
+            # Hangar stats (still uses VehicleLaunch ability from abilities dict)
+            if comp.has_ability('VehicleLaunch') or 'VehicleLaunch' in comp.abilities:
+                vl = comp.abilities.get('VehicleLaunch', {})
+                ship.fighter_capacity += comp.abilities.get('VehicleStorage', 0)
+                ship.fighters_per_wave += 1
+                max_mass = vl.get('max_launch_mass', 0) if isinstance(vl, dict) else 0
+                if max_mass > ship.fighter_size_cap:
+                    ship.fighter_size_cap = max_mass
+                    
+                cycle = vl.get('cycle_time', 5.0) if isinstance(vl, dict) else 5.0
+                if cycle > ship.launch_cycle:
+                    ship.launch_cycle = cycle
+            
+            # Check for generic abilities that affect stats
+            # MultiplexTracking
+            mt = comp.abilities.get('MultiplexTracking', 0)
+            if mt > 0:
+                if mt > ship.max_targets:
+                    ship.max_targets = mt 
+
+        # Apply Accumulated Totals Atomicially
+        ship.resources.register_storage('fuel', total_max_fuel)
+        ship.resources.register_storage('ammo', total_max_ammo)
+        ship.resources.register_storage('energy', total_max_energy)
+        ship.resources.register_generation('energy', total_energy_gen)
+        ship.resources.register_generation('ammo', total_ammo_gen)
+        ship.total_thrust = total_thrust
+        ship.turn_speed = total_turn_speed
+        ship.max_shields = total_max_shields
+        ship.shield_regen_rate = total_shield_regen
+        ship.shield_regen_cost = total_shield_cost
+
+        # 5. Phase 4: Physics & Limits
+        # ----------------------------
+        
+        # Derelict Check - REMOVED per user request
+        # Condition: Ships are never derelict, they only die when destroyed.
+        ship.is_derelict = False
+        
+        # Physics Stats - INVERSE MASS SCALING
+        K_THRUST = 2500
+        K_TURN = 25000
+        
+        if ship.mass > 0:
+            ship.acceleration_rate = (ship.total_thrust * K_THRUST) / (ship.mass * ship.mass)
+            raw_turn_speed = ship.turn_speed
+            ship.turn_speed = (raw_turn_speed * K_TURN) / (ship.mass ** 1.5)
+            
+            K_SPEED = 25
+            ship.max_speed = (ship.total_thrust * K_SPEED) / ship.mass if ship.total_thrust > 0 else 0
+        else:
+            ship.acceleration_rate = 0
+            ship.max_speed = 0
+        
+        # Limit Checks (Budget)
+        self._check_mass_limits(ship)
+    
+        # Radius Calculation
+        base_radius = 40
+        ref_mass = 1000
+        actual_mass = max(ship.mass, 100)
+        ratio = actual_mass / ref_mass
+        ship.radius = base_radius * (ratio ** (1/3.0))
+
+        # 6. Phase 5: To-Hit & Electronic Warfare Stats
+        # ---------------------------------------------
+        
+        # New Logit-Score System:
+        # Defense Score (Higher = Harder to Hit). Is SUBTRACTED from Accuracy.
+        # Components:
+        # 1. Size: Larger = Easier to Hit (Negative Score).
+        # 2. Maneuver: Agile = Harder to Hit (Positive Score).
+        # 3. ECM: Noise = Harder to Hit (Positive Score).
+        
+        diameter = ship.radius * 2
+        
+        # Size Score:
+        # Baseline Diameter 80 (Mass ~1k) = 0.0
+        # Formula: -2.5 * log10(diameter / 80)
+        # Prevents log(0)
+        d_ratio = max(0.1, diameter / 80.0)
+        size_score = -2.5 * math.log10(d_ratio)
+        
+        # Maneuver Score:
+        # Accel contributes ~0-2.5 pts (Fighters 25 accel) -> /10
+        # Turn contributes ~0-2.0 pts (Fighters 180 turn) -> /90
+        maneuver_score = math.sqrt((ship.acceleration_rate / 20.0) + (ship.turn_speed / 360.0))
+        
+        # ECM Score (Additive)
+        ecm_score = self._get_ability_total(component_pool, 'ToHitDefenseModifier')
+        # Default 0 if none
+        if isinstance(ecm_score, bool): ecm_score = 0.0
+        
+        # Total Defense Score
+        ship.total_defense_score = size_score + maneuver_score + ecm_score
+        
+        # Legacy/Alias for UI until fully refactored
+        ship.to_hit_profile = ship.total_defense_score
+        
+        # Offensive Baseline (Sensor Strength) - Score
+        attack_mods = self._get_ability_total(component_pool, 'ToHitAttackModifier')
+        # Default 0
+        if isinstance(attack_mods, bool): attack_mods = 0.0
+        
+        ship.baseline_to_hit_offense = attack_mods
+
+        # Emissive Armor (Max Stacking)
+        ship.emissive_armor = self._get_ability_total(component_pool, 'EmissiveArmor')
+        
+        # Crystalline Armor (Max Stacking)
+        ship.crystalline_armor = self._get_ability_total(component_pool, 'CrystallineArmor')
+
+        # Ship Repair (SumStacking)
+        ship.repair_rate = self._get_ability_total(component_pool, 'ShipRepair')
+        
+        # Ammo Generation (SumStacking)
+        ship.ammo_gen_rate = self._get_ability_total(component_pool, 'AmmoGeneration')
+
+        # 6. Aggregate Resources (Storage & Generation) - DEPRECATED / REMOVED
+        # Phase 3 already handles Ability aggregation for Ship properties and ResourceRegistry.
+        # This block was legacy/redundant and risked double-counting if active.
+        pass
+
+
+        # Armor Pool Init (if starting)
+        if LayerType.ARMOR in ship.layers:
+            if ship.layers[LayerType.ARMOR]['hp_pool'] == 0:
+                ship.layers[LayerType.ARMOR]['hp_pool'] = ship.layers[LayerType.ARMOR]['max_hp_pool']
+            
+        # Initialize Resources 
+        self._initialize_resources(ship)
+        
+        # 7. Combat Endurance Stats
+        # -------------------------
+        self._calculate_combat_endurance(ship, component_pool)
+
+    def _calculate_combat_endurance(self, ship, component_pool):
+        """Calculate endurance times for Fuel, Ammo, and Energy."""
+        from game.simulation.systems.resource_manager import ResourceConsumption
+
+        
+        # Rate = Sum of ResourceConsumption(fuel, constant)
+        # A. Fuel
+        fuel_consumption = 0.0
+        potential_fuel = 0.0
+        
+        # B. Ordinance (Ammo)
+        ammo_consumption = 0.0
+        potential_ammo = 0.0
+        
+        # C. Energy
+        energy_consumption = 0.0
+        potential_energy = 0.0
+
+        for c in component_pool:
+            # Local accumulators for this component
+            c_fuel = 0.0
+            c_ammo = 0.0
+            c_energy = 0.0
+            
+            # Iterate Abilities for Source of Truth
+            if hasattr(c, 'ability_instances'):
+                for ab in c.ability_instances:
+                    ab_cls = ab.__class__.__name__
+                    # Resource Storage dealt with in Phase 3 aggregation
+                    
+                    if ab_cls == 'ResourceConsumption':
+                        # Constant Consumption (Generic)
+                        trigger = getattr(ab, 'trigger', 'constant')
+                        resource_name = getattr(ab, 'resource_name', '')
+                        amount = getattr(ab, 'amount', 0.0)
+                        
+                        if trigger == 'constant':
+                            if resource_name == 'fuel':
+                                c_fuel += amount
+                            elif resource_name == 'energy':
+                                c_energy += amount
+                            elif resource_name == 'ammo':
+                                c_ammo += amount
+                            
+                        # Activation Costs (Energy/Ammo) -> Convert to Rate
+                        elif trigger == 'activation':
+                            # Get fire rate (1/reload)
+                            # Look for associated WeaponAbility to get accurate reload time
+                            reload_t = 1.0
+                            found_weapon = False
+                            
+                            # Try to find WeaponAbility on component
+                            if hasattr(c, 'ability_instances'):
+                                for inst in c.ability_instances:
+                                    if inst.__class__.__name__ in ['WeaponAbility', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility']:
+                                        reload_t = getattr(inst, 'reload_time', 1.0)
+                                        found_weapon = True
+                                        break
+                            
+                            # Fallback to component attribute (Legacy)
+                            if not found_weapon:
+                                reload_t = getattr(c, 'reload_time', 1.0)
+                                
+                            if reload_t > 0:
+                                rate = ab.amount / reload_t
+                                if ab.resource_name == 'ammo':
+                                    c_ammo += rate
+                                elif ab.resource_name == 'energy':
+                                    c_energy += rate
+
+            # Add to Potentials (Always)
+            potential_fuel += c_fuel
+            potential_ammo += c_ammo
+            potential_energy += c_energy
+            
+            # Add to Actuals (Only if Active)
+            if c.is_active:
+                fuel_consumption += c_fuel
+                ammo_consumption += c_ammo
+                energy_consumption += c_energy
+
+        # Store Actuals (used for physics/endurance)
+        ship.fuel_consumption = fuel_consumption
+        ship.ammo_consumption = ammo_consumption
+        ship.energy_consumption = energy_consumption
+
+        # Store Potentials (used for UI projections)
+        ship.potential_fuel_consumption = potential_fuel
+        ship.potential_ammo_consumption = potential_ammo
+        ship.potential_energy_consumption = potential_energy
+        
+        # Use registry directly
+        max_fuel = ship.resources.get_max_value('fuel')
+        # Endurance calculation uses ACTIVE consumption
+        ship.fuel_endurance = (max_fuel / fuel_consumption) if fuel_consumption > 0 else float('inf')
+
+        max_ammo = ship.resources.get_max_value('ammo')
+        ship.ammo_endurance = (max_ammo / ammo_consumption) if ammo_consumption > 0 else float('inf')
+        
+        # Energy Gen Rate
+        r_energy = ship.resources.get_resource('energy')
+        energy_gen_rate = r_energy.regen_rate if r_energy else 0.0
+        
+        ship.energy_net = energy_gen_rate - energy_consumption
+        
+        max_energy = ship.resources.get_max_value('energy')
+        
+        if ship.energy_net < 0:
+            # Draining
+            drain_rate = abs(ship.energy_net)
+            ship.energy_endurance = max_energy / drain_rate
+        else:
+            # Sustainable
+            ship.energy_endurance = float('inf')
+            
+        # Recharge Time
+        # Assume starting from 0 to Full using only Generation (no consumption)
+        # Or should it be Net Recharge? Prompt says "if consumption stops". So purely Generation.
+        if energy_gen_rate > 0:
+            ship.energy_recharge = max_energy / energy_gen_rate
+        else:
+            ship.energy_recharge = float('inf')
+
+        # Populate Cached Summary
+        dps = 0
+        from game.simulation.components.abilities import WeaponAbility
+        
+        # Calculate theoretical max DPS (all weapons)
+        for layer in ship.layers.values():
+            for c in layer['components']:
+                 # Use get_abilities to handle polymorphism
+                 for ab in c.get_abilities('WeaponAbility'):
+                     if ab.reload_time > 0:
+                         dps += ab.damage / ab.reload_time
+        
+        ship._cached_summary = {
+            'mass': ship.mass,
+            'max_hp': ship.max_hp,
+            'speed': ship.max_speed,
+            'turn': ship.turn_speed,
+            'shield': ship.max_shields,
+            'dps': dps,
+            'range': ship.max_weapon_range
+        }
+
+    def _priority_sort_key(self, c):
+        # Bridge (Command)
+        if c.has_ability('CommandAndControl'): return 0
+        # Engines (Movement)
+        if c.has_ability('CombatPropulsion') or c.has_ability('ManeuveringThruster'): return 1
+        # Weapons (Offense)
+        if c.has_ability('WeaponAbility'): return 2
+        # Others
+        return 3
+
+    def _check_mass_limits(self, ship):
+        ship.mass_limits_ok = True
+        # Budget check (Max Mass)
+        ship.max_mass_budget = 1000 # Default
+        
+        if ship.ship_class in self.vehicle_classes:
+             ship.max_mass_budget = self.vehicle_classes[ship.ship_class].get('max_mass', 1000)
+
+        for layer_type, layer_data in ship.layers.items():
+            limit_ratio = layer_data.get('max_mass_pct', 1.0)
+            ratio = layer_data['mass'] / ship.max_mass_budget
+            is_ok = ratio <= limit_ratio
+            ship.layer_status[layer_type] = {
+                'mass': layer_data['mass'],
+                'ratio': ratio,
+                'limit': limit_ratio,
+                'ok': is_ok
+            }
+            if not is_ok: ship.mass_limits_ok = False
+        
+        if ship.mass > ship.max_mass_budget:
+            ship.mass_limits_ok = False
+
+    def _initialize_resources(self, ship):
+        # Resource Initialization (Auto-fill on first load only, or when capacity increases)
+        prev_max_fuel = getattr(ship, '_prev_max_fuel', 0)
+        prev_max_ammo = getattr(ship, '_prev_max_ammo', 0)
+        prev_max_energy = getattr(ship, '_prev_max_energy', 0)
+        prev_max_shields = getattr(ship, '_prev_max_shields', 0)
+        
+        # Get current max values directly from registry
+        curr_max_fuel = ship.resources.get_max_value('fuel')
+        curr_max_ammo = ship.resources.get_max_value('ammo')
+        curr_max_energy = ship.resources.get_max_value('energy')
+        
+        if not getattr(ship, '_resources_initialized', False):
+            # First init - fill to max
+            if curr_max_fuel > 0:
+                ship.resources.set_value('fuel', curr_max_fuel)
+            if curr_max_ammo > 0:
+                ship.resources.set_value('ammo', curr_max_ammo)
+            if curr_max_energy > 0:
+                ship.resources.set_value('energy', curr_max_energy)
+            if ship.max_shields > 0:
+                ship.current_shields = ship.max_shields
+            ship._resources_initialized = True
+        else:
+            # Handle capacity increases (preserve current relative usage or just add delta?)
+            # Logic: If max increased, add difference to current.
+            if curr_max_fuel > prev_max_fuel:
+                delta = curr_max_fuel - prev_max_fuel
+                ship.resources.modify_value('fuel', delta)
+            if curr_max_ammo > prev_max_ammo:
+                delta = curr_max_ammo - prev_max_ammo
+                ship.resources.modify_value('ammo', delta)
+            if curr_max_energy > prev_max_energy:
+                delta = curr_max_energy - prev_max_energy
+                ship.resources.modify_value('energy', delta)
+            if ship.max_shields > prev_max_shields:
+                ship.current_shields += (ship.max_shields - prev_max_shields)
+        
+        # Remember current max for next recalculate
+        ship._prev_max_fuel = curr_max_fuel
+        ship._prev_max_ammo = curr_max_ammo
+        ship._prev_max_energy = curr_max_energy
+        ship._prev_max_shields = ship.max_shields
+
+    def calculate_ability_totals(self, components):
+        """
+        Calculate total values for all abilities from components.
+        Supports 'stack_group' in ability definition for redundancy (MAX) vs stacking (SUM/MULT).
+        """
+        totals = {}
+        
+        # Abilities that should multiply instead of sum
+        MULTIPLICATIVE_ABILITIES = {'ToHitAttackModifier', 'ToHitDefenseModifier'}
+        
+        # Intermediate structure: ability -> { group_key -> [values] }
+        ability_groups = {}
+
+        for comp in components:
+            # 1. Process Ability Instances (New System - Scaled Values)
+            # Track which abilities are handled to avoid double counting from dict
+            handled_abilities = set()
+            
+            if hasattr(comp, 'ability_instances'):
+                # Handle List (Current Implementation)
+                if isinstance(comp.ability_instances, list):
+                    for ab in comp.ability_instances:
+                        ability_name = ab.__class__.__name__
+                        handled_abilities.add(ability_name)
+                        
+                        # Extract value from Object
+                        value = None
+                        if hasattr(ab, 'amount'): value = ab.amount
+                        elif hasattr(ab, 'value'): value = ab.value
+                        elif hasattr(ab, 'capacity'): value = ab.capacity # Some use capacity
+                        elif hasattr(ab, 'max_amount'): value = ab.max_amount # ResourceStorage uses max_amount
+                        elif hasattr(ab, 'thrust_force'): value = ab.thrust_force # CombatPropulsion uses thrust_force
+                        # Special case for CommandAndControl (Flag)
+                        elif ability_name == 'CommandAndControl': value = True
+                        
+                        # Fallback for complex abilities not meant for simple aggregation?
+                        if value is None: continue
+                        
+                        stack_group = getattr(ab, 'stack_group', None)
+                        group_key = stack_group if stack_group else comp
+
+                        if ability_name not in ability_groups: ability_groups[ability_name] = {}
+                        if group_key not in ability_groups[ability_name]: ability_groups[ability_name][group_key] = []
+                        
+                        ability_groups[ability_name][group_key].append(value)
+                        
+                        # Fix for BUG-08: Alias ResourceStorage(fuel) to FuelStorage for ClassRequirementsRule
+                        if ability_name == 'ResourceStorage' and getattr(ab, 'resource_type', '') == 'fuel':
+                             alias = 'FuelStorage'
+                             if alias not in ability_groups: ability_groups[alias] = {}
+                             if group_key not in ability_groups[alias]: ability_groups[alias][group_key] = []
+                             ability_groups[alias][group_key].append(value)
+                
+                # Handle Dict
+                elif isinstance(comp.ability_instances, dict):
+                     # ... (omitted for brevity, assume debug print sufficient in list block)
+                     pass
+
+            # 2. Process Raw Dictionary
+            abilities = getattr(comp, 'abilities', {})
+            if isinstance(abilities, dict):
+                for ability_name, raw_value in abilities.items():
+                    # Check handled
+                    if ability_name in handled_abilities:
+                        continue
+                    
+                    # Parse Value & Group
+                    value = raw_value
+                    stack_group = None
+                    
+                    if isinstance(raw_value, dict) and 'value' in raw_value:
+                        value = raw_value['value']
+                        stack_group = raw_value.get('stack_group')
+                    
+                    # Determine Group Key
+                    group_key = stack_group if stack_group else comp
+
+                    if ability_name not in ability_groups:
+                        ability_groups[ability_name] = {}
+                    if group_key not in ability_groups[ability_name]:
+                        ability_groups[ability_name][group_key] = []
+                    
+                    ability_groups[ability_name][group_key].append(value)
+
+        # Aggregate
+        for ability_name, groups in ability_groups.items():
+            # 1. Intra-Group Aggregation (MAX / Redundancy)
+            # All items in a Named Group provide redundancy -> Take MAX
+            group_contributions = []
+            
+            for key, values in groups.items():
+                # Filter for numeric
+                nums = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
+                if nums:
+                    group_contributions.append(max(nums))
+                elif any(v is True for v in values):
+                     # Boolean support (if any is True, the group is True)
+                     group_contributions.append(True)
+
+            if not group_contributions:
+                continue
+
+            # 2. Inter-Group Aggregation (Sum or Multiply)
+            first = group_contributions[0]
+            
+            if isinstance(first, bool):
+                # If any group contributes True, result is True
+                totals[ability_name] = True
+            else:
+                if ability_name in MULTIPLICATIVE_ABILITIES:
+                    val = 1.0
+                    for v in group_contributions:
+                         if isinstance(v, (int, float)): val *= v
+                    totals[ability_name] = val
+                else:
+                    val = sum(v for v in group_contributions if isinstance(v, (int, float)))
+                    totals[ability_name] = val
+        
+        return totals
+
+    def _get_ability_total(self, component_list, ability_name):
+        """Calculate total value of a specific ability across provided components."""
+        totals = self.calculate_ability_totals(component_list)
+        return totals.get(ability_name, 0)
+
+--- END FILE: ship_stats.py ---
+

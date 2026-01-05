@@ -68,4 +68,10 @@ class RegistryManager:
         return self._validator
     
     def set_validator(self, validator):
+        self._check_frozen()
         self._validator = validator
+
+    def _check_frozen(self):
+        """Helper to raise error if modifications are attempted while frozen."""
+        if self._frozen:
+            raise RuntimeError("RegistryManager is frozen and cannot be modified")

@@ -44,7 +44,7 @@ class TestShields(unittest.TestCase):
         self.ship.resources.get_resource("energy").current_value = 1000 
 
     def tearDown(self):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
 
     def test_stats_init(self):
         self.assertEqual(self.ship.max_shields, 100)

@@ -1,0 +1,23 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+pygame-ce 2.5.6 (SDL 2.32.10, Python 3.10.11)
+DEBUG: formula_system loading
+collected 1 item
+
+simulation_tests\data_driven\test_combat_targeting.py Loaded 14 vehicle classes.
+DEBUG: Registry has 29 components
+DEBUG: create_component('test_bridge_basic') -> <game.simulation.components.component.Component object at 0x000001E4F4E7D780>
+DEBUG: Add bridge success: True, total core: 1
+F
+
+================================== FAILURES ===================================
+_______________ TestCombatTargeting.test_firing_arc_validation ________________
+simulation_tests\data_driven\test_combat_targeting.py:143: in test_firing_arc_validation
+    self.assertEqual(len(attacks), 1, "Should fire at target directly ahead")
+E   AssertionError: 0 != 1 : Should fire at target directly ahead
+=========================== short test summary info ===========================
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_firing_arc_validation
+============================== 1 failed in 0.25s ==============================

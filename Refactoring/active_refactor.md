@@ -1,4 +1,6 @@
-**Status:** Phase 4: Final Cleanup & Logic Repair (COMPLETE)
+**Status:** Phase 6: Regression Triage (HANDOFF READY)
+**Current Pass Rate:** 532/534 (99.6%)
+**Handoff Note:** Core regressions and infrastructure fixes complete. 2 environmental failures remain in high-concurrency parallel runs.
 **Start Date:** 2026-01-04
 
 ## Migration Map (The Constitution)
@@ -180,4 +182,56 @@
     - Status: **GREEN** (534/534 tests passed).
 
 ### Phase 5: Protocol 13 (Archive)
-- [ ] [EXECUTE] Run Protocol 13 (Archive).
+*Goal: Preserve refactoring history and clean the workspace.*
+
+#### 1. Snapshot History
+- [ ] [CREATE] `Refactoring/archive/2026-01-04_test_stabilization/`
+- [ ] [MOVE] Move all files from `Refactoring/swarm_prompts/` to archive.
+- [ ] [MOVE] Move all files from `Refactoring/swarm_reports/` to archive.
+- [ ] [MOVE] Move `Refactoring/swarm_manifests/` to archive.
+
+#### 2. Final Cleanup
+- [ ] [DELETE] Remove any temporary `.tmp` or `.bak` files created during refactoring.
+- [ ] [FINALIZE] Set `active_refactor.md` status to [ARCHIVED].
+
+### Phase 6: Regression Triage (STABILIZATION COMPLETE)
+*Goal: Resolve the regressions introduced by the transition to RegistryManager and Ability v2.*
+
+#### 1. Core Logic & Data-Layer Bridges
+- [x] [FIXED] **Legacy Attribute Shim**: `Component.__init__` now converts flat data (range, damage, energy_cost) to Ability instances if missing. Ref: [component.py](file:///c:/Dev/Starship%20Battles/game/simulation/components/component.py)
+- [x] [FIXED] **Resource Property Bridges**: `Ship` class now bridges legacy attributes (`current_energy`, `max_ammo`) to the `ResourceRegistry`. Ref: [ship.py](file:///c:/Dev/Starship%20Battles/game/simulation/entities/ship.py)
+- [x] [FIXED] **Robust Capability Detection**: `has_ability` and `get_ability` use MRO-based name matching to handle module identity drift.
+- [x] [FIXED] **Weapon Activation & Consumption**: `WeaponAbility.fire` now correctly consumes resources from the registry.
+
+#### 2. Infrastructure & Environment Stabilization
+- [x] [FIXED] **Pygame Lifecycle**: Consolidated `pygame.init()` into `conftest.py` session fixture. Stripped all 12 destructive `pygame.quit()` calls from unit tests to prevent worker-level state collapse in `xdist`.
+- [x] [FIXED] **UI Layout Recursion**: Increased headless dummy display resolution to 1440x900 in `conftest.py` to prevent infinite layout loops in `LayerPanel.rebuild`.
+- [x] [FIXED] **Singleton Isolation**: Added `ShipThemeManager._instance = None` resets to `test_theme_discovery.py` to prevent state leakage.
+
+#### 3. Remaining Failures (Handoff Targets)
+The following tests pass in isolation but fail in the bulk `pytest tests/` run (16 workers):
+- `tests/unit/test_ship_theme_logic.py::test_get_image_metrics` (AssertionError: unexpectedly None)
+    - *Context*: Likely a race condition in `discovery_complete` flag when multiple workers initialize themes simultaneously.
+- `tests/unit/test_main_integration.py::test_game_instantiation` (RecursionError)
+    - *Context*: Occurs during `pygame_gui` layout in `LayerPanel.rebuild`. Potentially sensitive to global z-order state leakage.
+
+---
+
+## Handoff Plan: Final Stabilization Instructions
+
+### 1. Resolve "The Last Two"
+- **Task**: Standardize the `ShipThemeManager` discovery lock. Ensure that `initialize()` is idempotent and thread-safe if accessed by multiple xdist workers sharing a filesystem lock.
+- **Task**: Deep-clean `pygame_gui` state between integration tests. If `RecursionError` persists, check if `LayerPanel` is failing to `kill()` its old scroll container before rebuild.
+
+### 2. Execution Path
+1. Run `pytest tests/unit/test_ship_theme_logic.py tests/unit/test_main_integration.py -n 0` to verify they pass in serial.
+2. Run `pytest tests/ -n 16` (Maintain the Green Gauntlet).
+3. Once **534/534** is achieved, execute **Phase 5: Protocol 13 (Archive)**.
+
+### 3. Protocol 13: Archival
+Move all files in the following directories to `Refactoring/archive/2026-01-04_test_stabilization/`:
+- `Refactoring/swarm_manifests/`
+- `Refactoring/swarm_prompts/`
+- `Refactoring/swarm_reports/`
+
+**Status:** Ready for archival once final 2 tests are green.

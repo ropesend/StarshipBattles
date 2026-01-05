@@ -17,7 +17,7 @@ class TestBuilderImprovements(unittest.TestCase):
              SHIP_CLASSES.update({"Escort": {"max_mass": 1000, "type": "Ship"}})
 
     def tearDown(self):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
 
     def test_image_scale_factor(self):
         """

@@ -25,7 +25,7 @@ class TestCrashRegressions(unittest.TestCase):
         self.panel = WeaponsReportPanel(self.builder, self.manager, self.rect, self.sprite_mgr)
 
     def tearDown(self):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
 
     def test_weapons_panel_unbound_local_error(self):
         """

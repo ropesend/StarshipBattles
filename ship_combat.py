@@ -76,11 +76,13 @@ class ShipCombatMixin:
                     continue
 
                 if comp.has_ability('WeaponAbility') and comp.is_active:
-                    # Get weapon ability for attribute access
                     weapon_ab = comp.get_ability('WeaponAbility')
-                    
-                    # Check resources via Component Abilities
                     has_resource = comp.can_afford_activation()
+                    
+                    # Tracer
+                    dist = 0
+                    if self.current_target:
+                        dist = self.position.distance_to(self.current_target.position)
                     
                     if has_resource and weapon_ab.can_fire():
                         # TARGETING logic
@@ -235,8 +237,13 @@ class ShipCombatMixin:
         if not projectiles: return None
         
         # Get weapon ability for range check
-        weapon_ab = comp.get_ability('WeaponAbility')
-        weapon_range = weapon_ab.range if weapon_ab else 0
+        weapon_range = 0
+        if hasattr(comp, 'get_ability'):
+            weapon_ab = comp.get_ability('WeaponAbility')
+            weapon_range = weapon_ab.range if weapon_ab else 0
+        else:
+            # Fallback for legacy test mocks
+            weapon_range = getattr(comp, 'range', 0)
         
         possible_targets = []
         for p in projectiles:

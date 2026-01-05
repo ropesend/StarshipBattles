@@ -55,7 +55,7 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         # But mostly we test BuilderSceneGUI logic and Item classes separately
 
     def tearDown(self):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
 
     def test_individual_item_ui_elements(self):
         """Test that IndividualComponentItem has correct buttons and label style."""

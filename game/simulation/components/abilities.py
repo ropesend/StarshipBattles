@@ -396,9 +396,9 @@ class WeaponAbility(Ability):
         raw_reload = data.get('reload', 1.0)
         if isinstance(raw_reload, str) and raw_reload.startswith('='):
             from formula_system import evaluate_math_formula
-            self.reload_time = float(max(0.01, evaluate_math_formula(raw_reload[1:], {})))
+            self.reload_time = float(max(0.0, evaluate_math_formula(raw_reload[1:], {})))
         else:
-            self.reload_time = float(raw_reload) if raw_reload else 1.0
+            self.reload_time = float(raw_reload) if raw_reload is not None else 1.0
         self._base_reload = self.reload_time  # Store for modifier sync
         
         self.firing_arc = float(data.get('firing_arc', 360))
@@ -437,6 +437,18 @@ class WeaponAbility(Ability):
                  self.reload_time = self._base_reload
 
     def recalculate(self):
+        # 0. Legacy Override Sync (Phase 6 Regression Triage)
+        # Check if the component object itself has individual attribute overrides
+        # and sync them into the ability's base stats.
+        for attr in ['range', 'damage', 'reload_time', 'firing_arc', 'facing_angle']:
+            if hasattr(self.component, attr):
+                val = getattr(self.component, attr)
+                if attr == 'range': self._base_range = float(val)
+                elif attr == 'damage': self._base_damage = float(val)
+                elif attr == 'reload_time': self._base_reload = float(val)
+                elif attr == 'firing_arc': self._base_firing_arc = float(val)
+                elif attr == 'facing_angle': self.facing_angle = float(val)
+
         # Apply modifiers to base stats
         if hasattr(self, '_base_damage'):
             self.damage = self._base_damage * self.component.stats.get('damage_mult', 1.0)
@@ -453,9 +465,10 @@ class WeaponAbility(Ability):
             else:
                 self.firing_arc = self._base_firing_arc + self.component.stats.get('arc_add', 0.0)
         
-        # Sync facing_angle from properties
+        # Sync facing_angle from properties (if not already overridden)
         if 'facing_angle' in self.component.stats.get('properties', {}):
-            self.facing_angle = self.component.stats['properties']['facing_angle']
+             if not hasattr(self.component, 'facing_angle'):
+                self.facing_angle = self.component.stats['properties']['facing_angle']
 
     def update(self) -> bool:
         if self.cooldown_timer > 0:
@@ -465,9 +478,13 @@ class WeaponAbility(Ability):
     def can_fire(self):
         return self.cooldown_timer <= 0
 
-    def fire(self, target):
-        """Perform firing logic. Returns dict or Projectile, or False if failed."""
+    def fire(self, target: Any) -> bool:
+        """Execute weapon fire logic. Returns True if successfully fired."""
         if self.can_fire():
+            # Consume resources via Component (Bridge to ResourceRegistry)
+            if self.component:
+                self.component.consume_activation()
+                
             self.cooldown_timer = self.reload_time
             return True
         return False
@@ -583,6 +600,11 @@ class SeekerWeaponAbility(WeaponAbility):
              self.range = int(self.projectile_speed * self.endurance * 0.8)
              self._base_range = self.range
 
+    def check_firing_solution(self, ship_pos, ship_angle, target_pos) -> bool:
+        """Seekers are omni-directional and ignore firing arcs."""
+        dist = ship_pos.distance_to(target_pos)
+        return dist <= self.range
+
 # --- Registry ---
 
 ABILITY_REGISTRY = {
@@ -597,7 +619,6 @@ ABILITY_REGISTRY = {
     "WeaponAbility": WeaponAbility,
     "ProjectileWeaponAbility": ProjectileWeaponAbility,
     "BeamWeaponAbility": BeamWeaponAbility,
-    "SeekerWeaponAbility": SeekerWeaponAbility,
     "SeekerWeaponAbility": SeekerWeaponAbility,
     "CommandAndControl": CommandAndControl,
     "CrewCapacity": CrewCapacity,

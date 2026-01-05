@@ -9,8 +9,7 @@ class TestButton(unittest.TestCase):
     """Test Button widget."""
     
     def setUp(self):
-        pygame.init()
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        pass
     
     
     def test_button_initialization(self):
@@ -71,8 +70,7 @@ class TestLabel(unittest.TestCase):
     """Test Label widget."""
     
     def setUp(self):
-        pygame.init()
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        pass
     
     
     def test_label_initialization(self):
@@ -101,8 +99,7 @@ class TestSlider(unittest.TestCase):
     """Test Slider widget."""
     
     def setUp(self):
-        pygame.init()
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        pass
     
     
     def test_slider_initialization(self):

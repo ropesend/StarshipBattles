@@ -49,7 +49,7 @@ class TestMultiSelectionLogic(unittest.TestCase):
         self.builder.selected_components = []
 
     def tearDown(self):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
 
     def test_toggle_behavior(self):
         """Test that Ctrl+Click toggles items in selection."""

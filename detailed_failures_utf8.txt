@@ -1,0 +1,77 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+collected 41 items / 3 errors
+
+=================================== ERRORS ====================================
+___ ERROR collecting simulation_tests/data_driven/test_combat_targeting.py ____
+ImportError while importing test module 'C:\Dev\Starship Battles\simulation_tests\data_driven\test_combat_targeting.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+simulation_tests\data_driven\test_combat_targeting.py:11: in <module>
+    from game.simulation.components.component import Weapon, BeamWeapon, ProjectileWeapon, SeekerWeapon, create_component, load_components
+E   ImportError: cannot import name 'Weapon' from 'game.simulation.components.component' (C:\Dev\Starship Battles\game\simulation\components\component.py)
+______________________ ERROR collecting test_output.txt _______________________
+
+self = WindowsPath('C:/Dev/Starship Battles/test_output.txt')
+encoding = 'utf-8', errors = None
+
+    def read_text(self, encoding=None, errors=None):
+        """
+        Open the file in text mode, read it, and close the file.
+        """
+        encoding = io.text_encoding(encoding)
+        with self.open(mode='r', encoding=encoding, errors=errors) as f:
+>           return f.read()
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <encodings.utf_8.IncrementalDecoder object at 0x000001C2C4775000>
+input = b'\xff\xfe=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x...0=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00\r\x00\n\x00'
+final = True
+
+    def decode(self, input, final=False):
+        # decode input (taking the buffer into account)
+        data = self.buffer + input
+>       (result, consumed) = self._buffer_decode(data, self.errors, final)
+E       UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: UnicodeDecodeError
+_____________________ ERROR collecting test_output_2.txt ______________________
+
+self = WindowsPath('C:/Dev/Starship Battles/test_output_2.txt')
+encoding = 'utf-8', errors = None
+
+    def read_text(self, encoding=None, errors=None):
+        """
+        Open the file in text mode, read it, and close the file.
+        """
+        encoding = io.text_encoding(encoding)
+        with self.open(mode='r', encoding=encoding, errors=errors) as f:
+>           return f.read()
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\pathlib.py:1135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <encodings.utf_8.IncrementalDecoder object at 0x000001C2C4BB3E20>
+input = b'\xff\xfe=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x...0=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00=\x00\r\x00\n\x00'
+final = True
+
+    def decode(self, input, final=False):
+        # decode input (taking the buffer into account)
+        data = self.buffer + input
+>       (result, consumed) = self._buffer_decode(data, self.errors, final)
+E       UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\codecs.py:322: UnicodeDecodeError
+=========================== short test summary info ===========================
+ERROR simulation_tests/data_driven/test_combat_targeting.py
+ERROR test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte 0...
+ERROR test_output_2.txt - UnicodeDecodeError: 'utf-8' codec can't decode byte...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 3 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 3 errors in 0.38s ==============================

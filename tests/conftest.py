@@ -45,8 +45,14 @@ def reset_game_state(monkeypatch):
 def enforce_headless():
     """
     Enforce headless mode for Pygame to prevent window creation and interference.
+    Initializes core modules once per worker session.
     """
     import pygame
+    os.environ["SDL_VIDEODRIVER"] = "dummy"
     pygame.init()
+    pygame.font.init()
+    # Create a persistent dummy display to satisfy tests that require one
+    # Use standard resolution to prevent UI recursion issues in 1x1 windows
+    pygame.display.set_mode((1440, 900), pygame.NOFRAME)
     yield
     pygame.quit()

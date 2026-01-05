@@ -26,7 +26,15 @@ class TestCombatTargeting(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         pygame.init()
-        # Initialize data with standardized test files
+        # The data loading logic is moved to setUp to ensure it's reloaded for each test
+        # due to potential global state resets by fixtures.
+
+    @classmethod
+    def tearDownClass(cls):
+        pygame.quit()
+
+    def setUp(self):
+        # 1. Reload CUSTOM test data (because reset_game_state fixture wipes it)
         try:
             cwd = os.getcwd()
             # If we are in 'tests' folder, go up
@@ -34,24 +42,25 @@ class TestCombatTargeting(unittest.TestCase):
                 cwd = os.path.dirname(cwd)
             
             # Load specific test data
-            load_vehicle_classes(os.path.join(cwd, "tests", "data", "test_vehicleclasses.json"))
-            load_components(os.path.join(cwd, "tests", "data", "test_components.json"))
+            load_vehicle_classes(os.path.join(cwd, "tests", "unit", "data", "test_vehicleclasses.json"))
+            load_components(os.path.join(cwd, "tests", "unit", "data", "test_components.json"))
+            from game.core.registry import RegistryManager
+            print(f"DEBUG: Registry has {len(RegistryManager.instance().components)} components")
         except Exception as e:
-            print(f"Set up warning: {e}")
+            print(f"DEBUG: Error loading components: {e}")
             # Fallback (shouldn't be reached if paths are correct)
-            load_vehicle_classes("unit_tests/data/test_vehicleclasses.json")
-            load_components("unit_tests/data/test_components.json")
+            load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+            load_components("tests/unit/data/test_components.json")
 
-    @classmethod
-    def tearDownClass(cls):
-        pygame.quit()
-
-    def setUp(self):
-        # Create attacker ship
+        # 2. Create ships
         self.attacker = Ship("Attacker", 0, 0, (255, 0, 0))
+        bridge = create_component('test_bridge_basic')
+        print(f"DEBUG: create_component('test_bridge_basic') -> {bridge}")
+        if bridge:
+             success = self.attacker.add_component(bridge, LayerType.CORE)
+             print(f"DEBUG: Add bridge success: {success}, total core: {len(self.attacker.layers[LayerType.CORE]['components'])}")
+        
         self.attacker.team_id = 0
-        # Ensure it has a bridge/core so it's alive
-        self.attacker.add_component(create_component('test_bridge_basic'), LayerType.CORE)
         self.attacker.recalculate_stats() # Init basic stats
         self.attacker.is_alive = True
         self.attacker.is_derelict = False

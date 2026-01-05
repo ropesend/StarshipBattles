@@ -8,11 +8,6 @@ from ship_theme import ShipThemeManager
 
 class TestShipThemeLogic(unittest.TestCase):
     def setUp(self):
-        # Initialize pygame for surface creation
-        pygame.init()
-        # Create dummy display for image loading/convert_alpha
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
-
         # Ensure singleton is reset before each test
         ShipThemeManager._instance = None
         self.manager = ShipThemeManager.get_instance()
@@ -20,7 +15,6 @@ class TestShipThemeLogic(unittest.TestCase):
     def tearDown(self):
         # Clean up singleton
         ShipThemeManager._instance = None
-        pygame.quit()
 
     def test_singleton_handling(self):
         """Test that the singleton pattern works and enforces unique instance."""

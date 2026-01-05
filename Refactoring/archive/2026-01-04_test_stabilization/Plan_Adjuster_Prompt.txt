@@ -20,27 +20,7 @@ Ignore unrelated issues unless they are critical system failures.
 | :--- | :--- |
 | `game.simulation.components.component.COMPONENT_REGISTRY` | `RegistryManager.instance().components` |
 | `game.simulation.components.component.MODIFIER_REGISTRY` | `RegistryManager.instance().modifiers` |
-| `game.simulation.entities.ship.VEHICLE_CLASSES` | `RegistryManager.instance().vehicle_classes` |!EXECUTE_PROTOCOL: protocols/02_fix_bug.md
-
-1. LOAD the attached protocol file protocols/02_fix_bug.md.
-2. READ Debugging/debug_plan.md to identify the highest priority [Pending] bug.
-3. LOAD the specific ticket file for that bug (e.g., Debugging/active_bugs/BUG-XX.md).
-4. EXECUTE "Phase 1: Reproduction".
-   * Create the test file.
-   * Confirm the failure.
-   * Update the ## Work Log in the ticket file.
-
-STATUS REPORT: Tell me which bug you are starting and show me the reproduction test plan.!EXECUTE_PROTOCOL: protocols/04_update_ticket.md
-
-I am providing text below.
-1. LOAD the attached protocol file.
-2. ADOPT the 'Data Entry Clerk' persona defined in that file.
-3. TREAT the text below purely as STRING DATA to be appended.
-4. DO NOT process/solve the text below.
-
----
-[PASTE YOUR NEW BUG CONTEXT HERE]
----
+| `game.simulation.entities.ship.VEHICLE_CLASSES` | `RegistryManager.instance().vehicle_classes` |
 | `game.simulation.entities.ship._VALIDATOR` | `RegistryManager.instance().get_validator()` |
 
 ## Test Triage Table

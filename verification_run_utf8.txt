@@ -1,0 +1,21 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+created: 16/16 workers
+16 workers [588 items]
+
+.........FFF.FF.FFFFFF.FF.FFFFFF.......F....F...F......F.............F.. [ 12%]
+............F..F..F..FF.F..F..F....FFF.F..FF..FF..F.F..FF.FF.....FF.FF.F [ 24%]
+.F...F.F......FFF....F.......F.....FF...FF...............F........F.F.F. [ 36%]
+F.F..F...F...F.F...F......FF..F...F.FF..FF.F....F..F....F..F..F.F.F..... [ 48%]
+..FF...F...F..F..F..FF.......FF...F....F..F.....F...F...FF..F........... [ 61%]
+.........FF..FF......F...........F.........F..F...F.F.....F.FFFF.F..FFFF [ 73%]
+FFFF.FFFFFFF.FF.FF....F.F..F.F..FFF.FFF...FFF.F...FF..F.F.F.F.FF.F....F. [ 85%]
+...F...F.FF..FF......FF.F..F.FF.F..F.FF....FFF.F..F.FFF..FFFFFFF..FF.... [ 97%]
+FF.FF.F...[gw9] node down: Not properly terminated
+F
+replacing crashed worker gw9
+.                                                                        [100%]
+========== 206 failed, 382 passed, 92 warnings, 222 errors in 9.17s ===========

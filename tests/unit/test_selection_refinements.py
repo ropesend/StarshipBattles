@@ -49,7 +49,7 @@ class TestSelectionRefinements(unittest.TestCase):
         self.builder.selected_components = []
 
     def tearDown(self):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
 
     def test_homogeneity_enforcement(self):
         """Test that selection is restricted to identical component types."""

@@ -30,7 +30,7 @@ class TestWeaponsReportLayout(unittest.TestCase):
         self.rect = pygame.Rect(10, 400, 800, 200)
         
     def tearDown(self):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
         
     def test_button_creation_widths(self):
         """Verify buttons are created with updated widths and positions."""

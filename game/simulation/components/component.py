@@ -76,6 +76,40 @@ class Component:
         
         # Parse abilities from data
         self.abilities = self.data.get('abilities', {})
+        
+        # Legacy Attribute Shim (Phase 6 Regression Triage)
+        # Convert old flat weapon attributes into the new Ability format if abilities dict is empty
+        if not self.abilities:
+            if 'range' in self.data or 'damage' in self.data:
+                # Detect which ability to create
+                is_seeker = 'endurance' in self.data
+                is_beam = 'energy_cost' in self.data and 'ammo_cost' not in self.data
+                
+                ab_data = {
+                    'range': self.data.get('range', 0.0),
+                    'damage': self.data.get('damage', 0.0),
+                    'reload': self.data.get('reload', self.data.get('cooldown', 1.0)),
+                    'firing_arc': self.data.get('firing_arc', 360),
+                    'facing_angle': self.data.get('facing_angle', 0)
+                }
+                
+                if is_seeker:
+                    ab_data['projectile_speed'] = self.data.get('projectile_speed', 500)
+                    ab_data['endurance'] = self.data.get('endurance', 3.0)
+                    self.abilities['SeekerWeaponAbility'] = ab_data
+                elif is_beam:
+                    ab_data['accuracy_falloff'] = self.data.get('accuracy_falloff', 0.001)
+                    self.abilities['BeamWeaponAbility'] = ab_data
+                else:
+                    ab_data['projectile_speed'] = self.data.get('projectile_speed', 1000)
+                    self.abilities['ProjectileWeaponAbility'] = ab_data
+
+                # Also map resource consumption if present
+                if 'energy_cost' in self.data:
+                    self.abilities['EnergyConsumption'] = {'amount': self.data['energy_cost'], 'trigger': 'activation', 'resource': 'energy'}
+                if 'ammo_cost' in self.data:
+                    self.abilities['AmmoConsumption'] = {'amount': self.data['ammo_cost'], 'trigger': 'activation', 'resource': 'ammo'}
+        
         self.base_abilities = copy.deepcopy(self.abilities)
         
         self.ship = None # Container reference
@@ -142,9 +176,13 @@ class Component:
             # 1. Polymorphic check (preferred)
             if target_class and isinstance(ab, target_class):
                 found.append(ab)
-            # 2. Name check (fallback)
-            elif ab.__class__.__name__ == ability_name:
-                found.append(ab)
+            # 2. Hierarchy Name check (Strong fallback for Module Identity Drift in tests)
+            else:
+                # Check if the ability name matches any class in the inheritance chain
+                for cls in ab.__class__.mro():
+                    if cls.__name__ == ability_name:
+                        found.append(ab)
+                        break
         return found
 
     def get_ability(self, ability_name: str):
@@ -510,25 +548,28 @@ COMPONENT_REGISTRY = RegistryManager.instance().components
 # Types with custom logic (Shield, Hangar, etc.) are now also aliases
 # as their logic has been unified into the Ability system.
 
+# Export types for compatibility (Phase 6 Regression Triage)
+Bridge = Weapon = ProjectileWeapon = BeamWeapon = SeekerWeapon = Engine = \
+Thruster = ManeuveringThruster = Shield = ShieldRegenerator = Generator = \
+Hangar = Armor = Sensor = Electronics = Tank = CrewQuarters = LifeSupport = Component
+
 COMPONENT_TYPE_MAP = {
-    # All types map to generic Component
-    "Bridge": Component,
+    # Aliased types now use Component directly
+# Types with custom logic (Shield, Hangar, etc.) are now also aliases
     "Weapon": Component,
     "ProjectileWeapon": Component,
     "BeamWeapon": Component,
     "SeekerWeapon": Component,
-    "Engine": Component,
-    "Thruster": Component,
-    "ManeuveringThruster": Component,
+    "Turret": Component,
+    "Launcher": Component,
     "Shield": Component,
     "ShieldRegenerator": Component,
     "Generator": Component,
-    "Hangar": Component,
-    "Armor": Component,
+    "Engine": Component,
+    "Thruster": Component,
+    "Bridge": Component,
     "Sensor": Component,
     "Electronics": Component,
-    "Tank": Component,
-    "CrewQuarters": Component,
     "LifeSupport": Component
 }
 
@@ -600,7 +641,7 @@ def load_modifiers(filepath="data/modifiers.json"):
         for m_id, mod in _MODIFIER_CACHE.items():
             mgr.modifiers[m_id] = copy.deepcopy(mod)
         return
-
+    
     # Slow Path
     if not os.path.exists(filepath):
          base_dir = os.path.dirname(os.path.abspath(__file__))

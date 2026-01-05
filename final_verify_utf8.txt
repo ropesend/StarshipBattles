@@ -1,0 +1,247 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+created: 16/16 workers
+16 workers [534 items]
+
+........................................................................ [ 13%]
+........................................................................ [ 26%]
+........................................................................ [ 40%]
+........................................................................ [ 53%]
+........................................................................ [ 67%]
+........................................................................ [ 80%]
+.....................................................................F.. [ 94%]
+.F............................                                           [100%]
+================================== FAILURES ===================================
+__________________ TestShipThemeLogic.test_get_image_metrics __________________
+[gw13] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+tests\unit\test_ship_theme_logic.py:150: in test_get_image_metrics
+    self.assertIsNotNone(rect)
+E   AssertionError: unexpectedly None
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 1 ship themes: ['MetricsTheme']
+_________________ TestMainIntegration.test_game_instantiation _________________
+[gw10] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+tests\unit\test_main_integration.py:56: in test_game_instantiation
+    game = app.Game()
+game\app.py:104: in __init__
+    self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return)
+game\ui\screens\builder_screen.py:123: in __init__
+    self._create_ui()
+game\ui\screens\builder_screen.py:138: in _create_ui
+    self.layer_panel = LayerPanel(
+ui\builder\layer_panel.py:96: in __init__
+    self.rebuild()
+ui\builder\layer_panel.py:245: in rebuild
+    self.scroll_container.set_scrollable_area_dimensions((content_width, y_pos))
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_scrolling_container.py:344: in set_scrollable_area_dimensions
+    self._sort_out_element_container_scroll_bars()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_scrolling_container.py:488: in _sort_out_element_container_scroll_bars
+    self.vert_scroll_bar.set_relative_position((-self.scroll_bar_width, 0))
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_vertical_scroll_bar.py:681: in set_relative_position
+    super().set_relative_position(position)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_element.py:1010: in set_relative_position
+    self.ui_container.get_container().on_contained_elements_changed(self)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_container.py:421: in on_contained_elements_changed
+    element.update_containing_rect_position()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_container.py:191: in update_containing_rect_position
+    super().update_containing_rect_position()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_element.py:986: in update_containing_rect_position
+    self._update_absolute_rect_position_from_anchors()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_element.py:842: in _update_absolute_rect_position_from_anchors
+    self.set_dimensions((new_width, new_height))
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_container.py:228: in set_dimensions
+    self.update_containing_rect_position()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_container.py:191: in update_containing_rect_position
+    super().update_containing_rect_position()
+E   RecursionError: maximum recursion depth exceeded in comparison
+!!! Recursion detected (same locals & position)
+
+During handling of the above exception, another exception occurred:
+tests\unit\test_main_integration.py:71: in test_game_instantiation
+    self.fail(f"Game instantiation failed with exception: {e}")
+E   AssertionError: Game instantiation failed with exception: maximum recursion depth exceeded in comparison
+---------------------------- Captured stdout call -----------------------------
+Loading sprites from C:\Dev\Starship Battles\assets\Images\Components\Tiles
+SUCCESS: Loaded 242 sprites from directory (max index 241)
+------------------------------ Captured log call ------------------------------
+[32mINFO    [0m StarshipBattles:logger.py:32 Discovered 4 ship themes: ['Atlantians', 'Federation', 'Klingons', 'Romulans']
+============================== warnings summary ===============================
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_main_integration.py: 1 warning
+tests/unit/test_multi_selection_logic.py: 3 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:92: UserWarning: Clamping shadow_width of: 2, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_structure_features.py: 5 warnings
+tests/unit/test_main_integration.py: 1 warning
+tests/unit/test_multi_selection_logic.py: 3 warnings
+tests/unit/test_selection_refinements.py: 2 warnings
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:113: UserWarning: Clamping border_width of: 1, to: 0
+    warnings.warn(
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_multi_selection_logic
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_append_integration
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_selection_integration
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_reselection_behavior
+tests/unit/test_selection_refinements.py::TestSelectionRefinements::test_homogeneity_enforcement
+tests/unit/test_multi_selection_logic.py::TestMultiSelectionLogic::test_toggle_behavior
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_font_dictionary.py:405: UserWarning: Finding font with id: noto_sans_bold_aa_14 that is not already loaded.
+  Preload this font with {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': '1'}
+    warnings.warn(warning_string, UserWarning)
+
+tests/unit/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\html_parser.py:179: UserWarning: Unsupported HTML Tag <magicmock>. Check documentation for full range of supported tags.
+    warnings.warn(warning_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Energy: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Energy Gen: - size diff: (-14, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Thrust: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Acceleration: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Top Speed: - size diff: (-7, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Maneuvering Points: - size diff: (-108, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Turning Rate: - size diff: (-24, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Shields: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Regen Cost: - size diff: (-13, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Armor HP: - size diff: (-37, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Dmg Ignore: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen/Hit: - size diff: (-50, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Targets: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Evasion Score: - size diff: (-28, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Targeting Score: - size diff: (-42, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew Required: - size diff: (-36, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew On Board: - size diff: (-38, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Life Support: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Fighter Support \u2500\u2500 - size diff: (-11, 5)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Cap: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Launch/Wave: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Time: - size diff: (-22, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Recommendations \u2500\u2500 - size diff: (-30, 0)\n    warnings.warn(warn_text, UserWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/unit/test_ship_theme_logic.py::TestShipThemeLogic::test_get_image_metrics
+FAILED tests/unit/test_main_integration.py::TestMainIntegration::test_game_instantiation
+================= 2 failed, 532 passed, 102 warnings in 5.66s =================

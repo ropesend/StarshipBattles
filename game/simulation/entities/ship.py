@@ -776,3 +776,85 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     def ammo_gen_rate(self, value):
         res = self.resources.get_resource("ammo")
         if res: res.regen_rate = value
+
+    # Legacy Resource Compatibility Properties
+    @property
+    def current_energy(self) -> float:
+        return self.resources.get_value("energy")
+
+    @current_energy.setter
+    def current_energy(self, value: float):
+        res = self.resources.get_resource("energy")
+        if not res:
+            self.resources.register_storage("energy", value)
+            res = self.resources.get_resource("energy")
+        if res:
+            if value > res.max_value:
+                res.max_value = value
+            res.current_value = value
+
+    @property
+    def max_energy(self) -> float:
+        return self.resources.get_max_value("energy")
+
+    @max_energy.setter
+    def max_energy(self, value: float):
+        res = self.resources.get_resource("energy")
+        if not res:
+            self.resources.register_storage("energy", value)
+        else:
+            res.max_value = value
+
+    @property
+    def current_ammo(self) -> float:
+        return self.resources.get_value("ammo")
+
+    @current_ammo.setter
+    def current_ammo(self, value: float):
+        res = self.resources.get_resource("ammo")
+        if not res:
+            self.resources.register_storage("ammo", value)
+            res = self.resources.get_resource("ammo")
+        if res:
+            if value > res.max_value:
+                res.max_value = value
+            res.current_value = value
+
+    @property
+    def max_ammo(self) -> float:
+        return self.resources.get_max_value("ammo")
+
+    @max_ammo.setter
+    def max_ammo(self, value: float):
+        res = self.resources.get_resource("ammo")
+        if not res:
+            self.resources.register_storage("ammo", value)
+        else:
+            res.max_value = value
+
+    @property
+    def current_fuel(self) -> float:
+        return self.resources.get_value("fuel")
+
+    @current_fuel.setter
+    def current_fuel(self, value: float):
+        res = self.resources.get_resource("fuel")
+        if not res:
+            self.resources.register_storage("fuel", value)
+            res = self.resources.get_resource("fuel")
+        if res:
+            if value > res.max_value:
+                res.max_value = value
+            res.current_value = value
+
+    @property
+    def max_fuel(self) -> float:
+        return self.resources.get_max_value("fuel")
+
+    @max_fuel.setter
+    def max_fuel(self, value: float):
+        res = self.resources.get_resource("fuel")
+        if not res:
+            self.resources.register_storage("fuel", value)
+        else:
+            res.max_value = value

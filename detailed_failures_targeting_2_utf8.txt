@@ -1,0 +1,168 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+created: 16/16 workers
+16 workers [10 items]
+
+.....FFFFF                                                               [100%]
+================================== FAILURES ===================================
+_______________ TestCombatTargeting.test_firing_arc_validation ________________
+[gw0] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_firing_arc_validation>
+
+    def test_firing_arc_validation(self):
+        """Test that weapons do not fire if target is outside firing arc."""
+        weapon = ProjectileWeapon({
+            'name': 'TestGun', 'id':'test_gun', 'firing_arc': 45, 'range': 500,
+            'projectile_speed': 1000, 'damage': 10, 'ammo_cost': 1, 'cooldown': 0,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        weapon.facing_angle = 0 # Right
+        weapon.is_active = True
+        weapon.cooldown_timer = 0
+        self.attacker.add_component(weapon, LayerType.OUTER)
+        self.attacker.angle = 0
+    
+        # Case 1: Target directly ahead (Valid)
+        self.target.position = pygame.math.Vector2(200, 0) # 0 degrees
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1, "Should fire at target directly ahead")
+E       AssertionError: 0 != 1 : Should fire at target directly ahead
+
+simulation_tests\data_driven\test_combat_targeting.py:134: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+Loaded 14 vehicle classes.
+_____________ TestCombatTargeting.test_resource_consumption_beam ______________
+[gw4] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_resource_consumption_beam>
+
+    def test_resource_consumption_beam(self):
+        """Verify energy consumption for BeamWeapon."""
+        beam = BeamWeapon({
+            'name': 'Laser', 'id':'laser', 'energy_cost': 50, 'range': 500,
+            'damage': 10, 'firing_arc': 360, 'cooldown': 0,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        beam.is_active = True
+        self.attacker.add_component(beam, LayerType.OUTER)
+        self.attacker.current_energy = 100
+    
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        self.attacker.fire_weapons()
+>       self.assertEqual(self.attacker.current_energy, 50, "Should consume 50 energy")
+E       AssertionError: 100 != 50 : Should consume 50 energy
+
+simulation_tests\data_driven\test_combat_targeting.py:254: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+Loaded 14 vehicle classes.
+_____________ TestCombatTargeting.test_resource_consumption_ammo ______________
+[gw3] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_resource_consumption_ammo>
+
+    def test_resource_consumption_ammo(self):
+        """Verify ammo consumption for ProjectileWeapon."""
+        gun = ProjectileWeapon({
+             'name': 'Cannon', 'id':'cannon', 'ammo_cost': 5, 'range': 500,
+            'damage': 10, 'firing_arc': 360, 'cooldown': 0, 'projectile_speed': 1000,
+             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        gun.is_active = True
+        self.attacker.add_component(gun, LayerType.OUTER)
+        self.attacker.current_ammo = 10
+        self.attacker.current_energy = 1000
+    
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+        self.attacker.fire_weapons()
+>       self.assertEqual(self.attacker.current_ammo, 5)
+E       AssertionError: 10 != 5
+
+simulation_tests\data_driven\test_combat_targeting.py:283: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+Loaded 14 vehicle classes.
+_________________ TestCombatTargeting.test_seeker_ignores_arc _________________
+[gw5] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_seeker_ignores_arc>
+
+    def test_seeker_ignores_arc(self):
+        """Verify SeekerWeapon fires even if target is outside arc."""
+        missile_launcher = SeekerWeapon({
+            'name': 'Missile', 'id':'test_missile', 'firing_arc': 10, 'range': 1000,
+            'projectile_speed': 500, 'ammo_cost': 1, 'damage': 10, 'endurance': 100,
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        missile_launcher.facing_angle = 0
+        missile_launcher.is_active = True
+        self.attacker.add_component(missile_launcher, LayerType.OUTER)
+    
+        # Target behind
+        self.target.position = pygame.math.Vector2(-200, 0)
+        self.attacker.current_target = self.target
+        self.attacker.is_derelict = False
+    
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1, "Seeker weapon should fire regardless of arc")
+E       AssertionError: 0 != 1 : Seeker weapon should fire regardless of arc
+
+simulation_tests\data_driven\test_combat_targeting.py:171: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+Loaded 14 vehicle classes.
+_______________ TestCombatTargeting.test_target_prioritization ________________
+[gw9] win32 -- Python 3.10.11 C:\Users\rossr\AppData\Local\Programs\Python\Python310\python.exe
+
+self = <test_combat_targeting.TestCombatTargeting testMethod=test_target_prioritization>
+
+    def test_target_prioritization(self):
+        """Test that secondary targets are checked if current target is invalid or out of arc."""
+        self.attacker.max_targets = 2
+    
+        # Weapon with narrow arc
+        weapon = ProjectileWeapon({
+            'name': 'Gun', 'id':'gun', 'firing_arc': 45, 'range': 500,
+            'projectile_speed': 1000, 'damage':10, 'ammo_cost':1,
+             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+        })
+        weapon.facing_angle = 0
+        weapon.is_active = True
+        self.attacker.add_component(weapon, LayerType.OUTER)
+    
+        # Target 1: Out of Arc (Behind)
+        t1 = Ship("T1", -200, 0, (0,0,0))
+        t1.is_alive = True
+        t1.team_id = 1
+        t1.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+    
+        # Target 2: Valid (In front)
+        t2 = Ship("T2", 200, 0, (0,0,0))
+        t2.is_alive = True
+        t2.team_id = 1
+        t2.add_component(create_component('test_bridge_basic'), LayerType.CORE)
+    
+        self.attacker.current_target = t1
+        self.attacker.secondary_targets = [t2]
+    
+        self.attacker.is_derelict = False
+        self.attacker.max_targets = 2
+        attacks = self.attacker.fire_weapons()
+>       self.assertEqual(len(attacks), 1)
+E       AssertionError: 0 != 1
+
+simulation_tests\data_driven\test_combat_targeting.py:208: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+Loaded 14 vehicle classes.
+=========================== short test summary info ===========================
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_firing_arc_validation
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_beam
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_resource_consumption_ammo
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_seeker_ignores_arc
+FAILED simulation_tests/data_driven/test_combat_targeting.py::TestCombatTargeting::test_target_prioritization
+========================= 5 failed, 5 passed in 1.62s =========================

@@ -15,7 +15,7 @@ class TestModifierRow(unittest.TestCase):
         
         
     def tearDown(self):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
         
         
     def test_build_ui_creates_elements(self):

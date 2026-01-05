@@ -28,7 +28,7 @@ class TestMandatoryModifiers(unittest.TestCase):
              MODIFIER_REGISTRY['facing'] = Modifier({'id': 'facing', 'name': 'Facing', 'type': 'linear', 'min_val': 0, 'max_val': 360})
 
     def tearDown(self):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
 
     def _setup_mock_comp(self, type_str):
         mock_comp = MagicMock()

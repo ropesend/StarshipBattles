@@ -25,7 +25,7 @@ class TestUIDynamicUpdate(unittest.TestCase):
         
         
     def tearDown(self):
-        pygame.quit()
+        pass # pygame.quit() removed for session isolation
 
     @patch('pygame_gui.elements.UIScrollingContainer')
     @patch('pygame_gui.elements.UIImage')
