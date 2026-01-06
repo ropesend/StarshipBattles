@@ -10,12 +10,12 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 # Add project root to path
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.core.registry import RegistryManager
 from game.simulation.components.component import load_components
-from game.ai.controller import COMBAT_STRATEGIES
+
 
 class TestBuilderUISync(unittest.TestCase):
 
@@ -23,7 +23,9 @@ class TestBuilderUISync(unittest.TestCase):
     def setUp(self):
         pygame.init()
         # Initialize data needed for dropdowns
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        # Adjusted for new location: tests/unit/builder/test_builder_ui_sync.py
+        # Need 4 levels up to reach root (builder -> unit -> tests -> Starship Battles)
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
         initialize_ship_data(base_dir)
         load_components(os.path.join(base_dir, "data", "components.json"))
         from game.ai.controller import load_combat_strategies
@@ -88,8 +90,8 @@ class TestBuilderUISync(unittest.TestCase):
         val = self._get_option_value(self.panel.class_dropdown.selected_option)
         self.assertEqual(val, target_class)
         
-        # AI
         # AI Strategy Name lookup
+        from game.ai.controller import COMBAT_STRATEGIES
         strat_name = COMBAT_STRATEGIES["kamikaze"]["name"]
         val = self._get_option_value(self.panel.ai_dropdown.selected_option)
         self.assertEqual(val, strat_name)
