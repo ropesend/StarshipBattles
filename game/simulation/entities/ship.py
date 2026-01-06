@@ -11,7 +11,7 @@ from game.simulation.components.component import (
     Component, LayerType
 )
 from game.core.logger import log_debug
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, get_vehicle_classes, get_validator, get_component_registry, get_modifier_registry
 from ship_validator import ShipDesignValidator, ValidationResult
 from ship_stats import ShipStatsCalculator
 from ship_physics import ShipPhysicsMixin
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 class ValidatorProxy:
     def __getattr__(self, name):
-        val = RegistryManager.instance().get_validator()
+        val = get_validator()
         if not val:
             # Lazy init
             val = ShipDesignValidator()
@@ -75,7 +75,8 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_file
         with open(filepath, 'r') as f:
             data = json.load(f)
             # Update in place to preserve references
-            mgr.vehicle_classes.clear()
+            classes = get_vehicle_classes()
+            classes.clear()
             
             raw_classes = data.get('classes', {})
             
@@ -88,10 +89,10 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_file
                      else:
                          print(f"Warning: Class {cls_name} references unknown layer config {config_id}")
             
-            mgr.vehicle_classes.update(raw_classes)
+            classes.update(raw_classes)
             
 
-            print(f"Loaded {len(mgr.vehicle_classes)} vehicle classes.")
+            print(f"Loaded {len(classes)} vehicle classes.")
     except FileNotFoundError:
         print(f"Warning: {filepath} not found, using defaults")
         defaults = {
@@ -103,8 +104,9 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_file
             "Battleship": {"hull_mass": 1600, "max_mass": 32000, "requirements": {}},
             "Dreadnought": {"hull_mass": 3200, "max_mass": 64000, "requirements": {}}
         }
-        mgr.vehicle_classes.clear()
-        mgr.vehicle_classes.update(defaults)
+        classes = get_vehicle_classes()
+        classes.clear()
+        classes.update(defaults)
         
 
 
@@ -130,7 +132,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.theme_id: str = theme_id
         
         # Get class definition
-        class_def = RegistryManager.instance().vehicle_classes.get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
+        class_def = get_vehicle_classes().get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
 
         # Initialize Layers dynamically from class definition
         self._initialize_layers()
@@ -528,8 +530,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         Recalculates derived stats. Delegates to ShipStatsCalculator.
         """
         # 1. Update Base Class Specs (ensure budget is fresh for scaling modifiers)
-        if self.ship_class in RegistryManager.instance().vehicle_classes:
-             cdef = RegistryManager.instance().vehicle_classes[self.ship_class]
+        classes = get_vehicle_classes()
+        if self.ship_class in classes:
+             cdef = classes[self.ship_class]
              self.max_mass_budget = cdef.get('max_mass', 1000)
 
         # 2. Update components with current ship context
@@ -540,7 +543,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 comp.recalculate_stats()
 
         if not self.stats_calculator:
-             self.stats_calculator = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)
+             self.stats_calculator = ShipStatsCalculator(classes)
         
         self.stats_calculator.calculate(self)
 
@@ -568,7 +571,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         all_components = [c for layer in self.layers.values() for c in layer['components']]
         
         if not self.stats_calculator:
-             self.stats_calculator = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)
+             self.stats_calculator = ShipStatsCalculator(get_vehicle_classes())
              
         totals = self.stats_calculator.calculate_ability_totals(all_components)
         return totals.get(ability_name, 0)
@@ -721,14 +724,16 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                     comp_id = c_entry.get("id", "")
                     modifiers_data = c_entry.get("modifiers", [])
                 
-                if comp_id in RegistryManager.instance().components:
-                    new_comp = RegistryManager.instance().components[comp_id].clone()
+                comps = get_component_registry()
+                if comp_id in comps:
+                    new_comp = comps[comp_id].clone()
                     
                     # Apply Modifiers
+                    mods = get_modifier_registry()
                     for m_dat in modifiers_data:
                         mid = m_dat['id']
                         mval = m_dat['value']
-                        if mid in RegistryManager.instance().modifiers:
+                        if mid in mods:
                             new_comp.add_modifier(mid, mval)
 
                     s.add_component(new_comp, layer_type)

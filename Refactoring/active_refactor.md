@@ -361,12 +361,12 @@ def get_validator():
 
 - [x] [VERIFY] Run `pytest tests/ -n 16` — Must still be **534/534 PASSED**. (Actually 560/560 passed)
 
-#### 2. (Optional) Migrate High-Traffic Code to Utilities
+#### 2. (Optional) Migrate High-Traffic Code to Utilities [x]
 This step is optional and can be deferred. The utility functions are available for new code.
 
-- [ ] [OPTIONAL] Update `ship.py` to use `get_vehicle_classes()` instead of `RegistryManager.instance().vehicle_classes`.
-- [ ] [OPTIONAL] Update `builder_screen.py` to use utility functions.
-- [ ] [VERIFY] Run `pytest tests/ -n 16` — Must still be **534/534 PASSED**.
+- [x] [OPTIONAL] Update `ship.py` to use `get_vehicle_classes()` instead of `RegistryManager.instance().vehicle_classes`.
+- [x] [OPTIONAL] Update `builder_screen.py` to use utility functions.
+- [x] [VERIFY] Run `pytest tests/ -n 16` — Must still be **534/534 PASSED**. (Verified 560/560 passed)
 
 ---
 

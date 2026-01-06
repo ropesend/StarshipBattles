@@ -15,7 +15,7 @@ from pygame_gui.windows import UIConfirmationDialog
 from game.core.profiling import profile_action, profile_block
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, get_component_registry, get_modifier_registry, get_vehicle_classes
 from game.simulation.components.component import (
     get_all_components
 )
@@ -417,9 +417,10 @@ class BuilderSceneGUI:
                     
                     self.controller.dragged_item = c.clone()
                     # Apply template modifiers
+                    mods = get_modifier_registry()
                     for m_id, val in self.template_modifiers.items():
-                       if m_id in RegistryManager.instance().modifiers:
-                           mod_def = RegistryManager.instance().modifiers[m_id]
+                       if m_id in mods:
+                           mod_def = mods[m_id]
                            allow = True
                            if mod_def.restrictions:
                                if 'allow_types' in mod_def.restrictions and c.type_str not in mod_def.restrictions['allow_types']:
@@ -637,7 +638,8 @@ class BuilderSceneGUI:
                 if new_type == getattr(self.ship, 'vehicle_type', "Ship"): return
                 
                 # Determine default class for this type
-                valid_classes = [(n, RegistryManager.instance().vehicle_classes[n].get('max_mass', 0)) for n, c in RegistryManager.instance().vehicle_classes.items() if c.get('type', 'Ship') == new_type]
+                classes = get_vehicle_classes()
+                valid_classes = [(n, classes[n].get('max_mass', 0)) for n, c in classes.items() if c.get('type', 'Ship') == new_type]
                 valid_classes.sort(key=lambda x: x[1])
                 target_class = valid_classes[0][0] if valid_classes else "Escort"
                 
@@ -715,8 +717,9 @@ class BuilderSceneGUI:
                 self.ship.change_class(data, migrate_components=False)
                 
                 # We also need to update the Class Dropdown options
-                new_type = RegistryManager.instance().vehicle_classes[data].get('type', 'Ship')
-                valid_classes = [(n, RegistryManager.instance().vehicle_classes[n].get('max_mass', 0)) for n, c in RegistryManager.instance().vehicle_classes.items() if c.get('type', 'Ship') == new_type]
+                classes = get_vehicle_classes()
+                new_type = classes[data].get('type', 'Ship')
+                valid_classes = [(n, classes[n].get('max_mass', 0)) for n, c in classes.items() if c.get('type', 'Ship') == new_type]
                 valid_classes.sort(key=lambda x: x[1])
                 valid_class_names = [n for n, m in valid_classes]
                 if not valid_class_names: valid_class_names = ["Escort"]
@@ -787,8 +790,9 @@ class BuilderSceneGUI:
                      comp_template = hovered_item.component
                      preview_comp = comp_template.clone()
                      for m_id, val in self.template_modifiers.items():
-                        if m_id in RegistryManager.instance().modifiers:
-                            mod_def = RegistryManager.instance().modifiers[m_id]
+                        mods = get_modifier_registry()
+                        if m_id in mods:
+                            mod_def = mods[m_id]
                             if mod_def.restrictions and 'allow_types' in mod_def.restrictions and preview_comp.type_str not in mod_def.restrictions['allow_types']:
                                 continue
                             preview_comp.add_modifier(m_id)
@@ -999,9 +1003,10 @@ class BuilderSceneGUI:
             # Reset Ship
             # Find a valid default class
             default_class = "Escort"
-            if default_class not in RegistryManager.instance().vehicle_classes and RegistryManager.instance().vehicle_classes:
+            classes = get_vehicle_classes()
+            if default_class not in classes and classes:
                 # Pick first available
-                default_class = next(iter(RegistryManager.instance().vehicle_classes.keys()))
+                default_class = next(iter(classes.keys()))
                 
             self.ship = Ship("Custom Ship", self.width // 2, self.height // 2, (100, 100, 255), ship_class=default_class)
             self.ship.recalculate_stats()
@@ -1020,7 +1025,8 @@ class BuilderSceneGUI:
             # Accessing right_panel internals (tight coupling, but needed for quick fix)
             
             # Update Class Dropdown
-            valid_classes = [(n, RegistryManager.instance().vehicle_classes[n].get('max_mass', 0)) for n, c in RegistryManager.instance().vehicle_classes.items()]
+            classes = get_vehicle_classes()
+            valid_classes = [(n, classes[n].get('max_mass', 0)) for n, c in classes.items()]
             valid_classes.sort(key=lambda x: x[1])
             valid_class_names = [n for n, m in valid_classes]
             if not valid_class_names: valid_class_names = ["Escort"]
@@ -1037,9 +1043,10 @@ class BuilderSceneGUI:
                 
             # Update Type Dropdown if it exists
             if hasattr(self.right_panel, 'vehicle_type_dropdown'):
-                types = sorted(list(set(c.get('type', 'Ship') for c in RegistryManager.instance().vehicle_classes.values())))
+                classes = get_vehicle_classes()
+                types = sorted(list(set(c.get('type', 'Ship') for c in classes.values())))
                 if not types: types = ["Ship"]
-                default_type = RegistryManager.instance().vehicle_classes[default_class].get('type', 'Ship')
+                default_type = classes[default_class].get('type', 'Ship')
                 
                 self.right_panel.vehicle_type_dropdown.kill()
                 self.right_panel.vehicle_type_dropdown = UIDropDownMenu(
