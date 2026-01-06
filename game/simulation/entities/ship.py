@@ -37,14 +37,13 @@ _VALIDATOR = ValidatorProxy()
 # Deprecated global access for backward compatibility (lazy usage preferred)
 VALIDATOR = _VALIDATOR 
 
-# Registry access is now handled via RegistryManager.instance()
+
 
 def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_filepath: Optional[str] = None) -> None:
     """
     Load vehicle class definitions from JSON.
     This should be called explicitly during game initialization.
     """
-    mgr = RegistryManager.instance()
     
     # Check if we need to resolve path relative to this file
     if not os.path.exists(filepath):
@@ -304,7 +303,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         If essential components (e.g. Bridge) are destroyed, ship becomes derelict.
         """
         # 1. Get Requirements
-        class_def = RegistryManager.instance().vehicle_classes.get(self.ship_class, {})
+        class_def = get_vehicle_classes().get(self.ship_class, {})
         requirements = class_def.get('requirements', {})
         
         # 2. If no requirements, never derelict (unless dead)
@@ -320,7 +319,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                      active_components.append(c)
         
         if not self.stats_calculator:
-             self.stats_calculator = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)
+             self.stats_calculator = ShipStatsCalculator(get_vehicle_classes())
              
         # Recalculate abilities based on currently living components
         totals = self.stats_calculator.calculate_ability_totals(active_components)
@@ -347,7 +346,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
     def _initialize_layers(self) -> None:
         """Initialize or Re-initialize layers based on current ship_class."""
-        class_def = RegistryManager.instance().vehicle_classes.get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
+        class_def = get_vehicle_classes().get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
         self.layers = {}
         layer_defs = class_def.get('layers', [])
         
@@ -405,7 +404,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             migrate_components: If True, attempts to keep components and fit them into new layers.
                                 If False, clears all components.
         """
-        if new_class not in RegistryManager.instance().vehicle_classes:
+        if new_class not in get_vehicle_classes():
             print(f"Error: Unknown class {new_class}")
             return
 
@@ -418,7 +417,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         
         # Update Class
         self.ship_class = new_class
-        class_def = RegistryManager.instance().vehicle_classes[self.ship_class]
+        class_def = get_vehicle_classes()[self.ship_class]
         self.base_mass = class_def.get('hull_mass', 50)
         self.vehicle_type = class_def.get('type', "Ship")
         self.max_mass_budget = class_def.get('max_mass', 1000)

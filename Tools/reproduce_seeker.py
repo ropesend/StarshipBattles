@@ -5,7 +5,7 @@ import sys
 
 sys.path.append(os.getcwd())
 
-from game.simulation.components.component import load_components, create_component, SeekerWeapon, load_modifiers
+from game.simulation.components.component import load_components, create_component, load_modifiers
 
 def test():
     load_components("data/components.json")

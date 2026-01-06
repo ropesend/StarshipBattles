@@ -4,12 +4,48 @@ import threading
 class RegistryManager:
     """
     Central singleton for managing global game state registries.
+    
     Replaces module-level globals to allow for clean state resets in testing.
+    
+    Thread Safety:
+        - Instance creation is thread-safe via double-checked locking
+        - All dictionary operations use the same dict instances (no replacement)
+        - Individual dict operations are atomic in CPython (GIL)
+        - For cross-registry transactions, external synchronization is required
+    
+    Usage:
+        # Preferred: Use utility functions (easier to mock)
+        from game.core.registry import get_component_registry, get_modifier_registry
+        
+        components = get_component_registry()
+        modifiers = get_modifier_registry()
+        classes = get_vehicle_classes()
+        
+        # Alternative: Direct access (when needed for special operations)
+        mgr = RegistryManager.instance()
+        mgr.clear()  # For test isolation
+        mgr.freeze() # For production initialization
+    
+    Testing:
+        - Use conftest.py's reset_game_state fixture (auto-applied)
+        - Fixture calls clear() before/after each test
+        - Never call reset() in production code
+    
+    Attributes:
+        components: Dict of component definitions keyed by ID
+        modifiers: Dict of modifier definitions keyed by ID
+        vehicle_classes: Dict of vehicle class definitions keyed by name
     """
     _instance: Optional['RegistryManager'] = None
     _lock = threading.Lock()
 
     def __init__(self):
+        """
+        Initialize the RegistryManager.
+        
+        Raises:
+            Exception: If called directly instead of via instance()
+        """
         if RegistryManager._instance is not None:
              raise Exception("RegistryManager is a singleton. Use RegistryManager.instance()")
         
@@ -21,6 +57,14 @@ class RegistryManager:
 
     @classmethod
     def instance(cls) -> 'RegistryManager':
+        """
+        Get the singleton instance, creating it if necessary.
+        
+        Thread-safe via double-checked locking pattern.
+        
+        Returns:
+            The singleton RegistryManager instance
+        """
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -30,26 +74,47 @@ class RegistryManager:
     @classmethod
     def reset(cls):
         """
-        [WARNING] For testing only: completely destroys the singleton instance.
-        Prefer clear() for test isolation to avoid stale reference hazards.
+        Completely destroy the singleton instance.
+        
+        WARNING: For testing only! This can cause stale reference hazards if
+        any code is holding references to the old instance's dictionaries.
+        
+        Prefer clear() for test isolation - it preserves dict identity while
+        emptying the contents.
         """
         cls._instance = None
 
     def freeze(self):
-        """Prevents further modifications to the registry."""
+        """
+        Prevent further modifications to the registry.
+        
+        Call this after game initialization to catch accidental mutations
+        during gameplay. Useful for detecting bugs where code tries to
+        modify registry data at runtime.
+        """
         self._frozen = True
 
     def hydrate(self, components_data: Dict[str, Any], modifiers_data: Dict[str, Any], vehicle_classes_data: Dict[str, Any]):
         """
-        Fast hydration from pre-loaded dictionary data (e.g. Session Cache).
-        Bypasses disk I/O.
+        Fast hydration from pre-loaded dictionary data.
+        
+        Used by test fixtures to populate registries from SessionRegistryCache
+        without disk I/O. Updates dictionaries in-place to preserve any
+        existing references.
+        
+        Args:
+            components_data: Pre-loaded component definitions
+            modifiers_data: Pre-loaded modifier definitions  
+            vehicle_classes_data: Pre-loaded vehicle class definitions
+            
+        Raises:
+            RuntimeError: If the registry is frozen
         """
         if self._frozen:
             raise RuntimeError("Cannot hydrate a frozen RegistryManager")
             
-        # CRITICAL: Do NOT replace the dictionary instances (e.g. self.components = ...).
-        # Global aliases in other modules (like COMPONENT_REGISTRY) hold references to the original dicts.
-        # We must update them in place.
+        # NOTE: We update dictionaries in-place rather than replacing them.
+        # This ensures any code holding references to these dicts sees the updates.
         self.components.clear()
         self.components.update(components_data)
         
@@ -60,7 +125,15 @@ class RegistryManager:
         self.vehicle_classes.update(vehicle_classes_data)
 
     def clear(self):
-        """Clears all registries to empty state."""
+        """
+        Clear all registries to empty state.
+        
+        Used by test fixtures to ensure clean state between tests.
+        Preserves dict identity, only empties contents.
+        
+        Raises:
+            RuntimeError: If the registry is frozen
+        """
         if self._frozen:
              raise RuntimeError("Cannot clear a frozen RegistryManager (Tests must unfreeze or reset if absolutely necessary)")
         self.components.clear()
@@ -69,9 +142,19 @@ class RegistryManager:
         self._validator = None
 
     def get_validator(self):
+        """Get the ship design validator (may be None if not initialized)."""
         return self._validator
     
     def set_validator(self, validator):
+        """
+        Set the ship design validator.
+        
+        Args:
+            validator: ShipDesignValidator instance
+            
+        Raises:
+            RuntimeError: If the registry is frozen
+        """
         self._check_frozen()
         self._validator = validator
 

@@ -2,7 +2,7 @@ import json
 import math
 from enum import Enum, auto
 from formula_system import evaluate_math_formula
-from game.core.registry import RegistryManager
+from game.core.registry import get_component_registry, get_modifier_registry
 
 class ComponentStatus(Enum):
     ACTIVE = auto()
@@ -39,7 +39,7 @@ class Modifier:
     def create_modifier(self, value=None):
         return ApplicationModifier(self, value)
 
-# Registry access is now handled via RegistryManager.instance()
+
 
 class ApplicationModifier:
     """Instance of a modifier applied to a component"""
@@ -78,32 +78,28 @@ class Component:
         self.sprite_index = data.get('sprite_index', 0)
         self.cost = data.get('cost', 0)
         
+        
         # Parse abilities from data
         self.abilities = self.data.get('abilities', {})
         
-        # Legacy Attribute Shim (Phase 6 Regression Triage)
-        # Convert old flat weapon attributes into the new Ability format if abilities dict is empty
-        if not self.abilities:
-            self._convert_legacy_data_to_abilities()
-        else:
-            # Sync base attributes FROM abilities if they exist (Phase 7 initialization sync)
-            # This ensures comp.range returns correct value even if not in top-level data
-            for ab_name in ['WeaponAbility', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility']:
-                if ab_name in self.abilities:
-                    ab_data = self.abilities[ab_name]
-                    # Helper to safely set float or skip formula
-                    def set_stat(attr, val):
-                        if isinstance(val, (int, float)):
-                            setattr(self, attr, float(val))
-                        elif isinstance(val, str) and not val.startswith('='):
-                            try: setattr(self, attr, float(val))
-                            except: pass
-                            
-                    if 'range' in ab_data: set_stat('_range', ab_data['range'])
-                    if 'damage' in ab_data: set_stat('_damage', ab_data['damage'])
-                    if 'firing_arc' in ab_data: set_stat('_firing_arc', ab_data['firing_arc'])
-                    if 'projectile_speed' in ab_data: set_stat('_projectile_speed', ab_data['projectile_speed'])
-                    break
+        # Sync base attributes FROM abilities if they exist (Phase 7 initialization sync)
+        # This ensures comp.range returns correct value even if not in top-level data
+        for ab_name in ['WeaponAbility', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility']:
+            if ab_name in self.abilities:
+                ab_data = self.abilities[ab_name]
+                # Helper to safely set float or skip formula
+                def set_stat(attr, val):
+                    if isinstance(val, (int, float)):
+                        setattr(self, attr, float(val))
+                    elif isinstance(val, str) and not val.startswith('='):
+                        try: setattr(self, attr, float(val))
+                        except: pass
+                        
+                if 'range' in ab_data: set_stat('_range', ab_data['range'])
+                if 'damage' in ab_data: set_stat('_damage', ab_data['damage'])
+                if 'firing_arc' in ab_data: set_stat('_firing_arc', ab_data['firing_arc'])
+                if 'projectile_speed' in ab_data: set_stat('_projectile_speed', ab_data['projectile_speed'])
+                break
         
         self.base_abilities = copy.deepcopy(self.abilities)
         
@@ -124,10 +120,9 @@ class Component:
             for mod_data in self.data['modifiers']:
                 mod_id = mod_data['id']
                 val = mod_data.get('value', None)
-                # We need to access registry. BUT registry might not be fully loaded if simple import.
-                # Assuming modifiers are populated in RegistryManager.instance().modifiers globally.
-                from game.core.registry import RegistryManager
-                mods = RegistryManager.instance().modifiers
+                # We need to access modifier registry.
+                from game.core.registry import get_modifier_registry
+                mods = get_modifier_registry()
                 if mod_id in mods:
                     mod_def = mods[mod_id]
                     self.modifiers.append(mod_def.create_modifier(val))
@@ -440,7 +435,7 @@ class Component:
         self.status = ComponentStatus.ACTIVE
 
     def add_modifier(self, mod_id, value=None):
-        mods = RegistryManager.instance().modifiers
+        mods = get_modifier_registry()
         if mod_id not in mods: return False
         
         # Check restrictions
@@ -493,50 +488,12 @@ class Component:
         # 4. Apply Custom/Subclass Stats
         self._apply_custom_stats(stats)
 
-    def _convert_legacy_data_to_abilities(self):
-        """Phase 6: Convert flat attributes back to ability dict for runtime processing."""
-        # Only skip if we already have abilities (don't overwrite new system with legacy fallback)
-        if self.abilities:
-            return
-            
-        self._legacy_converted = True
-        """Helper to convert flat data format to abilities dict."""
-        if 'range' in self.data or 'damage' in self.data:
-            # Detect which ability to create
-            is_seeker = 'endurance' in self.data
-            is_beam = 'energy_cost' in self.data and 'ammo_cost' not in self.data
-            
-            ab_data = {
-                'range': self.data.get('range', 0.0),
-                'damage': self.data.get('damage', 0.0),
-                'reload': self.data.get('reload', self.data.get('cooldown', 1.0)),
-                'firing_arc': self.data.get('firing_arc', 360),
-                'facing_angle': self.data.get('facing_angle', 0)
-            }
-            
-            if is_seeker:
-                ab_data['projectile_speed'] = self.data.get('projectile_speed', 500)
-                ab_data['endurance'] = self.data.get('endurance', 3.0)
-                self.abilities['SeekerWeaponAbility'] = ab_data
-            elif is_beam:
-                ab_data['accuracy_falloff'] = self.data.get('accuracy_falloff', 0.001)
-                self.abilities['BeamWeaponAbility'] = ab_data
-            else:
-                ab_data['projectile_speed'] = self.data.get('projectile_speed', 1000)
-                self.abilities['ProjectileWeaponAbility'] = ab_data
 
-            # Also map resource consumption if present
-            if 'energy_cost' in self.data:
-                self.abilities['EnergyConsumption'] = {'amount': self.data['energy_cost'], 'trigger': 'activation', 'resource': 'energy'}
-            if 'ammo_cost' in self.data:
-                self.abilities['AmmoConsumption'] = {'amount': self.data['ammo_cost'], 'trigger': 'activation', 'resource': 'ammo'}
 
     def _reset_and_evaluate_base_formulas(self):
         import copy
         # Reset abilities from raw data
         self.abilities = copy.deepcopy(self.data.get('abilities', {}))
-        if not self.abilities:
-            self._convert_legacy_data_to_abilities()
         
         # Context building
         context = {
@@ -682,36 +639,13 @@ class Component:
         return self.__class__(self.data)
 
 
-# COMPONENT_REGISTRY removal in progress...
-# Registries are now managed by RegistryManager.instance()
+# Component type aliases for backward compatibility
 # Phase 7 Simplified: Aliased types now use Component directly
 # Types with custom logic (Shield, Hangar, etc.) are now also aliases
 # as their logic has been unified into the Ability system.
 
 # Export types for compatibility (Phase 6 Regression Triage)
-Bridge = Weapon = ProjectileWeapon = BeamWeapon = SeekerWeapon = Engine = \
-Thruster = ManeuveringThruster = Shield = ShieldRegenerator = Generator = \
-Hangar = Armor = Sensor = Electronics = Tank = CrewQuarters = LifeSupport = Component
 
-COMPONENT_TYPE_MAP = {
-    # Aliased types now use Component directly
-# Types with custom logic (Shield, Hangar, etc.) are now also aliases
-    "Weapon": Component,
-    "ProjectileWeapon": Component,
-    "BeamWeapon": Component,
-    "SeekerWeapon": Component,
-    "Turret": Component,
-    "Launcher": Component,
-    "Shield": Component,
-    "ShieldRegenerator": Component,
-    "Generator": Component,
-    "Engine": Component,
-    "Thruster": Component,
-    "Bridge": Component,
-    "Sensor": Component,
-    "Electronics": Component,
-    "LifeSupport": Component
-}
 
 # Caching for performance (Phase 2 Test Stabilization)
 _COMPONENT_CACHE = None
@@ -723,13 +657,13 @@ def load_components(filepath="data/components.json"):
     global _COMPONENT_CACHE, _LAST_COMPONENT_FILE
     import os
     import copy
-    from game.core.registry import RegistryManager
+    from game.core.registry import get_component_registry
 
     # If cache exists and matches filepath, hydrate Registry from cache (Fast Path)
     if _COMPONENT_CACHE is not None and _LAST_COMPONENT_FILE == filepath:
-        mgr = RegistryManager.instance()
+        comps = get_component_registry()
         for c_id, comp in _COMPONENT_CACHE.items():
-            mgr.components[c_id] = comp.clone()
+            comps[c_id] = comp.clone()
         return
 
     # Slow Path: Load from Disk
@@ -754,7 +688,8 @@ def load_components(filepath="data/components.json"):
         for comp_def in data['components']:
             c_type = comp_def['type']
             try:
-                cls = COMPONENT_TYPE_MAP.get(c_type, Component)
+                # COMPONENT_TYPE_MAP removed in Phase 10
+                cls = Component 
                 obj = cls(comp_def)
                 temp_cache[comp_def['id']] = obj
             except Exception as e:
@@ -765,9 +700,9 @@ def load_components(filepath="data/components.json"):
         _LAST_COMPONENT_FILE = filepath
         
         # Populate Registry from Cache
-        mgr = RegistryManager.instance()
+        comps = get_component_registry()
         for c_id, comp in _COMPONENT_CACHE.items():
-            mgr.components[c_id] = comp.clone()
+            comps[c_id] = comp.clone()
             
     except Exception as e:
         print(f"ERROR loading/parsing components json: {e}")
@@ -776,13 +711,13 @@ def load_modifiers(filepath="data/modifiers.json"):
     global _MODIFIER_CACHE, _LAST_MODIFIER_FILE
     import os
     import copy
-    from game.core.registry import RegistryManager
+    from game.core.registry import get_modifier_registry
     
     # Fast Path
     if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
-        mgr = RegistryManager.instance()
+        mods = get_modifier_registry()
         for m_id, mod in _MODIFIER_CACHE.items():
-            mgr.modifiers[m_id] = copy.deepcopy(mod)
+            mods[m_id] = copy.deepcopy(mod)
         return
     
     # Slow Path
@@ -803,22 +738,22 @@ def load_modifiers(filepath="data/modifiers.json"):
         _MODIFIER_CACHE = temp_cache
         _LAST_MODIFIER_FILE = filepath
         
-        mgr = RegistryManager.instance()
+        mods = get_modifier_registry()
         for m_id, mod in _MODIFIER_CACHE.items():
-            mgr.modifiers[m_id] = copy.deepcopy(mod)
+            mods[m_id] = copy.deepcopy(mod)
             
     except Exception as e:
         print(f"ERROR loading modifiers: {e}")
 
 def create_component(component_id):
-    # Use RegistryManager instance instead of alias if possible, but alias is still mapped
-    from game.core.registry import RegistryManager
-    comps = RegistryManager.instance().components
+    """Create a clone of a component from the registry by ID."""
+    comps = get_component_registry()
     if component_id in comps:
         return comps[component_id].clone()
     print(f"Error: Component ID {component_id} not found in registry.")
     return None
 
 def get_all_components():
-    from game.core.registry import RegistryManager
-    return list(RegistryManager.instance().components.values())
+    """Get a list of all components in the registry."""
+    return list(get_component_registry().values())
+

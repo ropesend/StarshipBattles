@@ -8,7 +8,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data, load_vehicle_classes
-from game.simulation.components.component import Weapon, BeamWeapon, ProjectileWeapon, SeekerWeapon, create_component, load_components
+from game.simulation.components.component import Component, create_component, load_components
 from ship_combat import ShipCombatMixin
 from game.core.constants import AttackType
 
@@ -120,10 +120,11 @@ class TestCombatTargeting(unittest.TestCase):
 
     def test_firing_arc_validation(self):
         """Test that weapons do not fire if target is outside firing arc."""
-        weapon = ProjectileWeapon({
+        weapon = Component({
             'name': 'TestGun', 'id':'test_gun', 'firing_arc': 45, 'range': 500,
             'projectile_speed': 1000, 'damage': 10, 'ammo_cost': 1, 'cooldown': 0,
-            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon',
+            'abilities': {'ProjectileWeaponAbility': {'projectile_speed': 1000, 'damage': 10, 'range': 500, 'firing_arc': 45}}
         })
         weapon.facing_angle = 0 # Right
         weapon.is_active = True
@@ -164,10 +165,11 @@ class TestCombatTargeting(unittest.TestCase):
 
     def test_seeker_ignores_arc(self):
         """Verify SeekerWeapon fires even if target is outside arc."""
-        missile_launcher = SeekerWeapon({
+        missile_launcher = Component({
             'name': 'Missile', 'id':'test_missile', 'firing_arc': 10, 'range': 1000,
             'projectile_speed': 500, 'ammo_cost': 1, 'damage': 10, 'endurance': 100,
-            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon',
+            'abilities': {'SeekerWeaponAbility': {'projectile_speed': 500, 'damage': 10, 'range': 1000, 'endurance': 100, 'firing_arc': 10}}
         })
         missile_launcher.facing_angle = 0
         missile_launcher.is_active = True
@@ -189,10 +191,11 @@ class TestCombatTargeting(unittest.TestCase):
         self.attacker.max_targets = 2
         
         # Weapon with narrow arc
-        weapon = ProjectileWeapon({
+        weapon = Component({
             'name': 'Gun', 'id':'gun', 'firing_arc': 45, 'range': 500,
             'projectile_speed': 1000, 'damage':10, 'ammo_cost':1,
-             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon',
+             'abilities': {'ProjectileWeaponAbility': {'projectile_speed': 1000, 'damage': 10, 'range': 500, 'firing_arc': 45}}
         })
         weapon.facing_angle = 0      
         weapon.is_active = True
@@ -250,10 +253,14 @@ class TestCombatTargeting(unittest.TestCase):
 
     def test_resource_consumption_beam(self):
         """Verify energy consumption for BeamWeapon."""
-        beam = BeamWeapon({
+        beam = Component({
             'name': 'Laser', 'id':'laser', 'energy_cost': 50, 'range': 500,
             'damage': 10, 'firing_arc': 360, 'cooldown': 0,
-            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+            'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon',
+            'abilities': {
+                'BeamWeaponAbility': {'damage': 10, 'range': 500, 'firing_arc': 360},
+                'EnergyConsumption': {'amount': 50, 'trigger': 'activation', 'resource': 'energy'}
+            }
         })
         beam.is_active = True
         self.attacker.add_component(beam, LayerType.OUTER)
@@ -278,10 +285,14 @@ class TestCombatTargeting(unittest.TestCase):
 
     def test_resource_consumption_ammo(self):
         """Verify ammo consumption for ProjectileWeapon."""
-        gun = ProjectileWeapon({
+        gun = Component({
              'name': 'Cannon', 'id':'cannon', 'ammo_cost': 5, 'range': 500,
             'damage': 10, 'firing_arc': 360, 'cooldown': 0, 'projectile_speed': 1000,
-             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon'
+             'mass': 1, 'hp': 1, 'allowed_layers': ['OUTER'], 'type': 'Weapon',
+             'abilities': {
+                'ProjectileWeaponAbility': {'projectile_speed': 1000, 'damage': 10, 'range': 500, 'firing_arc': 360},
+                'AmmoConsumption': {'amount': 5, 'trigger': 'activation', 'resource': 'ammo'}
+             }
         })
         gun.is_active = True
         self.attacker.add_component(gun, LayerType.OUTER)

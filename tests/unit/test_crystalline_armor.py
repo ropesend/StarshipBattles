@@ -16,7 +16,7 @@ from ship_combat import ShipCombatMixin
 
 class TestCrystallineArmor(unittest.TestCase):
     def setUp(self):
-        # Initialize ship data (VEHICLE_CLASSES, etc.)
+        # Initialize ship data (vehicle classes, etc.)
         initialize_ship_data()
         
         # Create a dummy ship (use Cruiser for sufficient layers)

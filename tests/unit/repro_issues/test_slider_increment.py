@@ -56,7 +56,7 @@ class TestSliderIncrement(unittest.TestCase):
         # Setup template modifiers to include range_mount
         template_modifiers = {'range_mount': 0}
         
-        # We also need to make sure MODIFIER_REGISTRY has range_mount
+        # We also need to make sure the registry has range_mount
         # We can mock it or use the real one. The real one is imported in builder_components
         # but let's patch it to be safe and isolated
         

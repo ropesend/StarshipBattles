@@ -821,8 +821,9 @@ class BuilderSceneGUI:
                      comp_template = hovered_item.component
                      preview_comp = comp_template.clone()
                      for m_id, val in self.template_modifiers.items():
-                        if m_id in RegistryManager.instance().modifiers:
-                            mod_def = RegistryManager.instance().modifiers[m_id]
+                        mods = get_modifier_registry()
+                        if m_id in mods:
+                            mod_def = mods[m_id]
                             if mod_def.restrictions and 'allow_types' in mod_def.restrictions and preview_comp.type_str not in mod_def.restrictions['allow_types']:
                                 continue
                             preview_comp.add_modifier(m_id)
