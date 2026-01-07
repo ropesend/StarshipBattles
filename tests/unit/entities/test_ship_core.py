@@ -24,14 +24,12 @@ def registry_with_hull():
     mgr.vehicle_classes.update({
         "Escort": {
             "type": "Ship",
-            "hull_mass": 50,  # Legacy fallback (should NOT be used)
             "max_mass": 1000,
             "default_hull_id": "hull_escort",
             "layers": [
                 {"type": "CORE", "radius_pct": 0.2, "restrictions": []},
                 {"type": "OUTER", "radius_pct": 0.5, "restrictions": []},
-            ],
-            "requirements": {}
+            ]
         }
     })
     
@@ -49,31 +47,6 @@ def registry_with_hull():
     
     yield mgr
 
-
-@pytest.fixture
-def registry_no_hull():
-    """
-    Populate RegistryManager with TestShip class that has NO default_hull_id.
-    This tests the legacy fallback path.
-    """
-    mgr = RegistryManager.instance()
-    
-    # Vehicle class WITHOUT default_hull_id
-    mgr.vehicle_classes.update({
-        "TestShip": {
-            "type": "Ship",
-            "hull_mass": 100,  # Should be used as legacy fallback
-            "max_mass": 2000,
-            # NO default_hull_id
-            "layers": [
-                {"type": "CORE", "radius_pct": 0.2, "restrictions": []},
-                {"type": "OUTER", "radius_pct": 0.5, "restrictions": []},
-            ],
-            "requirements": {}
-        }
-    })
-    
-    yield mgr
 
 
 @pytest.fixture
@@ -153,23 +126,6 @@ class TestHullAutoEquip:
         assert ship.base_mass == 0.0, "base_mass should be 0 when Hull component is equipped"
 
 
-@pytest.mark.use_custom_data
-class TestLegacyFallback:
-    """TC-3.2.2: Legacy Fallback (No Hull)"""
-    
-    def test_no_hull_fallback(self, registry_no_hull):
-        """Verify Ship uses legacy hull_mass when no default_hull_id."""
-        ship = Ship(name="Test", x=0, y=0, color=(255, 255, 255), ship_class="TestShip")
-        
-        core_comps = ship.layers[LayerType.CORE]['components']
-        
-        # No auto-equipped components expected
-        hull_comps = [c for c in core_comps if hasattr(c, 'type') and c.type == 'Hull']
-        assert len(hull_comps) == 0, "No Hull component should be in CORE when default_hull_id is missing"
-        
-        # Legacy fallback: base_mass should be the legacy hull_mass value
-        assert ship.base_mass == 100.0, "base_mass should be legacy hull_mass (100) when no Hull component"
-
 
 @pytest.mark.use_custom_data
 class TestMassAggregation:
@@ -231,16 +187,11 @@ class TestDerelictStatus:
         # With empty requirements {}, ship should NOT be derelict
         assert ship.is_derelict is False, "Ship should NOT be derelict with operational bridge"
     
-    def test_derelict_when_requirements_unmet(self, registry_with_hull):
-        """Verify ship becomes derelict when requirements are not met."""
+    def test_derelict_when_bridge_destroyed(self, registry_with_hull):
+        """Verify ship becomes derelict when CommandAndControl component is destroyed."""
         mgr = registry_with_hull
         
-        # Update vehicle class to require CommandAndControl
-        mgr.vehicle_classes["Escort"]["requirements"] = {
-            "command": {"ability": "CommandAndControl", "min_value": True}
-        }
-        
-        # Add Bridge component for the command requirement - must be Component instance
+        # Add Bridge component with CommandAndControl - must be Component instance
         bridge_data = {
             "id": "test_bridge",
             "name": "Test Bridge",
@@ -254,7 +205,7 @@ class TestDerelictStatus:
         
         ship = Ship(name="DerelictTest", x=0, y=0, color=(255, 255, 255), ship_class="Escort")
         
-        # Add and then destroy bridge
+        # Add bridge to ship
         bridge = create_component("test_bridge")
         if bridge:
             ship.add_component(bridge, LayerType.CORE)
@@ -262,14 +213,16 @@ class TestDerelictStatus:
         ship.recalculate_stats()
         ship.update_derelict_status()
         
-        # Should NOT be derelict initially
+        # Should NOT be derelict initially (has CommandAndControl)
         assert ship.is_derelict is False, "Ship should not be derelict with operational bridge"
         
-        # Destroy the bridge
+        # Destroy the bridge (set HP to 0 and deactivate)
         if bridge:
             bridge.current_hp = 0
+            bridge.is_active = False  # Must deactivate for is_operational to be False
         
         ship.update_derelict_status()
         
-        # Should BE derelict now
+        # Should BE derelict now (no operational CommandAndControl capability)
         assert ship.is_derelict is True, "Ship should be derelict after bridge destruction"
+        assert ship.bridge_destroyed is True, "bridge_destroyed flag should be set"

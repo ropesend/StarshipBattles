@@ -464,6 +464,73 @@
                     }
                 ]
             }
+        },
+        {
+            "_comment": "=== TEST HULLS (Phase 6 Migration) ===",
+            "id": "hull_test_s",
+            "name": "Test Hull (Small)",
+            "type": "Hull",
+            "mass": 20,
+            "hp": 100,
+            "major_classification": "Hull",
+            "sprite_index": 0,
+            "abilities": {
+                "HullMass": 20
+            }
+        },
+        {
+            "id": "hull_test_m",
+            "name": "Test Hull (Medium)",
+            "type": "Hull",
+            "mass": 200,
+            "hp": 500,
+            "major_classification": "Hull",
+            "sprite_index": 0,
+            "abilities": {
+                "HullMass": 200
+            }
+        },
+        {
+            "id": "hull_test_l",
+            "name": "Test Hull (Large)",
+            "type": "Hull",
+            "mass": 2000,
+            "hp": 2000,
+            "major_classification": "Hull",
+            "sprite_index": 0,
+            "abilities": {
+                "HullMass": 2000
+            }
+        },
+        {
+            "id": "hull_test_fighter",
+            "name": "Test Hull (Fighter)",
+            "type": "Hull",
+            "mass": 5,
+            "hp": 25,
+            "major_classification": "Hull",
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "HullMass": 5
+            }
+        },
+        {
+            "id": "hull_test_satellite",
+            "name": "Test Hull (Satellite)",
+            "type": "Hull",
+            "mass": 50,
+            "hp": 100,
+            "major_classification": "Hull",
+            "allowed_vehicle_types": [
+                "Satellite"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "HullMass": 50
+            }
         }
     ]
 }

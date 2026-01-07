@@ -1,115 +1,109 @@
 {
-    "swarm_name": "Phase 4 Review Swarm",
-    "mission_goal": "Verify Phase 4 (UI Reconstruction) completion and generate DETAILED SPECS for Phase 5 (Legacy Purge & Final Polish).",
-    "review_phase": "Phase 4: UI Reconstruction",
-    "next_phase": "Phase 5: Legacy Purge & Final Polish",
+    "swarm_name": "Phase 5 Final Review Swarm",
+    "mission_goal": "Verify Phase 5 (Legacy Purge & Final Polish) completion and generate DETAILED SPECS for Protocol 13 (Archive).",
+    "review_phase": "Phase 5: Legacy Purge & Final Polish",
+    "next_phase": "REFACTOR COMPLETE - Proceed to Protocol 13 (Archive)",
     "context_root": "./",
     "agents": [
         {
             "role": "Code_Reviewer",
-            "focus": "Verify Phase 4 Implementation Quality & Completeness",
-            "primary_files": [
-                "game/ui/screens/builder_utils.py",
-                "game/ui/screens/builder_screen.py",
-                "ui/builder/right_panel.py",
-                "ui/builder/left_panel.py",
-                "game/ui/builder/builder_scene_gui.py",
-                "Refactoring/active_refactor.md"
-            ],
-            "review_checklist": [
-                "Verify Task 4.1: builder_utils.py exists with centralized PANEL_WIDTHS, PANEL_HEIGHTS, MARGINS, and BuilderEvents constants",
-                "Verify Task 4.1: Layout constants cover component_palette, structure_list, detail_panel, ship_stats widths",
-                "Verify Task 4.1: Layout constants cover bottom_bar, weapons_report, modifier_panel heights",
-                "Verify Task 4.2: builder_screen.py uses PANEL_WIDTHS and PANEL_HEIGHTS constants instead of hardcoded pixel values",
-                "Verify Task 4.2: Relative/grid-based sizing implemented for 1920px+ resolutions",
-                "Verify Task 4.3: Vertical collision between Weapons Report and Nav Panels is resolved (proper Y-offset calculation)",
-                "Verify Task 4.3: right_panel.py uses vertical stacking pattern or correct Y-offset calculation",
-                "Verify Task 4.4: REGISTRY_RELOADED event exists in builder_utils.py or event_bus.py",
-                "Verify Task 4.4: BuilderRightPanel and BuilderLeftPanel subscribe to REGISTRY_RELOADED event",
-                "Verify Task 4.4: _reload_data emits REGISTRY_RELOADED event on registry changes",
-                "Verify no regressions: Run builder UI tests and confirm no layout-related failures"
-            ]
-        },
-        {
-            "role": "Plan_Adjuster",
-            "focus": "Generate DETAILED SPECS for Phase 5 - Legacy Purge & Final Polish",
+            "focus": "Verify Phase 5 Implementation Quality, Definition of Done, and Refactor Completion",
             "primary_files": [
                 "data/vehicleclasses.json",
                 "data/components.json",
                 "game/simulation/entities/ship.py",
                 "game/data/load_vehicle_classes.py",
-                "game/simulation/components/component.py",
+                "tests/unit/entities/test_ship_core.py",
                 "Refactoring/active_refactor.md"
             ],
+            "review_checklist": [
+                "Verify Task 5.1: vehicleclasses.json contains NO 'hull_mass' fields (grep returns 0 matches)",
+                "Verify Task 5.1: vehicleclasses.json contains NO 'requirements' fields (grep returns 0 matches)",
+                "Verify Task 5.1: All vehicle classes have 'default_hull_id' referencing valid Hull components",
+                "Verify Task 5.2: load_vehicle_classes.py has NO hardcoded fallback vehicle class dictionaries",
+                "Verify Task 5.2: Missing vehicleclasses.json raises RuntimeError (fail-fast behavior)",
+                "Verify Task 5.3: Ship.__init__ sets base_mass = 0.0 unconditionally (Hull component provides mass)",
+                "Verify Task 5.4: update_derelict_status uses ability-based checks (CommandAndControl, CrewCapacity)",
+                "Verify Task 5.4: No references to 'requirements' JSON key in derelict logic",
+                "Verify Task 5.5: Final Gauntlet passed (536/536 tests, 0 failures)",
+                "Verify Task 5.6: Definition of Done - ALL criteria met (hull_mass removed, UI verified, Save/Load verified)"
+            ]
+        },
+        {
+            "role": "Plan_Adjuster",
+            "focus": "Generate DETAILED SPECS for Protocol 13 - Refactor Archive",
+            "primary_files": [
+                "Refactoring/active_refactor.md",
+                "Refactoring/protocols/13_archive.md",
+                "data/vehicleclasses.json",
+                "data/components.json",
+                "game/simulation/entities/ship.py"
+            ],
             "specifications_required": {
-                "Task 5.1: Remove hull_mass and requirements from vehicleclasses.json": {
-                    "file": "data/vehicleclasses.json",
-                    "current_state": "vehicleclasses.json still contains legacy 'hull_mass' and 'requirements' fields that are now deprecated since Hull is a component",
-                    "target_state": "vehicleclasses.json contains ONLY: name, description, max_mass, default_hull_id, and any non-physical metadata",
+                "Archive_Task_1: Generate Refactor Summary Document": {
+                    "file": "Refactoring/archive/hull_cohesion_refactor_summary.md",
+                    "current_state": "No formal summary document exists for the completed refactor",
+                    "target_state": "Comprehensive summary document capturing scope, phases, outcomes, and lessons learned",
                     "detailed_steps": [
-                        "1. Open data/vehicleclasses.json",
-                        "2. For each vehicle class entry, delete the 'hull_mass' key-value pair if present",
-                        "3. For each vehicle class entry, delete the 'requirements' key-value pair if present (now handled by CrewRequired/FuelStorage abilities)",
-                        "4. Verify 'default_hull_id' is present for all classes (added in Phase 1)",
-                        "5. Run tests to verify Ship.__init__ still works without hull_mass fallback",
-                        "6. Verify Ship.base_mass is now 0.0 or derived from Hull component only"
+                        "1. Create Refactoring/archive/ directory",
+                        "2. Write hull_cohesion_refactor_summary.md with sections:",
+                        "   - Goal: Unify Ship stats with V2 Ability System",
+                        "   - Scope: 5 phases, 25+ tasks, 536 tests verified",
+                        "   - Key Outcomes: Hull-as-Component, Ability-Driven Dereliction, Legacy Purge",
+                        "   - Files Modified: List of all key files touched",
+                        "   - Breaking Changes: None (all legacy fallbacks removed, data migrated)",
+                        "   - Metrics: 100% test pass rate, 0 legacy hull_mass references",
+                        "3. Include references to active_refactor.md as historical record"
                     ],
-                    "dependencies": [
-                        "Phase 4 must be complete (UI uses new layout system)",
-                        "All Hull components must exist in components.json (Phase 1)"
-                    ],
-                    "risk_assessment": "MEDIUM - Breaking change if any code still reads hull_mass directly; grep for 'hull_mass' before removal"
+                    "dependencies": [],
+                    "risk_assessment": "LOW - Documentation only"
                 },
-                "Task 5.2: Remove Hardcoded Ship Fallback Registry": {
-                    "file": "game/data/load_vehicle_classes.py",
-                    "current_state": "load_vehicle_classes.py may contain hardcoded fallback vehicle class definitions for when JSON loading fails",
-                    "target_state": "No hardcoded fallback vehicle classes; rely entirely on JSON data with proper error handling",
+                "Archive_Task_2: Update Knowledge Base": {
+                    "file": "Knowledge Items",
+                    "current_state": "Knowledge items may reference pre-refactor architecture",
+                    "target_state": "Knowledge items updated to reflect Hull-as-Component architecture",
                     "detailed_steps": [
-                        "1. Audit game/data/load_vehicle_classes.py for hardcoded vehicle class dictionaries",
-                        "2. Identify any DEFAULT_VEHICLE_CLASSES or FALLBACK_CLASSES constants",
-                        "3. Remove hardcoded fallback definitions",
-                        "4. Implement proper error handling: raise clear exception if vehicleclasses.json fails to load",
-                        "5. Update tests that may depend on fallback behavior to use proper fixtures",
-                        "6. Verify RegistryManager.hydrate() handles missing data gracefully"
+                        "1. Update 'Starship Battles: Master Architecture' KI with Hull Component details",
+                        "2. Document the 'Hidden Hull Component' pattern in architecture ADR",
+                        "3. Update 'Ship Builder UI and UX' KI with Phase 4 layout system changes",
+                        "4. Archive refactor-specific details from active_refactor.md into KI artifacts"
                     ],
                     "dependencies": [
-                        "Task 5.1 must be complete (clean vehicleclasses.json)"
+                        "Archive_Task_1 must be complete"
                     ],
-                    "risk_assessment": "LOW - Cleanup only; fallback code should not be exercised in production"
+                    "risk_assessment": "LOW - Knowledge management only"
                 },
-                "Task 5.3: Final Verification Gauntlet": {
-                    "file": "N/A",
-                    "current_state": "Some tests may still have latent failures or skips",
-                    "target_state": "100% test pass rate with no skips or xfails related to refactor scope",
+                "Archive_Task_3: Clean Up Refactoring Directory": {
+                    "file": "Refactoring/",
+                    "current_state": "Refactoring/ contains working documents, manifests, prompts, reports",
+                    "target_state": "Working documents archived or deleted; active_refactor.md preserved as history",
                     "detailed_steps": [
-                        "1. Run full test suite: pytest tests/ -v --tb=short",
-                        "2. Identify any remaining failures and classify by root cause",
-                        "3. Fix test failures that are within refactor scope",
-                        "4. Document any out-of-scope failures for future work",
-                        "5. Verify save/load persists fuel/ammo correctly (manual test)",
-                        "6. Verify Ship Builder UI renders without overlap at 1080p, 1440p, 4K (manual test)"
+                        "1. Move swarm_prompts/ contents to archive/ (optional, for historical reference)",
+                        "2. Move swarm_reports/ contents to archive/ (preserve reviewer outputs)",
+                        "3. Keep swarm_manifests/ for future refactors",
+                        "4. Keep protocols/ for future refactors",
+                        "5. Rename active_refactor.md to archive/hull_cohesion_active_refactor_FINAL.md",
+                        "6. Clear active_refactor.md for next refactor (or delete if using separate file per refactor)"
                     ],
                     "dependencies": [
-                        "Task 5.1 and 5.2 must be complete"
+                        "Archive_Task_1 and Archive_Task_2 must be complete"
                     ],
-                    "risk_assessment": "MEDIUM - May uncover latent issues requiring additional fixes"
+                    "risk_assessment": "LOW - File organization only"
                 },
-                "Task 5.4: Definition of Done Verification": {
-                    "file": "N/A",
-                    "current_state": "Refactor may not meet all Definition of Done criteria",
-                    "target_state": "All DoD criteria verified and documented",
+                "Archive_Task_4: Final Status Update": {
+                    "file": "Refactoring/active_refactor.md",
+                    "current_state": "Status shows [PHASE_5_COMPLETE]",
+                    "target_state": "Status shows [REFACTOR_ARCHIVED] with completion timestamp",
                     "detailed_steps": [
-                        "1. grep -r 'self.base_mass\\s*=' game/simulation/entities/ship.py - should return 0 hardcoded assignments",
-                        "2. grep -r 'hull_mass' data/vehicleclasses.json - should return 0 matches after Task 5.1",
-                        "3. Test Ship Builder UI at 1920x1080 - no panel overlaps",
-                        "4. Create new ship, add fuel, save, reload - verify fuel level persists",
-                        "5. Create new ship, add ammo weapons, save, reload - verify ammo level persists",
-                        "6. Document any remaining tech debt for future refactors"
+                        "1. Update Status line: [REFACTOR_ARCHIVED] - 2026-01-07",
+                        "2. Add Archive Date field below Phase 5 Review line",
+                        "3. Add link to archive summary document",
+                        "4. Mark Protocol 13 (Archive) as complete"
                     ],
                     "dependencies": [
-                        "All Phase 5 tasks must be complete"
+                        "All Archive tasks complete"
                     ],
-                    "risk_assessment": "LOW - Verification only; no code changes"
+                    "risk_assessment": "LOW - Status update only"
                 }
             }
         }

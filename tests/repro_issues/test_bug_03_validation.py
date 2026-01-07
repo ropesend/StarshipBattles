@@ -18,7 +18,7 @@ class TestBug03Validation(unittest.TestCase):
         # Ensure 'Cruiser' exists
         classes = RegistryManager.instance().vehicle_classes
         if "Cruiser" not in classes:
-             classes["Cruiser"] = {"max_mass": 16000, "hull_mass": 400}
+             classes["Cruiser"] = {"max_mass": 16000, "default_hull_id": "hull_cruiser"}
 
         self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
         

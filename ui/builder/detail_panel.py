@@ -2,7 +2,7 @@ import pygame
 import pygame_gui
 import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
-from game.simulation.components.component import LayerType  # Phase 7: Removed unused legacy class imports
+from game.simulation.components.component import LayerType
 import json
 from ui.builder.modifier_logic import ModifierLogic
 
@@ -48,7 +48,6 @@ class ComponentDetailPanel:
         self.start_y = self.image_rect.bottom + 10
         stats_height = button_y - self.start_y - 10
         
-        from pygame_gui.elements import UITextBox
         self.stats_text_box = UITextBox(
             html_text="",
             relative_rect=pygame.Rect(10, self.start_y, rect.width - 20, stats_height),
@@ -163,8 +162,7 @@ class ComponentDetailPanel:
         
         full_html = "<br>".join(lines)
         if full_html != self.last_html:
-            self.stats_text_box.html_text = full_html
-            self.stats_text_box.rebuild()
+            self.stats_text_box.set_text(full_html)
             self.last_html = full_html
 
     def show_details_popup(self):
@@ -199,8 +197,7 @@ class ComponentDetailPanel:
         )
 
     def _clear_display(self):
-        self.stats_text_box.html_text = ""
-        self.stats_text_box.rebuild()
+        self.stats_text_box.set_text("")
         if self.image_element:
             self.image_element.kill()
             self.image_element = None

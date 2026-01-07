@@ -32,9 +32,10 @@ class TestDamageLayerLogic(unittest.TestCase):
         self.ship.add_component(create_component('armor_plate'), LayerType.ARMOR)
         
         # Ensure TestShip class exists in RegistryManager with correct layers
+        # Note: Post-Phase 5, hull_mass is removed; Hull component provides mass
         from game.core.registry import RegistryManager
         RegistryManager.instance().vehicle_classes["TestShip"] = {
-            "hull_mass": 50, "max_mass": 1000,
+            "max_mass": 1000,
             "layers": [
                 {"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 0.5},
                 {"type": "ARMOR", "radius_pct": 1.0, "max_mass_pct": 0.5}
@@ -97,11 +98,14 @@ class TestDamageLayerLogic(unittest.TestCase):
             self.assertEqual(armor.current_hp, initial_armor_hp)
     
     def test_bridge_destruction_kills_ship(self):
-        """Destroying the bridge should NOT kill the ship without requirements."""
-        # Explicitly ensure TestShip has NO requirements for this test
+        """Destroying the bridge SHOULD make the ship derelict (ability-based detection).
+        
+        Post-Phase 5: Derelict status is determined by CommandAndControl ability.
+        If no operational component has CommandAndControl, ship becomes derelict.
+        """
         from game.core.registry import RegistryManager
         RegistryManager.instance().vehicle_classes["TestShip"] = {
-            "hull_mass": 50, "max_mass": 1000, "requirements": {},
+            "max_mass": 1000,
             "layers": [
                 {"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 0.5},
                 {"type": "ARMOR", "radius_pct": 1.0, "max_mass_pct": 0.5}
@@ -122,8 +126,11 @@ class TestDamageLayerLogic(unittest.TestCase):
         self.assertIsNotNone(bridge)
         self.assertTrue(self.ship.is_alive)
         
+        # Update derelict status - should NOT be derelict initially (has bridge)
+        self.ship.update_derelict_status()
+        self.assertFalse(self.ship.is_derelict, "Ship should not be derelict with operational bridge")
+        
         # Deal massive damage to destroy bridge
-        # Need to potentially hit bridge multiple times due to random selection
         for _ in range(50):
             if not bridge.is_active:
                 break
@@ -132,42 +139,19 @@ class TestDamageLayerLogic(unittest.TestCase):
         # Bridge should be destroyed
         self.assertFalse(bridge.is_active)
         
-        # Ship should STILL BE ALIVE (No requirements set for "TestShip")
-        self.assertTrue(self.ship.is_alive)
-        self.assertFalse(self.ship.is_derelict)
+        # Update derelict status - should BE derelict now (no CommandAndControl)
+        self.ship.update_derelict_status()
+        self.assertTrue(self.ship.is_derelict, "Ship should be derelict after bridge destruction")
+        self.assertTrue(self.ship.bridge_destroyed, "bridge_destroyed flag should be set")
 
     def test_bridge_requirement_kills_ship(self):
-        """Destroying the bridge SHOULD kill the ship IF required."""
-        # Inject requirement
-        from game.core.registry import RegistryManager
-        RegistryManager.instance().vehicle_classes["TestShip"] = {
-            "hull_mass": 50, "max_mass": 1000,
-            "requirements": {"CommandAndControl": True}
-        }
-        self.ship.ship_class = "TestShip" # Must match key
-        # Re-init ship to pick up requirements
-        self.ship.update_derelict_status()
+        """Test is obsolete post-Phase 5. Merged into test_bridge_destruction_kills_ship.
         
-        # Ensure bridge exists and provides CommandAndControl
-        # (Assuming standard bridge provides it)
-        
-        # Remove armor first
-        self.ship.layers[LayerType.ARMOR]['components'] = []
-        
-        bridge = None
-        for c in self.ship.layers[LayerType.CORE]['components']:
-             if c.type_str == 'Bridge':
-                 bridge = c
-                 break
-        
-        # Kill logic
-        for _ in range(50):
-            if self.ship.is_derelict:
-                break
-            self.ship.take_damage(100)
-
-        # Should be derelict now
-        self.assertTrue(self.ship.is_derelict)
+        Post-Phase 5: All ships with CommandAndControl components will become derelict
+        when those components are destroyed. The 'requirements' JSON field no longer exists.
+        """
+        # This test is now covered by test_bridge_destruction_kills_ship
+        pass
 
 
 class TestEnergyRegeneration(unittest.TestCase):

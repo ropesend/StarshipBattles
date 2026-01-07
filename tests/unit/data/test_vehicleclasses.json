@@ -5,7 +5,7 @@
             "name": "TestS_2L",
             "type": "Ship",
             "max_mass": 2000,
-            "hull_mass": 20,
+            "default_hull_id": "hull_test_s",
             "layers": [
                 {
                     "type": "CORE",
@@ -23,7 +23,7 @@
             "name": "TestS_3L",
             "type": "Ship",
             "max_mass": 2000,
-            "hull_mass": 20,
+            "default_hull_id": "hull_test_s",
             "layers": [
                 {
                     "type": "CORE",
@@ -46,7 +46,7 @@
             "name": "TestS_4L",
             "type": "Ship",
             "max_mass": 2000,
-            "hull_mass": 20,
+            "default_hull_id": "hull_test_s",
             "layers": [
                 {
                     "type": "CORE",
@@ -74,7 +74,7 @@
             "name": "TestS_5L",
             "type": "Ship",
             "max_mass": 2000,
-            "hull_mass": 20,
+            "default_hull_id": "hull_test_s",
             "layers": [
                 {
                     "type": "CORE",
@@ -107,7 +107,7 @@
             "name": "TestM_2L",
             "type": "Ship",
             "max_mass": 20000,
-            "hull_mass": 200,
+            "default_hull_id": "hull_test_m",
             "layers": [
                 {
                     "type": "CORE",
@@ -125,7 +125,7 @@
             "name": "TestM_3L",
             "type": "Ship",
             "max_mass": 20000,
-            "hull_mass": 200,
+            "default_hull_id": "hull_test_m",
             "layers": [
                 {
                     "type": "CORE",
@@ -148,7 +148,7 @@
             "name": "TestM_4L",
             "type": "Ship",
             "max_mass": 20000,
-            "hull_mass": 200,
+            "default_hull_id": "hull_test_m",
             "layers": [
                 {
                     "type": "CORE",
@@ -176,7 +176,7 @@
             "name": "TestM_5L",
             "type": "Ship",
             "max_mass": 20000,
-            "hull_mass": 200,
+            "default_hull_id": "hull_test_m",
             "layers": [
                 {
                     "type": "CORE",
@@ -209,7 +209,7 @@
             "name": "TestL_2L",
             "type": "Ship",
             "max_mass": 200000,
-            "hull_mass": 2000,
+            "default_hull_id": "hull_test_l",
             "layers": [
                 {
                     "type": "CORE",
@@ -227,7 +227,7 @@
             "name": "TestL_3L",
             "type": "Ship",
             "max_mass": 200000,
-            "hull_mass": 2000,
+            "default_hull_id": "hull_test_l",
             "layers": [
                 {
                     "type": "CORE",
@@ -250,7 +250,7 @@
             "name": "TestL_4L",
             "type": "Ship",
             "max_mass": 200000,
-            "hull_mass": 2000,
+            "default_hull_id": "hull_test_l",
             "layers": [
                 {
                     "type": "CORE",
@@ -278,7 +278,7 @@
             "name": "TestL_5L",
             "type": "Ship",
             "max_mass": 200000,
-            "hull_mass": 2000,
+            "default_hull_id": "hull_test_l",
             "layers": [
                 {
                     "type": "CORE",
@@ -311,7 +311,7 @@
             "name": "TestFighter",
             "type": "Fighter",
             "max_mass": 25,
-            "hull_mass": 5,
+            "default_hull_id": "hull_test_fighter",
             "layers": [
                 {
                     "type": "CORE",
@@ -329,7 +329,7 @@
             "name": "TestSatellite",
             "type": "Satellite",
             "max_mass": 500,
-            "hull_mass": 50,
+            "default_hull_id": "hull_test_satellite",
             "layers": [
                 {
                     "type": "CORE",

@@ -85,19 +85,7 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_file
 
             print(f"Loaded {len(classes)} vehicle classes.")
     except FileNotFoundError:
-        print(f"Warning: {filepath} not found, using defaults")
-        defaults = {
-            "Escort": {"hull_mass": 50, "max_mass": 1000, "requirements": {}},
-            "Frigate": {"hull_mass": 100, "max_mass": 2000, "requirements": {}},
-            "Destroyer": {"hull_mass": 200, "max_mass": 4000, "requirements": {}},
-            "Cruiser": {"hull_mass": 400, "max_mass": 8000, "requirements": {}},
-            "Battlecruiser": {"hull_mass": 800, "max_mass": 16000, "requirements": {}},
-            "Battleship": {"hull_mass": 1600, "max_mass": 32000, "requirements": {}},
-            "Dreadnought": {"hull_mass": 3200, "max_mass": 64000, "requirements": {}}
-        }
-        classes = get_vehicle_classes()
-        classes.clear()
-        classes.update(defaults)
+        raise RuntimeError(f"Critical Error: {filepath} not found. Vehicle class data is required for game operation.")
         
 
 
@@ -122,8 +110,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.ship_class: str = ship_class
         self.theme_id: str = theme_id
         
-        # Get class definition
-        class_def = get_vehicle_classes().get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
+        # Get class definition (no fallback - data must be present)
+        class_def = get_vehicle_classes().get(self.ship_class, {})
 
         # Initialize Layers dynamically from class definition
         self._initialize_layers()
@@ -140,11 +128,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 hull_component.ship = self
                 hull_equipped = True
         
-        # Stats
-        self.mass: float = 0.0
-        # base_mass is 0 if Hull component equipped (Hull provides mass as component)
-        # Otherwise use legacy hull_mass from vehicle class as fallback
-        self.base_mass: float = 0.0 if hull_equipped else class_def.get('hull_mass', 50)
+        # Stats - Cached values (populated by ShipStatsCalculator.calculate())
+        self._cached_mass: float = 0.0
+        self._cached_max_hp: int = 0
+        self._cached_hp: int = 0
+        # base_mass is always 0.0 - Hull component provides all base mass via ShipStatsCalculator
+        self.base_mass: float = 0.0
         self.vehicle_type: str = class_def.get('type', "Ship")
         self.total_thrust: float = 0.0
         self.max_speed: float = 0.0
@@ -221,22 +210,34 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
 
     @property
+    def mass(self) -> float:
+        """Total mass (cached, updated by recalculate_stats)."""
+        return self._cached_mass
+    
+    @mass.setter
+    def mass(self, value: float) -> None:
+        """Set cached mass value (used by ShipStatsCalculator and tests)."""
+        self._cached_mass = value
+
+    @property
     def max_hp(self) -> int:
-        """Total HP of all components."""
-        total = 0
-        for layer in self.layers.values():
-            for c in layer['components']:
-                total += c.max_hp
-        return total
+        """Total HP of all components (cached, updated by recalculate_stats)."""
+        return self._cached_max_hp
+    
+    @max_hp.setter
+    def max_hp(self, value: int) -> None:
+        """Set cached max_hp value."""
+        self._cached_max_hp = value
 
     @property
     def hp(self) -> int:
-        """Current HP of all components."""
-        total = 0
-        for layer in self.layers.values():
-            for c in layer['components']:
-                total += c.current_hp
-        return total
+        """Current HP of all components (cached, updated by recalculate_stats)."""
+        return self._cached_hp
+    
+    @hp.setter
+    def hp(self, value: int) -> None:
+        """Set cached hp value."""
+        self._cached_hp = value
 
     @property
     def max_weapon_range(self) -> float:
@@ -295,76 +296,42 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
     def update_derelict_status(self) -> None:
         """
-        Update is_derelict status based on vehicle class requirements.
-        If essential components (e.g. Bridge) are destroyed, ship becomes derelict.
-        
-        Requirements format (from vehicleclasses.json):
-        {
-            "command": {"ability": "CommandAndControl", "min_value": true},
-            "propulsion": {"ability": "CombatPropulsion", "min_value": 1}
-        }
+        Update derelict status based on CommandAndControl and CrewCapacity abilities.
+        Ship becomes derelict when:
+        1. No operational component has CommandAndControl ability (bridge destroyed)
+        2. CrewRequired exceeds CrewCapacity (insufficient crew quarters)
         """
-        # 1. Get Requirements
-        class_def = get_vehicle_classes().get(self.ship_class, {})
-        requirements = class_def.get('requirements', {})
-        
-        # 2. If no requirements, never derelict (unless dead)
-        if not requirements:
-            self.is_derelict = False
-            return
-
-        # 3. Calculate Current Active Abilities
-        active_components = [
-            c for layer in self.layers.values()
+        # Check 1: CommandAndControl capability (essential for command)
+        has_command = any(
+            c.is_operational and c.has_ability('CommandAndControl')
+            for layer in self.layers.values()
             for c in layer['components']
-            if c.is_active and c.current_hp > 0
-        ]
+        )
         
-        if not self.stats_calculator:
-            self.stats_calculator = ShipStatsCalculator(get_vehicle_classes())
-             
-        # Recalculate abilities based on currently living components
-        totals = self.stats_calculator.calculate_ability_totals(active_components)
+        if not has_command:
+            if not self.is_derelict:
+                print(f"{self.name} has become DERELICT (Bridge destroyed)")
+            self.is_derelict = True
+            self.bridge_destroyed = True
+            return
         
-        # 5. Check all Requirements (new nested format)
-        is_derelict = False
-        for req_name, req_spec in requirements.items():
-            # Handle new nested format: {"ability": "...", "min_value": ...}
-            if isinstance(req_spec, dict) and 'ability' in req_spec:
-                ability_name = req_spec['ability']
-                min_val = req_spec.get('min_value', 1)
-                current_val = totals.get(ability_name, 0)
-                
-                if isinstance(min_val, bool):
-                    if min_val and not current_val:
-                        is_derelict = True
-                        break
-                elif isinstance(min_val, (int, float)):
-                    if current_val < min_val:
-                        is_derelict = True
-                        break
-            # Legacy flat format: "AbilityName": min_value
-            else:
-                current_val = totals.get(req_name, 0)
-                min_val = req_spec
-                
-                if isinstance(min_val, bool):
-                    if min_val and not current_val:
-                        is_derelict = True
-                        break
-                elif isinstance(min_val, (int, float)):
-                    if current_val < min_val:
-                        is_derelict = True
-                        break
+        # Check 2: Crew capacity (resource capability)
+        crew_capacity = self.get_total_ability_value('CrewCapacity')
+        crew_required = self.get_total_ability_value('CrewRequired')
         
-        if is_derelict and not self.is_derelict:
-            print(f"{self.name} has become DERELICT (Requirements not met)")
-            
-        self.is_derelict = is_derelict
+        if crew_required > crew_capacity:
+            if not self.is_derelict:
+                print(f"{self.name} has become DERELICT (Insufficient crew capacity)")
+            self.is_derelict = True
+            return
+        
+        # All checks passed - ship is operational
+        self.is_derelict = False
+        self.bridge_destroyed = False
 
     def _initialize_layers(self) -> None:
         """Initialize or Re-initialize layers based on current ship_class."""
-        class_def = get_vehicle_classes().get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
+        class_def = get_vehicle_classes().get(self.ship_class, {})
         self.layers = {}
         layer_defs = class_def.get('layers', [])
         
@@ -436,7 +403,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Update Class
         self.ship_class = new_class
         class_def = get_vehicle_classes()[self.ship_class]
-        self.base_mass = class_def.get('hull_mass', 50)
+        self.base_mass = 0.0  # Hull component provides mass via ShipStatsCalculator
         self.vehicle_type = class_def.get('type', "Ship")
         self.max_mass_budget = class_def.get('max_mass', 1000)
         

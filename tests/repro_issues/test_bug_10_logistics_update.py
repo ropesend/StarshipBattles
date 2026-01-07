@@ -29,7 +29,7 @@ def test_ammo_usage_triggers_logistics_row():
     # 1. Setup test-specific vehicle classes to ensure ship has expected layers
     test_vehicle_classes = {
         "TestClass": {
-            "hull_mass": 50,
+            "default_hull_id": "hull_escort",
             "max_mass": 1000,
             "type": "Ship",
             "layers": [

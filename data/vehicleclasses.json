@@ -3,531 +3,212 @@
         "Escort": {
             "type": "Ship",
             "code": "ES",
-            "hull_mass": 50,
             "max_mass": 1000,
             "layer_config": "Capital_Escort",
-            "default_hull_id": "hull_escort",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_escort"
         },
         "Frigate": {
             "type": "Ship",
             "code": "FR",
-            "hull_mass": 100,
             "max_mass": 2000,
             "layer_config": "Capital_Escort",
-            "default_hull_id": "hull_frigate",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_frigate"
         },
         "Destroyer": {
             "type": "Ship",
             "code": "DS",
-            "hull_mass": 200,
             "max_mass": 4000,
             "layer_config": "Capital_Escort",
-            "default_hull_id": "hull_destroyer",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_destroyer"
         },
         "Light Cruiser": {
             "type": "Ship",
             "code": "LC",
-            "hull_mass": 300,
             "max_mass": 8000,
             "layer_config": "Capital_Escort",
-            "default_hull_id": "hull_light_cruiser",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_light_cruiser"
         },
         "Cruiser": {
             "type": "Ship",
             "code": "CR",
-            "hull_mass": 400,
             "max_mass": 16000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_cruiser",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_cruiser"
         },
         "Heavy Cruiser": {
             "type": "Ship",
             "code": "HC",
-            "hull_mass": 600,
             "max_mass": 32000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_heavy_cruiser",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_heavy_cruiser"
         },
         "Battle Cruiser": {
             "type": "Ship",
             "code": "BC",
-            "hull_mass": 800,
             "max_mass": 64000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_battle_cruiser",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_battle_cruiser"
         },
         "Battleship": {
             "type": "Ship",
             "code": "BS",
-            "hull_mass": 1600,
             "max_mass": 128000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_battleship",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_battleship"
         },
         "Dreadnought": {
             "type": "Ship",
             "code": "DN",
-            "hull_mass": 3200,
             "max_mass": 256000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_dreadnought",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_dreadnought"
         },
         "Superdreadnaugh": {
             "type": "Ship",
             "code": "SD",
-            "hull_mass": 6400,
             "max_mass": 512000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_superdreadnaugh",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_superdreadnaugh"
         },
         "Monitor": {
             "type": "Ship",
             "code": "MO",
-            "hull_mass": 12800,
             "max_mass": 1024000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_monitor",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_monitor"
         },
         "Fighter (Small)": {
             "type": "Fighter",
             "code": "SF",
-            "hull_mass": 5,
             "max_mass": 25,
             "layer_config": "Fighter_Standard",
-            "default_hull_id": "hull_fighter_small",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_fighter_small"
         },
         "Fighter (Medium)": {
             "type": "Fighter",
             "code": "MF",
-            "hull_mass": 10,
             "max_mass": 35,
             "layer_config": "Fighter_Standard",
-            "default_hull_id": "hull_fighter_medium",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_fighter_medium"
         },
         "Fighter (Large)": {
             "type": "Fighter",
             "code": "LF",
-            "hull_mass": 15,
             "max_mass": 50,
             "layer_config": "Fighter_Standard",
-            "default_hull_id": "hull_fighter_large",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_fighter_large"
         },
         "Fighter (Heavy)": {
             "type": "Fighter",
             "code": "HF",
-            "hull_mass": 20,
             "max_mass": 70,
             "layer_config": "Fighter_Standard",
-            "default_hull_id": "hull_fighter_heavy",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                },
-                "propulsion": {
-                    "ability": "CombatPropulsion",
-                    "min_value": 1
-                },
-                "fuel": {
-                    "ability": "FuelStorage",
-                    "min_value": 1
-                }
-            }
+            "default_hull_id": "hull_fighter_heavy"
         },
         "Satellite (Small)": {
             "type": "Satellite",
             "code": "SS",
-            "hull_mass": 50,
             "max_mass": 250,
             "layer_config": "Satellite_Standard",
-            "default_hull_id": "hull_satellite_small",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_satellite_small"
         },
         "Satellite (Medium)": {
             "type": "Satellite",
             "code": "MS",
-            "hull_mass": 100,
             "max_mass": 500,
             "layer_config": "Satellite_Standard",
-            "default_hull_id": "hull_satellite_medium",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_satellite_medium"
         },
         "Satellite (Large)": {
             "type": "Satellite",
             "code": "LS",
-            "hull_mass": 200,
             "max_mass": 1000,
             "layer_config": "Satellite_Standard",
-            "default_hull_id": "hull_satellite_large",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_satellite_large"
         },
         "Satellite (Heavy)": {
             "type": "Satellite",
             "code": "HS",
-            "hull_mass": 400,
             "max_mass": 2000,
             "layer_config": "Satellite_Standard",
-            "default_hull_id": "hull_satellite_heavy",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_satellite_heavy"
         },
         "Planetary Complex (Tier 1)": {
             "type": "Planetary Complex",
             "code": "PC1",
-            "hull_mass": 0,
             "max_mass": 1000,
             "layer_config": "Planetary_Complex",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_planetary_complex_t1"
         },
         "Planetary Complex (Tier 2)": {
             "type": "Planetary Complex",
             "code": "PC2",
-            "hull_mass": 0,
             "max_mass": 2000,
             "layer_config": "Planetary_Complex",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_planetary_complex_t2"
         },
         "Planetary Complex (Tier 3)": {
             "type": "Planetary Complex",
             "code": "PC3",
-            "hull_mass": 0,
             "max_mass": 4000,
             "layer_config": "Planetary_Complex",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_planetary_complex_t3"
         },
         "Planetary Complex (Tier 4)": {
             "type": "Planetary Complex",
             "code": "PC4",
-            "hull_mass": 0,
             "max_mass": 8000,
             "layer_config": "Planetary_Complex",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_planetary_complex_t4"
         },
         "Planetary Complex (Tier 5)": {
             "type": "Planetary Complex",
             "code": "PC5",
-            "hull_mass": 0,
             "max_mass": 16000,
             "layer_config": "Planetary_Complex",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_planetary_complex_t5"
         },
         "Planetary Complex (Tier 6)": {
             "type": "Planetary Complex",
             "code": "PC6",
-            "hull_mass": 0,
             "max_mass": 32000,
             "layer_config": "Planetary_Complex",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_planetary_complex_t6"
         },
         "Planetary Complex (Tier 7)": {
             "type": "Planetary Complex",
             "code": "PC7",
-            "hull_mass": 0,
             "max_mass": 64000,
             "layer_config": "Planetary_Complex",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_planetary_complex_t7"
         },
         "Planetary Complex (Tier 8)": {
             "type": "Planetary Complex",
             "code": "PC8",
-            "hull_mass": 0,
             "max_mass": 128000,
             "layer_config": "Planetary_Complex",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_planetary_complex_t8"
         },
         "Planetary Complex (Tier 9)": {
             "type": "Planetary Complex",
             "code": "PC9",
-            "hull_mass": 0,
             "max_mass": 256000,
             "layer_config": "Planetary_Complex",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_planetary_complex_t9"
         },
         "Planetary Complex (Tier 10)": {
             "type": "Planetary Complex",
             "code": "PC10",
-            "hull_mass": 0,
             "max_mass": 512000,
             "layer_config": "Planetary_Complex",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_planetary_complex_t10"
         },
         "Planetary Complex (Tier 11)": {
             "type": "Planetary Complex",
             "code": "PC11",
-            "hull_mass": 0,
             "max_mass": 1024000,
             "layer_config": "Planetary_Complex",
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": true
-                }
-            }
+            "default_hull_id": "hull_planetary_complex_t11"
         }
     }
 }

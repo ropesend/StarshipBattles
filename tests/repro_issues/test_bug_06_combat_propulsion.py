@@ -30,10 +30,9 @@ class TestBug06CombatPropulsion:
         # Use a minimal vehicle classes dict for testing
         self.vehicle_classes = {
             "TestClass": {
-                "hull_mass": 50,
+                "default_hull_id": "hull_escort",
                 "max_mass": 1000,
                 "type": "Ship",
-                "requirements": {"CombatPropulsion": True, "CommandAndControl": True},
                 "layers": [
                     {"type": "CORE", "radius_pct": 0.2, "restrictions": []},
                     {"type": "INNER", "radius_pct": 0.5, "restrictions": []},

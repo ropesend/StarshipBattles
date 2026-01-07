@@ -12,22 +12,23 @@ class TestDetailPanelRendering(unittest.TestCase):
     def setUp(self):
         pygame.init()
         pygame.font.init()
-        # Patch UI elements to avoid actual GUI creation
+        
+        # Patch UI elements in the TARGET namespace to ensure they are used
         self.uipanel_patch = patch('ui.builder.detail_panel.UIPanel')
         self.uilabel_patch = patch('ui.builder.detail_panel.UILabel')
         self.uiimage_patch = patch('ui.builder.detail_panel.UIImage')
         self.uibutton_patch = patch('ui.builder.detail_panel.UIButton')
+        self.uitextbox_patch = patch('ui.builder.detail_panel.UITextBox')
         
-        # Patch both possible import locations for UITextBox to catch local import
-        self.uitextbox_patch = patch('pygame_gui.elements.UITextBox')
-        self.uitextbox_patch_real = patch('pygame_gui.elements.ui_text_box.UITextBox')
-        
-        self.uipanel_patch.start()
-        self.uilabel_patch.start()
-        self.uiimage_patch.start()
-        self.uibutton_patch.start()
+        self.MockUIPanel = self.uipanel_patch.start()
+        self.MockUILabel = self.uilabel_patch.start()
+        self.MockUIImage = self.uiimage_patch.start()
+        self.MockUIButton = self.uibutton_patch.start()
         self.MockUITextBox = self.uitextbox_patch.start()
-        self.MockUITextBoxReal = self.uitextbox_patch_real.start()
+        
+        # Ensure the mock instance behaves like a UITextBox for our tests
+        # We'll use a property mock or just capture set_text calls
+        self.mock_textbox_instance = self.MockUITextBox.return_value
 
         # Delayed import to allow pygame init
         from ui.builder.detail_panel import ComponentDetailPanel
@@ -35,6 +36,15 @@ class TestDetailPanelRendering(unittest.TestCase):
 
         # Mock Pygame and UI Manager
         self.mock_manager = MagicMock(spec=pygame_gui.UIManager)
+        
+        # Configure mock manager to return proper values for font dimensions
+        # This prevents TypeError when pygame_gui compares MagicMock with int
+        mock_rect = MagicMock()
+        mock_rect.width = 100
+        mock_rect.height = 20
+        mock_font = MagicMock()
+        mock_font.get_rect.return_value = mock_rect
+        self.mock_manager.get_theme.return_value.get_font.return_value = mock_font
         
         # Create the panel under test
         self.panel_rect = pygame.Rect(0, 0, 300, 600)
@@ -49,7 +59,6 @@ class TestDetailPanelRendering(unittest.TestCase):
         self.uiimage_patch.stop()
         self.uibutton_patch.stop()
         self.uitextbox_patch.stop()
-        self.uitextbox_patch_real.stop()
 
     def test_html_stats_generation_basic(self):
         """Verify basic component stats (Name, Type, Mass, HP) are generated."""
@@ -80,12 +89,10 @@ class TestDetailPanelRendering(unittest.TestCase):
         
         self.panel.show_component(mock_comp)
         
-        # Get the HTML text set on the textbox
-        # Access the instance created by the mock class
-        textbox_instance = self.panel.stats_text_box
-        self.assertTrue(textbox_instance.html_text) # Should be set
+        # Verify set_text was called with expected HTML components
+        self.mock_textbox_instance.set_text.assert_called()
+        html = self.mock_textbox_instance.set_text.call_args[0][0]
         
-        html = textbox_instance.html_text
         self.assertIn("<b>Test Component</b>", html)
         self.assertIn("Weapon", html)
         self.assertIn("Mass: 50.5t", html)
@@ -123,7 +130,9 @@ class TestDetailPanelRendering(unittest.TestCase):
         
         self.panel.show_component(mock_comp)
         
-        html = self.panel.stats_text_box.html_text
+        self.mock_textbox_instance.set_text.assert_called()
+        html = self.mock_textbox_instance.set_text.call_args[0][0]
+        
         self.assertIn("<font color='#FF0000'>Damage: 50</font>", html)
         self.assertIn("<font color='#00FF00'>Range: 1000m</font>", html)
 
@@ -159,7 +168,9 @@ class TestDetailPanelRendering(unittest.TestCase):
         with patch.dict('game.simulation.components.abilities.ABILITY_REGISTRY', {}, clear=True):
              self.panel.show_component(mock_comp)
         
-        html = self.panel.stats_text_box.html_text
+        self.mock_textbox_instance.set_text.assert_called()
+        html = self.mock_textbox_instance.set_text.call_args[0][0]
+        
         self.assertIn("Abilities:", html)
         self.assertIn("SecretAbility: {'power': 9000}", html)
         self.assertIn("CustomPowerAbility: {'energy': 42}", html)
@@ -213,7 +224,9 @@ class TestDetailPanelRendering(unittest.TestCase):
             
             self.panel.show_component(mock_comp)
             
-        html = self.panel.stats_text_box.html_text
+        self.mock_textbox_instance.set_text.assert_called()
+        html = self.mock_textbox_instance.set_text.call_args[0][0]
+        
         self.assertIn("Modifiers:", html)
         
         # Mandatory: Gold + [A]

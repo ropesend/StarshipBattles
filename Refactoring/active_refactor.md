@@ -8,7 +8,8 @@
 **Phase 2 Review:** ✅ APPROVED (2026-01-06)
 **Phase 3 Review:** ✅ APPROVED (2026-01-06)
 **Phase 4 Review:** ✅ APPROVED (2026-01-06)
-**Status:** [PHASE_5_IN_PROGRESS]
+**Phase 5 Review:** ✅ COMPLETE (2026-01-07)
+**Status:** [PHASE_5_COMPLETE]
 
 ---
 
@@ -375,16 +376,27 @@ pytest tests/integration/ -v
   - Added `REGISTRY_RELOADED` event emission in `_reload_data`
   - Updated `BuilderRightPanel` and `BuilderLeftPanel` to subscribe to event
 
-### Phase 5: Legacy Purge & Final Polish (The Cleanup)
+### Phase 5: Legacy Purge & Final Polish (The Cleanup) [Complete] ✅
 **Objective:** Remove deprecated data and finalize the refactor.
-- [ ] **Cleanup:** Remove `hull_mass` and `requirements` from `vehicleclasses.json`.
-- [ ] **Cleanup:** Remove hardcoded ship fallback registry in `load_vehicle_classes`.
-- [ ] **Final Verification:** Run Full Gauntlet (Target: 100% Pass).
-- [ ] **Definition of Done:**
-    - `Ship.py` has ZERO hardcoded mass/hp assignments.
-    - `vehicleclasses.json` contains NO physical stats.
-    - Ship Builder UI renders without overlap on 1080p+.
-    - Save/Load persists fuel/ammo levels correctly.
+- [x] **Task 5.1:** Remove `hull_mass` and `requirements` from `vehicleclasses.json`.
+  - Removed all 29 legacy field entries
+  - Added `default_hull_id` to Planetary Complex classes
+- [x] **Task 5.2:** Remove hardcoded ship fallback registry in `load_vehicle_classes`.
+  - Replaced fallback dict with RuntimeError for missing data
+- [x] **Task 5.3:** Eliminate `base_mass` fallback in `Ship.__init__`.
+  - Set `base_mass = 0.0` unconditionally
+  - Hull component now provides all base mass
+- [x] **Task 5.4:** Finalize ability-based derelict logic.
+  - `update_derelict_status` now checks CommandAndControl and CrewCapacity abilities
+  - No longer reads `requirements` from JSON
+- [x] **Task 5.5:** Final Verification Gauntlet (536 passed, 0 failed).
+- [x] **Task 5.6:** Definition of Done Verification:
+  - [x] `vehicleclasses.json` contains NO `hull_mass` → verified 0 matches
+  - [x] `vehicleclasses.json` contains NO `requirements` → verified 0 matches
+  - [x] No `COMPONENT_REGISTRY` in tests → verified 0 matches
+  - [x] No `VEHICLE_CLASSES` in tests → verified 0 matches
+  - [x] Ship Builder UI renders without overlap (verified Phase 4)
+  - [x] Save/Load persists fuel/ammo levels correctly (verified Phase 1)
 
 ---
 
@@ -649,3 +661,6 @@ grep -rn "self.base_mass\s*=\s*[^0]" game/simulation/entities/ship.py
 | Task 4.2a: Dynamic Layer Width | `builder_screen.py` | RESOLVED | UI Specialist | Changed to `calculate_dynamic_layer_width(screen_width)` |
 | Task 4.2b: Weapons Panel Width | `builder_screen.py` | RESOLVED | UI Specialist | Subtracted `right_panel_width` from calculation |
 | Task 4.3: Vertical Stacking | `right_panel.py` | NOT_APPLICABLE | UI Specialist | Reclassified: right_panel uses single scroll container, no sub-panels |
+| Task 5.1: Legacy Fallback Test | `test_ship_core.py` | DELETED | QA Lead | Obsolete: TestLegacyFallback removed (hull_mass fallback no longer exists) |
+| Task 5.2: Requirements JSON Tests | `test_builder_logic.py`, `test_combat.py`, `test_bug_08.py` | FIXED | QA Lead | Updated tests to use ability-based detection instead of JSON requirements |
+| Task 5.3: Derelict Test | `test_ship_core.py` | FIXED | QA Lead | Updated to set `is_active=False` when simulating bridge destruction |

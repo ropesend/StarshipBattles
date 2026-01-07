@@ -28,7 +28,10 @@ class ShipStatsCalculator:
             layer_data['mass'] = l_mass
             ship.current_mass += l_mass
             
+        # Update cached values via property setters
         ship.mass = ship.current_mass + ship.base_mass
+        ship.max_hp = sum(c.max_hp for layer in ship.layers.values() for c in layer['components'])
+        ship.hp = sum(c.current_hp for layer in ship.layers.values() for c in layer['components'])
 
         # Base Stats Reset
         ship.total_thrust = 0

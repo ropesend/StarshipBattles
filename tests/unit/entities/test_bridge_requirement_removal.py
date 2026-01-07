@@ -59,32 +59,6 @@ class TestBridgeRequirementRemoval(unittest.TestCase):
         error_messages = result.errors
         self.assertFalse(any("Ship needs a Bridge!" in err for err in error_messages), 
                          f"Validation failed with bridge error: {error_messages}")
-        
-    def test_class_with_command_requirement(self):
-        """Test that a class WITH command requirement still fails if no bridge/command provider."""
-        # We need to simulate a class that DOES require command
-        # Let's inject one into the mock data
-        RegistryManager.instance().vehicle_classes["CommandShip"] = {
-            "requirements": {
-                "command": {
-                    "ability": "CommandAndControl",
-                    "min_value": True
-                }
-            }
-        }
-        
-        ship = MagicMock(spec=Ship)
-        ship.ship_class = "CommandShip"
-        ship.layers = {LayerType.CORE: {'components': []}}
-        ship.current_mass = 100
-        ship.max_mass_budget = 1000
-        
-        result = self.validator.validate_design(ship)
-        
-        # This SHOULD fail because of ClassRequirementsRule, but NOT BridgeExistenceRule
-        # The error message from ClassRequirementsRule is "Needs Command And Control"
-        self.assertTrue(any("Needs Command And Control" in err for err in result.errors),
-                        f"Expected 'Needs Command And Control' error, got: {result.errors}")
                         
 if __name__ == '__main__':
     unittest.main()

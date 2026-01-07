@@ -46,7 +46,7 @@ class TestShip(unittest.TestCase):
         # Inject TestShip definition strictly
         from game.core.registry import RegistryManager
         RegistryManager.instance().vehicle_classes["TestShip"] = {
-            "hull_mass": 50, "max_mass": 1000,
+            "default_hull_id": "hull_escort", "max_mass": 1000,
             "layers": [
                 {"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 0.5},
                 {"type": "ARMOR", "radius_pct": 1.0, "max_mass_pct": 0.5}
@@ -155,7 +155,7 @@ class TestShipClassMutation(unittest.TestCase):
         from game.core.registry import RegistryManager
         classes = RegistryManager.instance().vehicle_classes
         if "Frigate" in classes:
-            classes["Frigate"]["requirements"] = {"Command": 1}
+            pass  # Post-Phase 5: Derelict is now ability-based (CommandAndControl)
         
         # Add Bridge (Assumed to provide Command=1)
         bridge = create_component('bridge')
