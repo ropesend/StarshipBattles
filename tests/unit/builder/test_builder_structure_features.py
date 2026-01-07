@@ -205,8 +205,9 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         self.builder_gui.layer_panel.handle_event.return_value = ('add_individual', comp)
         
         # Mock VALIDATOR
-        with patch('game.simulation.entities.ship.VALIDATOR') as mock_val:
-            mock_val.validate_addition.return_value.is_valid = True
+        with patch('game.simulation.entities.ship.get_or_create_validator') as mock_val:
+            mock_val.return_value.validate_addition.return_value.is_valid = True
+
             
             # Need to clone component
             comp.clone = MagicMock(return_value=Component(self.comp_data))

@@ -1,0 +1,28 @@
+# INSTRUCTIONS FOR AGENT (QA Lead)
+
+**ROLE:** QA Lead
+**FOCUS:** Verification Plan & Test Coverage
+
+## YOUR GOAL
+Analyze the provided code context below.
+Isolate issues specifically related to your FOCUS (Verification Plan & Test Coverage).
+Ignore unrelated issues unless they are critical system failures.
+
+## PHASE STATUS
+
+
+## OUTPUT INSTRUCTIONS
+You are an autonomous agent.
+1. Perform your analysis.
+2. **CRITICAL:** You MUST use the `write_to_file` tool to save your report.
+   - **Target File:** `C:\Dev\Starship Battles\Refactoring\swarm_reports\QA Lead_Report.md`
+   - **Do NOT** just print the markdown to the chat. Save it to the file.
+
+## CONTEXT
+
+[WARNING: File not found: tests/unit/entities/test_ship_core.py]
+
+[WARNING: File not found: tests/unit/ui/test_builder_inventory.py]
+
+[WARNING: File not found: tests/conftest.py]
+

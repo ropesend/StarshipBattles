@@ -84,8 +84,8 @@ class TestPDC(unittest.TestCase):
             mock_bridge.type_str = "Bridge"
             self.ship.add_component(mock_bridge, LayerType.CORE)
 
-        self.ship.current_energy = 1000
-        self.ship.max_energy = 1000
+        self.ship.resources.set_max_value('energy', 1000); self.ship.resources.set_value('energy', 1000)
+        self.ship.resources.set_max_value('energy', 1000)
         self.pdc = MockPDC()
         self.ship.layers[LayerType.OUTER]['components'] = [self.pdc]
         
@@ -115,14 +115,14 @@ class TestPDC(unittest.TestCase):
         self.missile.is_alive = True
         
         self.ship.recalculate_stats()
-        self.ship.current_energy = 1000
-        self.ship.max_energy = 1000
+        self.ship.resources.set_max_value('energy', 1000); self.ship.resources.set_value('energy', 1000)
+        self.ship.resources.set_max_value('energy', 1000)
         # fire_weapons prioritized current_target first, and only looks at secondary if max_targets > 1
         self.ship.current_target = self.missile 
         self.ship.secondary_targets = [self.missile] 
         
         # Diagnostic: Why is it not firing?
-        # print(f"DEBUG: Alive={self.ship.is_alive}, Derelict={self.ship.is_derelict}, Energy={self.ship.current_energy}/{self.ship.max_energy}, Targets={self.ship.current_target}")
+        # print(f"DEBUG: Alive={self.ship.is_alive}, Derelict={self.ship.is_derelict}, Energy={self.ship.resources.get_value('energy')}/{self.ship.resources.get_max_value('energy')}, Targets={self.ship.current_target}")
         # print(f"DEBUG: PDC Active={self.pdc.is_active}, CD={self.pdc.cooldown_timer}, Range={self.pdc.range}")
 
         attacks = self.ship.fire_weapons(context)

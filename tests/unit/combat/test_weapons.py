@@ -103,7 +103,7 @@ class TestWeaponFiring(unittest.TestCase):
         self.ship.add_component(create_component('railgun'), LayerType.OUTER)
         self.ship.add_component(create_component('ordnance_tank'), LayerType.INNER)
         self.ship.recalculate_stats()
-        self.ship.current_ammo = 100
+        self.ship.resources.set_max_value('ammo', 100); self.ship.resources.set_value('ammo', 100)
         
         # Create target
         self.target = Ship("Target", 500, 0, (255, 0, 0), team_id=1)
@@ -123,7 +123,7 @@ class TestWeaponFiring(unittest.TestCase):
     
     def test_fire_consumes_ammo(self):
         """Firing projectile weapons should consume ammo."""
-        initial_ammo = self.ship.current_ammo
+        initial_ammo = self.ship.resources.get_value('ammo')
         
         self.ship.current_target = self.target
         self.ship.comp_trigger_pulled = True
@@ -132,7 +132,7 @@ class TestWeaponFiring(unittest.TestCase):
         attacks = self.ship.fire_weapons()
         
         if attacks:  # If weapon fired
-            self.assertLess(self.ship.current_ammo, initial_ammo)
+            self.assertLess(self.ship.resources.get_value('ammo'), initial_ammo)
     
     def test_no_fire_without_target(self):
         """Weapons should not fire without valid target."""

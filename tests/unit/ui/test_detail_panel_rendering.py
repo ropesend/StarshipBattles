@@ -63,6 +63,20 @@ class TestDetailPanelRendering(unittest.TestCase):
         mock_comp.modifiers = []
         mock_comp.sprite_index = 1
         
+        # Set defaults to avoid TypeError
+        mock_comp.base_mass = 50.5
+        mock_comp.base_max_hp = 100
+        mock_comp.allowed_vehicle_types = ["Ship"]
+        # mock_comp.range = 0
+        # mock_comp.damage = 0
+        # mock_comp.firing_arc = 0
+        # mock_comp.projectile_speed = 0
+        # mock_comp.facing_angle = 0
+        mock_comp.cost = 0
+        mock_comp.level = 0
+        mock_comp.rarity = "Common"
+
+        
         self.panel.show_component(mock_comp)
         
         # Get the HTML text set on the textbox
@@ -88,7 +102,19 @@ class TestDetailPanelRendering(unittest.TestCase):
         mock_comp.modifiers = []
         mock_comp.sprite_index = 1
         
-        # Mock get_ui_rows
+        # Set defaults to avoid TypeError
+        mock_comp.base_mass = 10
+        mock_comp.base_max_hp = 50
+        mock_comp.allowed_vehicle_types = ["Ship"]
+        # mock_comp.range = 0
+        # mock_comp.damage = 0
+        # mock_comp.firing_arc = 0
+        # mock_comp.projectile_speed = 0
+        # mock_comp.facing_angle = 0
+        mock_comp.cost = 0
+        mock_comp.level = 0
+        mock_comp.rarity = "Common"
+
         mock_comp.get_ui_rows.return_value = [
             {'label': 'Damage', 'value': '50', 'color_hint': '#FF0000'},
             {'label': 'Range', 'value': '1000m', 'color_hint': '#00FF00'}
@@ -112,11 +138,21 @@ class TestDetailPanelRendering(unittest.TestCase):
         mock_comp.modifiers = []
         mock_comp.sprite_index = 1
         
-        # Random custom ability data
+        # Random custom ability data (unregistered)
         mock_comp.abilities = {
             "SecretAbility": {"power": 9000},
-            "ProjectileWeapon": {} # Should be skipped (legacy shim)
+            "CustomPowerAbility": {"energy": 42}
         }
+        # Set attributes to avoid MagicMock comparison errors (TypeError: > not supported)
+        # mock_comp.range = 0
+        # mock_comp.damage = 0
+        # mock_comp.firing_arc = 0
+        # mock_comp.projectile_speed = 0
+        # mock_comp.facing_angle = 0
+        mock_comp.cost = 0
+        mock_comp.level = 0
+        mock_comp.rarity = "Common"
+
         
         # Mock ABILITY_REGISTRY to ensure SecretAbility is treated as unregistered
         with patch.dict('game.simulation.components.abilities.ABILITY_REGISTRY', {}, clear=True):
@@ -125,7 +161,7 @@ class TestDetailPanelRendering(unittest.TestCase):
         html = self.panel.stats_text_box.html_text
         self.assertIn("Abilities:", html)
         self.assertIn("SecretAbility: {'power': 9000}", html)
-        self.assertNotIn("ProjectileWeapon", html)
+        self.assertIn("CustomPowerAbility: {'energy': 42}", html)
 
     def test_html_modifiers(self):
         """Verify modifiers are displayed with correct formatting."""
@@ -133,11 +169,26 @@ class TestDetailPanelRendering(unittest.TestCase):
         mock_comp.name = "Modded Engine"
         mock_comp.type_str = "Engine"
         mock_comp.mass = 10
+        mock_comp.base_mass = 10
         mock_comp.max_hp = 10
+        mock_comp.base_max_hp = 10
         mock_comp.current_hp = 10
+        mock_comp.allowed_vehicle_types = ["Ship"]
+
         mock_comp.get_ui_rows.return_value = []
         mock_comp.abilities = {}
         mock_comp.sprite_index = 1
+        
+        # Set attributes to avoid MagicMock comparison errors (TypeError: > not supported)
+        # mock_comp.range = 0
+        # mock_comp.damage = 0
+        # mock_comp.firing_arc = 0
+        # mock_comp.projectile_speed = 0
+        # mock_comp.facing_angle = 0
+        mock_comp.cost = 0
+        mock_comp.level = 0
+        mock_comp.rarity = "Common"
+
         
         # Mock Modifiers
         mock_mod1 = MagicMock()

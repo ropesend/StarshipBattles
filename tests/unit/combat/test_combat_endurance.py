@@ -92,7 +92,7 @@ class TestCombatEndurance(unittest.TestCase):
         # If it uses the new generic get_resource_consumption, that ONLY sums CONSTANT triggers.
         # So weapons (activation) won't show up in "consumption" (burn rate) unless we simulate fire.
         # BUT the legacy test expected weapons to contribute to consumption.
-        # The shim or calculator must handle this conversion for backward compatibility 
+        # The calculator handles this conversion (activation -> constant rate)
         # OR we need to define it as constant for this test to match "endurance" concept effectively,
         # OR we accept that "Endurance" for weapons is valid firing time.
         

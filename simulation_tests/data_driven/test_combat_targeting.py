@@ -60,9 +60,9 @@ class TestCombatTargeting(unittest.TestCase):
         self.attacker.recalculate_stats() # Init basic stats
         self.attacker.is_alive = True
         self.attacker.is_derelict = False
-        self.attacker.current_energy = 1000
-        self.attacker.max_energy = 1000
-        self.attacker.current_ammo = 100
+        self.attacker.resources.set_max_value('energy', 1000); self.attacker.resources.set_value('energy', 1000)
+        self.attacker.resources.set_max_value('energy', 1000)
+        self.attacker.resources.set_max_value('ammo', 100); self.attacker.resources.set_value('ammo', 100)
         self.attacker.velocity = pygame.math.Vector2(0, 0)
         
         # Create target ship
@@ -264,18 +264,18 @@ class TestCombatTargeting(unittest.TestCase):
         })
         beam.is_active = True
         self.attacker.add_component(beam, LayerType.OUTER)
-        self.attacker.current_energy = 100
+        self.attacker.resources.set_max_value('energy', 100); self.attacker.resources.set_value('energy', 100)
         
         self.attacker.current_target = self.target
         self.attacker.is_derelict = False
         self.attacker.fire_weapons()
-        self.assertEqual(self.attacker.current_energy, 50, "Should consume 50 energy")
+        self.assertEqual(self.attacker.resources.get_value('energy'), 50, "Should consume 50 energy")
         
         # Fire again
         beam.cooldown_timer = 0
         self.attacker.is_derelict = False
         self.attacker.fire_weapons()
-        self.assertEqual(self.attacker.current_energy, 0)
+        self.assertEqual(self.attacker.resources.get_value('energy'), 0)
         
         # Fire again (Empty)
         beam.cooldown_timer = 0
@@ -296,13 +296,13 @@ class TestCombatTargeting(unittest.TestCase):
         })
         gun.is_active = True
         self.attacker.add_component(gun, LayerType.OUTER)
-        self.attacker.current_ammo = 10
-        self.attacker.current_energy = 1000 
+        self.attacker.resources.set_max_value('ammo', 10); self.attacker.resources.set_value('ammo', 10)
+        self.attacker.resources.set_max_value('energy', 1000); self.attacker.resources.set_value('energy', 1000)
         
         self.attacker.current_target = self.target
         self.attacker.is_derelict = False
         self.attacker.fire_weapons()
-        self.assertEqual(self.attacker.current_ammo, 5)
+        self.assertEqual(self.attacker.resources.get_value('ammo'), 5)
 
 if __name__ == '__main__':
     unittest.main()

@@ -62,11 +62,8 @@ class Component:
         self.max_hp = self.base_max_hp
         self.current_hp = self.max_hp
         
-        # Attribute shims for weapon compatibility (Phase 7)
-        self._range = data.get('range', 0)
-        self._damage = data.get('damage', 0)
-        self._firing_arc = data.get('firing_arc', 360)
-        self._projectile_speed = data.get('projectile_speed', 0)
+
+
         # allowed_layers removed in refactor
         # self.allowed_layers = [LayerType.from_string(l) for l in data['allowed_layers']]
         self.allowed_vehicle_types = data.get('allowed_vehicle_types', ["Ship"])
@@ -82,24 +79,8 @@ class Component:
         # Parse abilities from data
         self.abilities = self.data.get('abilities', {})
         
-        # Sync base attributes FROM abilities if they exist (Phase 7 initialization sync)
-        # This ensures comp.range returns correct value even if not in top-level data
-        for ab_name in ['WeaponAbility', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility']:
-            if ab_name in self.abilities:
-                ab_data = self.abilities[ab_name]
-                # Helper to safely set float or skip formula
-                def set_stat(attr, val):
-                    if isinstance(val, (int, float)):
-                        setattr(self, attr, float(val))
-                    elif isinstance(val, str) and not val.startswith('='):
-                        try: setattr(self, attr, float(val))
-                        except: pass
-                        
-                if 'range' in ab_data: set_stat('_range', ab_data['range'])
-                if 'damage' in ab_data: set_stat('_damage', ab_data['damage'])
-                if 'firing_arc' in ab_data: set_stat('_firing_arc', ab_data['firing_arc'])
-                if 'projectile_speed' in ab_data: set_stat('_projectile_speed', ab_data['projectile_speed'])
-                break
+
+
         
         self.base_abilities = copy.deepcopy(self.abilities)
         
@@ -190,9 +171,7 @@ class Component:
     def has_pdc_ability(self) -> bool:
         """Check if component has a Point Defense weapon ability.
         
-        Supports both:
-        - New system: 'pdc' in ability.tags
-        - Legacy system: abilities.get('PointDefense', False)
+        Returns True if any ability has 'pdc' in its tags.
         """
         # 1. Check new tag-based system
         for ab in self.ability_instances:
@@ -202,88 +181,7 @@ class Component:
 
         return False
 
-    @property
-    def range(self):
-        ab = self.get_ability('WeaponAbility')
-        if ab and hasattr(ab, 'range'):
-            return ab.range
-        return self.stats.get('range', self._range)
-    
-    @range.setter
-    def range(self, value):
-        self._range = float(value)
-        self.stats['range'] = self._range
-        # Push to ability
-        ab = self.get_ability('WeaponAbility')
-        if ab:
-            ab.sync_data({'range': value})
-            ab.recalculate()
-    
-    @property
-    def damage(self):
-        ab = self.get_ability('WeaponAbility')
-        if ab and hasattr(ab, 'damage'):
-            return ab.damage
-        return self.stats.get('damage', self._damage)
-        
-    @damage.setter
-    def damage(self, value):
-        self._damage = float(value)
-        self.stats['damage'] = self._damage
-        # Push to ability
-        ab = self.get_ability('WeaponAbility')
-        if ab:
-            ab.sync_data({'damage': value})
-            ab.recalculate()
 
-    @property
-    def firing_arc(self):
-        ab = self.get_ability('WeaponAbility')
-        if ab and hasattr(ab, 'firing_arc'):
-            return ab.firing_arc
-        return self.stats.get('firing_arc', self._firing_arc)
-        
-    @firing_arc.setter
-    def firing_arc(self, value):
-        self._firing_arc = float(value)
-        self.stats['firing_arc'] = self._firing_arc
-        # Push to ability
-        ab = self.get_ability('WeaponAbility')
-        if ab:
-            ab.sync_data({'firing_arc': value})
-            ab.recalculate()
-
-    @property
-    def facing_angle(self):
-        ab = self.get_ability('WeaponAbility')
-        if ab and hasattr(ab, 'facing_angle'):
-            return ab.facing_angle
-        # Fallback to local attribute (Phase 7 compatibility)
-        return getattr(self, '_facing_angle', 0.0)
-        
-    @facing_angle.setter
-    def facing_angle(self, value):
-        self._facing_angle = float(value)
-        # Push to ability
-        ab = self.get_ability('WeaponAbility')
-        if ab:
-            ab.facing_angle = self._facing_angle
-            ab.recalculate()
-        
-    @property
-    def projectile_speed(self):
-        return self.stats.get('projectile_speed', self._projectile_speed)
-        
-    @projectile_speed.setter
-    def projectile_speed(self, value):
-        self._projectile_speed = float(value)
-        self.stats['projectile_speed'] = self._projectile_speed
-        # Push to ability
-        from game.simulation.components.abilities import ProjectileWeaponAbility, SeekerWeaponAbility
-        for ab in self.ability_instances:
-            if isinstance(ab, (ProjectileWeaponAbility, SeekerWeaponAbility)):
-                ab.projectile_speed = self._projectile_speed
-                ab.recalculate()
 
     @property
     def cooldown_timer(self):
@@ -398,7 +296,7 @@ class Component:
                 ability.check_and_consume()
 
     def try_activate(self):
-        """Analyze if we can activate, and if so, consume and return True. (Legacy/Simple usage)"""
+        """Check if component can afford activation costs, consume them if available, and return True on success."""
         if self.can_afford_activation():
             self.consume_activation()
             return True
@@ -639,7 +537,6 @@ class Component:
         return self.__class__(self.data)
 
 
-# Component type aliases for backward compatibility
 # Phase 7 Simplified: Aliased types now use Component directly
 # Types with custom logic (Shield, Hangar, etc.) are now also aliases
 # as their logic has been unified into the Ability system.
@@ -688,7 +585,6 @@ def load_components(filepath="data/components.json"):
         for comp_def in data['components']:
             c_type = comp_def['type']
             try:
-                # COMPONENT_TYPE_MAP removed in Phase 10
                 cls = Component 
                 obj = cls(comp_def)
                 temp_cache[comp_def['id']] = obj

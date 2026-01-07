@@ -78,9 +78,9 @@ class TestBattlePanels(unittest.TestCase):
         ship.hp = 100
         ship.current_speed = 0
         ship.max_speed = 100
-        ship.max_fuel = 100
-        ship.max_energy = 100
-        ship.max_ammo = 100
+        ship.resources.set_max_value('fuel', 100)
+        ship.resources.set_max_value('energy', 100)
+        ship.resources.set_max_value('ammo', 100)
         ship.ai_strategy = "aggressive"
         return ship
 

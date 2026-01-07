@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import Component, LayerType, load_components
 from game.core.registry import RegistryManager
-from game.ai.controller import AIController, COMBAT_STRATEGIES
+from game.ai.controller import AIController
 from game.engine.spatial import SpatialGrid
 from game.simulation.entities.projectile import Projectile
 from game.core.constants import AttackType

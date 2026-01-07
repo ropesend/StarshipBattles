@@ -35,7 +35,7 @@
         {
             "id": "railgun",
             "name": "Railgun",
-            "type": "ProjectileWeapon",
+            "type": "ProjectileWeaponAbility",
             "mass": 100,
             "hp": 150,
             "allowed_vehicle_types": [
@@ -278,7 +278,7 @@
         {
             "id": "laser_cannon",
             "name": "Laser Cannon",
-            "type": "BeamWeapon",
+            "type": "BeamWeaponAbility",
             "mass": 20,
             "hp": 40,
             "allowed_vehicle_types": [
@@ -435,7 +435,7 @@
         {
             "id": "capital_missile",
             "name": "Capital Missile",
-            "type": "SeekerWeapon",
+            "type": "SeekerWeaponAbility",
             "mass": 60,
             "hp": 10,
             "allowed_vehicle_types": [
@@ -468,7 +468,7 @@
         {
             "id": "point_defence_cannon",
             "name": "Point Defence Cannon",
-            "type": "BeamWeapon",
+            "type": "BeamWeaponAbility",
             "mass": 10,
             "hp": 30,
             "allowed_vehicle_types": [
@@ -478,7 +478,6 @@
             ],
             "sprite_index": 151,
             "abilities": {
-                "PointDefense": true,
                 "CrewRequired": 1,
                 "ResourceConsumption": [
                     {
@@ -638,7 +637,7 @@
         {
             "id": "mini_railgun",
             "name": "Mini Railgun",
-            "type": "BeamWeapon",
+            "type": "BeamWeaponAbility",
             "mass": 2,
             "hp": 2,
             "allowed_vehicle_types": [
@@ -660,7 +659,7 @@
         {
             "id": "mini_laser_cannon",
             "name": "Mini Laser Cannon",
-            "type": "BeamWeapon",
+            "type": "BeamWeaponAbility",
             "mass": 1,
             "hp": 1,
             "allowed_vehicle_types": [
@@ -689,7 +688,7 @@
         {
             "id": "mini_capital_missile",
             "name": "Mini Capital Missile",
-            "type": "BeamWeapon",
+            "type": "BeamWeaponAbility",
             "mass": 3,
             "hp": 3,
             "allowed_vehicle_types": [

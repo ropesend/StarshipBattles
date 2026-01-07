@@ -231,7 +231,7 @@ class ShieldRegeneration(Ability):
         self.rate = self.base_rate
         
     def recalculate(self):
-        # Apply energy_gen_mult (legacy name used by modifiers) or regenerate_mult
+        # Apply energy_gen_mult (modifier stat key)
         mult = self.component.stats.get('energy_gen_mult', 1.0) 
         self.rate = self.base_rate * mult
 
@@ -670,13 +670,7 @@ ABILITY_REGISTRY = {
     "ToHitDefenseModifier": ToHitDefenseModifier,
     "EmissiveArmor": EmissiveArmor,
     "Armor": lambda c, d: Ability(c, d), # Dummy ability for tag/existence checks
-    
-    # Legacy Shims
-    "ProjectileWeapon": ProjectileWeaponAbility,
-    "BeamWeapon": BeamWeaponAbility,
-    "SeekerWeapon": SeekerWeaponAbility,
-    "PointDefense": lambda c, d: Ability(c, {"tags": ["pdc"]} if d is True else {**d, "tags": ["pdc"]}),
-    
+
     # Primitive/Shortcut Factories
     "FuelStorage": lambda c, d: ResourceStorage(c, {"resource": "fuel", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "fuel"}),
     "EnergyStorage": lambda c, d: ResourceStorage(c, {"resource": "energy", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "energy"}),

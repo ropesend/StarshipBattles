@@ -7,7 +7,7 @@ import tkinter as tk
 from tkinter import filedialog, simpledialog
 
 from game.simulation.entities.ship import Ship
-from game.ai.controller import COMBAT_STRATEGIES
+from game.ai.controller import STRATEGY_MANAGER
 
 
 def scan_ship_designs():
@@ -136,7 +136,7 @@ class BattleSetupScreen:
         self.team2 = []
         self.scroll_offset = 0
         self.ai_dropdown_open = None  # (team_idx, ship_idx) or None
-        self.ai_strategies = list(COMBAT_STRATEGIES.keys())
+        self.ai_strategies = list(STRATEGY_MANAGER.strategies.keys())
         
         # Action flags for Game class to check
         self.action_start_battle = False
@@ -608,7 +608,7 @@ class BattleSetupScreen:
                 y = 150 + i * 35
                 name = item['name']
                 strategy = item['strategy']
-                strat_name = COMBAT_STRATEGIES.get(strategy, {}).get('name', strategy)[:12]
+                strat_name = STRATEGY_MANAGER.strategies.get(strategy, {}).get('name', strategy)[:12]
                 
                 is_formation = (item['type'] == 'formation')
                 
@@ -668,7 +668,7 @@ class BattleSetupScreen:
             pygame.draw.rect(screen, (100, 100, 150), (col_x, ship_y, dropdown_w, dropdown_h), 1)
             
             for idx, strat_id in enumerate(self.ai_strategies):
-                strat_name = COMBAT_STRATEGIES.get(strat_id, {}).get('name', strat_id)
+                strat_name = STRATEGY_MANAGER.strategies.get(strat_id, {}).get('name', strat_id)
                 opt_y = ship_y + idx * 22
                 text_color = (220, 220, 220)
                 opt_text = item_font.render(strat_name, True, text_color)

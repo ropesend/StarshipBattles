@@ -194,7 +194,7 @@ def get_resource_max_usage(ship, res_name):
     if attr and hasattr(ship, attr):
         return getattr(ship, attr, 0)
         
-    # Fallback to standard consumption if potential not calculated (backward compat)
+    # Fallback to standard consumption if potential not calculated
     fallback_map = {
         'fuel': 'fuel_consumption',
         'ammo': 'ammo_consumption',

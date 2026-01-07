@@ -68,9 +68,10 @@ class TestBuilderImprovements(unittest.TestCase):
         mock_ship.acceleration_rate = 10
         mock_ship.total_thrust = 1000
         mock_ship.energy_gen_rate = 10
-        mock_ship.max_fuel = 1000
-        mock_ship.max_ammo = 100
-        mock_ship.max_energy = 1000
+        mock_ship.resources = MagicMock() # spec=Ship doesn't see instance vars automatically
+        mock_ship.resources.set_max_value('fuel', 1000)
+        mock_ship.resources.set_max_value('ammo', 100)
+        mock_ship.resources.set_max_value('energy', 1000)
         mock_ship.max_shields = 200
         mock_ship.shield_regen_rate = 10
         mock_ship.shield_regen_cost = 5

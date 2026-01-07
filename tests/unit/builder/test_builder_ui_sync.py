@@ -91,8 +91,8 @@ class TestBuilderUISync(unittest.TestCase):
         self.assertEqual(val, target_class)
         
         # AI Strategy Name lookup
-        from game.ai.controller import COMBAT_STRATEGIES
-        strat_name = COMBAT_STRATEGIES["kamikaze"]["name"]
+        from game.ai.controller import STRATEGY_MANAGER
+        strat_name = STRATEGY_MANAGER.strategies["kamikaze"]["name"]
         val = self._get_option_value(self.panel.ai_dropdown.selected_option)
         self.assertEqual(val, strat_name)
 

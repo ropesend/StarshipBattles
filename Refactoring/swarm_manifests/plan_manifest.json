@@ -1,0 +1,43 @@
+{
+    "swarm_name": "Hull Refactor Swarm",
+    "mission_goal": "Unify Ship stats with V2 Ability System (Hull Component) and remove legacy cohesion issues.",
+    "context_root": "./",
+    "agents": [
+        {
+            "role": "Data Architect",
+            "focus": "JSON Data Migration & Legacy Cleanup (Phase 1 & 4)",
+            "primary_files": [
+                "data/components.json",
+                "data/vehicleclasses.json",
+                "game/simulation/entities/ship.py"
+            ]
+        },
+        {
+            "role": "Core Engineer",
+            "focus": "Ship.py Core Logic Refactor (Phase 2)",
+            "primary_files": [
+                "game/simulation/entities/ship.py",
+                "game/simulation/components/component.py",
+                "game/core/registry.py"
+            ]
+        },
+        {
+            "role": "UI Specialist",
+            "focus": "Builder UI & UX Compatibility (Phase 3)",
+            "primary_files": [
+                "game/ui/screens/builder_screen.py",
+                "game/ui/screens/builder_utils.py",
+                "tests/unit/builder/test_builder_ui_sync.py"
+            ]
+        },
+        {
+            "role": "QA Lead",
+            "focus": "Verification Plan & Test Coverage",
+            "primary_files": [
+                "tests/unit/entities/test_ship_core.py",
+                "tests/unit/ui/test_builder_inventory.py",
+                "tests/conftest.py"
+            ]
+        }
+    ]
+}

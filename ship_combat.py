@@ -395,11 +395,6 @@ class ShipCombatMixin:
             target.take_damage(damage_absorbed)
             
             damage -= damage_absorbed
-            
-            # REMOVED: Hardcoded Bridge death. 
-            # if isinstance(target, Bridge) and target.current_hp <= 0:
-            #     self.die() 
-            #     break 
                 
         return damage
 

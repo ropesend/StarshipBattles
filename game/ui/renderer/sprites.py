@@ -15,15 +15,10 @@ class SpriteManager:
             SpriteManager._instance = SpriteManager()
         return SpriteManager._instance
 
-    def load_atlas(self, path):
-        # Backward compatibility wrapper, or maybe just unused now if we switch fully
-        # For now, let's make a new method load_sprites that handles the logic
-        pass
-
     def load_sprites(self, base_path):
         """
         Loads sprites from assets/Images/Components if available.
-        Checks for 'Tiles' subdirectory first (new system), then base directory (legacy BMPs).
+        Checks for 'Tiles' subdirectory first, then falls back to base directory.
         Falls back to loading atlas from older path if not.
         """
         components_dir = os.path.join(base_path, "assets", "Images", "Components")

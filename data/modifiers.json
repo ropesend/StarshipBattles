@@ -31,9 +31,9 @@
             "restrictions": {
                 "allow_types": [
                     "Weapon",
-                    "ProjectileWeapon",
-                    "BeamWeapon",
-                    "SeekerWeapon"
+                    "ProjectileWeaponAbility",
+                    "BeamWeaponAbility",
+                    "SeekerWeaponAbility"
                 ]
             }
         },
@@ -63,11 +63,11 @@
             },
             "restrictions": {
                 "allow_types": [
-                    "ProjectileWeapon",
-                    "BeamWeapon"
+                    "ProjectileWeaponAbility",
+                    "BeamWeaponAbility"
                 ],
                 "deny_types": [
-                    "SeekerWeapon"
+                    "SeekerWeaponAbility"
                 ]
             }
         },
@@ -82,9 +82,9 @@
             "default_val": 0,
             "restrictions": {
                 "allow_types": [
-                    "ProjectileWeapon",
-                    "BeamWeapon",
-                    "SeekerWeapon"
+                    "ProjectileWeaponAbility",
+                    "BeamWeaponAbility",
+                    "SeekerWeaponAbility"
                 ]
             },
             "effects": {
@@ -104,7 +104,7 @@
             },
             "restrictions": {
                 "allow_types": [
-                    "BeamWeapon"
+                    "BeamWeaponAbility"
                 ]
             }
         },
@@ -123,9 +123,9 @@
             "restrictions": {
                 "allow_types": [
                     "Weapon",
-                    "ProjectileWeapon",
-                    "BeamWeapon",
-                    "SeekerWeapon"
+                    "ProjectileWeaponAbility",
+                    "BeamWeaponAbility",
+                    "SeekerWeaponAbility"
                 ]
             }
         },
@@ -143,7 +143,7 @@
             },
             "restrictions": {
                 "allow_types": [
-                    "SeekerWeapon"
+                    "SeekerWeaponAbility"
                 ]
             }
         },
@@ -161,7 +161,7 @@
             },
             "restrictions": {
                 "allow_types": [
-                    "SeekerWeapon"
+                    "SeekerWeaponAbility"
                 ]
             }
         },
@@ -179,7 +179,7 @@
             },
             "restrictions": {
                 "allow_types": [
-                    "SeekerWeapon"
+                    "SeekerWeaponAbility"
                 ]
             }
         },
@@ -197,7 +197,7 @@
             },
             "restrictions": {
                 "allow_types": [
-                    "SeekerWeapon"
+                    "SeekerWeaponAbility"
                 ]
             }
         },

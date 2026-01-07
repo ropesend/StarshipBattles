@@ -76,7 +76,7 @@ class StrategyManager:
         }
 
 def load_combat_strategies(filepath=None):
-    """Entry point for loading. Filepath arg is legacy/optional override for base path."""
+    """Entry point for loading. Filepath arg is an optional override for base path."""
     global STRATEGY_MANAGER, COMBAT_STRATEGIES
     
     # Create manager if it doesn't exist, but preserve strategies dict reference
@@ -97,17 +97,6 @@ def load_combat_strategies(filepath=None):
         
     STRATEGY_MANAGER.load_data(base_dir)
     
-    # CRITICAL: Update COMBAT_STRATEGIES reference to point to the actual strategies dict.
-    # We update in-place if COMBAT_STRATEGIES exists and is a dict, else reassign.
-    # This ensures other modules that imported COMBAT_STRATEGIES before see the new data.
-    if 'COMBAT_STRATEGIES' in globals() and isinstance(globals()['COMBAT_STRATEGIES'], dict):
-        globals()['COMBAT_STRATEGIES'].clear()
-        globals()['COMBAT_STRATEGIES'].update(STRATEGY_MANAGER.strategies)
-    else:
-        COMBAT_STRATEGIES = STRATEGY_MANAGER.strategies
-
-# Legacy support: Initialize the dict BEFORE load_combat_strategies() so it can be updated in-place
-COMBAT_STRATEGIES = {}
 
 # Initialize on import
 load_combat_strategies()

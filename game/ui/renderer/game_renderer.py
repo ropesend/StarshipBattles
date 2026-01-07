@@ -174,13 +174,13 @@ def draw_hud(surface, ship, x, y):
         y += 20
     
     # Resources
-    draw_bar(surface, x, y, 100, 8, ship.current_fuel / ship.max_fuel if ship.max_fuel > 0 else 0, (255, 165, 0))
+    draw_bar(surface, x, y, 100, 8, ship.resources.get_value('fuel') / ship.resources.get_max_value('fuel') if ship.resources.get_max_value('fuel') > 0 else 0, (255, 165, 0))
     surface.blit(font_small.render("Fuel", True, (200, 200, 200)), (x + 105, y - 2))
     y += 12
-    draw_bar(surface, x, y, 100, 8, ship.current_ammo / ship.max_ammo if ship.max_ammo > 0 else 0, (255, 50, 50))
+    draw_bar(surface, x, y, 100, 8, ship.resources.get_value('ammo') / ship.resources.get_max_value('ammo') if ship.resources.get_max_value('ammo') > 0 else 0, (255, 50, 50))
     surface.blit(font_small.render("Ammo", True, (200, 200, 200)), (x + 105, y - 2))
     y += 12
-    draw_bar(surface, x, y, 100, 8, ship.current_energy / ship.max_energy if ship.max_energy > 0 else 0, (50, 100, 255))
+    draw_bar(surface, x, y, 100, 8, ship.resources.get_value('energy') / ship.resources.get_max_value('energy') if ship.resources.get_max_value('energy') > 0 else 0, (50, 100, 255))
     surface.blit(font_small.render("Energy", True, (200, 200, 200)), (x + 105, y - 2))
     y += 20
     

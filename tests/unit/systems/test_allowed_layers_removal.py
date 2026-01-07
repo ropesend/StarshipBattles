@@ -97,7 +97,7 @@ class TestBuilderDropValidation(unittest.TestCase):
     
     def test_validator_handles_component_placement(self):
         """Validator should handle layer checks without allowed_layers."""
-        from game.simulation.entities.ship import VALIDATOR
+        from game.simulation.entities.ship import get_or_create_validator
         
         comps = RegistryManager.instance().components
         if 'bridge' not in comps:
@@ -105,7 +105,7 @@ class TestBuilderDropValidation(unittest.TestCase):
         bridge = comps['bridge'].clone()
         
         # Validate should work without AttributeError
-        result = VALIDATOR.validate_addition(self.ship, bridge, LayerType.CORE)
+        result = get_or_create_validator().validate_addition(self.ship, bridge, LayerType.CORE)
         
         # Result should be a ValidationResult object
         self.assertTrue(hasattr(result, 'is_valid'))
@@ -113,7 +113,7 @@ class TestBuilderDropValidation(unittest.TestCase):
     
     def test_weapon_blocked_in_core_layer(self):
         """Weapon should be blocked in CORE layer via vehiclelayers.json rules."""
-        from game.simulation.entities.ship import VALIDATOR
+        from game.simulation.entities.ship import get_or_create_validator
         
         # Find any weapon component in registry
         weapon_id = None
@@ -129,7 +129,7 @@ class TestBuilderDropValidation(unittest.TestCase):
         weapon = comps[weapon_id].clone()
         
         # Try to place weapon in CORE (should be blocked by block_classification:Weapons rule)
-        result = VALIDATOR.validate_addition(self.ship, weapon, LayerType.CORE)
+        result = get_or_create_validator().validate_addition(self.ship, weapon, LayerType.CORE)
         
         # Weapon should fail validation in CORE
         self.assertFalse(
@@ -139,7 +139,7 @@ class TestBuilderDropValidation(unittest.TestCase):
     
     def test_armor_allowed_in_armor_layer(self):
         """Armor should be allowed in ARMOR layer."""
-        from game.simulation.entities.ship import VALIDATOR
+        from game.simulation.entities.ship import get_or_create_validator
         
         # Find any armor component in registry
         armor_id = None
@@ -153,7 +153,7 @@ class TestBuilderDropValidation(unittest.TestCase):
         
         armor = RegistryManager.instance().components[armor_id].clone()
         
-        result = VALIDATOR.validate_addition(self.ship, armor, LayerType.ARMOR)
+        result = get_or_create_validator().validate_addition(self.ship, armor, LayerType.ARMOR)
         
         self.assertTrue(
             result.is_valid,

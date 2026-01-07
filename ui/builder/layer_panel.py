@@ -15,7 +15,7 @@ from ui.builder.structure_list_items import (
 from ui.builder.grouping_strategies import DefaultGroupingStrategy, TypeGroupingStrategy, FlatGroupingStrategy
 from ui.builder.panel_layout_config import StructurePanelLayoutConfig
 from ui.builder.drop_target import DropTarget
-from game.simulation.entities.ship import VALIDATOR
+from game.simulation.entities.ship import get_or_create_validator
 
 class LayerPanel(DropTarget):
     def __init__(self, builder, manager, rect):
@@ -384,7 +384,7 @@ class LayerPanel(DropTarget):
                  # If 0 added, show error from validation of first attempt?
                  # ship.add_components_bulk prints errors to console, but builder.show_error might be needed.
                  # Let's re-run single validation to get the error message for UI if it failed completely.
-                 validation = VALIDATOR.validate_addition(self.builder.ship, component, target_layer)
+                 validation = get_or_create_validator().validate_addition(self.builder.ship, component, target_layer)
                  if not validation.is_valid:
                      self.builder.show_error(f"Cannot add: {', '.join(validation.errors)}")
                  return False

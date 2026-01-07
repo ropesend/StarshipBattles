@@ -119,8 +119,22 @@ class ResourceRegistry:
             # Clamp
             if res.current_value > res.max_value:
                 res.current_value = res.max_value
-            elif res.current_value < 0:
                 res.current_value = 0.0
+
+    def set_max_value(self, name: str, value: float) -> None:
+        """Helper for initializing max values directly."""
+        res = self.get_resource(name)
+        if not res:
+            self.register_storage(name, value)
+        else:
+            res.max_value = value
+            
+    def set_regen_rate(self, name: str, value: float) -> None:
+        """Helper for initializing regen rates directly."""
+        res = self.get_resource(name)
+        if res:
+            res.regen_rate = value
+
 
 # --- Ability System ---
 

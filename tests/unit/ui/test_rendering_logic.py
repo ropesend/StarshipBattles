@@ -106,12 +106,22 @@ class TestRenderingLogic(unittest.TestCase):
         self.ship.mass = 1000
         self.ship.total_thrust = 5000 
         self.ship.drag = 0.5
-        self.ship.current_fuel = 50
-        self.ship.max_fuel = 100
-        self.ship.current_ammo = 10
-        self.ship.max_ammo = 20
-        self.ship.current_energy = 100
-        self.ship.max_energy = 100
+        # Configure resources mock to return values
+        resources_data = {
+            'fuel': {'current': 50, 'max': 100},
+            'ammo': {'current': 10, 'max': 20},
+            'energy': {'current': 100, 'max': 100}
+        }
+        
+        def get_value_side_effect(name):
+            return resources_data.get(name, {}).get('current', 0)
+            
+        def get_max_value_side_effect(name):
+            return resources_data.get(name, {}).get('max', 0)
+            
+        self.ship.resources.get_value.side_effect = get_value_side_effect
+        self.ship.resources.get_max_value.side_effect = get_max_value_side_effect
+
         
         draw_hud(self.mock_surface, self.ship, 10, 10)
         

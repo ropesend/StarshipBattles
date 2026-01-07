@@ -16,11 +16,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from game.ui.screens import builder_screen
 from game.ui.screens.builder_screen import BuilderSceneGUI
-from game.simulation.entities.ship import VALIDATOR, LayerType
+from game.simulation.entities.ship import get_or_create_validator, LayerType
 
 class TestBuilderDragDropReal(unittest.TestCase):
     
     def setUp(self):
+        # ... existing setup code ...
+        pass # Simplified for replacement efficiency - regex logic below addresses usage
+
         if not pygame.get_init():
             pygame.init()
             pygame.display.set_mode((1,1)) # Mock display for UIManager
@@ -106,12 +109,12 @@ class TestBuilderDragDropReal(unittest.TestCase):
         # Set benign defaults to satisfy update loop comparisons
         self.builder.ship.mass = 1000
         self.builder.ship.max_mass_budget = 10000
-        self.builder.ship.max_fuel = 100
-        self.builder.ship.current_fuel = 100
-        self.builder.ship.max_ammo = 100
-        self.builder.ship.current_ammo = 100
-        self.builder.ship.max_energy = 100
-        self.builder.ship.current_energy = 100
+        self.builder.ship.resources.set_max_value('fuel', 100)
+        self.builder.ship.resources.set_max_value('fuel', 100); self.builder.ship.resources.set_value('fuel', 100)
+        self.builder.ship.resources.set_max_value('ammo', 100)
+        self.builder.ship.resources.set_max_value('ammo', 100); self.builder.ship.resources.set_value('ammo', 100)
+        self.builder.ship.resources.set_max_value('energy', 100)
+        self.builder.ship.resources.set_max_value('energy', 100); self.builder.ship.resources.set_value('energy', 100)
         self.builder.ship.total_thrust = 500
         self.builder.ship.drag = 0.1
         self.builder.ship.name = "Test Ship"
@@ -166,10 +169,10 @@ class TestBuilderDragDropReal(unittest.TestCase):
         self.builder.controller.dragged_item = dragged
         
         # Setup Validator to return Valid
-        with patch('game.simulation.entities.ship.VALIDATOR') as mock_validator:
+        with patch('game.simulation.entities.ship.get_or_create_validator') as mock_validator:
             validation_result = MagicMock()
             validation_result.is_valid = True
-            mock_validator.validate_addition.return_value = validation_result
+            mock_validator.return_value.validate_addition.return_value = validation_result
             
             # Simulate 'add_individual' action which roughly corresponds to a drop completion (handled by controller usually)
             # Actually, InteractionController calls ship.add_component directly or via builder action?
@@ -238,7 +241,7 @@ class TestBuilderDragDropReal(unittest.TestCase):
             self.builder.handle_event(MagicMock())
             
             # Verify VALIDATOR was called
-            mock_validator.validate_addition.assert_called()
+            mock_validator.return_value.validate_addition.assert_called()
             # Verify ship.add_component called
             self.builder.ship.add_component.assert_called()
 
@@ -254,12 +257,12 @@ class TestBuilderDragDropReal(unittest.TestCase):
         
         self.builder.ship.layers[LayerType.OUTER]['components'] = [original]
         
-        with patch('game.simulation.entities.ship.VALIDATOR') as mock_validator:
+        with patch('game.simulation.entities.ship.get_or_create_validator') as mock_validator:
             # Invalid Result
             validation_result = MagicMock()
             validation_result.is_valid = False
             validation_result.errors = ["Overlapping"]
-            mock_validator.validate_addition.return_value = validation_result
+            mock_validator.return_value.validate_addition.return_value = validation_result
             
             self.builder.left_panel.handle_event = MagicMock(return_value=('add_individual', original))
             

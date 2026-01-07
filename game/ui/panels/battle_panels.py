@@ -2,7 +2,7 @@ import pygame
 import math
 from game.simulation.components.component import ComponentStatus
 from game.simulation.entities.ship import LayerType
-from game.ai.controller import COMBAT_STRATEGIES
+from game.ai.controller import STRATEGY_MANAGER
 from game.core.profiling import profile_action, profile_block
 
 class BattlePanel:
@@ -118,7 +118,7 @@ class ShipStatsPanel(BattlePanel):
             surface.blit(text, (x_indent, y))
             y += 16
         
-        strat_name = COMBAT_STRATEGIES.get(ship.ai_strategy, {}).get('name', ship.ai_strategy)
+        strat_name = STRATEGY_MANAGER.strategies.get(ship.ai_strategy, {}).get('name', ship.ai_strategy)
         text = font.render(f"AI: {strat_name}", True, (150, 200, 150))
         surface.blit(text, (x_indent, y))
         y += 16
