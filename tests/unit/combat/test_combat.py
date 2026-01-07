@@ -97,7 +97,18 @@ class TestDamageLayerLogic(unittest.TestCase):
             self.assertEqual(armor.current_hp, initial_armor_hp)
     
     def test_bridge_destruction_kills_ship(self):
-        """Destroying the bridge should kill the ship."""
+        """Destroying the bridge should NOT kill the ship without requirements."""
+        # Explicitly ensure TestShip has NO requirements for this test
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().vehicle_classes["TestShip"] = {
+            "hull_mass": 50, "max_mass": 1000, "requirements": {},
+            "layers": [
+                {"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 0.5},
+                {"type": "ARMOR", "radius_pct": 1.0, "max_mass_pct": 0.5}
+            ]
+        }
+        self.ship.ship_class = "TestShip"
+        
         # Remove armor first to make bridge accessible
         self.ship.layers[LayerType.ARMOR]['components'] = []
         self.ship.recalculate_stats()
@@ -346,9 +357,21 @@ class TestCombatFlow(unittest.TestCase):
         ship.recalculate_stats() 
         ship.emissive_armor = 5
         
+        # Find the bridge component (Hull is auto-equipped first now)
+        bridge = None
+        for comp in ship.layers[LayerType.CORE]['components']:
+            if comp.type_str == 'Bridge':
+                bridge = comp
+                break
+        self.assertIsNotNone(bridge, "Bridge component should be in CORE layer")
+        c = bridge
+        
         c.is_active = True
         c.current_hp = 100
         initial_hp = c.current_hp
+        
+        # Clear other components except the bridge for this test
+        ship.layers[LayerType.CORE]['components'] = [c]
         
         # Take 10 damage -> Reduced by 5 -> 5 damage
         ship.take_damage(10)

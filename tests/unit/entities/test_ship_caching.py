@@ -40,7 +40,8 @@ class TestShipCaching(unittest.TestCase):
         # Verify values
         self.assertEqual(summary['dps'], 10.0) # 10 / 1.0
         self.assertEqual(summary['range'], 1000)
-        self.assertEqual(summary['mass'], 60.0) # 10 component + 50 base hull
+        # Mass: Hull component (50 for Escort) + weapon component (10) = 60
+        self.assertEqual(summary['mass'], 60.0)
         
     def test_cached_summary_updates(self):
         # Add weapon
@@ -66,7 +67,8 @@ class TestShipCaching(unittest.TestCase):
         
         summary = self.ship.cached_summary
         self.assertEqual(summary['dps'], 10.0)
-        self.assertEqual(summary['mass'], 70.0) # 50 + 10 + 10
+        # Mass: Hull component (50) + 2 weapons (10 + 10) = 70
+        self.assertEqual(summary['mass'], 70.0)
 
 if __name__ == '__main__':
     unittest.main()

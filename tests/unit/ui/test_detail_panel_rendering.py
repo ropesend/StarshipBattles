@@ -49,6 +49,7 @@ class TestDetailPanelRendering(unittest.TestCase):
         self.uiimage_patch.stop()
         self.uibutton_patch.stop()
         self.uitextbox_patch.stop()
+        self.uitextbox_patch_real.stop()
 
     def test_html_stats_generation_basic(self):
         """Verify basic component stats (Name, Type, Mass, HP) are generated."""

@@ -1,8 +1,0 @@
-To Start a New Refactor (The Architect)
-!EXECUTE_PROTOCOL: Refactoring/protocols/10_start_refactor.md
-
-Goal: [Describe your refactor here] Key Changes:
-
-[Change A]
-
-[Change B]

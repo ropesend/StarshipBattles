@@ -1,3 +1,13 @@
+# INSTRUCTIONS FOR DEBUG SCOUT (Fixture_Scout)
+
+**ZONE:** Conftest & Fixtures
+**OBJECTIVE:** Find clues related to the failing test in this specific area.
+
+## CONTEXT
+
+[WARNING: File not found: tests/conftest.py]
+
+--- START FILE: tests/unit/entities/test_ship.py ---
 import unittest
 import sys
 import os
@@ -193,3 +203,14 @@ class TestShipClassMutation(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+--- END FILE: tests/unit/entities/test_ship.py ---
+
+
+## FAILURE OUTPUT
+test_ship_mass_calculation fails with AssertionError: 500 != 505. Error occurs after equipping 'Mk.II Thruster'. Possible mass double-counting.
+
+## OUTPUT
+1. Analyze your zone. 
+2. Use `write_to_file` to save your report to:
+   `C:\Dev\Starship Battles\Test Debugging\swarm_reports\Fixture_Scout_Report.md`

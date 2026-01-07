@@ -1,0 +1,38 @@
+{
+    "swarm_name": "Sample Debug Swarm - Ship Stats Failure",
+    "failure_summary": "test_ship_mass_calculation fails with AssertionError: 500 != 505. Error occurs after equipping 'Mk.II Thruster'. Possible mass double-counting.",
+    "agents": [
+        {
+            "role": "Fixture_Scout",
+            "zone": "Conftest & Fixtures",
+            "primary_files": [
+                "tests/conftest.py",
+                "tests/unit/entities/test_ship.py"
+            ]
+        },
+        {
+            "role": "State_Scout",
+            "zone": "Registry & Global State",
+            "primary_files": [
+                "game/core/registry.py",
+                "game/simulation/components/component_manager.py"
+            ]
+        },
+        {
+            "role": "Data_Scout",
+            "zone": "JSON Data Files",
+            "primary_files": [
+                "data/components.json",
+                "data/vehicleclasses.json"
+            ]
+        },
+        {
+            "role": "Logic_Scout",
+            "zone": "Base Class & Inheritance",
+            "primary_files": [
+                "game/simulation/entities/entity.py",
+                "game/simulation/entities/ship_stats.py"
+            ]
+        }
+    ]
+}

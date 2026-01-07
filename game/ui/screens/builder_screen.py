@@ -28,6 +28,7 @@ from ui.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel, 
 from ui.builder.schematic_view import SchematicView
 from ui.builder.interaction_controller import InteractionController
 from ui.builder.event_bus import EventBus
+from game.ui.screens.builder_utils import PANEL_WIDTHS, PANEL_HEIGHTS, MARGINS, BuilderEvents, calculate_dynamic_layer_width
 from game.core.screenshot_manager import ScreenshotManager
 
 # Initialize Tkinter root and hide it (for simpledialog)
@@ -92,13 +93,13 @@ class BuilderSceneGUI:
             self.theme_manager = ShipThemeManager.get_instance()
             self.theme_manager.initialize() # No path needed anymore
         
-        # Layout
-        self.left_panel_width = 450
-        self.right_panel_width = 750 # Widened for ship portrait and 2-column stats
-        self.layer_panel_width = 450 # Widened
-        self.detail_panel_width = 550
-        self.bottom_bar_height = 60
-        self.weapons_report_height = 600
+        # Layout (from centralized constants)
+        self.left_panel_width = PANEL_WIDTHS.component_palette
+        self.right_panel_width = PANEL_WIDTHS.right_panel
+        self.layer_panel_width = calculate_dynamic_layer_width(screen_width)
+        self.detail_panel_width = PANEL_WIDTHS.detail_panel
+        self.bottom_bar_height = PANEL_HEIGHTS.bottom_bar
+        self.weapons_report_height = PANEL_HEIGHTS.weapons_report
         
         # MVC Lite
         # Schematic View shifted right
@@ -132,7 +133,8 @@ class BuilderSceneGUI:
         with profile_block("Builder: Init Panels (Left/Right/Layer)"):
             self.left_panel = BuilderLeftPanel(
                 self, self.ui_manager,
-                pygame.Rect(0, 0, self.left_panel_width, panels_height)
+                pygame.Rect(0, 0, self.left_panel_width, panels_height),
+                event_bus=self.event_bus
             )
             
             # New Layer Panel
@@ -177,7 +179,7 @@ class BuilderSceneGUI:
         weapons_panel_y = self.height - self.bottom_bar_height - self.weapons_report_height
         # Shifted weapons panel
         weapons_panel_x = self.left_panel_width + self.layer_panel_width
-        weapons_panel_width = self.width - weapons_panel_x
+        weapons_panel_width = self.width - weapons_panel_x - self.right_panel_width
         with profile_block("Builder: Init Weapons Panel"):
             self.weapons_report_panel = WeaponsReportPanel(
                 self, self.ui_manager,
@@ -1060,6 +1062,9 @@ class BuilderSceneGUI:
             
             self.update_stats()
             self.rebuild_modifier_ui()
+            
+            # Emit registry reload event for decoupled UI sync
+            self.event_bus.emit(BuilderEvents.REGISTRY_RELOADED, None)
             
             # Show success
             self.show_error(f"Reloaded data from {os.path.basename(directory)}")

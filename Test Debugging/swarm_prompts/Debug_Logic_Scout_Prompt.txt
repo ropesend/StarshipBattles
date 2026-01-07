@@ -1,0 +1,19 @@
+# INSTRUCTIONS FOR DEBUG SCOUT (Logic_Scout)
+
+**ZONE:** Base Class & Inheritance
+**OBJECTIVE:** Find clues related to the failing test in this specific area.
+
+## CONTEXT
+
+[WARNING: File not found: game/simulation/entities/entity.py]
+
+[WARNING: File not found: game/simulation/entities/ship_stats.py]
+
+
+## FAILURE OUTPUT
+test_ship_mass_calculation fails with AssertionError: 500 != 505. Error occurs after equipping 'Mk.II Thruster'. Possible mass double-counting.
+
+## OUTPUT
+1. Analyze your zone. 
+2. Use `write_to_file` to save your report to:
+   `C:\Dev\Starship Battles\Test Debugging\swarm_reports\Logic_Scout_Report.md`

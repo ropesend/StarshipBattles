@@ -4,12 +4,16 @@ from pygame_gui.elements import UIPanel, UILabel, UIScrollingContainer, UIDropDo
 from ui.builder.components import ComponentListItem
 
 class BuilderLeftPanel:
-    def __init__(self, builder, manager, rect):
+    def __init__(self, builder, manager, rect, event_bus=None):
         self.builder = builder
         self.manager = manager
         self.rect = rect
         self.items = []
         self.selected_item = None
+        self.event_bus = event_bus
+        
+        if event_bus:
+            event_bus.subscribe("REGISTRY_RELOADED", self.on_registry_reloaded)
         
         # Store original order of components for sorting
         self.component_order_map = {c.id: i for i, c in enumerate(builder.available_components)}
@@ -139,6 +143,33 @@ class BuilderLeftPanel:
         
         # Modifier Panel
 
+    def on_registry_reloaded(self, data):
+        """Handle registry reload event - refresh component list and filter options."""
+        # Update available components from new registry data
+        from game.simulation.components.component import get_all_components
+        self.builder.available_components = get_all_components()
+        self.component_order_map = {c.id: i for i, c in enumerate(self.builder.available_components)}
+        
+        # Update type filter options
+        all_types = sorted(list(set(c.type_str for c in self.builder.available_components)))
+        self.type_filter_options = ["All Types"] + all_types
+        if self.current_type_filter not in self.type_filter_options:
+            self.current_type_filter = "All Types"
+        
+        # Rebuild the filter dropdown
+        y_filters = 40
+        self.filter_type_dropdown.kill()
+        self.filter_type_dropdown = UIDropDownMenu(
+            options_list=self.type_filter_options,
+            starting_option=self.current_type_filter,
+            relative_rect=pygame.Rect(5, y_filters, (self.rect.width//2)-10, 30),
+            manager=self.manager,
+            container=self.panel
+        )
+        self.filter_type_dropdown.change_layer(5)
+        
+        # Refresh the component list
+        self.update_component_list()
         
     def update(self, dt):
         """Update panel logic."""

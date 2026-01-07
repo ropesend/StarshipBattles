@@ -54,9 +54,11 @@ class BuilderRightPanel:
         self.builder = builder
         self.manager = manager
         self.rect = rect
+        self.event_bus = event_bus
         
         if event_bus:
             event_bus.subscribe("SHIP_UPDATED", self.on_ship_updated)
+            event_bus.subscribe("REGISTRY_RELOADED", self.on_registry_reloaded)
         
         self.panel = UIPanel(
             relative_rect=rect,
@@ -67,6 +69,10 @@ class BuilderRightPanel:
         self.setup_controls()
         self.setup_stats()
         
+    def on_registry_reloaded(self, data):
+        """Handle registry reload event - refresh all controls with new data."""
+        self.refresh_controls()
+
     def on_ship_updated(self, ship):
         # Check if resource keys match our current rows
         # If mismatch, we must rebuild the layout to add/remove rows

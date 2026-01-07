@@ -1,0 +1,12 @@
+# PROMPT: Review Debug Reports
+
+**CONTEXT:** Scout agents have completed their exploration of unlikely zones.
+
+**GOAL:** Synthesize findings into a fix strategy.
+
+**INSTRUCTIONS:**
+1. Load all reports from `Test Debugging/swarm_reports/`.
+2. Adopt the **Synthesizer** persona.
+3. Identify any "Signal" found in the "Noise" of the exploration zones.
+4. Rank investigation priorities for the main agent.
+5. Propose a specific experiment or fix to resolve the failing test.

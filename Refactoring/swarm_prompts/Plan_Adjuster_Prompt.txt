@@ -1,11 +1,11 @@
 # INSTRUCTIONS FOR AGENT (Plan_Adjuster)
 
 **ROLE:** Plan_Adjuster
-**FOCUS:** Generate DETAILED SPECS for Phase 2 - Core Logic & Stability
+**FOCUS:** Generate DETAILED SPECS for Phase 5 - Legacy Purge & Final Polish
 
 ## YOUR GOAL
 Analyze the provided code context below.
-Isolate issues specifically related to your FOCUS (Generate DETAILED SPECS for Phase 2 - Core Logic & Stability).
+Isolate issues specifically related to your FOCUS (Generate DETAILED SPECS for Phase 5 - Legacy Purge & Final Polish).
 Ignore unrelated issues unless they are critical system failures.
 
 ## PHASE STATUS
@@ -15,9 +15,13 @@ Ignore unrelated issues unless they are critical system failures.
 **Goal:** Unify Ship stats with V2 Ability System (Hull Component) and eliminate architectural incoherence.
 
 ## Status
-**Current Phase:** Phase 1 (Data & State Foundations) - COMPLETE
+**Current Phase:** Phase 4 (UI Reconstruction) - AWAITING REVIEW
 **Start Date:** 2026-01-05
-**Status:** [PHASE_1_COMPLETE]
+**Phase 1 Review:** ✅ APPROVED (2026-01-06)
+**Phase 2 Review:** ✅ APPROVED (2026-01-06)
+**Phase 3 Review:** ✅ APPROVED (2026-01-06)
+**Phase 4 Review:** ⏳ PENDING (2026-01-06)
+**Status:** [PHASE_4_COMPLETE_PENDING_REVIEW]
 
 ---
 
@@ -35,7 +39,7 @@ Ignore unrelated issues unless they are critical system failures.
 
 ## Phased Schedule
 
-### Phase 1: Data & State Foundations (The Bedrock)
+### Phase 1: Data & State Foundations (The Bedrock) [Complete]
 **Objective:** Fix critical state bugs and prepare data structures.
 - [x] **Critical Fix:** Patch `resource_manager.py` clamping bug (resets to 0 on overflow).
 - [x] **Data Migration:** Create `Hull` components in `data/components.json` for all 18 classes. [Data Architect]
@@ -43,26 +47,346 @@ Ignore unrelated issues unless they are critical system failures.
 - [x] **Serialization:** Update `Ship.to_dict`/`from_dict` to persist `ResourceRegistry` values. [Data Architect]
 - [x] **Cleanup:** Remove hardcoded ability string maps in `Component._instantiate_abilities`.
 
-### Phase 2: Core Logic & Stability (The Engine)
+---
+
+### Phase 2: Core Logic & Stability (The Engine) [Complete]
 **Objective:** Implement the "Hull as Component" logic and fix core simulation loops.
-- [ ] **Refactor:** Update `Ship.__init__` to auto-equip `default_hull_id`. [Core Engineer]
-- [ ] **Refactor:** Switch `Ship.mass` and `Ship.hp` to cached properties in `ShipStatsCalculator`.
-- [ ] **Refactor:** Implement `CommandAndControl` and `CrewRequired` logic in `update_derelict_status`.
-- [ ] **Cleanup:** Remove duplicate To-Hit/Derelict initializations in `Ship.py`.
-- [ ] **Cleanup:** Standardize MRO-based identity checks (remove brittle class name checks).
+- [x] **Task 2.1:** Update `Ship.__init__` to auto-equip `default_hull_id`. [Core Engineer]
+- [ ] **Task 2.2:** Switch `Ship.mass` and `Ship.hp` to cached properties in `ShipStatsCalculator`. (DEFERRED - optimization)
+- [x] **Task 2.3:** Implement `CommandAndControl` and `CrewRequired` logic in `update_derelict_status`.
+- [x] **Task 2.4:** Remove duplicate To-Hit/Derelict initializations in `Ship.py`.
+- [x] **Task 2.5:** Standardize MRO-based identity checks (remove brittle class name checks).
+- [x] **Task 2.6:** Fix detail panel rendering test regressions. [UI Specialist]
+  - **File:** `tests/unit/ui/test_detail_panel_rendering.py`
+  - **Fix:** Added missing `uitextbox_patch_real.stop()` in tearDown to prevent patch leakage causing intermittent failures in parallel execution.
 
-### Phase 3: Test Infrastructure & Verification (The Guardrails)
+---
+
+## Phase 2 Implementation Specifications
+
+### Task 2.1: Auto-Equip `default_hull_id` in `Ship.__init__`
+**File:** `game/simulation/entities/ship.py`
+**Method:** `__init__`
+
+**Current State (lines ~223-230):**
+```python
+class_def = get_vehicle_classes().get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
+self.base_mass: float = class_def.get('hull_mass', 50)  # LEGACY
+```
+
+**Target Implementation:**
+```python
+from game.simulation.components.component import create_component
+
+# In __init__, AFTER _initialize_layers():
+class_def = get_vehicle_classes().get(self.ship_class, {})
+default_hull_id = class_def.get('default_hull_id')
+
+if default_hull_id:
+    hull_component = create_component(default_hull_id)
+    if hull_component:
+        self.add_component(hull_component, LayerType.CORE)
+    else:
+        print(f"WARNING: Hull '{default_hull_id}' not found for {self.ship_class}")
+```
+
+**Steps:**
+1. Import `create_component` from `game.simulation.components.component`.
+2. Remove `self.base_mass` assignment from `class_def.get('hull_mass', ...)`.
+3. After `_initialize_layers()`, lookup `default_hull_id` and call `create_component()`.
+4. Add Hull to `CORE` layer via `add_component()`.
+
+**Edge Cases:**
+- Missing `default_hull_id` → Log warning, continue (test-only ships).
+- Component registry not loaded → Graceful `None` return from `create_component`.
+
+---
+
+### Task 2.2: Cached `mass` and `hp` Properties
+**Files:** `game/simulation/entities/ship.py`, `ship_stats.py`
+
+**Current State:**
+- `self.mass: float = 0.0` (direct attribute)
+- `@property max_hp` / `hp` → O(n) iteration on every access
+
+**Target Implementation in `Ship.__init__`:**
+```python
+self._cached_mass: float = 0.0
+self._cached_max_hp: int = 0
+self._cached_hp: int = 0
+```
+
+**Target Properties:**
+```python
+@property
+def mass(self) -> float:
+    return self._cached_mass
+
+@property
+def max_hp(self) -> int:
+    return self._cached_max_hp
+
+@property
+def hp(self) -> int:
+    return self._cached_hp
+```
+
+**In `ShipStatsCalculator.calculate(ship)`:**
+```python
+# Calculate and cache
+total_mass = sum(c.mass for layer in ship.layers.values() for c in layer['components'])
+total_max_hp = sum(c.max_hp for layer in ship.layers.values() for c in layer['components'])
+total_hp = sum(c.current_hp for layer in ship.layers.values() for c in layer['components'])
+
+ship._cached_mass = total_mass
+ship._cached_max_hp = total_max_hp
+ship._cached_hp = total_hp
+```
+
+---
+
+### Task 2.3: Ability-Based Derelict Logic
+**File:** `game/simulation/entities/ship.py`
+**Method:** `update_derelict_status`
+
+**New Abilities Required (in `abilities.py`):**
+```python
+class CommandAndControl(Ability):
+    """Marks component as command center (Bridge, CIC)."""
+    pass
+```
+
+**Target Implementation:**
+```python
+def update_derelict_status(self) -> None:
+    # Check 1: Command and Control
+    has_command = any(
+        comp.is_operational and comp.has_ability('CommandAndControl')
+        for layer in self.layers.values()
+        for comp in layer['components']
+    )
+    
+    if not has_command:
+        self.is_derelict = True
+        self.bridge_destroyed = True
+        return
+    
+    # Check 2: Crew Capacity (optional)
+    total_crew_req = self.get_total_ability_value('CrewRequired')
+    total_crew_cap = self.get_total_ability_value('CrewCapacity')
+    
+    if total_crew_req > total_crew_cap:
+        self.is_derelict = True
+        return
+    
+    self.is_derelict = False
+```
+
+**Data Migration:** Add `"CommandAndControl": true` to Bridge components in `components.json`.
+
+---
+
+### Task 2.4: Remove Duplicate Initializations
+**File:** `game/simulation/entities/ship.py`
+
+**Remove (lines ~248-251):**
+```python
+self.baseline_to_hit_offense = 0.0  # DUPLICATE
+self.to_hit_profile = 0.0  # DUPLICATE
+```
+
+**Keep (lines ~298-300):**
+```python
+self.to_hit_profile: float = 1.0       # Defensive Multiplier
+self.baseline_to_hit_offense: float = 1.0  # Offensive Multiplier
+```
+
+---
+
+### Task 2.5: Standardize Identity Checks
+**File:** `game/simulation/entities/ship.py`
+**Method:** `max_weapon_range` (lines ~325-355)
+
+**Current (brittle):**
+```python
+if cls.__name__ == 'WeaponAbility':  # STRING CHECK
+```
+
+**Target:**
+```python
+from game.simulation.components.abilities import WeaponAbility, SeekerWeaponAbility
+
+for ab in comp.ability_instances:
+    if isinstance(ab, WeaponAbility):  # POLYMORPHIC
+        rng = getattr(ab, 'range', 0.0)
+        if isinstance(ab, SeekerWeaponAbility) and rng <= 0:
+            rng = ab.projectile_speed * ab.endurance
+        max_rng = max(max_rng, rng)
+```
+
+### Phase 3: Test Infrastructure & Verification (The Guardrails) [Complete]
 **Objective:** Restore test isolation and verify unified stats.
-- [ ] **Infrastructure:** Restore/Fix `tests/conftest.py` for proper `RegistryManager` isolation. [QA Lead]
-- [ ] **New Test:** Create `tests/unit/entities/test_ship_core.py` (Mocked Hull/Stat verification).
-- [ ] **Audit:** Verify `Ship` tests typically use `RegistryManager` utilities.
+- [x] **Task 3.1:** Restore/Fix `tests/conftest.py` for proper `RegistryManager` isolation. [QA Lead]
+  - Added pre-test `mgr.clear()` before marker check
+  - Restructured with try/finally for unconditional post-test cleanup
+- [x] **Task 3.2:** Create `tests/unit/entities/test_ship_core.py` (Mocked Hull/Stat verification).
+  - Created 6 test cases covering Hull auto-equip, legacy fallback, mass/HP aggregation, derelict status
+  - All tests passing
+- [x] **Task 3.3:** Audit existing Ship tests for `RegistryManager` usage compliance.
+  - grep for COMPONENT_REGISTRY → 0 matches ✓
+  - grep for VEHICLE_CLASSES → 0 matches ✓
 
-### Phase 4: UI Reconstruction (The Interface)
+---
+
+## Phase 3 Implementation Specifications
+
+### Task 3.1: Registry Isolation in `conftest.py`
+**File:** `tests/conftest.py`
+**Root Cause:** `reset_game_state` fixture skips cleanup when `use_custom_data` marker is present.
+
+**Target Implementation:**
+```python
+@pytest.fixture(autouse=True)
+def reset_game_state(monkeypatch, request):
+    from game.core.registry import RegistryManager
+    mgr = RegistryManager.instance()
+    
+    # Pre-test cleanup (ALWAYS)
+    mgr.clear()
+
+    if "use_custom_data" not in request.keywords:
+        # Standard Fast Hydration
+        cache = SessionRegistryCache.instance()
+        cache.load_all_data()
+        mgr.hydrate(...)
+        
+    yield
+    
+    # Post-test cleanup (ALWAYS RUNS)
+    mgr.clear()
+```
+
+**Steps:**
+1. Open `tests/conftest.py`.
+2. Locate `reset_game_state` fixture.
+3. Add `mgr.clear()` call BEFORE the marker check.
+4. Ensure `mgr.clear()` is called AFTER `yield` unconditionally.
+5. Run `pytest tests/unit/entities/test_sequence_hazard.py` to verify isolation.
+
+---
+
+### Task 3.2: Create `test_ship_core.py`
+**File:** `tests/unit/entities/test_ship_core.py`
+
+**Test Cases:**
+
+#### TC-3.2.1: Hull Auto-Equip Verification
+```python
+def test_hull_auto_equip(registry_with_hull):
+    """Verify Ship auto-equips default_hull_id from vehicle class."""
+    ship = Ship(name="Test", x=0, y=0, color=(255,255,255), ship_class="Escort")
+    
+    core_comps = ship.layers[LayerType.CORE]['components']
+    assert len(core_comps) == 1
+    assert core_comps[0].id == "hull_escort"
+    assert ship.base_mass == 0.0  # Attribute Shadowing
+```
+
+#### TC-3.2.2: Legacy Fallback (No Hull)
+```python
+def test_no_hull_fallback(registry_no_hull):
+    """Verify Ship uses legacy hull_mass when no default_hull_id."""
+    ship = Ship(name="Test", x=0, y=0, color=(255,255,255), ship_class="TestShip")
+    
+    core_comps = ship.layers[LayerType.CORE]['components']
+    assert len(core_comps) == 0
+    assert ship.base_mass == 100.0
+```
+
+#### TC-3.2.3: Mass Aggregation
+```python
+def test_mass_from_components(ship_with_components):
+    """Verify Ship.mass equals sum of all component masses + base_mass."""
+    ship = ship_with_components
+    ship.recalculate_stats()
+    
+    expected_mass = ship.base_mass + sum(
+        c.mass for layer in ship.layers.values() for c in layer['components']
+    )
+    assert ship.mass == expected_mass
+```
+
+#### TC-3.2.4: HP Aggregation
+```python
+def test_hp_from_components(ship_with_components):
+    """Verify Ship.max_hp equals sum of component max_hp values."""
+    ship = ship_with_components
+    
+    expected_hp = sum(
+        c.max_hp for layer in ship.layers.values() for c in layer['components']
+    )
+    assert ship.max_hp == expected_hp
+```
+
+#### TC-3.2.5: Derelict Status from CommandAndControl
+```python
+def test_derelict_on_bridge_destruction(ship_with_bridge):
+    """Verify ship becomes derelict when CommandAndControl component destroyed."""
+    ship = ship_with_bridge
+    bridge = next(c for c in ship.layers[LayerType.CORE]['components'] 
+                  if c.has_ability('CommandAndControl'))
+    
+    bridge.current_hp = 0
+    ship.update_derelict_status()
+    
+    assert ship.is_derelict is True
+```
+
+**Fixtures Required:**
+- `registry_with_hull`: Populates RegistryManager with Escort class + hull_escort component.
+- `registry_no_hull`: Populates RegistryManager with TestShip class (hull_mass=100, no default_hull_id).
+- `ship_with_components`: Creates Ship with known components for mass/HP testing.
+- `ship_with_bridge`: Creates Ship with Bridge component having CommandAndControl ability.
+
+---
+
+### Task 3.3: Audit Ship Tests for RegistryManager Compliance
+**Scope:** `tests/unit/entities/`, `tests/integration/`
+
+**Verification Steps:**
+1. `grep -r "COMPONENT_REGISTRY" tests/` → Should return 0 matches.
+2. `grep -r "VEHICLE_CLASSES" tests/` → Should return 0 matches.
+3. `grep -r "from game.simulation.entities.ship import" tests/` → Verify imports use `get_vehicle_classes`, `get_component_registry`.
+
+**Remediation Pattern:**
+```python
+# OLD (Direct Import)
+from game.simulation.entities.ship import COMPONENT_REGISTRY
+
+# NEW (RegistryManager Access)
+from game.core.registry import get_component_registry
+components = get_component_registry()
+```
+
+**Run Verification:**
+```bash
+pytest tests/unit/entities/ -v
+pytest tests/integration/ -v
+```
+
+### Phase 4: UI Reconstruction (The Interface) [Complete]
 **Objective:** Resolve layout overlaps and ensure builder compatibility.
-- [ ] **Restoration:** Create/Restore `game/ui/screens/builder_utils.py` (Layout constants). [UI Specialist]
-- [ ] **Layout Fix:** Implement relative/grid sizing for `builder_screen.py` to fix 1920px overlap.
-- [ ] **Layout Fix:** Resolve vertical collision between Weapons Report and Nav Panels.
-- [ ] **Logic Fix:** Switch `BuilderSceneGUI` to event-based data sync (stop recreating dropdowns).
+- [x] **Task 4.1:** Create `game/ui/screens/builder_utils.py` (Layout constants). [UI Specialist]
+  - Created centralized module with `PanelWidths`, `PanelHeights`, `Margins`, and `BuilderEvents` constants
+- [x] **Task 4.2:** Implement relative/grid sizing for `builder_screen.py` to fix 1920px overlap.
+  - FIXED: Changed `layer_panel_width` from fixed `PANEL_WIDTHS.layer_panel` to dynamic `calculate_dynamic_layer_width(screen_width)`
+  - FIXED: `weapons_panel_width` calculation now subtracts `right_panel_width` to prevent overlap
+- [x] **Task 4.3:** Resolve vertical collision between Weapons Report and Nav Panels.
+  - ANALYZED: `right_panel.py` uses single scroll container, no sub-panels needing `update_layout()`
+  - RECLASSIFIED: Issue was horizontal overlap (covered by Task 4.2b), not vertical stacking
+- [x] **Task 4.4:** Switch `BuilderSceneGUI` to event-based data sync using `REGISTRY_RELOADED`.
+  - Added `REGISTRY_RELOADED` event emission in `_reload_data`
+  - Updated `BuilderRightPanel` and `BuilderLeftPanel` to subscribe to event
 
 ### Phase 5: Legacy Purge & Final Polish (The Cleanup)
 **Objective:** Remove deprecated data and finalize the refactor.
@@ -77,10 +401,82 @@ Ignore unrelated issues unless they are critical system failures.
 
 ---
 
+## Phase 4 Implementation Specifications
+
+### Task 4.1: Centralize Layout Constants
+**File:** `game/ui/screens/builder_utils.py` [NEW]
+
+**Implementation Spec:**
+Create a utility module to define the design system's dimensions.
+
+```python
+# game/ui/screens/builder_utils.py
+
+PANEL_WIDTHS = {
+    'component_palette': 400,
+    'structure_list': 400,
+    'detail_panel': 500,
+    'ship_stats': 750
+}
+
+PANEL_HEIGHTS = {
+    'bottom_bar': 60,
+    'weapons_report': 500,
+    'modifier_panel': 360
+}
+
+MARGINS = {
+    'edge': 20,
+    'gutter': 10
+}
+```
+
+---
+
+### Task 4.2: Relative/Grid Layout for 1920px+
+**File:** `game/ui/screens/builder_screen.py`
+
+**Implementation Spec:**
+1. **Calculate Available Center Width:** `center_width = screen_width - PANEL_WIDTHS['component_palette'] - PANEL_WIDTHS['ship_stats']`.
+2. **Dynamic Layer Panel:** Instead of fixed 450px, the Layer Panel should take `min(400, center_width * 0.3)`.
+3. **Schematic View:** Takes the remaining center space.
+4. **Detail Panel Overlay:** Position the Detail Panel as a `pygame_gui.elements.UIPanel` with a relative offset from the right.
+
+---
+
+### Task 4.3: Resolve Vertical Panel Collision
+**File:** `ui/builder/right_panel.py`
+
+**Implementation Spec:**
+The "Weapons Report" and "Navigation Panels" must use a vertical stack instead of fixed Y-offsets.
+
+```python
+def update_layout(self):
+    current_y = MARGINS['edge']
+    for panel in self.sub_panels:
+        panel.set_relative_position((0, current_y))
+        current_y += panel.rect.height + MARGINS['gutter']
+```
+
+---
+
+### Task 4.4: Event-Based UI Synchronization
+**Files:** `ui/builder/event_bus.py`, `game/ui/screens/builder_screen.py`
+
+**Implementation Spec:**
+1. **Registry Reload Event:** Add `REGISTRY_RELOADED = 'REGISTRY_RELOADED'` to `EventBus`.
+2. **Panel Subscriptions:** `BuilderRightPanel` and `BuilderLeftPanel` subscribe to `REGISTRY_RELOADED`.
+3. **Internal Refresh:** Update `BuilderRightPanel.refresh_controls()` to update dropdown *options* without killing the object.
+4. **Preserve Selection:** Cache `self.ship.ship_class` before reload and re-apply to dropdown after refresh.
+
+---
+
 ## Test Triage Table
-| Test File | Status | Owner | Notes |
-| :--- | :--- | :--- | :--- |
-| (Empty) | | | |
+| Issue | File | Status | Owner | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| Task 4.2a: Dynamic Layer Width | `builder_screen.py` | RESOLVED | UI Specialist | Changed to `calculate_dynamic_layer_width(screen_width)` |
+| Task 4.2b: Weapons Panel Width | `builder_screen.py` | RESOLVED | UI Specialist | Subtracted `right_panel_width` from calculation |
+| Task 4.3: Vertical Stacking | `right_panel.py` | NOT_APPLICABLE | UI Specialist | Reclassified: right_panel uses single scroll container, no sub-panels |
 
 --- END ACTIVE REFACTOR CONTEXT ---
 
@@ -94,6 +490,1760 @@ You are an autonomous agent.
 
 ## CONTEXT
 
+--- START FILE: data/vehicleclasses.json ---
+{
+    "classes": {
+        "Escort": {
+            "type": "Ship",
+            "code": "ES",
+            "hull_mass": 50,
+            "max_mass": 1000,
+            "layer_config": "Capital_Escort",
+            "default_hull_id": "hull_escort",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Frigate": {
+            "type": "Ship",
+            "code": "FR",
+            "hull_mass": 100,
+            "max_mass": 2000,
+            "layer_config": "Capital_Escort",
+            "default_hull_id": "hull_frigate",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Destroyer": {
+            "type": "Ship",
+            "code": "DS",
+            "hull_mass": 200,
+            "max_mass": 4000,
+            "layer_config": "Capital_Escort",
+            "default_hull_id": "hull_destroyer",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Light Cruiser": {
+            "type": "Ship",
+            "code": "LC",
+            "hull_mass": 300,
+            "max_mass": 8000,
+            "layer_config": "Capital_Escort",
+            "default_hull_id": "hull_light_cruiser",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Cruiser": {
+            "type": "Ship",
+            "code": "CR",
+            "hull_mass": 400,
+            "max_mass": 16000,
+            "layer_config": "Capital_Standard",
+            "default_hull_id": "hull_cruiser",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Heavy Cruiser": {
+            "type": "Ship",
+            "code": "HC",
+            "hull_mass": 600,
+            "max_mass": 32000,
+            "layer_config": "Capital_Standard",
+            "default_hull_id": "hull_heavy_cruiser",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Battle Cruiser": {
+            "type": "Ship",
+            "code": "BC",
+            "hull_mass": 800,
+            "max_mass": 64000,
+            "layer_config": "Capital_Standard",
+            "default_hull_id": "hull_battle_cruiser",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Battleship": {
+            "type": "Ship",
+            "code": "BS",
+            "hull_mass": 1600,
+            "max_mass": 128000,
+            "layer_config": "Capital_Standard",
+            "default_hull_id": "hull_battleship",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Dreadnought": {
+            "type": "Ship",
+            "code": "DN",
+            "hull_mass": 3200,
+            "max_mass": 256000,
+            "layer_config": "Capital_Standard",
+            "default_hull_id": "hull_dreadnought",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Superdreadnaugh": {
+            "type": "Ship",
+            "code": "SD",
+            "hull_mass": 6400,
+            "max_mass": 512000,
+            "layer_config": "Capital_Standard",
+            "default_hull_id": "hull_superdreadnaugh",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Monitor": {
+            "type": "Ship",
+            "code": "MO",
+            "hull_mass": 12800,
+            "max_mass": 1024000,
+            "layer_config": "Capital_Standard",
+            "default_hull_id": "hull_monitor",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Fighter (Small)": {
+            "type": "Fighter",
+            "code": "SF",
+            "hull_mass": 5,
+            "max_mass": 25,
+            "layer_config": "Fighter_Standard",
+            "default_hull_id": "hull_fighter_small",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Fighter (Medium)": {
+            "type": "Fighter",
+            "code": "MF",
+            "hull_mass": 10,
+            "max_mass": 35,
+            "layer_config": "Fighter_Standard",
+            "default_hull_id": "hull_fighter_medium",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Fighter (Large)": {
+            "type": "Fighter",
+            "code": "LF",
+            "hull_mass": 15,
+            "max_mass": 50,
+            "layer_config": "Fighter_Standard",
+            "default_hull_id": "hull_fighter_large",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Fighter (Heavy)": {
+            "type": "Fighter",
+            "code": "HF",
+            "hull_mass": 20,
+            "max_mass": 70,
+            "layer_config": "Fighter_Standard",
+            "default_hull_id": "hull_fighter_heavy",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                },
+                "propulsion": {
+                    "ability": "CombatPropulsion",
+                    "min_value": 1
+                },
+                "fuel": {
+                    "ability": "FuelStorage",
+                    "min_value": 1
+                }
+            }
+        },
+        "Satellite (Small)": {
+            "type": "Satellite",
+            "code": "SS",
+            "hull_mass": 50,
+            "max_mass": 250,
+            "layer_config": "Satellite_Standard",
+            "default_hull_id": "hull_satellite_small",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Satellite (Medium)": {
+            "type": "Satellite",
+            "code": "MS",
+            "hull_mass": 100,
+            "max_mass": 500,
+            "layer_config": "Satellite_Standard",
+            "default_hull_id": "hull_satellite_medium",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Satellite (Large)": {
+            "type": "Satellite",
+            "code": "LS",
+            "hull_mass": 200,
+            "max_mass": 1000,
+            "layer_config": "Satellite_Standard",
+            "default_hull_id": "hull_satellite_large",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Satellite (Heavy)": {
+            "type": "Satellite",
+            "code": "HS",
+            "hull_mass": 400,
+            "max_mass": 2000,
+            "layer_config": "Satellite_Standard",
+            "default_hull_id": "hull_satellite_heavy",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Planetary Complex (Tier 1)": {
+            "type": "Planetary Complex",
+            "code": "PC1",
+            "hull_mass": 0,
+            "max_mass": 1000,
+            "layer_config": "Planetary_Complex",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Planetary Complex (Tier 2)": {
+            "type": "Planetary Complex",
+            "code": "PC2",
+            "hull_mass": 0,
+            "max_mass": 2000,
+            "layer_config": "Planetary_Complex",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Planetary Complex (Tier 3)": {
+            "type": "Planetary Complex",
+            "code": "PC3",
+            "hull_mass": 0,
+            "max_mass": 4000,
+            "layer_config": "Planetary_Complex",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Planetary Complex (Tier 4)": {
+            "type": "Planetary Complex",
+            "code": "PC4",
+            "hull_mass": 0,
+            "max_mass": 8000,
+            "layer_config": "Planetary_Complex",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Planetary Complex (Tier 5)": {
+            "type": "Planetary Complex",
+            "code": "PC5",
+            "hull_mass": 0,
+            "max_mass": 16000,
+            "layer_config": "Planetary_Complex",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Planetary Complex (Tier 6)": {
+            "type": "Planetary Complex",
+            "code": "PC6",
+            "hull_mass": 0,
+            "max_mass": 32000,
+            "layer_config": "Planetary_Complex",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Planetary Complex (Tier 7)": {
+            "type": "Planetary Complex",
+            "code": "PC7",
+            "hull_mass": 0,
+            "max_mass": 64000,
+            "layer_config": "Planetary_Complex",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Planetary Complex (Tier 8)": {
+            "type": "Planetary Complex",
+            "code": "PC8",
+            "hull_mass": 0,
+            "max_mass": 128000,
+            "layer_config": "Planetary_Complex",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Planetary Complex (Tier 9)": {
+            "type": "Planetary Complex",
+            "code": "PC9",
+            "hull_mass": 0,
+            "max_mass": 256000,
+            "layer_config": "Planetary_Complex",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Planetary Complex (Tier 10)": {
+            "type": "Planetary Complex",
+            "code": "PC10",
+            "hull_mass": 0,
+            "max_mass": 512000,
+            "layer_config": "Planetary_Complex",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        },
+        "Planetary Complex (Tier 11)": {
+            "type": "Planetary Complex",
+            "code": "PC11",
+            "hull_mass": 0,
+            "max_mass": 1024000,
+            "layer_config": "Planetary_Complex",
+            "requirements": {
+                "command": {
+                    "ability": "CommandAndControl",
+                    "min_value": true
+                }
+            }
+        }
+    }
+}
+--- END FILE: data/vehicleclasses.json ---
+
+--- START FILE: data/components.json ---
+{
+    "components": [
+        {
+            "id": "bridge",
+            "name": "Bridge",
+            "type": "Bridge",
+            "mass": "=50 * sqrt(ship_class_mass / 1000)",
+            "hp": "=200 * sqrt(ship_class_mass / 1000)",
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 3,
+            "abilities": {
+                "CommandAndControl": true,
+                "CrewRequired": "=ceil(5 * sqrt(ship_class_mass / 1000))"
+            },
+            "major_classification": "Crewsupport"
+        },
+        {
+            "id": "central_complex_command",
+            "name": "Central Complex Command",
+            "type": "Bridge",
+            "mass": "=50 * sqrt(ship_class_mass / 1000)",
+            "hp": "=500 * sqrt(ship_class_mass / 1000)",
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 3,
+            "abilities": {
+                "CommandAndControl": true,
+                "CrewRequired": "=ceil(10 * sqrt(ship_class_mass / 1000))"
+            },
+            "major_classification": "Crewsupport"
+        },
+        {
+            "id": "railgun",
+            "name": "Railgun",
+            "type": "ProjectileWeaponAbility",
+            "mass": 100,
+            "hp": 150,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 85,
+            "abilities": {
+                "CrewRequired": 5,
+                "ResourceConsumption": [
+                    {
+                        "resource": "ammo",
+                        "amount": 1,
+                        "trigger": "activation"
+                    }
+                ],
+                "ProjectileWeaponAbility": {
+                    "damage": "=40 - (0.01 * range_to_target)",
+                    "range": 2400,
+                    "reload": 2.0,
+                    "projectile_speed": 20000,
+                    "firing_arc": 1
+                }
+            },
+            "major_classification": "Weapons"
+        },
+        {
+            "id": "standard_engine",
+            "name": "Engine",
+            "type": "Engine",
+            "mass": 80,
+            "hp": 100,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 10,
+            "abilities": {
+                "CombatPropulsion": 150,
+                "ResourceConsumption": [
+                    {
+                        "resource": "fuel",
+                        "amount": 0.5,
+                        "trigger": "constant"
+                    }
+                ]
+            },
+            "major_classification": "Engines"
+        },
+        {
+            "id": "thruster",
+            "name": "Thruster",
+            "type": "Thruster",
+            "mass": 20,
+            "hp": 40,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 78,
+            "abilities": {
+                "ManeuveringThruster": 30
+            },
+            "major_classification": "Engines"
+        },
+        {
+            "id": "armor_plate",
+            "name": "Armor Plate",
+            "type": "Armor",
+            "mass": 30,
+            "hp": 250,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 14,
+            "abilities": {
+                "Armor": true
+            },
+            "major_classification": "Armor"
+        },
+        {
+            "id": "emissive_armor",
+            "name": "Emissive Armor",
+            "type": "Armor",
+            "mass": "=40 * (ship_class_mass / 1000)",
+            "hp": 200,
+            "hp_formula": "=200 * (ship_class_mass / 1000)",
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 15,
+            "abilities": {
+                "Armor": true,
+                "EmissiveArmor": {
+                    "value": "=15 * (ship_class_mass / 1000)**(1/3)",
+                    "stack_group": "Emissive"
+                }
+            },
+            "modifiers": [],
+            "major_classification": "Armor"
+        },
+        {
+            "id": "crystalline_armor",
+            "name": "Crystalline Armor",
+            "type": "Armor",
+            "mass": "=40 * (ship_class_mass / 1000)",
+            "hp": 200,
+            "hp_formula": "=200 * (ship_class_mass / 1000)",
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 15,
+            "abilities": {
+                "Armor": true,
+                "CrystallineArmor": {
+                    "value": "=10 * (ship_class_mass / 1000)**(1/3)",
+                    "stack_group": "Crystalline"
+                }
+            },
+            "modifiers": [],
+            "major_classification": "Armor"
+        },
+        {
+            "id": "scattering_armor",
+            "name": "Scattering Armor",
+            "type": "Armor",
+            "mass": "=40 * (ship_class_mass / 1000)",
+            "hp": 150,
+            "hp_formula": "=150 * (ship_class_mass / 1000)",
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 50,
+            "abilities": {
+                "Armor": true,
+                "ToHitDefenseModifier": {
+                    "value": 0.2,
+                    "stack_group": "Scattering"
+                }
+            },
+            "modifiers": [],
+            "major_classification": "Armor"
+        },
+        {
+            "id": "fuel_tank",
+            "name": "Fuel Tank",
+            "type": "Tank",
+            "mass": 40,
+            "hp": 80,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 20,
+            "abilities": {
+                "ResourceStorage": [
+                    {
+                        "resource": "fuel",
+                        "amount": 50000
+                    }
+                ]
+            },
+            "major_classification": "Infrastructure"
+        },
+        {
+            "id": "ordnance_tank",
+            "name": "Ordnance Tank",
+            "type": "Tank",
+            "mass": 40,
+            "hp": 80,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 19,
+            "abilities": {
+                "ResourceStorage": [
+                    {
+                        "resource": "ammo",
+                        "amount": 5000
+                    }
+                ]
+            },
+            "major_classification": "Infrastructure"
+        },
+        {
+            "id": "battery",
+            "name": "Battery",
+            "type": "Tank",
+            "mass": 30,
+            "hp": 50,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 19,
+            "abilities": {
+                "ResourceStorage": [
+                    {
+                        "resource": "energy",
+                        "amount": 2000
+                    }
+                ]
+            },
+            "major_classification": "Infrastructure"
+        },
+        {
+            "id": "generator",
+            "name": "Generator",
+            "type": "Generator",
+            "mass": 50,
+            "hp": 80,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 81,
+            "abilities": {
+                "ResourceGeneration": [
+                    {
+                        "resource": "energy",
+                        "amount": 25
+                    }
+                ],
+                "CrewRequired": 1
+            },
+            "major_classification": "Infrastructure"
+        },
+        {
+            "id": "laser_cannon",
+            "name": "Laser Cannon",
+            "type": "BeamWeaponAbility",
+            "mass": 20,
+            "hp": 40,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 87,
+            "abilities": {
+                "CrewRequired": 1,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 5,
+                        "trigger": "activation"
+                    }
+                ],
+                "BeamWeaponAbility": {
+                    "damage": "=15 * (1 - 0.00005 * range_to_target)",
+                    "range": 2000,
+                    "reload": 0.2,
+                    "firing_arc": 1,
+                    "base_accuracy": 2.0,
+                    "accuracy_falloff": 0.001
+                }
+            },
+            "major_classification": "Weapons"
+        },
+        {
+            "id": "crew_quarters",
+            "name": "Crew Quarters",
+            "type": "CrewQuarters",
+            "mass": 30,
+            "hp": 60,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 5,
+            "abilities": {
+                "CrewCapacity": 10
+            },
+            "major_classification": "Crewsupport"
+        },
+        {
+            "id": "life_support",
+            "name": "Life Support",
+            "type": "LifeSupport",
+            "mass": 20,
+            "hp": 40,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 4,
+            "abilities": {
+                "LifeSupportCapacity": 25
+            },
+            "major_classification": "Crewsupport"
+        },
+        {
+            "id": "combat_sensor",
+            "name": "Combat Sensor",
+            "type": "Sensor",
+            "mass": 30,
+            "hp": 50,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 25,
+            "abilities": {
+                "ToHitAttackModifier": {
+                    "value": 1.0,
+                    "stack_group": "Sensor"
+                }
+            },
+            "major_classification": "Sensors"
+        },
+        {
+            "id": "ecm_suite",
+            "name": "ECM Suite",
+            "type": "Electronics",
+            "mass": 40,
+            "hp": 40,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 26,
+            "abilities": {
+                "ToHitDefenseModifier": {
+                    "value": 1.0,
+                    "stack_group": "ECM"
+                }
+            },
+            "major_classification": "Sensors"
+        },
+        {
+            "id": "multiplex_tracking",
+            "name": "Multiplex Tracking",
+            "type": "Electronics",
+            "mass": 40,
+            "hp": 60,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 27,
+            "abilities": {
+                "MultiplexTracking": 10,
+                "CrewRequired": 2
+            },
+            "major_classification": "Sensors"
+        },
+        {
+            "id": "shield_generator",
+            "name": "Shield Projector",
+            "type": "Shield",
+            "mass": 50,
+            "hp": 100,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 16,
+            "abilities": {
+                "ShieldProjection": 500
+            },
+            "major_classification": "Shields"
+        },
+        {
+            "id": "shield_regen",
+            "name": "Shield Regen",
+            "type": "ShieldRegenerator",
+            "mass": 40,
+            "hp": 80,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 18,
+            "abilities": {
+                "ShieldRegeneration": 5.0,
+                "EnergyConsumption": 2.0
+            },
+            "major_classification": "Shields"
+        },
+        {
+            "id": "capital_missile",
+            "name": "Capital Missile",
+            "type": "SeekerWeaponAbility",
+            "mass": 60,
+            "hp": 10,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 86,
+            "abilities": {
+                "CrewRequired": 3,
+                "ResourceConsumption": [
+                    {
+                        "resource": "ammo",
+                        "amount": 5,
+                        "trigger": "activation"
+                    }
+                ],
+                "SeekerWeaponAbility": {
+                    "damage": 100,
+                    "reload": 4.0,
+                    "projectile_speed": 6000,
+                    "firing_arc": 1,
+                    "endurance": 3.0,
+                    "turn_rate": 200,
+                    "to_hit_defense": 0.0
+                }
+            },
+            "major_classification": "Weapons"
+        },
+        {
+            "id": "point_defence_cannon",
+            "name": "Point Defence Cannon",
+            "type": "BeamWeaponAbility",
+            "mass": 10,
+            "hp": 30,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 151,
+            "abilities": {
+                "CrewRequired": 1,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 2,
+                        "trigger": "activation"
+                    }
+                ],
+                "BeamWeaponAbility": {
+                    "damage": 4,
+                    "range": 800,
+                    "reload": 0.04,
+                    "firing_arc": 180,
+                    "base_accuracy": 10.0,
+                    "accuracy_falloff": 0.003,
+                    "tags": [
+                        "pdc"
+                    ]
+                }
+            },
+            "major_classification": "Weapons"
+        },
+        {
+            "id": "fighter_cockpit",
+            "name": "Fighter Cockpit",
+            "type": "Bridge",
+            "mass": 2,
+            "hp": 2,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 53,
+            "abilities": {
+                "CommandAndControl": true,
+                "LifeSupportCapacity": 1,
+                "CrewCapacity": 1
+            },
+            "major_classification": "Crewsupport"
+        },
+        {
+            "id": "mini_engine",
+            "name": "Mini Engine",
+            "type": "Engine",
+            "mass": 3,
+            "hp": 3,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 58,
+            "abilities": {
+                "CombatPropulsion": 40,
+                "ResourceConsumption": [
+                    {
+                        "resource": "fuel",
+                        "amount": 0.2,
+                        "trigger": "constant"
+                    }
+                ]
+            },
+            "major_classification": "Engines"
+        },
+        {
+            "id": "mini_thruster",
+            "name": "Mini Thruster",
+            "type": "Thruster",
+            "mass": 1,
+            "hp": 1,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 79,
+            "abilities": {
+                "ManeuveringThruster": 50
+            },
+            "major_classification": "Engines"
+        },
+        {
+            "id": "mini_battery",
+            "name": "Mini Battery",
+            "type": "Tank",
+            "mass": 1,
+            "hp": 1,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 192,
+            "abilities": {
+                "ResourceStorage": [
+                    {
+                        "resource": "energy",
+                        "amount": 200
+                    }
+                ]
+            },
+            "major_classification": "Infrastructure"
+        },
+        {
+            "id": "mini_generator",
+            "name": "Mini Generator",
+            "type": "Generator",
+            "mass": 2,
+            "hp": 2,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 187,
+            "abilities": {
+                "ResourceGeneration": [
+                    {
+                        "resource": "energy",
+                        "amount": 10
+                    }
+                ]
+            },
+            "major_classification": "Infrastructure"
+        },
+        {
+            "id": "mini_ordnance",
+            "name": "Mini Ordnance",
+            "type": "Tank",
+            "mass": 2,
+            "hp": 2,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 19,
+            "abilities": {
+                "ResourceStorage": [
+                    {
+                        "resource": "ammo",
+                        "amount": 200
+                    }
+                ]
+            },
+            "major_classification": "Infrastructure"
+        },
+        {
+            "id": "mini_fuel_tank",
+            "name": "Mini Fuel Tank",
+            "type": "Tank",
+            "mass": 2,
+            "hp": 2,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 20,
+            "abilities": {
+                "ResourceStorage": [
+                    {
+                        "resource": "fuel",
+                        "amount": 2000
+                    }
+                ]
+            },
+            "major_classification": "Infrastructure"
+        },
+        {
+            "id": "mini_railgun",
+            "name": "Mini Railgun",
+            "type": "BeamWeaponAbility",
+            "mass": 2,
+            "hp": 2,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 138,
+            "abilities": {
+                "BeamWeaponAbility": {
+                    "damage": 10,
+                    "range": 1000,
+                    "reload": 1.0,
+                    "firing_arc": 1,
+                    "base_accuracy": 2.0,
+                    "accuracy_falloff": 0.001
+                }
+            },
+            "major_classification": "Weapons"
+        },
+        {
+            "id": "mini_laser_cannon",
+            "name": "Mini Laser Cannon",
+            "type": "BeamWeaponAbility",
+            "mass": 1,
+            "hp": 1,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 140,
+            "abilities": {
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 2,
+                        "trigger": "activation"
+                    }
+                ],
+                "BeamWeaponAbility": {
+                    "damage": 5,
+                    "range": 800,
+                    "reload": 0.3,
+                    "firing_arc": 1,
+                    "base_accuracy": 2.0,
+                    "accuracy_falloff": 0.001
+                }
+            },
+            "major_classification": "Weapons"
+        },
+        {
+            "id": "mini_capital_missile",
+            "name": "Mini Capital Missile",
+            "type": "BeamWeaponAbility",
+            "mass": 3,
+            "hp": 3,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 216,
+            "abilities": {
+                "BeamWeaponAbility": {
+                    "damage": 60,
+                    "range": 200,
+                    "reload": 15.0,
+                    "firing_arc": 10,
+                    "base_accuracy": 2.0,
+                    "accuracy_falloff": 0.0
+                }
+            },
+            "major_classification": "Weapons"
+        },
+        {
+            "id": "mini_armor",
+            "name": "Mini Armor",
+            "type": "Armor",
+            "mass": 1,
+            "hp": 5,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 62,
+            "abilities": {
+                "Armor": true
+            },
+            "major_classification": "Armor"
+        },
+        {
+            "id": "mini_sensor",
+            "name": "Mini Sensor",
+            "type": "Sensor",
+            "mass": 1,
+            "hp": 1,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 25,
+            "abilities": {
+                "ToHitAttackModifier": {
+                    "value": 0.2,
+                    "stack_group": "Sensor"
+                }
+            },
+            "major_classification": "Sensors"
+        },
+        {
+            "id": "mini_ecm",
+            "name": "Mini ECM",
+            "type": "Electronics",
+            "mass": 2,
+            "hp": 10,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 26,
+            "abilities": {
+                "ToHitDefenseModifier": {
+                    "value": 0.2,
+                    "stack_group": "ECM"
+                }
+            },
+            "major_classification": "Sensors"
+        },
+        {
+            "id": "mini_shield_generator",
+            "name": "Mini Shield Gen",
+            "type": "Shield",
+            "mass": 2,
+            "hp": 15,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 16,
+            "abilities": {
+                "ShieldProjection": 50
+            },
+            "major_classification": "Shields"
+        },
+        {
+            "id": "mini_emissive_armor",
+            "name": "Mini Emissive Armor",
+            "type": "Armor",
+            "mass": 1,
+            "hp": 5,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 62,
+            "abilities": {
+                "Armor": true,
+                "EmissiveArmor": {
+                    "value": 3,
+                    "stack_group": "Emissive"
+                }
+            },
+            "major_classification": "Armor"
+        },
+        {
+            "id": "mini_scattering_armor",
+            "name": "Mini Scattering Armor",
+            "type": "Armor",
+            "mass": 1,
+            "hp": 5,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 63,
+            "abilities": {
+                "Armor": true,
+                "ToHitDefenseModifier": {
+                    "value": 0.2,
+                    "stack_group": "Scattering"
+                }
+            },
+            "major_classification": "Armor"
+        },
+        {
+            "id": "satellite_core",
+            "name": "Satellite Core",
+            "type": "Bridge",
+            "mass": 10,
+            "hp": 50,
+            "allowed_vehicle_types": [
+                "Satellite"
+            ],
+            "sprite_index": 9,
+            "abilities": {
+                "CommandAndControl": true
+            },
+            "major_classification": "Crewsupport"
+        },
+        {
+            "id": "fighter_launch_bay",
+            "name": "Fighter Launch Bay",
+            "type": "Hangar",
+            "mass": 500,
+            "hp": 500,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 21,
+            "abilities": {
+                "VehicleStorage": 50,
+                "VehicleLaunch": {
+                    "max_launch_mass": 50,
+                    "cycle_time": 5.0
+                },
+                "CrewRequired": 5
+            },
+            "major_classification": "Infrastructure"
+        },
+        {
+            "id": "master_computer",
+            "name": "Master Computer",
+            "type": "Bridge",
+            "mass": 50,
+            "hp": 100,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 27,
+            "abilities": {
+                "CommandAndControl": true,
+                "ToHitDefenseModifier": {
+                    "value": 0.5,
+                    "stack_group": "MasterComputer"
+                },
+                "ToHitAttackModifier": {
+                    "value": 0.5,
+                    "stack_group": "MasterComputer"
+                },
+                "EnergyConsumption": 10.0
+            },
+            "major_classification": "Crewsupport"
+        },
+        {
+            "id": "robotic_drone_crew",
+            "name": "Robotic Drone Crew",
+            "type": "CrewQuarters",
+            "mass": 30,
+            "hp": 50,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 5,
+            "abilities": {
+                "CrewCapacity": 10,
+                "LifeSupportCapacity": 10,
+                "EnergyConsumption": 5.0
+            },
+            "major_classification": "Crewsupport"
+        },
+        {
+            "id": "emergency_repair_bay",
+            "name": "Emergency Repair Bay",
+            "type": "Engineering",
+            "mass": 50,
+            "hp": 100,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 21,
+            "abilities": {
+                "ShipRepair": 5.0,
+                "CrewRequired": 5,
+                "EnergyConsumption": 2.0
+            },
+            "major_classification": "Infrastructure"
+        },
+        {
+            "id": "ordnance_vat",
+            "name": "Ordnance Vat",
+            "type": "Factory",
+            "mass": 80,
+            "hp": 150,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 19,
+            "abilities": {
+                "AmmoGeneration": 2.0,
+                "CrewRequired": 5,
+                "EnergyConsumption": 15.0
+            },
+            "major_classification": "Infrastructure"
+        },
+        {
+            "id": "hull_escort",
+            "name": "Escort Hull",
+            "type": "Hull",
+            "mass": 50,
+            "hp": 200,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_frigate",
+            "name": "Frigate Hull",
+            "type": "Hull",
+            "mass": 100,
+            "hp": 400,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_destroyer",
+            "name": "Destroyer Hull",
+            "type": "Hull",
+            "mass": 200,
+            "hp": 800,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_light_cruiser",
+            "name": "Light Cruiser Hull",
+            "type": "Hull",
+            "mass": 300,
+            "hp": 1200,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_cruiser",
+            "name": "Cruiser Hull",
+            "type": "Hull",
+            "mass": 400,
+            "hp": 1600,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_heavy_cruiser",
+            "name": "Heavy Cruiser Hull",
+            "type": "Hull",
+            "mass": 600,
+            "hp": 2400,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_battle_cruiser",
+            "name": "Battle Cruiser Hull",
+            "type": "Hull",
+            "mass": 800,
+            "hp": 3200,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_battleship",
+            "name": "Battleship Hull",
+            "type": "Hull",
+            "mass": 1600,
+            "hp": 6400,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_dreadnought",
+            "name": "Dreadnought Hull",
+            "type": "Hull",
+            "mass": 3200,
+            "hp": 12800,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_superdreadnaugh",
+            "name": "Superdreadnaugh Hull",
+            "type": "Hull",
+            "mass": 6400,
+            "hp": 25600,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_monitor",
+            "name": "Monitor Hull",
+            "type": "Hull",
+            "mass": 12800,
+            "hp": 51200,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_fighter_small",
+            "name": "Small Fighter Hull",
+            "type": "Hull",
+            "mass": 5,
+            "hp": 10,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_fighter_medium",
+            "name": "Medium Fighter Hull",
+            "type": "Hull",
+            "mass": 10,
+            "hp": 20,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_fighter_large",
+            "name": "Large Fighter Hull",
+            "type": "Hull",
+            "mass": 15,
+            "hp": 30,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_fighter_heavy",
+            "name": "Heavy Fighter Hull",
+            "type": "Hull",
+            "mass": 20,
+            "hp": 40,
+            "allowed_vehicle_types": [
+                "Fighter"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_satellite_small",
+            "name": "Small Satellite Hull",
+            "type": "Hull",
+            "mass": 50,
+            "hp": 100,
+            "allowed_vehicle_types": [
+                "Satellite"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_satellite_medium",
+            "name": "Medium Satellite Hull",
+            "type": "Hull",
+            "mass": 100,
+            "hp": 200,
+            "allowed_vehicle_types": [
+                "Satellite"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_satellite_large",
+            "name": "Large Satellite Hull",
+            "type": "Hull",
+            "mass": 200,
+            "hp": 400,
+            "allowed_vehicle_types": [
+                "Satellite"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_satellite_heavy",
+            "name": "Heavy Satellite Hull",
+            "type": "Hull",
+            "mass": 400,
+            "hp": 800,
+            "allowed_vehicle_types": [
+                "Satellite"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure"
+        }
+    ]
+}
+--- END FILE: data/components.json ---
+
 --- START FILE: game/simulation/entities/ship.py ---
 import pygame
 import random
@@ -105,7 +2255,7 @@ from typing import List, Dict, Tuple, Optional, Any, Union, Set, TYPE_CHECKING
 
 from game.engine.physics import PhysicsBody
 from game.simulation.components.component import (
-    Component, LayerType
+    Component, LayerType, create_component
 )
 from game.core.logger import log_debug
 from game.core.registry import RegistryManager, get_vehicle_classes, get_validator, get_component_registry, get_modifier_registry
@@ -225,9 +2375,23 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Initialize Layers dynamically from class definition
         self._initialize_layers()
         
+        # Auto-equip default Hull component if defined for this class
+        default_hull_id = class_def.get('default_hull_id')
+        hull_equipped = False
+        if default_hull_id:
+            hull_component = create_component(default_hull_id)
+            if hull_component:
+                # Direct append to avoid validation during init
+                self.layers[LayerType.CORE]['components'].append(hull_component)
+                hull_component.layer_assigned = LayerType.CORE
+                hull_component.ship = self
+                hull_equipped = True
+        
         # Stats
         self.mass: float = 0.0
-        self.base_mass: float = class_def.get('hull_mass', 50)  # Hull/Structure mass from class
+        # base_mass is 0 if Hull component equipped (Hull provides mass as component)
+        # Otherwise use legacy hull_mass from vehicle class as fallback
+        self.base_mass: float = 0.0 if hull_equipped else class_def.get('hull_mass', 50)
         self.vehicle_type: str = class_def.get('type', "Ship")
         self.total_thrust: float = 0.0
         self.max_speed: float = 0.0
@@ -245,8 +2409,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Resource initialization tracking
         self._resources_initialized: bool = False
         
-        self.baseline_to_hit_offense = 0.0 # Score
-        self.to_hit_profile = 0.0 # Score
+        # To-Hit stats initialized in canonical block below (lines ~202-203)
         self.total_defense_score = 0.0 # Score (Size + Maneuver + ECM)
         self.emissive_armor = 0
         self.crystalline_armor = 0
@@ -329,28 +2492,19 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         max_rng = 0.0
         for layer in self.layers.values():
             for comp in layer['components']:
-                # 1. Check WeaponAbility instances (new system)
                 for ab in comp.ability_instances:
-                    # Check for any WeaponAbility variant via MRO-style name check
-                    is_weapon = False
-                    for cls in ab.__class__.mro():
-                        if cls.__name__ == 'WeaponAbility':
-                            is_weapon = True
-                            break
-                    
-                    if not is_weapon: continue
+                    # Polymorphic check using isinstance (Phase 2 Task 2.5)
+                    if not isinstance(ab, WeaponAbility):
+                        continue
                     
                     rng = getattr(ab, 'range', 0.0)
-                    # For SeekerWeapons, ensure we use their calculated range if not already reported
-                    # SeekerWeaponAbility name check
-                    if ab.__class__.__name__ == 'SeekerWeaponAbility' or 'SeekerWeaponAbility' in [c.__name__ for c in ab.__class__.mro()]:
-                         # Only override if range is 0 or less, as property might already be correct
-                         if rng <= 0 and hasattr(ab, 'projectile_speed') and hasattr(ab, 'endurance'):
-                             rng = ab.projectile_speed * ab.endurance
+                    # For SeekerWeapons, calculate range from endurance if not set
+                    if isinstance(ab, SeekerWeaponAbility):
+                        if rng <= 0 and hasattr(ab, 'projectile_speed') and hasattr(ab, 'endurance'):
+                            rng = ab.projectile_speed * ab.endurance
                              
                     if rng > max_rng:
                         max_rng = rng
-                
 
         return max_rng if max_rng > 0 else 0.0
 
@@ -390,6 +2544,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         """
         Update is_derelict status based on vehicle class requirements.
         If essential components (e.g. Bridge) are destroyed, ship becomes derelict.
+        
+        Requirements format (from vehicleclasses.json):
+        {
+            "command": {"ability": "CommandAndControl", "min_value": true},
+            "propulsion": {"ability": "CombatPropulsion", "min_value": 1}
+        }
         """
         # 1. Get Requirements
         class_def = get_vehicle_classes().get(self.ship_class, {})
@@ -401,32 +2561,48 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             return
 
         # 3. Calculate Current Active Abilities
-        active_components = []
-        for layer in self.layers.values():
-            for c in layer['components']:
-                if c.is_active and c.current_hp > 0:
-                     active_components.append(c)
+        active_components = [
+            c for layer in self.layers.values()
+            for c in layer['components']
+            if c.is_active and c.current_hp > 0
+        ]
         
         if not self.stats_calculator:
-             self.stats_calculator = ShipStatsCalculator(get_vehicle_classes())
+            self.stats_calculator = ShipStatsCalculator(get_vehicle_classes())
              
         # Recalculate abilities based on currently living components
         totals = self.stats_calculator.calculate_ability_totals(active_components)
         
-        # 4. Check Requirements
+        # 5. Check all Requirements (new nested format)
         is_derelict = False
-        for req_ability, min_val in requirements.items():
-            # Support boolean requirements (True means > 0)
-            current_val = totals.get(req_ability, 0)
-            
-            if isinstance(min_val, bool):
-                if min_val and not current_val:
-                    is_derelict = True
-                    break
-            elif isinstance(min_val, (int, float)):
-                 if current_val < min_val:
-                     is_derelict = True
-                     break
+        for req_name, req_spec in requirements.items():
+            # Handle new nested format: {"ability": "...", "min_value": ...}
+            if isinstance(req_spec, dict) and 'ability' in req_spec:
+                ability_name = req_spec['ability']
+                min_val = req_spec.get('min_value', 1)
+                current_val = totals.get(ability_name, 0)
+                
+                if isinstance(min_val, bool):
+                    if min_val and not current_val:
+                        is_derelict = True
+                        break
+                elif isinstance(min_val, (int, float)):
+                    if current_val < min_val:
+                        is_derelict = True
+                        break
+            # Legacy flat format: "AbilityName": min_value
+            else:
+                current_val = totals.get(req_name, 0)
+                min_val = req_spec
+                
+                if isinstance(min_val, bool):
+                    if min_val and not current_val:
+                        is_derelict = True
+                        break
+                elif isinstance(min_val, (int, float)):
+                    if current_val < min_val:
+                        is_derelict = True
+                        break
         
         if is_derelict and not self.is_derelict:
             print(f"{self.name} has become DERELICT (Requirements not met)")
@@ -772,6 +2948,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         for ltype, layer_data in self.layers.items():
             filter_comps = []
             for comp in layer_data['components']:
+                # Skip Hull components - they are auto-equipped on load
+                if comp.id.startswith('hull_'):
+                    continue
                 # Save as dict with modifiers
                 c_obj = {"id": comp.id}
                 if comp.modifiers:
@@ -888,6 +3067,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
 
 --- END FILE: game/simulation/entities/ship.py ---
+
+[WARNING: File not found: game/data/load_vehicle_classes.py]
 
 --- START FILE: game/simulation/components/component.py ---
 import json
@@ -1546,204 +3727,18 @@ def get_all_components():
 
 --- END FILE: game/simulation/components/component.py ---
 
---- START FILE: game/core/registry.py ---
-from typing import Dict, Any, Optional
-import threading
-
-class RegistryManager:
-    """
-    Central singleton for managing global game state registries.
-    
-    Replaces module-level globals to allow for clean state resets in testing.
-    
-    Thread Safety:
-        - Instance creation is thread-safe via double-checked locking
-        - All dictionary operations use the same dict instances (no replacement)
-        - Individual dict operations are atomic in CPython (GIL)
-        - For cross-registry transactions, external synchronization is required
-    
-    Usage:
-        # Preferred: Use utility functions (easier to mock)
-        from game.core.registry import get_component_registry, get_modifier_registry
-        
-        components = get_component_registry()
-        modifiers = get_modifier_registry()
-        classes = get_vehicle_classes()
-        
-        # Alternative: Direct access (when needed for special operations)
-        mgr = RegistryManager.instance()
-        mgr.clear()  # For test isolation
-        mgr.freeze() # For production initialization
-    
-    Testing:
-        - Use conftest.py's reset_game_state fixture (auto-applied)
-        - Fixture calls clear() before/after each test
-        - Never call reset() in production code
-    
-    Attributes:
-        components: Dict of component definitions keyed by ID
-        modifiers: Dict of modifier definitions keyed by ID
-        vehicle_classes: Dict of vehicle class definitions keyed by name
-    """
-    _instance: Optional['RegistryManager'] = None
-    _lock = threading.Lock()
-
-    def __init__(self):
-        """
-        Initialize the RegistryManager.
-        
-        Raises:
-            Exception: If called directly instead of via instance()
-        """
-        if RegistryManager._instance is not None:
-             raise Exception("RegistryManager is a singleton. Use RegistryManager.instance()")
-        
-        self.components: Dict[str, Any] = {}
-        self.modifiers: Dict[str, Any] = {}
-        self.vehicle_classes: Dict[str, Any] = {}
-        self._validator: Any = None 
-        self._frozen: bool = False
-
-    @classmethod
-    def instance(cls) -> 'RegistryManager':
-        """
-        Get the singleton instance, creating it if necessary.
-        
-        Thread-safe via double-checked locking pattern.
-        
-        Returns:
-            The singleton RegistryManager instance
-        """
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = cls()
-        return cls._instance
-    
-    @classmethod
-    def reset(cls):
-        """
-        Completely destroy the singleton instance.
-        
-        WARNING: For testing only! This can cause stale reference hazards if
-        any code is holding references to the old instance's dictionaries.
-        
-        Prefer clear() for test isolation - it preserves dict identity while
-        emptying the contents.
-        """
-        cls._instance = None
-
-    def freeze(self):
-        """
-        Prevent further modifications to the registry.
-        
-        Call this after game initialization to catch accidental mutations
-        during gameplay. Useful for detecting bugs where code tries to
-        modify registry data at runtime.
-        """
-        self._frozen = True
-
-    def hydrate(self, components_data: Dict[str, Any], modifiers_data: Dict[str, Any], vehicle_classes_data: Dict[str, Any]):
-        """
-        Fast hydration from pre-loaded dictionary data.
-        
-        Used by test fixtures to populate registries from SessionRegistryCache
-        without disk I/O. Updates dictionaries in-place to preserve any
-        existing references.
-        
-        Args:
-            components_data: Pre-loaded component definitions
-            modifiers_data: Pre-loaded modifier definitions  
-            vehicle_classes_data: Pre-loaded vehicle class definitions
-            
-        Raises:
-            RuntimeError: If the registry is frozen
-        """
-        if self._frozen:
-            raise RuntimeError("Cannot hydrate a frozen RegistryManager")
-            
-        # NOTE: We update dictionaries in-place rather than replacing them.
-        # This ensures any code holding references to these dicts sees the updates.
-        self.components.clear()
-        self.components.update(components_data)
-        
-        self.modifiers.clear()
-        self.modifiers.update(modifiers_data)
-        
-        self.vehicle_classes.clear()
-        self.vehicle_classes.update(vehicle_classes_data)
-
-    def clear(self):
-        """
-        Clear all registries to empty state.
-        
-        Used by test fixtures to ensure clean state between tests.
-        Preserves dict identity, only empties contents.
-        
-        Raises:
-            RuntimeError: If the registry is frozen
-        """
-        if self._frozen:
-             raise RuntimeError("Cannot clear a frozen RegistryManager (Tests must unfreeze or reset if absolutely necessary)")
-        self.components.clear()
-        self.modifiers.clear()
-        self.vehicle_classes.clear()
-        self._validator = None
-
-    def get_validator(self):
-        """Get the ship design validator (may be None if not initialized)."""
-        return self._validator
-    
-    def set_validator(self, validator):
-        """
-        Set the ship design validator.
-        
-        Args:
-            validator: ShipDesignValidator instance
-            
-        Raises:
-            RuntimeError: If the registry is frozen
-        """
-        self._check_frozen()
-        self._validator = validator
-
-    def _check_frozen(self):
-        """Helper to raise error if modifications are attempted while frozen."""
-        if self._frozen:
-            raise RuntimeError("RegistryManager is frozen and cannot be modified")
-
-def get_component_registry() -> Dict[str, Any]:
-    """Get the component registry dictionary.
-    
-    Returns a reference to the live dictionary managed by RegistryManager.
-    Prefer this over direct RegistryManager.instance().components access.
-    """
-    return RegistryManager.instance().components
-
-def get_modifier_registry() -> Dict[str, Any]:
-    """Get the modifier registry dictionary."""
-    return RegistryManager.instance().modifiers
-
-def get_vehicle_classes() -> Dict[str, Any]:
-    """Get the vehicle classes dictionary."""
-    return RegistryManager.instance().vehicle_classes
-
-def get_validator():
-    """Get the ship design validator (lazy-loaded)."""
-    return RegistryManager.instance().get_validator()
-
---- END FILE: game/core/registry.py ---
-
-[WARNING: File not found: game/simulation/ships/ship_stats_calculator.py]
-
 --- START FILE: Refactoring/active_refactor.md ---
 # Active Refactor: Hull Component & Ship Cohesion
 **Goal:** Unify Ship stats with V2 Ability System (Hull Component) and eliminate architectural incoherence.
 
 ## Status
-**Current Phase:** Phase 1 (Data & State Foundations) - COMPLETE
+**Current Phase:** Phase 4 (UI Reconstruction) - AWAITING REVIEW
 **Start Date:** 2026-01-05
-**Status:** [PHASE_1_COMPLETE]
+**Phase 1 Review:** ✅ APPROVED (2026-01-06)
+**Phase 2 Review:** ✅ APPROVED (2026-01-06)
+**Phase 3 Review:** ✅ APPROVED (2026-01-06)
+**Phase 4 Review:** ⏳ PENDING (2026-01-06)
+**Status:** [PHASE_4_COMPLETE_PENDING_REVIEW]
 
 ---
 
@@ -1761,7 +3756,7 @@ def get_validator():
 
 ## Phased Schedule
 
-### Phase 1: Data & State Foundations (The Bedrock)
+### Phase 1: Data & State Foundations (The Bedrock) [Complete]
 **Objective:** Fix critical state bugs and prepare data structures.
 - [x] **Critical Fix:** Patch `resource_manager.py` clamping bug (resets to 0 on overflow).
 - [x] **Data Migration:** Create `Hull` components in `data/components.json` for all 18 classes. [Data Architect]
@@ -1769,26 +3764,346 @@ def get_validator():
 - [x] **Serialization:** Update `Ship.to_dict`/`from_dict` to persist `ResourceRegistry` values. [Data Architect]
 - [x] **Cleanup:** Remove hardcoded ability string maps in `Component._instantiate_abilities`.
 
-### Phase 2: Core Logic & Stability (The Engine)
+---
+
+### Phase 2: Core Logic & Stability (The Engine) [Complete]
 **Objective:** Implement the "Hull as Component" logic and fix core simulation loops.
-- [ ] **Refactor:** Update `Ship.__init__` to auto-equip `default_hull_id`. [Core Engineer]
-- [ ] **Refactor:** Switch `Ship.mass` and `Ship.hp` to cached properties in `ShipStatsCalculator`.
-- [ ] **Refactor:** Implement `CommandAndControl` and `CrewRequired` logic in `update_derelict_status`.
-- [ ] **Cleanup:** Remove duplicate To-Hit/Derelict initializations in `Ship.py`.
-- [ ] **Cleanup:** Standardize MRO-based identity checks (remove brittle class name checks).
+- [x] **Task 2.1:** Update `Ship.__init__` to auto-equip `default_hull_id`. [Core Engineer]
+- [ ] **Task 2.2:** Switch `Ship.mass` and `Ship.hp` to cached properties in `ShipStatsCalculator`. (DEFERRED - optimization)
+- [x] **Task 2.3:** Implement `CommandAndControl` and `CrewRequired` logic in `update_derelict_status`.
+- [x] **Task 2.4:** Remove duplicate To-Hit/Derelict initializations in `Ship.py`.
+- [x] **Task 2.5:** Standardize MRO-based identity checks (remove brittle class name checks).
+- [x] **Task 2.6:** Fix detail panel rendering test regressions. [UI Specialist]
+  - **File:** `tests/unit/ui/test_detail_panel_rendering.py`
+  - **Fix:** Added missing `uitextbox_patch_real.stop()` in tearDown to prevent patch leakage causing intermittent failures in parallel execution.
 
-### Phase 3: Test Infrastructure & Verification (The Guardrails)
+---
+
+## Phase 2 Implementation Specifications
+
+### Task 2.1: Auto-Equip `default_hull_id` in `Ship.__init__`
+**File:** `game/simulation/entities/ship.py`
+**Method:** `__init__`
+
+**Current State (lines ~223-230):**
+```python
+class_def = get_vehicle_classes().get(self.ship_class, {"hull_mass": 50, "max_mass": 1000})
+self.base_mass: float = class_def.get('hull_mass', 50)  # LEGACY
+```
+
+**Target Implementation:**
+```python
+from game.simulation.components.component import create_component
+
+# In __init__, AFTER _initialize_layers():
+class_def = get_vehicle_classes().get(self.ship_class, {})
+default_hull_id = class_def.get('default_hull_id')
+
+if default_hull_id:
+    hull_component = create_component(default_hull_id)
+    if hull_component:
+        self.add_component(hull_component, LayerType.CORE)
+    else:
+        print(f"WARNING: Hull '{default_hull_id}' not found for {self.ship_class}")
+```
+
+**Steps:**
+1. Import `create_component` from `game.simulation.components.component`.
+2. Remove `self.base_mass` assignment from `class_def.get('hull_mass', ...)`.
+3. After `_initialize_layers()`, lookup `default_hull_id` and call `create_component()`.
+4. Add Hull to `CORE` layer via `add_component()`.
+
+**Edge Cases:**
+- Missing `default_hull_id` → Log warning, continue (test-only ships).
+- Component registry not loaded → Graceful `None` return from `create_component`.
+
+---
+
+### Task 2.2: Cached `mass` and `hp` Properties
+**Files:** `game/simulation/entities/ship.py`, `ship_stats.py`
+
+**Current State:**
+- `self.mass: float = 0.0` (direct attribute)
+- `@property max_hp` / `hp` → O(n) iteration on every access
+
+**Target Implementation in `Ship.__init__`:**
+```python
+self._cached_mass: float = 0.0
+self._cached_max_hp: int = 0
+self._cached_hp: int = 0
+```
+
+**Target Properties:**
+```python
+@property
+def mass(self) -> float:
+    return self._cached_mass
+
+@property
+def max_hp(self) -> int:
+    return self._cached_max_hp
+
+@property
+def hp(self) -> int:
+    return self._cached_hp
+```
+
+**In `ShipStatsCalculator.calculate(ship)`:**
+```python
+# Calculate and cache
+total_mass = sum(c.mass for layer in ship.layers.values() for c in layer['components'])
+total_max_hp = sum(c.max_hp for layer in ship.layers.values() for c in layer['components'])
+total_hp = sum(c.current_hp for layer in ship.layers.values() for c in layer['components'])
+
+ship._cached_mass = total_mass
+ship._cached_max_hp = total_max_hp
+ship._cached_hp = total_hp
+```
+
+---
+
+### Task 2.3: Ability-Based Derelict Logic
+**File:** `game/simulation/entities/ship.py`
+**Method:** `update_derelict_status`
+
+**New Abilities Required (in `abilities.py`):**
+```python
+class CommandAndControl(Ability):
+    """Marks component as command center (Bridge, CIC)."""
+    pass
+```
+
+**Target Implementation:**
+```python
+def update_derelict_status(self) -> None:
+    # Check 1: Command and Control
+    has_command = any(
+        comp.is_operational and comp.has_ability('CommandAndControl')
+        for layer in self.layers.values()
+        for comp in layer['components']
+    )
+    
+    if not has_command:
+        self.is_derelict = True
+        self.bridge_destroyed = True
+        return
+    
+    # Check 2: Crew Capacity (optional)
+    total_crew_req = self.get_total_ability_value('CrewRequired')
+    total_crew_cap = self.get_total_ability_value('CrewCapacity')
+    
+    if total_crew_req > total_crew_cap:
+        self.is_derelict = True
+        return
+    
+    self.is_derelict = False
+```
+
+**Data Migration:** Add `"CommandAndControl": true` to Bridge components in `components.json`.
+
+---
+
+### Task 2.4: Remove Duplicate Initializations
+**File:** `game/simulation/entities/ship.py`
+
+**Remove (lines ~248-251):**
+```python
+self.baseline_to_hit_offense = 0.0  # DUPLICATE
+self.to_hit_profile = 0.0  # DUPLICATE
+```
+
+**Keep (lines ~298-300):**
+```python
+self.to_hit_profile: float = 1.0       # Defensive Multiplier
+self.baseline_to_hit_offense: float = 1.0  # Offensive Multiplier
+```
+
+---
+
+### Task 2.5: Standardize Identity Checks
+**File:** `game/simulation/entities/ship.py`
+**Method:** `max_weapon_range` (lines ~325-355)
+
+**Current (brittle):**
+```python
+if cls.__name__ == 'WeaponAbility':  # STRING CHECK
+```
+
+**Target:**
+```python
+from game.simulation.components.abilities import WeaponAbility, SeekerWeaponAbility
+
+for ab in comp.ability_instances:
+    if isinstance(ab, WeaponAbility):  # POLYMORPHIC
+        rng = getattr(ab, 'range', 0.0)
+        if isinstance(ab, SeekerWeaponAbility) and rng <= 0:
+            rng = ab.projectile_speed * ab.endurance
+        max_rng = max(max_rng, rng)
+```
+
+### Phase 3: Test Infrastructure & Verification (The Guardrails) [Complete]
 **Objective:** Restore test isolation and verify unified stats.
-- [ ] **Infrastructure:** Restore/Fix `tests/conftest.py` for proper `RegistryManager` isolation. [QA Lead]
-- [ ] **New Test:** Create `tests/unit/entities/test_ship_core.py` (Mocked Hull/Stat verification).
-- [ ] **Audit:** Verify `Ship` tests typically use `RegistryManager` utilities.
+- [x] **Task 3.1:** Restore/Fix `tests/conftest.py` for proper `RegistryManager` isolation. [QA Lead]
+  - Added pre-test `mgr.clear()` before marker check
+  - Restructured with try/finally for unconditional post-test cleanup
+- [x] **Task 3.2:** Create `tests/unit/entities/test_ship_core.py` (Mocked Hull/Stat verification).
+  - Created 6 test cases covering Hull auto-equip, legacy fallback, mass/HP aggregation, derelict status
+  - All tests passing
+- [x] **Task 3.3:** Audit existing Ship tests for `RegistryManager` usage compliance.
+  - grep for COMPONENT_REGISTRY → 0 matches ✓
+  - grep for VEHICLE_CLASSES → 0 matches ✓
 
-### Phase 4: UI Reconstruction (The Interface)
+---
+
+## Phase 3 Implementation Specifications
+
+### Task 3.1: Registry Isolation in `conftest.py`
+**File:** `tests/conftest.py`
+**Root Cause:** `reset_game_state` fixture skips cleanup when `use_custom_data` marker is present.
+
+**Target Implementation:**
+```python
+@pytest.fixture(autouse=True)
+def reset_game_state(monkeypatch, request):
+    from game.core.registry import RegistryManager
+    mgr = RegistryManager.instance()
+    
+    # Pre-test cleanup (ALWAYS)
+    mgr.clear()
+
+    if "use_custom_data" not in request.keywords:
+        # Standard Fast Hydration
+        cache = SessionRegistryCache.instance()
+        cache.load_all_data()
+        mgr.hydrate(...)
+        
+    yield
+    
+    # Post-test cleanup (ALWAYS RUNS)
+    mgr.clear()
+```
+
+**Steps:**
+1. Open `tests/conftest.py`.
+2. Locate `reset_game_state` fixture.
+3. Add `mgr.clear()` call BEFORE the marker check.
+4. Ensure `mgr.clear()` is called AFTER `yield` unconditionally.
+5. Run `pytest tests/unit/entities/test_sequence_hazard.py` to verify isolation.
+
+---
+
+### Task 3.2: Create `test_ship_core.py`
+**File:** `tests/unit/entities/test_ship_core.py`
+
+**Test Cases:**
+
+#### TC-3.2.1: Hull Auto-Equip Verification
+```python
+def test_hull_auto_equip(registry_with_hull):
+    """Verify Ship auto-equips default_hull_id from vehicle class."""
+    ship = Ship(name="Test", x=0, y=0, color=(255,255,255), ship_class="Escort")
+    
+    core_comps = ship.layers[LayerType.CORE]['components']
+    assert len(core_comps) == 1
+    assert core_comps[0].id == "hull_escort"
+    assert ship.base_mass == 0.0  # Attribute Shadowing
+```
+
+#### TC-3.2.2: Legacy Fallback (No Hull)
+```python
+def test_no_hull_fallback(registry_no_hull):
+    """Verify Ship uses legacy hull_mass when no default_hull_id."""
+    ship = Ship(name="Test", x=0, y=0, color=(255,255,255), ship_class="TestShip")
+    
+    core_comps = ship.layers[LayerType.CORE]['components']
+    assert len(core_comps) == 0
+    assert ship.base_mass == 100.0
+```
+
+#### TC-3.2.3: Mass Aggregation
+```python
+def test_mass_from_components(ship_with_components):
+    """Verify Ship.mass equals sum of all component masses + base_mass."""
+    ship = ship_with_components
+    ship.recalculate_stats()
+    
+    expected_mass = ship.base_mass + sum(
+        c.mass for layer in ship.layers.values() for c in layer['components']
+    )
+    assert ship.mass == expected_mass
+```
+
+#### TC-3.2.4: HP Aggregation
+```python
+def test_hp_from_components(ship_with_components):
+    """Verify Ship.max_hp equals sum of component max_hp values."""
+    ship = ship_with_components
+    
+    expected_hp = sum(
+        c.max_hp for layer in ship.layers.values() for c in layer['components']
+    )
+    assert ship.max_hp == expected_hp
+```
+
+#### TC-3.2.5: Derelict Status from CommandAndControl
+```python
+def test_derelict_on_bridge_destruction(ship_with_bridge):
+    """Verify ship becomes derelict when CommandAndControl component destroyed."""
+    ship = ship_with_bridge
+    bridge = next(c for c in ship.layers[LayerType.CORE]['components'] 
+                  if c.has_ability('CommandAndControl'))
+    
+    bridge.current_hp = 0
+    ship.update_derelict_status()
+    
+    assert ship.is_derelict is True
+```
+
+**Fixtures Required:**
+- `registry_with_hull`: Populates RegistryManager with Escort class + hull_escort component.
+- `registry_no_hull`: Populates RegistryManager with TestShip class (hull_mass=100, no default_hull_id).
+- `ship_with_components`: Creates Ship with known components for mass/HP testing.
+- `ship_with_bridge`: Creates Ship with Bridge component having CommandAndControl ability.
+
+---
+
+### Task 3.3: Audit Ship Tests for RegistryManager Compliance
+**Scope:** `tests/unit/entities/`, `tests/integration/`
+
+**Verification Steps:**
+1. `grep -r "COMPONENT_REGISTRY" tests/` → Should return 0 matches.
+2. `grep -r "VEHICLE_CLASSES" tests/` → Should return 0 matches.
+3. `grep -r "from game.simulation.entities.ship import" tests/` → Verify imports use `get_vehicle_classes`, `get_component_registry`.
+
+**Remediation Pattern:**
+```python
+# OLD (Direct Import)
+from game.simulation.entities.ship import COMPONENT_REGISTRY
+
+# NEW (RegistryManager Access)
+from game.core.registry import get_component_registry
+components = get_component_registry()
+```
+
+**Run Verification:**
+```bash
+pytest tests/unit/entities/ -v
+pytest tests/integration/ -v
+```
+
+### Phase 4: UI Reconstruction (The Interface) [Complete]
 **Objective:** Resolve layout overlaps and ensure builder compatibility.
-- [ ] **Restoration:** Create/Restore `game/ui/screens/builder_utils.py` (Layout constants). [UI Specialist]
-- [ ] **Layout Fix:** Implement relative/grid sizing for `builder_screen.py` to fix 1920px overlap.
-- [ ] **Layout Fix:** Resolve vertical collision between Weapons Report and Nav Panels.
-- [ ] **Logic Fix:** Switch `BuilderSceneGUI` to event-based data sync (stop recreating dropdowns).
+- [x] **Task 4.1:** Create `game/ui/screens/builder_utils.py` (Layout constants). [UI Specialist]
+  - Created centralized module with `PanelWidths`, `PanelHeights`, `Margins`, and `BuilderEvents` constants
+- [x] **Task 4.2:** Implement relative/grid sizing for `builder_screen.py` to fix 1920px overlap.
+  - FIXED: Changed `layer_panel_width` from fixed `PANEL_WIDTHS.layer_panel` to dynamic `calculate_dynamic_layer_width(screen_width)`
+  - FIXED: `weapons_panel_width` calculation now subtracts `right_panel_width` to prevent overlap
+- [x] **Task 4.3:** Resolve vertical collision between Weapons Report and Nav Panels.
+  - ANALYZED: `right_panel.py` uses single scroll container, no sub-panels needing `update_layout()`
+  - RECLASSIFIED: Issue was horizontal overlap (covered by Task 4.2b), not vertical stacking
+- [x] **Task 4.4:** Switch `BuilderSceneGUI` to event-based data sync using `REGISTRY_RELOADED`.
+  - Added `REGISTRY_RELOADED` event emission in `_reload_data`
+  - Updated `BuilderRightPanel` and `BuilderLeftPanel` to subscribe to event
 
 ### Phase 5: Legacy Purge & Final Polish (The Cleanup)
 **Objective:** Remove deprecated data and finalize the refactor.
@@ -1803,10 +4118,82 @@ def get_validator():
 
 ---
 
+## Phase 4 Implementation Specifications
+
+### Task 4.1: Centralize Layout Constants
+**File:** `game/ui/screens/builder_utils.py` [NEW]
+
+**Implementation Spec:**
+Create a utility module to define the design system's dimensions.
+
+```python
+# game/ui/screens/builder_utils.py
+
+PANEL_WIDTHS = {
+    'component_palette': 400,
+    'structure_list': 400,
+    'detail_panel': 500,
+    'ship_stats': 750
+}
+
+PANEL_HEIGHTS = {
+    'bottom_bar': 60,
+    'weapons_report': 500,
+    'modifier_panel': 360
+}
+
+MARGINS = {
+    'edge': 20,
+    'gutter': 10
+}
+```
+
+---
+
+### Task 4.2: Relative/Grid Layout for 1920px+
+**File:** `game/ui/screens/builder_screen.py`
+
+**Implementation Spec:**
+1. **Calculate Available Center Width:** `center_width = screen_width - PANEL_WIDTHS['component_palette'] - PANEL_WIDTHS['ship_stats']`.
+2. **Dynamic Layer Panel:** Instead of fixed 450px, the Layer Panel should take `min(400, center_width * 0.3)`.
+3. **Schematic View:** Takes the remaining center space.
+4. **Detail Panel Overlay:** Position the Detail Panel as a `pygame_gui.elements.UIPanel` with a relative offset from the right.
+
+---
+
+### Task 4.3: Resolve Vertical Panel Collision
+**File:** `ui/builder/right_panel.py`
+
+**Implementation Spec:**
+The "Weapons Report" and "Navigation Panels" must use a vertical stack instead of fixed Y-offsets.
+
+```python
+def update_layout(self):
+    current_y = MARGINS['edge']
+    for panel in self.sub_panels:
+        panel.set_relative_position((0, current_y))
+        current_y += panel.rect.height + MARGINS['gutter']
+```
+
+---
+
+### Task 4.4: Event-Based UI Synchronization
+**Files:** `ui/builder/event_bus.py`, `game/ui/screens/builder_screen.py`
+
+**Implementation Spec:**
+1. **Registry Reload Event:** Add `REGISTRY_RELOADED = 'REGISTRY_RELOADED'` to `EventBus`.
+2. **Panel Subscriptions:** `BuilderRightPanel` and `BuilderLeftPanel` subscribe to `REGISTRY_RELOADED`.
+3. **Internal Refresh:** Update `BuilderRightPanel.refresh_controls()` to update dropdown *options* without killing the object.
+4. **Preserve Selection:** Cache `self.ship.ship_class` before reload and re-apply to dropdown after refresh.
+
+---
+
 ## Test Triage Table
-| Test File | Status | Owner | Notes |
-| :--- | :--- | :--- | :--- |
-| (Empty) | | | |
+| Issue | File | Status | Owner | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| Task 4.2a: Dynamic Layer Width | `builder_screen.py` | RESOLVED | UI Specialist | Changed to `calculate_dynamic_layer_width(screen_width)` |
+| Task 4.2b: Weapons Panel Width | `builder_screen.py` | RESOLVED | UI Specialist | Subtracted `right_panel_width` from calculation |
+| Task 4.3: Vertical Stacking | `right_panel.py` | NOT_APPLICABLE | UI Specialist | Reclassified: right_panel uses single scroll container, no sub-panels |
 
 --- END FILE: Refactoring/active_refactor.md ---
 

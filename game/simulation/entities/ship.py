@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple, Optional, Any, Union, Set, TYPE_CHECKING
 
 from game.engine.physics import PhysicsBody
 from game.simulation.components.component import (
-    Component, LayerType
+    Component, LayerType, create_component
 )
 from game.core.logger import log_debug
 from game.core.registry import RegistryManager, get_vehicle_classes, get_validator, get_component_registry, get_modifier_registry
@@ -128,9 +128,23 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Initialize Layers dynamically from class definition
         self._initialize_layers()
         
+        # Auto-equip default Hull component if defined for this class
+        default_hull_id = class_def.get('default_hull_id')
+        hull_equipped = False
+        if default_hull_id:
+            hull_component = create_component(default_hull_id)
+            if hull_component:
+                # Direct append to avoid validation during init
+                self.layers[LayerType.CORE]['components'].append(hull_component)
+                hull_component.layer_assigned = LayerType.CORE
+                hull_component.ship = self
+                hull_equipped = True
+        
         # Stats
         self.mass: float = 0.0
-        self.base_mass: float = class_def.get('hull_mass', 50)  # Hull/Structure mass from class
+        # base_mass is 0 if Hull component equipped (Hull provides mass as component)
+        # Otherwise use legacy hull_mass from vehicle class as fallback
+        self.base_mass: float = 0.0 if hull_equipped else class_def.get('hull_mass', 50)
         self.vehicle_type: str = class_def.get('type', "Ship")
         self.total_thrust: float = 0.0
         self.max_speed: float = 0.0
@@ -148,8 +162,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Resource initialization tracking
         self._resources_initialized: bool = False
         
-        self.baseline_to_hit_offense = 0.0 # Score
-        self.to_hit_profile = 0.0 # Score
+        # To-Hit stats initialized in canonical block below (lines ~202-203)
         self.total_defense_score = 0.0 # Score (Size + Maneuver + ECM)
         self.emissive_armor = 0
         self.crystalline_armor = 0
@@ -232,28 +245,19 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         max_rng = 0.0
         for layer in self.layers.values():
             for comp in layer['components']:
-                # 1. Check WeaponAbility instances (new system)
                 for ab in comp.ability_instances:
-                    # Check for any WeaponAbility variant via MRO-style name check
-                    is_weapon = False
-                    for cls in ab.__class__.mro():
-                        if cls.__name__ == 'WeaponAbility':
-                            is_weapon = True
-                            break
-                    
-                    if not is_weapon: continue
+                    # Polymorphic check using isinstance (Phase 2 Task 2.5)
+                    if not isinstance(ab, WeaponAbility):
+                        continue
                     
                     rng = getattr(ab, 'range', 0.0)
-                    # For SeekerWeapons, ensure we use their calculated range if not already reported
-                    # SeekerWeaponAbility name check
-                    if ab.__class__.__name__ == 'SeekerWeaponAbility' or 'SeekerWeaponAbility' in [c.__name__ for c in ab.__class__.mro()]:
-                         # Only override if range is 0 or less, as property might already be correct
-                         if rng <= 0 and hasattr(ab, 'projectile_speed') and hasattr(ab, 'endurance'):
-                             rng = ab.projectile_speed * ab.endurance
+                    # For SeekerWeapons, calculate range from endurance if not set
+                    if isinstance(ab, SeekerWeaponAbility):
+                        if rng <= 0 and hasattr(ab, 'projectile_speed') and hasattr(ab, 'endurance'):
+                            rng = ab.projectile_speed * ab.endurance
                              
                     if rng > max_rng:
                         max_rng = rng
-                
 
         return max_rng if max_rng > 0 else 0.0
 
@@ -293,6 +297,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         """
         Update is_derelict status based on vehicle class requirements.
         If essential components (e.g. Bridge) are destroyed, ship becomes derelict.
+        
+        Requirements format (from vehicleclasses.json):
+        {
+            "command": {"ability": "CommandAndControl", "min_value": true},
+            "propulsion": {"ability": "CombatPropulsion", "min_value": 1}
+        }
         """
         # 1. Get Requirements
         class_def = get_vehicle_classes().get(self.ship_class, {})
@@ -304,32 +314,48 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             return
 
         # 3. Calculate Current Active Abilities
-        active_components = []
-        for layer in self.layers.values():
-            for c in layer['components']:
-                if c.is_active and c.current_hp > 0:
-                     active_components.append(c)
+        active_components = [
+            c for layer in self.layers.values()
+            for c in layer['components']
+            if c.is_active and c.current_hp > 0
+        ]
         
         if not self.stats_calculator:
-             self.stats_calculator = ShipStatsCalculator(get_vehicle_classes())
+            self.stats_calculator = ShipStatsCalculator(get_vehicle_classes())
              
         # Recalculate abilities based on currently living components
         totals = self.stats_calculator.calculate_ability_totals(active_components)
         
-        # 4. Check Requirements
+        # 5. Check all Requirements (new nested format)
         is_derelict = False
-        for req_ability, min_val in requirements.items():
-            # Support boolean requirements (True means > 0)
-            current_val = totals.get(req_ability, 0)
-            
-            if isinstance(min_val, bool):
-                if min_val and not current_val:
-                    is_derelict = True
-                    break
-            elif isinstance(min_val, (int, float)):
-                 if current_val < min_val:
-                     is_derelict = True
-                     break
+        for req_name, req_spec in requirements.items():
+            # Handle new nested format: {"ability": "...", "min_value": ...}
+            if isinstance(req_spec, dict) and 'ability' in req_spec:
+                ability_name = req_spec['ability']
+                min_val = req_spec.get('min_value', 1)
+                current_val = totals.get(ability_name, 0)
+                
+                if isinstance(min_val, bool):
+                    if min_val and not current_val:
+                        is_derelict = True
+                        break
+                elif isinstance(min_val, (int, float)):
+                    if current_val < min_val:
+                        is_derelict = True
+                        break
+            # Legacy flat format: "AbilityName": min_value
+            else:
+                current_val = totals.get(req_name, 0)
+                min_val = req_spec
+                
+                if isinstance(min_val, bool):
+                    if min_val and not current_val:
+                        is_derelict = True
+                        break
+                elif isinstance(min_val, (int, float)):
+                    if current_val < min_val:
+                        is_derelict = True
+                        break
         
         if is_derelict and not self.is_derelict:
             print(f"{self.name} has become DERELICT (Requirements not met)")
@@ -675,6 +701,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         for ltype, layer_data in self.layers.items():
             filter_comps = []
             for comp in layer_data['components']:
+                # Skip Hull components - they are auto-equipped on load
+                if comp.id.startswith('hull_'):
+                    continue
                 # Save as dict with modifiers
                 c_obj = {"id": comp.id}
                 if comp.modifiers:

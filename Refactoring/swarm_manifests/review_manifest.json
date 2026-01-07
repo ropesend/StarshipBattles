@@ -1,68 +1,115 @@
 {
-    "swarm_name": "Phase 1 Review Swarm",
-    "mission_goal": "Verify Phase 1 (Data & State Foundations) completion and generate DETAILED SPECS for Phase 2 (Core Logic & Stability).",
-    "review_phase": "Phase 1: Data & State Foundations",
-    "next_phase": "Phase 2: Core Logic & Stability",
+    "swarm_name": "Phase 4 Review Swarm",
+    "mission_goal": "Verify Phase 4 (UI Reconstruction) completion and generate DETAILED SPECS for Phase 5 (Legacy Purge & Final Polish).",
+    "review_phase": "Phase 4: UI Reconstruction",
+    "next_phase": "Phase 5: Legacy Purge & Final Polish",
     "context_root": "./",
     "agents": [
         {
             "role": "Code_Reviewer",
-            "focus": "Verify Phase 1 Implementation Quality & Completeness",
+            "focus": "Verify Phase 4 Implementation Quality & Completeness",
             "primary_files": [
-                "game/core/resource_manager.py",
-                "game/simulation/entities/ship.py",
-                "game/simulation/components/component.py",
-                "data/components.json",
-                "data/vehicleclasses.json",
+                "game/ui/screens/builder_utils.py",
+                "game/ui/screens/builder_screen.py",
+                "ui/builder/right_panel.py",
+                "ui/builder/left_panel.py",
+                "game/ui/builder/builder_scene_gui.py",
                 "Refactoring/active_refactor.md"
             ],
             "review_checklist": [
-                "Verify resource_manager.py clamping bug is fixed",
-                "Verify Hull components exist for all 18 vehicle classes in components.json",
-                "Verify default_hull_id added to vehicleclasses.json for all classes",
-                "Verify Ship.to_dict/from_dict persists ResourceRegistry values",
-                "Verify Component._instantiate_abilities no longer has hardcoded ability string maps"
+                "Verify Task 4.1: builder_utils.py exists with centralized PANEL_WIDTHS, PANEL_HEIGHTS, MARGINS, and BuilderEvents constants",
+                "Verify Task 4.1: Layout constants cover component_palette, structure_list, detail_panel, ship_stats widths",
+                "Verify Task 4.1: Layout constants cover bottom_bar, weapons_report, modifier_panel heights",
+                "Verify Task 4.2: builder_screen.py uses PANEL_WIDTHS and PANEL_HEIGHTS constants instead of hardcoded pixel values",
+                "Verify Task 4.2: Relative/grid-based sizing implemented for 1920px+ resolutions",
+                "Verify Task 4.3: Vertical collision between Weapons Report and Nav Panels is resolved (proper Y-offset calculation)",
+                "Verify Task 4.3: right_panel.py uses vertical stacking pattern or correct Y-offset calculation",
+                "Verify Task 4.4: REGISTRY_RELOADED event exists in builder_utils.py or event_bus.py",
+                "Verify Task 4.4: BuilderRightPanel and BuilderLeftPanel subscribe to REGISTRY_RELOADED event",
+                "Verify Task 4.4: _reload_data emits REGISTRY_RELOADED event on registry changes",
+                "Verify no regressions: Run builder UI tests and confirm no layout-related failures"
             ]
         },
         {
             "role": "Plan_Adjuster",
-            "focus": "Generate DETAILED SPECS for Phase 2 - Core Logic & Stability",
+            "focus": "Generate DETAILED SPECS for Phase 5 - Legacy Purge & Final Polish",
             "primary_files": [
+                "data/vehicleclasses.json",
+                "data/components.json",
                 "game/simulation/entities/ship.py",
+                "game/data/load_vehicle_classes.py",
                 "game/simulation/components/component.py",
-                "game/core/registry.py",
-                "game/simulation/ships/ship_stats_calculator.py",
                 "Refactoring/active_refactor.md"
             ],
             "specifications_required": {
-                "Ship.__init__ auto-equip": {
-                    "file": "game/simulation/entities/ship.py",
-                    "method": "__init__",
-                    "spec": "After vehicle_class_id resolution, lookup default_hull_id from vehicle_classes, call self.equip_component(default_hull_id) if defined"
-                },
-                "Ship.mass cached property": {
-                    "file": "game/simulation/entities/ship.py",
-                    "current": "Ship.mass property",
-                    "target": "ShipStatsCalculator.calculate_mass()",
-                    "spec": "Remove hardcoded base_mass, sum mass from all equipped components including Hull"
-                },
-                "Ship.hp cached property": {
-                    "file": "game/simulation/entities/ship.py",
-                    "current": "Ship.hp direct attribute",
-                    "target": "ShipStatsCalculator.calculate_hp()",
-                    "spec": "HP derived from Hull component's MaxHP ability value"
-                },
-                "CommandAndControl logic": {
-                    "file": "game/simulation/entities/ship.py",
-                    "method": "update_derelict_status",
-                    "spec": "Check for CommandAndControl ability; if crew < CrewRequired ability value, set derelict=True"
-                },
-                "MRO identity checks": {
-                    "files": [
-                        "game/simulation/entities/ship.py",
-                        "game/simulation/components/component.py"
+                "Task 5.1: Remove hull_mass and requirements from vehicleclasses.json": {
+                    "file": "data/vehicleclasses.json",
+                    "current_state": "vehicleclasses.json still contains legacy 'hull_mass' and 'requirements' fields that are now deprecated since Hull is a component",
+                    "target_state": "vehicleclasses.json contains ONLY: name, description, max_mass, default_hull_id, and any non-physical metadata",
+                    "detailed_steps": [
+                        "1. Open data/vehicleclasses.json",
+                        "2. For each vehicle class entry, delete the 'hull_mass' key-value pair if present",
+                        "3. For each vehicle class entry, delete the 'requirements' key-value pair if present (now handled by CrewRequired/FuelStorage abilities)",
+                        "4. Verify 'default_hull_id' is present for all classes (added in Phase 1)",
+                        "5. Run tests to verify Ship.__init__ still works without hull_mass fallback",
+                        "6. Verify Ship.base_mass is now 0.0 or derived from Hull component only"
                     ],
-                    "spec": "Replace isinstance checks using string class names with proper type comparisons"
+                    "dependencies": [
+                        "Phase 4 must be complete (UI uses new layout system)",
+                        "All Hull components must exist in components.json (Phase 1)"
+                    ],
+                    "risk_assessment": "MEDIUM - Breaking change if any code still reads hull_mass directly; grep for 'hull_mass' before removal"
+                },
+                "Task 5.2: Remove Hardcoded Ship Fallback Registry": {
+                    "file": "game/data/load_vehicle_classes.py",
+                    "current_state": "load_vehicle_classes.py may contain hardcoded fallback vehicle class definitions for when JSON loading fails",
+                    "target_state": "No hardcoded fallback vehicle classes; rely entirely on JSON data with proper error handling",
+                    "detailed_steps": [
+                        "1. Audit game/data/load_vehicle_classes.py for hardcoded vehicle class dictionaries",
+                        "2. Identify any DEFAULT_VEHICLE_CLASSES or FALLBACK_CLASSES constants",
+                        "3. Remove hardcoded fallback definitions",
+                        "4. Implement proper error handling: raise clear exception if vehicleclasses.json fails to load",
+                        "5. Update tests that may depend on fallback behavior to use proper fixtures",
+                        "6. Verify RegistryManager.hydrate() handles missing data gracefully"
+                    ],
+                    "dependencies": [
+                        "Task 5.1 must be complete (clean vehicleclasses.json)"
+                    ],
+                    "risk_assessment": "LOW - Cleanup only; fallback code should not be exercised in production"
+                },
+                "Task 5.3: Final Verification Gauntlet": {
+                    "file": "N/A",
+                    "current_state": "Some tests may still have latent failures or skips",
+                    "target_state": "100% test pass rate with no skips or xfails related to refactor scope",
+                    "detailed_steps": [
+                        "1. Run full test suite: pytest tests/ -v --tb=short",
+                        "2. Identify any remaining failures and classify by root cause",
+                        "3. Fix test failures that are within refactor scope",
+                        "4. Document any out-of-scope failures for future work",
+                        "5. Verify save/load persists fuel/ammo correctly (manual test)",
+                        "6. Verify Ship Builder UI renders without overlap at 1080p, 1440p, 4K (manual test)"
+                    ],
+                    "dependencies": [
+                        "Task 5.1 and 5.2 must be complete"
+                    ],
+                    "risk_assessment": "MEDIUM - May uncover latent issues requiring additional fixes"
+                },
+                "Task 5.4: Definition of Done Verification": {
+                    "file": "N/A",
+                    "current_state": "Refactor may not meet all Definition of Done criteria",
+                    "target_state": "All DoD criteria verified and documented",
+                    "detailed_steps": [
+                        "1. grep -r 'self.base_mass\\s*=' game/simulation/entities/ship.py - should return 0 hardcoded assignments",
+                        "2. grep -r 'hull_mass' data/vehicleclasses.json - should return 0 matches after Task 5.1",
+                        "3. Test Ship Builder UI at 1920x1080 - no panel overlaps",
+                        "4. Create new ship, add fuel, save, reload - verify fuel level persists",
+                        "5. Create new ship, add ammo weapons, save, reload - verify ammo level persists",
+                        "6. Document any remaining tech debt for future refactors"
+                    ],
+                    "dependencies": [
+                        "All Phase 5 tasks must be complete"
+                    ],
+                    "risk_assessment": "LOW - Verification only; no code changes"
                 }
             }
         }

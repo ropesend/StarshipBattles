@@ -1,0 +1,13 @@
+# PROMPT: Initiate Debug Swarm
+
+**CONTEXT:** A unit test is failing and the main agent is stuck.
+
+**GOAL:** Trigger the "Test Debug Swarm" protocol.
+
+**INSTRUCTIONS:**
+1. Load `Test Debugging/protocols/20_test_debug_swarm.md`.
+2. Adopt the **Diagnostician** persona.
+3. Analyze the recent `pytest` failure output.
+4. Identify 5-10 **Exploration Zones** (e.g., Fixtures, Global State, Mocks, Data Files).
+5. Generate `Test Debugging/swarm_manifests/debug_manifest.json`.
+6. Run `python "Test Debugging/scripts/pack_debug_swarm.py" "Test Debugging/swarm_manifests/debug_manifest.json"`.
