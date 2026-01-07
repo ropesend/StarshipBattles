@@ -653,6 +653,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             "color": self.color,
             "ai_strategy": self.ai_strategy,
             "layers": {},
+            "resources": {
+                "fuel": self.resources.get_value("fuel"),
+                "energy": self.resources.get_value("energy"),
+                "ammo": self.resources.get_value("ammo"),
+            },
             "expected_stats": {
                 "max_hp": self.max_hp,
                 "max_fuel": self.resources.get_max_value("fuel"),
@@ -730,6 +735,13 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                     s.add_component(new_comp, layer_type)
         
         s.recalculate_stats()
+    
+        # Restore resource values if saved
+        saved_resources = data.get('resources', {})
+        if saved_resources:
+            for resource_name, value in saved_resources.items():
+                if value is not None:
+                    s.resources.set_value(resource_name, value)
         
         # Verify loaded stats match expected stats (if saved)
         expected = data.get('expected_stats', {})

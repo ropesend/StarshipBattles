@@ -1,0 +1,70 @@
+{
+    "swarm_name": "Phase 1 Review Swarm",
+    "mission_goal": "Verify Phase 1 (Data & State Foundations) completion and generate DETAILED SPECS for Phase 2 (Core Logic & Stability).",
+    "review_phase": "Phase 1: Data & State Foundations",
+    "next_phase": "Phase 2: Core Logic & Stability",
+    "context_root": "./",
+    "agents": [
+        {
+            "role": "Code_Reviewer",
+            "focus": "Verify Phase 1 Implementation Quality & Completeness",
+            "primary_files": [
+                "game/core/resource_manager.py",
+                "game/simulation/entities/ship.py",
+                "game/simulation/components/component.py",
+                "data/components.json",
+                "data/vehicleclasses.json",
+                "Refactoring/active_refactor.md"
+            ],
+            "review_checklist": [
+                "Verify resource_manager.py clamping bug is fixed",
+                "Verify Hull components exist for all 18 vehicle classes in components.json",
+                "Verify default_hull_id added to vehicleclasses.json for all classes",
+                "Verify Ship.to_dict/from_dict persists ResourceRegistry values",
+                "Verify Component._instantiate_abilities no longer has hardcoded ability string maps"
+            ]
+        },
+        {
+            "role": "Plan_Adjuster",
+            "focus": "Generate DETAILED SPECS for Phase 2 - Core Logic & Stability",
+            "primary_files": [
+                "game/simulation/entities/ship.py",
+                "game/simulation/components/component.py",
+                "game/core/registry.py",
+                "game/simulation/ships/ship_stats_calculator.py",
+                "Refactoring/active_refactor.md"
+            ],
+            "specifications_required": {
+                "Ship.__init__ auto-equip": {
+                    "file": "game/simulation/entities/ship.py",
+                    "method": "__init__",
+                    "spec": "After vehicle_class_id resolution, lookup default_hull_id from vehicle_classes, call self.equip_component(default_hull_id) if defined"
+                },
+                "Ship.mass cached property": {
+                    "file": "game/simulation/entities/ship.py",
+                    "current": "Ship.mass property",
+                    "target": "ShipStatsCalculator.calculate_mass()",
+                    "spec": "Remove hardcoded base_mass, sum mass from all equipped components including Hull"
+                },
+                "Ship.hp cached property": {
+                    "file": "game/simulation/entities/ship.py",
+                    "current": "Ship.hp direct attribute",
+                    "target": "ShipStatsCalculator.calculate_hp()",
+                    "spec": "HP derived from Hull component's MaxHP ability value"
+                },
+                "CommandAndControl logic": {
+                    "file": "game/simulation/entities/ship.py",
+                    "method": "update_derelict_status",
+                    "spec": "Check for CommandAndControl ability; if crew < CrewRequired ability value, set derelict=True"
+                },
+                "MRO identity checks": {
+                    "files": [
+                        "game/simulation/entities/ship.py",
+                        "game/simulation/components/component.py"
+                    ],
+                    "spec": "Replace isinstance checks using string class names with proper type comparisons"
+                }
+            }
+        }
+    ]
+}

@@ -116,9 +116,10 @@ class ResourceRegistry:
         res = self._resources.get(name)
         if res:
             res.current_value += amount
-            # Clamp
+            # Clamp to bounds
             if res.current_value > res.max_value:
                 res.current_value = res.max_value
+            elif res.current_value < 0:
                 res.current_value = 0.0
 
     def set_max_value(self, name: str, value: float) -> None:

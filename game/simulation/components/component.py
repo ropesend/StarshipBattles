@@ -232,17 +232,15 @@ class Component:
             
             items = data if isinstance(data, list) else [data]
             
-            # Get the target class for this registry entry (could be class or lambda)
+        # Get the target class for this registry entry (could be class or lambda)
             target = ABILITY_REGISTRY[name]
             target_cls_name = None
             if isinstance(target, type):
                 target_cls_name = target.__name__
-            elif name in ["FuelStorage", "EnergyStorage", "AmmoStorage"]:
-                 target_cls_name = "ResourceStorage"
-            elif name == "EnergyGeneration":
-                 target_cls_name = "ResourceGeneration"
-            elif name == "EnergyConsumption":
-                 target_cls_name = "ResourceConsumption"
+            else:
+                # Use centralized map for shortcut factories (lambdas)
+                from game.simulation.components.abilities import ABILITY_CLASS_MAP
+                target_cls_name = ABILITY_CLASS_MAP.get(name)
 
             for item in items:
                 # Heuristic: Match by Target Class Name if known, otherwise fallback to registry name

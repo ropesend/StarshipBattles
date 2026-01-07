@@ -680,6 +680,16 @@ ABILITY_REGISTRY = {
     "AmmoConsumption": lambda c, d: ResourceConsumption(c, {"resource": "ammo", "amount": d, "trigger": "activation"} if isinstance(d, (int, float)) else {**d, "resource": "ammo"})
 }
 
+# Map registry shortcut names to their actual class names for instance matching
+ABILITY_CLASS_MAP = {
+    "FuelStorage": "ResourceStorage",
+    "EnergyStorage": "ResourceStorage",
+    "AmmoStorage": "ResourceStorage",
+    "EnergyGeneration": "ResourceGeneration",
+    "EnergyConsumption": "ResourceConsumption",
+    "AmmoConsumption": "ResourceConsumption",
+}
+
 def create_ability(name: str, component, data: Any) -> Optional[Ability]:
     if name in ABILITY_REGISTRY:
         try:
