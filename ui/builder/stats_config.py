@@ -1,5 +1,5 @@
 from game.simulation.entities.ship import LayerType
-import ship_stats # Needed for accessing defaults/constants if any
+import game.simulation.entities.ship_stats as ship_stats # Needed for accessing defaults/constants if any
 
 
 class StatDefinition:

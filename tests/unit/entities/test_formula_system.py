@@ -1,6 +1,6 @@
 import unittest
 import math
-from formula_system import evaluate_math_formula
+from game.simulation.formula_system import evaluate_math_formula
 
 class TestFormulaSystem(unittest.TestCase):
     

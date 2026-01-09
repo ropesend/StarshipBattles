@@ -8,7 +8,7 @@ from game.core.registry import RegistryManager
 from game.simulation.components.component import Component
 from game.simulation.components.abilities import ResourceConsumption, WeaponAbility
 from ui.builder.stats_config import get_logistics_rows
-from ship_stats import ShipStatsCalculator
+from game.simulation.entities.ship_stats import ShipStatsCalculator
 
 
 def _get_layer_key(ship, layer_name):

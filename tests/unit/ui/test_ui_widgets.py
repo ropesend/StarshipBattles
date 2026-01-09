@@ -9,7 +9,13 @@ class TestButton(unittest.TestCase):
     """Test Button widget."""
     
     def setUp(self):
-        pass
+        import os
+        os.environ["SDL_VIDEODRIVER"] = "dummy"
+        pygame.init()
+        pygame.font.init()
+
+    def tearDown(self):
+        pygame.quit()
     
     
     def test_button_initialization(self):
@@ -70,7 +76,13 @@ class TestLabel(unittest.TestCase):
     """Test Label widget."""
     
     def setUp(self):
-        pass
+        import os
+        os.environ["SDL_VIDEODRIVER"] = "dummy"
+        pygame.init()
+        pygame.font.init()
+
+    def tearDown(self):
+        pygame.quit()
     
     
     def test_label_initialization(self):
@@ -99,7 +111,10 @@ class TestSlider(unittest.TestCase):
     """Test Slider widget."""
     
     def setUp(self):
-        pass
+        import os
+        os.environ["SDL_VIDEODRIVER"] = "dummy"
+        pygame.init()
+        pygame.font.init()
     
     
     def test_slider_initialization(self):

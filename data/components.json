@@ -937,7 +937,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -952,7 +954,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -967,7 +971,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -982,7 +988,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -997,7 +1005,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -1012,7 +1022,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -1027,7 +1039,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -1042,7 +1056,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -1057,7 +1073,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -1072,7 +1090,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -1087,7 +1107,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -1102,7 +1124,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -1117,7 +1141,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -1132,7 +1158,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -1147,7 +1175,9 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true,
+                "RequiresCombatMovement": true
             },
             "major_classification": "Structure"
         },
@@ -1162,7 +1192,8 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Structure"
         },
@@ -1177,7 +1208,8 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Structure"
         },
@@ -1192,7 +1224,8 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Structure"
         },
@@ -1207,7 +1240,184 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "StructuralIntegrity": true
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_planetary_complex_t1",
+            "name": "Planetary Complex T1 Hull",
+            "type": "Hull",
+            "mass": 1000,
+            "hp": 5000,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_planetary_complex_t2",
+            "name": "Planetary Complex T2 Hull",
+            "type": "Hull",
+            "mass": 2000,
+            "hp": 10000,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_planetary_complex_t3",
+            "name": "Planetary Complex T3 Hull",
+            "type": "Hull",
+            "mass": 4000,
+            "hp": 20000,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_planetary_complex_t4",
+            "name": "Planetary Complex T4 Hull",
+            "type": "Hull",
+            "mass": 8000,
+            "hp": 40000,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_planetary_complex_t5",
+            "name": "Planetary Complex T5 Hull",
+            "type": "Hull",
+            "mass": 16000,
+            "hp": 80000,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_planetary_complex_t6",
+            "name": "Planetary Complex T6 Hull",
+            "type": "Hull",
+            "mass": 32000,
+            "hp": 160000,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_planetary_complex_t7",
+            "name": "Planetary Complex T7 Hull",
+            "type": "Hull",
+            "mass": 64000,
+            "hp": 320000,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_planetary_complex_t8",
+            "name": "Planetary Complex T8 Hull",
+            "type": "Hull",
+            "mass": 128000,
+            "hp": 640000,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_planetary_complex_t9",
+            "name": "Planetary Complex T9 Hull",
+            "type": "Hull",
+            "mass": 256000,
+            "hp": 1280000,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_planetary_complex_t10",
+            "name": "Planetary Complex T10 Hull",
+            "type": "Hull",
+            "mass": 512000,
+            "hp": 2560000,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Structure"
+        },
+        {
+            "id": "hull_planetary_complex_t11",
+            "name": "Planetary Complex T11 Hull",
+            "type": "Hull",
+            "mass": 1024000,
+            "hp": 5120000,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true,
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Structure"
         }

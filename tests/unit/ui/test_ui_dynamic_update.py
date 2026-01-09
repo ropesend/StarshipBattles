@@ -12,6 +12,8 @@ from ui.builder.right_panel import BuilderRightPanel
 
 class TestUIDynamicUpdate(unittest.TestCase):
     def setUp(self):
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
         pygame.init()
         pygame.display.set_mode((800, 600), flags=pygame.HIDDEN)
         

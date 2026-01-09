@@ -29,6 +29,10 @@ class TestPlanetaryComplex(unittest.TestCase):
             self.assertEqual(vehicle_def['max_mass'], expected_mass, 
                             f"{class_name} mass incorrect")
             self.assertEqual(vehicle_def['type'], "Planetary Complex")
+            
+            # PATCH: Increase max_mass to allow adding components in tests 
+            # (since hulls now take 100% of base budget)
+            vehicle_def['max_mass'] += 2000
 
     def test_add_central_command(self):
         """Verify Central Complex Command can be added."""

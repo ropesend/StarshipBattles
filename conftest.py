@@ -55,7 +55,7 @@ def reset_game_state(monkeypatch, request):
             STRATEGY_MANAGER.clear()
             
         # Reset Ship Theme Manager
-        from ship_theme import ShipThemeManager
+        from game.simulation.ship_theme import ShipThemeManager
         ShipThemeManager.get_instance().clear()
 
 @pytest.fixture(scope="session", autouse=True)

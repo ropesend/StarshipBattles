@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 import math
 from game.simulation.components.component import Component, ComponentStatus
-from ship_validator import ResourceDependencyRule, ValidationResult
+from game.simulation.ship_validator import ResourceDependencyRule, ValidationResult
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability, ResourceStorage, ResourceConsumption
 from game.simulation.components.abilities import CrewRequired

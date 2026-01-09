@@ -8,7 +8,7 @@ root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 if root_dir not in sys.path:
     sys.path.append(root_dir)
 
-from projectile_manager import ProjectileManager
+from game.simulation.projectile_manager import ProjectileManager
 
 class DummyProjectile:
     def __init__(self, **kwargs):

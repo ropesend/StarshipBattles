@@ -20,10 +20,10 @@ from game.simulation.components.component import (
     get_all_components
 )
 from game.ui.renderer.sprites import SpriteManager
-from preset_manager import PresetManager
+from game.simulation.preset_manager import PresetManager
 from game.simulation.systems.persistence import ShipIO
 from game.ui.panels.builder_widgets import ModifierEditorPanel
-from ship_theme import ShipThemeManager
+from game.simulation.ship_theme import ShipThemeManager
 from ui.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel, LayerPanel
 from ui.builder.schematic_view import SchematicView
 from ui.builder.interaction_controller import InteractionController
@@ -72,7 +72,7 @@ class BuilderSceneGUI:
         
         # UI Manager
         from game.core.constants import ROOT_DIR, DATA_DIR, ASSET_DIR
-        theme_path = os.path.join(ROOT_DIR, 'builder_theme.json')
+        theme_path = os.path.join(DATA_DIR, 'builder_theme.json')
         with profile_block("Builder: Init UIManager"):
             self.ui_manager = pygame_gui.UIManager(
                 (screen_width, screen_height),

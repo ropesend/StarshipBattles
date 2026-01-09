@@ -103,6 +103,9 @@ class ShipStatsCalculator:
         ship.crew_required = 0
         ship.max_targets = 1 # Reset to default
         
+        # Centralize mass budget lookup
+        ship.max_mass_budget = self.vehicle_classes.get(ship.ship_class, {}).get('max_mass', 1000)
+        
         # Effective Crew is limited by Life Support
         effective_crew = min(available_crew, available_life_support)
         
@@ -239,9 +242,8 @@ class ShipStatsCalculator:
         # 5. Phase 4: Physics & Limits
         # ----------------------------
         
-        # Derelict Check - REMOVED per user request
-        # Condition: Ships are never derelict, they only die when destroyed.
-        ship.is_derelict = False
+        # Derelict check is now handled via update_derelict_status() in ship.py
+        # and ability-based logic in ClassRequirementsRule.
         
         # Physics Stats - INVERSE MASS SCALING
         K_THRUST = 2500
@@ -597,8 +599,9 @@ class ShipStatsCalculator:
                         # Special case for CommandAndControl (Flag)
                         elif ability_name == 'CommandAndControl': value = True
                         
-                        # Fallback for complex abilities not meant for simple aggregation?
-                        if value is None: continue
+                        # Fallback for marker abilities (if it exists, it's True)
+                        if value is None: 
+                            value = True
                         
                         stack_group = getattr(ab, 'stack_group', None)
                         group_key = stack_group if stack_group else comp

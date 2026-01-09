@@ -1,0 +1,14 @@
+{
+    "swarm_name": "Protocol 10 Planning",
+    "context_root": "./",
+    "agents": [
+        {
+            "role": "Refactor_Planner",
+            "focus": "Generate a detailed migration map and phased schedule for the Refactor, following the structure defined in Protocol 10. The report must provide detailed specs for Phase 1 and clear paths for subsequent phases.",
+            "primary_files": [
+                "Refactoring/protocols/10_swarm_plan.md",
+                "c:\\Users\\rossr\\.gemini\\antigravity\\brain\\81511285-ade5-40f2-9325-d4a46ac17746\\implementation_plan.md.resolved"
+            ]
+        }
+    ]
+}

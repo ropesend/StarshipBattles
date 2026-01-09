@@ -7,7 +7,7 @@ import pygame
 from game.ai.controller import AIController
 from game.engine.spatial import SpatialGrid
 from game.core.constants import AttackType
-from projectile_manager import ProjectileManager
+from game.simulation.projectile_manager import ProjectileManager
 from game.engine.collision import CollisionSystem
 
 from game.engine.collision import CollisionSystem

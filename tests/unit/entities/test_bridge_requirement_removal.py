@@ -9,7 +9,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 # Import necessary classes
-from ship_validator import ShipDesignValidator, ValidationResult
+from game.simulation.ship_validator import ShipDesignValidator, ValidationResult
 from game.simulation.entities.ship import Ship, LayerType
 from game.core.registry import RegistryManager
 from game.simulation.components.component import Component

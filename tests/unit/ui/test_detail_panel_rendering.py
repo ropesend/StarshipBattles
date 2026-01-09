@@ -8,6 +8,18 @@ import pygame_gui
 
 class TestDetailPanelRendering(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        # Clear registry to ensure clean state from any prior tests
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
+    
+    @classmethod
+    def tearDownClass(cls):
+        # Clean up registry after tests
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
+        pygame.quit()
 
     def setUp(self):
         pygame.init()
@@ -39,9 +51,7 @@ class TestDetailPanelRendering(unittest.TestCase):
         
         # Configure mock manager to return proper values for font dimensions
         # This prevents TypeError when pygame_gui compares MagicMock with int
-        mock_rect = MagicMock()
-        mock_rect.width = 100
-        mock_rect.height = 20
+        mock_rect = pygame.Rect(0, 0, 100, 20)
         mock_font = MagicMock()
         mock_font.get_rect.return_value = mock_rect
         self.mock_manager.get_theme.return_value.get_font.return_value = mock_font
@@ -192,11 +202,11 @@ class TestDetailPanelRendering(unittest.TestCase):
         mock_comp.sprite_index = 1
         
         # Set attributes to avoid MagicMock comparison errors (TypeError: > not supported)
-        # mock_comp.range = 0
-        # mock_comp.damage = 0
-        # mock_comp.firing_arc = 0
-        # mock_comp.projectile_speed = 0
-        # mock_comp.facing_angle = 0
+        mock_comp.range = 0
+        mock_comp.damage = 0
+        mock_comp.firing_arc = 0
+        mock_comp.projectile_speed = 0
+        mock_comp.facing_angle = 0
         mock_comp.cost = 0
         mock_comp.level = 0
         mock_comp.rarity = "Common"

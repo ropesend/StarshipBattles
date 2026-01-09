@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components  # Phase 7: Removed legacy class imports
-from designs import create_brick, create_interceptor
+from game.simulation.designs import create_brick, create_interceptor
 
 
 class TestDesignFactories(unittest.TestCase):

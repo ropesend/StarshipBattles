@@ -1,7 +1,7 @@
 import unittest
 import pygame
 import os
-from ship_theme import ShipThemeManager
+from game.simulation.ship_theme import ShipThemeManager
 
 from game.core.constants import ASSET_DIR
 

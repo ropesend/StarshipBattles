@@ -1,0 +1,503 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Dev\Starship Battles
+configfile: pytest.ini
+plugins: anyio-4.12.0, xdist-3.8.0
+collected 550 items
+
+tests\repro_issues\test_bug_01_crew_delay.py .                           [  0%]
+tests\repro_issues\test_bug_02_seeker.py .                               [  0%]
+tests\repro_issues\test_bug_03_validation.py ..                          [  0%]
+tests\repro_issues\test_bug_04_display.py .                              [  0%]
+tests\repro_issues\test_bug_05_logistics.py .                            [  1%]
+tests\repro_issues\test_bug_05_rejected_fix.py ..                        [  1%]
+tests\repro_issues\test_bug_06_combat_propulsion.py ..                   [  1%]
+tests\repro_issues\test_bug_07_crash.py .                                [  2%]
+tests\repro_issues\test_bug_08_fuel_validation.py .                      [  2%]
+tests\repro_issues\test_bug_09_endurance.py .                            [  2%]
+tests\repro_issues\test_bug_09_hull_in_palette.py .                      [  2%]
+tests\repro_issues\test_bug_10_logistics_update.py .                     [  2%]
+tests\repro_issues\test_bug_10_repro.py ..                               [  3%]
+tests\repro_issues\test_bug_11_dialog_size.py .                          [  3%]
+tests\repro_issues\test_bug_11_hull_update.py ..                         [  3%]
+tests\repro_issues\test_bug_12_energy_gen.py ..                          [  4%]
+tests\repro_issues\test_bug_13_weapons_report.py ....                    [  4%]
+tests\repro_issues\test_sequence_hazard.py ..                            [  5%]
+tests\unit\ai\test_advanced_behaviors.py ....                            [  5%]
+tests\unit\ai\test_ai.py ...........                                     [  7%]
+tests\unit\ai\test_ai_behaviors.py ............                          [ 10%]
+tests\unit\ai\test_movement_and_ai.py ..                                 [ 10%]
+tests\unit\ai\test_strategy_system.py ....                               [ 11%]
+tests\unit\builder\test_builder_drag_drop_real.py ...                    [ 11%]
+tests\unit\builder\test_builder_improvements.py ..                       [ 12%]
+tests\unit\builder\test_builder_interaction.py ..                        [ 12%]
+tests\unit\builder\test_builder_io_integration.py ....                   [ 13%]
+tests\unit\builder\test_builder_logic.py ....                            [ 13%]
+tests\unit\builder\test_builder_refactor.py ..                           [ 14%]
+tests\unit\builder\test_builder_structure_features.py .....              [ 15%]
+tests\unit\builder\test_builder_ui_sync.py ...                           [ 15%]
+tests\unit\builder\test_builder_validation.py ..........                 [ 17%]
+tests\unit\builder\test_builder_warning_logic.py ....                    [ 18%]
+tests\unit\builder\test_bulk_add.py ...                                  [ 18%]
+tests\unit\builder\test_designs.py ........                              [ 20%]
+tests\unit\builder\test_fleet_composition.py ....                        [ 20%]
+tests\unit\builder\test_formation_editor_logic.py ..........             [ 22%]
+tests\unit\builder\test_io_interactive.py ......                         [ 23%]
+tests\unit\builder\test_multi_selection_logic.py ...                     [ 24%]
+tests\unit\builder\test_preset_manager.py ......                         [ 25%]
+tests\unit\builder\test_requirement_abilities.py ......                  [ 26%]
+tests\unit\builder\test_selection_refinements.py ..                      [ 26%]
+tests\unit\builder\test_ship_loading.py .....                            [ 27%]
+tests\unit\combat\test_battle_engine_core.py ..                          [ 28%]
+tests\unit\combat\test_battle_logger.py .....                            [ 29%]
+tests\unit\combat\test_battle_setup_logic.py ...                         [ 29%]
+tests\unit\combat\test_combat.py ............                            [ 31%]
+tests\unit\combat\test_combat_endurance.py .....                         [ 32%]
+tests\unit\combat\test_damage_weighted.py ...                            [ 33%]
+tests\unit\combat\test_fighter_launch.py ....                            [ 34%]
+tests\unit\combat\test_firing_arc_logic.py .....                         [ 34%]
+tests\unit\combat\test_multitarget.py ...                                [ 35%]
+tests\unit\combat\test_pdc.py ..                                         [ 35%]
+tests\unit\combat\test_projectile_manager.py ...                         [ 36%]
+tests\unit\combat\test_projectiles.py .........                          [ 38%]
+tests\unit\combat\test_seeker_range.py ..                                [ 38%]
+tests\unit\combat\test_shields.py .....                                  [ 39%]
+tests\unit\combat\test_weapons.py ...........                            [ 41%]
+tests\unit\entities\test_abilities.py ...........                        [ 43%]
+tests\unit\entities\test_abilities_advanced.py ...                       [ 43%]
+tests\unit\entities\test_bridge_requirement_removal.py .                 [ 44%]
+tests\unit\entities\test_bridge_scaling.py ...                           [ 44%]
+tests\unit\entities\test_component_composition.py ...                    [ 45%]
+tests\unit\entities\test_component_formulas.py ..                        [ 45%]
+tests\unit\entities\test_component_modifiers_extended.py ...........     [ 47%]
+tests\unit\entities\test_component_resources.py ....                     [ 48%]
+tests\unit\entities\test_components.py ..............                    [ 50%]
+tests\unit\entities\test_crystalline_armor.py ....                       [ 51%]
+tests\unit\entities\test_emissive_armor.py ...                           [ 52%]
+tests\unit\entities\test_formula_system.py ....                          [ 52%]
+tests\unit\entities\test_mandatory_modifiers.py .......                  [ 54%]
+tests\unit\entities\test_mandatory_updates.py ...                        [ 54%]
+tests\unit\entities\test_modifier_defaults_robustness.py ...             [ 55%]
+tests\unit\entities\test_modifier_logic.py .....                         [ 56%]
+tests\unit\entities\test_modifier_propagation.py ...                     [ 56%]
+tests\unit\entities\test_modifier_row.py ...                             [ 57%]
+tests\unit\entities\test_modifiers.py ..........                         [ 58%]
+tests\unit\entities\test_new_modifiers.py ......                         [ 60%]
+tests\unit\entities\test_planetary_complex.py .....                      [ 60%]
+tests\unit\entities\test_resources.py .....                              [ 61%]
+tests\unit\entities\test_scaling_logic.py ....                           [ 62%]
+tests\unit\entities\test_ship.py ......                                  [ 63%]
+tests\unit\entities\test_ship_caching.py ...                             [ 64%]
+tests\unit\entities\test_ship_classes.py ..                              [ 64%]
+tests\unit\entities\test_ship_core.py .....                              [ 65%]
+tests\unit\entities\test_ship_physics_mixin.py ..........                [ 67%]
+tests\unit\entities\test_ship_resources.py .....                         [ 68%]
+tests\unit\entities\test_ship_stats.py ......                            [ 69%]
+tests\unit\entities\test_ship_theme_logic.py ......                      [ 70%]
+tests\unit\entities\test_stacking_rules.py ....                          [ 71%]
+tests\unit\performance\test_profiling.py .......                         [ 72%]
+tests\unit\regressions\test_bug_regressions_2026_01.py ...               [ 72%]
+tests\unit\regressions\test_crash_regressions.py ..                      [ 73%]
+tests\unit\regressions\test_regressions.py ...                           [ 73%]
+tests\unit\regressions\test_warnings.py ...                              [ 74%]
+tests\unit\repro_issues\test_slider_increment.py .                       [ 74%]
+tests\unit\systems\test_allowed_layers_removal.py ........               [ 76%]
+tests\unit\systems\test_arcade_movement.py ....                          [ 76%]
+tests\unit\systems\test_collision_system.py ..                           [ 77%]
+tests\unit\systems\test_dynamic_layers.py ....                           [ 77%]
+tests\unit\systems\test_event_bus.py ..                                  [ 78%]
+tests\unit\systems\test_layer_refinements.py ....                        [ 78%]
+tests\unit\systems\test_layer_restrictions_refactor.py ...               [ 79%]
+tests\unit\systems\test_logger.py ............                           [ 81%]
+tests\unit\systems\test_main_integration.py ..                           [ 82%]
+tests\unit\systems\test_physics.py .............                         [ 84%]
+tests\unit\systems\test_spatial.py ...........                           [ 86%]
+tests\unit\systems\test_spatial_extended.py ..........                   [ 88%]
+tests\unit\test_targeting_rules.py .....                                 [ 89%]
+tests\unit\ui\test_battle_panels.py .....                                [ 90%]
+tests\unit\ui\test_battle_scene.py .....                                 [ 90%]
+tests\unit\ui\test_battle_scene_extended.py ....                         [ 91%]
+tests\unit\ui\test_camera.py ..........                                  [ 93%]
+tests\unit\ui\test_detail_panel_rendering.py FFFF                        [ 94%]
+tests\unit\ui\test_overlay.py ..                                         [ 94%]
+tests\unit\ui\test_rendering_logic.py ...                                [ 95%]
+tests\unit\ui\test_sprite_loading.py ..                                  [ 95%]
+tests\unit\ui\test_sprites.py .s                                         [ 95%]
+tests\unit\ui\test_stats_render.py ..                                    [ 96%]
+tests\unit\ui\test_structure_visibility.py FFF                           [ 96%]
+tests\unit\ui\test_theme_discovery.py ...                                [ 97%]
+tests\unit\ui\test_ui_dynamic_update.py .                                [ 97%]
+tests\unit\ui\test_ui_stats.py ..                                        [ 97%]
+tests\unit\ui\test_ui_widgets.py ...........                             [ 99%]
+tests\unit\ui\test_weapons_report_layout.py .                            [100%]
+
+================================== FAILURES ===================================
+________________ TestDetailPanelRendering.test_html_modifiers _________________
+tests\unit\ui\test_detail_panel_rendering.py:51: in setUp
+    self.panel = ComponentDetailPanel(self.mock_manager, self.panel_rect, "assets/images")
+ui\builder\detail_panel.py:39: in __init__
+    self.details_btn = UIButton(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_button.py:181: in __init__
+    self.rebuild_from_changed_theme_data()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_button.py:862: in rebuild_from_changed_theme_data
+    self.rebuild()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_button.py:979: in rebuild
+    self.drawable_shape = RectDrawableShape(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rect_drawable_shape.py:41: in __init__
+    super().__init__(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:231: in __init__
+    self.build_text_layout()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:803: in build_text_layout
+    self.text_box_layout = TextBoxLayout(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:106: in __init__
+    self._process_layout_queue(self.layout_rect_queue, current_row)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:216: in _process_layout_queue
+    current_row = self._handle_regular_rect(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:282: in _handle_regular_rect
+    current_row.add_item(text_layout_rect)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout_row.py:108: in add_item
+    self.y_origin = max(self.y_origin, item.y_origin)
+E   TypeError: '>' not supported between instances of 'MagicMock' and 'int'
+---------------------------- Captured log teardown ----------------------------
+INFO     StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_________ TestDetailPanelRendering.test_html_stats_dynamic_abilities __________
+tests\unit\ui\test_detail_panel_rendering.py:51: in setUp
+    self.panel = ComponentDetailPanel(self.mock_manager, self.panel_rect, "assets/images")
+ui\builder\detail_panel.py:39: in __init__
+    self.details_btn = UIButton(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_button.py:181: in __init__
+    self.rebuild_from_changed_theme_data()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_button.py:862: in rebuild_from_changed_theme_data
+    self.rebuild()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_button.py:979: in rebuild
+    self.drawable_shape = RectDrawableShape(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rect_drawable_shape.py:41: in __init__
+    super().__init__(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:231: in __init__
+    self.build_text_layout()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:803: in build_text_layout
+    self.text_box_layout = TextBoxLayout(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:106: in __init__
+    self._process_layout_queue(self.layout_rect_queue, current_row)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:216: in _process_layout_queue
+    current_row = self._handle_regular_rect(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:282: in _handle_regular_rect
+    current_row.add_item(text_layout_rect)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout_row.py:108: in add_item
+    self.y_origin = max(self.y_origin, item.y_origin)
+E   TypeError: '>' not supported between instances of 'MagicMock' and 'int'
+---------------------------- Captured log teardown ----------------------------
+INFO     StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestDetailPanelRendering.test_html_stats_generation_basic __________
+tests\unit\ui\test_detail_panel_rendering.py:51: in setUp
+    self.panel = ComponentDetailPanel(self.mock_manager, self.panel_rect, "assets/images")
+ui\builder\detail_panel.py:39: in __init__
+    self.details_btn = UIButton(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_button.py:181: in __init__
+    self.rebuild_from_changed_theme_data()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_button.py:862: in rebuild_from_changed_theme_data
+    self.rebuild()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_button.py:979: in rebuild
+    self.drawable_shape = RectDrawableShape(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rect_drawable_shape.py:41: in __init__
+    super().__init__(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:231: in __init__
+    self.build_text_layout()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:803: in build_text_layout
+    self.text_box_layout = TextBoxLayout(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:106: in __init__
+    self._process_layout_queue(self.layout_rect_queue, current_row)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:216: in _process_layout_queue
+    current_row = self._handle_regular_rect(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:282: in _handle_regular_rect
+    current_row.add_item(text_layout_rect)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout_row.py:108: in add_item
+    self.y_origin = max(self.y_origin, item.y_origin)
+E   TypeError: '>' not supported between instances of 'MagicMock' and 'int'
+---------------------------- Captured log teardown ----------------------------
+INFO     StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+__________ TestDetailPanelRendering.test_html_unregistered_abilities __________
+tests\unit\ui\test_detail_panel_rendering.py:51: in setUp
+    self.panel = ComponentDetailPanel(self.mock_manager, self.panel_rect, "assets/images")
+ui\builder\detail_panel.py:39: in __init__
+    self.details_btn = UIButton(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_button.py:181: in __init__
+    self.rebuild_from_changed_theme_data()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_button.py:862: in rebuild_from_changed_theme_data
+    self.rebuild()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_button.py:979: in rebuild
+    self.drawable_shape = RectDrawableShape(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rect_drawable_shape.py:41: in __init__
+    super().__init__(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:231: in __init__
+    self.build_text_layout()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\drawable_shape.py:803: in build_text_layout
+    self.text_box_layout = TextBoxLayout(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:106: in __init__
+    self._process_layout_queue(self.layout_rect_queue, current_row)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:216: in _process_layout_queue
+    current_row = self._handle_regular_rect(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout.py:282: in _handle_regular_rect
+    current_row.add_item(text_layout_rect)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\text_box_layout_row.py:108: in add_item
+    self.y_origin = max(self.y_origin, item.y_origin)
+E   TypeError: '>' not supported between instances of 'MagicMock' and 'int'
+---------------------------- Captured log teardown ----------------------------
+INFO     StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+____ TestStructureVisibility.test_headers_remain_visible_with_hidden_hull _____
+tests\unit\ui\test_structure_visibility.py:78: in setUp
+    self.layer_panel = LayerPanel(self.mock_builder, self.mock_manager, self.panel_rect)
+ui\builder\layer_panel.py:54: in __init__
+    UILabel(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:122: in __init__
+    self.rebuild_from_changed_theme_data()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:314: in rebuild_from_changed_theme_data
+    self.rebuild()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:166: in rebuild
+    (text_size[1] > self.relative_rect.height)
+E   TypeError: '>' not supported between instances of 'MagicMock' and 'int'
+---------------------------- Captured stdout setup ----------------------------
+Loaded 5 layer configurations from vehiclelayers.json.
+Loaded 30 vehicle classes.
+---------------------------- Captured log teardown ----------------------------
+INFO     StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+_______ TestStructureVisibility.test_hull_is_hidden_from_structure_list _______
+tests\unit\ui\test_structure_visibility.py:78: in setUp
+    self.layer_panel = LayerPanel(self.mock_builder, self.mock_manager, self.panel_rect)
+ui\builder\layer_panel.py:54: in __init__
+    UILabel(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:122: in __init__
+    self.rebuild_from_changed_theme_data()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:314: in rebuild_from_changed_theme_data
+    self.rebuild()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:166: in rebuild
+    (text_size[1] > self.relative_rect.height)
+E   TypeError: '>' not supported between instances of 'MagicMock' and 'int'
+---------------------------- Captured log teardown ----------------------------
+INFO     StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+___ TestStructureVisibility.test_structure_list_shows_all_available_layers ____
+tests\unit\ui\test_structure_visibility.py:78: in setUp
+    self.layer_panel = LayerPanel(self.mock_builder, self.mock_manager, self.panel_rect)
+ui\builder\layer_panel.py:54: in __init__
+    UILabel(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:122: in __init__
+    self.rebuild_from_changed_theme_data()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:314: in rebuild_from_changed_theme_data
+    self.rebuild()
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:166: in rebuild
+    (text_size[1] > self.relative_rect.height)
+E   TypeError: '>' not supported between instances of 'MagicMock' and 'int'
+---------------------------- Captured log teardown ----------------------------
+INFO     StarshipBattles:logger.py:32 ShipThemeManager caches cleared.
+============================== warnings summary ===============================
+tests\repro_issues\test_bug_11_hull_update.py:49
+  c:\Dev\Starship Battles\tests\repro_issues\test_bug_11_hull_update.py:49: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+tests\repro_issues\test_bug_11_hull_update.py:66
+  c:\Dev\Starship Battles\tests\repro_issues\test_bug_11_hull_update.py:66: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+tests\unit\entities\test_ship_core.py:110
+  c:\Dev\Starship Battles\tests\unit\entities\test_ship_core.py:110: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+tests\unit\entities\test_ship_core.py:130
+  c:\Dev\Starship Battles\tests\unit\entities\test_ship_core.py:130: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+tests\unit\entities\test_ship_core.py:148
+  c:\Dev\Starship Battles\tests\unit\entities\test_ship_core.py:148: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+tests\unit\entities\test_ship_core.py:163
+  c:\Dev\Starship Battles\tests\unit\entities\test_ship_core.py:163: PytestUnknownMarkWarning: Unknown pytest.mark.use_custom_data - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.use_custom_data
+
+tests/unit/builder/test_builder_improvements.py::TestBuilderImprovements::test_image_scale_factor
+tests/unit/builder/test_builder_improvements.py::TestBuilderImprovements::test_loading_sync
+tests/unit/builder/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_append_integration
+tests/unit/builder/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_selection_integration
+tests/unit/builder/test_multi_selection_logic.py::TestMultiSelectionLogic::test_toggle_behavior
+tests/unit/builder/test_selection_refinements.py::TestSelectionRefinements::test_homogeneity_enforcement
+tests/unit/builder/test_selection_refinements.py::TestSelectionRefinements::test_reselection_behavior
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:92: UserWarning: Clamping shadow_width of: 2, to: 0
+    warnings.warn(
+
+tests/unit/builder/test_builder_improvements.py::TestBuilderImprovements::test_image_scale_factor
+tests/unit/builder/test_builder_improvements.py::TestBuilderImprovements::test_loading_sync
+tests/unit/builder/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_append_integration
+tests/unit/builder/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_selection_integration
+tests/unit/builder/test_multi_selection_logic.py::TestMultiSelectionLogic::test_toggle_behavior
+tests/unit/builder/test_selection_refinements.py::TestSelectionRefinements::test_homogeneity_enforcement
+tests/unit/builder/test_selection_refinements.py::TestSelectionRefinements::test_reselection_behavior
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\drawable_shapes\rounded_rect_drawable_shape.py:113: UserWarning: Clamping border_width of: 1, to: 0
+    warnings.warn(
+
+tests/unit/builder/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+tests/unit/builder/test_builder_structure_features.py::TestBuilderStructureFeatures::test_multi_selection_logic
+tests/unit/builder/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_append_integration
+tests/unit/builder/test_multi_selection_logic.py::TestMultiSelectionLogic::test_range_selection_integration
+tests/unit/builder/test_multi_selection_logic.py::TestMultiSelectionLogic::test_toggle_behavior
+tests/unit/builder/test_selection_refinements.py::TestSelectionRefinements::test_homogeneity_enforcement
+tests/unit/builder/test_selection_refinements.py::TestSelectionRefinements::test_reselection_behavior
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_font_dictionary.py:405: UserWarning: Finding font with id: noto_sans_bold_aa_14 that is not already loaded.
+  Preload this font with {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': '1'}
+    warnings.warn(warning_string, UserWarning)
+
+tests/unit/builder/test_builder_structure_features.py::TestBuilderStructureFeatures::test_modifier_propagation
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\text\html_parser.py:179: UserWarning: Unsupported HTML Tag <magicmock>. Check documentation for full range of supported tags.
+    warnings.warn(warning_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Energy: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Energy Gen: - size diff: (-14, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Thrust: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Acceleration: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Top Speed: - size diff: (-7, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Maneuvering Points: - size diff: (-108, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Turning Rate: - size diff: (-24, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Shields: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Regen Cost: - size diff: (-13, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Total Armor HP: - size diff: (-37, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Dmg Ignore: - size diff: (-17, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Shield Regen/Hit: - size diff: (-50, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Max Targets: - size diff: (-18, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Evasion Score: - size diff: (-28, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Targeting Score: - size diff: (-42, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew Required: - size diff: (-36, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Crew On Board: - size diff: (-38, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Life Support: - size diff: (-19, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Fighter Support \u2500\u2500 - size diff: (-11, 5)\n    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Cap: - size diff: (-15, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Launch/Wave: - size diff: (-26, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_label.py:176: UserWarning: Label Rect is too small for text: Fighter Time: - size diff: (-22, 0)
+    warnings.warn(warn_text, UserWarning)
+
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_refresh_controls_syncs_ui
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_revert_protection
+tests/unit/builder/test_builder_ui_sync.py::TestBuilderUISync::test_type_change_filtering
+  C:\\Users\\rossr\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\pygame_gui\\elements\\ui_label.py:176: UserWarning: Label Rect is too small for text: \u2500\u2500 Recommendations \u2500\u2500 - size diff: (-30, 0)\n    warnings.warn(warn_text, UserWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/unit/ui/test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_modifiers
+FAILED tests/unit/ui/test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_stats_dynamic_abilities
+FAILED tests/unit/ui/test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_stats_generation_basic
+FAILED tests/unit/ui/test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_unregistered_abilities
+FAILED tests/unit/ui/test_structure_visibility.py::TestStructureVisibility::test_headers_remain_visible_with_hidden_hull
+FAILED tests/unit/ui/test_structure_visibility.py::TestStructureVisibility::test_hull_is_hidden_from_structure_list
+FAILED tests/unit/ui/test_structure_visibility.py::TestStructureVisibility::test_structure_list_shows_all_available_layers
+=========== 7 failed, 542 passed, 1 skipped, 100 warnings in 18.88s ===========

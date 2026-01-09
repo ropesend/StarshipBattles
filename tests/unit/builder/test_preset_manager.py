@@ -4,7 +4,7 @@ import os
 import json
 import tempfile
 import shutil
-from preset_manager import PresetManager
+from game.simulation.preset_manager import PresetManager
 
 class TestPresetManager(unittest.TestCase):
     def setUp(self):

@@ -162,7 +162,7 @@ class TestAbilityDrivenPhysics(unittest.TestCase):
         if not pygame.get_init():
             pygame.init()
         # Mocking Ability System usage
-        from ship_physics import ShipPhysicsMixin
+        from game.simulation.entities.ship_physics import ShipPhysicsMixin
         from game.engine.physics import PhysicsBody
         
         class MockShip(PhysicsBody, ShipPhysicsMixin):

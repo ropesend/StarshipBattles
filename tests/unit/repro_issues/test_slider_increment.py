@@ -9,6 +9,41 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../.
 
 class TestSliderIncrement(unittest.TestCase):
     def setUp(self):
+        # Save original pygame modules BEFORE patching
+        self._original_pygame = sys.modules.get('pygame')
+        self._original_pygame_gui = sys.modules.get('pygame_gui')
+        self._original_pygame_gui_elements = sys.modules.get('pygame_gui.elements')
+        self._original_pygame_gui_core = sys.modules.get('pygame_gui.core')
+        self._original_pygame_gui_windows = sys.modules.get('pygame_gui.windows')
+        
+        # Define cleanup function for module restoration
+        def cleanup_modules():
+            # Unload modules that may have cached mocked references
+            to_unload = [m for m in list(sys.modules.keys()) 
+                        if m.startswith('game.ui.') 
+                        or m.startswith('ui.') 
+                        or m == 'components'
+                        or m == 'builder_components']
+            for m in to_unload:
+                if m in sys.modules:
+                    del sys.modules[m]
+            
+            # Restore original pygame modules to prevent pollution of subsequent tests
+            if self._original_pygame is not None:
+                sys.modules['pygame'] = self._original_pygame
+            if self._original_pygame_gui is not None:
+                sys.modules['pygame_gui'] = self._original_pygame_gui
+            if self._original_pygame_gui_elements is not None:
+                sys.modules['pygame_gui.elements'] = self._original_pygame_gui_elements
+            if self._original_pygame_gui_core is not None:
+                sys.modules['pygame_gui.core'] = self._original_pygame_gui_core
+            if self._original_pygame_gui_windows is not None:
+                sys.modules['pygame_gui.windows'] = self._original_pygame_gui_windows
+        
+        # Register cleanup_modules FIRST so it runs LAST (LIFO order)
+        # This ensures it runs AFTER modules_patcher.stop restores the patched modules
+        self.addCleanup(cleanup_modules)
+        
         # 1. Start patching sys.modules
         self.modules_patcher = patch.dict(sys.modules, {
             'pygame': MagicMock(),
@@ -21,22 +56,13 @@ class TestSliderIncrement(unittest.TestCase):
         })
         self.modules_patcher.start()
         
-        # Ensure patcher is stopped even if import fails
+        # Register patcher stop SECOND so it runs FIRST (before cleanup_modules)
         self.addCleanup(self.modules_patcher.stop)
         
         # 2. Aggressively unload target modules to ensure they reload with patched dependencies
-        # We need to unload 'components' because builder_components imports it,
-        # and if it was already loaded with real pygame, it might cause issues.
         to_unload = [m for m in sys.modules if m.startswith('ui.') or m.startswith('game.ui.') or m == 'builder_components' or m == 'components']
         for m in to_unload:
             del sys.modules[m]
-            
-        def cleanup_modules():
-             to_unload = [m for m in sys.modules if m.startswith('game.ui.') or m == 'components']
-             for m in to_unload:
-                 del sys.modules[m]
-                 
-        self.addCleanup(cleanup_modules)
             
         # 3. Import module
         import game.ui.panels.builder_widgets as builder_widgets

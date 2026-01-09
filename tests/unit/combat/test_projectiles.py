@@ -40,7 +40,7 @@ class TestProjectileBasics(unittest.TestCase):
         self.assertEqual(proj.damage, 50)
         self.assertEqual(proj.max_range, 1000)
         self.assertEqual(proj.endurance, 5.0)
-        from ship_combat import AttackType
+        from game.simulation.entities.ship_combat import AttackType
         self.assertEqual(proj.type, AttackType.PROJECTILE)
         self.assertEqual(proj.team_id, 0)
         self.assertTrue(proj.is_alive)

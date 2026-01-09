@@ -61,7 +61,7 @@ class TestLayerRefinements(unittest.TestCase):
         heavy_armor.type_str = "Armor"
         heavy_armor.id = "heavy_armor"
         # Since we use validate_addition, we need to ensure other checks pass or we focus on mass
-        from ship_validator import MassBudgetRule
+        from game.simulation.ship_validator import MassBudgetRule
         
         rule = MassBudgetRule()
         

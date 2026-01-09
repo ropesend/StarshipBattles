@@ -186,6 +186,14 @@ class TestShipClassMutation(unittest.TestCase):
         
         # Destroy Bridge
         bridge.current_hp = 0
+        bridge.is_active = False # Ensure it's inactive
+        
+        # ALSO deactivate the auto-equipped hull (BUG-11 Fix causes this to be present)
+        for c in self.ship.layers[LayerType.CORE]['components']:
+            if c.type_str == 'Hull':
+                c.current_hp = 0
+                c.is_active = False
+                
         self.ship.recalculate_stats()
         self.ship.update_derelict_status()
         

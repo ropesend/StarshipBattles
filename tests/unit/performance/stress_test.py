@@ -12,7 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 # main.py has Game class which runs the loop. We want a headless or automated version.
 # Let's import Game from main
 from game.app import Game
-from designs import create_brick, create_interceptor
+from game.simulation.designs import create_brick, create_interceptor
 
 def run_stress_test():
     # Initialize Game (Headless-ish, we still need pygame initialized)

@@ -34,7 +34,7 @@ class TestShipStatsBaseline(unittest.TestCase):
         # Import after mocking
         from game.core.registry import RegistryManager
         from game.simulation.components.component import Component, load_components, load_modifiers
-        from ship_stats import ShipStatsCalculator
+        from game.simulation.entities.ship_stats import ShipStatsCalculator
         
         self.Component = Component
         self.ShipStatsCalculator = ShipStatsCalculator

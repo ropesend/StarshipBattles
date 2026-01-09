@@ -3,7 +3,7 @@ import pygame
 import os
 from game.simulation.entities.ship import initialize_ship_data
 from game.core.registry import RegistryManager
-from ship_theme import ShipThemeManager
+from game.simulation.ship_theme import ShipThemeManager
 
 class TestShipClasses(unittest.TestCase):
     def setUp(self):

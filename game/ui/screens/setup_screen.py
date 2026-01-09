@@ -12,7 +12,8 @@ from game.ai.controller import STRATEGY_MANAGER
 
 def scan_ship_designs():
     """Scan for available ship design JSON files in ships/ folder."""
-    base_path = os.path.dirname(os.path.abspath(__file__))
+    # Root is up 3 levels from game/ui/screens
+    base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     ships_folder = os.path.join(base_path, "ships")
     json_files = glob.glob(os.path.join(ships_folder, "*.json"))
     
@@ -40,7 +41,7 @@ def scan_ship_designs():
 
 def scan_formations():
     """Scan for available formation JSON files in data/formations directory."""
-    base_path = os.path.dirname(os.path.abspath(__file__))
+    base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     formations_dir = os.path.join(base_path, "data", "formations")
     
     if not os.path.exists(formations_dir):
@@ -170,7 +171,7 @@ class BattleSetupScreen:
         """Open dialog to save current setup to JSON."""
         root = tk.Tk()
         root.withdraw()
-        base_path = os.path.dirname(os.path.abspath(__file__))
+        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
         battles_dir = os.path.join(base_path, "data", "battles")
         if not os.path.exists(battles_dir):
             os.makedirs(battles_dir)
@@ -223,7 +224,7 @@ class BattleSetupScreen:
              
         root = tk.Tk()
         root.withdraw()
-        base_path = os.path.dirname(os.path.abspath(__file__))
+        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
         battles_dir = os.path.join(base_path, "data", "battles")
         
         filepath = filedialog.askopenfilename(
@@ -284,7 +285,7 @@ class BattleSetupScreen:
         root = tk.Tk()
         root.withdraw()
         
-        base_path = os.path.dirname(os.path.abspath(__file__))
+        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
         ships_dir = os.path.join(base_path, "ships")
         
         ship_path = filedialog.askopenfilename(

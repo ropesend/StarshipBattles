@@ -9,8 +9,8 @@ from game.simulation.components.component import Component
 from game.simulation.components.abilities import (
     CombatPropulsion, CommandAndControl, ResourceStorage
 )
-from ship_stats import ShipStatsCalculator
-from ship_validator import ShipDesignValidator
+from game.simulation.entities.ship_stats import ShipStatsCalculator
+from game.simulation.ship_validator import ShipDesignValidator
 
 
 class TestBug06CombatPropulsion:

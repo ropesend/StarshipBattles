@@ -13,7 +13,7 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 from battle import BattleScene
 from game.simulation.entities.ship import Ship
-from designs import create_interceptor, create_brick
+from game.simulation.designs import create_interceptor, create_brick
 from game.simulation.components.component import load_components, load_modifiers
 
 def run_battle(seed, log_filename):

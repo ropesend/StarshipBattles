@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import load_components, create_component, LayerType
-from ship_stats import ShipStatsCalculator
+from game.simulation.entities.ship_stats import ShipStatsCalculator
 
 class TestBug09Endurance(unittest.TestCase):
 

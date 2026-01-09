@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 import pygame
 import random
-from ship_combat import ShipCombatMixin
+from game.simulation.entities.ship_combat import ShipCombatMixin
 from game.simulation.components.component import Component, LayerType  # Phase 7: Removed Bridge import
 
 class MockComponent(Component):

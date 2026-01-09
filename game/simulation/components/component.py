@@ -1,7 +1,7 @@
 import json
 import math
 from enum import Enum, auto
-from formula_system import evaluate_math_formula
+from game.simulation.formula_system import evaluate_math_formula
 from game.core.registry import get_component_registry, get_modifier_registry
 
 class ComponentStatus(Enum):
@@ -147,9 +147,11 @@ class Component:
             # 1. Polymorphic check (preferred)
             if target_class and isinstance(ab, target_class):
                 found.append(ab)
-            # 2. Hierarchy Name check (Strong fallback for Module Identity Drift in tests)
+            # [KNOWN_ISSUE] Fallback for Module Identity Drift in tests.
+            # When test modules reload ability classes, isinstance() fails due to
+            # different class objects. This __name__ check provides test isolation.
+            # Ref: Phase 2 Task 2.5 audit - documented as intentional tech debt.
             else:
-                # Check if the ability name matches any class in the inheritance chain
                 for cls in ab.__class__.mro():
                     if cls.__name__ == ability_name:
                         found.append(ab)

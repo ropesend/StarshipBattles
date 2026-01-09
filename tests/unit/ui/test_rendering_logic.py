@@ -57,7 +57,7 @@ class TestRenderingLogic(unittest.TestCase):
         
         self.mock_draw.circle.assert_not_called()
         
-    @patch('ship_theme.ShipThemeManager') 
+    @patch('game.simulation.ship_theme.ShipThemeManager') 
     def test_component_color_coding(self, mock_theme_mgr_cls):
         """Verify components are colored based on abilities."""
         mock_theme_instance = MagicMock()

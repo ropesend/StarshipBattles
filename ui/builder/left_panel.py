@@ -254,6 +254,9 @@ class BuilderLeftPanel:
         v_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
         filtered = [c for c in self.builder.available_components if v_type in c.allowed_vehicle_types]
         
+        # 1b. Exclude Hulls (they belong in the structural layout, not the palette)
+        filtered = [c for c in filtered if c.type_str != "Hull"]
+
         # 2. Filter by Component Type
         if self.current_type_filter != "All Types":
             filtered = [c for c in filtered if c.type_str == self.current_type_filter]
@@ -286,7 +289,7 @@ class BuilderLeftPanel:
             self.filter_layer_dropdown.change_layer(5)
 
         
-        from ship_validator import LayerRestrictionDefinitionRule
+        from game.simulation.ship_validator import LayerRestrictionDefinitionRule
         from game.simulation.entities.ship import LayerType
         # Create a temporary rule instance for filtering
         restriction_rule = LayerRestrictionDefinitionRule()

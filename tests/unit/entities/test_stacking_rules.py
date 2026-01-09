@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from game.simulation.components.component import Component, LayerType
 from game.simulation.entities.ship import Ship
-from ship_stats import ShipStatsCalculator
+from game.simulation.entities.ship_stats import ShipStatsCalculator
 
 class TestStackingRules(unittest.TestCase):
     def setUp(self):

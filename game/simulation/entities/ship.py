@@ -12,10 +12,10 @@ from game.simulation.components.component import (
 )
 from game.core.logger import log_debug
 from game.core.registry import RegistryManager, get_vehicle_classes, get_validator, get_component_registry, get_modifier_registry
-from ship_validator import ShipDesignValidator, ValidationResult
-from ship_stats import ShipStatsCalculator
-from ship_physics import ShipPhysicsMixin
-from ship_combat import ShipCombatMixin
+from game.simulation.ship_validator import ShipDesignValidator, ValidationResult
+from .ship_stats import ShipStatsCalculator
+from .ship_physics import ShipPhysicsMixin
+from .ship_combat import ShipCombatMixin
 from game.simulation.systems.resource_manager import ResourceRegistry
 
 if TYPE_CHECKING:
@@ -143,15 +143,18 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Budget
         self.max_mass_budget: float = class_def.get('max_mass', 1000)
         
-        self.radius: float = 40.0 # Will be recalculated
+        # Stats initialized to 0.0 - Recalculate will populate these
+        self.current_mass: float = 0.0 
+        self.radius: float = 0.0 
         
         # Resources (New System)
+        from game.simulation.systems.resource_manager import ResourceRegistry
         self.resources = ResourceRegistry()
         
         # Resource initialization tracking
         self._resources_initialized: bool = False
         
-        # To-Hit stats initialized in canonical block below (lines ~202-203)
+        # To-Hit stats
         self.total_defense_score = 0.0 # Score (Size + Maneuver + ECM)
         self.emissive_armor = 0
         self.crystalline_armor = 0
@@ -168,9 +171,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.layer_status: Dict[LayerType, Dict[str, Any]] = {}
         self._cached_summary = {}  # Performance optimization for UI
         self._loading_warnings: List[str] = []
-        
-        # Old init values
-        self.current_mass: float = 0.0 
         
         self.is_alive: bool = True
         self.is_derelict: bool = False
@@ -398,6 +398,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             # Flatten all components with their original layer
             for l_type, data in self.layers.items():
                 for comp in data['components']:
+                    # DON'T migrate the hull! New class gets its own new hull.
+                    # This matches the to_dict() logic and Task 2.1 intent.
+                    if comp.id.startswith('hull_'):
+                        continue
                     old_components.append((comp, l_type))
         
         # Update Class
@@ -409,7 +413,16 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         
         # Re-initialize Layers (clears self.layers)
         self._initialize_layers()
-        self.current_mass = 0.0 # Reset mass accumulator
+        
+        # Auto-equip default Hull component for the NEW class (BUG-11 Fix)
+        default_hull_id = class_def.get('default_hull_id')
+        if default_hull_id:
+            hull_component = create_component(default_hull_id)
+            if hull_component:
+                # Direct append to avoid validation during class change
+                self.layers[LayerType.CORE]['components'].append(hull_component)
+                hull_component.layer_assigned = LayerType.CORE
+                hull_component.ship = self
         
         if migrate_components:
             # Attempt to restore components
@@ -453,7 +466,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         component.layer_assigned = layer_type
         component.ship = self
         component.recalculate_stats()
-        self.current_mass += component.mass
         self._cached_summary = {}  # Invalidate cache
         
         # Update Stats
@@ -492,7 +504,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             new_comp.layer_assigned = layer_type
             new_comp.ship = self
             new_comp.recalculate_stats()
-            self.current_mass += new_comp.mass
             added_count += 1
             
         if added_count > 0:
@@ -504,7 +515,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         """Remove a component from the specified layer by index."""
         if 0 <= index < len(self.layers[layer_type]['components']):
             comp = self.layers[layer_type]['components'].pop(index)
-            self.current_mass -= comp.mass
             self.recalculate_stats()
             return comp
         return None
@@ -513,13 +523,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         """
         Recalculates derived stats. Delegates to ShipStatsCalculator.
         """
-        # 1. Update Base Class Specs (ensure budget is fresh for scaling modifiers)
-        classes = get_vehicle_classes()
-        if self.ship_class in classes:
-             cdef = classes[self.ship_class]
-             self.max_mass_budget = cdef.get('max_mass', 1000)
-
-        # 2. Update components with current ship context
+        # 1. Update components with current ship context
         for layer_data in self.layers.values():
             for comp in layer_data['components']:
                 # Ensure ship ref is set
@@ -527,7 +531,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 comp.recalculate_stats()
 
         if not self.stats_calculator:
-             self.stats_calculator = ShipStatsCalculator(classes)
+             from .ship_stats import ShipStatsCalculator
+             self.stats_calculator = ShipStatsCalculator(get_vehicle_classes())
         
         self.stats_calculator.calculate(self)
 

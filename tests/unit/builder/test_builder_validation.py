@@ -255,7 +255,7 @@ class TestComplexRules(unittest.TestCase):
         
         self.ship = Ship("Complex Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
         
-        from ship_validator import ShipDesignValidator
+        from game.simulation.ship_validator import ShipDesignValidator
         self.validator = ShipDesignValidator()
 
     def create_component_with_abilities(self, abilities: dict, name="Test Comp"):

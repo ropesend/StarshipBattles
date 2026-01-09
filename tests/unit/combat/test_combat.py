@@ -259,7 +259,7 @@ class TestCombatFlow(unittest.TestCase):
     def test_firing_solution_lead(self):
         """Test lead calculation for moving targets."""
         # Mixin logic requires a class instance
-        from ship_combat import ShipCombatMixin
+        from game.simulation.entities.ship_combat import ShipCombatMixin
         class MockCombatShip(ShipCombatMixin):
             pass
             

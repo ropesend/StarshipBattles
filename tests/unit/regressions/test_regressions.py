@@ -4,7 +4,7 @@ import os
 from game.simulation.entities import ship as ship
 from game.simulation.entities.ship import Ship, load_vehicle_classes
 from game.core.registry import RegistryManager
-from ship_theme import ShipThemeManager
+from game.simulation.ship_theme import ShipThemeManager
 
 class TestRegressions(unittest.TestCase):
     def setUp(self):

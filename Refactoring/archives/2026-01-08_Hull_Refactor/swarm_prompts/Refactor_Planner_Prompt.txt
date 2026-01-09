@@ -1,3 +1,16 @@
+# INSTRUCTIONS FOR AGENT (Refactor_Planner)
+
+**ROLE:** Refactor_Planner
+**FOCUS:** Generate a detailed migration map and phased schedule for the Refactor, following the structure defined in Protocol 10. The report must provide detailed specs for Phase 1 and clear paths for subsequent phases.
+
+## YOUR GOAL
+Analyze the provided code context below.
+Isolate issues specifically related to your FOCUS (Generate a detailed migration map and phased schedule for the Refactor, following the structure defined in Protocol 10. The report must provide detailed specs for Phase 1 and clear paths for subsequent phases.).
+Ignore unrelated issues unless they are critical system failures.
+
+## PHASE STATUS
+
+--- ACTIVE REFACTOR CONTEXT ---
 # Active Refactor: Hull Component & Ship Cohesion
 **Goal:** Unify Ship stats with V2 Ability System (Hull Component) and eliminate architectural incoherence.
 
@@ -40,7 +53,7 @@
 ### Phase 2: Core Logic & Stability (The Engine) [Complete]
 **Objective:** Implement the "Hull as Component" logic and fix core simulation loops.
 - [x] **Task 2.1:** Update `Ship.__init__` to auto-equip `default_hull_id`. [Core Engineer]
-- [ ] **Task 2.2:** Switch `Ship.mass` and `Ship.hp` to cached properties in `ShipStatsCalculator`. (DEFERRED - optimization)
+- [x] **Task 2.2:** Switch `Ship.mass` and `Ship.hp` to cached properties in `ShipStatsCalculator`. (Verified implemented 2026-01-06)
 - [x] **Task 2.3:** Implement `CommandAndControl` and `CrewRequired` logic in `update_derelict_status`.
 - [x] **Task 2.4:** Remove duplicate To-Hit/Derelict initializations in `Ship.py`.
 - [x] **Task 2.5:** Standardize MRO-based identity checks (remove brittle class name checks).
@@ -664,3 +677,120 @@ grep -rn "self.base_mass\s*=\s*[^0]" game/simulation/entities/ship.py
 | Task 5.1: Legacy Fallback Test | `test_ship_core.py` | DELETED | QA Lead | Obsolete: TestLegacyFallback removed (hull_mass fallback no longer exists) |
 | Task 5.2: Requirements JSON Tests | `test_builder_logic.py`, `test_combat.py`, `test_bug_08.py` | FIXED | QA Lead | Updated tests to use ability-based detection instead of JSON requirements |
 | Task 5.3: Derelict Test | `test_ship_core.py` | FIXED | QA Lead | Updated to set `is_active=False` when simulating bridge destruction |
+
+--- END ACTIVE REFACTOR CONTEXT ---
+
+
+## OUTPUT INSTRUCTIONS
+You are an autonomous agent.
+1. Perform your analysis.
+2. **CRITICAL:** You MUST use the `write_to_file` tool to save your report.
+   - **Target File:** `C:\Dev\Starship Battles\Refactoring\swarm_reports\Refactor_Planner_Report.md`
+   - **Do NOT** just print the markdown to the chat. Save it to the file.
+
+## CONTEXT
+
+--- START FILE: Refactoring/protocols/10_swarm_plan.md ---
+# PROTOCOL 10: Swarm Planning
+**Role:** The Architect (Coordinator)
+**Objective:** Decompose the user's goal into a Phased Engineering Plan.
+
+> [!IMPORTANT]
+> **Planning Role Only:** This agent is responsible for STRATEGIC PLANNING.
+> You must **NOT** write implementation code or modify project files directly (other than the plan itself).
+
+**Phase 1: The Architect**
+1. **Analyze Goal:** Read user input and goal.
+2. **Generate Manifest:** Create `Refactoring/swarm_manifests/plan_manifest.json`.
+3. **Execute:** `python Refactoring/scripts/pack_swarm.py Refactoring/swarm_manifests/plan_manifest.json`
+4. **STOP:** Wait for user (or swarm orchestrator) to run the swarm agents.
+
+**Phase 2: The Synthesizer**
+1. **Trigger:** Reports present in `Refactoring/swarm_reports/`.
+2. **Initialize Context:**
+   * check if `Refactoring/active_refactor.md` exists.
+   * If NOT, create it with a standard header (Goal, Status, Start Date).
+   * **NOTE:** This file MUST remain in `Refactoring/` as the single source of truth.
+3. **Synthesize:** Update `Refactoring/active_refactor.md`.
+   * **Migration Map** (The Constitution)
+   * **Test Triage Table** (Empty)
+   * **Phased Schedule:**
+     * **CRITICAL:** The plan must cover the **ENTIRE** refactor from start to finish.
+     * **Phase 1:** Must contain **DETAILED IMPLEMENTATION SPECS** (exact file paths, signatures).
+     * **Subsequent Phases:** Must be fully defined to show the path to completion. **DO NOT** use vague placeholders.
+     * **Final Phase:** Must clearly define the "Definition of Done" (e.g., specific tests passing, legacy code removed).
+4. **Handoff:** Request Protocol 11 (Execution).
+
+--- END FILE: Refactoring/protocols/10_swarm_plan.md ---
+
+--- START FILE: c:\Users\rossr\.gemini\antigravity\brain\81511285-ade5-40f2-9325-d4a46ac17746\implementation_plan.md.resolved ---
+# Implementation Plan - Hull Layer Migration
+
+## Goal
+Move the Hull component from `LayerType.CORE` to a dedicated `LayerType.HULL` to separate the chassis from the internal components, improving architectural clarity and removing the need for hacky UI filtering.
+
+## User Review Required
+> [!NOTE]
+> This change is internal. The Hull will technically reside in a new layer, but end-users will experience the same behavior (Hull contributes stats but is not manipulatable in the standard layer list).
+
+## Proposed Changes
+
+### Core Simulation
+
+#### [MODIFY] [component.py](file:///c:/Dev/Starship Battles/game/simulation/components/component.py)
+- Update [LayerType(Enum)](file:///c:/Dev/Starship%20Battles/game/simulation/components/component.py#15-24) to include `HULL`.
+    - **Crucial:** Assign a value that represents "Innermost" if order is implicit, or handling [from_string](file:///c:/Dev/Starship%20Battles/game/simulation/components/component.py#21-24) correctly.
+    - Proposal: `HULL = 0`, `CORE = 1`, `INNER = 2`, `OUTER = 3`, `ARMOR = 4`.
+
+#### [MODIFY] [ship.py](file:///c:/Dev/Starship Battles/game/simulation/entities/ship.py)
+- Update [_initialize_layers](file:///c:/Dev/Starship%20Battles/game/simulation/entities/ship.py#332-382):
+    - Add `LayerType.HULL` to `self.layers`.
+    - **Logic Change:** Ensure `layer_order` in damage/targeting logic places `HULL` last (Innermost).
+- Update [__init__](file:///c:/Dev/Starship%20Battles/game/simulation/entities/ship_stats.py#8-10) and [change_class](file:///c:/Dev/Starship%20Battles/game/simulation/entities/ship.py#383-451):
+    - Equip default hull to `LayerType.HULL`.
+    - **Stat Change:** Explicitly set Hull Component `max_hp = 0` and [mass](file:///c:/Dev/Starship%20Battles/game/simulation/entities/ship.py#212-216) to class limit (or keep as is, but user said 0 HP).
+- Update [to_dict](file:///c:/Dev/Starship%20Battles/game/simulation/entities/ship.py#644-687):
+    - Continue to exclude `LayerType.HULL` from "customization" serialization, or simply filter components with `hull_` prefix if they are in HULL layer (redundant but safe).
+
+### UI / Tools
+
+#### [MODIFY] [layer_panel.py](file:///c:/Dev/Starship Battles/ui/builder/layer_panel.py)
+- **Visibility:** Include `LayerType.HULL` in the `layer_order` list so it is rendered.
+- **Read-Only Mode:**
+    - In [rebuild()](file:///c:/Dev/Starship%20Battles/ui/builder/layer_panel.py#100-257): When processing `LayerType.HULL`, do NOT add "Add Group/Individual" buttons to the header.
+    - In `LayerComponentItem`: If layer is HULL, disable/hide "Remove" buttons.
+    - In [handle_item_action](file:///c:/Dev/Starship%20Battles/ui/builder/layer_panel.py#258-313): Intercept `ACTION_START_DRAG` for HULL items and block it.
+    
+#### [MODIFY] [builder_screen.py](file:///c:/Dev/Starship Battles/game/ui/screens/builder_screen.py)
+- **Selection:** Allow selection of Hull components (for viewing).
+- **Modification Prevention:**
+    - In [rebuild_modifier_ui()](file:///c:/Dev/Starship%20Battles/game/ui/screens/builder_screen.py#359-364): If [selected_component](file:///c:/Dev/Starship%20Battles/game/ui/screens/builder_screen.py#365-368) is Hull, hide or disable the `ModifierEditorPanel` controls, or show a "Read Only" label.
+
+#### [MODIFY] [components.json](file:///c:/Dev/Starship Battles/data/components.json)
+- Check defaultHull definitions. Ensure they have `hp: 0` if that's the new standard, or handle this override in code ([ship.py](file:///c:/Dev/Starship%20Battles/game/simulation/entities/ship.py) or [component.py](file:///c:/Dev/Starship%20Battles/game/simulation/components/component.py)). Prefer code override to avoid breaking data schema yet.
+
+## Damage Logic Specifics
+- **Innermost Layer:** The `HULL` layer sits physically *inside* the `CORE`.
+- **Destruction:** The Ship is destroyed when `CORE` is compromised (Bridge/Reactor). The Hull component itself contributes 0 HP and is practically invulnerable/structural only. It exists solely to provide Base Mass, Inertia, and Visuals.
+
+
+## Verification Plan
+
+### Automated Tests
+- **Run `test_ship_core.py`**:
+    - Verify ship initialization doesn't crash.
+    - Verify stats (mass/hp) are still calculated correctly (Hull mass + Core mass).
+- **New Test: `tests/unit/test_hull_layer.py`**:
+    - Test that `ship.layers[LayerType.HULL]` exists and contains the hull.
+    - Test that `ship.layers[LayerType.CORE]` does **not** contain the hull.
+    - Test that `ship.mass` includes the hull mass.
+
+### Manual Verification
+- **Ship Builder**:
+    - Launch Builder (`python launcher.py`).
+    - Verify Hull is **not** visible in the "Structure" list.
+    - Load a ship. Verify mass is correct.
+    - Save a ship. Verify JSON does not duplicate the hull.
+
+--- END FILE: c:\Users\rossr\.gemini\antigravity\brain\81511285-ade5-40f2-9325-d4a46ac17746\implementation_plan.md.resolved ---
+

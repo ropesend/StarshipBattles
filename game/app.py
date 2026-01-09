@@ -12,7 +12,7 @@ parser.add_argument('--force-resolution', action='store_true',
 # parse_known_args returns (known_args, unknown_args) - this prevents failure when
 # pytest or other tools pass their own arguments
 args, _ = parser.parse_known_args()
-from designs import create_brick, create_interceptor
+from game.simulation.designs import create_brick, create_interceptor
 from game.simulation.components.component import load_components, load_modifiers
 from ui import Button
 from game.ui.screens.builder_screen import BuilderSceneGUI
@@ -20,7 +20,7 @@ from game.ui.renderer.sprites import SpriteManager
 from game.ui.renderer.camera import Camera
 from game.ui.screens.battle_scene import BattleScene
 from game.ui.screens.setup_screen import BattleSetupScreen
-from formation_editor import FormationEditorScene
+from Tools.formation_editor import FormationEditorScene
 from ui.test_lab_scene import TestLabScene
 from game.core.profiling import PROFILER, profile_action
 

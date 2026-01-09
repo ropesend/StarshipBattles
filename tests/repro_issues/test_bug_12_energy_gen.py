@@ -18,7 +18,7 @@ sys.path.append(os.getcwd())
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component, load_components, create_component
 from game.core.registry import RegistryManager
-from ship_stats import ShipStatsCalculator
+from game.simulation.entities.ship_stats import ShipStatsCalculator
 
 
 class MockClass:

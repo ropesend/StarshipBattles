@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from game.simulation.components.component import Component
 from game.simulation.entities.ship import Ship, LayerType
-from ship_combat import ShipCombatMixin
+from game.simulation.entities.ship_combat import ShipCombatMixin
 import unittest
 
 class TestEmissiveArmor(unittest.TestCase):

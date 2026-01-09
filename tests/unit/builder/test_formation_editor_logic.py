@@ -5,18 +5,13 @@ import sys
 import os
 import json
 
-# Adjust path to find formation_editor if necessary
-if os.getcwd() not in sys.path:
-    sys.path.append(os.getcwd())
+# Adjust path to find formation_editor in Tools
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+tools_dir = os.path.join(root_dir, 'Tools')
+if tools_dir not in sys.path:
+    sys.path.append(tools_dir)
 
-try:
-    import formation_editor
-except ImportError:
-    # Attempt to add parent directory if running from tests/
-    parent_dir = os.path.dirname(os.getcwd())
-    if parent_dir not in sys.path:
-        sys.path.append(parent_dir)
-    import formation_editor
+import formation_editor
 
 class TestFormationCore(unittest.TestCase):
     def setUp(self):

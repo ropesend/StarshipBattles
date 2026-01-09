@@ -10,7 +10,8 @@ from ui.builder.structure_list_items import (
     ACTION_ADD_GROUP, ACTION_ADD_INDIVIDUAL, 
     ACTION_REMOVE_GROUP, ACTION_REMOVE_INDIVIDUAL,
     ACTION_SELECT_GROUP, ACTION_SELECT_INDIVIDUAL,
-    ACTION_TOGGLE_GROUP, ACTION_TOGGLE_LAYER
+    ACTION_TOGGLE_GROUP, ACTION_TOGGLE_LAYER,
+    ACTION_START_DRAG
 )
 from ui.builder.grouping_strategies import DefaultGroupingStrategy, TypeGroupingStrategy, FlatGroupingStrategy
 from ui.builder.panel_layout_config import StructurePanelLayoutConfig
@@ -122,7 +123,8 @@ class LayerPanel(DropTarget):
                 if l_type not in ship.layers: continue
                 
                 data = ship.layers[l_type]
-                components = data['components']
+                # Filter out hull components (Jan 2026 Refactor: Hull is now a component)
+                components = [c for c in data['components'] if not c.id.startswith('hull_')]
                 
                 current_mass = sum(c.mass for c in components)
                 layer_max_mass = ship.max_mass_budget * data.get('max_mass_pct', 1.0)

@@ -179,38 +179,27 @@ class ClassRequirementsRule(ValidationRule):
         
         # Import internally to avoid circular imports
         from game.core.registry import RegistryManager
-        from ship_stats import ShipStatsCalculator
+        from game.simulation.entities.ship_stats import ShipStatsCalculator
         
         classes = RegistryManager.instance().vehicle_classes
         class_def = classes.get(ship.ship_class, {})
-        requirements = class_def.get('requirements', {})
         
         all_components = [c for layer in ship.layers.values() for c in layer['components']]
         if component:
             all_components.append(component)
             
+        from game.simulation.entities.ship_stats import ShipStatsCalculator
         stats_calculator = ShipStatsCalculator(classes)
         ability_totals = stats_calculator.calculate_ability_totals(all_components)
-        
-        for req_name, req_def in requirements.items():
-            ability_name = req_def.get('ability', '')
-            min_value = req_def.get('min_value', 0)
-            
-            if not ability_name:
-                continue
-            
-            current_value = ability_totals.get(ability_name, 0)
-            
-            # Format name helper (duplicated from ship.py or we can move it)
-            import re
-            nice_name = re.sub(r'(?<!^)(?=[A-Z])', ' ', ability_name)
 
-            if isinstance(min_value, bool):
-                if min_value and not current_value:
-                    result.add_error(f"Needs {nice_name}")
-            elif isinstance(min_value, (int, float)):
-                if current_value < min_value:
-                    result.add_error(f"Needs {nice_name}")
+        # Ability-Based Requirements (Dynamic)
+        if ability_totals.get('RequiresCommandAndControl', 0) > 0:
+            if not ability_totals.get('CommandAndControl', 0):
+                result.add_error("Needs Command capability")
+        
+        if ability_totals.get('RequiresCombatMovement', 0) > 0:
+            if not ability_totals.get('CombatPropulsion', 0):
+                result.add_error("Needs Combat propulsion")
 
         # Crew & Life Support
         crew_capacity = ability_totals.get('CrewCapacity', 0)
