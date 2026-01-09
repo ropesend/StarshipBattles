@@ -112,8 +112,10 @@ class TestShip(unittest.TestCase):
         new_ship = Ship.from_dict(data)
         
         self.assertEqual(new_ship.name, "TestShip")
-        # CORE: Hull (auto-equipped) + Bridge (from data) = 2 components
-        self.assertEqual(len(new_ship.layers[LayerType.CORE]['components']), 2)
+        # HULL: Hull (auto-equipped) = 1 component
+        # CORE: Bridge (from data) = 1 component
+        self.assertEqual(len(new_ship.layers[LayerType.HULL]['components']), 1)
+        self.assertEqual(len(new_ship.layers[LayerType.CORE]['components']), 1)
         self.assertEqual(len(new_ship.layers[LayerType.OUTER]['components']), 1)
         # Check Bridge is present
         bridge_found = any(c.type_str == 'Bridge' for c in new_ship.layers[LayerType.CORE]['components'])

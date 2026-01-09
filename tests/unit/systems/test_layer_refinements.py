@@ -30,16 +30,16 @@ class TestLayerRefinements(unittest.TestCase):
         self.assertEqual(core['max_mass_pct'], 1.0, "Fighter CORE should be 100%")
         self.assertAlmostEqual(armor['max_mass_pct'], 0.3, places=2, msg="Fighter ARMOR should be 30%")
         
-        # Verify Escort (likely 3 layers: Core, Outer, Armor)
-        # 3-layer -> Core: 0.5, Outer: 0.7, Armor: 0.3
-        # Or 4-layer? Let's check what keys it has.
+        # Verify Escort (likely 3 real layers + 1 HULL)
         layer_count = len(self.escort.layers)
         
-        if layer_count == 3:
+        # [NEW] Adjust for mandatory HULL layer
+        if layer_count == 4:
+            # Was 3-layer -> now 4. Core: 0.5, Outer: 0.7, Armor: 0.3
             self.assertEqual(self.escort.layers[LayerType.CORE]['max_mass_pct'], 0.5)
             self.assertEqual(self.escort.layers[LayerType.OUTER]['max_mass_pct'], 0.7)
-        elif layer_count == 4:
-            # 4-layer -> Core: 0.3, Inner: 0.5, Outer: 0.5, Armor: 0.3 (Capital_Escort)
+        elif layer_count == 5:
+            # Was 4-layer -> now 5.
             self.assertEqual(self.escort.layers[LayerType.CORE]['max_mass_pct'], 0.3)
             self.assertEqual(self.escort.layers[LayerType.OUTER]['max_mass_pct'], 0.5)
             

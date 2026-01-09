@@ -1,0 +1,32 @@
+{
+    "context_root": "./",
+    "agents": [
+        {
+            "role": "Simulation_Architect",
+            "focus": "Core component and ship logic implementation for Hull Layer migration. Define detailed code changes for component.py and ship.py.",
+            "primary_files": [
+                "game/simulation/components/component.py",
+                "game/simulation/entities/ship.py",
+                "game/simulation/entities/ship_stats.py",
+                "c:/Users/rossr/.gemini/antigravity/brain/81511285-ade5-40f2-9325-d4a46ac17746/implementation_plan.md.resolved"
+            ]
+        },
+        {
+            "role": "UI_Engineer",
+            "focus": "UI modifications for Hull Layer readability and read-only blocking. Define changes for layer_panel.py and builder_screen.py.",
+            "primary_files": [
+                "ui/builder/layer_panel.py",
+                "game/ui/screens/builder_screen.py",
+                "c:/Users/rossr/.gemini/antigravity/brain/81511285-ade5-40f2-9325-d4a46ac17746/implementation_plan.md.resolved"
+            ]
+        },
+        {
+            "role": "QA_Lead",
+            "focus": "Verification plan, test case design, and regression checks. Analyze test_ship_core.py and specify requirements for test_hull_layer.py.",
+            "primary_files": [
+                "tests/unit/entities/test_ship_core.py",
+                "c:/Users/rossr/.gemini/antigravity/brain/81511285-ade5-40f2-9325-d4a46ac17746/implementation_plan.md.resolved"
+            ]
+        }
+    ]
+}

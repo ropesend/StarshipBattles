@@ -28,10 +28,11 @@ class ModifierEditorPanel:
         # Preset UI Sub-Component
         self.preset_ui = PresetManagerUI(manager, container, width, preset_manager)
         
-    def rebuild(self, editing_component, template_modifiers):
+    def rebuild(self, editing_component, template_modifiers, is_readonly=False):
         """Rebuild/Update the modifier UI based on current state."""
         self.editing_component = editing_component
         self.template_modifiers = template_modifiers
+        self.is_readonly = is_readonly
         
         if self.editing_component:
             # Ensure mandatory modifiers are present in data model
@@ -91,7 +92,7 @@ class ModifierEditorPanel:
                 if not hasattr(row, 'y') or row.y != y:
                      row.build_ui(y)
                 
-                row.update(self.editing_component, self.template_modifiers)
+                row.update(self.editing_component, self.template_modifiers, is_readonly=self.is_readonly)
                 y += row.height
         
         # Remove stale rows

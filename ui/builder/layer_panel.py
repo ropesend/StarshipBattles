@@ -88,6 +88,7 @@ class LayerPanel(DropTarget):
         self.view_dropdown.change_layer(100)
         
         self.expanded_layers = {
+            LayerType.HULL: True,
             LayerType.CORE: True,
             LayerType.INNER: True,
             LayerType.OUTER: True,
@@ -110,7 +111,7 @@ class LayerPanel(DropTarget):
             container_rect = self.scroll_container.get_container().get_rect()
             content_width = container_rect.width
             
-            layer_order = [LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR]
+            layer_order = [LayerType.HULL, LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR]
             ship = self.builder.ship
             
             # 1. Generate Logical List of Items needed
@@ -123,8 +124,13 @@ class LayerPanel(DropTarget):
                 if l_type not in ship.layers: continue
                 
                 data = ship.layers[l_type]
-                # Filter out hull components (Jan 2026 Refactor: Hull is now a component)
-                components = [c for c in data['components'] if not c.id.startswith('hull_')]
+                is_readonly = (l_type == LayerType.HULL)
+                
+                # Filter out hull components ONLY from non-hull layers (legacy cleanup/safety)
+                # Jan 2026 Refactor: Hull is now a component in its own layer.
+                components = data['components']
+                if not is_readonly:
+                    components = [c for c in components if not c.id.startswith('hull_')]
                 
                 current_mass = sum(c.mass for c in components)
                 layer_max_mass = ship.max_mass_budget * data.get('max_mass_pct', 1.0)
@@ -149,7 +155,8 @@ class LayerPanel(DropTarget):
                         self, # Event Handler
                         y_pos,
                         content_width,
-                        self.config
+                        self.config,
+                        is_readonly=is_readonly
                     )
                     self.ui_cache[header_key] = header
                     
@@ -197,7 +204,8 @@ class LayerPanel(DropTarget):
                                 content_width,
                                 self.builder.sprite_mgr,
                                 self,
-                                self.config
+                                self.config,
+                                is_readonly=is_readonly
                             )
                             self.ui_cache[item_key] = item
                             
@@ -232,7 +240,8 @@ class LayerPanel(DropTarget):
                                         self,
                                         is_sel_ind,
                                         is_last,
-                                        self.config
+                                        self.config,
+                                        is_readonly=is_readonly
                                      )
                                      self.ui_cache[ind_key] = ind_item
                                      
@@ -292,6 +301,9 @@ class LayerPanel(DropTarget):
         elif action == ACTION_START_DRAG:
             # Reorder Strategy: Pick up component (remove from ship) and attach to cursor
             comp = payload
+            if comp.layer_assigned == LayerType.HULL:
+                 return False # Block dragging hull
+                 
             removed = False
             for l_type, layers in self.builder.ship.layers.items():
                 if comp in layers['components']:

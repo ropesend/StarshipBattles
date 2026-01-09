@@ -128,9 +128,10 @@ class ModifierControlRow:
         self.slider = None
         self.entry = None
 
-    def update(self, component, template_modifiers):
+    def update(self, component, template_modifiers, is_readonly=False):
         """Updates the row state based on the current component or template."""
         self.component_context = component
+        self.is_readonly = is_readonly
         
         # 1. Determine State (Active/Value)
         is_active = False
@@ -190,10 +191,16 @@ class ModifierControlRow:
             for btn in self.buttons.keys():
                 btn.disable()
                 
-        # Mandatory lock
-        if component and ModifierLogic.is_modifier_mandatory(self.mod_id, component):
+                
+        # Mandatory lock or Readonly lock
+        if self.is_readonly or (component and ModifierLogic.is_modifier_mandatory(self.mod_id, component)):
             # Disable toggle so it can't be unchecked (visual cue + prevent click)
              self.toggle_btn.disable()
+             if self.is_readonly:
+                 if self.entry: self.entry.disable()
+                 if self.slider: self.slider.disable()
+                 for btn in self.buttons.keys():
+                     btn.disable()
         else:
              self.toggle_btn.enable()
 
@@ -203,7 +210,10 @@ class ModifierControlRow:
         if not hasattr(event, 'ui_element'):
             return False
 
-        if not self.is_active and event.ui_element != self.toggle_btn:
+        if (not self.is_active or self.is_readonly) and event.ui_element != self.toggle_btn:
+            return False
+            
+        if self.is_readonly:
             return False
             
         if event.type == pygame_gui.UI_BUTTON_PRESSED:

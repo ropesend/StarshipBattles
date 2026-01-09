@@ -16,12 +16,13 @@ ACTION_START_DRAG = 'start_drag'
 
 class IndividualComponentItem:
     """Row for a single component inside an expanded group."""
-    def __init__(self, manager, container, component, max_mass, y_pos, width, sprite_mgr, event_handler, is_selected, is_last=False, config=StructurePanelLayoutConfig()):
+    def __init__(self, manager, container, component, max_mass, y_pos, width, sprite_mgr, event_handler, is_selected, is_last=False, config=StructurePanelLayoutConfig(), is_readonly=False):
         self.component = component
         self.event_handler = event_handler
         self.is_selected = is_selected
         self.is_last = is_last
         self.config = config
+        self.is_readonly = is_readonly
         self.height = config.ROW_HEIGHT
         self.rect = pygame.Rect(0, y_pos, width, self.height)
         
@@ -120,6 +121,11 @@ class IndividualComponentItem:
             anchors=config.ANCHOR_TOP_RIGHT
         )
         
+        if is_readonly:
+            self.add_button.hide()
+            self.remove_button.hide()
+            self.drag_button.hide()
+        
     def update(self, component, max_mass, is_selected, is_last=False):
         """Update relevant data in-place."""
         self.component = component
@@ -180,12 +186,13 @@ class IndividualComponentItem:
 class LayerComponentItem:
     """Row representing a component group."""
     def __init__(self, manager, container, component, count, total_mass, total_pct, is_expanded, 
-                 group_key, is_selected, y_pos, width, sprite_mgr, event_handler, config=StructurePanelLayoutConfig()):
+                 group_key, is_selected, y_pos, width, sprite_mgr, event_handler, config=StructurePanelLayoutConfig(), is_readonly=False):
         self.group_key = group_key
         self.event_handler = event_handler
         self.count = count
         self.is_selected = is_selected
         self.config = config
+        self.is_readonly = is_readonly
         self.height = config.LAYER_ROW_HEIGHT
         self.rect = pygame.Rect(0, y_pos, width, self.height)
         
@@ -280,6 +287,10 @@ class LayerComponentItem:
             anchors=config.ANCHOR_TOP_RIGHT
         )
 
+        if is_readonly:
+            self.add_button.hide()
+            self.remove_button.hide()
+
     def update(self, count, total_mass, total_pct, is_expanded, is_selected, component_name):
         self.count = count
         self.is_selected = is_selected
@@ -322,10 +333,11 @@ class LayerComponentItem:
 
 class LayerHeaderItem:
     """Header row for a Layer."""
-    def __init__(self, manager, container, layer_type, current_mass, max_mass, is_expanded, event_handler, y_pos, width, config=StructurePanelLayoutConfig()):
+    def __init__(self, manager, container, layer_type, current_mass, max_mass, is_expanded, event_handler, y_pos, width, config=StructurePanelLayoutConfig(), is_readonly=False):
         self.layer_type = layer_type
         self.event_handler = event_handler
         self.config = config
+        self.is_readonly = is_readonly
         self.height = config.HEADER_HEIGHT
         self.rect = pygame.Rect(0, y_pos, width, self.height)
         self.panel = UIPanel(

@@ -1,0 +1,24 @@
+{
+    "context_root": "./",
+    "agents": [
+        {
+            "role": "Code_Reviewer",
+            "focus": "Verify Phase 1 implementation in component.py and ship.py. Ensure HULL layer ordinality at 0 is respected and to_dict exclusion is correct. Review test_hull_layer.py for coverage.",
+            "primary_files": [
+                "game/simulation/components/component.py",
+                "game/simulation/entities/ship.py",
+                "tests/unit/entities/test_hull_layer.py",
+                "Refactoring/active_refactor.md"
+            ]
+        },
+        {
+            "role": "Plan_Adjuster",
+            "focus": "Generate DETAILED implementation specs for Phase 2 (UI Integration). Define specific changes for layer_panel.py and builder_screen.py to implement read-only blocking for the HULL layer. Ensure the plan is actionable with file paths and logic descriptions.",
+            "primary_files": [
+                "ui/builder/layer_panel.py",
+                "game/ui/screens/builder_screen.py",
+                "Refactoring/active_refactor.md"
+            ]
+        }
+    ]
+}

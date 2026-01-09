@@ -13,6 +13,7 @@ class ComponentStatus(Enum):
     NO_AMMO = auto()
 
 class LayerType(Enum):
+    HULL = 0    # [NEW] Innermost Chassis Layer
     CORE = 1
     INNER = 2
     OUTER = 3

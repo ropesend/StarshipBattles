@@ -115,12 +115,12 @@ class TestHullAutoEquip:
         """Verify Ship auto-equips default_hull_id from vehicle class."""
         ship = Ship(name="Test", x=0, y=0, color=(255, 255, 255), ship_class="Escort")
         
-        core_comps = ship.layers[LayerType.CORE]['components']
-        assert len(core_comps) >= 1, "Expected at least 1 component in CORE layer"
+        hull_comps = ship.layers[LayerType.HULL]['components']
+        assert len(hull_comps) >= 1, "Expected at least 1 component in HULL layer"
         
         # Find the hull component
-        hull_comp = next((c for c in core_comps if c.id == "hull_escort"), None)
-        assert hull_comp is not None, "hull_escort should be auto-equipped"
+        hull_comp = next((c for c in hull_comps if c.id == "hull_escort"), None)
+        assert hull_comp is not None, "hull_escort should be auto-equipped to HULL layer"
         
         # Attribute Shadowing: base_mass should be 0 when hull is equipped
         assert ship.base_mass == 0.0, "base_mass should be 0 when Hull component is equipped"
