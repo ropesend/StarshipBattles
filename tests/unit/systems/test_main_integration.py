@@ -26,6 +26,9 @@ class TestMainIntegration(unittest.TestCase):
 
     def tearDown(self):
         """Cleanup pygame and registry."""
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
         pygame.quit()
         RegistryManager.instance().clear()
 

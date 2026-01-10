@@ -18,6 +18,7 @@ class TestBattleSceneExtended(unittest.TestCase):
         
 
     def setUp(self):
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         # Ensure data dir is accessible
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

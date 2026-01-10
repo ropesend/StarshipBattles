@@ -21,6 +21,7 @@ class TestBuilderUISync(unittest.TestCase):
 
 
     def setUp(self):
+        os.environ["SDL_VIDEODRIVER"] = "dummy"
         pygame.init()
         # Initialize data needed for dropdowns
         # Adjusted for new location: tests/unit/builder/test_builder_ui_sync.py
@@ -48,6 +49,9 @@ class TestBuilderUISync(unittest.TestCase):
                 self.panel = BuilderRightPanel(self.mock_builder, self.manager, pygame.Rect(0, 0, 300, 600))
 
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
         pygame.quit()
         RegistryManager.instance().clear()
         from game.ai.controller import STRATEGY_MANAGER

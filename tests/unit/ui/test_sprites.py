@@ -12,6 +12,7 @@ class TestSprites(unittest.TestCase):
         
 
     def setUp(self):
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         # Initialize display for convert() calls
         pygame.display.set_mode((1, 1), pygame.NOFRAME)

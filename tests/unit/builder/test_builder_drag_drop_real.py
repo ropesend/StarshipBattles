@@ -121,6 +121,9 @@ class TestBuilderDragDropReal(unittest.TestCase):
         self.builder.ship.name = "Test Ship"
         
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
         for p in self.patchers:
             p.stop()
         pygame.quit()

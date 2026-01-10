@@ -34,3 +34,55 @@ def pytest_configure(config):
         # Log but don't fail - tests may mock these modules
         print(f"Warning: Could not pre-import game.ui modules: {e}", file=sys.stderr)
 
+
+def pytest_configure_node(node):
+    """
+    Called when a pytest-xdist worker node is initialized.
+    Ensures all workers have completed module imports before tests start.
+    
+    This hook runs AFTER pytest_configure() completes, giving time for
+    all imports to finish before the worker requests tests to run.
+    """
+    import time
+    # Small delay to ensure all workers finish pytest_configure()
+    # This prevents race conditions where Worker A starts running tests
+    # while Worker B is still importing modules
+    time.sleep(0.3)  # 300ms provides maximum safety margin for all workers
+    
+    # Verify critical imports succeeded
+    try:
+        import game.ui.renderer.sprites
+        import game.ui.screens.battle_scene
+        import game.ui.panels.battle_panels
+    except ImportError as e:
+        print(f"ERROR: Worker {node.gateway.id} failed to import game.ui modules: {e}", 
+              file=sys.stderr)
+        raise
+
+
+
+@pytest.fixture(autouse=True)
+def pygame_cleanup():
+    """
+    Cleanup-only fixture - does NOT initialize pygame.
+    Tests control their own pygame.init() as needed.
+    
+    This prevents conflicts with tests that expect to control their own
+    pygame initialization sequence.
+    """
+    yield  # Test runs here
+    
+    # Cleanup after test
+    try:
+        import pygame
+        pygame.display.quit()
+    except:
+        pass  # pygame.display may not be initialized
+    
+    try:
+        import pygame
+        pygame.quit()
+    except:
+        pass  # pygame may not be initialized
+
+

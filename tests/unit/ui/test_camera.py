@@ -20,6 +20,8 @@ class TestCameraBasics(unittest.TestCase):
     """Test basic camera initialization and properties."""
     
     def setUp(self):
+        import os
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
     
     
@@ -45,6 +47,8 @@ class TestCameraTransformations(unittest.TestCase):
     """Test coordinate transformation functions."""
     
     def setUp(self):
+        import os
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
     
     
@@ -111,6 +115,8 @@ class TestCameraFitObjects(unittest.TestCase):
     """Test camera fit_objects functionality."""
     
     def setUp(self):
+        import os
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
     
     

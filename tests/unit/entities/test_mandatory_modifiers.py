@@ -14,6 +14,8 @@ from game.simulation.components.component import Modifier
 
 class TestMandatoryModifiers(unittest.TestCase):
     def setUp(self):
+        import os
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         self.window = pygame.display.set_mode((800, 600), flags=pygame.HIDDEN)
         self.manager = pygame_gui.UIManager((800, 600))
@@ -29,7 +31,12 @@ class TestMandatoryModifiers(unittest.TestCase):
              mods['facing'] = Modifier({'id': 'facing', 'name': 'Facing', 'type': 'linear', 'min_val': 0, 'max_val': 360})
 
     def tearDown(self):
-        pass # pygame.quit() removed for session isolation
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        # RegistryManager.instance().clear() removed for session isolation
 
     def _setup_mock_comp(self, type_str):
         mock_comp = MagicMock()

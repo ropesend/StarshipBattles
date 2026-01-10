@@ -12,7 +12,9 @@ class TestDetailPanelRendering(unittest.TestCase):
     # Cleanup now happens per-test in tearDown to prevent pygame display state pollution
 
     def setUp(self):
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
+        pygame.display.set_mode((1, 1), pygame.NOFRAME)
         pygame.font.init()
         
         # Patch UI elements in the TARGET namespace to ensure they are used
@@ -54,6 +56,9 @@ class TestDetailPanelRendering(unittest.TestCase):
         self.MockUITextBox.reset_mock()
 
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
         # Stop all patchers
         self.uipanel_patch.stop()
         self.uilabel_patch.stop()
@@ -62,6 +67,7 @@ class TestDetailPanelRendering(unittest.TestCase):
         self.uitextbox_patch.stop()
         
         # Clean up pygame and registry PER TEST (fixes parallel execution failures)
+        pygame.display.quit()  # CRITICAL: Must quit display BEFORE pygame.quit()
         pygame.quit()
         from game.core.registry import RegistryManager
         RegistryManager.instance().clear()

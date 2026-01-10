@@ -14,7 +14,9 @@ class TestUIDynamicUpdate(unittest.TestCase):
     def setUp(self):
         from game.core.registry import RegistryManager
         RegistryManager.instance().clear()
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
+        pygame.font.init()
         pygame.display.set_mode((800, 600), flags=pygame.HIDDEN)
         
         self.builder = MagicMock()
@@ -27,7 +29,13 @@ class TestUIDynamicUpdate(unittest.TestCase):
         
         
     def tearDown(self):
-        pass # pygame.quit() removed for session isolation
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
+        pygame.display.quit()
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
 
     @patch('pygame_gui.elements.UIScrollingContainer')
     @patch('pygame_gui.elements.UIImage')

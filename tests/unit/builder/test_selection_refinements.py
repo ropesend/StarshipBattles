@@ -1,6 +1,6 @@
 
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 import pygame
 from game.ui.screens.builder_screen import BuilderSceneGUI
 from game.simulation.components.component import Component
@@ -49,6 +49,9 @@ class TestSelectionRefinements(unittest.TestCase):
         self.builder.selected_components = []
 
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
         pygame.quit()
         from game.core.registry import RegistryManager
         RegistryManager.instance().clear()

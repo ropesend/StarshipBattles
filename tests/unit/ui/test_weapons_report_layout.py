@@ -12,10 +12,10 @@ from ui.builder.weapons_panel import WeaponsReportPanel
 
 class TestWeaponsReportLayout(unittest.TestCase):
     def setUp(self):
-        pygame.init()
         # Headless mode if possible, but UIManager needs a surface usually
         # We can set SDL_VIDEODRIVER to dummy
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
+        pygame.init()
         self.surface = pygame.display.set_mode((800, 600))
         self.manager = pygame_gui.UIManager((800, 600))
         

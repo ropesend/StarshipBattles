@@ -16,6 +16,7 @@ class TestBattleScene(unittest.TestCase):
 
 
     def setUp(self):
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         # Mocking display set_mode to avoid window creation but we might need it for sprites?
         # Actually BattleScene uses pygame.display functionality potentially.
@@ -49,6 +50,9 @@ class TestBattleScene(unittest.TestCase):
 
     def tearDown(self):
         """Cleanup pygame and registry."""
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
         pygame.quit()
         RegistryManager.instance().clear()
 

@@ -17,20 +17,8 @@ from ui.builder.layer_panel import LayerPanel
 from ui.builder.structure_list_items import LayerHeaderItem, LayerComponentItem, IndividualComponentItem
 
 class TestStructureVisibility(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        pygame.init()
-        # Clear registry before loading to ensure clean state
-        RegistryManager.instance().clear()
-        initialize_ship_data()
-        load_components()
-        load_modifiers()
-    
-    @classmethod
-    def tearDownClass(cls):
-        # Clean up registry after tests to prevent pollution of other tests
-        RegistryManager.instance().clear()
-        pygame.quit()
+    # Class-level setup removed to ensure per-test isolation
+    # setUpClass / tearDownClass removed
 
     def setUp(self):
         pygame.init()
@@ -86,6 +74,9 @@ class TestStructureVisibility(unittest.TestCase):
         self.layer_panel = LayerPanel(self.mock_builder, self.mock_manager, self.panel_rect)
 
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
         self.item_uipanel_patch.stop()
         self.item_uilabel_patch.stop()
         self.item_uiimage_patch.stop()
@@ -94,7 +85,12 @@ class TestStructureVisibility(unittest.TestCase):
         self.panel_uilabel_patch.stop()
         self.panel_uiscroll_patch.stop()
         self.panel_uidropdown_patch.stop()
+        
+        # Clean up pygame and registry PER TEST (fixes parallel execution failures)
+        pygame.display.quit()  # CRITICAL: Must quit display BEFORE pygame.quit()
         pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
 
     def test_hull_is_hidden_from_structure_list(self):
         """Verify that hull components are not rendered in the structure list."""

@@ -1,6 +1,6 @@
 
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 import pygame
 import os
 import sys
@@ -13,6 +13,8 @@ from game.simulation.components.component import Component
 
 class TestMultiSelectionLogic(unittest.TestCase):
     def setUp(self):
+        import os
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         # Initialize display for pygame_gui
         pygame.display.set_mode((800, 600), flags=pygame.HIDDEN)
@@ -49,6 +51,9 @@ class TestMultiSelectionLogic(unittest.TestCase):
         self.builder.selected_components = []
 
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
         pygame.quit()
         from game.core.registry import RegistryManager
         RegistryManager.instance().clear()

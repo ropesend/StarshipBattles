@@ -18,6 +18,9 @@ class TestBuilderImprovements(unittest.TestCase):
              RegistryManager.instance().vehicle_classes.update({"Escort": {"max_mass": 1000, "type": "Ship"}})
 
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
         pygame.quit()
         RegistryManager.instance().clear()
 

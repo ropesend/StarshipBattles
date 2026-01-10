@@ -13,6 +13,7 @@ from game.simulation.components.component import Component
 
 class TestStatsRender(unittest.TestCase):
     def setUp(self):
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         pygame.display.set_mode((800, 600), flags=pygame.HIDDEN)
         
@@ -23,7 +24,13 @@ class TestStatsRender(unittest.TestCase):
         self.manager = MagicMock()
         
     def tearDown(self):
-        pass # pygame.quit() removed for session isolation
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
+        pygame.display.quit()
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
 
     @patch('pygame_gui.elements.UIScrollingContainer')
     @patch('pygame_gui.elements.UIImage')

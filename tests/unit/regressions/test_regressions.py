@@ -8,12 +8,17 @@ from game.simulation.ship_theme import ShipThemeManager
 
 class TestRegressions(unittest.TestCase):
     def setUp(self):
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         # Ensure we have a display for image operations if needed (though mostly headless works for surfaces)
         # ship.py might depend on initialized pygame
         pass
 
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        from unittest.mock import patch
+        patch.stopall()
+        
         pygame.quit()
         RegistryManager.instance().clear()
 

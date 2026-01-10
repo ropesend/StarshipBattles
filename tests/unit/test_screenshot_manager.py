@@ -7,22 +7,24 @@ import sys
 # Add root to sys.path
 sys.path.append(os.getcwd())
 
-# Mock pygame before importing modules that might use it
-sys.modules['pygame'] = MagicMock()
-sys.modules['pygame.image'] = MagicMock()
-sys.modules['pygame.display'] = MagicMock()
-
-# Now import the manager (adjust based on actual path context)
-# Assuming we run this from root
 from game.core.screenshot_manager import ScreenshotManager
+from game.core.registry import RegistryManager
 
 class TestScreenshotManager(unittest.TestCase):
     def setUp(self):
+        if not pygame.get_init():
+            pygame.init()
         # Reset singleton if possible or just re-setup
         ScreenshotManager._instance = None
         self.manager = ScreenshotManager.get_instance()
         self.manager.enabled = True # Force enable for tests logic
         self.manager.base_dir = "test_screenshots"
+
+    def tearDown(self):
+        patch.stopall()
+        RegistryManager.instance().clear()
+        pygame.quit()
+        super().tearDown()
 
     @patch('game.core.screenshot_manager.pygame.image.save')
     @patch('game.core.screenshot_manager.pygame.display.get_surface')

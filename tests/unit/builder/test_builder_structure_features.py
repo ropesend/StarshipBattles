@@ -56,6 +56,9 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         # But mostly we test BuilderSceneGUI logic and Item classes separately
 
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
         pygame.quit()
         RegistryManager.instance().clear()
 

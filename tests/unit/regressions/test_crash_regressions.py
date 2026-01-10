@@ -26,6 +26,10 @@ class TestCrashRegressions(unittest.TestCase):
         self.panel = WeaponsReportPanel(self.builder, self.manager, self.rect, self.sprite_mgr)
 
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        from unittest.mock import patch
+        patch.stopall()
+        
         pygame.quit()
         RegistryManager.instance().clear()
 

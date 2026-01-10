@@ -12,8 +12,8 @@ from ui.builder.weapons_panel import WeaponsReportPanel
 
 class TestBug13Fix(unittest.TestCase):
     def setUp(self):
-        pygame.init()
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
+        pygame.init()
         self.surface = pygame.display.set_mode((800, 600))
         self.manager = pygame_gui.UIManager((800, 600))
         
@@ -26,7 +26,12 @@ class TestBug13Fix(unittest.TestCase):
         self.panel._max_range = 1000
 
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
         pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
 
     def test_unified_drawing_structure(self):
         """Verify the unified drawing method exists and old ones are gone."""

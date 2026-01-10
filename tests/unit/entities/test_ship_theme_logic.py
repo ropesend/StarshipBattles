@@ -8,11 +8,21 @@ from game.simulation.ship_theme import ShipThemeManager
 
 class TestShipThemeLogic(unittest.TestCase):
     def setUp(self):
+        # Set dummy driver for headless execution
+        import os
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
+        pygame.init()
+        pygame.display.set_mode((1, 1))
+
         # Ensure singleton is reset before each test
         ShipThemeManager._instance = None
         self.manager = ShipThemeManager.get_instance()
 
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        pygame.quit()
+        
         # Clean up singleton
         ShipThemeManager._instance = None
 

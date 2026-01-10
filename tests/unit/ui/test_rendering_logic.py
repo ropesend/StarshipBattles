@@ -46,10 +46,14 @@ class TestRenderingLogic(unittest.TestCase):
         self.mock_camera.world_to_screen.side_effect = lambda pos: pos 
         
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
         self.patcher_draw.stop()
         self.patcher_font.stop()
         
         # Add missing cleanup to fix parallel execution failures
+        pygame.display.quit()  # CRITICAL: Must quit display BEFORE pygame.quit()
         pygame.quit()
         from game.core.registry import RegistryManager
         RegistryManager.instance().clear()

@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 import pygame
 import os
 from game.simulation.entities.ship import initialize_ship_data
@@ -7,6 +8,7 @@ from game.simulation.ship_theme import ShipThemeManager
 
 class TestShipClasses(unittest.TestCase):
     def setUp(self):
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         # Initialize with CWD
         cwd = os.getcwd()
@@ -16,6 +18,9 @@ class TestShipClasses(unittest.TestCase):
         self.theme_manager.initialize(cwd)
 
     def tearDown(self):
+        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+        patch.stopall()
+        
         RegistryManager.instance().clear()
         self.theme_manager.clear()
         if pygame.get_init():
