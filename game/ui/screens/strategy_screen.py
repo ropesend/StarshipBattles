@@ -1,7 +1,6 @@
 import pygame
 import pygame_gui
 
-
 class StrategyInterface:
     """Handles all UI rendering and interaction for the StrategyScene."""
     
@@ -9,23 +8,100 @@ class StrategyInterface:
         self.scene = scene
         self.width = screen_width
         self.height = screen_height
+        self.sidebar_width = 600
         
         # UI State
         self.manager = pygame_gui.UIManager((screen_width, screen_height))
         
-        # System Info Panel (Initially hidden or empty)
-        self.panel_rect = pygame.Rect(10, screen_height - 210, 300, 200)
-        self.info_panel = pygame_gui.elements.UIPanel(
-            relative_rect=self.panel_rect,
-            manager=self.manager
+        # --- Right Sidebar Layout (Three Panels) ---
+        # 1. System Window (Top)
+        # 2. Sector Window (Middle)
+        # 3. Detail Window (Bottom)
+        
+        # Vertical partitioning
+        # Let's divide by ratio or fixed px?
+        # Detail needs minimal 250px for portrait.
+        # Let's say top two split the remaining space.
+        
+        gap = 5
+        panel_h_approx = (screen_height - 20) / 3
+        
+        # 1. System Panel (Top)
+        rect_system = pygame.Rect(-self.sidebar_width + 10, 10, self.sidebar_width - 20, panel_h_approx - gap)
+        
+        self.system_panel = pygame_gui.elements.UIPanel(
+            relative_rect=rect_system,
+            manager=self.manager,
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
         )
         
-        self.info_label = pygame_gui.elements.UITextBox(
-            html_text="Select a system...",
-            relative_rect=pygame.Rect(10, 10, 280, 180),
+        self.system_header = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, 10, self.sidebar_width - 40, 30),
+            text="System: Deep Space",
             manager=self.manager,
-            container=self.info_panel
+            container=self.system_panel
         )
+        
+        self.system_list = pygame_gui.elements.UISelectionList(
+            relative_rect=pygame.Rect(10, 40, self.sidebar_width - 40, rect_system.height - 50),
+            item_list=[],
+            manager=self.manager,
+            container=self.system_panel
+        )
+        
+        # 2. Sector Panel (Middle)
+        rect_sector = pygame.Rect(-self.sidebar_width + 10, 10 + panel_h_approx, self.sidebar_width - 20, panel_h_approx - gap)
+        
+        self.sector_panel = pygame_gui.elements.UIPanel(
+            relative_rect=rect_sector,
+            manager=self.manager,
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
+        )
+        
+        self.sector_header = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, 10, self.sidebar_width - 40, 30),
+            text="Sector: Unknown",
+            manager=self.manager,
+            container=self.sector_panel
+        )
+        
+        self.sector_list = pygame_gui.elements.UISelectionList(
+            relative_rect=pygame.Rect(10, 40, self.sidebar_width - 40, rect_sector.height - 50),
+            item_list=[],
+            manager=self.manager,
+            container=self.sector_panel
+        )
+        
+        # 3. Detail Panel (Bottom)
+        rect_detail = pygame.Rect(-self.sidebar_width + 10, 10 + 2*panel_h_approx, self.sidebar_width - 20, panel_h_approx - gap)
+        
+        self.detail_panel = pygame_gui.elements.UIPanel(
+            relative_rect=rect_detail,
+            manager=self.manager,
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
+        )
+        
+        # Portrait Image
+        self.portrait_image = pygame_gui.elements.UIImage(
+            relative_rect=pygame.Rect(10, 10, 200, 200),
+            image_surface=pygame.Surface((200, 200)),
+            manager=self.manager,
+            container=self.detail_panel
+        )
+        
+        # Info Text
+        self.detail_text = pygame_gui.elements.UITextBox(
+            html_text="Select an object for details.",
+            relative_rect=pygame.Rect(220, 10, self.sidebar_width - 250, rect_detail.height - 20),
+            manager=self.manager,
+            container=self.detail_panel
+        )
+        
+        # Mapping: Label -> Object
+        self.current_system_objects = {}
+        self.current_sector_objects = {} 
+        self.current_selection = None
+
         
     def handle_resize(self, width, height):
         """Update UI elements for new resolution."""
@@ -33,43 +109,113 @@ class StrategyInterface:
         self.height = height
         self.manager.set_window_resolution((width, height))
         
-        # Reposition Panel (Bottom Left)
-        self.panel_rect.y = height - 210
-        self.info_panel.set_relative_position(self.panel_rect.topleft)
+        panel_h_approx = (height - 20) / 3
+        gap = 5
         
-    def show_object_info(self, obj):
-        """Update info panel with object data."""
+        # System (Top)
+        self.system_panel.set_dimensions((self.sidebar_width - 20, panel_h_approx - gap))
+        self.system_panel.set_relative_position((-self.sidebar_width + 10, 10))
+        self.system_list.set_dimensions((self.sidebar_width - 40, panel_h_approx - 60))
+        
+        # Sector (Middle)
+        self.sector_panel.set_dimensions((self.sidebar_width - 20, panel_h_approx - gap))
+        self.sector_panel.set_relative_position((-self.sidebar_width + 10, 10 + panel_h_approx))
+        self.sector_list.set_dimensions((self.sidebar_width - 40, panel_h_approx - 60))
+        
+        # Detail (Bottom)
+        self.detail_panel.set_dimensions((self.sidebar_width - 20, panel_h_approx - gap))
+        self.detail_panel.set_relative_position((-self.sidebar_width + 10, 10 + 2*panel_h_approx))
+        self.detail_text.set_dimensions((self.sidebar_width - 250, panel_h_approx - 30))
+
+    def show_system_info(self, system_obj, contents):
+        """Populate Top List (System)."""
+        if system_obj:
+            self.system_header.set_text(f"System: {system_obj.name}")
+        else:
+            self.system_header.set_text("Deep Space (No System)")
+            
+        self.current_system_objects = {}
+        item_labels = []
+        
+        for obj in contents:
+            # Reusing label gen logic?
+            label = self._get_label_for_obj(obj)
+            # Uniquify
+            if label in item_labels: label = f"{label} ({id(obj)})"
+            
+            item_labels.append(label)
+            self.current_system_objects[label] = obj
+            
+        self.system_list.set_item_list(item_labels)
+
+    def show_sector_info(self, hex_coord, contents):
+        """Populate Middle List (Sector/Hex)."""
+        self.sector_header.set_text(f"Sector: [{hex_coord.q}, {hex_coord.r}]")
+        
+        self.current_sector_objects = {}
+        item_labels = []
+        for obj in contents:
+            label = self._get_label_for_obj(obj)
+            if label in item_labels: label = f"{label} ({id(obj)})"
+            item_labels.append(label)
+            self.current_sector_objects[label] = obj
+            
+        self.sector_list.set_item_list(item_labels)
+        
+    def _get_label_for_obj(self, obj):
+        if hasattr(obj, 'star_type'): return f"Star: {obj.star_type.name}"
+        elif hasattr(obj, 'planet_type'): return f"Planet: {obj.planet_type.name}"
+        elif hasattr(obj, 'destination_id'): return f"Warp Point -> {obj.destination_id}"
+        elif hasattr(obj, 'ships'): return f"Fleet {obj.id} ({len(obj.ships)})"
+        return "Unknown Object"
+        
+    def show_detailed_report(self, obj, portrait_surface=None):
+        """Update the detail report implementation."""
         if not obj:
-            self.info_label.set_text("Select an object...")
             return
             
         text = ""
         # Check type loosely or explicitly
-        if hasattr(obj, 'star_type'): # StarSystem
-            text = f"<b>System:</b> {obj.name}<br>"
-            text += f"<b>Star:</b> {obj.star_type.name}<br>"
-            text += f"<b>Planets:</b> {len(obj.planets)}<br>"
-            text += f"<b>Warp Points:</b> {len(obj.warp_points)}<br>"
-            text += f"<b>Location:</b> {obj.global_location}"
+        if hasattr(obj, 'star_type'): # StarSystem (representing the Star itself in the list)
+            text = f"<b>Star:</b> {obj.name}<br>"
+            text += f"<b>Class:</b> {obj.star_type.name}<br>"
+            text += f"<b>Radius:</b> {obj.star_type.radius}<br>"
+            text += f"<b>Temp:</b> {obj.star_type.color}<br>" # placeholder
             
         elif hasattr(obj, 'planet_type'): # Planet
             text = f"<b>Planet:</b> {obj.planet_type.name}<br>"
             text += f"<b>Orbit:</b> Ring {obj.orbit_distance}<br>"
-            text += f"<b>Local Loc:</b> {obj.location}"
+            text += f"<b>Local Loc:</b> {obj.location}<br>"
+            text += f"<br><i>Sample lore text about this {obj.planet_type.name} world.</i>"
             
-        elif hasattr(obj, 'ships'): # Fleet (duck typing)
+        elif hasattr(obj, 'destination_id'): # Warp Point
+            text = f"<b>Warp Point</b><br>"
+            text += f"<b>Destination:</b> {obj.destination_id}<br>"
+            text += f"<b>Local Loc:</b> {obj.location}<br>"
+            
+        elif hasattr(obj, 'ships'): # Fleet
             text = f"<b>Fleet:</b> {obj.id}<br>"
             text += f"<b>Owner:</b> {obj.owner_id}<br>"
             text += f"<b>Ships:</b> {len(obj.ships)}<br>"
             text += f"<b>Location:</b> {obj.location}<br>"
             text += f"<b>Dest:</b> {obj.destination}<br>"
             
-        self.info_label.set_text(text)
+        self.detail_text.set_text(text)
+        
+        # Update Portrait
+        if portrait_surface:
+            self.portrait_image.set_image(portrait_surface)
+        else:
+             # Default/Fallback
+             s = pygame.Surface((200, 200))
+             s.fill((50, 50, 50))
+             self.portrait_image.set_image(s)
+
         
     def update(self, dt):
         """Update UI logic."""
         self.manager.update(dt)
-
+ 
     def draw(self, screen):
         """Draw the strategy scene UI elements."""
         self.manager.draw_ui(screen)
@@ -80,12 +226,28 @@ class StrategyInterface:
         screen.blit(mode_text, (20, 20))
 
     def handle_event(self, event):
-        """Pass events to pygame_gui."""
+        """Pass events to pygame_gui and handle custom UI logic."""
         self.manager.process_events(event)
+        
+        if event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
+            obj = None
+            if event.ui_element == self.sector_list:
+                obj = self.current_sector_objects.get(event.text)
+            elif event.ui_element == self.system_list:
+                obj = self.current_system_objects.get(event.text)
+                
+            if obj:
+                # We need to trigger the callback. 
+                # Since we don't have a direct ref to the callback method here easily (unless we add it)
+                # We can just return it? No, handle_event is void.
+                # Actually, check if scene has `on_ui_selection`.
+                if hasattr(self.scene, 'on_ui_selection'):
+                    self.scene.on_ui_selection(obj)
+                    
         
     def handle_click(self, mx, my, button):
         """Handle mouse clicks. Returns True if click was handled by UI."""
-        # Check if click is inside panel
-        if self.panel_rect.collidepoint(mx, my):
+        # Check if click is inside sidebar area (simplified)
+        if mx > self.width - self.sidebar_width:
             return True
         return False

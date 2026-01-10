@@ -1,5 +1,6 @@
 import math
 import pygame
+import pygame_gui
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint, Planet
 from game.strategy.data.hex_math import hex_to_pixel, pixel_to_hex, HexCoord, hex_distance
 from game.ui.renderer.camera import Camera
@@ -125,6 +126,9 @@ class StrategyScene:
     def handle_resize(self, width, height):
         self.screen_width = width
         self.screen_height = height
+        # Adjust camera to exclude sidebar? 
+        # For now, let's keep camera full width but input will be blocked by UI.
+        # Ideally: self.camera.viewport_width = width - 600
         self.camera.width = width
         self.camera.height = height
         self.ui.handle_resize(width, height)
@@ -139,6 +143,14 @@ class StrategyScene:
 
     def handle_event(self, event):
         self.ui.handle_event(event)
+
+        # Handle UI Selection Events from the Interface
+        if event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
+            if event.ui_element == self.ui.sector_list:
+                selected_label = event.text
+                obj = self.ui.current_sector_objects.get(selected_label)
+                if obj:
+                    self.on_ui_selection(obj)
 
         # Fleet Movement Input
         if event.type == pygame.KEYDOWN:
@@ -181,8 +193,6 @@ class StrategyScene:
         elif current_mode == 'SELECT':    
             if button == 1: # Left Click: Select
                 self._handle_picking(mx, my)
-                # Update UI
-                self.ui.show_object_info(self.selected_object)
                 return True
             elif button == 3: # Right Click: Quick Move (Legacy/Contextual)
                 if self.selected_fleet:
@@ -194,83 +204,119 @@ class StrategyScene:
     def _handle_picking(self, mx, my):
         """Raycast from screen to galaxy objects."""
         world_pos = self.camera.screen_to_world((mx, my))
+        hex_clicked = pixel_to_hex(world_pos.x, world_pos.y, self.HEX_SIZE)
         
-        # 0. Check for Fleets (Top Priority)
-        # Fleet size in pixel logic
-        fleet_px_radius = 15
+        # 1. Identify System Context
+        # Find which system (if any) this hex belongs to.
+        # We can reuse _get_system_at_hex logic or distance check.
+        clicked_system = self._get_system_at_hex(hex_clicked)
+        
+        # 2. Identify Precise Objects at this Hex (Sector Content)
+        sector_contents = []
+        
+        # Check Fleets
         for f in self.fleets:
-            fx, fy = hex_to_pixel(f.location, self.HEX_SIZE)
-            f_screen = self.camera.world_to_screen(pygame.math.Vector2(fx, fy))
-            dist = math.hypot(mx - f_screen.x, my - f_screen.y)
-            if dist < fleet_px_radius:
-                self.selected_object = f
-                self.selected_fleet = f # Also set active fleet for commands
-                print(f"Selected Fleet: {f.id}")
-                return
-
-        # 1. Check for visible Systems first
-        clicked_system = None
-        best_dist = float('inf')
-        
-        # Pick radius scales with zoom to be usable
-        pick_radius = 20 / self.camera.zoom 
-        if pick_radius < 10: pick_radius = 10 # Min size
-        
-        visible_systems = []
-        
-        # Global Search
-        for sys in self.galaxy.systems.values():
-            sx, sy = hex_to_pixel(sys.global_location, self.HEX_SIZE)
-            dist = math.hypot(sx - world_pos.x, sy - world_pos.y)
-            
-            if dist < 2000: # Optimization: Track nearby systems for detail check
-                visible_systems.append(sys)
-            
-            if dist < pick_radius and dist < best_dist:
-                best_dist = dist
-                clicked_system = sys
-        
-        # 2. If Zoomed In, check local objects (Planets, Warp Points)
-        if self.camera.zoom > self.DETAIL_ZOOM_LEVEL:
-            # Check objects in nearby systems
-            best_local_obj = None
-            best_local_dist = float('inf')
-            local_pick_radius = 15 / self.camera.zoom
-            
-            for sys in visible_systems:
-                sx, sy = hex_to_pixel(sys.global_location, self.HEX_SIZE)
-                
-                # Check Warp Points
-                for wp in sys.warp_points:
-                     wx, wy = hex_to_pixel(wp.location, self.HEX_SIZE)
-                     # Global Pos
-                     gx, gy = sx + wx, sy + wy
-                     dist = math.hypot(gx - world_pos.x, gy - world_pos.y)
-                     if dist < local_pick_radius and dist < best_local_dist:
-                         best_local_dist = dist
-                         best_local_obj = wp
-                         
-                # Check Planets
-                for planet in sys.planets:
-                     px, py = hex_to_pixel(planet.location, self.HEX_SIZE)
-                     gx, gy = sx + px, sy + py
-                     dist = math.hypot(gx - world_pos.x, gy - world_pos.y)
-                     if dist < local_pick_radius and dist < best_local_dist:
-                         best_local_dist = dist
-                         best_local_obj = planet
-            
-            if best_local_obj:
-                self.selected_object = best_local_obj
-                print(f"Selected Local Object: {type(best_local_obj)}")
-                return
-
-        # Fallback to System
+            if f.location == hex_clicked:
+                 sector_contents.append(f)
+                 
         if clicked_system:
-            self.selected_object = clicked_system
-            print(f"Selected System: {clicked_system.name}")
-            return
+             # Check System Objects at this hex
+             # Star?
+             if hex_distance(hex_clicked, clicked_system.global_location) == 0:
+                 sector_contents.append(clicked_system) # Star
+                 
+             # Planets
+             for p in clicked_system.planets:
+                 if p.location == hex_clicked - clicked_system.global_location: # Local to Global check?
+                     # Wait, planet.location is local.
+                     # hex_clicked is global.
+                     # p_global = sys.global + p.local
+                     p_global = clicked_system.global_location + p.location
+                     if p_global == hex_clicked:
+                         sector_contents.append(p)
+                         
+             # Warp Points
+             for wp in clicked_system.warp_points:
+                 wp_global = clicked_system.global_location + wp.location
+                 if wp_global == hex_clicked:
+                     sector_contents.append(wp)
+
+        # 3. Populate UI
+        
+        # System Panel
+        if clicked_system:
+            sys_contents = [clicked_system] # Star
+            sys_contents.extend(clicked_system.planets)
+            sys_contents.extend(clicked_system.warp_points)
+            # Fleets in system?
+            # Ideally find all fleets in system radius.
+            self.ui.show_system_info(clicked_system, sys_contents)
+        else:
+            self.ui.show_system_info(None, [])
             
-        self.selected_object = None
+        # Sector Panel
+        self.ui.show_sector_info(hex_clicked, sector_contents)
+        
+        # 4. Detail View Selection Logic
+        # If we clicked a specific visual element, prefer that.
+        # Use existing distance logic for precision picking, or just pick first in sector list?
+        # User said "The system view should show... The sector view..."
+        # Let's try to pick the "most interesting" item in the sector list if available.
+        
+        best_pick = None
+        if sector_contents:
+            best_pick = sector_contents[0] # Default to first
+            # Prefer fleets or planets over warp points?
+            
+        if best_pick:
+            self.on_ui_selection(best_pick)
+            self.selected_object = best_pick
+        elif clicked_system:
+             # If clicked empty space in system, maybe show System/Star details?
+             self.on_ui_selection(clicked_system)
+             self.selected_object = clicked_system
+        else:
+             self.selected_object = None
+             self.ui.show_detailed_report(None, None)
+
+    def on_ui_selection(self, obj):
+        """Called when user selects an item in the UI list."""
+        self.selected_object = obj
+        
+        # Get Portrait
+        img = self._get_object_asset(obj)
+        self.ui.show_detailed_report(obj, img)
+        
+    def _get_object_asset(self, obj):
+        """Resolve the visual asset for a data object."""
+        if hasattr(obj, 'star_type'):
+            # System/Star - logic from _draw_systems
+            color = obj.star_type.color
+            asset_key = 'yellow'
+            if color[0] > 200 and color[1] < 100: asset_key = 'red'
+            elif color[2] > 200 and color[0] < 100: asset_key = 'blue'
+            elif color[0] > 200 and color[1] > 200 and color[2] > 200: asset_key = 'white'
+            elif color[0] > 200 and color[1] > 150: asset_key = 'orange'
+            return self.assets['stars'].get(asset_key)
+            
+        elif hasattr(obj, 'planet_type'):
+            p_type_name = obj.planet_type.name.lower()
+            cat = 'terran'
+            if 'gas' in p_type_name: cat = 'gas'
+            elif 'ice' in p_type_name: cat = 'ice'
+            elif 'desert' in p_type_name or 'hot' in p_type_name: cat = 'venus'
+            
+            images = self.assets['planets'].get(cat, [])
+            if images:
+                idx = hash(obj) % len(images)
+                return images[idx]
+                
+        elif hasattr(obj, 'destination_id'): # Warp Point
+             if self.assets['warp_points']:
+                 idx = hash(obj) % len(self.assets['warp_points'])
+                 return self.assets['warp_points'][idx]
+                 
+        return None
         
     def _handle_move_designation(self, mx, my):
         """Handle designating a move target."""
@@ -457,70 +503,105 @@ class StrategyScene:
 
         grid_color = (30, 30, 40)
         
-        # 2. Optimization: Pre-calculate screen-space corner offsets
-        # The hex size on screen scales with zoom
+        # 2. Optimization: Jagged Lines (Snakes)
+        # Instead of drawing hexes, we draw continuous lines.
+        # Set 1: Vertical Snakes (Left boundaries of columns)
+        # Set 2: Horizontal Segments (Top boundaries of hexes)
+        
         screen_hex_size = self.HEX_SIZE * self.camera.zoom
-        
-        # Pre-calc 6 corners relative to center (0,0)
-        corner_offsets = []
-        for i in range(6):
-            angle_deg = 60 * i 
-            angle_rad = math.radians(angle_deg)
-            # Note: flat-topped hexes (which we seem to use based on pixel_to_hex logic implied?)
-            # Actually pixel_to_hex code usually implies the orientation.
-            # Assuming standard orientation from hex_math.
-            px = screen_hex_size * math.cos(angle_rad)
-            py = screen_hex_size * math.sin(angle_rad)
-            corner_offsets.append(pygame.math.Vector2(px, py))
-            
-        # 3. Draw Loop - Optimized
-        # Inline math to avoid function calls (approx 10x faster in Python for tight loops)
-        
-        # Constants
         SQRT3 = 1.73205080757
-        screen_center_x = self.screen_width / 2
-        screen_center_y = self.screen_height / 2
+        
+        # Pre-calculate Dimensions
+        # Flat Top Hex:
+        # Width = 2 * s
+        # Height = sqrt(3) * s
+        # Col X Stride = 1.5 * s
+        # Row Y Stride = sqrt(3) * s
+        
+        s = screen_hex_size
+        col_stride_x = 1.5 * s
+        row_stride_y = SQRT3 * s
+        half_row_height = row_stride_y / 2
+        
+        # Offsets from Column Center (cx, cy)
+        # Vertices: 
+        # TL: (-0.5s, -h)  -> In pygame Y is down, so (-0.5s, -h)
+        # L:  (-s, 0)
+        # BL: (-0.5s, h)
+        # TR: (0.5s, -h) ...
+        
+        # Global Base (screen space of 0,0)
         cam_x = self.camera.position.x
         cam_y = self.camera.position.y
-        zoom = self.camera.zoom
+        base_x = (self.screen_width / 2) - cam_x * self.camera.zoom
+        base_y = (self.screen_height / 2) - cam_y * self.camera.zoom
         
-        # Pre-calc camera offset combined with zoom
-        # screen = center + (world - cam) * zoom
-        # screen = center - cam*zoom + world*zoom
-        base_x = screen_center_x - cam_x * zoom
-        base_y = screen_center_y - cam_y * zoom
+        # Pre-calc offsets
+        # Left Snake Vertex Offsets (relative to row center)
+        # We draw the "Left Boundary" of the column: TL -> L -> BL
+        # BL of row r is TL of row r+1. So we just connect them.
+        v_tl = pygame.math.Vector2(-0.5 * s, -half_row_height)
+        v_l  = pygame.math.Vector2(-1.0 * s, 0)
+        v_bl = pygame.math.Vector2(-0.5 * s, half_row_height)
         
-        # Factors for q, r to world*zoom (Flat Topped)
-        # x = size * 3/2 * q
-        # y = size * sqrt(3) * (r + q/2)
+        # Top Segment Offsets
+        # TL -> TR
+        v_tr = pygame.math.Vector2(0.5 * s, -half_row_height)
         
-        x_factor = screen_hex_size * 1.5
-        y_factor = screen_hex_size * SQRT3
+        # Optimization: Generate Point Lists for Columns
+        # We iterate columns. For each column, we generate the full vertical snake.
         
-        # Optimize by iterating Columns (q) first, since X depends only on Q
-        for q in range(min_q, max_q):
-            # Pre-calculate X (invariant for column)
-            cx = base_x + x_factor * q
-            
-            # Column Bounds Check (Horizontal optimization)
-            if not (-50 < cx < self.screen_width + 50):
-                continue
-                
-            # Pre-calc y column offset
-            # y = y_factor * r + y_factor * 0.5 * q
-            col_y_offset = base_y + (y_factor * 0.5 * q)
-            
-            for r in range(min_r, max_r):
-                # cy = col_y_offset + y_factor * r
-                cy = col_y_offset + y_factor * r
-                
-                # Check rough bounds (Vertical optimization)
-                if not (-50 < cy < self.screen_height + 50):
-                     continue
+        # We need to cover min_q-1 to max_q+1 to ensure screen coverage
+        
+        for q in range(min_q, max_q + 2):
+             cx = base_x + q * col_stride_x
+             
+             # Optimization: X-Culling
+             if not (-50 < cx < self.screen_width + 50):
+                 continue
+                 
+             # Shift Y based on Column?
+             # y = size * sqrt(3) * (r + q/2)
+             # The rows 'r' are shifted by q/2 * height?
+             # Yes. y_center = base_y + row_stride * r + row_stride * 0.5 * q
+             col_y_offset = base_y + (row_stride_y * 0.5 * q)
+             
+             # Calculate R range for this column
+             # We need cy roughly 0 to screen_height
+             # cy = col_y_offset + row_stride * r
+             # r = (cy - col_y_offset) / row_stride
+             start_r = int((-50 - col_y_offset) / row_stride_y) - 1
+             end_r = int((self.screen_height + 50 - col_y_offset) / row_stride_y) + 1
+             
+             snake_points = []
+             
+             # We need to construct a continuous line.
+             # Sequence: TL(r0) -> L(r0) -> BL(r0) == TL(r1) -> ...
+             # We start at TL of start_r
+             
+             # Initial Point
+             cy_start = col_y_offset + row_stride_y * start_r
+             snake_points.append((cx + v_tl.x, cy_start + v_tl.y))
+             
+             for r in range(start_r, end_r):
+                 cy = col_y_offset + row_stride_y * r
+                 
+                 # Append L
+                 snake_points.append((cx + v_l.x, cy + v_l.y))
+                 
+                 # Append BL (which is start of next)
+                 snake_points.append((cx + v_bl.x, cy + v_bl.y))
+                 
+                 # Draw Horizontal Top Segment?
+                 # TL to TR
+                 # We can't batch perfectly into the snake. Draw separate.
+                 # Optimization: Draw horizontal lines ?
+                 p1 = (cx + v_tl.x, cy + v_tl.y)
+                 p2 = (cx + v_tr.x, cy + v_tr.y)
+                 pygame.draw.line(screen, grid_color, p1, p2, 1)
 
-                points = [(cx + off.x, cy + off.y) for off in corner_offsets]
-                
-                pygame.draw.lines(screen, grid_color, True, points, 1)
+             if len(snake_points) > 1:
+                 pygame.draw.lines(screen, grid_color, False, snake_points, 1)
 
     def _draw_warp_lanes(self, screen): 
         drawn_pairs = set()
