@@ -20,6 +20,7 @@ from game.ui.renderer.sprites import SpriteManager
 from game.ui.renderer.camera import Camera
 from game.ui.screens.battle_scene import BattleScene
 from game.ui.screens.setup_screen import BattleSetupScreen
+from game.ui.screens.strategy_scene import StrategyScene
 from Tools.formation_editor import FormationEditorScene
 from ui.test_lab_scene import TestLabScene
 from game.core.profiling import PROFILER, profile_action
@@ -42,7 +43,10 @@ BUILDER = GameState.BUILDER
 BATTLE = GameState.BATTLE
 BATTLE_SETUP = GameState.BATTLE_SETUP
 FORMATION = GameState.FORMATION
+BATTLE_SETUP = GameState.BATTLE_SETUP
+FORMATION = GameState.FORMATION
 TEST_LAB = GameState.TEST_LAB
+STRATEGY = GameState.STRATEGY
 
 # Initialize fonts
 pygame.font.init()
@@ -107,7 +111,9 @@ class Game:
         # Scene objects
         self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return)
         self.battle_setup = BattleSetupScreen()
+        self.battle_setup = BattleSetupScreen()
         self.battle_scene = BattleScene(WIDTH, HEIGHT)
+        self.strategy_scene = StrategyScene(WIDTH, HEIGHT)
         self.formation_scene = FormationEditorScene(WIDTH, HEIGHT, self.on_formation_return)
         self.test_lab_scene = TestLabScene(self)
     
@@ -115,8 +121,9 @@ class Game:
         self.menu_buttons = [
             Button(WIDTH//2 - 100, HEIGHT//2 - 80, 200, 50, "Ship Builder", self.start_builder),
             Button(WIDTH//2 - 100, HEIGHT//2 - 10, 200, 50, "Battle Setup", self.start_battle_setup),
-            Button(WIDTH//2 - 100, HEIGHT//2 + 60, 200, 50, "Formation Editor", self.start_formation_editor),
-            Button(WIDTH//2 - 100, HEIGHT//2 + 130, 200, 50, "Combat Lab", self.start_test_lab)
+            Button(WIDTH//2 - 100, HEIGHT//2 + 60, 200, 50, "Strategy Layer", self.start_strategy_layer),
+            Button(WIDTH//2 - 100, HEIGHT//2 + 130, 200, 50, "Formation Editor", self.start_formation_editor),
+            Button(WIDTH//2 - 100, HEIGHT//2 + 200, 200, 50, "Combat Lab", self.start_test_lab)
         ]
 
     @profile_action("App: Start Builder")
@@ -135,6 +142,12 @@ class Game:
         self.state = BATTLE_SETUP
         self.return_state = BATTLE_SETUP
         self.battle_setup.start(preserve_teams=preserve_teams)
+
+    def start_strategy_layer(self):
+        """Enter strategy layer."""
+        self.state = STRATEGY
+        if hasattr(self.strategy_scene, 'handle_resize'):
+            self.strategy_scene.handle_resize(WIDTH, HEIGHT)
 
     @profile_action("App: Start Formation Editor")
     def start_formation_editor(self):
@@ -223,6 +236,8 @@ class Game:
                         self.battle_setup.update([event], self.screen.get_size())
                     elif self.state == FORMATION:
                         self.formation_scene.handle_event(event)
+                    elif self.state == STRATEGY:
+                        self.strategy_scene.handle_event(event)
                     elif self.state == TEST_LAB:
                         self.test_lab_scene.handle_input([event])
             
@@ -250,6 +265,8 @@ class Game:
         elif self.state == TEST_LAB:
              # Test lab handles resize if implemented, otherwise just re-draws
              self.test_lab_scene._create_ui()
+        elif self.state == STRATEGY:
+            self.strategy_scene.handle_resize(w, h)
     
     def _handle_keydown(self, event):
         """Handle key press events."""
@@ -268,6 +285,8 @@ class Game:
                         self.start_test_lab()
                     else:
                         self.start_battle_setup(preserve_teams=True)
+        elif self.state == STRATEGY:
+            self.strategy_scene.handle_click(mx, my, event.button)
     
     def _handle_scroll(self, event):
         """Handle mouse wheel events."""
@@ -276,6 +295,8 @@ class Game:
             sw = self.screen.get_size()[0]
             if mx >= sw - self.battle_scene.stats_panel_width or mx < self.battle_scene.ui.seeker_panel.rect.width:
                 self.battle_scene.handle_scroll(event.y, self.screen.get_size()[1])
+        elif self.state == STRATEGY and hasattr(self.strategy_scene, 'handle_scroll'):
+            self.strategy_scene.handle_scroll(event.y, self.screen.get_size()[1])
     
     def _update_and_draw(self, frame_time, events):
         """Update logic and draw current scene."""
@@ -292,6 +313,10 @@ class Game:
         elif self.state == FORMATION:
             self.formation_scene.update(frame_time)
             self.formation_scene.draw(self.screen)
+        elif self.state == STRATEGY:
+            self.strategy_scene.update_input(frame_time, events)
+            self.strategy_scene.update(frame_time)
+            self.strategy_scene.draw(self.screen)
         elif self.state == TEST_LAB:
             self.test_lab_scene.draw(self.screen)
 
@@ -514,7 +539,16 @@ def main():
     from game.core.registry import RegistryManager
     RegistryManager.instance().freeze()
     
-    game.run()
+    try:
+        game.run()
+    except Exception as e:
+        import traceback
+        error_msg = traceback.format_exc()
+        print("CRITICAL CRASH CAUGHT:")
+        print(error_msg)
+        with open("crash_log.txt", "w") as f:
+            f.write(error_msg)
+        raise e
     # Save profiling data
     PROFILER.save_history()
 

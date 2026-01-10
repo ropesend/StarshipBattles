@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data, load_vehicle_classes
 from game.simulation.components.component import Component, create_component, load_components
-from ship_combat import ShipCombatMixin
+from game.simulation.entities.ship_combat import ShipCombatMixin
 from game.core.constants import AttackType
 
 import pytest
