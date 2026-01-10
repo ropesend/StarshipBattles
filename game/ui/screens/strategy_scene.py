@@ -10,7 +10,7 @@ from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint, Planet
 from game.strategy.data.hex_math import hex_to_pixel, pixel_to_hex, HexCoord, hex_distance
 from game.ui.renderer.camera import Camera
 from game.ui.screens.strategy_screen import StrategyInterface
-from game.strategy.data.pathfinding import find_path_interstellar, find_path_deep_space
+from game.strategy.data.pathfinding import find_path_interstellar, find_path_deep_space, project_fleet_path
 
 class StrategyScene:
     """Manages strategy layer simulation, rendering, and UI."""
@@ -980,51 +980,38 @@ class StrategyScene:
             
                 # Draw Path (Indented inside loop)
                 # 1. Active Path
-                last_screen_pos = f_screen
-                if f.path:
-                    path_points = [f_screen]
-                    for node_loc in f.path:
-                        nx, ny = hex_to_pixel(node_loc, self.HEX_SIZE)
-                        p_vec = self.camera.world_to_screen(pygame.math.Vector2(nx, ny))
-                        path_points.append(p_vec)
+                # Draw Path (Projected)
+                segments = project_fleet_path(f, self.galaxy, max_turns=10)
+                
+                start_screen = f_screen
+                font = None
+                if segments and self.camera.zoom >= 0.5:
+                     font = pygame.font.SysFont("arial", 12, bold=True)
+
+                for seg in segments:
+                    end_hex = seg['end']
+                    is_warp = seg['is_warp']
+                    turn_idx = seg['turn']
                     
-                    if len(path_points) > 1:
-                        # Thicker line (width 2) and brighter green
-                        pygame.draw.lines(screen, (0, 255, 100), False, path_points, 2)
-                        last_screen_pos = path_points[-1]
+                    ex, ey = hex_to_pixel(end_hex, self.HEX_SIZE)
+                    end_screen = self.camera.world_to_screen(pygame.math.Vector2(ex, ey))
+                    
+                    # Line Color
+                    color = (0, 255, 100) # Green (Normal)
+                    width = 2
+                    if is_warp:
+                        color = (255, 50, 50) # Red (Warp)
+                        width = 1
+                    
+                    # Draw Line
+                    pygame.draw.line(screen, color, start_screen, end_screen, width)
+                    
+                    # Draw Turn Number
+                    if font and not is_warp:
+                        # Draw number at the END of the segment (arrival hex)
+                        txt = font.render(str(turn_idx), True, (200, 200, 255))
+                        # Center text on hex
+                        tr = txt.get_rect(center=(end_screen.x, end_screen.y))
+                        screen.blit(txt, tr)
                         
-                        # Draw Order Status Text
-                        current_order = f.get_current_order()
-                        if current_order:
-                             font = pygame.font.SysFont("arial", 10)
-                             txt = font.render(f"{current_order.type.name}", True, (0, 255, 100))
-                             screen.blit(txt, (f_screen.x + 10, f_screen.y - 10))
-                             
-                # 2. Future Queued Paths (Straight Lines for simple feedback)
-                # Calculating full A* for every queued order every frame is too heavy.
-                # Visualization: Draw line from end of current path to next target.
-                
-                # Start from end of current path or current ship pos
-                start_connector = f.location
-                if f.path: start_connector = f.path[-1] # End of active path (HexCoord)
-                
-                # Convert active path end to screen for connectivity
-                cx, cy = hex_to_pixel(start_connector, self.HEX_SIZE)
-                previous_screen_pos = self.camera.world_to_screen(pygame.math.Vector2(cx, cy))
-                
-                # Iterate Future Orders
-                # Skip first order if it is the active one (f.get_current_order())
-                orders_to_draw = f.orders[1:] if f.orders else []
-                
-                for idx, order in enumerate(orders_to_draw):
-                    if order.type == OrderType.MOVE:
-                         target_hex = order.target
-                         tx, ty = hex_to_pixel(target_hex, self.HEX_SIZE)
-                         target_screen = self.camera.world_to_screen(pygame.math.Vector2(tx, ty))
-                         
-                         # Draw dashed-like line (Dotted) or distinct color
-                         # Making it slightly dimmer green
-                         pygame.draw.line(screen, (0, 150, 50), previous_screen_pos, target_screen, 1)
-                         
-                         previous_screen_pos = target_screen
-                         start_connector = target_hex # For next segment logic                    
+                    start_screen = end_screen                    

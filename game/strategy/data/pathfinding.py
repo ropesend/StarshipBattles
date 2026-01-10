@@ -1,5 +1,6 @@
 import heapq
 from game.strategy.data.hex_math import hex_distance, hex_linedraw
+from game.strategy.data.fleet import OrderType
 
 def find_path_deep_space(start, end):
     """
@@ -179,3 +180,116 @@ def find_hybrid_path(galaxy, start_hex, end_hex):
         
     # Fallback: Just direct line (Deep Space logic)
     return find_path_deep_space(start_hex, end_hex)
+    return find_path_deep_space(start_hex, end_hex)
+
+def project_fleet_path(fleet, galaxy, max_turns=10):
+    """
+    Simulate future fleet movement based on current speed and orders.
+    Returns a list of segment dictionaries:
+    {
+        'start': HexCoord,
+        'end': HexCoord (this is the 'hex' occupied at end of step),
+        'turn': int (relative turn number, 0 = next turn),
+        'is_warp': bool,
+        'hex': HexCoord (alias for end)
+    }
+    """
+    segments = []
+    
+    # Clone fleet state for simulation (path, location, orders)
+    # We don't want to modify actual fleet
+    sim_location = fleet.location
+    sim_path = list(fleet.path) # Copy
+    sim_orders = list(fleet.orders) # Copy
+    
+    moves_per_turn = int(fleet.speed)
+    moves_left_in_turn = moves_per_turn
+    current_turn = 0
+    
+    # Safety
+    iterations = 0
+    max_steps = max_turns * moves_per_turn
+    
+    # 1. Process active path first
+    # 2. Then pop orders and generate new paths
+    
+    # We loop until path empty AND orders empty OR max turns reached
+    while (sim_path or sim_orders) and current_turn < max_turns:
+        iterations += 1
+        if iterations > max_steps + 100: break # Safety brake
+        
+        # If no path but have orders, generate path
+        if not sim_path and sim_orders:
+            # Check if we need to pop an old order?
+            # If path was empty to start with, sim_orders[0] is the active one if logic aligns with fleet.py
+            # fleet.get_current_order() returns orders[0].
+            # If fleet.path is empty, it means we either just finished an order or haven't started.
+            
+            # Logic: If we are here, we need a path for the *current* order.
+            # If sim_orders[0] is MOVE, gen path.
+            # If COLONIZE, it consumes no movement? Or consumes turn?
+            # For visualization, we skip non-move orders or maybe mark them?
+            # Let's assume non-move orders are instantaneous or consume 0 movement for this "path line" viz.
+            
+            order = sim_orders[0]
+            if order.type != OrderType.MOVE:
+                sim_orders.pop(0)
+                continue
+                
+            # It is a MOVE order.
+            # Generate path from sim_location to order.target
+            target = order.target
+            
+            # Use hybrid path
+            new_path_segment = find_hybrid_path(galaxy, sim_location, target)
+            if new_path_segment:
+                if new_path_segment and new_path_segment[0] == sim_location:
+                    new_path_segment.pop(0)
+                sim_path = new_path_segment
+                # We do NOT pop order yet; we pop it when path finished.
+            else:
+                # Cannot reach? Abort
+                break
+                
+        if not sim_path:
+             break # No path and no orders left
+             
+        # Execute one step
+        next_hex = sim_path.pop(0)
+        
+        # Check if Warp Jump
+        # Detection: If distance > 1, it's a warp jump (teleport)
+        is_warp = False
+        if hex_distance(sim_location, next_hex) > 1:
+            is_warp = True
+            
+        segment = {
+            'start': sim_location,
+            'end': next_hex,
+            'hex': next_hex, # For convenience
+            'turn': current_turn,
+            'is_warp': is_warp
+        }
+        segments.append(segment)
+        
+        sim_location = next_hex
+        
+        # Cost Logic
+        if not is_warp:
+             moves_left_in_turn -= 1
+        else:
+             # Warp Jump cost?
+             # Usually consumes movement?
+             # Let's assume it costs 1 MP for entering/exiting warp
+             moves_left_in_turn -= 1
+             
+        if moves_left_in_turn <= 0:
+            current_turn += 1
+            moves_left_in_turn = moves_per_turn
+            
+        # Check if Order Finished
+        if not sim_path and sim_orders:
+             # Just finished this order's path
+             sim_orders.pop(0)
+             
+    return segments
