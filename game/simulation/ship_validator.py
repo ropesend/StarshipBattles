@@ -102,6 +102,12 @@ class LayerRestrictionDefinitionRule(ValidationRule):
 
         restrictions = ship.layers[layer_type]['restrictions']
         
+        # [FIX for BUG-12] Handle HullOnly restriction
+        if "HullOnly" in restrictions:
+            if not component.id.startswith("hull_"):
+                result.add_error(f"Layer {layer_type.name} only allows Hull components.")
+                return result
+
         # 1. Process "Block" Rules (Blacklist)
         for r in restrictions:
             if r.startswith("block_classification:"):

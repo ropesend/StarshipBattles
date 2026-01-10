@@ -107,3 +107,59 @@
 * **Original Issue:** The ship builder reported "Needs Fuel Storage" even when a Fuel Tank was present.
 * **Solution Implemented:** Fixed attribute mismatch in `ShipStatsCalculator` where it was looking for the wrong attribute name when aggregating resource storage capabilities (`max_amount` vs `amount`).
 * **Test Case:** `tests/repro_issues/test_bug_08_fuel_validation.py`
+---
+
+## [BUG-07] - Crash in Weapons Panel (AttributeError)
+* **Date Solved:** 2026-01-03 17:25
+* **Original Issue:** The game crashed with an `AttributeError: 'ToHitAttackModifier' object has no attribute 'value'` when adding a component, specifically in the weapons panel drawing logic.
+* **Solution Implemented:** Renamed `amount` to `value` in `ToHitAttackModifier` and `ToHitDefenseModifier` classes in `game/simulation/components/abilities.py` to match the API expectation in `ship.py`.
+* **Test Case:** `tests/repro_issues/test_bug_07_crash.py`
+
+---
+
+## [BUG-08b] - Hull Visible in Ship Structure List (ID Collision with Legacy BUG-08)
+* **Date Solved:** 2026-01-07
+* **Original Issue:** The hull was incorrectly showing up in the ship's structure list in the Ship Builder, whereas it should be hidden from the user.
+* **Solution Implemented:** Modified `ui/builder/layer_panel.py` to filter out components with IDs starting with `hull_`.
+* **Test Case:** `tests/repro_issues/test_bug_08_hull_visible.py`
+
+---
+
+## [BUG-09b] - Hull Components Visible in Component List (ID Collision with Legacy BUG-09)
+* **Date Solved:** 2026-01-07
+* **Original Issue:** Hull components were incorrectly appearing in the component palette (selection list), which clutter the UI.
+* **Solution Implemented:** Modified `ui/builder/left_panel.py` to filter out components with `type == "Hull"` in the `update_component_list()` method.
+* **Test Case:** `tests/repro_issues/test_bug_09_hull_in_palette.py`
+
+---
+
+## [BUG-10b] - Hull Components Missing Required Abilities (ID Collision with Legacy BUG-10)
+* **Date Solved:** 2026-01-07
+* **Original Issue:** Hull components were missing requirements for Command & Control and Combat Propulsion.
+* **Solution Implemented:** Implemented "Requirement Abilities" pattern. Created `RequiresCommandAndControl` and `RequiresCombatMovement` markers in `abilities.py`. Updated `ship_validator.py` and `ship_stats.py` to enforce and tally these markers.
+* **Test Case:** `tests/repro_issues/test_bug_10_repro.py`
+
+---
+
+## [BUG-11b] - Hull Not Updated When Switching Ship/Class Type (ID Collision with Legacy BUG-11)
+* **Date Solved:** 2026-01-08
+* **Original Issue:** Switching a ship's type or class did not automatically update the hull component to the new default for that class.
+* **Solution Implemented:** Modified `Ship.change_class` to auto-equip the new default hull after layer initialization and exclude the old hull from the component migration list.
+* **Test Case:** `tests/repro_issues/test_bug_11_hull_update.py`
+
+---
+
+## [BUG-12] - Ship Builder: Component Addition to Hull Layer
+* **Date Solved:** 2026-01-09
+* **Original Issue:** The Ship Builder allowed any component to be added to the Hull layer, violating the structural integrity rules where only hull-type components should exist.
+* **Solution Implemented:** Modified `game/simulation/ship_validator.py` to enforce the `HullOnly` restriction in `LayerRestrictionDefinitionRule`. It now explicitly blocks any component whose ID does not start with `hull_` when the `HullOnly` restriction is present.
+* **Test Case:** `tests/repro_issues/test_bug_12_hull_layer_addition.py`
+
+---
+
+## [BUG-13] - Ship Builder: Clear Design Removes Hull
+* **Date Solved:** 2026-01-09
+* **Original Issue:** Using the "Clear Design" feature in the Ship Builder removed the mandatory hull component, leaving the ship in an invalid state.
+* **Solution Implemented:** Modified `_clear_design` in `game/ui/screens/builder_screen.py` to skip the `LayerType.HULL` layer when clearing components. This ensures the structural hull is preserved while user-added components are removed.
+* **Test Case:** `tests/repro_issues/test_bug_13_clear_removes_hull.py`
+

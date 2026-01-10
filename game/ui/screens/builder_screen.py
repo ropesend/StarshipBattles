@@ -1118,6 +1118,8 @@ class BuilderSceneGUI:
     def _clear_design(self):
         logger.info("Clearing ship design")
         for layer_type, layer_data in self.ship.layers.items():
+            if layer_type == LayerType.HULL:
+                continue
             layer_data['components'] = []
             layer_data['hp_pool'] = 0
             layer_data['max_hp_pool'] = 0

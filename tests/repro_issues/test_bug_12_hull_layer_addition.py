@@ -1,0 +1,46 @@
+
+import unittest
+import pygame
+import os
+from game.simulation.entities.ship import Ship, initialize_ship_data, LayerType
+from game.simulation.components.component import load_components, create_component
+from game.core.registry import RegistryManager
+
+class TestBug12HullAddition(unittest.TestCase):
+    """Reproduction test for BUG-12: Component Addition to Hull Layer."""
+
+    def setUp(self):
+        pygame.init()
+        # Set up registry and data
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        initialize_ship_data(base_dir)
+        load_components(os.path.join(base_dir, "data", "components.json"))
+        self.ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+
+    def tearDown(self):
+        pygame.quit()
+        RegistryManager.instance().clear()
+
+    def test_prevent_non_hull_addition_to_hull_layer(self):
+        """Verify that non-hull components cannot be added to the HULL layer."""
+        # 'armor_plate' is definitely not a hull component
+        comp = create_component('armor_plate')
+        self.assertIsNotNone(comp)
+        
+        # This SHOULD return False and not add the component
+        res = self.ship.add_component(comp, LayerType.HULL)
+        
+        self.assertFalse(res, "Should NOT be able to add armor_plate to HULL layer")
+        self.assertNotIn(comp, self.ship.layers[LayerType.HULL]['components'], 
+                        "Component should not be present in HULL layer list")
+
+    def test_prevent_any_addition_to_hull_layer_in_builder(self):
+        """Verify that even 'bridge' or 'engine' cannot be added to HULL layer."""
+        for comp_id in ['bridge', 'standard_engine']:
+            comp = create_component(comp_id)
+            res = self.ship.add_component(comp, LayerType.HULL)
+            self.assertFalse(res, f"Should NOT be able to add {comp_id} to HULL layer")
+            self.assertNotIn(comp, self.ship.layers[LayerType.HULL]['components'])
+
+if __name__ == '__main__':
+    unittest.main()
