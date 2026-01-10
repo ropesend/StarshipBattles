@@ -29,9 +29,10 @@ class TestBuilderWarningLogic(unittest.TestCase):
         self.p2 = patch('game.ui.screens.builder_screen.PresetManager')
         self.p3 = patch('game.ui.screens.builder_screen.ShipThemeManager')
         self.p4 = patch('game.ui.screens.builder_screen.UIConfirmationDialog')
-        self.p1.start(); self.p2.start(); self.p3.start(); self.p4.start()
+        self.p5 = patch('game.ui.screens.builder_event_router.UIConfirmationDialog')  # Also patch in event router
+        self.p1.start(); self.p2.start(); self.p3.start(); self.p4.start(); self.p5.start()
         self.addCleanup(self.p1.stop); self.addCleanup(self.p2.stop); 
-        self.addCleanup(self.p3.stop); self.addCleanup(self.p4.stop)
+        self.addCleanup(self.p3.stop); self.addCleanup(self.p4.stop); self.addCleanup(self.p5.stop)
         
         self.builder = BuilderSceneGUI(800, 600, MagicMock())
              

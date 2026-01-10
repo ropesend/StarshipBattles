@@ -175,7 +175,7 @@ class TestBuilderDragDropReal(unittest.TestCase):
         self.builder.controller.dragged_item = dragged
         
         # Setup Validator to return Valid
-        with patch('game.simulation.entities.ship.get_or_create_validator') as mock_validator:
+        with patch('game.ui.screens.builder_event_router.get_or_create_validator') as mock_validator:
             validation_result = MagicMock()
             validation_result.is_valid = True
             mock_validator.return_value.validate_addition.return_value = validation_result
@@ -263,7 +263,7 @@ class TestBuilderDragDropReal(unittest.TestCase):
         
         self.builder.ship.layers[LayerType.OUTER]['components'] = [original]
         
-        with patch('game.simulation.entities.ship.get_or_create_validator') as mock_validator:
+        with patch('game.ui.screens.builder_event_router.get_or_create_validator') as mock_validator:
             # Invalid Result
             validation_result = MagicMock()
             validation_result.is_valid = False

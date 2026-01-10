@@ -16,6 +16,7 @@ from game.simulation.ship_validator import ShipDesignValidator, ValidationResult
 from .ship_stats import ShipStatsCalculator
 from .ship_physics import ShipPhysicsMixin
 from .ship_combat import ShipCombatMixin
+from .ship_formation import ShipFormation
 from game.simulation.systems.resource_manager import ResourceRegistry
 
 if TYPE_CHECKING:
@@ -180,12 +181,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.ai_strategy: str = "standard_ranged"
         self.source_file: Optional[str] = None
         
-        # Formation Attributes
-        self.formation_master: Optional[Any] = None      # Reference to master ship object
-        self.formation_offset: Optional[Any] = None      # Vector2 offset relative to master
-        self.formation_rotation_mode: str = 'relative' # 'relative' or 'fixed'
-        self.formation_members: List[Any] = []       # List of followers (if this is master)
-        self.in_formation: bool = True          # Flag to track if ship is currently holding formation
+        # Formation (Composition - delegates to ShipFormation)
+        self.formation = ShipFormation(self)
         self.turn_throttle: float = 1.0          # Multiplier for max speed (0.0 to 1.0)
         self.engine_throttle: float = 1.0        # Multiplier for max speed (0.0 to 1.0)
         
@@ -238,6 +235,55 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     def hp(self, value: int) -> None:
         """Set cached hp value."""
         self._cached_hp = value
+
+    # =========================================================================
+    # Formation Delegation Properties (backward compatibility)
+    # =========================================================================
+    
+    @property
+    def formation_master(self) -> Optional[Any]:
+        """Reference to formation leader (delegates to formation.master)."""
+        return self.formation.master
+    
+    @formation_master.setter
+    def formation_master(self, value: Optional[Any]) -> None:
+        self.formation.master = value
+    
+    @property
+    def formation_offset(self) -> Optional[Any]:
+        """Position offset relative to master (delegates to formation.offset)."""
+        return self.formation.offset
+    
+    @formation_offset.setter
+    def formation_offset(self, value: Optional[Any]) -> None:
+        self.formation.offset = value
+    
+    @property
+    def formation_rotation_mode(self) -> str:
+        """Rotation mode: 'relative' or 'fixed' (delegates to formation.rotation_mode)."""
+        return self.formation.rotation_mode
+    
+    @formation_rotation_mode.setter
+    def formation_rotation_mode(self, value: str) -> None:
+        self.formation.rotation_mode = value
+    
+    @property
+    def formation_members(self) -> List[Any]:
+        """List of followers (delegates to formation.members)."""
+        return self.formation.members
+    
+    @formation_members.setter
+    def formation_members(self, value: List[Any]) -> None:
+        self.formation.members = value
+    
+    @property
+    def in_formation(self) -> bool:
+        """Whether ship is holding formation (delegates to formation.active)."""
+        return self.formation.active
+    
+    @in_formation.setter
+    def in_formation(self, value: bool) -> None:
+        self.formation.active = value
 
     @property
     def max_weapon_range(self) -> float:

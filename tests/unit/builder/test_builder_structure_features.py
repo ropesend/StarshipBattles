@@ -209,7 +209,7 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         self.builder_gui.layer_panel.handle_event.return_value = ('add_individual', comp)
         
         # Mock VALIDATOR
-        with patch('game.simulation.entities.ship.get_or_create_validator') as mock_val:
+        with patch('game.ui.screens.builder_event_router.get_or_create_validator') as mock_val:
             mock_val.return_value.validate_addition.return_value.is_valid = True
 
             
