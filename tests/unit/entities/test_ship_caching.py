@@ -1,7 +1,7 @@
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import Component
+from game.simulation.components.component import Component, LayerType
 from game.core.registry import RegistryManager
 # Assuming registry is populated or we mock it. 
 # Better to mock components or use a minimal test case without full registry dependency if possible.
@@ -10,6 +10,10 @@ class TestShipCaching(unittest.TestCase):
     def setUp(self):
         # Create a basic ship
         self.ship = Ship("Test Ship", 0, 0, (255, 255, 255))
+        
+    def tearDown(self):
+        RegistryManager.instance().clear()
+        patch.stopall()
         
     def test_cached_summary_empty_initially(self):
         self.assertEqual(self.ship.cached_summary, {})
@@ -28,9 +32,8 @@ class TestShipCaching(unittest.TestCase):
         }
         weapon = Component(weapon_data)
         
-        # Add to ship
-        # This triggers recalculate_stats -> calculate -> populate cache
-        self.ship.add_component(weapon, self.ship.layers.keys().__iter__().__next__()) # Add to first available layer (CORE)
+        # Add to ship - use CORE layer (not HULL, which only accepts hull components)
+        self.ship.add_component(weapon, LayerType.CORE)
         
         summary = self.ship.cached_summary
         self.assertTrue(summary)
@@ -56,14 +59,14 @@ class TestShipCaching(unittest.TestCase):
             }
         }
         weapon = Component(weapon_data)
-        self.ship.add_component(weapon, self.ship.layers.keys().__iter__().__next__())
+        self.ship.add_component(weapon, LayerType.CORE)
         
         summary = self.ship.cached_summary
         self.assertEqual(summary['dps'], 5.0)
         
         # Add another identical weapon
         weapon2 = Component(weapon_data)
-        self.ship.add_component(weapon2, self.ship.layers.keys().__iter__().__next__())
+        self.ship.add_component(weapon2, LayerType.CORE)
         
         summary = self.ship.cached_summary
         self.assertEqual(summary['dps'], 10.0)
@@ -72,3 +75,4 @@ class TestShipCaching(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

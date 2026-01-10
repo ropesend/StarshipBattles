@@ -582,7 +582,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     def get_total_ability_value(self, ability_name: str, operational_only: bool = True) -> float:
         """
         Sum values from all matching abilities across all components.
-        Uses ability_instances (Phase 3+ API) instead of abilities dict.
+        Uses polymorphic get_primary_value() interface for extensibility.
         
         Args:
             ability_name: Name of ability class to sum (e.g., 'CombatPropulsion')
@@ -597,17 +597,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 if operational_only and not comp.is_operational:
                     continue
                 for ab in comp.get_abilities(ability_name):
-                    # Get the primary value attribute based on ability type
-                    if hasattr(ab, 'thrust_force'):
-                        total += ab.thrust_force
-                    elif hasattr(ab, 'turn_rate'):
-                        total += ab.turn_rate
-                    elif hasattr(ab, 'capacity'):
-                        total += ab.capacity
-                    elif hasattr(ab, 'rate'):
-                        total += ab.rate
-                    elif hasattr(ab, 'value'):
-                        total += ab.value
+                    total += ab.get_primary_value()
         return total
     
     def get_total_sensor_score(self) -> float:

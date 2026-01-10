@@ -51,6 +51,14 @@ class Ability:
         """
         pass
 
+    def get_primary_value(self) -> float:
+        """
+        Return the primary numeric value for aggregation.
+        Override in subclasses to return the appropriate value (e.g., thrust_force, capacity).
+        Marker abilities return 0.0 by default.
+        """
+        return 0.0
+
     def get_ui_rows(self) -> List[Dict[str, str]]:
         """
         Return list of UI rows for the capability scanner/details panel.
@@ -127,6 +135,9 @@ class ResourceConsumption(Ability):
         label_text = f"{self.resource_name.title()} {'Cost' if self.trigger!='constant' else 'Use'}"
         return [{'label': label_text, 'value': f"{self.amount:.1f}{trigger_str}", 'color_hint': color}]
 
+    def get_primary_value(self) -> float:
+        return self.amount
+
 class ResourceStorage(Ability):
     """
     Ability to store resources.
@@ -150,6 +161,9 @@ class ResourceStorage(Ability):
         if self.resource_type == 'shield': color = '#00FFFF' # Standard Shield Cyan
         
         return [{'label': f"{self.resource_type.title()} Cap", 'value': f"{self.max_amount:.0f}", 'color_hint': color}]
+
+    def get_primary_value(self) -> float:
+        return self.max_amount
 
 class ResourceGeneration(Ability):
     """
@@ -175,6 +189,9 @@ class ResourceGeneration(Ability):
         
         return [{'label': f"{self.resource_type.title()} Gen", 'value': f"{self.rate:.1f}/s", 'color_hint': color}]
 
+    def get_primary_value(self) -> float:
+        return self.rate
+
 # --- Core Mechanics ---
 
 class CombatPropulsion(Ability):
@@ -192,6 +209,9 @@ class CombatPropulsion(Ability):
     def get_ui_rows(self):
         return [{'label': 'Thrust', 'value': f"{self.thrust_force:.0f} N", 'color_hint': '#64FF64'}] # Light Green
 
+    def get_primary_value(self) -> float:
+        return self.thrust_force
+
 class ManeuveringThruster(Ability):
     """Provides Rotation."""
     def __init__(self, component, data: Dict[str, Any]):
@@ -205,6 +225,9 @@ class ManeuveringThruster(Ability):
 
     def get_ui_rows(self):
         return [{'label': 'Turn Speed', 'value': f"{self.turn_rate:.1f} deg/s", 'color_hint': '#64FF96'}] # Slightly different green
+
+    def get_primary_value(self) -> float:
+        return self.turn_rate
 
 class ShieldProjection(Ability):
     """Provides Shield Capacity."""
@@ -222,6 +245,9 @@ class ShieldProjection(Ability):
     def get_ui_rows(self):
         return [{'label': 'Shield Cap', 'value': f"{self.capacity:.0f}", 'color_hint': '#00FFFF'}] # Cyan
 
+    def get_primary_value(self) -> float:
+        return self.capacity
+
 class ShieldRegeneration(Ability):
     """Regenerates Shields."""
     def __init__(self, component, data: Dict[str, Any]):
@@ -237,6 +263,9 @@ class ShieldRegeneration(Ability):
 
     def get_ui_rows(self):
         return [{'label': 'Regen', 'value': f"{self.rate:.1f}/s", 'color_hint': '#00C8FF'}] # Deep Sky Blue
+
+    def get_primary_value(self) -> float:
+        return self.rate
 
 class VehicleLaunchAbility(Ability):
     """Allows storing and launching fighters."""
@@ -269,6 +298,9 @@ class VehicleLaunchAbility(Ability):
             {'label': 'Cycle', 'value': f"{self.cycle_time}s", 'color_hint': '#C8C8C8'}
         ]
 
+    def get_primary_value(self) -> float:
+        return float(self.capacity)
+
 class CommandAndControl(Ability):
     """Marks component as providing ship command capability."""
     def get_ui_rows(self):
@@ -295,6 +327,9 @@ class CrewCapacity(Ability):
     def get_ui_rows(self):
         return [{'label': 'Crew Cap', 'value': f"{self.amount}", 'color_hint': '#96FF96'}]
 
+    def get_primary_value(self) -> float:
+        return float(self.amount)
+
 class LifeSupportCapacity(Ability):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
@@ -307,6 +342,9 @@ class LifeSupportCapacity(Ability):
 
     def get_ui_rows(self):
         return [{'label': 'Life Support', 'value': f"{self.amount}", 'color_hint': '#96FFFF'}]
+
+    def get_primary_value(self) -> float:
+        return float(self.amount)
 
 class CrewRequired(Ability):
     def __init__(self, component, data: Dict[str, Any]):
@@ -326,6 +364,9 @@ class CrewRequired(Ability):
     def get_ui_rows(self):
         return [{'label': 'Crew Req', 'value': f"{self.amount}", 'color_hint': '#FF9696'}]
 
+    def get_primary_value(self) -> float:
+        return float(self.amount)
+
 class ToHitAttackModifier(Ability):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
@@ -344,6 +385,9 @@ class ToHitAttackModifier(Ability):
         sign = "+" if val >= 0 else ""
         return [{'label': 'Targeting', 'value': f"{sign}{val:.1f}", 'color_hint': '#FF6464'}]
 
+    def get_primary_value(self) -> float:
+        return self.value
+
 class ToHitDefenseModifier(Ability):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
@@ -359,6 +403,9 @@ class ToHitDefenseModifier(Ability):
         sign = "+" if val >= 0 else ""
         return [{'label': 'Evasion', 'value': f"{sign}{val:.1f}", 'color_hint': '#64FFFF'}]
 
+    def get_primary_value(self) -> float:
+        return self.value
+
 class EmissiveArmor(Ability):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
@@ -371,6 +418,9 @@ class EmissiveArmor(Ability):
 
     def get_ui_rows(self):
         return [{'label': 'Dmg Ignore', 'value': f"{self.amount}", 'color_hint': '#FFFF00'}]
+
+    def get_primary_value(self) -> float:
+        return float(self.amount)
         
 # --- Weapon Abilities ---
 
@@ -536,6 +586,9 @@ class WeaponAbility(Ability):
             {'label': 'Range', 'value': f"{self.range:.0f}", 'color_hint': '#FFA500'}, # Orange
             {'label': 'Reload', 'value': f"{self.reload_time:.1f}s", 'color_hint': '#FFC864'} # Gold
         ]
+
+    def get_primary_value(self) -> float:
+        return self.damage
 
     def check_firing_solution(self, ship_pos, ship_angle, target_pos) -> bool:
         """
