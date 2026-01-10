@@ -50,8 +50,9 @@ class StatRow:
         self._visible = visible
 
 class BuilderRightPanel:
-    def __init__(self, builder, manager, rect, event_bus=None):
+    def __init__(self, builder, manager, rect, event_bus=None, viewmodel=None):
         self.builder = builder
+        self.viewmodel = viewmodel or builder.viewmodel
         self.manager = manager
         self.rect = rect
         self.event_bus = event_bus
@@ -116,13 +117,13 @@ class BuilderRightPanel:
         # Name
         UILabel(pygame.Rect(10, y, 60, 25), "Name:", manager=self.manager, container=self.panel)
         self.name_entry = UITextEntryLine(pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
-        self.name_entry.set_text(self.builder.ship.name)
+        self.name_entry.set_text(self.viewmodel.ship.name)
         y += 40
         
         # Theme
         UILabel(pygame.Rect(10, y, 60, 25), "Theme:", manager=self.manager, container=self.panel)
         theme_options = self.builder.theme_manager.get_available_themes()
-        curr_theme = getattr(self.builder.ship, 'theme_id', 'Federation')
+        curr_theme = getattr(self.viewmodel.ship, 'theme_id', 'Federation')
         if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
         
         self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
@@ -134,7 +135,7 @@ class BuilderRightPanel:
         types = sorted(list(set(c.get('type', 'Ship') for c in RegistryManager.instance().vehicle_classes.values())))
         if not types: types = ["Ship"]
         
-        curr_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
+        curr_type = getattr(self.viewmodel.ship, 'vehicle_type', "Ship")
         if curr_type not in types: curr_type = types[0]
         
         self.vehicle_type_dropdown = UIDropDownMenu(types, curr_type, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
@@ -148,7 +149,7 @@ class BuilderRightPanel:
         class_options = [name for name, _ in class_options]  # Extract just names
         if not class_options: class_options = ["Escort"]
 
-        curr_class = self.builder.ship.ship_class
+        curr_class = self.viewmodel.ship.ship_class
         if curr_class not in class_options: curr_class = class_options[0]
         
         self.class_dropdown = UIDropDownMenu(class_options, curr_class, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
@@ -167,7 +168,7 @@ class BuilderRightPanel:
         # Find display name for ship's current strategy
         ai_display = None
         for sid, strat in strategies.items():
-            if sid == self.builder.ship.ai_strategy:
+            if sid == self.viewmodel.ship.ai_strategy:
                 ai_display = strat.get('name', sid.replace('_', ' ').title())
                 break
         
@@ -193,7 +194,7 @@ class BuilderRightPanel:
         import pygame
         from pygame_gui.elements import UIDropDownMenu
         
-        s = self.builder.ship
+        s = self.viewmodel.ship
         
         # 1. Name
         self.name_entry.set_text(s.name)
@@ -279,8 +280,8 @@ class BuilderRightPanel:
         import re
         
         # Determine paths
-        theme = getattr(self.builder.ship, 'theme_id', 'Federation')
-        ship_class = self.builder.ship.ship_class
+        theme = getattr(self.viewmodel.ship, 'theme_id', 'Federation')
+        ship_class = self.viewmodel.ship.ship_class
         
         match = re.match(r"(.*)\s+\((.*)\)", ship_class)
         if match:
@@ -443,7 +444,7 @@ class BuilderRightPanel:
         y = start_y
         
         # Helper for Dynamic Logistics
-        log_rows = get_logistics_rows(self.builder.ship)
+        log_rows = get_logistics_rows(self.viewmodel.ship)
         
         # Store keys for dirty checking later
         self.current_logistics_keys = set(r.key for r in log_rows)

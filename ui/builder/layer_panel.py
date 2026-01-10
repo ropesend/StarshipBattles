@@ -19,8 +19,9 @@ from ui.builder.drop_target import DropTarget
 from game.simulation.entities.ship import get_or_create_validator
 
 class LayerPanel(DropTarget):
-    def __init__(self, builder, manager, rect):
+    def __init__(self, builder, manager, rect, viewmodel=None):
         self.builder = builder
+        self.viewmodel = viewmodel or builder.viewmodel
         self.manager = manager
         self.rect = rect
         self.items = [] 
@@ -112,7 +113,7 @@ class LayerPanel(DropTarget):
             content_width = container_rect.width
             
             layer_order = [LayerType.HULL, LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR]
-            ship = self.builder.ship
+            ship = self.viewmodel.ship
             
             # 1. Generate Logical List of Items needed
             # We process logical items and immediately reconcile them with the cache
@@ -174,8 +175,8 @@ class LayerPanel(DropTarget):
                             is_expanded = self.expanded_groups.get(group_key, False)
                         
                         is_selected_group = False
-                        if self.builder.selected_components:
-                             selected_objs = [x[2] for x in self.builder.selected_components]
+                        if self.viewmodel.selected_components:
+                             selected_objs = [x[2] for x in self.viewmodel.selected_components]
                              if comp_list[0] in selected_objs:
                                  is_selected_group = True
                                  
@@ -216,8 +217,8 @@ class LayerPanel(DropTarget):
                             for idx, comp in enumerate(comp_list):
                                  is_last = (idx == len(comp_list) - 1)
                                  is_sel_ind = False
-                                 if self.builder.selected_components:
-                                     if any(x[2] is comp for x in self.builder.selected_components):
+                                 if self.viewmodel.selected_components:
+                                     if any(x[2] is comp for x in self.viewmodel.selected_components):
                                          is_sel_ind = True
                                          
                                  # --- INDIVIDUAL ITEM ---
@@ -305,7 +306,7 @@ class LayerPanel(DropTarget):
                  return False # Block dragging hull
                  
             removed = False
-            for l_type, layers in self.builder.ship.layers.items():
+            for l_type, layers in self.viewmodel.ship.layers.items():
                 if comp in layers['components']:
                     layers['components'].remove(comp)
                     removed = True
@@ -313,10 +314,10 @@ class LayerPanel(DropTarget):
             
             if removed:
                 self.builder.controller.dragged_item = comp
-                self.builder.ship.recalculate_stats()
+                self.viewmodel.ship.recalculate_stats()
                 # Clear selection if we picked up the selected item
-                if self.builder.selected_components and any(x[2] is comp for x in self.builder.selected_components):
-                     self.builder.selected_components = []
+                if self.viewmodel.selected_components and any(x[2] is comp for x in self.viewmodel.selected_components):
+                     self.viewmodel._selected_components = []
                      self.builder.on_selection_changed(None)
                 
                 return ('refresh_ui', None)
@@ -390,7 +391,7 @@ class LayerPanel(DropTarget):
              # add_components_bulk performs validation internally per item or in batch.
              # Let's delegate to ship.add_components_bulk directly.
              
-             added_count = self.builder.ship.add_components_bulk(component, target_layer, count)
+             added_count = self.viewmodel.ship.add_components_bulk(component, target_layer, count)
              if added_count > 0:
                  self.builder.update_stats()
                  return True
@@ -398,7 +399,7 @@ class LayerPanel(DropTarget):
                  # If 0 added, show error from validation of first attempt?
                  # ship.add_components_bulk prints errors to console, but builder.show_error might be needed.
                  # Let's re-run single validation to get the error message for UI if it failed completely.
-                 validation = get_or_create_validator().validate_addition(self.builder.ship, component, target_layer)
+                 validation = get_or_create_validator().validate_addition(self.viewmodel.ship, component, target_layer)
                  if not validation.is_valid:
                      self.builder.show_error(f"Cannot add: {', '.join(validation.errors)}")
                  return False
@@ -496,7 +497,7 @@ class LayerPanel(DropTarget):
                 # We can't access 'ship' easily to find them all efficiently without strategy,
                 # but we can iterate ship layers like BuilderSceneGUI does.
                 g_key = item.group_key
-                for layers in self.builder.ship.layers.values():
+                for layers in self.viewmodel.ship.layers.values():
                     for c in layers['components']:
                         if get_component_group_key(c) == g_key:
                             result_components.append(c)

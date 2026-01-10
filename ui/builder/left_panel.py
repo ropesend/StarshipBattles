@@ -4,8 +4,9 @@ from pygame_gui.elements import UIPanel, UILabel, UIScrollingContainer, UIDropDo
 from ui.builder.components import ComponentListItem
 
 class BuilderLeftPanel:
-    def __init__(self, builder, manager, rect, event_bus=None):
+    def __init__(self, builder, manager, rect, event_bus=None, viewmodel=None):
         self.builder = builder
+        self.viewmodel = viewmodel or builder.viewmodel
         self.manager = manager
         self.rect = rect
         self.items = []
@@ -16,7 +17,7 @@ class BuilderLeftPanel:
             event_bus.subscribe("REGISTRY_RELOADED", self.on_registry_reloaded)
         
         # Store original order of components for sorting
-        self.component_order_map = {c.id: i for i, c in enumerate(builder.available_components)}
+        self.component_order_map = {c.id: i for i, c in enumerate(self.viewmodel.available_components)}
         
         self.panel = UIPanel(
             relative_rect=rect,
@@ -114,7 +115,7 @@ class BuilderLeftPanel:
         
         # Filter: Type
         # Gather all types
-        all_types = sorted(list(set(c.type_str for c in builder.available_components)))
+        all_types = sorted(list(set(c.type_str for c in self.viewmodel.available_components)))
         self.type_filter_options = ["All Types"] + all_types
         self.current_type_filter = "All Types"
         
@@ -129,7 +130,7 @@ class BuilderLeftPanel:
         
         # Filter: Layer
         # Initial population - will be updated dynamically
-        self.layer_filter_options = ["All Layers"] + [l.name for l in builder.ship.layers.keys()]
+        self.layer_filter_options = ["All Layers"] + [l.name for l in self.viewmodel.ship.layers.keys()]
         self.current_layer_filter = "All Layers"
         self.filter_layer_dropdown = UIDropDownMenu(
             options_list=self.layer_filter_options,
@@ -147,11 +148,11 @@ class BuilderLeftPanel:
         """Handle registry reload event - refresh component list and filter options."""
         # Update available components from new registry data
         from game.simulation.components.component import get_all_components
-        self.builder.available_components = get_all_components()
-        self.component_order_map = {c.id: i for i, c in enumerate(self.builder.available_components)}
+        self.viewmodel._available_components = get_all_components()
+        self.component_order_map = {c.id: i for i, c in enumerate(self.viewmodel.available_components)}
         
         # Update type filter options
-        all_types = sorted(list(set(c.type_str for c in self.builder.available_components)))
+        all_types = sorted(list(set(c.type_str for c in self.viewmodel.available_components)))
         self.type_filter_options = ["All Types"] + all_types
         if self.current_type_filter not in self.type_filter_options:
             self.current_type_filter = "All Types"
@@ -251,8 +252,8 @@ class BuilderLeftPanel:
         self.items = []
         
         # 1. Filter by Vehicle Type (Implicit)
-        v_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
-        filtered = [c for c in self.builder.available_components if v_type in c.allowed_vehicle_types]
+        v_type = getattr(self.viewmodel.ship, 'vehicle_type', "Ship")
+        filtered = [c for c in self.viewmodel.available_components if v_type in c.allowed_vehicle_types]
         
         # 1b. Exclude Hulls (they belong in the structural layout, not the palette)
         filtered = [c for c in filtered if c.type_str != "Hull"]
@@ -265,7 +266,7 @@ class BuilderLeftPanel:
         # 3. Filter by Layer
         
         # Refresh options map based on current ship layers
-        current_ship_layers = [l.name for l in self.builder.ship.layers.keys()]
+        current_ship_layers = [l.name for l in self.viewmodel.ship.layers.keys()]
         expected_options = ["All Layers"] + sorted(current_ship_layers)
         
         # If options changed (e.g. ship class changed), rebuild dropdown
@@ -298,19 +299,19 @@ class BuilderLeftPanel:
              # Filter by specific layer (find the LayerType enum from name)
              # self.builder.ship.layers keys are LayerType enums
              target_layer = None
-             for l_key in self.builder.ship.layers.keys():
+             for l_key in self.viewmodel.ship.layers.keys():
                  if l_key.name == self.current_layer_filter:
                      target_layer = l_key
                      break
              
              if target_layer:
-                 filtered = [c for c in filtered if restriction_rule.validate(self.builder.ship, c, target_layer).is_valid]
+                 filtered = [c for c in filtered if restriction_rule.validate(self.viewmodel.ship, c, target_layer).is_valid]
         else:
              # "All Layers": Show if compatible with AT LEAST ONE of the CURRENT ship's layers
-             valid_layer_types = list(self.builder.ship.layers.keys())
+             valid_layer_types = list(self.viewmodel.ship.layers.keys())
              filtered = [
                  c for c in filtered 
-                 if any(restriction_rule.validate(self.builder.ship, c, l_type).is_valid for l_type in valid_layer_types)
+                 if any(restriction_rule.validate(self.viewmodel.ship, c, l_type).is_valid for l_type in valid_layer_types)
              ]
         
         # 4. Sort
@@ -339,7 +340,7 @@ class BuilderLeftPanel:
                 y_pos=y,
                 width=item_width,
                 sprite_mgr=self.builder.sprite_mgr,
-                ship_context=self.builder.ship
+                ship_context=self.viewmodel.ship
             )
             self.items.append(item)
             y += item.height

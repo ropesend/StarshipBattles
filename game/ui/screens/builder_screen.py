@@ -31,6 +31,8 @@ from ui.builder.event_bus import EventBus
 from game.ui.screens.builder_utils import PANEL_WIDTHS, PANEL_HEIGHTS, MARGINS, BuilderEvents, calculate_dynamic_layer_width
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.screens.builder_event_router import BuilderEventRouter
+from game.ui.screens.builder_data_loader import BuilderDataLoader
+from game.ui.screens.builder_viewmodel import BuilderViewModel
 
 # Initialize Tkinter root and hide it (for simpledialog)
 # Initialize Tkinter root and hide it (for simpledialog)
@@ -71,6 +73,9 @@ class BuilderSceneGUI:
         self.event_bus = EventBus()
         self.screenshot_manager = ScreenshotManager.get_instance()
         
+        # MVVM: Create ViewModel to manage builder state
+        self.viewmodel = BuilderViewModel(self.event_bus, screen_width, screen_height)
+        
         # UI Manager
         from game.core.constants import ROOT_DIR, DATA_DIR, ASSET_DIR
         theme_path = os.path.join(DATA_DIR, 'builder_theme.json')
@@ -80,13 +85,11 @@ class BuilderSceneGUI:
                 theme_path=theme_path if os.path.exists(theme_path) else None
             )
         
-        # Ship
-        self.ship = Ship("Custom Ship", screen_width // 2, screen_height // 2, (100, 100, 255))
-        self.ship.recalculate_stats()
+        # Ship - now managed by ViewModel
+        self.viewmodel.create_default_ship()
         
         # Managers
-        self.available_components = get_all_components()
-        self.template_modifiers = {}
+        self.viewmodel.refresh_available_components()
         self.sprite_mgr = SpriteManager.get_instance()
         
         with profile_block("Builder: Init Managers"):
@@ -119,8 +122,7 @@ class BuilderSceneGUI:
         
         self.show_firing_arcs = False
         
-        # New Selection System
-        self.selected_components = [] # List of (layer_type, index, component) tuples or wrapped components
+        # Selection now managed by ViewModel - proxy property below
 
         
         # Event Router (composition pattern for event handling)
@@ -138,13 +140,15 @@ class BuilderSceneGUI:
             self.left_panel = BuilderLeftPanel(
                 self, self.ui_manager,
                 pygame.Rect(0, 0, self.left_panel_width, panels_height),
-                event_bus=self.event_bus
+                event_bus=self.event_bus,
+                viewmodel=self.viewmodel
             )
             
             # New Layer Panel
             self.layer_panel = LayerPanel(
                 self, self.ui_manager,
-                pygame.Rect(self.left_panel_width, 0, self.layer_panel_width, panels_height)
+                pygame.Rect(self.left_panel_width, 0, self.layer_panel_width, panels_height),
+                viewmodel=self.viewmodel
             )
             # Register Drop Target
             self.controller.register_drop_target(self.layer_panel)
@@ -153,7 +157,8 @@ class BuilderSceneGUI:
                 self, self.ui_manager,
                 pygame.Rect(self.width - self.right_panel_width, 0, 
                             self.right_panel_width, self.height - self.bottom_bar_height - self.weapons_report_height),
-                event_bus=self.event_bus
+                event_bus=self.event_bus,
+                viewmodel=self.viewmodel
             )
             
             # Modifier Panel (Bottom Spanning Left+Layer)
@@ -386,6 +391,43 @@ class BuilderSceneGUI:
     @dragged_item.setter
     def dragged_item(self, value):
         self.controller.dragged_item = value
+    
+    # ─────────────────────────────────────────────────────────────────
+    # Backward-Compatible Proxy Properties (delegate to ViewModel)
+    # ─────────────────────────────────────────────────────────────────
+    
+    @property
+    def ship(self):
+        """Proxy property for backward compatibility - delegates to ViewModel."""
+        return self.viewmodel.ship
+        
+    @ship.setter
+    def ship(self, value):
+        self.viewmodel.ship = value
+        
+    @property
+    def selected_components(self):
+        """Proxy property for backward compatibility - delegates to ViewModel."""
+        return self.viewmodel.selected_components
+        
+    @selected_components.setter
+    def selected_components(self, value):
+        # Direct assignment to internal list for backward compat
+        self.viewmodel._selected_components = value
+        
+    @property
+    def template_modifiers(self):
+        """Proxy property for backward compatibility - delegates to ViewModel."""
+        return self.viewmodel.template_modifiers
+        
+    @template_modifiers.setter
+    def template_modifiers(self, value):
+        self.viewmodel.template_modifiers = value
+        
+    @property
+    def available_components(self):
+        """Proxy property for backward compatibility - delegates to ViewModel."""
+        return self.viewmodel.available_components
 
     def show_error(self, msg):
         self.error_message = msg
@@ -596,175 +638,24 @@ class BuilderSceneGUI:
             self.show_error("Loaded Test Data • Ships: tests/data/ships/")
 
     def _reload_data(self, directory: str):
-        """Reload global game data from the specified directory."""
-        from game.simulation.components.component import load_components, load_modifiers
-        from game.simulation.entities.ship import load_vehicle_classes
+        """Reload global game data from the specified directory.
         
+        Data loading is delegated to BuilderDataLoader for better testability.
+        UI refresh logic remains in this class.
+        """
         try:
-            # 1. Clear Registries
-            from game.ai.controller import STRATEGY_MANAGER, load_combat_strategies
+            # 1. Load data via dedicated loader
+            loader = BuilderDataLoader(directory)
+            result = loader.load_all()
             
-            RegistryManager.instance().clear()
-            # Clear STRATEGY_MANAGER data
-            if STRATEGY_MANAGER:
-                STRATEGY_MANAGER.strategies.clear()
-                STRATEGY_MANAGER.targeting_policies.clear()
-                STRATEGY_MANAGER.movement_policies.clear()
+            if not result.success:
+                for error in result.errors:
+                    logger.error(error)
+                self.show_error(f"Data loading failed: {result.errors[0] if result.errors else 'Unknown error'}")
+                return
             
-            # 2. Helper to find file (standard, test prefix, or alias) -> returns (path, is_default_fallback)
-            def find_file(base_names, allow_default=True):
-                if isinstance(base_names, str): base_names = [base_names]
-                
-                # 1. Custom Directory Support
-                for name in base_names:
-                    # Direct match
-                    p = os.path.join(directory, name)
-                    if os.path.exists(p): return p, False
-                    
-                    # Test prefix match
-                    p = os.path.join(directory, "test_" + name)
-                    if os.path.exists(p): return p, False
-                
-                # 2. Default Fallback
-                if allow_default:
-                     default_dir = os.path.join(os.getcwd(), "data")
-                     for name in base_names:
-                         p = os.path.join(default_dir, name)
-                         if os.path.exists(p): return p, True
-                
-                return None, False
-            
-            # 3. Load Data
-            
-            # Modifiers
-            mod_path, _ = find_file("modifiers.json")
-            if mod_path:
-                load_modifiers(mod_path)
-                logger.info(f"Loaded modifiers from {mod_path}")
-            else:
-                logger.warning("No modifiers.json found")
-
-            # Components
-            comp_path, _ = find_file("components.json")
-            if comp_path:
-                load_components(comp_path)
-                logger.info(f"Loaded components from {comp_path}")
-            else:
-                logger.warning("No components.json found")
-                
-            # Combat Strategies - Need to load all three files
-            # Check if test files exist (with test_ prefix)
-            test_strat = os.path.join(directory, "test_combat_strategies.json")
-            test_targeting = os.path.join(directory, "test_targeting_policies.json")
-            test_movement = os.path.join(directory, "test_movement_policies.json")
-            
-            if os.path.exists(test_strat):
-                # Test data mode - use test_ prefixed files
-                if STRATEGY_MANAGER:
-                    STRATEGY_MANAGER.load_data(
-                        directory,
-                        targeting_file="test_targeting_policies.json",
-                        movement_file="test_movement_policies.json",
-                        strategy_file="test_combat_strategies.json"
-                    )
-                logger.info(f"Loaded strategies from test data in {directory}")
-            else:
-                # Production mode - try standard names
-                strat_path, is_def = find_file(["combatstrategies.json", "combat_strategies.json"])
-                if strat_path:
-                    load_combat_strategies(strat_path)
-                    logger.info(f"Loaded strategies from {strat_path}")
-            
-            # Vehicle Classes & Layers
-            # Check for 'vehicleclasses.json' OR 'classes.json'
-            vclass_path, _ = find_file(["vehicleclasses.json", "classes.json"])
-            vlayer_path, _ = find_file(["vehiclelayers.json", "layers.json"])
-            
-            if vclass_path:
-                if vlayer_path:
-                     load_vehicle_classes(vclass_path, layers_filepath=vlayer_path)
-                     logger.info(f"Loaded classes from {vclass_path} with layers from {vlayer_path}")
-                else:
-                     load_vehicle_classes(vclass_path)
-                     logger.info(f"Loaded classes from {vclass_path}")
-            else:
-                # If checking tests/data failed, try global default explicitly if not already tried?
-                # find_file with allow_default=True should have caught it.
-                logger.warning("No vehicleclasses.json found")
-
-            # 4. Refresh UI
-            self.right_panel.refresh_controls()
-            self.left_panel.update_component_list()
-            self.rebuild_modifier_ui()
-            
-            self.show_error("Data Reloaded Successfully!")
-            
-            # 5. Refresh Builder State
-            self.available_components = get_all_components()
-            self.template_modifiers = {}
-            
-            # Reset Ship
-            # Find a valid default class
-            default_class = "Escort"
-            classes = get_vehicle_classes()
-            if default_class not in classes and classes:
-                # Pick first available
-                default_class = next(iter(classes.keys()))
-                
-            self.ship = Ship("Custom Ship", self.width // 2, self.height // 2, (100, 100, 255), ship_class=default_class)
-            self.ship.recalculate_stats()
-            
-            # Reset UI Panels
-            # Left Panel needs to rebuild list
-            self.left_panel.update_component_list()
-            
-            # Center View
-            self.view.selected_component = None
-            self.controller.selected_component = None
-            self.selected_components = []
-            
-            # Right Panel needs to refresh dropdowns
-            # We need to recreate the class dropdown or update its items
-            # Accessing right_panel internals (tight coupling, but needed for quick fix)
-            
-            # Update Class Dropdown
-            classes = get_vehicle_classes()
-            valid_classes = [(n, classes[n].get('max_mass', 0)) for n, c in classes.items()]
-            valid_classes.sort(key=lambda x: x[1])
-            valid_class_names = [n for n, m in valid_classes]
-            if not valid_class_names: valid_class_names = ["Escort"]
-            
-            if hasattr(self.right_panel, 'class_dropdown'):
-                self.right_panel.class_dropdown.kill()
-                self.right_panel.class_dropdown = UIDropDownMenu(
-                    valid_class_names, 
-                    default_class,
-                    pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30), 
-                    manager=self.ui_manager, 
-                    container=self.right_panel.panel
-                )
-                
-            # Update Type Dropdown if it exists
-            if hasattr(self.right_panel, 'vehicle_type_dropdown'):
-                classes = get_vehicle_classes()
-                types = sorted(list(set(c.get('type', 'Ship') for c in classes.values())))
-                if not types: types = ["Ship"]
-                default_type = classes[default_class].get('type', 'Ship')
-                
-                self.right_panel.vehicle_type_dropdown.kill()
-                self.right_panel.vehicle_type_dropdown = UIDropDownMenu(
-                     types,
-                     default_type,
-                     pygame.Rect(70, self.right_panel.vehicle_type_dropdown.relative_rect.y, 195, 30),
-                     manager=self.ui_manager,
-                     container=self.right_panel.panel
-                )
-            
-            self.update_stats()
-            self.rebuild_modifier_ui()
-            
-            # Emit registry reload event for decoupled UI sync
-            self.event_bus.emit(BuilderEvents.REGISTRY_RELOADED, None)
+            # 2. Refresh UI (stays in BuilderSceneGUI)
+            self._refresh_ui_after_data_reload(result.default_class)
             
             # Show success
             self.show_error(f"Reloaded data from {os.path.basename(directory)}")
@@ -774,9 +665,77 @@ class BuilderSceneGUI:
             import traceback
             traceback.print_exc()
             self.show_error(f"Error reloading data: {e}")
+    
+    def _refresh_ui_after_data_reload(self, default_class: str):
+        """Refresh all UI panels after data reload.
+        
+        Extracted from _reload_data to separate data loading from UI concerns.
+        
+        Args:
+            default_class: The default ship class to use after reload
+        """
+        # Refresh UI panels
+        self.right_panel.refresh_controls()
+        self.left_panel.update_component_list()
+        self.rebuild_modifier_ui()
+        
+        # Refresh Builder State
+        self.available_components = get_all_components()
+        self.template_modifiers = {}
+        
+        # Reset Ship with new default class
+        self.ship = Ship("Custom Ship", self.width // 2, self.height // 2, (100, 100, 255), ship_class=default_class)
+        self.ship.recalculate_stats()
+        
+        # Reset UI Panels
+        self.left_panel.update_component_list()
+        
+        # Center View
+        self.view.selected_component = None
+        self.controller.selected_component = None
+        self.selected_components = []
+        
+        # Update Class Dropdown
+        classes = get_vehicle_classes()
+        valid_classes = [(n, classes[n].get('max_mass', 0)) for n, c in classes.items()]
+        valid_classes.sort(key=lambda x: x[1])
+        valid_class_names = [n for n, m in valid_classes]
+        if not valid_class_names: valid_class_names = ["Escort"]
+        
+        if hasattr(self.right_panel, 'class_dropdown'):
+            self.right_panel.class_dropdown.kill()
+            self.right_panel.class_dropdown = UIDropDownMenu(
+                valid_class_names, 
+                default_class,
+                pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30), 
+                manager=self.ui_manager, 
+                container=self.right_panel.panel
+            )
             
+        # Update Type Dropdown if it exists
+        if hasattr(self.right_panel, 'vehicle_type_dropdown'):
+            classes = get_vehicle_classes()
+            types = sorted(list(set(c.get('type', 'Ship') for c in classes.values())))
+            if not types: types = ["Ship"]
+            default_type = classes[default_class].get('type', 'Ship')
+            
+            self.right_panel.vehicle_type_dropdown.kill()
+            self.right_panel.vehicle_type_dropdown = UIDropDownMenu(
+                 types,
+                 default_type,
+                 pygame.Rect(70, self.right_panel.vehicle_type_dropdown.relative_rect.y, 195, 30),
+                 manager=self.ui_manager,
+                 container=self.right_panel.panel
+            )
+        
+        self.update_stats()
+        self.rebuild_modifier_ui()
+        
+        # Emit registry reload event for decoupled UI sync
+        self.event_bus.emit(BuilderEvents.REGISTRY_RELOADED, None)
     
     # Tooltip method removed
+
 
     @profile_action("Builder: Save Ship")
     def _save_ship(self):

@@ -64,6 +64,10 @@ class TestStructureVisibility(unittest.TestCase):
         self.ship = Ship("Test Escort", 0, 0, (255, 255, 255), ship_class="Escort")
         self.mock_builder.ship = self.ship
         
+        # MVVM: viewmodel must return the same ship/selected_components for refactored panels
+        self.mock_builder.viewmodel.ship = self.ship
+        self.mock_builder.viewmodel.selected_components = []
+        
         # Mock SpriteManager
         dummy_surf = pygame.Surface((32, 32))
         self.mock_builder.sprite_mgr.get_sprite.return_value = dummy_surf

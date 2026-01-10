@@ -42,14 +42,21 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
     # Instantiate BuilderSceneGUI without calling __init__ to avoid UI complexity
     gui = BuilderSceneGUI.__new__(BuilderSceneGUI)
     
-    # Setup minimal required state
-    gui.ship = Ship("Test Ship", 0, 0, (255,255,255), ship_class="Escort")
-    gui.template_modifiers = {"some_mod": 1.0}
+    # Setup minimal required state - MVVM architecture requires viewmodel
+    from ui.builder.event_bus import EventBus
+    from game.ui.screens.builder_viewmodel import BuilderViewModel
+    
+    gui.event_bus = EventBus()
+    gui.viewmodel = BuilderViewModel(gui.event_bus, 1280, 720)
+    
+    # Setup ship via viewmodel
+    gui.viewmodel._ship = Ship("Test Ship", 0, 0, (255,255,255), ship_class="Escort")
+    gui.viewmodel._template_modifiers = {"some_mod": 1.0}
+    
     gui.controller = MagicMock()
     gui.right_panel = MagicMock()
     gui.modifier_panel = MagicMock()
     gui.layer_panel = MagicMock()
-    gui.event_bus = MagicMock()
     
     # Verify initial hull exists (added by Ship.__init__ for Escort class)
     hull_comps = gui.ship.layers[LayerType.HULL]['components']

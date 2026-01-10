@@ -37,7 +37,11 @@ class TestBuilderUISync(unittest.TestCase):
         
         # Mock Builder
         self.mock_builder = MagicMock()
-        self.mock_builder.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Escort")
+        self.test_ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Escort")
+        self.mock_builder.ship = self.test_ship
+        
+        # MVVM: viewmodel.ship must return the same ship for Panel refactoring
+        self.mock_builder.viewmodel.ship = self.test_ship
         
         # Mock Theme Manager
         self.mock_builder.theme_manager.get_available_themes.return_value = ["Federation", "Klingon"]

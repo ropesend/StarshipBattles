@@ -19,7 +19,11 @@ class TestStatsRender(unittest.TestCase):
         
         self.builder = MagicMock()
         self.builder.theme_manager.get_available_themes.return_value = ["Federation"]
-        self.builder.ship = Ship("Test Ship", 0, 0, (255,255,255))
+        self.test_ship = Ship("Test Ship", 0, 0, (255,255,255))
+        self.builder.ship = self.test_ship
+        
+        # MVVM: viewmodel must return the same ship for refactored panels
+        self.builder.viewmodel.ship = self.test_ship
         
         self.manager = MagicMock()
         
