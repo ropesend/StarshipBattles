@@ -81,3 +81,101 @@ def find_path_interstellar(start_system, end_system, galaxy):
     path.append(start_system)
     path.reverse()
     return path
+
+def get_system_at_hex(galaxy, hex_c, radius=50):
+    """Find which system implies ownership of this hex (simplistic radius check)."""
+    best_sys = None
+    min_dist = float('inf')
+    
+    for sys in galaxy.systems.values():
+        dist = hex_distance(hex_c, sys.global_location)
+        if dist < radius:
+            if dist < min_dist:
+                min_dist = dist
+                best_sys = sys
+    return best_sys
+
+def find_nearest_system(galaxy, hex_c):
+    """Find the nearest system to a hex coordinate (ignoring radius)."""
+    best_sys = None
+    min_dist = float('inf')
+    
+    for sys in galaxy.systems.values():
+        dist = hex_distance(hex_c, sys.global_location)
+        if dist < min_dist:
+            min_dist = dist
+            best_sys = sys
+    return best_sys
+
+def find_hybrid_path(galaxy, start_hex, end_hex):
+    """
+    Calculate path combining local hex movement and interstellar warp jumps.
+    Returns list of HexCoords.
+    """
+    # 1. Identify Start/End Systems
+    # If in deep space, find NEAREST system to enter/exit the network.
+    start_sys = get_system_at_hex(galaxy, start_hex)
+    if not start_sys:
+        start_sys = find_nearest_system(galaxy, start_hex)
+        
+    end_sys = get_system_at_hex(galaxy, end_hex)
+    if not end_sys:
+        end_sys = find_nearest_system(galaxy, end_hex)
+    
+    # Case A: Same System (or both Deep Space near same system)
+    if start_sys and end_sys and start_sys == end_sys:
+        return find_path_deep_space(start_hex, end_hex)
+        
+    # Case B: Interstellar
+    if start_sys and end_sys:
+        # 1. Find System Path
+        sys_path = find_path_interstellar(start_sys, end_sys, galaxy)
+        if not sys_path:
+            # If no system path possible (disconnected graph?), fallback to direct
+            return find_path_deep_space(start_hex, end_hex)
+            
+        full_path = []
+        current_hex = start_hex
+        
+        # Iterate through system path to connect warp points
+        # sys_path is [StartSys, NextSys, ..., EndSys]
+        
+        for i in range(len(sys_path) - 1):
+            curr_sys = sys_path[i]
+            next_sys = sys_path[i+1]
+            
+            # Find Warp Point in curr_sys connecting to next_sys
+            target_wp = next((wp for wp in curr_sys.warp_points if wp.destination_id == next_sys.name), None)
+            
+            if target_wp:
+                # Calculate WP Global Hex
+                wp_global = curr_sys.global_location + target_wp.location
+                
+                # Local Path to WP
+                segment = find_path_deep_space(current_hex, wp_global)
+                if segment:
+                    full_path.extend(segment)
+                
+                # "Jump" to reciprocal WP (simulated by appending arrival hex)
+                # Need to find arrival WP in next_sys
+                arrival_wp = next((wp for wp in next_sys.warp_points if wp.destination_id == curr_sys.name), None)
+                if arrival_wp:
+                    arrival_global = next_sys.global_location + arrival_wp.location
+                    full_path.append(arrival_global) # The jump
+                    current_hex = arrival_global
+                else:
+                    # Fallback if reciprocal WP missing (data error?): Jump to system center?
+                    # or just continue from current (broken link)
+                    # Let's assume jump to center
+                    full_path.append(next_sys.global_location)
+                    current_hex = next_sys.global_location
+        
+        # Final Leg: From last arrival point to specific end_hex
+        final_segment = find_path_deep_space(current_hex, end_hex)
+        if final_segment:
+            full_path.extend(final_segment)
+        
+        return full_path
+        
+    # Fallback: Just direct line (Deep Space logic)
+    return find_path_deep_space(start_hex, end_hex)

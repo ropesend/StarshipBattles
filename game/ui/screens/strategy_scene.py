@@ -1,13 +1,15 @@
 import math
 import pygame
 import pygame_gui
+import random
+import os
+from game.strategy.engine.turn_engine import TurnEngine
+from game.strategy.data.empire import Empire
+from game.strategy.data.fleet import Order, OrderType, Fleet
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint, Planet
 from game.strategy.data.hex_math import hex_to_pixel, pixel_to_hex, HexCoord, hex_distance
 from game.ui.renderer.camera import Camera
 from game.ui.screens.strategy_screen import StrategyInterface
-from game.strategy.data.fleet import Fleet
-import os
-import random
 from game.strategy.data.pathfinding import find_path_interstellar, find_path_deep_space
 
 class StrategyScene:
@@ -17,6 +19,14 @@ class StrategyScene:
         self.screen_width = screen_width
         self.screen_height = screen_height
         
+        # Engine
+        self.turn_engine = TurnEngine()
+        
+        # Empires
+        self.player_empire = Empire(0, "Terran Command", (0, 0, 255))
+        self.enemy_empire = Empire(1, "Xeno Hive", (255, 0, 0))
+        self.empires = [self.player_empire, self.enemy_empire]
+        
         # Galaxy Data
         self.galaxy = Galaxy(radius=4000)
         print("StrategyScene: Generating Galaxy...")
@@ -24,10 +34,45 @@ class StrategyScene:
         self.galaxy.generate_warp_lanes()
         print(f"StrategyScene: Generated {len(self.systems)} systems.")
         
+        # Initial Setup (Colonies/Fleets)
+        if self.systems:
+             # Player Home (Sys 0)
+             p_home_sys = self.systems[0]
+             if p_home_sys.planets:
+                 p_planet = p_home_sys.planets[0]
+                 self.player_empire.add_colony(p_planet)
+                 
+                 # Starting Fleet: REMOVED per user request (Start with 0 ships)
+                 # f1 = Fleet(1, 0, p_home_sys.global_location)
+                 # f1.ships.append("Scout")
+                 # self.player_empire.add_fleet(f1)
+                 
+             # Enemy Home (Far away?)
+             e_home_sys = self.systems[-1]
+             if e_home_sys.planets:
+                 e_planet = e_home_sys.planets[0]
+                 self.enemy_empire.add_colony(e_planet)
+                 
+                 # f2 = Fleet(2, 1, e_home_sys.global_location)
+                 # f2.ships.append("Invader")
+                 # self.enemy_empire.add_fleet(f2)
+
         # Camera
         self.camera = Camera(screen_width, screen_height)
         self.camera.max_zoom = 25.0
-        self.camera.zoom = 0.1
+        self.camera.zoom = 2.0 # Start Zoomed In
+        
+        # Focus on Player Home
+        if self.player_empire.colonies:
+            home_colony = self.player_empire.colonies[0]
+            # Need Global Location of colony
+            # Iterating systems to match planet is slow but safe for init
+            home_sys = next((s for s in self.systems if home_colony in s.planets), None)
+            
+            if home_sys:
+                target_hex = home_sys.global_location + home_colony.location
+                fx, fy = hex_to_pixel(target_hex, 10) # 10 is default HEX_SIZE
+                self.camera.position = pygame.math.Vector2(fx, fy)
         
         # UI
         self.ui = StrategyInterface(self, screen_width, screen_height)
@@ -40,15 +85,15 @@ class StrategyScene:
         self.selected_object = None 
         self.hover_hex = None
         
-        # Fleets
-        self.fleets = []
-        # Create a test fleet at the first system
-        if self.systems:
-            start_sys = self.systems[0]
-            f = Fleet(1, 0, start_sys.global_location)
-            f.ships.append("TestShip")
-            self.fleets.append(f)
-            self.selected_fleet = f # Auto-select for testing
+        # Fleets: Managed by Empires now, but scene needs 'flat' list for rendering?
+        # Or we iterate empires.
+        # self.fleets = [] -> REMOVED/DEPRECATED, use self.empires access
+        
+        # Selected Fleet Ref
+        self.selected_fleet = None
+        
+        # State
+        self.turn_processing = False
 
         # Assets
         self.assets = {}
@@ -138,8 +183,9 @@ class StrategyScene:
         self.ui.update(dt)
         
         # Update Fleets (Visual movement can be added here)
-        for f in self.fleets:
-            f.update(dt)
+        # For turn-based, visualization happens during 'process_turn' or interpolated?
+        # For now, immediate jump.
+        pass
 
     def handle_event(self, event):
         self.ui.handle_event(event)
@@ -151,6 +197,24 @@ class StrategyScene:
                 obj = self.ui.current_sector_objects.get(selected_label)
                 if obj:
                     self.on_ui_selection(obj)
+                    
+        # Button Events
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.ui.btn_next_turn:
+                self.advance_turn()
+            elif event.ui_element == self.ui.btn_colonize:
+                self.on_colonize_click()
+            elif event.ui_element == self.ui.btn_build_ship:
+                self.on_build_ship_click()
+            # Navigation
+            elif event.ui_element == self.ui.btn_prev_colony:
+                self.cycle_selection('colony', -1)
+            elif event.ui_element == self.ui.btn_next_colony:
+                self.cycle_selection('colony', 1)
+            elif event.ui_element == self.ui.btn_prev_fleet:
+                self.cycle_selection('fleet', -1)
+            elif event.ui_element == self.ui.btn_next_fleet:
+                self.cycle_selection('fleet', 1)
 
         # Fleet Movement Input
         if event.type == pygame.KEYDOWN:
@@ -164,6 +228,139 @@ class StrategyScene:
                 if getattr(self, 'input_mode', 'SELECT') == 'MOVE':
                     self.input_mode = 'SELECT'
                     print("Input Mode: SELECT")
+
+    def advance_turn(self):
+        """Execute Turn Logic."""
+        self.turn_processing = True
+        print("Processing Turn...")
+        
+        # Force Render "Processing" state
+        # Get the screen surface from the app? 
+        # StrategyScene.draw takes 'screen'. 
+        # We need to access the main display surface to force an update.
+        # Current architecture doesn't easily expose the main loop's 'screen' variable here 
+        # except via draw(screen).
+        # We can try to get pygame.display.get_surface().
+        
+        screen = pygame.display.get_surface()
+        if screen:
+             self.draw(screen) # Draw current state
+             self._draw_processing_overlay(screen)
+             pygame.display.flip()
+        
+        # 1. Process
+        self.turn_engine.process_turn(self.empires, self.galaxy)
+        
+        # 2. Re-center Camera on Player Home (or active event)
+        # Find Home
+        if self.player_empire.colonies:
+            home = self.player_empire.colonies[0]
+            self.center_camera_on(home)
+                 
+        self.turn_processing = False
+        
+        # Refresh UI for currently selected object (stats might satisfy)
+        if self.selected_object:
+            self.on_ui_selection(self.selected_object)
+            
+    def _draw_processing_overlay(self, screen):
+        """Draw a modal overlay for turn processing."""
+        overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 150)) # Semi-transparent black
+        screen.blit(overlay, (0,0))
+        
+        font = pygame.font.SysFont("arial", 48, bold=True)
+        text = font.render("PROCESSING TURN...", True, (255, 200, 0))
+        rect = text.get_rect(center=(screen.get_width()//2, screen.get_height()//2))
+        screen.blit(text, rect)
+        
+    def on_colonize_click(self):
+        """Handle colonize action."""
+        # Requirements: Selected Fleet, Fleet at unowned Planet.
+        # Check UI state/selected object?
+        # The user likely selected the Fleet OR the Planet?
+        # If fleet selected, colonize what? The planet it's at.
+        
+        if not self.selected_fleet:
+            return
+            
+        # Find planet at fleet location
+        # Re-use picking logic or just search in global list?
+        # Efficient: Search system.
+        start_sys = self._get_system_at_hex(self.selected_fleet.location)
+        found_planet = None
+        if start_sys:
+            # Check planets
+            loc_local = self.selected_fleet.location - start_sys.global_location
+            for p in start_sys.planets:
+                 if p.location == loc_local:
+                     found_planet = p
+                     break
+        
+        if found_planet:
+             print(f"Queueing Colonize Order for {found_planet}")
+             self.selected_fleet.add_order(Order(OrderType.COLONIZE, found_planet))
+             self.on_ui_selection(self.selected_fleet) # Refresh UI
+             
+    def cycle_selection(self, obj_type, direction):
+        """Cycle selection through colonies or fleets and Center Camera."""
+        targets = []
+        if obj_type == 'colony':
+            targets = self.player_empire.colonies
+        elif obj_type == 'fleet':
+            targets = self.player_empire.fleets
+            
+        if not targets:
+            print(f"No {obj_type}s to cycle.")
+            return
+
+        # Find current index
+        current_idx = -1
+        if self.selected_object in targets:
+            current_idx = targets.index(self.selected_object)
+        
+        # Calc next
+        next_idx = (current_idx + direction) % len(targets)
+        new_obj = targets[next_idx]
+        
+        # Select & Center
+        self.on_ui_selection(new_obj)
+        self.center_camera_on(new_obj)
+
+    def center_camera_on(self, obj):
+        """Center camera on a Game Object (Planet, Fleet, System)."""
+        target_hex = None
+        
+        if hasattr(obj, 'location'):
+             # Planet location is local! Fleet is Global.
+             if hasattr(obj, 'planet_type'): # Planet
+                 # Find global by finding parent system
+                 # Optimize: We need system ref.
+                 sys = next((s for s in self.systems if obj in s.planets), None)
+                 if sys:
+                     target_hex = sys.global_location + obj.location
+             elif hasattr(obj, 'ships'): # Fleet
+                 target_hex = obj.location
+             elif hasattr(obj, 'global_location'): # System
+                 target_hex = obj.global_location
+        
+        if target_hex:
+            fx, fy = hex_to_pixel(target_hex, self.HEX_SIZE)
+            self.camera.position.x = fx
+            self.camera.position.y = fy
+            print(f"Camera centered on {obj} at {target_hex}")
+        else:
+            print(f"Could not center camera on {obj}")
+             
+    def on_build_ship_click(self):
+         """Handle 'Build Ship' action."""
+         if isinstance(self.selected_object, Planet):
+             planet = self.selected_object
+             if planet.owner_id == self.player_empire.id:
+                 print(f"Queueing Ship at {planet}...")
+                 # Add to Queue (1 Turn)
+                 planet.add_production("Colony Ship", 1)
+                 print("Ship added to construction queue (1 Turn).")
 
     def update_input(self, dt, events):
         """Update camera input."""
@@ -206,82 +403,73 @@ class StrategyScene:
         world_pos = self.camera.screen_to_world((mx, my))
         hex_clicked = pixel_to_hex(world_pos.x, world_pos.y, self.HEX_SIZE)
         
-        # 1. Identify System Context
-        # Find which system (if any) this hex belongs to.
-        # We can reuse _get_system_at_hex logic or distance check.
         clicked_system = self._get_system_at_hex(hex_clicked)
-        
-        # 2. Identify Precise Objects at this Hex (Sector Content)
         sector_contents = []
         
-        # Check Fleets
-        for f in self.fleets:
-            if f.location == hex_clicked:
-                 sector_contents.append(f)
+        # Check Fleets (All Empires)
+        for emp in self.empires:
+            for f in emp.fleets:
+                if f.location == hex_clicked:
+                     sector_contents.append(f)
                  
         if clicked_system:
-             # Check System Objects at this hex
-             # Star?
              if hex_distance(hex_clicked, clicked_system.global_location) == 0:
-                 sector_contents.append(clicked_system) # Star
+                 sector_contents.append(clicked_system) 
                  
-             # Planets
              for p in clicked_system.planets:
-                 if p.location == hex_clicked - clicked_system.global_location: # Local to Global check?
-                     # Wait, planet.location is local.
-                     # hex_clicked is global.
-                     # p_global = sys.global + p.local
-                     p_global = clicked_system.global_location + p.location
-                     if p_global == hex_clicked:
-                         sector_contents.append(p)
+                 p_global = clicked_system.global_location + p.location
+                 if p_global == hex_clicked:
+                     sector_contents.append(p)
                          
-             # Warp Points
              for wp in clicked_system.warp_points:
                  wp_global = clicked_system.global_location + wp.location
                  if wp_global == hex_clicked:
                      sector_contents.append(wp)
 
-        # 3. Populate UI
-        
-        # System Panel
         if clicked_system:
-            sys_contents = [clicked_system] # Star
+            sys_contents = [clicked_system] 
             sys_contents.extend(clicked_system.planets)
             sys_contents.extend(clicked_system.warp_points)
-            # Fleets in system?
-            # Ideally find all fleets in system radius.
             self.ui.show_system_info(clicked_system, sys_contents)
         else:
             self.ui.show_system_info(None, [])
             
-        # Sector Panel
         self.ui.show_sector_info(hex_clicked, sector_contents)
-        
-        # 4. Detail View Selection Logic
-        # If we clicked a specific visual element, prefer that.
-        # Use existing distance logic for precision picking, or just pick first in sector list?
-        # User said "The system view should show... The sector view..."
-        # Let's try to pick the "most interesting" item in the sector list if available.
         
         best_pick = None
         if sector_contents:
-            best_pick = sector_contents[0] # Default to first
-            # Prefer fleets or planets over warp points?
+            best_pick = sector_contents[0] 
             
         if best_pick:
             self.on_ui_selection(best_pick)
             self.selected_object = best_pick
         elif clicked_system:
-             # If clicked empty space in system, maybe show System/Star details?
              self.on_ui_selection(clicked_system)
              self.selected_object = clicked_system
         else:
              self.selected_object = None
              self.ui.show_detailed_report(None, None)
-
+             
     def on_ui_selection(self, obj):
         """Called when user selects an item in the UI list."""
         self.selected_object = obj
+        
+        # --- Update Button Visibility ---
+        # 1. Colonize (Fleet Selected + At Planet?)
+        # For now, just show if Player Fleet Selected
+        if isinstance(obj, Fleet) and obj.owner_id == self.player_empire.id:
+            self.selected_fleet = obj
+            self.ui.btn_colonize.show()
+        else:
+            if not isinstance(obj, Fleet): self.selected_fleet = None # Clear if not fleet
+            self.ui.btn_colonize.hide()
+            
+        # 2. Build Ship (Player Planet Selected)
+        if isinstance(obj, Planet) and obj.owner_id == self.player_empire.id:
+            self.ui.btn_build_ship.show()
+        else:
+            self.ui.btn_build_ship.hide()
+            
         
         # Get Portrait
         img = self._get_object_asset(obj)
@@ -290,7 +478,6 @@ class StrategyScene:
     def _get_object_asset(self, obj):
         """Resolve the visual asset for a data object."""
         if hasattr(obj, 'star_type'):
-            # System/Star - logic from _draw_systems
             color = obj.star_type.color
             asset_key = 'yellow'
             if color[0] > 200 and color[1] < 100: asset_key = 'red'
@@ -327,111 +514,54 @@ class StrategyScene:
         target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.HEX_SIZE)
         
         print(f"Calculating path to {target_hex}...")
-        path = self.calculate_hybrid_path(self.selected_fleet.location, target_hex)
+        # Determine Start Hex (Current Location or Last Queued Destination)
+        start_hex = self.selected_fleet.location
+        for o in reversed(self.selected_fleet.orders):
+             if o.type == OrderType.MOVE:
+                 start_hex = o.target
+                 break
+
+        print(f"Calculating path from {start_hex} to {target_hex}...")
+        path = self.calculate_hybrid_path(start_hex, target_hex)
         
         if path:
             print(f"Path confirmed: {len(path)} steps.")
-            self.selected_fleet.path = path
-            self.selected_fleet.destination = target_hex
-            self.input_mode = 'SELECT' # Revert to select after cmd
+            # Create Order
+            new_order = Order(OrderType.MOVE, target_hex)
+            self.selected_fleet.add_order(new_order)
+            
+            # Optimization: If Fleet has no path/orders, assign this path to 'current' immediately.
+            if len(self.selected_fleet.orders) == 1:
+                self.selected_fleet.path = path
+            
+            # Check modifier keys for Shift-Click (Chain orders)
+            keys = pygame.key.get_pressed()
+            if not (keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]):
+                self.input_mode = 'SELECT' # Revert to select after cmd unless Shift held
+                
+            # Refresh UI to show new order
+            self.on_ui_selection(self.selected_fleet)
         else:
             print("Cannot find path to target.")
 
     def calculate_hybrid_path(self, start_hex, end_hex):
         """
         Calculate path combining local hex movement and interstellar warp jumps.
-        Returns list of HexCoords.
+        Delegates to shared pathfinding module.
         """
-        # 1. Identify Start/End Systems
-        # If in deep space, find NEAREST system to enter/exit the network.
-        start_sys = self._get_system_at_hex(start_hex)
-        if not start_sys:
-            start_sys = self._find_nearest_system(start_hex)
-            
-        end_sys = self._get_system_at_hex(end_hex)
-        if not end_sys:
-            end_sys = self._find_nearest_system(end_hex)
-        
-        # Case A: Same System (or both Deep Space near same system)
-        if start_sys and end_sys and start_sys == end_sys:
-            return find_path_deep_space(start_hex, end_hex)
-            
-        # Case B: Interstellar
-        if start_sys and end_sys:
-            # 1. Find System Path
-            sys_path = find_path_interstellar(start_sys, end_sys, self.galaxy)
-            if not sys_path:
-                # If no system path possible (disconnected graph?), fallback to direct
-                return find_path_deep_space(start_hex, end_hex)
-                
-            full_path = []
-            current_hex = start_hex
-            
-            # Iterate through system path to connect warp points
-            # sys_path is [StartSys, NextSys, ..., EndSys]
-            
-            for i in range(len(sys_path) - 1):
-                curr_sys = sys_path[i]
-                next_sys = sys_path[i+1]
-                
-                # Find Warp Point in curr_sys connecting to next_sys
-                target_wp = next((wp for wp in curr_sys.warp_points if wp.destination_id == next_sys.name), None)
-                
-                if target_wp:
-                    # Calculate WP Global Hex
-                    wp_global = curr_sys.global_location + target_wp.location
-                    
-                    # Local Path to WP
-                    segment = find_path_deep_space(current_hex, wp_global)
-                    if segment:
-                        full_path.extend(segment)
-                    
-                    # "Jump" to reciprocal WP
-                    arrival_wp = next((wp for wp in next_sys.warp_points if wp.destination_id == curr_sys.name), None)
-                    if arrival_wp:
-                        arrival_global = next_sys.global_location + arrival_wp.location
-                        full_path.append(arrival_global) # The jump
-                        current_hex = arrival_global
-            
-            # Final Leg: From last arrival WP to specific end_hex
-            final_segment = find_path_deep_space(current_hex, end_hex)
-            if final_segment:
-                full_path.extend(final_segment)
-            
-            return full_path
-            
-        # Fallback: Just direct line (Deep Space logic)
-        return find_path_deep_space(start_hex, end_hex)
+        from game.strategy.data.pathfinding import find_hybrid_path
+        return find_hybrid_path(self.galaxy, start_hex, end_hex)
 
     def _get_system_at_hex(self, hex_c):
         """Find which system implies ownership of this hex (simplistic radius check)."""
-        # Systems are sparse, so checking radius from global center works.
-        # System radius is conceptual, let's say 50 hexes?
-        SYSTEM_RADIUS = 50
-        
-        best_sys = None
-        min_dist = float('inf')
-        
-        for sys in self.galaxy.systems.values():
-            dist = hex_distance(hex_c, sys.global_location)
-            if dist < SYSTEM_RADIUS:
-                if dist < min_dist:
-                    min_dist = dist
-                    best_sys = sys
-        
-        return best_sys
+        # Legacy Wrapper or just remove? Keeping for now to avoid breaking other calls if any.
+        from game.strategy.data.pathfinding import get_system_at_hex
+        return get_system_at_hex(self.galaxy, hex_c)
 
     def _find_nearest_system(self, hex_c):
         """Find the nearest system to a hex coordinate (ignoring radius)."""
-        best_sys = None
-        min_dist = float('inf')
-        
-        for sys in self.galaxy.systems.values():
-            dist = hex_distance(hex_c, sys.global_location)
-            if dist < min_dist:
-                min_dist = dist
-                best_sys = sys
-        return best_sys
+        from game.strategy.data.pathfinding import find_nearest_system
+        return find_nearest_system(self.galaxy, hex_c)
 
     def draw(self, screen):
         """Render the scene."""
@@ -456,8 +586,14 @@ class StrategyScene:
         self.ui.draw(screen)
 
     def _draw_move_preview(self, screen):
-        # Draw line from selected fleet to mouse cursor
-        fx, fy = hex_to_pixel(self.selected_fleet.location, self.HEX_SIZE)
+        # Determine start point (Fleet Location or Last Order Target)
+        start_hex = self.selected_fleet.location
+        for o in reversed(self.selected_fleet.orders):
+             if o.type == OrderType.MOVE:
+                 start_hex = o.target
+                 break
+                 
+        fx, fy = hex_to_pixel(start_hex, self.HEX_SIZE)
         f_pos = self.camera.world_to_screen(pygame.math.Vector2(fx, fy))
         
         mx, my = pygame.mouse.get_pos()
@@ -679,6 +815,25 @@ class StrategyScene:
                 continue
                 
             screen_pos = self.camera.world_to_screen(world_pos)
+
+            # Draw Colony Marker (Upper Left)
+            # ONLY DRAW ON STAR IF ZOOMED OUT (Planets not visible)
+            if self.camera.zoom < 0.5:
+                owned_planets = [p for p in sys.planets if p.owner_id is not None]
+                if owned_planets:
+                     first_owner_id = owned_planets[0].owner_id
+                     owner_emp = next((e for e in self.empires if e.id == first_owner_id), None)
+                     if owner_emp:
+                         # Calculate World Space Offset (Top Left)
+                         # Use HEX_SIZE to robustly position at "Hex Corner" regardless of zoom
+                         # Top Left is roughly (-1, -1) * HEX_SIZE (scaled a bit)
+                         # Let's say -1.5 * HEX_SIZE to be clearly separate
+                         offset_world = pygame.math.Vector2(-0.75 * self.HEX_SIZE, -0.75 * self.HEX_SIZE)
+                         marker_world = world_pos + offset_world
+                         marker_screen = self.camera.world_to_screen(marker_world)
+                         
+                         pygame.draw.circle(screen, owner_emp.color, (int(marker_screen.x), int(marker_screen.y)), 5)
+                         pygame.draw.circle(screen, (255, 255, 255), (int(marker_screen.x), int(marker_screen.y)), 6, 1)
             
             star_radius = sys.star_type.radius if sys.star_type else 8
             
@@ -729,6 +884,24 @@ class StrategyScene:
             if self.selected_object == planet:
                  pygame.draw.circle(screen, (255, 255, 255), p_screen, max(10, int(10 * self.camera.zoom)), 1)
 
+            # Colony Marker (Specific Planet)
+            if planet.owner_id is not None:
+                owner_emp = next((e for e in self.empires if e.id == planet.owner_id), None)
+                if owner_emp:
+                    # Upper Left of Planet (World Space)
+                    # Planet radius is visualized as ~10 * zoom. 
+                    # To clear it, we need offset > 10 in world units?
+                    # No, zoom scales everything.
+                    # Base size is 10. So offset of 15 world units is safe?
+                    # Let's use HEX_SIZE (10) * 1.5
+                    
+                    offset_world = pygame.math.Vector2(-0.75 * self.HEX_SIZE, -0.75 * self.HEX_SIZE)
+                    marker_world = p_world + offset_world
+                    marker_screen = self.camera.world_to_screen(marker_world)
+
+                    pygame.draw.circle(screen, owner_emp.color, (int(marker_screen.x), int(marker_screen.y)), 4)
+                    pygame.draw.circle(screen, (255, 255, 255), (int(marker_screen.x), int(marker_screen.y)), 5, 1)
+
             # Pick Asset
             # Deterministic choice based on planet pointer or ID
             # hash(planet) stable? usually. Or use index.
@@ -777,34 +950,81 @@ class StrategyScene:
                  pygame.draw.circle(screen, (200, 0, 255), w_screen, max(2, int(5 * self.camera.zoom)))
 
     def _draw_fleets(self, screen):
-        for f in self.fleets:
-            fx, fy = hex_to_pixel(f.location, self.HEX_SIZE)
-            f_screen = self.camera.world_to_screen(pygame.math.Vector2(fx, fy))
-            
-            # Draw Triangle
-            size = 10 * self.camera.zoom
-            if size < 8: size = 8
-            if size > 30: size = 30
-            
-            # Simple triangle shape
-            points = [
-                (f_screen.x, f_screen.y - size),
-                (f_screen.x - size/2, f_screen.y + size/2),
-                (f_screen.x + size/2, f_screen.y + size/2)
-            ]
-            
-            color = (0, 255, 0)
-            if self.selected_fleet == f:
-                color = (255, 255, 0) # Selected highlight
+        for emp in self.empires:
+            for f in emp.fleets:
+                fx, fy = hex_to_pixel(f.location, self.HEX_SIZE)
+                f_screen = self.camera.world_to_screen(pygame.math.Vector2(fx, fy))
                 
-            pygame.draw.polygon(screen, color, points)
-            
-            # Draw Path
-            if f.path:
-                path_points = [f_screen]
-                for node_loc in f.path:
-                    nx, ny = hex_to_pixel(node_loc, self.HEX_SIZE)
-                    path_points.append(self.camera.world_to_screen(pygame.math.Vector2(nx, ny)))
+                # Check Bounds
+                if not (0 <= f_screen.x <= self.screen_width and 0 <= f_screen.y <= self.screen_height):
+                    continue
                 
-                if len(path_points) > 1:
-                    pygame.draw.lines(screen, (0, 200, 0), False, path_points, 1)                    
+                # Draw Triangle
+                size = 10 * self.camera.zoom
+                if size < 8: size = 8
+                if size > 30: size = 30
+                
+                # Simple triangle shape
+                points = [
+                    (f_screen.x, f_screen.y - size),
+                    (f_screen.x - size/2, f_screen.y + size/2),
+                    (f_screen.x + size/2, f_screen.y + size/2)
+                ]
+                
+                # Color based on Empire
+                color = emp.color
+                if self.selected_fleet == f:
+                    color = (255, 255, 0) # Selected highlight
+                    
+                pygame.draw.polygon(screen, color, points)
+            
+                # Draw Path (Indented inside loop)
+                # 1. Active Path
+                last_screen_pos = f_screen
+                if f.path:
+                    path_points = [f_screen]
+                    for node_loc in f.path:
+                        nx, ny = hex_to_pixel(node_loc, self.HEX_SIZE)
+                        p_vec = self.camera.world_to_screen(pygame.math.Vector2(nx, ny))
+                        path_points.append(p_vec)
+                    
+                    if len(path_points) > 1:
+                        # Thicker line (width 2) and brighter green
+                        pygame.draw.lines(screen, (0, 255, 100), False, path_points, 2)
+                        last_screen_pos = path_points[-1]
+                        
+                        # Draw Order Status Text
+                        current_order = f.get_current_order()
+                        if current_order:
+                             font = pygame.font.SysFont("arial", 10)
+                             txt = font.render(f"{current_order.type.name}", True, (0, 255, 100))
+                             screen.blit(txt, (f_screen.x + 10, f_screen.y - 10))
+                             
+                # 2. Future Queued Paths (Straight Lines for simple feedback)
+                # Calculating full A* for every queued order every frame is too heavy.
+                # Visualization: Draw line from end of current path to next target.
+                
+                # Start from end of current path or current ship pos
+                start_connector = f.location
+                if f.path: start_connector = f.path[-1] # End of active path (HexCoord)
+                
+                # Convert active path end to screen for connectivity
+                cx, cy = hex_to_pixel(start_connector, self.HEX_SIZE)
+                previous_screen_pos = self.camera.world_to_screen(pygame.math.Vector2(cx, cy))
+                
+                # Iterate Future Orders
+                # Skip first order if it is the active one (f.get_current_order())
+                orders_to_draw = f.orders[1:] if f.orders else []
+                
+                for idx, order in enumerate(orders_to_draw):
+                    if order.type == OrderType.MOVE:
+                         target_hex = order.target
+                         tx, ty = hex_to_pixel(target_hex, self.HEX_SIZE)
+                         target_screen = self.camera.world_to_screen(pygame.math.Vector2(tx, ty))
+                         
+                         # Draw dashed-like line (Dotted) or distinct color
+                         # Making it slightly dimmer green
+                         pygame.draw.line(screen, (0, 150, 50), previous_screen_pos, target_screen, 1)
+                         
+                         previous_screen_pos = target_screen
+                         start_connector = target_hex # For next segment logic                    

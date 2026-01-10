@@ -539,7 +539,16 @@ def main():
     from game.core.registry import RegistryManager
     RegistryManager.instance().freeze()
     
-    game.run()
+    try:
+        game.run()
+    except Exception as e:
+        import traceback
+        error_msg = traceback.format_exc()
+        print("CRITICAL CRASH CAUGHT:")
+        print(error_msg)
+        with open("crash_log.txt", "w") as f:
+            f.write(error_msg)
+        raise e
     # Save profiling data
     PROFILER.save_history()
 

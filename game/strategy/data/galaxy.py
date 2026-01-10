@@ -38,6 +38,13 @@ class Planet:
         self.planet_type = planet_type
         self.orbit_distance = orbit_distance # Int (Ring number)
         self.location = location # HexCoord (Local to system, 0,0 is star)
+        
+        # Empire Management
+        self.owner_id = None # int or None
+        self.construction_queue = [] # List of (item_name, turns_remaining)
+
+    def add_production(self, item_name, turns):
+        self.construction_queue.append([item_name, turns])
 
 class WarpPoint:
     def __init__(self, destination_id, location):

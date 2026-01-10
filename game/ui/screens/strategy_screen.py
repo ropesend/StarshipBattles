@@ -1,5 +1,6 @@
 import pygame
 import pygame_gui
+from game.strategy.data.fleet import OrderType
 
 class StrategyInterface:
     """Handles all UI rendering and interaction for the StrategyScene."""
@@ -101,6 +102,84 @@ class StrategyInterface:
         self.current_system_objects = {}
         self.current_sector_objects = {} 
         self.current_selection = None
+        
+        # --- Top Bar ---
+        self.top_bar = pygame_gui.elements.UIPanel(
+            relative_rect=pygame.Rect(0, 0, screen_width - self.sidebar_width, 50),
+            manager=self.manager,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
+        )
+        
+        button_width = 150
+        gap = 10
+        # Button Groups
+        # Nav Group: [< Col >] [< Fleet >]
+        # Main Group: [Empire] [Research] [Next Turn]
+        
+        # Calculations for centering
+        # Nav Group Width: (30+80+30) + 10 + (30+80+30) = 140 + 10 + 140 = 290
+        # Main Group Width: 100 + 10 + 100 + 10 + 150 = 370
+        # Total Width = 290 + 20 + 370 = 680
+        
+        center_x = (screen_width - self.sidebar_width) / 2
+        start_x = center_x - (680 / 2)
+        
+        # --- Nav Buttons ---
+        # Colony
+        self.btn_prev_colony = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(start_x, 5, 30, 40), text="<", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
+        )
+        self.lbl_colony = pygame_gui.elements.UILabel(
+             relative_rect=pygame.Rect(start_x + 30, 5, 80, 40), text="Colony", manager=self.manager, container=self.top_bar
+        )
+        self.btn_next_colony = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(start_x + 110, 5, 30, 40), text=">", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
+        )
+        
+        # Fleet
+        offset_fleet = 150
+        self.btn_prev_fleet = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(start_x + offset_fleet, 5, 30, 40), text="<", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
+        )
+        self.lbl_fleet = pygame_gui.elements.UILabel(
+             relative_rect=pygame.Rect(start_x + offset_fleet + 30, 5, 80, 40), text="Fleet", manager=self.manager, container=self.top_bar
+        )
+        self.btn_next_fleet = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(start_x + offset_fleet + 110, 5, 30, 40), text=">", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
+        )
+        
+        # --- Main Buttons ---
+        offset_main = 310
+        self.btn_empire = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(start_x + offset_main, 5, 100, 40), text="Empire", manager=self.manager, container=self.top_bar
+        )
+        self.btn_research = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(start_x + offset_main + 110, 5, 100, 40), text="Research", manager=self.manager, container=self.top_bar
+        )
+        self.btn_next_turn = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(start_x + offset_main + 220, 5, 150, 40), 
+            text="Next Turn",
+            manager=self.manager,
+            container=self.top_bar
+        )
+        
+        # Contextual Buttons (Detail Panel)
+        # Positioned below text
+        self.btn_colonize = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(220, rect_detail.height - 50, 120, 40),
+            text="Colonize",
+            manager=self.manager,
+            container=self.detail_panel,
+            visible=0 # Hidden by default
+        )
+        
+        self.btn_build_ship = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(350, rect_detail.height - 50, 120, 40),
+            text="Build Ship",
+            manager=self.manager,
+            container=self.detail_panel,
+            visible=0 # Hidden by default
+        )
 
         
     def handle_resize(self, width, height):
@@ -198,7 +277,17 @@ class StrategyInterface:
             text += f"<b>Owner:</b> {obj.owner_id}<br>"
             text += f"<b>Ships:</b> {len(obj.ships)}<br>"
             text += f"<b>Location:</b> {obj.location}<br>"
-            text += f"<b>Dest:</b> {obj.destination}<br>"
+            text += f"<b>Location:</b> {obj.location}<br>"
+            
+            text += "<b>Orders:</b><br>"
+            if obj.orders:
+                for i, order in enumerate(obj.orders):
+                    if order.type == OrderType.MOVE:
+                         text += f" {i+1}. MOVE {order.target}<br>"
+                    else:
+                         text += f" {i+1}. {order.type.name}<br>"
+            else:
+                text += " (No Orders)<br>"
             
         self.detail_text.set_text(text)
         
