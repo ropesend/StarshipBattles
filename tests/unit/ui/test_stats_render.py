@@ -6,7 +6,7 @@ import os
 import sys
 
 # Ensure project root is in path
-sys.path.append(os.getcwd())
+
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component

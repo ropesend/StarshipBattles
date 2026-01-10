@@ -43,7 +43,7 @@ class TestBattlePanels(unittest.TestCase):
         
         # Prepare sys.path
         self._orig_path = list(sys.path)
-        sys.path.append(os.getcwd())
+        
         
         # Import module under test
         # Handle reload if needed

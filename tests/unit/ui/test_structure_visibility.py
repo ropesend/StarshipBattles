@@ -8,10 +8,7 @@ import pygame_gui
 # Set dummy video driver for headless testing
 os.environ['SDL_VIDEODRIVER'] = 'dummy'
 
-# Add root to sys.path if not already there
-root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
+
 
 from game.simulation.entities.ship import Ship, initialize_ship_data, LayerType
 from game.simulation.components.component import load_components, load_modifiers

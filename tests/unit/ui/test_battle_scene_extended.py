@@ -2,7 +2,7 @@
 import unittest
 import sys
 import os
-sys.path.append(os.getcwd())
+
 import pygame
 from game.ui.screens.battle_scene import BattleScene
 from game.simulation.entities.ship import Ship, initialize_ship_data

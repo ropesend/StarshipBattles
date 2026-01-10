@@ -5,7 +5,7 @@ import os
 import sys
 
 # Ensure project root is in path
-sys.path.append(os.getcwd())
+
 
 from game.simulation.entities.ship import Ship
 from ui.builder.right_panel import BuilderRightPanel

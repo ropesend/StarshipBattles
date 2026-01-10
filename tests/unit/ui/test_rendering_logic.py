@@ -6,7 +6,7 @@ import os
 import pygame
 
 # Add parent dir to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 
 from game.ui.renderer.game_renderer import draw_ship, draw_hud
 from game.simulation.entities.ship import LayerType
