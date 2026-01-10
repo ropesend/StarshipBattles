@@ -28,6 +28,10 @@ class TestKiteBehavior(unittest.TestCase):
         # Ensure check_avoidance returns None by default so it doesn't trigger
         self.controller.check_avoidance.return_value = None
 
+    def tearDown(self):
+        pygame.quit()
+        super().tearDown()
+
     def test_opt_dist_calculation(self):
         """Verify optimal distance calculation based on engage multiplier."""
         # Setup controller to return specific multiplier

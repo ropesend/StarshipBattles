@@ -3,6 +3,11 @@ from game.simulation.entities.ship import Ship
 from game.simulation.components.component import LayerType
 from game.core.registry import RegistryManager
 
+@pytest.fixture(autouse=True)
+def cleanup_registry():
+    yield
+    RegistryManager.instance().clear()
+
 def test_hull_missing_required_abilities():
     """
     Reproduction test for BUG-10.

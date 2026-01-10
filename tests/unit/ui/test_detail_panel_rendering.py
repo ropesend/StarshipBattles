@@ -8,18 +8,8 @@ import pygame_gui
 
 class TestDetailPanelRendering(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        # Clear registry to ensure clean state from any prior tests
-        from game.core.registry import RegistryManager
-        RegistryManager.instance().clear()
-    
-    @classmethod
-    def tearDownClass(cls):
-        # Clean up registry after tests
-        from game.core.registry import RegistryManager
-        RegistryManager.instance().clear()
-        pygame.quit()
+    # Removed setUpClass/tearDownClass to fix parallel execution failures
+    # Cleanup now happens per-test in tearDown to prevent pygame display state pollution
 
     def setUp(self):
         pygame.init()
@@ -64,11 +54,17 @@ class TestDetailPanelRendering(unittest.TestCase):
         self.MockUITextBox.reset_mock()
 
     def tearDown(self):
+        # Stop all patchers
         self.uipanel_patch.stop()
         self.uilabel_patch.stop()
         self.uiimage_patch.stop()
         self.uibutton_patch.stop()
         self.uitextbox_patch.stop()
+        
+        # Clean up pygame and registry PER TEST (fixes parallel execution failures)
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
 
     def test_html_stats_generation_basic(self):
         """Verify basic component stats (Name, Type, Mass, HP) are generated."""

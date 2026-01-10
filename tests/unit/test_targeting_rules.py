@@ -30,6 +30,10 @@ class TestTargetingRules(unittest.TestCase):
         self.target_far = MagicMock()
         self.target_far.position = pygame.math.Vector2(1000, 0)
         self.target_far.mass = 500
+
+    def tearDown(self):
+        pygame.quit()
+        super().tearDown()
         
     def test_rule_nearest(self):
         """Test 'nearest' rule scores closer targets higher."""

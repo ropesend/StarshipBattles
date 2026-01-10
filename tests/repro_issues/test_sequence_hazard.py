@@ -5,6 +5,13 @@ try:
 except ImportError:
     pytest.skip("Could not import registries", allow_module_level=True)
 
+@pytest.fixture(autouse=True)
+def reset_registry():
+    """Ensure registry is clean before and after each test."""
+    RegistryManager.instance().clear()
+    yield
+    RegistryManager.instance().clear()
+
 # These tests rely on default execution order (line definition order) or alphabetical.
 # We name them to ensure alphabetical order: test_a_... runs before test_b_...
 

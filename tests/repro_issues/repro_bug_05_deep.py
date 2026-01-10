@@ -2,10 +2,18 @@ import pytest
 import sys
 import os
 import json
-sys.path.append(os.getcwd())
+import pygame
+
+# Pattern I: Save original path and handle robust root discovery
+original_path = sys.path.copy()
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
+
 from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.components.component import Component
+from game.simulation.components.component import Component, load_components, load_modifiers
 from game.simulation.entities.ship_stats import ShipStatsCalculator
+from game.core.registry import RegistryManager
 from ui.builder.stats_config import get_logistics_rows
 
 # Mock Data simulating components.json entries
@@ -45,6 +53,16 @@ MOCK_LASER_DATA = {
     }
 }
 
+def setup_test_state():
+    pygame.init()
+    RegistryManager.instance().clear()
+
+def teardown_test_state():
+    pygame.quit()
+    RegistryManager.instance().clear()
+    global original_path
+    sys.path = original_path.copy()
+
 def test_shield_regen_consumption():
     """
     Verify Shield Regen (using EnergyConsumption alias) 
@@ -52,41 +70,45 @@ def test_shield_regen_consumption():
     2. Calculates correctly in ship.energy_consumption
     3. Shows up in Logistics Rows
     """
-    ship = Ship(name="TestShipSC", x=0, y=0, color=(255, 255, 255))
-    ship.ship_class = "TestClass"
-    vehicle_classes = {"TestClass": {'max_mass': 1000, 'type': 'Ship'}}
-    
-    # Create Component from Dict (simulating load_components)
-    comp = Component(MOCK_SHIELD_REGEN_DATA)
-    ship.layers[LayerType.INNER]['components'].append(comp)
-    
-    calc = ShipStatsCalculator(vehicle_classes)
-    calc.calculate(ship)
-    
-    # Check 1: Energy Registered?
-    assert 'energy' in ship.resources._resources, "Energy not registered in ship resources"
-    
-    # Check 2: Consumption Calculation
-    # Expected: 2.0 (Constant) + possibly 2.0 again if double counted?
-    # Correct value should be 2.0.
-    print(f"Energy Consumption: {ship.energy_consumption}")
-    assert ship.energy_consumption > 0, "Energy Consumption is 0, should be at least 2.0"
-    
-    if ship.energy_consumption == 4.0:
-        print("WARNING: Shield Regen Double Counting Detected!")
-    
-    # Check 3: Rows
-    rows = get_logistics_rows(ship)
-    row_keys = [r.key for r in rows]
-    print(f"Row Keys: {row_keys}")
-    
-    assert "energy_max_usage" in row_keys, "Energy Max Usage row missing"
-    
-    # Check Values
-    max_use_row = next(r for r in rows if r.key == 'energy_max_usage')
-    val = max_use_row.get_value(ship)
-    print(f"Max Usage Row Value: {val}")
-    assert val == ship.energy_consumption
+    setup_test_state()
+    try:
+        ship = Ship(name="TestShipSC", x=0, y=0, color=(255, 255, 255))
+        ship.ship_class = "TestClass"
+        vehicle_classes = {"TestClass": {'max_mass': 1000, 'type': 'Ship'}}
+        
+        # Inject mock vehicle class into registry
+        RegistryManager.instance().vehicle_classes.update(vehicle_classes)
+        # Re-init layers since we changed class data
+        ship._initialize_layers()
+        
+        # Create Component from Dict (simulating load_components)
+        comp = Component(MOCK_SHIELD_REGEN_DATA)
+        ship.layers[LayerType.INNER]['components'].append(comp)
+        
+        calc = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)
+        calc.calculate(ship)
+        
+        # Check 1: Energy Registered?
+        assert 'energy' in ship.resources._resources, "Energy not registered in ship resources"
+        
+        # Check 2: Consumption Calculation
+        print(f"Energy Consumption: {ship.energy_consumption}")
+        assert ship.energy_consumption > 0, "Energy Consumption is 0, should be at least 2.0"
+        
+        # Check 3: Rows
+        rows = get_logistics_rows(ship)
+        row_keys = [r.key for r in rows]
+        print(f"Row Keys: {row_keys}")
+        
+        assert "energy_max_usage" in row_keys, "Energy Max Usage row missing"
+        
+        # Check Values
+        max_use_row = next(r for r in rows if r.key == 'energy_max_usage')
+        val = max_use_row.get_value(ship)
+        print(f"Max Usage Row Value: {val}")
+        assert val == ship.energy_consumption
+    finally:
+        teardown_test_state()
 
 def test_laser_cannon_consumption():
     """
@@ -95,50 +117,51 @@ def test_laser_cannon_consumption():
     2. Calculates max usage (activation rate)
     3. Shows up in Logistics Rows
     """
-    ship = Ship(name="TestShipLC", x=0, y=0, color=(255, 255, 255))
-    ship.ship_class = "TestClass"
-    vehicle_classes = {"TestClass": {'max_mass': 1000, 'type': 'Ship'}, 'debug_log': True}
-    
-    comp = Component(MOCK_LASER_DATA)
-    comp.debug_log = True
-    # Ensure correct instantiation of abilities
-    assert comp.has_ability('ResourceConsumption')
-    assert comp.has_ability('WeaponAbility') # BeamWeaponAbility inherits
-    
-    ship.layers[LayerType.INNER]['components'].append(comp)
-    
-    # Force reset active? No, calculate does it.
-    
-    calc = ShipStatsCalculator(vehicle_classes)
-    calc.calculate(ship)
-    
-    # Check 1: Energy
-    assert 'energy' in ship.resources._resources
-    
-    # Check 2: Max Usage Calculation
-    # Cost 5, unit per shot. Reload 0.2s.
-    # Rate = 5 / 0.2 = 25.0 per sec.
-    print(f"Energy Consump: {ship.energy_consumption}")
-    # Note: ship.energy_consumption is CURRENT active consumption (0.0 without crew)
-    assert ship.energy_consumption == 0.0, f"Expected 0.0 (inactive), got {ship.energy_consumption}"
+    setup_test_state()
+    try:
+        ship = Ship(name="TestShipLC", x=0, y=0, color=(255, 255, 255))
+        ship.ship_class = "TestClass"
+        vehicle_classes = {"TestClass": {'max_mass': 1000, 'type': 'Ship'}}
+        
+        RegistryManager.instance().vehicle_classes.update(vehicle_classes)
+        ship._initialize_layers()
+        
+        comp = Component(MOCK_LASER_DATA)
+        comp.debug_log = True
+        # Ensure correct instantiation of abilities
+        assert comp.has_ability('ResourceConsumption')
+        assert comp.has_ability('WeaponAbility') # BeamWeaponAbility inherits
+        
+        ship.layers[LayerType.INNER]['components'].append(comp)
+        
+        calc = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)
+        calc.calculate(ship)
+        
+        # Check 1: Energy
+        assert 'energy' in ship.resources._resources
+        
+        # Check 2: Max Usage Calculation
+        # Cost 5, unit per shot. Reload 0.2s.
+        # Rate = 5 / 0.2 = 25.0 per sec.
+        print(f"Energy Consump: {ship.energy_consumption}")
+        assert ship.energy_consumption == 0.0, f"Expected 0.0 (inactive), got {ship.energy_consumption}"
 
-    # NEW CHECK: potential_energy_consumption should be 25.0
-    print(f"Potential Energy: {getattr(ship, 'potential_energy_consumption', 'N/A')}")
-    
-    # The UI uses get_resource_max_usage which uses potential.
-    potential = getattr(ship, 'potential_energy_consumption', 0.0)
-    assert potential == 25.0, f"Expected Potential 25.0, got {potential}"
-    
-    # Check 3: Rows
-    rows = get_logistics_rows(ship)
-    row_keys = [r.key for r in rows]
-    assert "energy_max_usage" in row_keys
+        # NEW CHECK: potential_energy_consumption should be 25.0
+        potential = getattr(ship, 'potential_energy_consumption', 0.0)
+        print(f"Potential Energy: {potential}")
+        assert potential == 25.0, f"Expected Potential 25.0, got {potential}"
+        
+        # Check 3: Rows
+        rows = get_logistics_rows(ship)
+        row_keys = [r.key for r in rows]
+        assert "energy_max_usage" in row_keys
 
-    # Check 4: Value from Row (Should use potential)
-    max_row = next(r for r in rows if r.key == "energy_max_usage")
-    val = max_row.get_value(ship)
-    # The getter uses getattr(ship, 'potential_energy_consumption')
-    assert val == 25.0, f"Row Value Expected 25.0, got {val}"
+        # Check 4: Value from Row (Should use potential)
+        max_row = next(r for r in rows if r.key == "energy_max_usage")
+        val = max_row.get_value(ship)
+        assert val == 25.0, f"Row Value Expected 25.0, got {val}"
+    finally:
+        teardown_test_state()
 
 if __name__ == "__main__":
     try:

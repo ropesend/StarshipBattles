@@ -1,50 +1,17 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import sys
-
 import os
 
-# Add project root to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
+# Pattern I: Save original path and handle robust root discovery
+original_path = sys.path.copy()
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
 
 class TestSliderIncrement(unittest.TestCase):
     def setUp(self):
-        # Save original pygame modules BEFORE patching
-        self._original_pygame = sys.modules.get('pygame')
-        self._original_pygame_gui = sys.modules.get('pygame_gui')
-        self._original_pygame_gui_elements = sys.modules.get('pygame_gui.elements')
-        self._original_pygame_gui_core = sys.modules.get('pygame_gui.core')
-        self._original_pygame_gui_windows = sys.modules.get('pygame_gui.windows')
-        
-        # Define cleanup function for module restoration
-        def cleanup_modules():
-            # Unload modules that may have cached mocked references
-            to_unload = [m for m in list(sys.modules.keys()) 
-                        if m.startswith('game.ui.') 
-                        or m.startswith('ui.') 
-                        or m == 'components'
-                        or m == 'builder_components']
-            for m in to_unload:
-                if m in sys.modules:
-                    del sys.modules[m]
-            
-            # Restore original pygame modules to prevent pollution of subsequent tests
-            if self._original_pygame is not None:
-                sys.modules['pygame'] = self._original_pygame
-            if self._original_pygame_gui is not None:
-                sys.modules['pygame_gui'] = self._original_pygame_gui
-            if self._original_pygame_gui_elements is not None:
-                sys.modules['pygame_gui.elements'] = self._original_pygame_gui_elements
-            if self._original_pygame_gui_core is not None:
-                sys.modules['pygame_gui.core'] = self._original_pygame_gui_core
-            if self._original_pygame_gui_windows is not None:
-                sys.modules['pygame_gui.windows'] = self._original_pygame_gui_windows
-        
-        # Register cleanup_modules FIRST so it runs LAST (LIFO order)
-        # This ensures it runs AFTER modules_patcher.stop restores the patched modules
-        self.addCleanup(cleanup_modules)
-        
-        # 1. Start patching sys.modules
+        # 1. Patch sys.modules to prevent real Pygame/UI loading
         self.modules_patcher = patch.dict(sys.modules, {
             'pygame': MagicMock(),
             'pygame_gui': MagicMock(),
@@ -56,17 +23,27 @@ class TestSliderIncrement(unittest.TestCase):
         })
         self.modules_patcher.start()
         
-        # Register patcher stop SECOND so it runs FIRST (before cleanup_modules)
-        self.addCleanup(self.modules_patcher.stop)
-        
-        # 2. Aggressively unload target modules to ensure they reload with patched dependencies
-        to_unload = [m for m in sys.modules if m.startswith('ui.') or m.startswith('game.ui.') or m == 'builder_components' or m == 'components']
+        # 2. Aggressively unload target modules to ensure they reload with mocks
+        to_unload = [m for m in list(sys.modules.keys()) 
+                    if m.startswith('game.ui') 
+                    or m.startswith('ui.') 
+                    or m == 'builder_components' 
+                    or m == 'components']
         for m in to_unload:
             del sys.modules[m]
             
-        # 3. Import module
+        # 3. Import module after setup
         import game.ui.panels.builder_widgets as builder_widgets
         self.module = builder_widgets
+
+    def tearDown(self):
+        # 4. Stop patcher (restores original sys.modules state)
+        self.modules_patcher.stop()
+        
+        # 5. Restore path
+        global original_path
+        sys.path = original_path.copy()
+        super().tearDown()
 
     def test_range_mount_increment(self):
         """Test that the Range Mount slider is initialized with 0.1 increment."""
@@ -81,10 +58,6 @@ class TestSliderIncrement(unittest.TestCase):
         
         # Setup template modifiers to include range_mount
         template_modifiers = {'range_mount': 0}
-        
-        # We also need to make sure the registry has range_mount
-        # We can mock it or use the real one. The real one is imported in builder_components
-        # but let's patch it to be safe and isolated
         
         mock_registry = {
             'range_mount': MagicMock(

@@ -26,8 +26,7 @@ class TestBug13Fix(unittest.TestCase):
         self.panel._max_range = 1000
 
     def tearDown(self):
-        # pygame.quit() removed for xdist session isolation
-        pass
+        pygame.quit()
 
     def test_unified_drawing_structure(self):
         """Verify the unified drawing method exists and old ones are gone."""

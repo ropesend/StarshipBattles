@@ -12,31 +12,33 @@
     "layers": {
         "CORE": [
             {
-                "id": "test_beam_low_acc",
-                "modifiers": []
+                "id": "test_beam_low_acc"
             },
             {
-                "id": "test_gen_fusion",
-                "modifiers": []
+                "id": "test_gen_fusion"
             },
             {
-                "id": "test_storage_energy",
-                "modifiers": []
+                "id": "test_storage_energy"
             }
         ],
         "ARMOR": []
     },
     "_test_notes": "Attacker with Low Accuracy (0.5) Beam",
     "expected_stats": {
-        "max_hp": 140,
-        "max_fuel": 0,
-        "max_ammo": 0,
-        "max_energy": 1000,
+        "max_hp": 240,
+        "max_fuel": 0.0,
+        "max_energy": 1000.0,
+        "max_ammo": 0.0,
         "max_speed": 0,
         "acceleration_rate": 0.0,
         "turn_speed": 0.0,
         "total_thrust": 0,
         "mass": 50.0,
         "armor_hp_pool": 0
+    },
+    "resources": {
+        "fuel": 0.0,
+        "energy": 1000.0,
+        "ammo": 0.0
     }
 }

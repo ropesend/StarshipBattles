@@ -16,6 +16,7 @@ from game.simulation.entities.ship import Ship, load_vehicle_classes
 from game.simulation.components.component import (
     load_components, load_modifiers, create_component
 )
+from game.core.registry import RegistryManager
 
 
 class TestModifierStacking(unittest.TestCase):
@@ -25,6 +26,9 @@ class TestModifierStacking(unittest.TestCase):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
     
+    def tearDown(self):
+        RegistryManager.instance().clear()
+
     def test_simple_size_mount_hp_multiplier(self):
         """simple_size_mount should multiply HP by the scale value."""
         laser = create_component('laser_cannon')
@@ -90,6 +94,9 @@ class TestShipExpectedStats(unittest.TestCase):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
         load_vehicle_classes()
+
+    def tearDown(self):
+        RegistryManager.instance().clear()
     
     
 
@@ -106,6 +113,9 @@ class TestAllShipDesigns(unittest.TestCase):
         # Find all ship JSON files
         ships_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ships")
         self.ship_files = glob.glob(os.path.join(ships_dir, "*.json"))
+
+    def tearDown(self):
+        RegistryManager.instance().clear()
     
     def test_all_ships_match_expected_stats(self):
         """All ships should match their expected_stats if present."""

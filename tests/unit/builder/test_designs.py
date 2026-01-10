@@ -9,10 +9,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components  # Phase 7: Removed legacy class imports
 from game.simulation.designs import create_brick, create_interceptor
-
+from game.core.registry import RegistryManager
 
 class TestDesignFactories(unittest.TestCase):
     """Test programmatic ship creation functions."""
+    
+    def tearDown(self):
+        pygame.quit()
+        RegistryManager.instance().clear()
     
     def setUp(self):
         pygame.init()

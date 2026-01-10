@@ -1,60 +1,58 @@
 {
     "name": "Test Attacker",
+    "ship_class": "TestShip_S_2L",
+    "theme_id": "Federation",
+    "team_id": 0,
     "color": [
         255,
         0,
         0
     ],
-    "team_id": 0,
-    "ship_class": "TestShip_S_2L",
-    "theme_id": "Federation",
-    "ai_strategy": "optimal_firing_range",
+    "ai_strategy": "standard_ranged",
     "layers": {
         "CORE": [
             {
-                "id": "test_bridge_basic",
-                "modifiers": []
+                "id": "test_bridge_basic"
             },
             {
-                "id": "test_weapon_proj_omni",
-                "modifiers": []
+                "id": "test_weapon_proj_omni"
             }
         ],
         "INNER": [],
         "OUTER": [],
         "ARMOR": [
             {
-                "id": "test_armor_std",
-                "modifiers": []
+                "id": "test_armor_std"
             },
             {
-                "id": "test_armor_std",
-                "modifiers": []
+                "id": "test_armor_std"
             },
             {
-                "id": "test_armor_std",
-                "modifiers": []
+                "id": "test_armor_std"
             },
             {
-                "id": "test_armor_std",
-                "modifiers": []
+                "id": "test_armor_std"
             },
             {
-                "id": "test_armor_std",
-                "modifiers": []
+                "id": "test_armor_std"
             }
         ]
     },
+    "resources": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+    },
     "expected_stats": {
         "max_hp": 1100,
-        "max_fuel": 0,
-        "max_ammo": 0,
-        "max_energy": 0,
+        "max_fuel": 0.0,
+        "max_energy": 0.0,
+        "max_ammo": 0.0,
         "max_speed": 0,
         "acceleration_rate": 0.0,
         "turn_speed": 0.0,
         "total_thrust": 0,
-        "mass": 170.0,
+        "mass": 120.0,
         "armor_hp_pool": 1000
     }
 }

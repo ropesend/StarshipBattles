@@ -3,12 +3,15 @@ import unittest
 import pygame
 from game.simulation.entities.ship import Ship, initialize_ship_data, LayerType
 from game.simulation.components.component import load_components, create_component
+from game.core.registry import RegistryManager
 import os
 
 class TestBuilderLogic(unittest.TestCase):
     """Test ship validation logic used by the builder."""
     
-        
+    def tearDown(self):
+        pygame.quit()
+        RegistryManager.instance().clear()
 
     def setUp(self):
         pygame.init()

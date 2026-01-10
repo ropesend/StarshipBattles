@@ -48,6 +48,11 @@ class TestRenderingLogic(unittest.TestCase):
     def tearDown(self):
         self.patcher_draw.stop()
         self.patcher_font.stop()
+        
+        # Add missing cleanup to fix parallel execution failures
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
 
     def test_draw_ship_culling(self):
         """Verify ship is skipped if out of camera bounds."""

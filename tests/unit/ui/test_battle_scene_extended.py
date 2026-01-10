@@ -10,6 +10,7 @@ from game.simulation.components.component import load_components, create_compone
 import os
 from unittest import mock
 from game.ai.controller import STRATEGY_MANAGER
+from game.core.registry import RegistryManager
 
 class TestBattleSceneExtended(unittest.TestCase):
     """Test BattleScene simulation loop, victory conditions, and headless mode."""
@@ -29,6 +30,12 @@ class TestBattleSceneExtended(unittest.TestCase):
              movement_file="test_movement_policies.json", 
              strategy_file="test_combat_strategies.json"
         )
+
+    def tearDown(self):
+        """Cleanup pygame and global managers."""
+        pygame.quit()
+        RegistryManager.instance().clear()
+        STRATEGY_MANAGER.clear()
 
     def test_is_battle_over_victory(self):
         """Verify is_battle_over identifies when one team is eliminated."""

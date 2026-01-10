@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component
+from game.core.registry import RegistryManager
 
 
 class TestShipPhysicsThrust(unittest.TestCase):
@@ -27,6 +28,11 @@ class TestShipPhysicsThrust(unittest.TestCase):
         self.ship.add_component(create_component('fuel_tank'), LayerType.CORE)
         self.ship.recalculate_stats()
     
+    def tearDown(self):
+        RegistryManager.instance().clear()
+        if pygame.get_init():
+            pygame.quit()
+
     def test_thrust_forward_sets_flag(self):
         """Thrusting should set is_thrusting flag."""
         self.ship.is_thrusting = False
@@ -109,6 +115,11 @@ class TestShipPhysicsRotation(unittest.TestCase):
         self.ship.add_component(create_component('thruster'), LayerType.OUTER)
         self.ship.recalculate_stats()
     
+    def tearDown(self):
+        RegistryManager.instance().clear()
+        if pygame.get_init():
+            pygame.quit()
+    
     def test_rotate_left(self):
         """Rotating left (direction=-1) should decrease angle."""
         initial_angle = self.ship.angle
@@ -167,6 +178,11 @@ class TestShipPhysicsMovement(unittest.TestCase):
         self.ship.add_component(create_component('fuel_tank'), LayerType.CORE)
         self.ship.recalculate_stats()
     
+    def tearDown(self):
+        RegistryManager.instance().clear()
+        if pygame.get_init():
+            pygame.quit()
+
     def test_position_updates_with_velocity(self):
         """Position should update based on velocity."""
         initial_pos = pygame.math.Vector2(self.ship.position)

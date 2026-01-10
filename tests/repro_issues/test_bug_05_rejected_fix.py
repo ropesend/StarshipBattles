@@ -2,6 +2,14 @@ import pytest
 import sys
 import os
 sys.path.append(os.getcwd())
+
+from game.core.registry import RegistryManager
+
+@pytest.fixture(autouse=True)
+def cleanup_registry():
+    yield
+    RegistryManager.instance().clear()
+
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component
 from game.simulation.components.abilities import ResourceGeneration, ResourceStorage, ResourceConsumption, WeaponAbility

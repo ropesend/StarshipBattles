@@ -8,11 +8,15 @@ import math
 sys.path.append(os.getcwd())
 
 from game.simulation.components.component import load_components, create_component, load_modifiers
+from game.core.registry import RegistryManager
 
 class TestScalingLogic(unittest.TestCase):
     def setUp(self):
         load_components("data/components.json")
         load_modifiers("data/modifiers.json")
+
+    def tearDown(self):
+        RegistryManager.instance().clear()
 
     def test_consumption_scaling_linear(self):
         """Test linear consumption scaling."""

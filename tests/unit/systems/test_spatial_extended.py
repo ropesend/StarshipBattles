@@ -21,6 +21,11 @@ class TestSpatialGridBasics(unittest.TestCase):
     def setUp(self):
         pygame.init()
     
+    def tearDown(self):
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
+    
     
     def test_grid_initialization(self):
         """Grid should initialize with specified cell size."""
@@ -57,6 +62,11 @@ class TestSpatialGridQueries(unittest.TestCase):
     
     def setUp(self):
         pygame.init()
+    
+    def tearDown(self):
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
     
     
     def test_query_radius_empty_grid(self):
@@ -96,6 +106,11 @@ class TestSpatialGridCellAssignment(unittest.TestCase):
     
     def setUp(self):
         pygame.init()
+    
+    def tearDown(self):
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
     
     
     def test_same_cell_multiple_objects(self):
@@ -143,6 +158,11 @@ class TestSpatialGridQueryRadius(unittest.TestCase):
     
     def setUp(self):
         pygame.init()
+    
+    def tearDown(self):
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
     
     
     def test_query_spans_multiple_cells(self):

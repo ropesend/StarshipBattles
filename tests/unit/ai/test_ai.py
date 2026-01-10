@@ -14,6 +14,7 @@ from game.ai.controller import AIController
 from game.ai import controller as ai
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, create_component
+from game.core.registry import RegistryManager
 
 
 class TestAIController(unittest.TestCase):
@@ -56,6 +57,11 @@ class TestAIController(unittest.TestCase):
         
         # Create AI controller for ship1 targeting team 1
         self.ai = AIController(self.ship1, self.grid, enemy_team_id=1)
+        
+    def tearDown(self):
+        RegistryManager.instance().clear()
+        ai.STRATEGY_MANAGER.clear()
+        super().tearDown()
     
     def test_find_target(self):
         """AI should find nearest enemy."""
@@ -166,6 +172,11 @@ class TestAIStrategyStates(unittest.TestCase):
         self.grid.insert(self.target)
         
         self.ai = AIController(self.ship, self.grid, enemy_team_id=1)
+
+    def tearDown(self):
+        RegistryManager.instance().clear()
+        ai.STRATEGY_MANAGER.clear()
+        super().tearDown()
     
     def test_attack_run_state_initialization(self):
         """Attack run should initialize state on first update."""

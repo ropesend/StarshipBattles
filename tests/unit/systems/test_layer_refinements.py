@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import Component
+from game.core.registry import RegistryManager
 
 class TestLayerRefinements(unittest.TestCase):
 
@@ -20,6 +21,10 @@ class TestLayerRefinements(unittest.TestCase):
         # Create an Escort (3 layers: CORE, OUTER, ARMOR) - assumption based on typical data
         # If Escort has 4, we adjust. Let's check keys.
         self.escort = Ship("TestEscort", 0, 0, (0, 255, 0), ship_class="Escort")
+
+    def tearDown(self) -> None:
+        """Clear the global registry state."""
+        RegistryManager.instance().clear()
 
     def test_layer_mass_limits_loaded(self):
         """Verify max_mass_pct is loaded correctly from JSON."""

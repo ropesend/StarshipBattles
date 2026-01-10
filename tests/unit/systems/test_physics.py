@@ -16,6 +16,11 @@ class TestPhysicsBasics(unittest.TestCase):
     def setUp(self):
         pygame.init()
     
+    def tearDown(self):
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
+    
     
     def test_initialization(self):
         """PhysicsBody should initialize with correct position and angle."""
@@ -37,6 +42,11 @@ class TestPhysicsMovement(unittest.TestCase):
     
     def setUp(self):
         pygame.init()
+    
+    def tearDown(self):
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
     
     
     def test_update_movement(self):
@@ -74,6 +84,11 @@ class TestPhysicsForces(unittest.TestCase):
     
     def setUp(self):
         pygame.init()
+    
+    def tearDown(self):
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
     
     
     def test_apply_force_accelerates(self):
@@ -119,6 +134,11 @@ class TestPhysicsDirection(unittest.TestCase):
     
     def setUp(self):
         pygame.init()
+    
+    def tearDown(self):
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
     
     
     def test_forward_vector_angle_0(self):
@@ -190,6 +210,11 @@ class TestAbilityDrivenPhysics(unittest.TestCase):
                 return 0
                 
         self.ship = MockShip()
+        
+    def tearDown(self):
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
         
     def test_ability_driven_thrust(self):
         """Test that physics uses stats derived from CombatPropulsion abilities."""

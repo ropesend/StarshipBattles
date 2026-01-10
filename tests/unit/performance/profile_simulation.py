@@ -10,7 +10,8 @@ import random
 import io
 
 # Add parent directory to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(ROOT_DIR)
 
 # Minimal pygame init
 os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -28,7 +29,7 @@ def run_battle_simulation(num_ships_per_team=10, num_ticks=300):
     """Run a headless battle simulation for profiling."""
     
     # Load components
-    base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    base_path = ROOT_DIR
     load_components(os.path.join(base_path, "data/components.json"))
     load_modifiers(os.path.join(base_path, "data/modifiers.json"))
     
@@ -73,7 +74,7 @@ def run_battle_simulation(num_ships_per_team=10, num_ticks=300):
         
         # Update AI
         for ai in ai_controllers:
-            ai.update(dt)
+            ai.update()
         
         # Update ships
         for s in ships:
@@ -169,36 +170,46 @@ def run_battle_simulation(num_ships_per_team=10, num_ticks=300):
     print(f"Final: Team1={alive_t1} alive, Team2={alive_t2} alive")
 
 def main():
-    # Profile with cProfile
-    print("=" * 60)
-    print("STARSHIP BATTLES PROFILER")
-    print("=" * 60)
+    # Save original sys.path
+    original_path = sys.path.copy()
     
-    # Set seed for reproducibility
-    random.seed(42)
-    
-    profiler = cProfile.Profile()
-    profiler.enable()
-    
-    run_battle_simulation(num_ships_per_team=25, num_ticks=500)
-    
-    profiler.disable()
-    
-    # Output stats
-    print("\n" + "=" * 60)
-    print("TOP 30 FUNCTIONS BY CUMULATIVE TIME")
-    print("=" * 60)
-    
-    stats = pstats.Stats(profiler)
-    stats.strip_dirs()
-    stats.sort_stats('cumulative')
-    stats.print_stats(30)
-    
-    print("\n" + "=" * 60)
-    print("TOP 20 FUNCTIONS BY TOTAL TIME (self)")
-    print("=" * 60)
-    stats.sort_stats('tottime')
-    stats.print_stats(20)
+    try:
+        # Profile with cProfile
+        print("=" * 60)
+        print("STARSHIP BATTLES PROFILER")
+        print("=" * 60)
+        
+        # Set seed for reproducibility
+        random.seed(42)
+        
+        profiler = cProfile.Profile()
+        profiler.enable()
+        
+        run_battle_simulation(num_ships_per_team=25, num_ticks=500)
+        
+        profiler.disable()
+        
+        # Output stats
+        print("\n" + "=" * 60)
+        print("TOP 30 FUNCTIONS BY CUMULATIVE TIME")
+        print("=" * 60)
+        
+        stats = pstats.Stats(profiler)
+        stats.strip_dirs()
+        stats.sort_stats('cumulative')
+        stats.print_stats(30)
+        
+        print("\n" + "=" * 60)
+        print("TOP 20 FUNCTIONS BY TOTAL TIME (self)")
+        print("=" * 60)
+        stats.sort_stats('tottime')
+        stats.print_stats(20)
+    finally:
+        # Cleanup
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
+        pygame.quit()
+        sys.path = original_path
 
 if __name__ == "__main__":
     main()

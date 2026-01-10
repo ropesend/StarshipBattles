@@ -255,6 +255,15 @@ def set_test_log_dir(directory: str) -> None:
     global TEST_LOG_DIR
     TEST_LOG_DIR = directory
 
+def reset_logging() -> None:
+    """Reset the global logging state. For testing use only."""
+    global TEST_LOGGING_ENABLED, ACTIVE_LOGGER, TEST_LOG_DIR
+    TEST_LOGGING_ENABLED = False
+    if ACTIVE_LOGGER:
+        ACTIVE_LOGGER.close()
+    ACTIVE_LOGGER = None
+    TEST_LOG_DIR = "tests/simulation/output/logs/"
+
 def log_event(event_type_str: str, **kwargs):
     """
     Global helper to log an event to the active logger.

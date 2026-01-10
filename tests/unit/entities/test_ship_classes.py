@@ -14,6 +14,12 @@ class TestShipClasses(unittest.TestCase):
         self.theme_manager = ShipThemeManager.get_instance()
         # Initialize theme manager with CWD to load themes
         self.theme_manager.initialize(cwd)
+
+    def tearDown(self):
+        RegistryManager.instance().clear()
+        self.theme_manager.clear()
+        if pygame.get_init():
+            pygame.quit()
         
 
     def test_all_classes_exist(self):

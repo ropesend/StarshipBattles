@@ -34,7 +34,6 @@ def dual_class_registry():
         }
     })
     
-    # Define hulls
     mgr.components.update({
         "hull_escort": Component({
             "id": "hull_escort", "name": "Escort Hull", "type": "Hull", "mass": 50, "hp": 100
@@ -44,7 +43,8 @@ def dual_class_registry():
         })
     })
     
-    return mgr
+    yield mgr
+    mgr.clear()
 
 @pytest.mark.use_custom_data
 def test_hull_updates_on_class_change_no_migrate(dual_class_registry):

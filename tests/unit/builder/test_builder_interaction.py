@@ -32,6 +32,9 @@ class TestBuilderInteraction(unittest.TestCase):
         
         self.controller = InteractionController(self.builder, self.view)
         
+    def tearDown(self):
+        pygame.quit()
+        
     def test_drop_delegation(self):
         target = MockDropTarget()
         self.controller.register_drop_target(target)

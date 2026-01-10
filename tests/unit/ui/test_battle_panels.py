@@ -42,16 +42,16 @@ class TestBattlePanels(unittest.TestCase):
         self.modules_patcher.start()
         
         # Prepare sys.path
+        self._orig_path = list(sys.path)
         sys.path.append(os.getcwd())
         
         # Import module under test
         # Handle reload if needed
         # Import module under test
         # Handle reload if needed
-        if 'game.ui.panels.battle_panels' in sys.modules:
-             del sys.modules['game.ui.panels.battle_panels']
-             
         from game.ui.panels import battle_panels
+        import importlib
+        importlib.reload(battle_panels)
         self.module = battle_panels
         self.mock_scene = MagicMock()
         self.mock_scene.ships = []
@@ -59,6 +59,11 @@ class TestBattlePanels(unittest.TestCase):
         # Default key state: Not pressing shift
         self.mock_keys = {self.mock_pygame.K_LSHIFT: False, self.mock_pygame.K_RSHIFT: False}
         self.mock_pygame.key.get_pressed.return_value = self.mock_keys
+
+    def tearDown(self):
+        """Restore modules and path."""
+        self.modules_patcher.stop()
+        sys.path = self._orig_path
 
     def create_mock_ship(self, team_id, name="Ship"):
         ship = MagicMock()

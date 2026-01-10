@@ -7,11 +7,17 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component  # Phase 7: Removed Bridge import
+from game.core.registry import RegistryManager
 
 class TestShip(unittest.TestCase):
     def setUp(self):
         initialize_ship_data() 
         load_components("data/components.json")
+
+    def tearDown(self):
+        RegistryManager.instance().clear()
+        if pygame.get_init():
+            pygame.quit()
 
     def test_add_component_constraints(self):
         ship = Ship("TestShip", 0, 0, (255, 255, 255))
@@ -128,6 +134,11 @@ class TestShipClassMutation(unittest.TestCase):
         initialize_ship_data(os.getcwd())
         load_components("data/components.json")
         self.ship = Ship("Mutation Test", 0, 0, (255, 255, 255), ship_class="Frigate")
+
+    def tearDown(self):
+        RegistryManager.instance().clear()
+        if pygame.get_init():
+            pygame.quit()
 
     def test_change_class_migration(self):
         """Verify components migrate or are removed during class change."""

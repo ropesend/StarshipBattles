@@ -24,6 +24,10 @@ class TestAllowedLayersRemoval(unittest.TestCase):
     def setUp(self):
         initialize_ship_data()
         load_components()
+
+    def tearDown(self) -> None:
+        """Clear the global registry state."""
+        RegistryManager.instance().clear()
     
     def test_component_base_class_no_allowed_layers(self):
         """Base Component class should not define allowed_layers."""
@@ -94,6 +98,10 @@ class TestBuilderDropValidation(unittest.TestCase):
         initialize_ship_data()
         load_components()
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser")
+
+    def tearDown(self) -> None:
+        """Clear the global registry state."""
+        RegistryManager.instance().clear()
     
     def test_validator_handles_component_placement(self):
         """Validator should handle layer checks without allowed_layers."""

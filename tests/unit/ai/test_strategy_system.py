@@ -23,6 +23,10 @@ class TestStrategySystem(unittest.TestCase):
             strategy_file="test_combat_strategies.json"
         )
         
+    def tearDown(self):
+        pygame.quit()
+        super().tearDown()
+        
     def test_load_data(self):
         """Verify data loading from test files."""
         # Check if test policies loaded

@@ -10,8 +10,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component, LayerType  # Phase 7: Removed Bridge, Armor, Weapon imports
+from game.core.registry import RegistryManager
 
 class TestBuilderValidation(unittest.TestCase):
+    def tearDown(self):
+        pygame.quit()
+        RegistryManager.instance().clear()
     def setUp(self):
         # Initialize pygame for Vector2
         if not pygame.get_init():

@@ -12,35 +12,36 @@
     "layers": {
         "CORE": [
             {
-                "id": "test_armor_std",
-                "modifiers": []
+                "id": "test_armor_std"
             },
             {
-                "id": "test_engine_no_fuel",
-                "modifiers": []
+                "id": "test_engine_no_fuel"
             },
             {
-                "id": "test_engine_no_fuel",
-                "modifiers": []
+                "id": "test_engine_no_fuel"
             },
             {
-                "id": "test_engine_no_fuel",
-                "modifiers": []
+                "id": "test_engine_no_fuel"
             }
         ],
         "ARMOR": []
     },
     "_test_notes": "Linearly moving target, fast speed",
     "expected_stats": {
-        "max_hp": 350,
-        "max_fuel": 0,
-        "max_ammo": 0,
-        "max_energy": 0,
+        "max_hp": 850,
+        "max_fuel": 0.0,
+        "max_energy": 0.0,
+        "max_ammo": 0.0,
         "max_speed": 133.92857142857142,
         "acceleration_rate": 47.83163265306123,
         "turn_speed": 0.0,
         "total_thrust": 1500.0,
         "mass": 280.0,
         "armor_hp_pool": 200
+    },
+    "resources": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
     }
 }

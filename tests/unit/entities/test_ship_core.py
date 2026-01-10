@@ -19,6 +19,7 @@ def registry_with_hull():
     Uses use_custom_data marker to skip production hydration.
     """
     mgr = RegistryManager.instance()
+    mgr.clear() # Ensure clean state before populating
     
     # Vehicle class with default_hull_id
     mgr.vehicle_classes.update({
@@ -46,6 +47,7 @@ def registry_with_hull():
     mgr.components["hull_escort"] = hull_component
     
     yield mgr
+    mgr.clear() # Clean up after test
 
 
 

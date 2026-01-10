@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component
+from game.core.registry import RegistryManager
 
 class TestArcadeMovement(unittest.TestCase):
 
@@ -40,6 +41,11 @@ class TestArcadeMovement(unittest.TestCase):
             f"Engine should have thrust. Crew: {self.ship.crew_onboard}, Required: {self.ship.crew_required}")
         self.assertGreater(self.ship.resources.get_max_value("fuel"), 0)
         self.ship.resources.get_resource("fuel").current_value = self.ship.resources.get_max_value("fuel")
+
+    def tearDown(self) -> None:
+        """Clear the global registry state and cleanup pygame."""
+        pygame.quit()
+        RegistryManager.instance().clear()
 
     def test_stats(self):
         # Physics validation using tick-based INVERSE MASS SCALING model

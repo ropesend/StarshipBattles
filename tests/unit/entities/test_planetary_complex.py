@@ -34,6 +34,9 @@ class TestPlanetaryComplex(unittest.TestCase):
             # (since hulls now take 100% of base budget)
             vehicle_def['max_mass'] += 2000
 
+    def tearDown(self):
+        RegistryManager.instance().clear()
+
     def test_add_central_command(self):
         """Verify Central Complex Command can be added."""
         complex_ship = Ship("Test Complex", 0, 0, (255, 255, 255), 

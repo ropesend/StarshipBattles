@@ -33,6 +33,10 @@ class TestBug03Validation(unittest.TestCase):
             "abilities": {}
         }
 
+    def tearDown(self):
+        pygame.quit()
+        RegistryManager.instance().clear()
+
     def create_comp(self, **kwargs):
         data = self.base_data.copy()
         data.update(kwargs)

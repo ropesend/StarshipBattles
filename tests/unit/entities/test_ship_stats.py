@@ -18,18 +18,13 @@ class TestShipStatsBaseline(unittest.TestCase):
     
     def setUp(self):
         """Load test data once."""
-        # Save original pygame modules if they exist
-        self._original_pygame = sys.modules.get('pygame')
-        self._original_pygame_mixer = sys.modules.get('pygame.mixer')
-        self._original_pygame_font = sys.modules.get('pygame.font')
-        
-        # Mock pygame before importing game modules
-        self.pygame_mock = MagicMock()
-        self.pygame_mock.mixer = MagicMock()
-        self.pygame_mock.font = MagicMock()
-        sys.modules['pygame'] = self.pygame_mock
-        sys.modules['pygame.mixer'] = self.pygame_mock.mixer
-        sys.modules['pygame.font'] = self.pygame_mock.font
+        # Use patch.dict for safe sys.modules mocking
+        self.modules_patcher = patch.dict(sys.modules, {
+            'pygame': MagicMock(),
+            'pygame.mixer': MagicMock(),
+            'pygame.font': MagicMock()
+        })
+        self.modules_patcher.start()
         
         # Import after mocking
         from game.core.registry import RegistryManager
@@ -43,6 +38,17 @@ class TestShipStatsBaseline(unittest.TestCase):
         # Load components and modifiers
         load_components()
         load_modifiers()
+    
+    def tearDown(self):
+        """Clean up state."""
+        self.modules_patcher.stop()
+        
+        import pygame
+        if 'pygame' in sys.modules:
+            pygame.quit()
+            
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
     
     
     def _create_mock_ship(self, components):
@@ -230,17 +236,13 @@ class TestAbilityModifierSync(unittest.TestCase):
     
     def setUp(self):
         """Load test data once."""
-        # Save original pygame modules if they exist
-        self._original_pygame = sys.modules.get('pygame')
-        self._original_pygame_mixer = sys.modules.get('pygame.mixer')
-        self._original_pygame_font = sys.modules.get('pygame.font')
-        
-        self.pygame_mock = MagicMock()
-        self.pygame_mock.mixer = MagicMock()
-        self.pygame_mock.font = MagicMock()
-        sys.modules['pygame'] = self.pygame_mock
-        sys.modules['pygame.mixer'] = self.pygame_mock.mixer
-        sys.modules['pygame.font'] = self.pygame_mock.font
+        # Use patch.dict for safe sys.modules mocking
+        self.modules_patcher = patch.dict(sys.modules, {
+            'pygame': MagicMock(),
+            'pygame.mixer': MagicMock(),
+            'pygame.font': MagicMock()
+        })
+        self.modules_patcher.start()
         
         from game.simulation.components.component import Component, load_components, load_modifiers
         from game.core.registry import RegistryManager
@@ -250,6 +252,17 @@ class TestAbilityModifierSync(unittest.TestCase):
         
         load_components()
         load_modifiers()
+
+    def tearDown(self):
+        """Clean up state."""
+        self.modules_patcher.stop()
+        
+        import pygame
+        if 'pygame' in sys.modules:
+            pygame.quit()
+            
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
     
     
     def test_thrust_modifier_updates_ability(self):

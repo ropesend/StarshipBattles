@@ -25,6 +25,10 @@ class TestAdvancedBehaviors(unittest.TestCase):
         self.target = MagicMock()
         self.target.position = pygame.math.Vector2(2000, 0) # Far away
         self.target.velocity = pygame.math.Vector2(0, 0)
+
+    def tearDown(self):
+        pygame.quit()
+        super().tearDown()
         
     def test_kite_behavior(self):
         """Test KiteBehavior navigation logic."""

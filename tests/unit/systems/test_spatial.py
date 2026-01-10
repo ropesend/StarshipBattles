@@ -25,6 +25,11 @@ class TestSpatialGridBasics(unittest.TestCase):
     def setUp(self):
         pygame.init()
     
+    def tearDown(self):
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
+    
     
     def test_grid_initialization(self):
         """SpatialGrid should initialize with correct cell size."""
@@ -91,6 +96,11 @@ class TestSpatialGridQueries(unittest.TestCase):
     
     def setUp(self):
         pygame.init()
+    
+    def tearDown(self):
+        pygame.quit()
+        from game.core.registry import RegistryManager
+        RegistryManager.instance().clear()
     
     
     def test_query_finds_object_in_range(self):

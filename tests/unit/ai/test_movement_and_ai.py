@@ -42,6 +42,12 @@ class TestMovementAndAI(unittest.TestCase):
         )
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser")
 
+    def tearDown(self):
+        pygame.quit()
+        RegistryManager.instance().clear()
+        STRATEGY_MANAGER.clear()
+        super().tearDown()
+
     def get_component_clone(self, id):
         comps = RegistryManager.instance().components
         if id in comps:

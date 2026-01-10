@@ -5,6 +5,7 @@ import os
 import importlib
 import pygame
 from unittest.mock import patch, MagicMock
+from game.core.registry import RegistryManager
 
 # Ensure we use dummy video driver to prevent window opening
 os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -22,6 +23,11 @@ class TestMainIntegration(unittest.TestCase):
     def setUp(self):
         # We need to make sure we can import main even if it was already imported
         pass
+
+    def tearDown(self):
+        """Cleanup pygame and registry."""
+        pygame.quit()
+        RegistryManager.instance().clear()
 
     def test_import_main(self):
         """Test that main.py can be imported without ImportError."""

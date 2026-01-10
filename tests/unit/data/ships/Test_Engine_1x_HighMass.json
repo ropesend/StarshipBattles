@@ -12,62 +12,56 @@
     "layers": {
         "CORE": [
             {
-                "id": "test_engine_no_fuel",
-                "modifiers": []
+                "id": "test_engine_no_fuel"
             },
             {
-                "id": "test_mass_sim_1k",
-                "modifiers": []
+                "id": "test_mass_sim_1k"
             },
             {
-                "id": "test_mass_sim_1k",
-                "modifiers": []
+                "id": "test_mass_sim_1k"
             },
             {
-                "id": "test_mass_sim_1k",
-                "modifiers": []
+                "id": "test_mass_sim_1k"
             },
             {
-                "id": "test_mass_sim_1k",
-                "modifiers": []
+                "id": "test_mass_sim_1k"
             },
             {
-                "id": "test_mass_sim_1k",
-                "modifiers": []
+                "id": "test_mass_sim_1k"
             },
             {
-                "id": "test_mass_sim_1k",
-                "modifiers": []
+                "id": "test_mass_sim_1k"
             },
             {
-                "id": "test_mass_sim_1k",
-                "modifiers": []
+                "id": "test_mass_sim_1k"
             },
             {
-                "id": "test_mass_sim_1k",
-                "modifiers": []
+                "id": "test_mass_sim_1k"
             },
             {
-                "id": "test_mass_sim_1k",
-                "modifiers": []
+                "id": "test_mass_sim_1k"
             },
             {
-                "id": "test_mass_sim_1k",
-                "modifiers": []
+                "id": "test_mass_sim_1k"
             }
         ],
         "ARMOR": []
     },
     "expected_stats": {
-        "max_hp": 60,
-        "max_fuel": 0,
-        "max_ammo": 0,
-        "max_energy": 0,
+        "max_hp": 560,
+        "max_fuel": 0.0,
+        "max_energy": 0.0,
+        "max_ammo": 0.0,
         "max_speed": 1.2230919765166341,
         "acceleration_rate": 0.011967631864154933,
         "turn_speed": 0.0,
         "total_thrust": 500.0,
         "mass": 10220.0,
         "armor_hp_pool": 0
+    },
+    "resources": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
     }
 }

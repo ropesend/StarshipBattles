@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component, ComponentStatus
+from game.core.registry import RegistryManager
 
 class TestShipResources(unittest.TestCase):
     """Test resource initialization, capacity, life support, and crew logic."""
@@ -26,6 +27,11 @@ class TestShipResources(unittest.TestCase):
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship.add_component(create_component('life_support'), LayerType.CORE)
         self.ship.recalculate_stats()
+
+    def tearDown(self):
+        RegistryManager.instance().clear()
+        if pygame.get_init():
+            pygame.quit()
 
     def test_resource_initialization(self):
         """Resources should be auto-filled only on first initialization with capacity."""

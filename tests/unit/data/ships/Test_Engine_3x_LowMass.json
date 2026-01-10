@@ -12,16 +12,13 @@
     "layers": {
         "CORE": [
             {
-                "id": "test_engine_std",
-                "modifiers": []
+                "id": "test_engine_std"
             },
             {
-                "id": "test_engine_std",
-                "modifiers": []
+                "id": "test_engine_std"
             },
             {
-                "id": "test_engine_std",
-                "modifiers": []
+                "id": "test_engine_std"
             }
         ],
         "OUTER": [],
@@ -29,15 +26,20 @@
     },
     "_test_notes": "3 engines, minimal mass. Mass = hull(200) + 3*engine(20) = 260. Thrust = 1500",
     "expected_stats": {
-        "max_hp": 150,
-        "max_fuel": 0,
-        "max_ammo": 0,
-        "max_energy": 0,
+        "max_hp": 650,
+        "max_fuel": 0.0,
+        "max_energy": 0.0,
+        "max_ammo": 0.0,
         "max_speed": 144.23076923076923,
         "acceleration_rate": 55.47337278106509,
         "turn_speed": 0.0,
         "total_thrust": 1500.0,
         "mass": 260.0,
         "armor_hp_pool": 0
+    },
+    "resources": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
     }
 }

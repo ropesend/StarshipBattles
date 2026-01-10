@@ -12,31 +12,33 @@
     "layers": {
         "CORE": [
             {
-                "id": "test_engine_no_fuel",
-                "modifiers": []
+                "id": "test_engine_no_fuel"
             },
             {
-                "id": "test_mass_sim_1k",
-                "modifiers": []
+                "id": "test_mass_sim_1k"
             },
             {
-                "id": "test_mass_sim_1k",
-                "modifiers": []
+                "id": "test_mass_sim_1k"
             }
         ],
         "ARMOR": []
     },
     "_test_notes": "1 engine + 2x mass simulators. Mass = hull(200) + engine(20) + 2*1000 = 2220",
     "expected_stats": {
-        "max_hp": 52,
-        "max_fuel": 0,
-        "max_ammo": 0,
-        "max_energy": 0,
+        "max_hp": 552,
+        "max_fuel": 0.0,
+        "max_energy": 0.0,
+        "max_ammo": 0.0,
         "max_speed": 5.63063063063063,
         "acceleration_rate": 0.25363201038876715,
         "turn_speed": 0.0,
         "total_thrust": 500.0,
         "mass": 2220.0,
         "armor_hp_pool": 0
+    },
+    "resources": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
     }
 }

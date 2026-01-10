@@ -16,7 +16,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from game.ui.screens import builder_screen
 from game.ui.screens.builder_screen import BuilderSceneGUI
-from game.simulation.entities.ship import get_or_create_validator, LayerType
+from game.core.registry import RegistryManager
+from game.simulation.entities.ship import LayerType
 
 class TestBuilderDragDropReal(unittest.TestCase):
     
@@ -122,6 +123,8 @@ class TestBuilderDragDropReal(unittest.TestCase):
     def tearDown(self):
         for p in self.patchers:
             p.stop()
+        pygame.quit()
+        RegistryManager.instance().clear()
             
     def test_drag_start(self):
         """Verify starting a drag sets dragged_item."""

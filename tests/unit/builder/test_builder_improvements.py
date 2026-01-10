@@ -18,7 +18,8 @@ class TestBuilderImprovements(unittest.TestCase):
              RegistryManager.instance().vehicle_classes.update({"Escort": {"max_mass": 1000, "type": "Ship"}})
 
     def tearDown(self):
-        pass # pygame.quit() removed for session isolation
+        pygame.quit()
+        RegistryManager.instance().clear()
 
     def test_image_scale_factor(self):
         """

@@ -13,6 +13,9 @@ from game.ui.screens.builder_screen import BuilderSceneGUI
 from game.core.registry import RegistryManager
 
 class TestBuilderWarningLogic(unittest.TestCase):
+    def tearDown(self):
+        pygame.quit()
+        RegistryManager.instance().clear()
     def setUp(self):
         pygame.init()
         

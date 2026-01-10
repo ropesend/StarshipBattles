@@ -4,6 +4,7 @@ import pygame
 import pygame_gui
 from unittest.mock import MagicMock
 from ui.builder.weapons_panel import WeaponsReportPanel
+from game.core.registry import RegistryManager
 import os
 
 class TestCrashRegressions(unittest.TestCase):
@@ -25,7 +26,8 @@ class TestCrashRegressions(unittest.TestCase):
         self.panel = WeaponsReportPanel(self.builder, self.manager, self.rect, self.sprite_mgr)
 
     def tearDown(self):
-        pass # pygame.quit() removed for session isolation
+        pygame.quit()
+        RegistryManager.instance().clear()
 
     def test_weapons_panel_unbound_local_error(self):
         """

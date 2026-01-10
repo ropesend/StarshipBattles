@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from game.ui.screens.battle_scene import BattleScene
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import create_component, load_components
+from game.core.registry import RegistryManager
 
 class TestBattleScene(unittest.TestCase):
 
@@ -45,6 +46,11 @@ class TestBattleScene(unittest.TestCase):
         self.ship2.add_component(create_component('life_support'), LayerType.CORE)
         self.ship2.add_component(create_component('standard_engine'), LayerType.OUTER) # Add engine
         self.ship2.recalculate_stats()
+
+    def tearDown(self):
+        """Cleanup pygame and registry."""
+        pygame.quit()
+        RegistryManager.instance().clear()
 
     def test_start_initialization(self):
         """Test battle initialization."""

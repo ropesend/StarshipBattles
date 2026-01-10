@@ -47,6 +47,12 @@ class TestBuilderUISync(unittest.TestCase):
                 from ui.builder.right_panel import BuilderRightPanel
                 self.panel = BuilderRightPanel(self.mock_builder, self.manager, pygame.Rect(0, 0, 300, 600))
 
+    def tearDown(self):
+        pygame.quit()
+        RegistryManager.instance().clear()
+        from game.ai.controller import STRATEGY_MANAGER
+        STRATEGY_MANAGER.clear()
+
     def _get_option_value(self, option):
         """Helper to handle pygame_gui returning (id, text) tuples or raw values."""
         if isinstance(option, tuple):

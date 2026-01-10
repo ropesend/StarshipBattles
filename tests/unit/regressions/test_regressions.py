@@ -13,6 +13,10 @@ class TestRegressions(unittest.TestCase):
         # ship.py might depend on initialized pygame
         pass
 
+    def tearDown(self):
+        pygame.quit()
+        RegistryManager.instance().clear()
+
     def test_ship_classes_update_in_place(self):
         """
         Regression Test for Builder Dropdown Bug:
