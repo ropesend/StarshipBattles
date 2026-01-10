@@ -1,10 +1,4 @@
-
 import unittest
-import sys
-import os
-
-# Add src to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.components.component import Component, LayerType
 from game.simulation.entities.ship import Ship

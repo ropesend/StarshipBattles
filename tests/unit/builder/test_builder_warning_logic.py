@@ -3,11 +3,9 @@ import pygame
 import pygame_gui
 from unittest.mock import MagicMock, patch
 import os
-import sys
 
 # Dummy video driver
 os.environ["SDL_VIDEODRIVER"] = "dummy"
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.ui.screens.builder_screen import BuilderSceneGUI
 from game.core.registry import RegistryManager

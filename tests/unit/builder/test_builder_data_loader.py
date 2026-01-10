@@ -48,11 +48,13 @@ class TestBuilderDataLoader(unittest.TestCase):
     def setUp(self):
         pygame.init()
         RegistryManager.instance().clear()
-    
+
     def tearDown(self):
         RegistryManager.instance().clear()
-        pygame.quit()
-    
+        # NOTE: Do not call pygame.quit() here - the root conftest manages
+        # pygame lifecycle at session scope. Calling quit() here would break
+        # subsequent tests with "No video mode set" errors.
+
     def test_find_file_direct_match(self):
         """find_file returns direct path when file exists in custom directory."""
         from game.ui.screens.builder_data_loader import BuilderDataLoader
@@ -134,7 +136,9 @@ class TestBuilderDataLoaderIntegration(unittest.TestCase):
     
     def tearDown(self):
         RegistryManager.instance().clear()
-        pygame.quit()
+        # NOTE: Do not call pygame.quit() here - the root conftest manages
+        # pygame lifecycle at session scope. Calling quit() here would break
+        # subsequent tests with "No video mode set" errors.
         from unittest.mock import patch
         patch.stopall()
     

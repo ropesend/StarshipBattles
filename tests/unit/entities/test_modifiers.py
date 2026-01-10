@@ -1,9 +1,5 @@
 """Tests for component modifier system."""
 import unittest
-import sys
-import os
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.components.component import (
     load_components, load_modifiers, create_component, Component

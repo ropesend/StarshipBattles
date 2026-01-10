@@ -1,12 +1,7 @@
-
 import unittest
 from unittest.mock import MagicMock, patch
 import pygame
 import os
-import sys
-
-# Ensure project root is in path
-sys.path.append(os.getcwd())
 
 from game.ui.screens.builder_screen import BuilderSceneGUI
 from game.simulation.components.component import Component

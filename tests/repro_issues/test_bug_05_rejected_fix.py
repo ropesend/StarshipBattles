@@ -1,7 +1,4 @@
 import pytest
-import sys
-import os
-sys.path.append(os.getcwd())
 
 from game.core.registry import RegistryManager
 

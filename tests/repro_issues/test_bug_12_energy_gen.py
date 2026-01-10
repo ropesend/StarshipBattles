@@ -11,9 +11,6 @@ due to unmet crew requirements, causing its ResourceGeneration to be skipped.
 This is WORKING AS DESIGNED - not a code bug.
 """
 import pytest
-import sys
-import os
-sys.path.append(os.getcwd())
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component, load_components, create_component

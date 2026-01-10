@@ -1,4 +1,3 @@
-
 import unittest
 import pygame
 import pygame_gui
@@ -7,10 +6,6 @@ from unittest.mock import MagicMock, patch
 
 # Environment setup for headless
 os.environ["SDL_VIDEODRIVER"] = "dummy"
-
-# Add project root to path
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.core.registry import RegistryManager

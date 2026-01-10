@@ -1,10 +1,5 @@
 import unittest
 from unittest.mock import MagicMock, patch
-import sys
-import os
-
-# Add project root to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from game.simulation.components.component import Component, Modifier
 from game.core.registry import RegistryManager

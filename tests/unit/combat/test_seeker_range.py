@@ -1,9 +1,4 @@
-
 import unittest
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.components.component import load_components, get_all_components, create_component
 

@@ -1,10 +1,4 @@
-
 import unittest
-import sys
-import os
-
-# Add project root to path
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
 from game.simulation.entities.ship import Ship, initialize_ship_data, LayerType
 from game.simulation.components.component import load_components, load_modifiers, get_all_components

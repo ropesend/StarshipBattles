@@ -1,9 +1,11 @@
 import pygame
 import os
+import threading
 
 class SpriteManager:
     _instance = None
-    
+    _singleton_lock = threading.Lock()
+
     def __init__(self):
          self.atlas = None
          self.sprites = []
@@ -14,6 +16,12 @@ class SpriteManager:
         if SpriteManager._instance is None:
             SpriteManager._instance = SpriteManager()
         return SpriteManager._instance
+
+    @classmethod
+    def reset(cls):
+        """Thread-safe singleton reset for testing only."""
+        with cls._singleton_lock:
+            cls._instance = None
 
     def load_sprites(self, base_path):
         """

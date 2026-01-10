@@ -1,6 +1,4 @@
-
 import unittest
-import sys
 import os
 import importlib
 import pygame
@@ -10,8 +8,6 @@ from game.core.registry import RegistryManager
 # Ensure we use dummy video driver to prevent window opening
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
-# Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 class TestMainIntegration(unittest.TestCase):
     """

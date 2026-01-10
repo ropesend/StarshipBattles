@@ -1,8 +1,3 @@
-
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from game.simulation.components.component import Component
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_combat import ShipCombatMixin

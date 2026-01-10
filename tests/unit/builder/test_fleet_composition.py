@@ -1,14 +1,7 @@
-
 import unittest
 from unittest.mock import patch, MagicMock, mock_open
-import sys
 import os
 import pygame
-
-# Assuming the project structure, we might need to add paths if running directly, 
-# but usually running via pytest or similar handles it. 
-# For safety, since I cannot be sure of the test runner environment:
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.ui.screens.setup_screen import load_ships_from_entries, scan_ship_designs, BattleSetupScreen
 

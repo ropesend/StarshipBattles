@@ -3,12 +3,8 @@ Tests for ShipFormation class (formation relationship management).
 TDD-first approach for ShipFormation extraction from Ship class.
 """
 import unittest
-import sys
-import os
 import pygame
 from unittest import mock
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.entities.ship_formation import ShipFormation

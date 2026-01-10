@@ -2,16 +2,13 @@
 Stress Test Performance Script for Starship Battles.
 Measures update and collision detection performance with many entities.
 """
-import sys
 import os
 import pygame
 import cProfile
 import pstats
 import random
 
-# Add parent directory to path
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-sys.path.append(ROOT_DIR)
 
 # Headless environment
 os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -23,7 +20,6 @@ from game.core.registry import RegistryManager
 from game.core.constants import AttackType
 
 def run_stress_test():
-    original_path = sys.path.copy()
     try:
         pygame.init()
         # Fallback display initialization for headless
@@ -129,7 +125,6 @@ def run_stress_test():
     finally:
         RegistryManager.instance().clear()
         pygame.quit()
-        sys.path = original_path
 
 if __name__ == "__main__":
     # Run and print stats

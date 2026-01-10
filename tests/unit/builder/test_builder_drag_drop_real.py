@@ -1,12 +1,6 @@
-
 import unittest
 from unittest.mock import MagicMock, patch
-import sys
-import os
 import pygame
-
-# Add parent dir to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 # We need to mock pygame_gui before importing builder_gui because it initializes UI
 # Actually builder_screen imports pygame_gui. 

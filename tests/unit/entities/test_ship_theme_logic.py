@@ -15,16 +15,18 @@ class TestShipThemeLogic(unittest.TestCase):
         pygame.display.set_mode((1, 1))
 
         # Ensure singleton is reset before each test
-        ShipThemeManager._instance = None
+        ShipThemeManager.reset()
         self.manager = ShipThemeManager.get_instance()
 
     def tearDown(self):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
-        pygame.quit()
-        
+        # NOTE: Do not call pygame.quit() here - the root conftest manages
+        # pygame lifecycle at session scope. Calling quit() here would break
+        # subsequent tests with "No video mode set" errors.
+
         # Clean up singleton
-        ShipThemeManager._instance = None
+        ShipThemeManager.reset()
 
     def test_singleton_handling(self):
         """Test that the singleton pattern works and enforces unique instance."""

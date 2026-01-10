@@ -1,7 +1,5 @@
 import pytest
-import sys
-import os
-sys.path.append(os.getcwd())
+
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component
 from game.simulation.components.abilities import ResourceGeneration, ResourceStorage, ResourceConsumption, WeaponAbility

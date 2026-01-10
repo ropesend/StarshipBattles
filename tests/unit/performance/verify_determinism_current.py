@@ -1,13 +1,9 @@
-import sys
 import os
+import sys
 import time
 import pygame
 
-# Robust root discovery
-original_path = sys.path.copy()
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-if ROOT_DIR not in sys.path:
-    sys.path.append(ROOT_DIR)
 
 # Set dummy video driver for headless
 os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -87,10 +83,10 @@ if __name__ == "__main__":
     try:
         print("  Executing Run 1...")
         run_battle(seed=42, log_filename=log1)
-        
+
         print("  Executing Run 2...")
         run_battle(seed=42, log_filename=log2)
-        
+
         print("\nComparing Logs...")
         if compare_files(log1, log2):
             print("SUCCESS: Logs are identical. Simulation is deterministic.")
@@ -100,17 +96,12 @@ if __name__ == "__main__":
                 if os.path.exists(log2): os.remove(log2)
             except:
                 pass
-            sys.path = original_path
             sys.exit(0)
         else:
             print("FAILURE: Logs differ.")
-            sys.path = original_path
             sys.exit(1)
     except Exception as e:
         print(f"CRITICAL ERROR: {e}")
         import traceback
         traceback.print_exc()
-        sys.path = original_path
         sys.exit(2)
-    finally:
-        sys.path = original_path

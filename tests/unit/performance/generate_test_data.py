@@ -6,9 +6,7 @@ import json
 import os
 import sys
 
-# Add root to path
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-sys.path.append(ROOT_DIR)
 
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component, LayerType, create_component
@@ -56,13 +54,12 @@ def generate_test_ships():
         print(f"Saved Test_Target.json to {output_dir}")
 
 def run_generation():
-    original_path = sys.path.copy()
     try:
         # Load test registry data
         RegistryManager.instance().clear()
-        
+
         test_data_dir = os.path.join(ROOT_DIR, "tests/unit/data")
-        
+
         # Load components - assumes test_components.json or similar exists?
         # The original script just called load_components() which defaults to data/components.json
         # But then it might not find the 'test_' components.
@@ -72,7 +69,7 @@ def run_generation():
             load_components(test_comp_path)
         else:
             load_components()
-            
+
         # Load vehicle classes
         test_vclass_path = os.path.join(test_data_dir, "test_vehicleclasses.json")
         if os.path.exists(test_vclass_path):
@@ -82,13 +79,12 @@ def run_generation():
                 classes = vehicle_classes_data["classes"]
             else:
                 classes = vehicle_classes_data
-                
+
             RegistryManager.instance().vehicle_classes.update(classes)
-        
+
         generate_test_ships()
     finally:
         RegistryManager.instance().clear()
-        sys.path = original_path
 
 if __name__ == "__main__":
     run_generation()

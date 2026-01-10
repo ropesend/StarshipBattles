@@ -1,11 +1,5 @@
-
 import unittest
-import sys
-import os
 import math
-
-# Add root to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from game.simulation.components.component import Component, load_components
 from game.core.registry import RegistryManager

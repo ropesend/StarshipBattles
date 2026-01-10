@@ -1,12 +1,8 @@
 import unittest
-import sys
 import os
 import pygame
 import pygame_gui
 from unittest.mock import MagicMock, patch
-
-# Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from ui.builder.weapons_panel import WeaponsReportPanel
 

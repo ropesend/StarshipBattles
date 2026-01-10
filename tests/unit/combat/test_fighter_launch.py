@@ -1,7 +1,5 @@
 import unittest
-import sys
 import os
-sys.path.append(os.getcwd())
 import pygame
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import load_components, LayerType

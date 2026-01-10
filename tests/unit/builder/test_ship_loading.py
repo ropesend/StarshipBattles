@@ -5,12 +5,9 @@ the expected_stats saved by the ship builder, validating that modifier
 stacking is working correctly in the simulator.
 """
 import unittest
-import sys
 import os
 import json
 import glob
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.entities.ship import Ship, load_vehicle_classes
 from game.simulation.components.component import (

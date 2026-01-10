@@ -13,10 +13,14 @@ def reset_game_state(monkeypatch, request):
     and cleaned up after. Registry is ALWAYS cleared pre/post-test for isolation.
     """
     from tests.infrastructure.session_cache import SessionRegistryCache
-    
+    from game.simulation.components.component import reset_component_caches
+
     # 0. PRE-TEST CLEANUP (ALWAYS - ensures isolation even after test failures)
     mgr = RegistryManager.instance()
     mgr.clear()
+
+    # Reset module-level caches to prevent stale data from previous tests
+    reset_component_caches()
     
     try:
         # 1. Skip production hydration if test uses custom data
@@ -48,15 +52,23 @@ def reset_game_state(monkeypatch, request):
     finally:
         # POST-TEST CLEANUP (ALWAYS RUNS - even on test failure or use_custom_data)
         mgr.clear()
-        
-        # Reset AI Strategy Manager
-        from game.ai.controller import STRATEGY_MANAGER
-        if STRATEGY_MANAGER:
-            STRATEGY_MANAGER.clear()
-            
-        # Reset Ship Theme Manager
+
+        # Reset module-level caches to prevent pollution to next test
+        reset_component_caches()
+
+        # Reset AI Strategy Manager (fully reset to None, not just clear)
+        from game.ai.controller import reset_strategy_manager
+        reset_strategy_manager()
+
+        # Reset singletons using thread-safe reset() methods
         from game.simulation.ship_theme import ShipThemeManager
-        ShipThemeManager.get_instance().clear()
+        ShipThemeManager.reset()
+
+        from game.core.screenshot_manager import ScreenshotManager
+        ScreenshotManager.reset()
+
+        from game.ui.renderer.sprites import SpriteManager
+        SpriteManager.reset()
 
 @pytest.fixture(scope="session", autouse=True)
 def enforce_headless():

@@ -1,10 +1,6 @@
 """Tests for ship design factory functions."""
 import unittest
-import sys
-import os
 import pygame
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components  # Phase 7: Removed legacy class imports

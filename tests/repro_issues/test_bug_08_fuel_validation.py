@@ -1,13 +1,6 @@
-
 import unittest
 import pygame
-import sys
-import os
 import pytest
-
-# Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 
 from game.simulation.entities.ship import Ship, LayerType, load_vehicle_classes
 from game.core.registry import RegistryManager

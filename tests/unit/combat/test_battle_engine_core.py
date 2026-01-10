@@ -1,36 +1,14 @@
-
 import unittest
 import math
 import pygame
 from pygame.math import Vector2
 from unittest.mock import MagicMock, patch
 
-# Adjust path to find modules if necessary (assuming running from root)
-import sys
-import os
-# Ensure the root directory is in python path
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
-
-# Also add the current directory just in case it's run differently
-if os.getcwd() not in sys.path:
-    sys.path.append(os.getcwd())
-
-try:
-    from game.simulation.systems.battle_engine import BattleEngine
-    from game.simulation.entities.ship import Ship
-    from game.simulation.entities.projectile import Projectile
-    from game.engine.spatial import SpatialGrid
-    from game.core.constants import AttackType
-except ImportError:
-    # If running directly from tests folder, might need adjustment
-    sys.path.append(os.path.join(os.getcwd(), '..'))
-    from game.simulation.systems.battle_engine import BattleEngine
-    from game.simulation.entities.ship import Ship
-    from game.simulation.entities.projectile import Projectile
-    from game.engine.spatial import SpatialGrid
-    from game.core.constants import AttackType
+from game.simulation.systems.battle_engine import BattleEngine
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.projectile import Projectile
+from game.engine.spatial import SpatialGrid
+from game.core.constants import AttackType
 
 class TestBattleEngineCore(unittest.TestCase):
     def setUp(self):

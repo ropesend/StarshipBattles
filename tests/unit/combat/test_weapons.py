@@ -1,11 +1,7 @@
 """Tests for weapon systems."""
 import unittest
-import sys
-import os
 import pygame
 import math
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import (

@@ -1,10 +1,6 @@
 """Extended tests for component modifier effects."""
 import unittest
-import sys
-import os
 import math
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.components.component import load_components, load_modifiers, create_component
 from game.core.registry import RegistryManager

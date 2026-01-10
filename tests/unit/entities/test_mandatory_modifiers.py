@@ -1,12 +1,8 @@
 import unittest
+import os
 import pygame
 import pygame_gui
 from unittest.mock import MagicMock, patch
-# Import the class to test. Need to ensure path is correct.
-# Assuming builder_components is in root or accessible via sys.path logic in tests
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from game.ui.screens.builder_screen import ModifierEditorPanel
 from game.core.registry import RegistryManager

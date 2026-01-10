@@ -1,14 +1,9 @@
-
-import sys
-import os
 import unittest
 from unittest.mock import MagicMock
 
 # Use real pygame instead of mocking it - mocking at module level pollutes other tests
 import pygame
 pygame.init()
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.components.component import Component
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data

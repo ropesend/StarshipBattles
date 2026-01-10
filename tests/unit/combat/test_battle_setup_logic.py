@@ -1,12 +1,7 @@
-
 import unittest
 from unittest.mock import MagicMock, patch
 import pygame
-import sys
 import os
-
-# Ensure project root is in path
-sys.path.append(os.getcwd())
 
 from game.engine.spatial import SpatialGrid
 from game.ui.screens.battle_scene import BattleScene

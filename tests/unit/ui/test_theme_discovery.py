@@ -17,8 +17,8 @@ class TestNewThemes(unittest.TestCase):
         # Ensure display is initialized for convert_alpha
         if not pygame.display.get_surface():
              pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        
-        ShipThemeManager._instance = None
+
+        ShipThemeManager.reset()
         self.manager = ShipThemeManager.get_instance()
         
         # Verify resources exist
@@ -54,12 +54,13 @@ class TestNewThemes(unittest.TestCase):
     def tearDown(self):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
-        
+
         # Clean up singleton
-        ShipThemeManager._instance = None
-        
-        pygame.display.quit()
-        pygame.quit()
+        ShipThemeManager.reset()
+
+        # NOTE: Do not call pygame.quit() or pygame.display.quit() here - the root
+        # conftest manages pygame lifecycle at session scope. Calling quit() here
+        # would break subsequent tests with "No video mode set" errors.
         from game.core.registry import RegistryManager
         RegistryManager.instance().clear()
 

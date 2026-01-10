@@ -2,16 +2,13 @@
 Performance profiling for Starship Battles simulation.
 Runs a headless battle simulation and outputs profiling data.
 """
-import sys
 import os
 import cProfile
 import pstats
 import random
 import io
 
-# Add parent directory to path
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-sys.path.append(ROOT_DIR)
 
 # Minimal pygame init
 os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -170,9 +167,6 @@ def run_battle_simulation(num_ships_per_team=10, num_ticks=300):
     print(f"Final: Team1={alive_t1} alive, Team2={alive_t2} alive")
 
 def main():
-    # Save original sys.path
-    original_path = sys.path.copy()
-    
     try:
         # Profile with cProfile
         print("=" * 60)
@@ -209,7 +203,6 @@ def main():
         from game.core.registry import RegistryManager
         RegistryManager.instance().clear()
         pygame.quit()
-        sys.path = original_path
 
 if __name__ == "__main__":
     main()

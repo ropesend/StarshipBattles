@@ -1,12 +1,7 @@
-
 import unittest
 from unittest.mock import MagicMock
 import pygame
 import os
-import sys
-
-# Ensure imports work from project root
-sys.path.append(os.getcwd())
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.ui.screens.battle_scene import BattleScene

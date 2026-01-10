@@ -1,11 +1,8 @@
 """Tests for ship combat damage mechanics."""
 import unittest
-import sys
 import os
 import pygame
 import random
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component  # Phase 7: Removed Bridge import
@@ -21,8 +18,10 @@ class TestDamageLayerLogic(unittest.TestCase):
             pygame.init()
         initialize_ship_data(os.getcwd())
         load_components("data/components.json")
-        
-        # Set deterministic random for reproducible tests
+
+        # Save random state and set deterministic seed for reproducible tests
+        # State is restored in tearDown to prevent pollution of other tests
+        self._saved_random_state = random.getstate()
         random.seed(42)
         
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255))
@@ -49,7 +48,11 @@ class TestDamageLayerLogic(unittest.TestCase):
         self.ship.add_component(create_component('armor_plate'), LayerType.ARMOR)
         
         self.ship.recalculate_stats()
-    
+
+    def tearDown(self):
+        # Restore random state to prevent pollution of other tests
+        random.setstate(self._saved_random_state)
+
     def test_armor_absorbs_damage_first(self):
         """Damage should be absorbed by armor layer first."""
         armor = self.ship.layers[LayerType.ARMOR]['components'][0]

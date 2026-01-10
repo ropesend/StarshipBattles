@@ -1,15 +1,11 @@
 import unittest
 from unittest.mock import MagicMock
 import os
-import sys
 import pygame
 import pygame_gui
 
 # Set dummy video driver for headless testing
 os.environ['SDL_VIDEODRIVER'] = 'dummy'
-
-# Add root to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import load_components, load_modifiers, get_all_components

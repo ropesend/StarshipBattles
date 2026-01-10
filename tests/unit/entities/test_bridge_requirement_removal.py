@@ -1,14 +1,8 @@
-
 import unittest
 from unittest.mock import MagicMock, patch
 import json
 import os
-import sys
 
-# Add parent directory to path to import modules
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-# Import necessary classes
 from game.simulation.ship_validator import ShipDesignValidator, ValidationResult
 from game.simulation.entities.ship import Ship, LayerType
 from game.core.registry import RegistryManager

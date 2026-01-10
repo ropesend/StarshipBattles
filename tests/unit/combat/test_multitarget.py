@@ -1,12 +1,7 @@
 import unittest
 import unittest.mock
 import pygame
-import sys
-import os
 import math
-
-# Add project root to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import Component, LayerType, load_components

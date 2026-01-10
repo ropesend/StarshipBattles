@@ -5,10 +5,6 @@ Specifically tests that:
 2. Builder drop logic works without relying on that attribute
 """
 import unittest
-import sys
-import os
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from game.simulation.components.component import Component, load_components
 from game.core.registry import RegistryManager

@@ -1,12 +1,9 @@
 """Tests for AI Controller behavior."""
 import unittest
-import sys
 import os
 import pygame
 import math
 import inspect
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.ai import controller as ai

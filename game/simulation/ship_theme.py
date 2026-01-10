@@ -45,6 +45,14 @@ class ShipThemeManager:
                 self.image_metrics = {}
                 self.discovery_complete = False
                 log_info("ShipThemeManager caches cleared.")
+
+    @classmethod
+    def reset(cls):
+        """Thread-safe singleton reset for testing only."""
+        with cls._singleton_lock:
+            if cls._instance is not None:
+                cls._instance.clear()  # Clean up state first
+                cls._instance = None
         
     def initialize(self, base_path=None):
         """Discover all themes from assets/ShipThemes without loading images."""

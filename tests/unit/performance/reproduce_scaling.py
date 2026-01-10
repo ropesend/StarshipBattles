@@ -1,13 +1,8 @@
-import sys
 import os
 import unittest
 import pygame
 
-# Pattern I: Save original path and handle robust root discovery
-original_path = sys.path.copy()
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-if ROOT_DIR not in sys.path:
-    sys.path.append(ROOT_DIR)
 
 from game.simulation.components.component import load_components, create_component, load_modifiers
 from game.core.registry import RegistryManager
@@ -26,10 +21,6 @@ class TestComponentScaling(unittest.TestCase):
     def tearDown(self):
         pygame.quit()
         RegistryManager.instance().clear()
-        # Restore sys.path
-        global original_path
-        sys.path = original_path.copy()
-        super().tearDown()
 
     def test_crew_scaling(self):
         # Create Crew Quarters

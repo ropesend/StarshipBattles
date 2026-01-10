@@ -1,10 +1,6 @@
 """Tests for Logger singleton and utility functions."""
 import unittest
-import sys
-import os
 import tempfile
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.core.logger import Logger, log_debug, log_info, log_error, set_logging, _logger
 

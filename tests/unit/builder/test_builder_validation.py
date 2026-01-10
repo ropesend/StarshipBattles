@@ -1,12 +1,7 @@
-
 import unittest
 from unittest.mock import MagicMock, patch
 import pygame
-import sys
 import os
-
-# Add project root to path to allow imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component, LayerType  # Phase 7: Removed Bridge, Armor, Weapon imports

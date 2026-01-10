@@ -1,14 +1,7 @@
 import pytest
 import sys
-import os
 import json
 import pygame
-
-# Pattern I: Save original path and handle robust root discovery
-original_path = sys.path.copy()
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if ROOT_DIR not in sys.path:
-    sys.path.append(ROOT_DIR)
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component, load_components, load_modifiers
@@ -60,8 +53,6 @@ def setup_test_state():
 def teardown_test_state():
     pygame.quit()
     RegistryManager.instance().clear()
-    global original_path
-    sys.path = original_path.copy()
 
 def test_shield_regen_consumption():
     """

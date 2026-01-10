@@ -3,7 +3,6 @@ Strategy Tournament Simulation for Starship Battles.
 Runs all combat strategies vs all combat strategies with 5v5 escort ships.
 Logs results to CSV for analysis.
 """
-import sys
 import os
 import json
 import csv
@@ -13,9 +12,7 @@ import math
 from datetime import datetime
 from itertools import product
 
-# Add parent directory to path
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-sys.path.append(ROOT_DIR)
 
 # Minimal pygame init (headless)
 os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -225,12 +222,11 @@ def run_battle(strategy_a, strategy_b, ship_json_path, seed=None):
 
 def run_tournament():
     """Run full tournament of all strategies vs all strategies."""
-    original_path = sys.path.copy()
     try:
         base_path = ROOT_DIR
         load_components(os.path.join(base_path, "data/components.json"))
         load_modifiers(os.path.join(base_path, "data/modifiers.json"))
-        
+
         ship_json_path = os.path.join(base_path, "ships/RailGun Frigate (FR).json")
         if not os.path.exists(ship_json_path):
              ships_dir = os.path.join(base_path, "ships")
@@ -239,28 +235,27 @@ def run_tournament():
                      if f.endswith(".json"):
                          ship_json_path = os.path.join(ships_dir, f)
                          break
-        
+
         if not os.path.exists(ship_json_path):
             print("ERROR: No ship file found")
             return
-        
+
         strategies = list(STRATEGY_MANAGER.strategies.keys()) if STRATEGY_MANAGER else []
         if not strategies:
             print("ERROR: No strategies found")
             return
-            
+
         print(f"Tournament: {len(strategies)} strategies. Ship: {os.path.basename(ship_json_path)}")
-        
+
         for strategy_a in strategies:
             for strategy_b in strategies:
                 winner, surv_a, surv_b, ticks, timeout = run_battle(strategy_a, strategy_b, ship_json_path, seed=42)
                 print(f"{strategy_a} vs {strategy_b}: {winner} wins ({surv_a}-{surv_b})")
-                
+
                 if os.environ.get("VERIFY_RUN") == "1": return
     finally:
         RegistryManager.instance().clear()
         pygame.quit()
-        sys.path = original_path
 
 if __name__ == "__main__":
     run_tournament()

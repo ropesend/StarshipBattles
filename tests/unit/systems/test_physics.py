@@ -1,11 +1,6 @@
 import unittest
 import pygame
-import sys
-import os
 import math
-
-# Add parent dir to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.engine.physics import PhysicsBody
 

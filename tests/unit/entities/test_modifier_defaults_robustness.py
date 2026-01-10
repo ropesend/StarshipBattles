@@ -1,9 +1,4 @@
 import unittest
-import sys
-import os
-
-# Add project root to path
-sys.path.append(os.getcwd())
 
 from game.simulation.components.component import load_components, load_modifiers, create_component
 from game.core.registry import RegistryManager

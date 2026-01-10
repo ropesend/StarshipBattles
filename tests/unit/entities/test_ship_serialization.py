@@ -3,12 +3,8 @@ Tests for Ship serialization (to_dict/from_dict round-trip).
 TDD-first approach for ShipSerializer extraction.
 """
 import unittest
-import sys
-import os
 import pygame
 from unittest import mock
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component

@@ -1,12 +1,7 @@
 import unittest
-import sys
-import os
 import pygame
 import math
 from unittest.mock import MagicMock, patch
-
-# Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.ai.behaviors import KiteBehavior, FormationBehavior, RamBehavior
 

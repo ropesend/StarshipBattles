@@ -7,16 +7,16 @@ from game.ui.renderer.sprites import SpriteManager
 class TestSpriteLoading(unittest.TestCase):
     def setUp(self):
         # Reset singleton
-        SpriteManager._instance = None
+        SpriteManager.reset()
         self.mgr = SpriteManager.get_instance()
 
-    @patch('game.ui.renderer.sprites.os.path.exists')
-    @patch('game.ui.renderer.sprites.os.listdir')
-    @patch('game.ui.renderer.sprites.pygame.image.load')
+    @patch('os.path.exists')
+    @patch('os.listdir')
+    @patch('pygame.image.load')
     def test_load_sprites_from_directory(self, mock_load, mock_listdir, mock_exists):
         # Setup mocks
         mock_exists.return_value = True
-        
+
         # Mock directory contents
         mock_listdir.return_value = [
             "Comp_001.bmp",
@@ -24,10 +24,11 @@ class TestSpriteLoading(unittest.TestCase):
             "Comp_010.bmp",
             "OtherFile.txt"
         ]
-        
+
         # Mock image loading
         mock_surface = MagicMock(spec=pygame.Surface)
         mock_surface.convert.return_value = mock_surface
+        mock_surface.set_colorkey = MagicMock()  # Mock set_colorkey to prevent errors
         mock_load.return_value = mock_surface
         
         # Execute
@@ -49,7 +50,7 @@ class TestSpriteLoading(unittest.TestCase):
         expected_path_1 = os.path.join(base_path, "assets", "Images", "Components", "Tiles", "Comp_001.bmp")
         mock_load.assert_any_call(expected_path_1)
 
-    @patch('game.ui.renderer.sprites.os.path.exists')
+    @patch('os.path.exists')
     def test_directory_not_found_fallback(self, mock_exists):
         # Setup to return False for directory check
         mock_exists.return_value = False

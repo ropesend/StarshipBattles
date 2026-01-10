@@ -1,10 +1,7 @@
 """Tests for Ship resource management, life support, and crew requirements."""
 import unittest
-import sys
 import os
 import pygame
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component, ComponentStatus

@@ -12,10 +12,9 @@ class TestDetailPanelRendering(unittest.TestCase):
     # Cleanup now happens per-test in tearDown to prevent pygame display state pollution
 
     def setUp(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        pygame.font.init()
+        # NOTE: pygame is initialized by the root conftest's session-scope fixture.
+        # Do NOT call pygame.init() or set_mode() here as it interferes with
+        # parallel test execution.
         
         # Patch UI elements in the TARGET namespace to ensure they are used
         self.uipanel_patch = patch('ui.builder.detail_panel.UIPanel')
@@ -58,10 +57,12 @@ class TestDetailPanelRendering(unittest.TestCase):
     def tearDown(self):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
-        
-        # Clean up pygame and registry PER TEST (fixes parallel execution failures)
-        pygame.display.quit()  # CRITICAL: Must quit display BEFORE pygame.quit()
-        pygame.quit()
+
+        # NOTE: Do NOT call pygame.quit() here - the root conftest manages
+        # pygame lifecycle at session scope. Calling quit() destroys the
+        # session-level pygame state and breaks other parallel tests.
+
+        # Clean up registry PER TEST
         from game.core.registry import RegistryManager
         RegistryManager.instance().clear()
 

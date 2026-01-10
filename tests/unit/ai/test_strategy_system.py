@@ -2,11 +2,6 @@ import unittest
 import pygame
 import os
 import json
-import sys
-
-# Add root to path
-sys.path.append(os.getcwd())
-
 from unittest.mock import MagicMock, patch
 from game.ai.controller import StrategyManager, TargetEvaluator, load_combat_strategies, STRATEGY_MANAGER
 

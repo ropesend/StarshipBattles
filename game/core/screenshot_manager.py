@@ -2,13 +2,15 @@ import os
 import datetime
 import pygame
 import logging
+import threading
 from game.core.constants import ROOT_DIR, DEBUG_SCREENSHOTS, SCREENSHOT_DIR
 
 logger = logging.getLogger(__name__)
 
 class ScreenshotManager:
     _instance = None
-    
+    _singleton_lock = threading.Lock()
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(ScreenshotManager, cls).__new__(cls)
@@ -20,6 +22,12 @@ class ScreenshotManager:
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
+
+    @classmethod
+    def reset(cls):
+        """Thread-safe singleton reset for testing only."""
+        with cls._singleton_lock:
+            cls._instance = None
 
     def setup(self):
         self.enabled = DEBUG_SCREENSHOTS

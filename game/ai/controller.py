@@ -108,6 +108,20 @@ def get_strategy_names():
     return []
 
 
+def reset_strategy_manager():
+    """
+    Reset the global STRATEGY_MANAGER for test isolation.
+    Clears all loaded data but keeps the manager instance to maintain
+    compatibility with tests that expect STRATEGY_MANAGER to be initialized.
+    """
+    global STRATEGY_MANAGER
+    if STRATEGY_MANAGER is None:
+        # Re-initialize if somehow None (shouldn't happen in normal flow)
+        STRATEGY_MANAGER = StrategyManager()
+    else:
+        STRATEGY_MANAGER.clear()
+
+
 class TargetEvaluator:
     """Helper to evaluate targets based on rules."""
     @staticmethod

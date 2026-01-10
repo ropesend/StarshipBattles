@@ -551,6 +551,18 @@ _MODIFIER_CACHE = None
 _LAST_COMPONENT_FILE = None
 _LAST_MODIFIER_FILE = None
 
+
+def reset_component_caches():
+    """
+    Reset all module-level caches for test isolation.
+    This ensures clean state between tests in parallel execution.
+    """
+    global _COMPONENT_CACHE, _MODIFIER_CACHE, _LAST_COMPONENT_FILE, _LAST_MODIFIER_FILE
+    _COMPONENT_CACHE = None
+    _MODIFIER_CACHE = None
+    _LAST_COMPONENT_FILE = None
+    _LAST_MODIFIER_FILE = None
+
 def load_components(filepath="data/components.json"):
     global _COMPONENT_CACHE, _LAST_COMPONENT_FILE
     import os

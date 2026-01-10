@@ -1,10 +1,7 @@
 """Unit tests for BattleLogger resource management."""
 import unittest
 import os
-import sys
 import warnings
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.systems.battle_engine import BattleLogger
 

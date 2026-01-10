@@ -1,12 +1,6 @@
-
 import unittest
 from unittest.mock import MagicMock
 import pygame
-import sys
-import os
-
-# Add parent dir to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.ai.behaviors import KiteBehavior, AttackRunBehavior, OrbitBehavior
 from game.ai.controller import AIController

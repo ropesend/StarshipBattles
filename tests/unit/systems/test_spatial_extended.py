@@ -1,10 +1,6 @@
 """Extended tests for SpatialGrid edge cases."""
 import unittest
-import sys
-import os
 import pygame
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.engine.spatial import SpatialGrid
 

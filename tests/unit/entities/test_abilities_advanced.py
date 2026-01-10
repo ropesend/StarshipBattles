@@ -1,16 +1,9 @@
-
 import unittest
 from unittest.mock import MagicMock
 import pygame
 import math
 from game.simulation.components.component import Component
 from game.simulation.components.abilities import WeaponAbility, BeamWeaponAbility, ProjectileWeaponAbility
-
-# Mock Formula System if needed, or import if available
-# Assuming formula_system is available as referenced in abilities.py
-# If it's a real module, we can use it.
-# If not, we might need to mock it. Based on file listing from earlier, we didn't see formula_system.py but we saw test_formula_system.py so it likely exists.
-# Let's try to import it inside the tests or mock it.
 
 class TestAbilitiesAdvanced(unittest.TestCase):
     
@@ -133,8 +126,4 @@ class TestAbilitiesAdvanced(unittest.TestCase):
             pass
 
 if __name__ == '__main__':
-    # Ensure sys path includes root
-    import sys
-    import os
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     unittest.main()

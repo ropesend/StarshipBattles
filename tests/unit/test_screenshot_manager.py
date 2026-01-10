@@ -1,11 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
-import os
 import pygame
-import sys
-
-# Add root to sys.path
-sys.path.append(os.getcwd())
 
 from game.core.screenshot_manager import ScreenshotManager
 from game.core.registry import RegistryManager
@@ -15,7 +10,7 @@ class TestScreenshotManager(unittest.TestCase):
         if not pygame.get_init():
             pygame.init()
         # Reset singleton if possible or just re-setup
-        ScreenshotManager._instance = None
+        ScreenshotManager.reset()
         self.manager = ScreenshotManager.get_instance()
         self.manager.enabled = True # Force enable for tests logic
         self.manager.base_dir = "test_screenshots"
@@ -23,7 +18,9 @@ class TestScreenshotManager(unittest.TestCase):
     def tearDown(self):
         patch.stopall()
         RegistryManager.instance().clear()
-        pygame.quit()
+        # NOTE: Do not call pygame.quit() here - the root conftest manages
+        # pygame lifecycle at session scope. Calling quit() here would break
+        # subsequent tests with "No video mode set" errors.
         super().tearDown()
 
     @patch('game.core.screenshot_manager.pygame.image.save')

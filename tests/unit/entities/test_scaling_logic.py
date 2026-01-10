@@ -1,11 +1,5 @@
-
-import sys
-import os
 import unittest
 import math
-
-# Add project root to path
-sys.path.append(os.getcwd())
 
 from game.simulation.components.component import load_components, create_component, load_modifiers
 from game.core.registry import RegistryManager

@@ -1,16 +1,9 @@
 import unittest
 from unittest.mock import MagicMock, patch, mock_open
 import math
-import sys
-import os
 import json
 
-# Adjust path to find formation_editor in Tools
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-tools_dir = os.path.join(root_dir, 'Tools')
-if tools_dir not in sys.path:
-    sys.path.append(tools_dir)
-
+# Tools directory is added to pythonpath via pytest.ini
 import formation_editor
 
 class TestFormationCore(unittest.TestCase):

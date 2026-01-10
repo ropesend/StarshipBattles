@@ -38,51 +38,52 @@ def pytest_configure(config):
 def pytest_configure_node(node):
     """
     Called when a pytest-xdist worker node is initialized.
-    Ensures all workers have completed module imports before tests start.
-    
-    This hook runs AFTER pytest_configure() completes, giving time for
-    all imports to finish before the worker requests tests to run.
+    Verifies all critical imports succeeded before tests start.
+
+    Note: The time.sleep(0.3) workaround was removed - it added 4.8s total
+    overhead with 16 workers and didn't guarantee synchronization. The
+    pytest_configure() hook already imports modules; this just verifies.
     """
-    import time
-    # Small delay to ensure all workers finish pytest_configure()
-    # This prevents race conditions where Worker A starts running tests
-    # while Worker B is still importing modules
-    time.sleep(0.3)  # 300ms provides maximum safety margin for all workers
-    
-    # Verify critical imports succeeded
+    # Verify critical imports succeeded (they should be loaded by pytest_configure)
     try:
         import game.ui.renderer.sprites
         import game.ui.screens.battle_scene
         import game.ui.panels.battle_panels
     except ImportError as e:
-        print(f"ERROR: Worker {node.gateway.id} failed to import game.ui modules: {e}", 
+        print(f"ERROR: Worker {node.gateway.id} failed to import game.ui modules: {e}",
               file=sys.stderr)
         raise
 
 
 
 @pytest.fixture(autouse=True)
-def pygame_cleanup():
+def pygame_display_reset():
     """
-    Cleanup-only fixture - does NOT initialize pygame.
-    Tests control their own pygame.init() as needed.
-    
-    This prevents conflicts with tests that expect to control their own
-    pygame initialization sequence.
+    Reset pygame display to session state after each test.
+
+    The root conftest's enforce_headless fixture manages pygame lifecycle
+    at session scope. This fixture ensures any display modifications made
+    by tests are reset without destroying the session-level pygame state.
+
+    IMPORTANT: Do NOT call pygame.quit() here - that destroys the session
+    fixture's pygame initialization and breaks subsequent tests.
     """
+    import pygame
+
+    # Ensure pygame font subsystem is initialized for this test
+    # This fixes "font not initialized" errors in parallel execution
+    if not pygame.font.get_init():
+        pygame.font.init()
+
     yield  # Test runs here
-    
-    # Cleanup after test
+
+    # Reset display to session state (1440x900 dummy display)
+    # This handles tests that create their own display surfaces
     try:
-        import pygame
-        pygame.display.quit()
-    except:
-        pass  # pygame.display may not be initialized
-    
-    try:
-        import pygame
-        pygame.quit()
-    except:
-        pass  # pygame may not be initialized
+        if pygame.display.get_init():
+            # Restore the standard session display size
+            pygame.display.set_mode((1440, 900), pygame.NOFRAME)
+    except Exception:
+        pass  # Display may not be available
 
 
