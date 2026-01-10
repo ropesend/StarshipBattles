@@ -49,9 +49,6 @@ class TestRenderingLogic(unittest.TestCase):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
         
-        self.patcher_draw.stop()
-        self.patcher_font.stop()
-        
         # Add missing cleanup to fix parallel execution failures
         pygame.display.quit()  # CRITICAL: Must quit display BEFORE pygame.quit()
         pygame.quit()

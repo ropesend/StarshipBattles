@@ -59,13 +59,6 @@ class TestDetailPanelRendering(unittest.TestCase):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
         
-        # Stop all patchers
-        self.uipanel_patch.stop()
-        self.uilabel_patch.stop()
-        self.uiimage_patch.stop()
-        self.uibutton_patch.stop()
-        self.uitextbox_patch.stop()
-        
         # Clean up pygame and registry PER TEST (fixes parallel execution failures)
         pygame.display.quit()  # CRITICAL: Must quit display BEFORE pygame.quit()
         pygame.quit()

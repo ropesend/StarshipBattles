@@ -77,15 +77,6 @@ class TestStructureVisibility(unittest.TestCase):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
         
-        self.item_uipanel_patch.stop()
-        self.item_uilabel_patch.stop()
-        self.item_uiimage_patch.stop()
-        self.item_uibutton_patch.stop()
-        self.panel_uipanel_patch.stop()
-        self.panel_uilabel_patch.stop()
-        self.panel_uiscroll_patch.stop()
-        self.panel_uidropdown_patch.stop()
-        
         # Clean up pygame and registry PER TEST (fixes parallel execution failures)
         pygame.display.quit()  # CRITICAL: Must quit display BEFORE pygame.quit()
         pygame.quit()
