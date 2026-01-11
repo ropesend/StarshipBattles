@@ -98,7 +98,7 @@ class StrategyScene:
         
         # Multi-player turn management
         self.current_player_index = 0
-        self.human_player_ids = [0]  # Configurable: list of human-controlled empire IDs
+        self.human_player_ids = [0, 1]  # Both players are human-controlled
 
         # Assets
         self.assets = {}
@@ -250,14 +250,29 @@ class StrategyScene:
             # All humans ready - process the full turn
             self.current_player_index = 0
             self._process_full_turn()
+            # Update label for next round
+            self._update_player_label()
         else:
             # Switch to next human player's view
             next_player_id = self.human_player_ids[self.current_player_index]
-            print(f"Player {next_player_id}'s turn to give orders.")
+            print(f"Player {next_player_id + 1}'s turn to give orders.")
+            # Update UI label
+            self._update_player_label()
             # Center on their home colony if they have one
             next_empire = next((e for e in self.empires if e.id == next_player_id), None)
             if next_empire and next_empire.colonies:
                 self.center_camera_on(next_empire.colonies[0])
+    
+    def _update_player_label(self):
+        """Update the player indicator label."""
+        player_num = self.current_player_index + 1
+        self.ui.lbl_current_player.set_text(f"Player {player_num}'s Turn")
+    
+    @property
+    def current_empire(self):
+        """Get the empire for the current player (supports N players)."""
+        current_player_id = self.human_player_ids[self.current_player_index]
+        return next((e for e in self.empires if e.id == current_player_id), self.empires[0])
     
     def _process_full_turn(self):
         """Process the turn for all empires simultaneously."""
@@ -329,9 +344,9 @@ class StrategyScene:
         """Cycle selection through colonies or fleets and Center Camera."""
         targets = []
         if obj_type == 'colony':
-            targets = self.player_empire.colonies
+            targets = self.current_empire.colonies
         elif obj_type == 'fleet':
-            targets = self.player_empire.fleets
+            targets = self.current_empire.fleets
             
         if not targets:
             print(f"No {obj_type}s to cycle.")
@@ -379,7 +394,7 @@ class StrategyScene:
          """Handle 'Build Ship' action."""
          if isinstance(self.selected_object, Planet):
              planet = self.selected_object
-             if planet.owner_id == self.player_empire.id:
+             if planet.owner_id == self.current_empire.id:
                  print(f"Queueing Ship at {planet}...")
                  # Add to Queue (1 Turn)
                  planet.add_production("Colony Ship", 1)
@@ -487,17 +502,20 @@ class StrategyScene:
         self.selected_object = obj
         
         # --- Update Button Visibility ---
+        # Get current player's empire ID
+        current_player_id = self.human_player_ids[self.current_player_index]
+        
         # 1. Colonize (Fleet Selected + At Planet?)
-        # For now, just show if Player Fleet Selected
-        if isinstance(obj, Fleet) and obj.owner_id == self.player_empire.id:
+        # Show if current player's Fleet Selected
+        if isinstance(obj, Fleet) and obj.owner_id == current_player_id:
             self.selected_fleet = obj
             self.ui.btn_colonize.show()
         else:
             if not isinstance(obj, Fleet): self.selected_fleet = None # Clear if not fleet
             self.ui.btn_colonize.hide()
             
-        # 2. Build Ship (Player Planet Selected)
-        if isinstance(obj, Planet) and obj.owner_id == self.player_empire.id:
+        # 2. Build Ship (Current Player's Planet Selected)
+        if isinstance(obj, Planet) and obj.owner_id == current_player_id:
             self.ui.btn_build_ship.show()
         else:
             self.ui.btn_build_ship.hide()
@@ -1070,12 +1088,12 @@ class StrategyScene:
                 
                 # Draw path only for the selected fleet (visible even when zoomed elsewhere)
                 if f == self.selected_fleet:
-                    segments = project_fleet_path(f, self.galaxy, max_turns=10)
+                    segments = project_fleet_path(f, self.galaxy, max_turns=50)
                     
                     start_screen = f_screen
                     font = None
                     if segments and self.camera.zoom >= 0.5:
-                         font = pygame.font.SysFont("arial", 12, bold=True)
+                         font = pygame.font.SysFont("arial", 18, bold=True)
 
                     for seg in segments:
                         end_hex = seg['end']
