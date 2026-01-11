@@ -225,6 +225,7 @@ class BuilderSceneGUI:
             ('save_btn', "Save", 80),
             ('load_btn', "Load", 80),
             ('arc_toggle_btn', "Show Firing Arcs", 140),
+            ('hull_toggle_btn', "Show Hull", 100),
             ('target_btn', "Select Target", 110),
             ('std_data_btn', "Standard Data", 110),
             ('test_data_btn', "Test Data", 90),

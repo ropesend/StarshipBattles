@@ -305,6 +305,10 @@ class BuilderEventRouter:
         elif event.ui_element == gui.arc_toggle_btn:
             gui.show_firing_arcs = not gui.show_firing_arcs
             gui.arc_toggle_btn.set_text("Hide Firing Arcs" if gui.show_firing_arcs else "Show Firing Arcs")
+        elif event.ui_element == gui.hull_toggle_btn:
+            showing = gui.viewmodel.toggle_hull_layer()
+            gui.hull_toggle_btn.set_text("Hide Hull" if showing else "Show Hull")
+            gui.layer_panel.rebuild()
         elif event.ui_element == gui.target_btn:
             gui._on_select_target_pressed()
         elif event.ui_element == gui.std_data_btn:

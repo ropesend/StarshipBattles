@@ -526,6 +526,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         component.layer_assigned = layer_type
         component.ship = self
         component.recalculate_stats()
+        # Apply mandatory modifiers (e.g., size mount) immediately upon addition
+        from ui.builder.modifier_logic import ModifierLogic
+        ModifierLogic.ensure_mandatory_modifiers(component)
         self._cached_summary = {}  # Invalidate cache
         
         # Update Stats
@@ -564,6 +567,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             new_comp.layer_assigned = layer_type
             new_comp.ship = self
             new_comp.recalculate_stats()
+            # Apply mandatory modifiers (e.g., size mount) immediately upon addition
+            from ui.builder.modifier_logic import ModifierLogic
+            ModifierLogic.ensure_mandatory_modifiers(new_comp)
             added_count += 1
             
         if added_count > 0:
@@ -686,8 +692,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                     "id": comp.id,
                     "modifiers": []
                 }
-                for m_id, m_val in comp.modifiers.items():
-                    c_data["modifiers"].append({"id": m_id, "value": m_val})
+                for m in comp.modifiers:
+                    c_data["modifiers"].append({"id": m.definition.id, "value": m.value})
                 d[l_type.name].append(c_data)
         return d
 
