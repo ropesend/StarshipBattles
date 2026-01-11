@@ -250,12 +250,28 @@ class StrategyInterface:
         self.sector_list.set_item_list(item_labels)
         
     def _get_label_for_obj(self, obj):
-        if hasattr(obj, 'star_type'): return f"Star: {obj.star_type.name}"
+        if hasattr(obj, 'stars'): return f"System: {obj.name}"
+        elif hasattr(obj, 'color') and hasattr(obj, 'mass'): return f"Star: {obj.name}"
         elif hasattr(obj, 'planet_type'): return f"Planet: {obj.name}"
         elif hasattr(obj, 'destination_id'): return f"Warp Point -> {obj.destination_id}"
         elif hasattr(obj, 'ships'): return f"Fleet {obj.id} ({len(obj.ships)})"
+        elif hasattr(obj, 'calculate_radiation'): return "Local Radiation Analysis"
         return "Unknown Object"
         
+    def _format_spectrum(self, star):
+        s = star.spectrum
+        html = "<br><b>Spectrum Intensity (W/m^2 rel):</b><br>"
+        html += f" Gamma: {s.gamma_ray:.2e}<br>"
+        html += f" X-Ray: {s.xray:.2e}<br>"
+        html += f" UV:    {s.ultraviolet:.2e}<br>"
+        html += f" Blue:  {s.blue:.2e}<br>"
+        html += f" Green: {s.green:.2e}<br>"
+        html += f" Red:   {s.red:.2e}<br>"
+        html += f" IR:    {s.infrared:.2e}<br>"
+        html += f" Micro: {s.microwave:.2e}<br>"
+        html += f" Radio: {s.radio:.2e}<br>"
+        return html
+
     def show_detailed_report(self, obj, portrait_surface=None):
         """Update the detail report implementation."""
         if not obj:
@@ -263,11 +279,42 @@ class StrategyInterface:
             
         text = ""
         # Check type loosely or explicitly
-        if hasattr(obj, 'star_type'): # StarSystem (representing the Star itself in the list)
+        # Check type loosely or explicitly
+        if hasattr(obj, 'stars'): # StarSystem
+            # Show Primary Star Info
+            primary = obj.primary_star
+            if primary:
+                text = f"<b>System:</b> {obj.name}<br>"
+                text += f"<b>Primary:</b> {primary.name}<br>"
+                text += f"<b>Type:</b> {primary.star_type.name}<br>"
+                text += f"<b>Mass:</b> {primary.mass:.2f} Sol<br>"
+                text += f"<b>Temp:</b> {int(primary.temperature)} K<br>"
+                text += f"<b>Stars:</b> {len(obj.stars)}<br>"
+                text += self._format_spectrum(primary)
+            else:
+                 text = f"<b>System:</b> {obj.name}<br>(Empty System)"
+
+        elif hasattr(obj, 'color') and hasattr(obj, 'mass'): # Star (representing the Star itself in the list)
             text = f"<b>Star:</b> {obj.name}<br>"
-            text += f"<b>Class:</b> {obj.star_type.name}<br>"
-            text += f"<b>Radius:</b> {obj.star_type.radius}<br>"
-            text += f"<b>Temp:</b> {obj.star_type.color}<br>" # placeholder
+            text += f"<b>Type:</b> {obj.star_type.name}<br>"
+            text += f"<b>Mass:</b> {obj.mass:.2f} Sol<br>"
+            text += f"<b>Temp:</b> {int(obj.temperature)} K<br>"
+            text += f"<b>Diam:</b> {obj.diameter_hexes:.1f} Hex<br>"
+            text += self._format_spectrum(obj)
+            
+        elif hasattr(obj, 'calculate_radiation'): # SectorEnvironment
+            # Calculate dynamic radiation
+            spec = obj.calculate_radiation()
+            # Mock a star-like object so _format_spectrum works
+            class MockStar:
+                spectrum = spec
+            
+            text = f"<b>Local Environment</b><br>"
+            text += f"<b>System:</b> {obj.system.name}<br>"
+            text += f"<b>Local:</b> {obj.local_hex}<br>"
+            text += f"<br><b>Total Incident Radiation:</b><br>"
+            text += f"{spec.get_total_output():.2e} W/m^2 (relative)<br>"
+            text += self._format_spectrum(MockStar)
             
         elif hasattr(obj, 'planet_type'): # Planet
             text = f"<b>Planet:</b> {obj.name}<br>"

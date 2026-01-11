@@ -5,18 +5,7 @@ from game.strategy.data.hex_math import HexCoord, hex_distance, hex_to_pixel, he
 from game.strategy.data.naming import NameRegistry
 import os
 
-class StarType(Enum):
-    # Name, Radius (px relative), Color (RGB), Weight
-    BLUE_GIANT = (12, (100, 100, 255), 5)
-    WHITE_DWARF = (4, (220, 220, 255), 10)
-    YELLOW_MAIN = (8, (255, 255, 0), 40) # Sol-like
-    ORANGE_DWARF = (7, (255, 165, 0), 25)
-    RED_DWARF = (6, (255, 60, 60), 20)
-    
-    def __init__(self, radius, color, weight):
-        self.radius = radius
-        self.color = color
-        self.probability_weight = weight
+from game.strategy.data.stars import StarGenerator, Star, StarType
 
 class PlanetType(Enum):
     # Name, Min Orbit Ring (int), Max Orbit Ring (int), Color (RGB)
@@ -55,19 +44,24 @@ class WarpPoint:
         self.location = location # HexCoord (Local to system)
 
 class StarSystem:
-    def __init__(self, name, global_location, star_type=None):
+    def __init__(self, name, global_location, stars=None):
         self.name = name
         self.global_location = global_location # HexCoord
-        self.star_type = star_type
+        self.stars = stars if stars else []
         self.warp_points = []
         self.planets = [] # List[Planet]
+    
+    @property
+    def primary_star(self):
+        return self.stars[0] if self.stars else None
         
     def add_warp_point(self, destination_id, location):
         self.warp_points.append(WarpPoint(destination_id, location))
         
     def __repr__(self):
-        star_name = self.star_type.name if self.star_type else 'Unk'
-        return f"System('{self.name}', {self.global_location}, {star_name}, Planets: {len(self.planets)})"
+        star_count = len(self.stars)
+        p_name = self.primary_star.name if self.primary_star else "Empty"
+        return f"System('{self.name}', Loc:{self.global_location}, Stars:{star_count}, Primary:{p_name})"
 
 class Galaxy:
     # ... (__init__, add_system, generate_planets remain unchanged, only create_vars_link changes)
@@ -79,7 +73,11 @@ class Galaxy:
         # Initialize Naming Registry
         # Assuming run from root of repo
         data_path = os.path.join(os.getcwd(), 'data', 'StarSystemNames.YAML')
+        # Initialize Naming Registry
+        # Assuming run from root of repo
+        data_path = os.path.join(os.getcwd(), 'data', 'StarSystemNames.YAML')
         self.naming = NameRegistry(data_path)
+        self.star_generator = StarGenerator()
         
     def add_system(self, system):
         """Add a system to the galaxy map."""
@@ -91,64 +89,40 @@ class Galaxy:
         return self.name_map.get(name)
     
     def generate_planets(self, system):
-        # ... (same as before)
         """Generate planets for a system based on its star type."""
-        # Hex Grid placement
-        # 1. Determine number of planets
-        base_count = random.randint(1, 8)
-        if system.star_type == StarType.RED_DWARF:
-             base_count = random.randint(0, 5)
-        elif system.star_type == StarType.BLUE_GIANT:
-             base_count = random.randint(0, 4)
-             
-        # 2. Pick occupied rings
+        # Placeholder for now until Planet Gen is reworked
+        # We need to respect the star diameters
+        if not system.primary_star: return
+        
+        # Safe distance start: Primary Radius (Hexes) + 2
+        safe_start = int(system.primary_star.diameter_hexes / 2) + 2
+        
+        # Basic placeholder generation
+        base_count = random.randint(0, 5)
         occupied_rings = set()
         
-        # 3. Generate
         for _ in range(base_count):
-            p_type = random.choice(list(PlanetType))
-            
-            # Constraints
-            if p_type == PlanetType.LAVA and system.star_type == StarType.BLUE_GIANT:
-                continue
-                
-            # Pick a ring
-            ring = -1
-            for attempt in range(10):
-                r = random.randint(p_type.min_ring, p_type.max_ring)
-                if r not in occupied_rings:
-                    ring = r
-                    break
-            
-            if ring == -1:
-                continue 
-                
-            occupied_rings.add(ring)
-            
-            # Pick a spot on the ring
-            ring_hexes = hex_ring(ring)
-            if not ring_hexes:
-                continue
-                
-            loc = random.choice(ring_hexes)
-            
-            planet = Planet(p_type, ring, loc)
-            system.planets.append(planet)
-            
+             p_type = random.choice(list(PlanetType))
+             ring = random.randint(safe_start, safe_start + 15)
+             if ring in occupied_rings: continue
+             occupied_rings.add(ring)
+             
+             ring_hexes = hex_ring(ring)
+             if not ring_hexes: continue
+             loc = random.choice(ring_hexes)
+             
+             system.planets.append(Planet(p_type, ring, loc))
+        
         system.planets.sort(key=lambda p: p.orbit_distance)
         self.naming.name_planets(system.name, system.planets)
 
     def generate_systems(self, count, min_dist=10):
-        # ... (same as before)
         """
         Generate random systems ensuring minimum distance and assigning Star Types.
         """
         generated = []
         attempts = 0
         max_attempts = count * 1000 
-        
-        star_types = list(StarType)
-        weights = [st.probability_weight for st in star_types]
         
         while len(generated) < count and attempts < max_attempts:
             attempts += 1
@@ -171,8 +145,11 @@ class Galaxy:
             
             if valid:
                 name = self.naming.get_system_name()
-                s_type = random.choices(star_types, weights=weights, k=1)[0]
-                sys = StarSystem(name, coord, star_type=s_type)
+                
+                # New Star Generation
+                stars = self.star_generator.generate_system_stars(name)
+                
+                sys = StarSystem(name, coord, stars=stars)
                 self.generate_planets(sys)
                 self.add_system(sys)
                 generated.append(sys)

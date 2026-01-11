@@ -460,8 +460,9 @@ class StrategyScene:
                      sector_contents.append(f)
                  
         if clicked_system:
-             if hex_distance(hex_clicked, clicked_system.global_location) == 0:
-                 sector_contents.append(clicked_system) 
+             # System object itself is NOT in the sector list (Middle Panel) 
+             # It only appears in the System Info (Top Panel)
+             pass 
                  
              for p in clicked_system.planets:
                  p_global = clicked_system.global_location + p.location
@@ -472,9 +473,22 @@ class StrategyScene:
                  wp_global = clicked_system.global_location + wp.location
                  if wp_global == hex_clicked:
                      sector_contents.append(wp)
+                     
+             for star in clicked_system.stars:
+                 s_global = clicked_system.global_location + star.location
+                 if s_global == hex_clicked:
+                     sector_contents.append(star)
+                     
+             # Always include Environmental Data (Radiation)
+             from game.strategy.data.physics import SectorEnvironment
+             local_hex = hex_clicked - clicked_system.global_location
+             env = SectorEnvironment(local_hex, clicked_system)
+             sector_contents.append(env)
+
 
         if clicked_system:
             sys_contents = [clicked_system] 
+            sys_contents.extend(clicked_system.stars) # Include all stars
             sys_contents.extend(clicked_system.planets)
             sys_contents.extend(clicked_system.warp_points)
             self.ui.show_system_info(clicked_system, sys_contents)
@@ -527,8 +541,8 @@ class StrategyScene:
         
     def _get_object_asset(self, obj):
         """Resolve the visual asset for a data object."""
-        if hasattr(obj, 'star_type'):
-            color = obj.star_type.color
+        if hasattr(obj, 'color') and hasattr(obj, 'mass'): # Star
+            color = obj.color
             asset_key = 'yellow'
             if color[0] > 200 and color[1] < 100: asset_key = 'red'
             elif color[2] > 200 and color[0] < 100: asset_key = 'blue'
@@ -942,41 +956,67 @@ class StrategyScene:
                          pygame.draw.circle(screen, owner_emp.color, (int(marker_screen.x), int(marker_screen.y)), 5)
                          pygame.draw.circle(screen, (255, 255, 255), (int(marker_screen.x), int(marker_screen.y)), 6, 1)
             
-            star_radius = sys.star_type.radius if sys.star_type else 8
+            primary = sys.primary_star
+            if primary:
+                star_radius = max(2, int((primary.diameter_hexes / 2.0) * self.camera.zoom * 2.0 * 10)) # approximate scalar 
+                # Actually, previously radius=8 was base.
+                # Now diameter=1 to 11. Radius 0.5 to 5.5.
+                # previous code: max(4, int(radius * zoom * 2.0))
+                # If radius=8, result=16*zoom.
+                # New: diameter=1 (Sol-ish). radius=0.5. result=1*zoom? Too small.
+                # We need to scale visual presence.
+                # Let's say 1 hex diameter ~= 20 pixels on screen at zoom 1.0?
+                # HEX_SIZE=10. Diameter=1 means width approx 17px.
+                # So radius in pixels = (diameter/2) * 1.73 * HEX_SIZE?
+                # Let's simplify: radius_px = diameter * 8 * zoom
+                
+                # Render Primary and Companions
+                # Render Primary and Companions
+                for star in sys.stars:
+                    # Calculate position offset from primary
+                    # Primary is at 0,0 locally.
+                    # star.location is HexCoord local to system center.
+                    # Need to map this to pixel offset.
+                    
+                    local_pixel_x, local_pixel_y = hex_to_pixel(star.location, self.HEX_SIZE)
+                    
+                    # hx, hy is world pixel pos of system center
+                    star_screen_pos = self.camera.world_to_screen(pygame.math.Vector2(hx + local_pixel_x, hy + local_pixel_y))
+                    
+                    # Logic for Asset Resolution
+                    asset_key = 'yellow'
+                    color = star.color
+                    if color[0] > 200 and color[1] < 100: asset_key = 'red'
+                    elif color[2] > 200 and color[0] < 100: asset_key = 'blue'
+                    elif color[0] > 200 and color[1] > 200 and color[2] > 200: asset_key = 'white'
+                    elif color[0] > 200 and color[1] > 150: asset_key = 'orange'
+                    
+                    star_img = self.assets['stars'].get(asset_key)
+                    
+                    # Size calculation
+                    # Base size: diameter=1 -> 15px radius?
+                    # Let's try: radius = diameter * 6 * zoom
+                    screen_star_r = max(3, int(star.diameter_hexes * self.HEX_SIZE * self.camera.zoom))
+                    
+                    # Highlight
+                    if self.selected_object == sys and star == primary:
+                        pygame.draw.circle(screen, (255, 255, 255), star_screen_pos, screen_star_r + 4, 1) 
+                    
+                    if star_img:
+                        scaled_img = pygame.transform.smoothscale(star_img, (screen_star_r*2, screen_star_r*2))
+                        dest_rect = scaled_img.get_rect(center=(int(star_screen_pos.x), int(star_screen_pos.y)))
+                        screen.blit(scaled_img, dest_rect)
+                    else:
+                        pygame.draw.circle(screen, color, star_screen_pos, screen_star_r)
+                        
+                    # Name if zoomed
+                    if self.camera.zoom >= 0.5:
+                        font_size = 12 if star == primary else 10
+                        font = pygame.font.SysFont("arial", font_size)
+                        text = font.render(star.name if star != primary else sys.name, True, (200, 200, 200)) # Show System Name for Primary
+                        screen.blit(text, (star_screen_pos.x + 10, star_screen_pos.y))
             
-            # Resolve Asset
-            # Map color to asset key
-            # Default to Yellow
-            asset_key = 'yellow'
-            color = sys.star_type.color
-            if color[0] > 200 and color[1] < 100: asset_key = 'red'
-            elif color[2] > 200 and color[0] < 100: asset_key = 'blue'
-            elif color[0] > 200 and color[1] > 200 and color[2] > 200: asset_key = 'white'
-            elif color[0] > 200 and color[1] > 150: asset_key = 'orange'
-            
-            star_img = self.assets['stars'].get(asset_key)
-            
-            screen_star_r = max(4, int(star_radius * self.camera.zoom * 2.0)) # Scale up a bit for visual flair
-            
-            # Highlight
-            if self.selected_object == sys:
-                pygame.draw.circle(screen, (255, 255, 255), screen_pos, screen_star_r + 4, 1) # Selection Ring
-            
-            if star_img:
-                # Scale
-                scaled_img = pygame.transform.smoothscale(star_img, (screen_star_r*2, screen_star_r*2))
-                dest_rect = scaled_img.get_rect(center=(int(screen_pos.x), int(screen_pos.y)))
-                screen.blit(scaled_img, dest_rect)
-            else:
-                # Fallback
-                pygame.draw.circle(screen, color, screen_pos, screen_star_r)
-            
-            if self.camera.zoom >= 0.5:
-                font = pygame.font.SysFont("arial", 12)
-                text = font.render(sys.name, True, (200, 200, 200))
-                screen.blit(text, (screen_pos.x + 10, screen_pos.y))
-            
-            # Detail Mode
+            # Detail Mode (Planets)
             if self.camera.zoom >= 0.5:
                 self._draw_system_details(screen, sys, world_pos)
 
