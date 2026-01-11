@@ -71,18 +71,14 @@ class Game:
         # Check for forced resolution
         if args.force_resolution:
             WIDTH, HEIGHT = 2560, 1600
-        else:
-            # Force 2560x1600 resolution as requested
+        # Logic: Use 4K if available, else 2560x1600, else smaller?
+        elif monitor_w >= 3840 and monitor_h >= 2160:
+            WIDTH, HEIGHT = 3840, 2160
+        elif monitor_w >= 2560 and monitor_h >= 1600:
             WIDTH, HEIGHT = 2560, 1600
-            
-            # Auto-detection logic (Disabled)
-            # elif monitor_w >= 3840 and monitor_h >= 2160:
-            #     WIDTH, HEIGHT = 3840, 2160
-            # elif monitor_w >= 2560 and monitor_h >= 1600:
-            #     WIDTH, HEIGHT = 2560, 1600
-            # else:
-            #      # Fallback for smaller screens (e.g. 1920x1080)
-            #      WIDTH, HEIGHT = int(monitor_w * 0.9), int(monitor_h * 0.9)
+        else:
+             # Fallback for smaller screens (e.g. 1920x1080)
+             WIDTH, HEIGHT = int(monitor_w * 0.9), int(monitor_h * 0.9)
 
         if not pygame.display.get_surface():
             self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
