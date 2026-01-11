@@ -1,0 +1,41 @@
+{
+    "name": "Test Attacker Proj90",
+    "color": [
+        255,
+        0,
+        0
+    ],
+    "team_id": 1,
+    "ship_class": "TestS_2L",
+    "theme_id": "Federation",
+    "ai_strategy": "test_do_nothing",
+    "layers": {
+        "CORE": [
+            {
+                "id": "test_weapon_proj_fixed"
+            },
+            {
+                "id": "test_storage_ammo"
+            }
+        ],
+        "ARMOR": []
+    },
+    "_test_notes": "Attacker with 45 degree fixed projectile weapon",
+    "expected_stats": {
+        "max_hp": 170,
+        "max_fuel": 0.0,
+        "max_energy": 0.0,
+        "max_ammo": 1000.0,
+        "max_speed": 0,
+        "acceleration_rate": 0.0,
+        "turn_speed": 0.0,
+        "total_thrust": 0,
+        "mass": 35.0,
+        "armor_hp_pool": 0
+    },
+    "resources": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 1000.0
+    }
+}

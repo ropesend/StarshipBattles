@@ -6,7 +6,7 @@ from game.simulation.components.component import LayerType
 from game.core.logger import log_info
 from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior, 
                           FormationBehavior, DoNothingBehavior, StraightLineBehavior,
-                          RotateOnlyBehavior, ErraticBehavior, OrbitBehavior)
+                          RotateOnlyBehavior, ErraticBehavior, OrbitBehavior, StationaryFireBehavior)
 from game.core.constants import AttackType
 
 # Global Managers
@@ -265,6 +265,7 @@ class AIController:
             'formation': FormationBehavior(self),
             # Test-specific behaviors
             'do_nothing': DoNothingBehavior(self),
+            'stationary_fire': StationaryFireBehavior(self),
             'straight_line': StraightLineBehavior(self),
             'rotate_only': RotateOnlyBehavior(self),
             'erratic': ErraticBehavior(self),

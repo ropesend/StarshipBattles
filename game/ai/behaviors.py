@@ -260,6 +260,15 @@ class DoNothingBehavior(AIBehavior):
         # Do nothing else - no navigation, no rotation
 
 
+class StationaryFireBehavior(AIBehavior):
+    """Ship sits still but can fire weapons. Used for weapon testing."""
+    
+    def update(self, target: Any, strategy: Dict[str, Any]) -> None:
+        # Do not disable firing (comp_trigger_pulled stays True from AIController)
+        # Do nothing else - no navigation, no rotation
+        pass
+
+
 class StraightLineBehavior(AIBehavior):
     """Full thrust in initial facing direction. No rotation."""
     

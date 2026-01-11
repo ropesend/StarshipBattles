@@ -1,0 +1,44 @@
+{
+    "name": "Test Attacker Beam360 High",
+    "color": [
+        255,
+        0,
+        0
+    ],
+    "team_id": 1,
+    "ship_class": "TestS_2L",
+    "theme_id": "Federation",
+    "ai_strategy": "test_do_nothing",
+    "layers": {
+        "CORE": [
+            {
+                "id": "test_beam_high_acc"
+            },
+            {
+                "id": "test_gen_fusion"
+            },
+            {
+                "id": "test_storage_energy"
+            }
+        ],
+        "ARMOR": []
+    },
+    "_test_notes": "Attacker with High Accuracy (5.0) Beam",
+    "expected_stats": {
+        "max_hp": 240,
+        "max_fuel": 0.0,
+        "max_energy": 1000.0,
+        "max_ammo": 0.0,
+        "max_speed": 0,
+        "acceleration_rate": 0.0,
+        "turn_speed": 0.0,
+        "total_thrust": 0,
+        "mass": 50.0,
+        "armor_hp_pool": 0
+    },
+    "resources": {
+        "fuel": 0.0,
+        "energy": 1000.0,
+        "ammo": 0.0
+    }
+}

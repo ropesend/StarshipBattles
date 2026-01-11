@@ -1,0 +1,44 @@
+{
+    "name": "Test Target Erratic Small",
+    "color": [
+        0,
+        0,
+        255
+    ],
+    "team_id": 2,
+    "ship_class": "TestS_2L",
+    "theme_id": "Federation",
+    "ai_strategy": "test_erratic_maneuver",
+    "layers": {
+        "CORE": [
+            {
+                "id": "test_armor_std"
+            },
+            {
+                "id": "test_engine_no_fuel"
+            },
+            {
+                "id": "test_thruster_std"
+            }
+        ],
+        "ARMOR": []
+    },
+    "_test_notes": "Small erratic target",
+    "expected_stats": {
+        "max_hp": 370,
+        "max_fuel": 0.0,
+        "max_energy": 0.0,
+        "max_ammo": 0.0,
+        "max_speed": 192.30769230769232,
+        "acceleration_rate": 295.85798816568047,
+        "turn_speed": 238.5283357484778,
+        "total_thrust": 500.0,
+        "mass": 65.0,
+        "armor_hp_pool": 200
+    },
+    "resources": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+    }
+}

@@ -1,0 +1,38 @@
+{
+    "name": "Test Engine 1x LowMass",
+    "color": [
+        0,
+        255,
+        0
+    ],
+    "team_id": 0,
+    "ship_class": "TestS_2L",
+    "theme_id": "Federation",
+    "ai_strategy": "do_nothing",
+    "layers": {
+        "CORE": [
+            {
+                "id": "test_engine_no_fuel"
+            }
+        ],
+        "ARMOR": []
+    },
+    "_test_notes": "Minimal ship: 1 engine only. Mass = hull(20) + engine(20) = 40",
+    "expected_stats": {
+        "max_hp": 150,
+        "max_fuel": 0.0,
+        "max_energy": 0.0,
+        "max_ammo": 0.0,
+        "max_speed": 312.5,
+        "acceleration_rate": 781.25,
+        "turn_speed": 0.0,
+        "total_thrust": 500.0,
+        "mass": 40.0,
+        "armor_hp_pool": 0
+    },
+    "resources": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+    }
+}

@@ -125,6 +125,8 @@ class ProjectileManager:
                 p.is_alive = False
                 p.status = 'hit'
                 if hasattr(p, 'source_weapon') and p.source_weapon:
+                    if not hasattr(p.source_weapon, 'shots_hit'):
+                        p.source_weapon.shots_hit = 0
                     p.source_weapon.shots_hit += 1
                 projectiles_to_remove.add(idx)
         

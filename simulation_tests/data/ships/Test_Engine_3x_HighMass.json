@@ -1,0 +1,51 @@
+{
+    "name": "Test Engine 3x HighMass",
+    "color": [
+        0,
+        255,
+        0
+    ],
+    "team_id": 0,
+    "ship_class": "TestL_3L",
+    "theme_id": "Federation",
+    "ai_strategy": "do_nothing",
+    "layers": {
+        "CORE": [
+            {
+                "id": "test_engine_no_fuel"
+            },
+            {
+                "id": "test_engine_no_fuel"
+            },
+            {
+                "id": "test_engine_no_fuel"
+            },
+            {
+                "id": "test_mass_sim_10k"
+            },
+            {
+                "id": "test_mass_sim_10k"
+            }
+        ],
+        "OUTER": [],
+        "ARMOR": []
+    },
+    "_test_notes": "3 engines + 2x 10k mass sims. Mass = hull(2000) + 3*20 + 2*10000 = 22060. Thrust = 1500",
+    "expected_stats": {
+        "max_hp": 2152,
+        "max_fuel": 0.0,
+        "max_energy": 0.0,
+        "max_ammo": 0.0,
+        "max_speed": 1.699909338168631,
+        "acceleration_rate": 0.007705844687981102,
+        "turn_speed": 0.0,
+        "total_thrust": 1500.0,
+        "mass": 22060.0,
+        "armor_hp_pool": 0
+    },
+    "resources": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+    }
+}

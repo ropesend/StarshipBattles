@@ -184,6 +184,9 @@ class ShipCombatMixin:
                                 if comp.has_ability('SeekerWeaponAbility'):
                                     seeker_ab = comp.get_ability('SeekerWeaponAbility')
                                     
+                                    # Calculate aim_vec for seeker launch direction
+                                    aim_pos, aim_vec = self._calculate_firing_solution(comp, target)
+                                    
                                     # Launch vector
                                     comp_facing = self.angle + getattr(comp, 'facing_angle', 0)
                                     # Use target angle if we have a valid targeting solution
