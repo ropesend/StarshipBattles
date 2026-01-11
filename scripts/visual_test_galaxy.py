@@ -168,9 +168,60 @@ def main():
             # Visibility check
             if -200 < screen_pos.x < current_w + 200 and -200 < screen_pos.y < current_h + 200:
                 
-                # Get Star Properties
-                star_radius = sys.star_type.radius if sys.star_type else 8
-                star_color = sys.star_type.color if sys.star_type else (255, 255, 200)
+                # Get Primary Star Properties
+                primary = sys.primary_star
+                # Render all stars
+                if primary:
+                    # Draw Primary at center (hx, hy)
+                    # Convert diameter (hexes) to pixels
+                    # diameter_hexes is the full width. Radius is half.
+                    # HEX_SIZE is center-to-corner radius of a single hex.
+                    # So 1 hex width (flat to flat) is sqrt(3) * HEX_SIZE
+                    # But diameter_hexes usually refers to grid units.
+                    # Let's assume diameter_hexes means "this many hexes wide".
+                    # Radius in pixels = (diameter / 2) * (width of hex)
+                    # Width of hex ~= 1.73 * HEX_SIZE
+                    # But let's keep it simple: scale visually.
+                    
+                    for star in sys.stars:
+                         # Calculate position offset from primary
+                         # Primary is at 0,0 locally.
+                         # Companions are at star.orbit_distance, star.orbit_angle relative
+                         
+                         # Convert polar to cartesian (hex units) then to pixels
+                         # Or just polar to pixels directly?
+                         # Hex units...
+                         # Distance is in Hexes.
+                         # hex_to_pixel usually takes a HexCoord.
+                         # We can simulate a HexCoord or just do math.
+                         # r = star.orbit_distance * (hex_width?)
+                         # Let's say hex distance N means N steps.
+                         
+                         dist_pixels = 0
+                         if star.orbit_distance > 0:
+                             # Approx pixel distance
+                             dist_pixels = star.orbit_distance * HEX_SIZE * 1.5 
+                             # 1.5 is the x-spacing of hexes, good approx.
+                             
+                             rel_x = math.cos(star.orbit_angle) * dist_pixels
+                             rel_y = math.sin(star.orbit_angle) * dist_pixels
+                         else:
+                             rel_x, rel_y = 0, 0
+                             
+                         star_screen_pos = camera.world_to_screen(pygame.math.Vector2(hx + rel_x, hy + rel_y))
+                         
+                         # Size
+                         # Base radius in pixels
+                         # Let's make 1 hex diameter = 2 * HEX_SIZE pixels roughly
+                         radius_px = max(2, int((star.diameter_hexes / 2.0) * HEX_SIZE * 2.0 * camera.zoom))
+                         
+                         pygame.draw.circle(screen, star.color, star_screen_pos, radius_px)
+                         
+                         # Add label for companions if zoomed
+                         if camera.zoom > 5.0 and star.orbit_distance > 0:
+                             s_font = pygame.font.SysFont("arial", 10)
+                             s_text = s_font.render(star.name, True, (200, 200, 200))
+                             screen.blit(s_text, (star_screen_pos.x, star_screen_pos.y - radius_px - 10))
                 
                 # --- SYSTEM DETAIL MODE ---
                 if camera.zoom > DETAIL_ZOOM_LEVEL:
@@ -214,11 +265,7 @@ def main():
                         
                         # Let's just draw the planet for now as requested "render planets at exact hex location"
                 
-                # --- STAR RENDERING ---
-                # Draw Star
-                # Scale star by zoom, but keep min size
-                screen_star_r = max(2, int(star_radius * camera.zoom))
-                pygame.draw.circle(screen, star_color, screen_pos, screen_star_r)
+                # Stars already drawn above in loop
                 
                 # Draw Warp Points (Close zoom)
                 # Draw Warp Points (Close zoom)
