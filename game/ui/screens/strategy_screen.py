@@ -1,6 +1,7 @@
 import pygame
 import pygame_gui
 from game.strategy.data.fleet import OrderType
+from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 
 class StrategyInterface:
     """Handles all UI rendering and interaction for the StrategyScene."""
@@ -320,8 +321,40 @@ class StrategyInterface:
             text = f"<b>Planet:</b> {obj.name}<br>"
             text += f"<b>Type:</b> {obj.planet_type.name}<br>"
             text += f"<b>Orbit:</b> Ring {obj.orbit_distance}<br>"
-            text += f"<b>Local Loc:</b> {obj.location}<br>"
-            text += f"<br><i>Sample lore text about this {obj.planet_type.name} world.</i>"
+            
+            # Mass formatting
+            m_earth = 5.97e24
+            m_jup = 1.89e27
+            if obj.mass >= m_jup:
+                m_str = f"{obj.mass/m_jup:.2f} M_Jup"
+            elif obj.mass >= m_earth:
+                m_str = f"{obj.mass/m_earth:.2f} M_Earth"
+            else:
+                m_str = f"{obj.mass/m_earth:.4f} M_Earth"
+                
+            text += f"<b>Mass:</b> {m_str}<br>"
+            text += f"<b>Radius:</b> {obj.radius/1000.0:.0f} km<br>"
+            text += f"<b>Gravity:</b> {obj.surface_gravity/9.81:.2f} g<br>"
+            text += f"<b>Temp:</b> {int(obj.surface_temperature)} K<br>"
+            text += f"<b>Pressure (Sea Level):</b> {obj.surface_pressure/101325.0:.2f} atm<br>"
+            
+            # Atmosphere
+            text += "<br><b>Atmosphere:</b><br>"
+            if obj.atmosphere:
+                # Sort by pressure/amount
+                sorted_gases = sorted(obj.atmosphere.items(), key=lambda x: x[1], reverse=True)
+                total_p = obj.surface_pressure
+                count = 0
+                for gas, p_partial in sorted_gases:
+                    perc = (p_partial / total_p) * 100
+                    if perc < 0.1: continue
+                    text += f" {gas}: {perc:.1f}%<br>"
+                    count += 1
+            else:
+                text += " None<br>"
+                
+            text += f"<br><b>Water:</b> {obj.surface_water*100:.0f}%<br>"
+            # text += f"<b>Tectonics:</b> {obj.tectonic_activity*100:.0f}%<br>"
             
         elif hasattr(obj, 'destination_id'): # Warp Point
             text = f"<b>Warp Point</b><br>"
@@ -396,3 +429,13 @@ class StrategyInterface:
         if mx > self.width - self.sidebar_width:
             return True
         return False
+
+    def prompt_planet_selection(self, planets, on_select):
+        """Open a modal window to select a planet."""
+        width = 400
+        height = 300
+        x = (self.width - width) / 2
+        y = (self.height - height) / 2
+        
+        rect = pygame.Rect(x, y, width, height)
+        PlanetSelectionWindow(rect, self.manager, planets, on_select)

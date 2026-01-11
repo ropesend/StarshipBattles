@@ -1,0 +1,68 @@
+from dataclasses import dataclass, field
+from enum import Enum, auto
+from typing import Dict, List, Optional
+from game.strategy.data.hex_math import HexCoord
+
+class PlanetType(Enum):
+    """
+    Broad classification of planetary bodies.
+    Derived from physical properties.
+    """
+    GAS_GIANT = auto()
+    ICE_GIANT = auto()
+    TERRESTRIAL = auto() # Earth-like, Mars-like, Venus-like
+    BARREN = auto() # Moon-like, Mercury-like
+    ICE_WORLD = auto() # Europa, Pluto
+    LAVA = auto() # Hot, molten surface
+    ASTEROID = auto() # Small bodies
+
+@dataclass
+class Planet:
+    """
+    Represents a planetary body (Planet or Moon).
+    Physical properties are grounded in real physics units (SI).
+    """
+    name: str
+    location: HexCoord # Local system coordinates
+    orbit_distance: int # Ring number
+    
+    # Physical Properties
+    mass: float # kg
+    radius: float # meters
+    surface_area: float # m^2
+    density: float # kg/m^3
+    surface_gravity: float # m/s^2 (also stored as g's for convenience if needed, but easy to calc)
+    
+    # Surface Conditions
+    surface_pressure: float # Pascals (1 ATM = 101325 Pa)
+    surface_temperature: float # Kelvin
+    surface_water: float # 0.0 to 1.0 (Percentage of surface covered)
+    
+    # Internal Properties
+    tectonic_activity: float # 0.0 (Dead) to 1.0 (Volcanic Hell)
+    magnetic_field: float # Relative to Earth (0.0 to X.0)
+    
+    # Atmosphere: Gas Name -> Partial Pressure (Pa) or Percentage? 
+    # Plan said "Percentage/Pressure". Let's store Partial Pressure in Pa for simulation accuracy.
+    # Total pressure is sum of these.
+    atmosphere: Dict[str, float] = field(default_factory=dict)
+    
+    # Classification
+    planet_type: PlanetType = PlanetType.BARREN
+    
+    # Hierarchy / Render
+    # Parent star is implicit system primary generally, but could be specific star in binary.
+    # We will just assume system center for now as per hex logic.
+    orbit_parent_name: Optional[str] = None # Name of Star or "Planet I" if strictly modeling hierarchy later, but for now mostly for flavor.
+    
+    # Empire
+    owner_id: Optional[int] = None
+    construction_queue: list = field(default_factory=list)
+
+    @property
+    def total_pressure_atm(self) -> float:
+        total_pa = sum(self.atmosphere.values())
+        return total_pa / 101325.0
+
+    def add_production(self, item_name, turns):
+        self.construction_queue.append([item_name, turns])

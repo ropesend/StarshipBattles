@@ -197,15 +197,21 @@ def main():
                          # r = star.orbit_distance * (hex_width?)
                          # Let's say hex distance N means N steps.
                          
-                         dist_pixels = 0
-                         if star.orbit_distance > 0:
-                             # Approx pixel distance
-                             dist_pixels = star.orbit_distance * HEX_SIZE * 1.5 
-                             # 1.5 is the x-spacing of hexes, good approx.
-                             
-                             rel_x = math.cos(star.orbit_angle) * dist_pixels
-                             rel_y = math.sin(star.orbit_angle) * dist_pixels
+                         # Star has 'location' (HexCoord), primary is at (0,0)
+                         # We need to calculate pixel offset from sys center (hx, hy)
+                         
+                         local_hex = star.location
+                         # Hex to pixel relative to 0,0
+                         rel_x, rel_y = hex_to_pixel(local_hex, HEX_SIZE)
+                         
+                         # Check distance for visual logic (zoom labels etc)
+                         dist_hexes = max(abs(local_hex.q), abs(local_hex.r), abs(local_hex.r + local_hex.q)) # approx
+                         
+                         if dist_hexes > 0:
+                             # It is a companion
+                             pass
                          else:
+                             # Primary
                              rel_x, rel_y = 0, 0
                              
                          star_screen_pos = camera.world_to_screen(pygame.math.Vector2(hx + rel_x, hy + rel_y))
@@ -218,7 +224,7 @@ def main():
                          pygame.draw.circle(screen, star.color, star_screen_pos, radius_px)
                          
                          # Add label for companions if zoomed
-                         if camera.zoom > 5.0 and star.orbit_distance > 0:
+                         if camera.zoom > 5.0 and dist_hexes > 0:
                              s_font = pygame.font.SysFont("arial", 10)
                              s_text = s_font.render(star.name, True, (200, 200, 200))
                              screen.blit(s_text, (star_screen_pos.x, star_screen_pos.y - radius_px - 10))

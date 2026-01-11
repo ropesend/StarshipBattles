@@ -5,9 +5,11 @@ Traceback (most recent call last):
     self._update_and_draw(frame_time, events)
   File "C:\Developer\StarshipBattles\game\app.py", line 319, in _update_and_draw
     self.strategy_scene.draw(self.screen)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 681, in draw
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 704, in draw
     self._draw_systems(screen)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 945, in _draw_systems
-    star_radius = sys.star_type.radius if sys.star_type else 8
-                                          ^^^^^^^^^^^^^
-AttributeError: 'StarSystem' object has no attribute 'star_type'
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 1030, in _draw_systems
+    self._draw_system_details(screen, sys, world_pos)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 1074, in _draw_system_details
+    idx = hash(planet) % len(images)
+          ^^^^^^^^^^^^
+TypeError: unhashable type: 'Planet'

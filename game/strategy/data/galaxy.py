@@ -6,37 +6,10 @@ from game.strategy.data.naming import NameRegistry
 import os
 
 from game.strategy.data.stars import StarGenerator, Star, StarType
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planet_gen import PlanetGenerator
 
-class PlanetType(Enum):
-    # Name, Min Orbit Ring (int), Max Orbit Ring (int), Color (RGB)
-    # Rings 1-3: Inner/Hot
-    # Rings 4-9: Habitable/Temperate
-    # Rings 10+: Outer/Cold
-    LAVA = (1, 3, (255, 100, 0))
-    BARREN = (1, 15, (150, 150, 150))
-    TERRAN = (4, 9, (0, 200, 200)) # Rare, Goldilocks
-    GAS_GIANT = (8, 20, (200, 150, 100))
-    ICE_WORLD = (12, 25, (100, 200, 255))
-    ASTEROID_FIELD = (3, 20, (100, 100, 100))
-    
-    def __init__(self, min_ring, max_ring, color):
-        self.min_ring = min_ring
-        self.max_ring = max_ring
-        self.color = color
-
-class Planet:
-    def __init__(self, planet_type, orbit_distance, location):
-        self.planet_type = planet_type
-        self.orbit_distance = orbit_distance # Int (Ring number)
-        self.location = location # HexCoord (Local to system, 0,0 is star)
-        self.name = f"Planet-{orbit_distance}"
-        
-        # Empire Management
-        self.owner_id = None # int or None
-        self.construction_queue = [] # List of (item_name, turns_remaining)
-
-    def add_production(self, item_name, turns):
-        self.construction_queue.append([item_name, turns])
+# Planet and PlanetType moved to game.strategy.data.planet
 
 class WarpPoint:
     def __init__(self, destination_id, location):
@@ -78,6 +51,7 @@ class Galaxy:
         data_path = os.path.join(os.getcwd(), 'data', 'StarSystemNames.YAML')
         self.naming = NameRegistry(data_path)
         self.star_generator = StarGenerator()
+        self.planet_generator = PlanetGenerator()
         
     def add_system(self, system):
         """Add a system to the galaxy map."""
@@ -90,31 +64,13 @@ class Galaxy:
     
     def generate_planets(self, system):
         """Generate planets for a system based on its star type."""
-        # Placeholder for now until Planet Gen is reworked
-        # We need to respect the star diameters
-        if not system.primary_star: return
+        # Use new Planet Generator
+        if not system.stars: return
         
-        # Safe distance start: Primary Radius (Hexes) + 2
-        safe_start = int(system.primary_star.diameter_hexes / 2) + 2
+        system.planets = self.planet_generator.generate_system_bodies(system.name, system.stars)
         
-        # Basic placeholder generation
-        base_count = random.randint(0, 5)
-        occupied_rings = set()
-        
-        for _ in range(base_count):
-             p_type = random.choice(list(PlanetType))
-             ring = random.randint(safe_start, safe_start + 15)
-             if ring in occupied_rings: continue
-             occupied_rings.add(ring)
-             
-             ring_hexes = hex_ring(ring)
-             if not ring_hexes: continue
-             loc = random.choice(ring_hexes)
-             
-             system.planets.append(Planet(p_type, ring, loc))
-        
-        system.planets.sort(key=lambda p: p.orbit_distance)
-        self.naming.name_planets(system.name, system.planets)
+        # Sort by distance, then mass (descending) for consistent ordering
+        system.planets.sort(key=lambda p: (p.orbit_distance, -p.mass))
 
     def generate_systems(self, count, min_dist=10):
         """
@@ -156,6 +112,51 @@ class Galaxy:
                 
         return generated
 
+    def _calculate_warp_distance(self, system):
+        """
+        Calculate the distance for a warp point based on the primary star's size.
+        Formula: Base (15) + (Star Diameter * 1.5) + Random(-2 to 5)
+        Min Distance: 10
+        """
+        star_diam = 1.0
+        if system.primary_star:
+            star_diam = system.primary_star.diameter_hexes
+            
+        base_dist = 15.0
+        scaled_dist = base_dist + (star_diam * 1.5)
+        jitter = random.uniform(-2.0, 5.0)
+        
+        total_dist = scaled_dist + jitter
+        return max(10.0, total_dist)
+
+    def _is_angle_clear(self, system, target_angle_rad, threshold_deg=30):
+        """
+        Check if a target angle is clear of existing warp lines.
+        Returns True if the angle difference to all existing lines is >= threshold.
+        """
+        if not system.warp_points:
+            return True
+            
+        threshold_rad = math.radians(threshold_deg)
+        
+        for wp in system.warp_points:
+            # Calculate angle of existing WP
+            # We need to convert hex location to angle relative to system center (0,0)
+            # Local hex coords are relative to system center.
+            wx, wy = hex_to_pixel(wp.location, 1.0)
+            existing_angle = math.atan2(wy, wx)
+            
+            diff = abs(target_angle_rad - existing_angle)
+            # Normalize to 0-PI
+            while diff > math.pi:
+                diff -= 2 * math.pi
+            diff = abs(diff)
+            
+            if diff < threshold_rad:
+                return False
+                
+        return True
+
     def create_vars_link(self, sys_a, sys_b):
         """Create a warp link between two systems."""
         for wp in sys_a.warp_points:
@@ -170,22 +171,22 @@ class Galaxy:
         angle_b_to_a = math.atan2(ay - by, ax - bx)
         
         # 2. Place Warp Point at System Edge (Local Map)
-        # Target ~25 Hexes out
-        WARP_HEX_DIST = 25
         
-        # We want the resulting HexCoord to have a distance of approx 25.
+        dist_a = self._calculate_warp_distance(sys_a)
+        dist_b = self._calculate_warp_distance(sys_b)
+        
         # hex_to_pixel(size=1) scales x by 1.5.
-        # So we project ~37.5 units in 'pixel space' of size 1.0.
-        projection_dist = WARP_HEX_DIST * 1.5
         
         # For A -> B
-        local_ax = math.cos(angle_a_to_b) * projection_dist
-        local_ay = math.sin(angle_a_to_b) * projection_dist
+        projection_dist_a = dist_a * 1.5
+        local_ax = math.cos(angle_a_to_b) * projection_dist_a
+        local_ay = math.sin(angle_a_to_b) * projection_dist_a
         loc_a = pixel_to_hex(local_ax, local_ay, 1.0)
         
         # For B -> A
-        local_bx = math.cos(angle_b_to_a) * projection_dist
-        local_by = math.sin(angle_b_to_a) * projection_dist
+        projection_dist_b = dist_b * 1.5
+        local_bx = math.cos(angle_b_to_a) * projection_dist_b
+        local_by = math.sin(angle_b_to_a) * projection_dist_b
         loc_b = pixel_to_hex(local_bx, local_by, 1.0)
         
         sys_a.add_warp_point(sys_b.name, loc_a)
@@ -245,12 +246,36 @@ class Galaxy:
             
             if deg_i >= 10 or deg_j >= 10:
                 continue
+            
+            # Check Angle Preference
+            # Calculate intended angle for both
+            ax, ay = hex_to_pixel(s_i.global_location, 1.0)
+            bx, by = hex_to_pixel(s_j.global_location, 1.0)
+            angle_i_to_j = math.atan2(by - ay, bx - ax)
+            angle_j_to_i = math.atan2(ay - by, ax - bx)
+            
+            # If angles are bad, reduce chance drastically or skip
+            # Preference: "prefer to have at least 30 degrees... if necessary... ok"
+            valid_angles = True
+            if not self._is_angle_clear(s_i, angle_i_to_j, threshold_deg=30):
+                valid_angles = False
+            if not self._is_angle_clear(s_j, angle_j_to_i, threshold_deg=30):
+                valid_angles = False
                 
             # If degree is low, boost chance
             base_chance = 40.0 / (dist + 1) # Arbitrary tuning
             
             if deg_i < 3 or deg_j < 3:
                 base_chance *= 3.0 # Boost to help them get up to min
+            
+            # Penalize bad angles
+            if not valid_angles:
+                # If degrees are decent (>3), strictly reject (or very low chance)
+                # If degrees are low (<3), allow with penalty because "if it is necessary... that is ok"
+                if deg_i > 3 and deg_j > 3:
+                    continue
+                else:
+                    base_chance *= 0.1 # Severe penalty
             
             if random.random() < base_chance:
                 self.create_vars_link(s_i, s_j)
