@@ -251,7 +251,7 @@ class StrategyInterface:
         
     def _get_label_for_obj(self, obj):
         if hasattr(obj, 'star_type'): return f"Star: {obj.star_type.name}"
-        elif hasattr(obj, 'planet_type'): return f"Planet: {obj.planet_type.name}"
+        elif hasattr(obj, 'planet_type'): return f"Planet: {obj.name}"
         elif hasattr(obj, 'destination_id'): return f"Warp Point -> {obj.destination_id}"
         elif hasattr(obj, 'ships'): return f"Fleet {obj.id} ({len(obj.ships)})"
         return "Unknown Object"
@@ -270,7 +270,8 @@ class StrategyInterface:
             text += f"<b>Temp:</b> {obj.star_type.color}<br>" # placeholder
             
         elif hasattr(obj, 'planet_type'): # Planet
-            text = f"<b>Planet:</b> {obj.planet_type.name}<br>"
+            text = f"<b>Planet:</b> {obj.name}<br>"
+            text += f"<b>Type:</b> {obj.planet_type.name}<br>"
             text += f"<b>Orbit:</b> Ring {obj.orbit_distance}<br>"
             text += f"<b>Local Loc:</b> {obj.location}<br>"
             text += f"<br><i>Sample lore text about this {obj.planet_type.name} world.</i>"

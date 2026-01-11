@@ -199,6 +199,12 @@ def main():
                         p_rad = max(2, int(3 * camera.zoom))
                         pygame.draw.circle(screen, p_color, p_screen, p_rad)
                         
+                        # Draw Planet Name (Very faint or small unless super zoomed)
+                        if camera.zoom > 5.0:
+                            p_font = pygame.font.SysFont("arial", 10)
+                            p_text = p_font.render(planet.name, True, (150, 150, 150))
+                            screen.blit(p_text, (p_screen.x + 5, p_screen.y - 5))
+                        
                         # Draw faint ring for orbit indication? 
                         # We can use hex_distance or just circles as approximation
                         # Or draw the specific hex ring?
@@ -253,7 +259,7 @@ def main():
         screen.blit(mode_text, (20, 20))
         
         if camera.zoom > DETAIL_ZOOM_LEVEL:
-            instr = font.render("SCROLL to Zoom in/out to see Planets", True, (100, 255, 100))
+            instr = font.render("SCROLL to Zoom in/out to see Planets (Zoom > 5.0 for names)", True, (100, 255, 100))
             screen.blit(instr, (20, 45))
         
         pygame.display.flip()
