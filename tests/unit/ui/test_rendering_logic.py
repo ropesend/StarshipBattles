@@ -48,12 +48,10 @@ class TestRenderingLogic(unittest.TestCase):
     def tearDown(self):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
-        
-        # Add missing cleanup to fix parallel execution failures
-        pygame.display.quit()  # CRITICAL: Must quit display BEFORE pygame.quit()
-        pygame.quit()
-        from game.core.registry import RegistryManager
-        RegistryManager.instance().clear()
+
+        # Note: pygame and registry cleanup is handled by conftest fixtures
+        # (pygame_display_reset and reset_game_state)
+        # DO NOT call pygame.quit() here as it conflicts with session-level fixture
 
     def test_draw_ship_culling(self):
         """Verify ship is skipped if out of camera bounds."""

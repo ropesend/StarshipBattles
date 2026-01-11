@@ -58,13 +58,9 @@ class TestDetailPanelRendering(unittest.TestCase):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
 
-        # NOTE: Do NOT call pygame.quit() here - the root conftest manages
-        # pygame lifecycle at session scope. Calling quit() destroys the
-        # session-level pygame state and breaks other parallel tests.
-
-        # Clean up registry PER TEST
-        from game.core.registry import RegistryManager
-        RegistryManager.instance().clear()
+        # Note: pygame and registry cleanup is handled by conftest fixtures
+        # (pygame_display_reset and reset_game_state)
+        # DO NOT call pygame.quit() or RegistryManager.clear() here as it conflicts with fixtures
 
     def test_html_stats_generation_basic(self):
         """Verify basic component stats (Name, Type, Mass, HP) are generated."""

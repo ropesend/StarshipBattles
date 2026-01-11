@@ -7,15 +7,14 @@ from ui import Button, Label, Slider
 
 class TestButton(unittest.TestCase):
     """Test Button widget."""
-    
+
     def setUp(self):
-        import os
-        os.environ["SDL_VIDEODRIVER"] = "dummy"
-        pygame.init()
-        pygame.font.init()
+        # Note: pygame initialization is handled by conftest fixtures
+        pass
 
     def tearDown(self):
-        pygame.quit()
+        # Note: pygame cleanup is handled by conftest fixtures
+        pass
     
     
     def test_button_initialization(self):
@@ -74,15 +73,14 @@ class TestButton(unittest.TestCase):
 
 class TestLabel(unittest.TestCase):
     """Test Label widget."""
-    
+
     def setUp(self):
-        import os
-        os.environ["SDL_VIDEODRIVER"] = "dummy"
-        pygame.init()
-        pygame.font.init()
+        # Note: pygame initialization is handled by conftest fixtures
+        pass
 
     def tearDown(self):
-        pygame.quit()
+        # Note: pygame cleanup is handled by conftest fixtures
+        pass
     
     
     def test_label_initialization(self):

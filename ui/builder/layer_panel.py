@@ -123,15 +123,18 @@ class LayerPanel(DropTarget):
             
             for l_type in layer_order:
                 if l_type not in ship.layers: continue
-                
+
+                # Skip HULL layer entirely - hull components should be hidden from structure list
+                # (BUG-08b fix: Hull should not be visible in UI)
+                if l_type == LayerType.HULL:
+                    continue
+
                 data = ship.layers[l_type]
-                is_readonly = (l_type == LayerType.HULL)
-                
-                # Filter out hull components ONLY from non-hull layers (legacy cleanup/safety)
-                # Jan 2026 Refactor: Hull is now a component in its own layer.
-                components = data['components']
-                if not is_readonly:
-                    components = [c for c in components if not c.id.startswith('hull_')]
+                is_readonly = False
+
+                # Filter out hull components from other layers (legacy cleanup/safety)
+                # Jan 2026 Refactor: Hull is now a component in its own dedicated layer.
+                components = [c for c in data['components'] if not c.id.startswith('hull_')]
                 
                 current_mass = sum(c.mass for c in components)
                 layer_max_mass = ship.max_mass_budget * data.get('max_mass_pct', 1.0)

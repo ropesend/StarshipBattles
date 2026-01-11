@@ -179,10 +179,14 @@ class TurnEngine:
         return f2
 
     def _process_end_turn_orders(self, fleet, empire):
-        """Process static orders like COLONIZE."""
+        """Process static orders like COLONIZE.
+        
+        Returns:
+            True if fleet was consumed/deleted by the order, False otherwise.
+        """
         order = fleet.get_current_order()
         if not order:
-            return
+            return False
             
         if order.type == OrderType.COLONIZE:
             planet = order.target
@@ -201,6 +205,13 @@ class TurnEngine:
             # Real logic should verify location.
             # But the order might not store location if reference is object.
             
-            # For now, execute.
+            # Execute colonization
             empire.add_colony(planet)
             fleet.pop_order()
+            
+            # Colonizing ship is consumed to create the colony
+            empire.remove_fleet(fleet)
+            return True
+        
+        return False
+

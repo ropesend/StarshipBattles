@@ -10,9 +10,7 @@ os.environ['SDL_VIDEODRIVER'] = 'dummy'
 
 
 
-from game.simulation.entities.ship import Ship, initialize_ship_data, LayerType
-from game.simulation.components.component import load_components, load_modifiers
-from game.core.registry import RegistryManager
+from game.simulation.entities.ship import Ship, LayerType
 from ui.builder.layer_panel import LayerPanel
 from ui.builder.structure_list_items import LayerHeaderItem, LayerComponentItem, IndividualComponentItem
 
@@ -21,12 +19,8 @@ class TestStructureVisibility(unittest.TestCase):
     # setUpClass / tearDownClass removed
 
     def setUp(self):
-        pygame.init()
-        pygame.font.init()
-        RegistryManager.instance().clear()
-        initialize_ship_data()
-        load_components()
-        load_modifiers()
+        # Note: pygame and registry initialization is handled by conftest fixtures
+        # (enforce_headless, pygame_display_reset, and reset_game_state)
 
         # Patch UI elements in the structure_list_items namespace
         self.item_uipanel_patch = patch('ui.builder.structure_list_items.UIPanel')
@@ -80,12 +74,10 @@ class TestStructureVisibility(unittest.TestCase):
     def tearDown(self):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
-        
-        # Clean up pygame and registry PER TEST (fixes parallel execution failures)
-        pygame.display.quit()  # CRITICAL: Must quit display BEFORE pygame.quit()
-        pygame.quit()
-        from game.core.registry import RegistryManager
-        RegistryManager.instance().clear()
+
+        # Note: pygame and registry cleanup is handled by conftest fixtures
+        # (pygame_display_reset and reset_game_state)
+        # DO NOT call pygame.quit() here as it conflicts with session-level fixture
 
     def test_hull_is_hidden_from_structure_list(self):
         """Verify that hull components are not rendered in the structure list."""

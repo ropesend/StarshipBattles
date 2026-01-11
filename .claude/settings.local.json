@@ -5,7 +5,13 @@
       "Bash(python -m pytest:*)",
       "Bash(for i in 1 2 3)",
       "Bash(do echo \"=== Run $i ===\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(pytest:*)",
+      "Bash(Select-String -Pattern \"FAILED|test_structure_visibility\" -Context 0,3)",
+      "Bash(for i in {1..5})",
+      "Bash(for i in {1..10})",
+      "Bash(do pytest \"c:\\\\Dev\\\\Starship Battles\\\\tests\\\\unit\\\\ui\\\\test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_stats_generation_basic\" -q)",
+      "Bash(do pytest tests/unit/ -q)"
     ]
   }
 }

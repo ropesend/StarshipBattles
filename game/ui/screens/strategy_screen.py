@@ -158,7 +158,7 @@ class StrategyInterface:
         )
         self.btn_next_turn = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(start_x + offset_main + 220, 5, 150, 40), 
-            text="Next Turn",
+            text="End Turn",
             manager=self.manager,
             container=self.top_bar
         )
