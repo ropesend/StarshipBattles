@@ -48,6 +48,7 @@ class BuilderViewModel:
         self._template_modifiers: Dict[str, Any] = {}
         self._dragged_item: Optional[Component] = None
         self._available_components: List[Component] = []
+        self._show_hull_layer: bool = False
         
     # ─────────────────────────────────────────────────────────────────
     # Ship Property
@@ -236,6 +237,26 @@ class BuilderViewModel:
     def refresh_available_components(self):
         """Refresh the available components list from registry."""
         self._available_components = get_all_components()
+        
+    # ─────────────────────────────────────────────────────────────────
+    # Hull Layer Visibility
+    # ─────────────────────────────────────────────────────────────────
+    
+    @property
+    def show_hull_layer(self) -> bool:
+        """Whether the hull layer is visible in the structure panel."""
+        return self._show_hull_layer
+    
+    @show_hull_layer.setter
+    def show_hull_layer(self, value: bool):
+        if self._show_hull_layer != value:
+            self._show_hull_layer = value
+            self.event_bus.emit('HULL_LAYER_VISIBILITY_CHANGED', value)
+    
+    def toggle_hull_layer(self) -> bool:
+        """Toggle hull layer visibility and return the new state."""
+        self.show_hull_layer = not self._show_hull_layer
+        return self._show_hull_layer
         
     # ─────────────────────────────────────────────────────────────────
     # Modifier Synchronization

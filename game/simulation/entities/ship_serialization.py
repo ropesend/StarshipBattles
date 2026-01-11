@@ -65,7 +65,7 @@ class ShipSerializer:
                 # Save as dict with modifiers
                 c_obj = {"id": comp.id}
                 if comp.modifiers:
-                    c_obj["modifiers"] = [{"id": k, "value": v} for k, v in comp.modifiers.items()]
+                    c_obj["modifiers"] = [{"id": m.definition.id, "value": m.value} for m in comp.modifiers]
                 filter_comps.append(c_obj)
                 
             data["layers"][ltype.name] = filter_comps
