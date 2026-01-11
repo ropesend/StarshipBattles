@@ -2,6 +2,8 @@ import random
 import math
 from enum import Enum, auto
 from game.strategy.data.hex_math import HexCoord, hex_distance, hex_to_pixel, hex_ring, pixel_to_hex
+from game.strategy.data.naming import NameRegistry
+import os
 
 class StarType(Enum):
     # Name, Radius (px relative), Color (RGB), Weight
@@ -38,6 +40,7 @@ class Planet:
         self.planet_type = planet_type
         self.orbit_distance = orbit_distance # Int (Ring number)
         self.location = location # HexCoord (Local to system, 0,0 is star)
+        self.name = f"Planet-{orbit_distance}"
         
         # Empire Management
         self.owner_id = None # int or None
@@ -72,6 +75,11 @@ class Galaxy:
         self.radius = radius
         self.systems = {} # keys: HexCoord, values: StarSystem
         self.name_map = {} # keys: str (name), values: StarSystem
+        
+        # Initialize Naming Registry
+        # Assuming run from root of repo
+        data_path = os.path.join(os.getcwd(), 'data', 'StarSystemNames.YAML')
+        self.naming = NameRegistry(data_path)
         
     def add_system(self, system):
         """Add a system to the galaxy map."""
@@ -128,6 +136,7 @@ class Galaxy:
             system.planets.append(planet)
             
         system.planets.sort(key=lambda p: p.orbit_distance)
+        self.naming.name_planets(system.name, system.planets)
 
     def generate_systems(self, count, min_dist=10):
         # ... (same as before)
@@ -161,7 +170,7 @@ class Galaxy:
                     break
             
             if valid:
-                name = f"Sys-{len(self.systems) + 1}"
+                name = self.naming.get_system_name()
                 s_type = random.choices(star_types, weights=weights, k=1)[0]
                 sys = StarSystem(name, coord, star_type=s_type)
                 self.generate_planets(sys)
