@@ -1,16 +1,31 @@
 
 import unittest
-from game.strategy.data.galaxy import Planet, HexCoord
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 
 class TestProduction(unittest.TestCase):
     def setUp(self):
-        class SimpleType:
-            name = "Terran"
-        
-        self.planet = Planet(SimpleType(), 3, HexCoord(0, 0))
+        # Create a valid planet manually to satisfy the dataclass
+        self.planet = Planet(
+            name="Terran Prime",
+            location=HexCoord(0, 0),
+            orbit_distance=3,
+            mass=5.97e24,
+            radius=6371000,
+            surface_area=5.1e14,
+            density=5515,
+            surface_gravity=9.81,
+            surface_pressure=101325,
+            surface_temperature=288,
+            surface_water=0.7,
+            tectonic_activity=0.1,
+            magnetic_field=1.0,
+            atmosphere={'N2': 78000.0, 'O2': 21000.0},
+            planet_type=PlanetType.TERRESTRIAL
+        )
         self.planet.owner_id = 0
         
         self.empire = Empire(0, "Terran", (0, 0, 255))

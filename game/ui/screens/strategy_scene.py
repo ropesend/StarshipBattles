@@ -322,23 +322,32 @@ class StrategyScene:
         if not self.selected_fleet:
             return
             
-        # Find planet at fleet location
-        # Re-use picking logic or just search in global list?
-        # Efficient: Search system.
+        # Find planets at fleet location
         start_sys = self._get_system_at_hex(self.selected_fleet.location)
-        found_planet = None
+        valid_planets = []
+        
         if start_sys:
-            # Check planets
             loc_local = self.selected_fleet.location - start_sys.global_location
             for p in start_sys.planets:
                  if p.location == loc_local:
-                     found_planet = p
-                     break
-        
-        if found_planet:
-             print(f"Queueing Colonize Order for {found_planet}")
-             self.selected_fleet.add_order(Order(OrderType.COLONIZE, found_planet))
+                     # Add filter for valid colonization? (e.g. not owned)
+                     if p.owner_id != self.player_empire.id:
+                        valid_planets.append(p)
+
+        if not valid_planets:
+            print("No colonizable planets at fleet location.")
+            return
+            
+        def execute_colonize(planet):
+             print(f"Queueing Colonize Order for {planet.name}")
+             self.selected_fleet.add_order(Order(OrderType.COLONIZE, planet))
              self.on_ui_selection(self.selected_fleet) # Refresh UI
+
+        if len(valid_planets) == 1:
+            execute_colonize(valid_planets[0])
+        else:
+            print("Multiple planets detected. Requesting user selection...")
+            self.ui.prompt_planet_selection(valid_planets, execute_colonize)
              
     def cycle_selection(self, obj_type, direction):
         """Cycle selection through colonies or fleets and Center Camera."""
@@ -559,12 +568,12 @@ class StrategyScene:
             
             images = self.assets['planets'].get(cat, [])
             if images:
-                idx = hash(obj) % len(images)
+                idx = id(obj) % len(images)
                 return images[idx]
                 
         elif hasattr(obj, 'destination_id'): # Warp Point
              if self.assets['warp_points']:
-                 idx = hash(obj) % len(self.assets['warp_points'])
+                 idx = id(obj) % len(self.assets['warp_points'])
                  return self.assets['warp_points'][idx]
                  
         return None
@@ -1062,7 +1071,7 @@ class StrategyScene:
             images = self.assets['planets'].get(cat, [])
             if images:
                 # Deterministic index
-                idx = hash(planet) % len(images)
+                idx = id(planet) % len(images)
                 img = images[idx]
                 
                 size = int(10 * self.camera.zoom) # Base size

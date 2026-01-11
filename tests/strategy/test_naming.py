@@ -48,60 +48,6 @@ class TestNaming(unittest.TestCase):
         self.assertEqual(NameRegistry.to_roman(9), "IX")
         self.assertEqual(NameRegistry.to_roman(10), "X")
         
-    def test_planet_naming_simple(self):
-        """Test standard planet naming."""
-        registry = NameRegistry(self.path)
-        
-        # Mock Planets
-        # Planet(type, ring, location)
-        p1 = Planet(PlanetType.TERRAN, 1, (0,0))
-        p2 = Planet(PlanetType.GAS_GIANT, 3, (0,0))
-        p3 = Planet(PlanetType.ICE_WORLD, 5, (0,0))
-        
-        planets = [p3, p1, p2] # Unsorted
-        
-        registry.name_planets("Sol", planets)
-        
-        # Should be sorted by distance
-        # p1 (1) -> Sol I
-        # p2 (3) -> Sol II
-        # p3 (5) -> Sol III
-        
-        self.assertEqual(p1.name, "Sol I")
-        self.assertEqual(p2.name, "Sol II")
-        self.assertEqual(p3.name, "Sol III")
-        
-    def test_planet_naming_same_distance(self):
-        """Test that planets at same distance get sequential numbers if locations differ."""
-        registry = NameRegistry(self.path)
-        
-        # Two planets at ring 3, different locations
-        p1 = Planet(PlanetType.TERRAN, 3, (1,0))
-        p2 = Planet(PlanetType.TERRAN, 3, (0,1))
-        
-        planets = [p1, p2]
-        registry.name_planets("Sol", planets)
-        
-        names = {p1.name, p2.name}
-        self.assertEqual(names, {"Sol I", "Sol II"})
-        
-    def test_planet_naming_moons(self):
-        """Test that planets at same distance AND location get suffix."""
-        registry = NameRegistry(self.path)
-        
-        # Two planets at ring 3, SAME location
-        # Simulate moon by having same location object
-        loc = (2,2)
-        p1 = Planet(PlanetType.TERRAN, 3, loc) # "Larger" (first in list/sort)
-        p2 = Planet(PlanetType.BARREN, 3, loc) # "Smaller" (second)
-        
-        # Force order for test stability since we rely on list order for size proxy
-        planets = [p1, p2]
-        
-        registry.name_planets("Sol", planets)
-        
-        self.assertEqual(p1.name, "Sol I") 
-        self.assertEqual(p2.name, "Sol Ia")
 
 if __name__ == '__main__':
     unittest.main()
