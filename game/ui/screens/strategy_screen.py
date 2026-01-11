@@ -158,7 +158,15 @@ class StrategyInterface:
         )
         self.btn_next_turn = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(start_x + offset_main + 220, 5, 150, 40), 
-            text="Next Turn",
+            text="End Turn",
+            manager=self.manager,
+            container=self.top_bar
+        )
+        
+        # Player indicator label (far left of top bar)
+        self.lbl_current_player = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, 5, 200, 40),
+            text="Player 1's Turn",
             manager=self.manager,
             container=self.top_bar
         )
@@ -309,10 +317,10 @@ class StrategyInterface:
         """Draw the strategy scene UI elements."""
         self.manager.draw_ui(screen)
         
-        # Draw Debug/Placeholder Text
+        # Draw Debug/Placeholder Text (bottom left)
         font = pygame.font.SysFont("arial", 20)
         mode_text = font.render(f"Strategy Layer | Zoom: {self.scene.camera.zoom:.2f}", True, (255, 255, 255))
-        screen.blit(mode_text, (20, 20))
+        screen.blit(mode_text, (20, self.height - 30))
 
     def handle_event(self, event):
         """Pass events to pygame_gui and handle custom UI logic."""

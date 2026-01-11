@@ -13,9 +13,8 @@ from game.simulation.components.component import Component
 
 class TestStatsRender(unittest.TestCase):
     def setUp(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
-        pygame.display.set_mode((800, 600), flags=pygame.HIDDEN)
+        # Note: pygame and registry initialization handled by conftest fixtures
+        # pygame.init() and pygame.display are managed at session scope
         
         self.builder = MagicMock()
         self.builder.theme_manager.get_available_themes.return_value = ["Federation"]
@@ -30,11 +29,10 @@ class TestStatsRender(unittest.TestCase):
     def tearDown(self):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
-        
-        pygame.display.quit()
-        pygame.quit()
-        from game.core.registry import RegistryManager
-        RegistryManager.instance().clear()
+
+        # Note: pygame and registry cleanup is handled by conftest fixtures
+        # (pygame_display_reset and reset_game_state)
+        # DO NOT call pygame.quit() here as it conflicts with session-level fixture
 
     @patch('pygame_gui.elements.UIScrollingContainer')
     @patch('pygame_gui.elements.UIImage')

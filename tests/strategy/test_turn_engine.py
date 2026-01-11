@@ -138,3 +138,25 @@ def test_order_chaining():
     assert planet.owner_id == 0
     assert planet in e1.colonies
     assert len(f1.orders) == 0 # Order consumed
+
+def test_colonize_deletes_fleet():
+    """Verify colonizing fleet is removed from empire after colonization."""
+    engine = TurnEngine()
+    
+    planet = MockPlanet()
+    
+    f1 = Fleet(1, 0, HexCoord(1, 0), speed=5.0)
+    f1.orders = [Order(OrderType.COLONIZE, planet)]
+    
+    e1 = Empire(0, "P1", (0, 0, 0))
+    e1.add_fleet(f1)
+    
+    assert len(e1.fleets) == 1  # Fleet exists before turn
+    
+    engine.process_turn([e1], MockGalaxy())
+    
+    # Fleet should be removed (consumed to create colony)
+    assert len(e1.fleets) == 0
+    assert planet.owner_id == 0
+    assert planet in e1.colonies
+

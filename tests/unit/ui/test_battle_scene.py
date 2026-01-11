@@ -16,17 +16,9 @@ class TestBattleScene(unittest.TestCase):
 
 
     def setUp(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
-        # Mocking display set_mode to avoid window creation but we might need it for sprites?
-        # Actually BattleScene uses pygame.display functionality potentially.
-        # Let's verify if headless needs it.
-        # pygame.display.set_mode = MagicMock() 
-        # Using a dummy mode is safer for headless
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        
-        initialize_ship_data()
-        load_components("data/components.json")
+        # Note: pygame, registry, and data loading handled by conftest fixtures
+        # initialize_ship_data() and load_components() are patched to be no-ops
+        # because the reset_game_state fixture already loaded the data
         # Patch BattleInterface to avoid UI overhead
         with patch('game.ui.screens.battle_screen.BattleInterface') as MockUI:
             self.scene = BattleScene(800, 600)
@@ -52,9 +44,10 @@ class TestBattleScene(unittest.TestCase):
         """Cleanup pygame and registry."""
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
-        
-        pygame.quit()
-        RegistryManager.instance().clear()
+
+        # Note: pygame and registry cleanup is handled by conftest fixtures
+        # (pygame_display_reset and reset_game_state)
+        # DO NOT call pygame.quit() here as it conflicts with session-level fixture
 
     def test_start_initialization(self):
         """Test battle initialization."""

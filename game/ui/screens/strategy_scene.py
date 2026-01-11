@@ -11,6 +11,7 @@ from game.strategy.data.hex_math import hex_to_pixel, pixel_to_hex, HexCoord, he
 from game.ui.renderer.camera import Camera
 from game.ui.screens.strategy_screen import StrategyInterface
 from game.strategy.data.pathfinding import find_path_interstellar, find_path_deep_space, project_fleet_path
+from ui.colors import COLORS
 
 class StrategyScene:
     """Manages strategy layer simulation, rendering, and UI."""
@@ -94,6 +95,10 @@ class StrategyScene:
         
         # State
         self.turn_processing = False
+        
+        # Multi-player turn management
+        self.current_player_index = 0
+        self.human_player_ids = [0, 1]  # Both players are human-controlled
 
         # Assets
         self.assets = {}
@@ -225,41 +230,74 @@ class StrategyScene:
                 else:
                     print("Select a fleet first.")
             elif event.key == pygame.K_ESCAPE:
-                if getattr(self, 'input_mode', 'SELECT') == 'MOVE':
+                if getattr(self, 'input_mode', 'SELECT') in ('MOVE', 'COLONIZE_TARGET'):
                     self.input_mode = 'SELECT'
                     print("Input Mode: SELECT")
+            elif event.key == pygame.K_c:
+                if self.selected_fleet:
+                    self.input_mode = 'COLONIZE_TARGET'
+                    print("Input Mode: COLONIZE - Select target planet.")
+                else:
+                    print("Select a fleet first.")
 
     def advance_turn(self):
-        """Execute Turn Logic."""
+        """End current player's order phase. Process turn when all humans ready."""
+        # Increment to next human player
+        self.current_player_index += 1
+        
+        # Check if all human players have submitted orders
+        if self.current_player_index >= len(self.human_player_ids):
+            # All humans ready - process the full turn
+            self.current_player_index = 0
+            self._process_full_turn()
+            # Update label for next round
+            self._update_player_label()
+        else:
+            # Switch to next human player's view
+            next_player_id = self.human_player_ids[self.current_player_index]
+            print(f"Player {next_player_id + 1}'s turn to give orders.")
+            # Update UI label
+            self._update_player_label()
+            # Center on their home colony if they have one
+            next_empire = next((e for e in self.empires if e.id == next_player_id), None)
+            if next_empire and next_empire.colonies:
+                self.center_camera_on(next_empire.colonies[0])
+    
+    def _update_player_label(self):
+        """Update the player indicator label."""
+        player_num = self.current_player_index + 1
+        self.ui.lbl_current_player.set_text(f"Player {player_num}'s Turn")
+    
+    @property
+    def current_empire(self):
+        """Get the empire for the current player (supports N players)."""
+        current_player_id = self.human_player_ids[self.current_player_index]
+        return next((e for e in self.empires if e.id == current_player_id), self.empires[0])
+    
+    def _process_full_turn(self):
+        """Process the turn for all empires simultaneously."""
         self.turn_processing = True
         print("Processing Turn...")
         
         # Force Render "Processing" state
-        # Get the screen surface from the app? 
-        # StrategyScene.draw takes 'screen'. 
-        # We need to access the main display surface to force an update.
-        # Current architecture doesn't easily expose the main loop's 'screen' variable here 
-        # except via draw(screen).
-        # We can try to get pygame.display.get_surface().
-        
         screen = pygame.display.get_surface()
         if screen:
-             self.draw(screen) # Draw current state
+             self.draw(screen)
              self._draw_processing_overlay(screen)
              pygame.display.flip()
         
-        # 1. Process
+        # Process turn for all empires simultaneously
         self.turn_engine.process_turn(self.empires, self.galaxy)
         
-        # 2. Re-center Camera on Player Home (or active event)
-        # Find Home
-        if self.player_empire.colonies:
-            home = self.player_empire.colonies[0]
-            self.center_camera_on(home)
+        # Re-center Camera on current player's home
+        current_player_id = self.human_player_ids[self.current_player_index]
+        current_empire = next((e for e in self.empires if e.id == current_player_id), self.player_empire)
+        if current_empire.colonies:
+            self.center_camera_on(current_empire.colonies[0])
                  
         self.turn_processing = False
         
-        # Refresh UI for currently selected object (stats might satisfy)
+        # Refresh UI for currently selected object
         if self.selected_object:
             self.on_ui_selection(self.selected_object)
             
@@ -306,9 +344,9 @@ class StrategyScene:
         """Cycle selection through colonies or fleets and Center Camera."""
         targets = []
         if obj_type == 'colony':
-            targets = self.player_empire.colonies
+            targets = self.current_empire.colonies
         elif obj_type == 'fleet':
-            targets = self.player_empire.fleets
+            targets = self.current_empire.fleets
             
         if not targets:
             print(f"No {obj_type}s to cycle.")
@@ -356,7 +394,7 @@ class StrategyScene:
          """Handle 'Build Ship' action."""
          if isinstance(self.selected_object, Planet):
              planet = self.selected_object
-             if planet.owner_id == self.player_empire.id:
+             if planet.owner_id == self.current_empire.id:
                  print(f"Queueing Ship at {planet}...")
                  # Add to Queue (1 Turn)
                  planet.add_production("Colony Ship", 1)
@@ -381,6 +419,15 @@ class StrategyScene:
         if current_mode == 'MOVE':
             if button == 1: # Left Click to Move
                 self._handle_move_designation(mx, my)
+                return True
+            elif button == 3: # Right click cancels
+                self.input_mode = 'SELECT'
+                print("Input Mode: SELECT")
+                return True
+        
+        elif current_mode == 'COLONIZE_TARGET':
+            if button == 1: # Left Click to select planet
+                self._handle_colonize_designation(mx, my)
                 return True
             elif button == 3: # Right click cancels
                 self.input_mode = 'SELECT'
@@ -455,17 +502,20 @@ class StrategyScene:
         self.selected_object = obj
         
         # --- Update Button Visibility ---
+        # Get current player's empire ID
+        current_player_id = self.human_player_ids[self.current_player_index]
+        
         # 1. Colonize (Fleet Selected + At Planet?)
-        # For now, just show if Player Fleet Selected
-        if isinstance(obj, Fleet) and obj.owner_id == self.player_empire.id:
+        # Show if current player's Fleet Selected
+        if isinstance(obj, Fleet) and obj.owner_id == current_player_id:
             self.selected_fleet = obj
             self.ui.btn_colonize.show()
         else:
             if not isinstance(obj, Fleet): self.selected_fleet = None # Clear if not fleet
             self.ui.btn_colonize.hide()
             
-        # 2. Build Ship (Player Planet Selected)
-        if isinstance(obj, Planet) and obj.owner_id == self.player_empire.id:
+        # 2. Build Ship (Current Player's Planet Selected)
+        if isinstance(obj, Planet) and obj.owner_id == current_player_id:
             self.ui.btn_build_ship.show()
         else:
             self.ui.btn_build_ship.hide()
@@ -544,6 +594,63 @@ class StrategyScene:
         else:
             print("Cannot find path to target.")
 
+    def _handle_colonize_designation(self, mx, my):
+        """Handle selecting a planet for colonization with movement."""
+        if not self.selected_fleet:
+            return
+            
+        world_pos = self.camera.screen_to_world((mx, my))
+        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.HEX_SIZE)
+        
+        # Find planet at this hex
+        target_system = self._get_system_at_hex(target_hex)
+        if not target_system:
+            print("No system at target location.")
+            self.input_mode = 'SELECT'
+            return
+        
+        local_hex = target_hex - target_system.global_location
+        target_planet = None
+        for p in target_system.planets:
+            if p.location == local_hex:
+                target_planet = p
+                break
+        
+        if not target_planet:
+            print("No planet at target hex.")
+            self.input_mode = 'SELECT'
+            return
+        
+        # Determine start hex (current location or last queued destination)
+        start_hex = self.selected_fleet.location
+        for o in reversed(self.selected_fleet.orders):
+            if o.type == OrderType.MOVE:
+                start_hex = o.target
+                break
+        
+        # Calculate path to planet
+        path = self.calculate_hybrid_path(start_hex, target_hex)
+        
+        if path:
+            # Queue MOVE order to planet's hex
+            move_order = Order(OrderType.MOVE, target_hex)
+            self.selected_fleet.add_order(move_order)
+            
+            # Assign path if this is the first order
+            if len(self.selected_fleet.orders) == 1:
+                self.selected_fleet.path = path
+            
+            # Queue COLONIZE order for the planet
+            colonize_order = Order(OrderType.COLONIZE, target_planet)
+            self.selected_fleet.add_order(colonize_order)
+            
+            print(f"Queued MOVE to {target_hex} then COLONIZE {target_planet}")
+        else:
+            print("Cannot find path to target planet.")
+        
+        self.input_mode = 'SELECT'
+        self.on_ui_selection(self.selected_fleet)
+
     def calculate_hybrid_path(self, start_hex, end_hex):
         """
         Calculate path combining local hex movement and interstellar warp jumps.
@@ -565,7 +672,7 @@ class StrategyScene:
 
     def draw(self, screen):
         """Render the scene."""
-        screen.fill((10, 10, 15)) 
+        screen.fill(COLORS['bg_deep']) 
         
         if self.camera.zoom >= 0.4:
             self._draw_grid(screen)
@@ -637,7 +744,7 @@ class StrategyScene:
         if hex_count > 80000:
              return 
 
-        grid_color = (30, 30, 40)
+        grid_color = COLORS['border_subtle']
         
         # 2. Optimization: Jagged Lines (Snakes)
         # Instead of drawing hexes, we draw continuous lines.
@@ -955,63 +1062,73 @@ class StrategyScene:
                 fx, fy = hex_to_pixel(f.location, self.HEX_SIZE)
                 f_screen = self.camera.world_to_screen(pygame.math.Vector2(fx, fy))
                 
-                # Check Bounds
-                if not (0 <= f_screen.x <= self.screen_width and 0 <= f_screen.y <= self.screen_height):
-                    continue
+                # Check if fleet icon is on screen
+                fleet_on_screen = (0 <= f_screen.x <= self.screen_width and 0 <= f_screen.y <= self.screen_height)
                 
-                # Draw Triangle
-                size = 10 * self.camera.zoom
-                if size < 8: size = 8
-                if size > 30: size = 30
-                
-                # Simple triangle shape
-                points = [
-                    (f_screen.x, f_screen.y - size),
-                    (f_screen.x - size/2, f_screen.y + size/2),
-                    (f_screen.x + size/2, f_screen.y + size/2)
-                ]
-                
-                # Color based on Empire
-                color = emp.color
-                if self.selected_fleet == f:
-                    color = (255, 255, 0) # Selected highlight
+                # Draw fleet icon only if on screen
+                if fleet_on_screen:
+                    # Draw Triangle
+                    size = 10 * self.camera.zoom
+                    if size < 8: size = 8
+                    if size > 30: size = 30
                     
-                pygame.draw.polygon(screen, color, points)
-            
-                # Draw Path (Indented inside loop)
-                # 1. Active Path
-                # Draw Path (Projected)
-                segments = project_fleet_path(f, self.galaxy, max_turns=10)
-                
-                start_screen = f_screen
-                font = None
-                if segments and self.camera.zoom >= 0.5:
-                     font = pygame.font.SysFont("arial", 12, bold=True)
-
-                for seg in segments:
-                    end_hex = seg['end']
-                    is_warp = seg['is_warp']
-                    turn_idx = seg['turn']
+                    # Simple triangle shape
+                    points = [
+                        (f_screen.x, f_screen.y - size),
+                        (f_screen.x - size/2, f_screen.y + size/2),
+                        (f_screen.x + size/2, f_screen.y + size/2)
+                    ]
                     
-                    ex, ey = hex_to_pixel(end_hex, self.HEX_SIZE)
-                    end_screen = self.camera.world_to_screen(pygame.math.Vector2(ex, ey))
-                    
-                    # Line Color
-                    color = (0, 255, 100) # Green (Normal)
-                    width = 2
-                    if is_warp:
-                        color = (255, 50, 50) # Red (Warp)
-                        width = 1
-                    
-                    # Draw Line
-                    pygame.draw.line(screen, color, start_screen, end_screen, width)
-                    
-                    # Draw Turn Number
-                    if font and not is_warp:
-                        # Draw number at the END of the segment (arrival hex)
-                        txt = font.render(str(turn_idx), True, (200, 200, 255))
-                        # Center text on hex
-                        tr = txt.get_rect(center=(end_screen.x, end_screen.y))
-                        screen.blit(txt, tr)
+                    # Color based on Empire
+                    color = emp.color
+                    if self.selected_fleet == f:
+                        color = (255, 255, 0) # Selected highlight
                         
-                    start_screen = end_screen                    
+                    pygame.draw.polygon(screen, color, points)
+                
+                # Draw path only for the selected fleet (visible even when zoomed elsewhere)
+                if f == self.selected_fleet:
+                    segments = project_fleet_path(f, self.galaxy, max_turns=50)
+                    
+                    start_screen = f_screen
+                    font = None
+                    if segments and self.camera.zoom >= 0.5:
+                         font = pygame.font.SysFont("arial", 18, bold=True)
+
+                    for seg in segments:
+                        end_hex = seg['end']
+                        is_warp = seg['is_warp']
+                        turn_idx = seg['turn']
+                        
+                        ex, ey = hex_to_pixel(end_hex, self.HEX_SIZE)
+                        end_screen = self.camera.world_to_screen(pygame.math.Vector2(ex, ey))
+                        
+                        # Per-segment culling: skip if both endpoints are off-screen
+                        start_on = (0 <= start_screen.x <= self.screen_width and 0 <= start_screen.y <= self.screen_height)
+                        end_on = (0 <= end_screen.x <= self.screen_width and 0 <= end_screen.y <= self.screen_height)
+                        
+                        if not start_on and not end_on:
+                            # Both off-screen, skip this segment
+                            start_screen = end_screen
+                            continue
+                        
+                        # Line Color
+                        color = (0, 255, 100) # Green (Normal)
+                        width = 2
+                        if is_warp:
+                            color = (255, 50, 50) # Red (Warp)
+                            width = 1
+                        
+                        # Draw Line
+                        pygame.draw.line(screen, color, start_screen, end_screen, width)
+                        
+                        # Draw Turn Number
+                        if font and not is_warp and end_on:
+                            # Draw number at the END of the segment (arrival hex)
+                            txt = font.render(str(turn_idx), True, (200, 200, 255))
+                            # Center text on hex
+                            tr = txt.get_rect(center=(end_screen.x, end_screen.y))
+                            screen.blit(txt, tr)
+                            
+                        start_screen = end_screen
+                    

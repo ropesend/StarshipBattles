@@ -18,24 +18,26 @@ class TestBattleSceneExtended(unittest.TestCase):
         
 
     def setUp(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
-        # Ensure data dir is accessible
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        initialize_ship_data(base_dir)
-        load_components(os.path.join(base_dir, "data", "components.json"))
+        # Note: pygame, registry, and data loading handled by conftest fixtures
+        # initialize_ship_data() and load_components() are patched to be no-ops
+        # because the reset_game_state fixture already loaded the data
+
+        # AI Strategy Manager still needs to be loaded per-test
         test_data_path = os.path.join(os.getcwd(), "tests", "unit", "data")
         STRATEGY_MANAGER.load_data(
-             test_data_path, 
-             targeting_file="test_targeting_policies.json", 
-             movement_file="test_movement_policies.json", 
+             test_data_path,
+             targeting_file="test_targeting_policies.json",
+             movement_file="test_movement_policies.json",
              strategy_file="test_combat_strategies.json"
         )
 
     def tearDown(self):
         """Cleanup pygame and global managers."""
-        pygame.quit()
-        RegistryManager.instance().clear()
+        # Note: pygame and registry cleanup is handled by conftest fixtures
+        # (pygame_display_reset and reset_game_state)
+        # DO NOT call pygame.quit() here as it conflicts with session-level fixture
+
+        # AI Strategy Manager should still be cleared
         STRATEGY_MANAGER.clear()
 
     def test_is_battle_over_victory(self):
