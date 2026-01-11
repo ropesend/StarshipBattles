@@ -653,24 +653,24 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         return total
     
     def get_total_sensor_score(self) -> float:
-        """Calculate total Targeting Score from all active sensors."""
-        total_score = 0.0
-        for layer in self.layers.values():
-            for comp in layer['components']:
-                # Phase 7: Use ability-based check
-                for ab in comp.get_abilities('ToHitAttackModifier'):
-                    total_score += ab.value
-        return total_score
+        """Calculate total Targeting Score from all active sensors.
+        
+        Uses stack_group rules:
+        - Same stack_group: MAX (redundancy)
+        - Different stack_groups: MULTIPLY (stacking)
+        """
+        result = self.get_ability_total('ToHitAttackModifier')
+        return float(result) if isinstance(result, (int, float)) else 0.0
 
     def get_total_ecm_score(self) -> float:
-        """Calculate total Evasion/Defense Score from all active ECM/Electronics."""
-        total_score = 0.0
-        for layer in self.layers.values():
-            for comp in layer['components']:
-                # Phase 7: Use ability-based check
-                for ab in comp.get_abilities('ToHitDefenseModifier'):
-                    total_score += ab.value
-        return total_score
+        """Calculate total Evasion/Defense Score from all active ECM/Electronics.
+        
+        Uses stack_group rules:
+        - Same stack_group: MAX (redundancy)
+        - Different stack_groups: MULTIPLY (stacking)
+        """
+        result = self.get_ability_total('ToHitDefenseModifier')
+        return float(result) if isinstance(result, (int, float)) else 0.0
 
     def check_validity(self) -> bool:
         """Check if the current ship design is valid."""

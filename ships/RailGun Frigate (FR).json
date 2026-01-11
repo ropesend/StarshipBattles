@@ -1,14 +1,14 @@
 {
-    "name": "RailGun Frigate",
+    "name": "Custom Ship",
+    "ship_class": "Frigate",
+    "theme_id": "Federation",
+    "team_id": 0,
     "color": [
         100,
         100,
         255
     ],
-    "team_id": 0,
-    "ship_class": "Frigate",
-    "theme_id": "Klingons",
-    "ai_strategy": "attack_run",
+    "ai_strategy": "standard_ranged",
     "layers": {
         "CORE": [
             {
@@ -25,29 +25,11 @@
                 ]
             },
             {
-                "id": "shield_generator",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 2.0
-                    }
-                ]
-            },
-            {
-                "id": "fuel_tank",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 1.0
-                    }
-                ]
-            },
-            {
                 "id": "crew_quarters",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
-                        "value": 3.0
+                        "value": 1.0
                     }
                 ]
             },
@@ -70,7 +52,25 @@
                 ]
             },
             {
-                "id": "combat_sensor",
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "fuel_tank",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
@@ -97,7 +97,7 @@
                     },
                     {
                         "id": "turret_mount",
-                        "value": 180
+                        "value": 180.0
                     },
                     {
                         "id": "rapid_fire",
@@ -122,11 +122,11 @@
                     },
                     {
                         "id": "facing",
-                        "value": 0.0
+                        "value": 180.0
                     },
                     {
                         "id": "turret_mount",
-                        "value": 180
+                        "value": 180.0
                     },
                     {
                         "id": "rapid_fire",
@@ -143,48 +143,12 @@
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
-                        "value": 2.0
+                        "value": 1.0
                     }
                 ]
             },
             {
                 "id": "standard_engine",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 2.0
-                    }
-                ]
-            },
-            {
-                "id": "standard_engine",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 2.0
-                    }
-                ]
-            },
-            {
-                "id": "standard_engine",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 2.0
-                    }
-                ]
-            },
-            {
-                "id": "standard_engine",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 2.0
-                    }
-                ]
-            },
-            {
-                "id": "thruster",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
@@ -193,7 +157,7 @@
                 ]
             },
             {
-                "id": "thruster",
+                "id": "standard_engine",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
@@ -202,7 +166,7 @@
                 ]
             },
             {
-                "id": "thruster",
+                "id": "standard_engine",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
@@ -213,7 +177,7 @@
         ],
         "ARMOR": [
             {
-                "id": "emissive_armor",
+                "id": "armor_plate",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
@@ -222,7 +186,7 @@
                 ]
             },
             {
-                "id": "crystalline_armor",
+                "id": "armor_plate",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
@@ -231,7 +195,25 @@
                 ]
             },
             {
-                "id": "scattering_armor",
+                "id": "armor_plate",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "armor_plate",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "armor_plate",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
@@ -241,15 +223,21 @@
             }
         ]
     },
+    "resources": {
+        "fuel": 50000.0,
+        "energy": 0.0,
+        "ammo": 5000.0
+    },
     "expected_stats": {
-        "max_hp": 2882,
-        "max_fuel": 50000,
-        "max_ammo": 5000,
-        "max_energy": 0,
-        "max_speed": 18.837119403208266,
-        "turn_speed": 25.331292661844348,
-        "total_thrust": 1500.0,
-        "mass": 1990.7502414415412,
-        "armor_hp_pool": 550
+        "max_hp": 3012,
+        "max_fuel": 50000.0,
+        "max_energy": 0.0,
+        "max_ammo": 5000.0,
+        "max_speed": 12.18768804175163,
+        "acceleration_rate": 0.9902649320203711,
+        "turn_speed": 0.0,
+        "total_thrust": 600.0,
+        "mass": 1230.750241441541,
+        "armor_hp_pool": 1250
     }
 }

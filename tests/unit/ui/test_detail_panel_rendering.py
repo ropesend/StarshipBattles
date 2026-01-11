@@ -173,9 +173,12 @@ class TestDetailPanelRendering(unittest.TestCase):
         self.mock_textbox_instance.set_text.assert_called()
         html = self.mock_textbox_instance.set_text.call_args[0][0]
         
-        self.assertIn("Abilities:", html)
-        self.assertIn("SecretAbility: {'power': 9000}", html)
-        self.assertIn("CustomPowerAbility: {'energy': 42}", html)
+        # Header changed to "Other Abilities:" in the refactor
+        self.assertIn("Other Abilities:", html)
+        # Dict values are now formatted as "key: value" summaries, keys are CamelCase-spaced
+        self.assertIn("Secret Ability: power: 9000", html)
+        self.assertIn("Custom Power Ability: energy: 42", html)
+
 
     def test_html_modifiers(self):
         """Verify modifiers are displayed with correct formatting."""

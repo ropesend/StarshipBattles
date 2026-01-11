@@ -128,6 +128,7 @@ class ComponentDetailPanel:
         # Abilities (Unregistered / Custom Data / Fallback)
         if comp.abilities:
             from game.simulation.components.abilities import ABILITY_REGISTRY
+            import re
             
             shown_header = False
             
@@ -140,10 +141,25 @@ class ComponentDetailPanel:
                     continue
                     
                 if not shown_header:
-                    lines.append("<br>Abilities:")
+                    lines.append("<br>Other Abilities:")
                     shown_header = True
 
-                add_line(f"• {k}: {v}", '#C8C8C8')
+                # Format value based on type
+                if isinstance(v, bool):
+                    display_val = "Yes" if v else "No"
+                elif isinstance(v, dict):
+                    # For complex abilities, show summary
+                    display_val = ", ".join(f"{dk}: {dv}" for dk, dv in v.items() if not str(dk).startswith('_'))
+                    if len(display_val) > 40:
+                        display_val = display_val[:37] + "..."
+                else:
+                    display_val = str(v)
+                    
+                # Format key nicely (CamelCase to spaces)
+                label = re.sub(r'(?<!^)(?=[A-Z])', ' ', k)
+
+                add_line(f"• {label}: {display_val}", '#C8C8C8')
+
                     
         # Modifiers
         if comp.modifiers:

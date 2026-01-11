@@ -79,8 +79,10 @@ class TestStructureVisibility(unittest.TestCase):
         # (pygame_display_reset and reset_game_state)
         # DO NOT call pygame.quit() here as it conflicts with session-level fixture
 
-    def test_hull_is_hidden_from_structure_list(self):
-        """Verify that hull components are not rendered in the structure list."""
+    def test_hull_is_hidden_from_structure_list_by_default(self):
+        """Verify that hull components are not rendered when show_hull_layer=False (default)."""
+        # Ensure default state
+        self.mock_builder.viewmodel.show_hull_layer = False
         self.layer_panel.rebuild()
         
         hull_items = []
@@ -94,8 +96,37 @@ class TestStructureVisibility(unittest.TestCase):
             elif isinstance(item, IndividualComponentItem):
                 if item.component.id.startswith('hull_'):
                     hull_items.append(item)
+            # Check Headers
+            elif isinstance(item, LayerHeaderItem):
+                if item.layer_type == LayerType.HULL:
+                    hull_items.append(item)
                     
-        self.assertEqual(len(hull_items), 0, "Hull items detected in structure list!")
+        self.assertEqual(len(hull_items), 0, "Hull items detected in structure list when show_hull_layer=False!")
+
+    def test_hull_is_shown_when_toggle_enabled(self):
+        """Verify that hull layer and components are shown when show_hull_layer=True."""
+        # Enable hull visibility
+        self.mock_builder.viewmodel.show_hull_layer = True
+        self.layer_panel.rebuild()
+        
+        # Check for HULL layer header
+        hull_header = next((i for i in self.layer_panel.items 
+                           if isinstance(i, LayerHeaderItem) and i.layer_type == LayerType.HULL), None)
+        
+        self.assertIsNotNone(hull_header, "HULL layer header should be visible when show_hull_layer=True!")
+        
+        # Check for hull component (should be at least one)
+        hull_components = []
+        for item in self.layer_panel.items:
+            if isinstance(item, LayerComponentItem):
+                g_id = item.group_key[0] if isinstance(item.group_key, tuple) else item.group_key
+                if g_id.startswith('hull_'):
+                    hull_components.append(item)
+            elif isinstance(item, IndividualComponentItem):
+                if item.component.id.startswith('hull_'):
+                    hull_components.append(item)
+        
+        self.assertGreater(len(hull_components), 0, "Hull component should be visible when show_hull_layer=True!")
 
     def test_headers_remain_visible_with_hidden_hull(self):
         """Verify that layer headers are visible even if only a hidden hull exists in that layer."""

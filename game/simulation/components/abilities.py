@@ -308,11 +308,18 @@ class CommandAndControl(Ability):
 
 class RequiresCommandAndControl(Ability):
     """Marker ability: Component (e.g. Hull) requires Command and Control to be operational."""
-    pass
+    def get_ui_rows(self):
+        return [{'label': 'Requires C&C', 'value': 'Yes', 'color_hint': '#FFCC66'}]
 
 class RequiresCombatMovement(Ability):
     """Marker ability: Component (e.g. Hull) requires Combat Propulsion to be operational."""
-    pass
+    def get_ui_rows(self):
+        return [{'label': 'Requires Propulsion', 'value': 'Yes', 'color_hint': '#FFCC66'}]
+
+class StructuralIntegrity(Ability):
+    """Marker ability: Hull provides structural integrity for the ship."""
+    def get_ui_rows(self):
+        return [{'label': 'Structural Integrity', 'value': 'Yes', 'color_hint': '#96FF96'}]
 
 class CrewCapacity(Ability):
     def __init__(self, component, data: Dict[str, Any]):
@@ -734,6 +741,7 @@ ABILITY_REGISTRY = {
 
     "RequiresCommandAndControl": RequiresCommandAndControl,
     "RequiresCombatMovement": RequiresCombatMovement,
+    "StructuralIntegrity": StructuralIntegrity,
 
     # Primitive/Shortcut Factories
     "FuelStorage": lambda c, d: ResourceStorage(c, {"resource": "fuel", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "fuel"}),
