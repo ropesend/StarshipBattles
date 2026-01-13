@@ -12,33 +12,27 @@
     "layers": {
         "CORE": [
             {
-                "id": "test_beam_high_acc"
-            },
-            {
-                "id": "test_gen_fusion"
-            },
-            {
-                "id": "test_storage_energy"
+                "id": "test_beam_high_acc_1dmg"
             }
         ],
         "ARMOR": []
     },
-    "_test_notes": "Attacker with High Accuracy (5.0) Beam",
+    "_test_notes": "Attacker with High Accuracy (5.0) Beam - 1 Damage for accuracy testing",
     "expected_stats": {
-        "max_hp": 240,
+        "max_hp": 120,
         "max_fuel": 0.0,
-        "max_energy": 1000.0,
+        "max_energy": 0.0,
         "max_ammo": 0.0,
         "max_speed": 0,
         "acceleration_rate": 0.0,
         "turn_speed": 0.0,
         "total_thrust": 0,
-        "mass": 50.0,
+        "mass": 25.0,
         "armor_hp_pool": 0
     },
     "resources": {
         "fuel": 0.0,
-        "energy": 1000.0,
+        "energy": 0.0,
         "ammo": 0.0
     }
 }

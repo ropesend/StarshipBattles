@@ -98,10 +98,10 @@ class TestAbilityPrimaryValueInterface(unittest.TestCase):
         self.assertEqual(ab.get_primary_value(), 25.0)
     
     # --- Markers ---
-    def test_command_and_control_returns_zero(self):
-        """Marker abilities return 0.0 (boolean semantics handled separately)."""
+    def test_command_and_control_returns_one(self):
+        """Marker abilities return 1.0 for boolean presence checks."""
         ab = CommandAndControl(self.mock_comp, {})
-        self.assertEqual(ab.get_primary_value(), 0.0)
+        self.assertEqual(ab.get_primary_value(), 1.0)
     
     # --- Hangar ---
     def test_vehicle_launch_returns_capacity(self):

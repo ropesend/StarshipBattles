@@ -102,9 +102,10 @@ class TestDamageLayerLogic(unittest.TestCase):
     
     def test_bridge_destruction_kills_ship(self):
         """Destroying the bridge SHOULD make the ship derelict (ability-based detection).
-        
+
         Post-Phase 5: Derelict status is determined by CommandAndControl ability.
         If no operational component has CommandAndControl, ship becomes derelict.
+        The ship needs a hull component with RequiresCommandAndControl for this to work.
         """
         from game.core.registry import RegistryManager
         RegistryManager.instance().vehicle_classes["TestShip"] = {
@@ -115,33 +116,37 @@ class TestDamageLayerLogic(unittest.TestCase):
             ]
         }
         self.ship.ship_class = "TestShip"
-        
+
+        # Add a hull component to require command and control
+        # Without this, the ship has no requirements and won't become derelict
+        hull = create_component('hull_escort')
+        self.ship.add_component(hull, LayerType.CORE)
+
         # Remove armor first to make bridge accessible
         self.ship.layers[LayerType.ARMOR]['components'] = []
         self.ship.recalculate_stats()
-        
+
         bridge = None
         for c in self.ship.layers[LayerType.CORE]['components']:
             if c.type_str == 'Bridge':
                 bridge = c
                 break
-        
+
         self.assertIsNotNone(bridge)
         self.assertTrue(self.ship.is_alive)
-        
+
         # Update derelict status - should NOT be derelict initially (has bridge)
         self.ship.update_derelict_status()
         self.assertFalse(self.ship.is_derelict, "Ship should not be derelict with operational bridge")
-        
-        # Deal massive damage to destroy bridge
-        for _ in range(50):
-            if not bridge.is_active:
-                break
-            self.ship.take_damage(100)
-        
+
+        # Directly destroy the bridge instead of using take_damage
+        # take_damage might hit other components first due to random distribution
+        bridge.current_hp = 0
+        bridge.is_active = False
+
         # Bridge should be destroyed
         self.assertFalse(bridge.is_active)
-        
+
         # Update derelict status - should BE derelict now (no CommandAndControl)
         self.ship.update_derelict_status()
         self.assertTrue(self.ship.is_derelict, "Ship should be derelict after bridge destruction")

@@ -20,25 +20,48 @@ class TestRunner:
     def load_data_for_scenario(self, scenario):
         """
         Reload global game data based on scenario requirements.
+
+        IMPORTANT: When running from Combat Lab, this keeps the registry unfrozen
+        to allow ship loading and validator creation. The registry will remain
+        unfrozen until the test completes or the game restarts.
         """
         print(f"Loading data for scenario: {scenario.name}")
-        
+
         paths = scenario.get_data_paths()
-        
-        # Reset Globals
-        RegistryManager.instance().clear()
-        
+
+        # Reset Globals (unfreeze if needed for Combat Lab)
+        registry = RegistryManager.instance()
+        was_frozen = registry._frozen
+        print(f"DEBUG: RegistryManager frozen state: {was_frozen}")
+
+        if was_frozen:
+            print("DEBUG: Unfreezing RegistryManager for test data loading")
+            registry._frozen = False
+
+        print("DEBUG: Clearing registry")
+        registry.clear()
+
         # Load New Data
         try:
+            print(f"DEBUG: Loading modifiers from {paths['modifiers']}")
             load_modifiers(paths['modifiers'])
+
+            print(f"DEBUG: Loading components from {paths['components']}")
             load_components(paths['components'])
-            
+
             # Helper needed in ship.py to accept direct path
             from game.simulation.entities.ship import load_vehicle_classes
+            print(f"DEBUG: Loading vehicle classes from {paths['vehicle_classes']}")
             load_vehicle_classes(paths['vehicle_classes'])
-            
+
+            # IMPORTANT: Keep unfrozen to allow ship loading in scenario.setup()
+            # The registry will remain unfrozen for the test duration
+            print("DEBUG: Registry remains unfrozen to allow ship loading")
+
         except Exception as e:
             print(f"CRITICAL: Failed to load test data: {e}")
+            import traceback
+            traceback.print_exc()
             raise e
             
     def run_scenario(self, scenario_cls, headless=True, render_callback=None):

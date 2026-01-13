@@ -163,7 +163,7 @@ class Game:
         """Enter Combat Lab."""
         self.state = TEST_LAB
         self.return_state = TEST_LAB
-        self.test_lab_scene.scan_scenarios()
+        # Scenarios are auto-discovered by TestRegistry in TestLabScene.__init__
     
     def start_battle(self, team1_ships, team2_ships, headless=False):
         """Start a battle with the given ships."""
@@ -205,18 +205,21 @@ class Game:
             else:
                  # Normal handling
                  for event in events:
+                    # Track state before processing event
+                    state_before = self.state
+
                     if event.type == pygame.QUIT:
                         self.running = False
-                        
+
                     # Universal Exit Command
                     elif event.type == pygame.KEYDOWN and event.key == pygame.K_x and (event.mod & pygame.KMOD_ALT):
                         self.show_exit_dialog = True
-                    
+
                     # Profiling Toggle
                     elif event.type == pygame.KEYDOWN and event.key == pygame.K_F9:
                         active = PROFILER.toggle()
                         print(f"Profiling {'ENABLED' if active else 'DISABLED'}")
-                        
+
                     elif event.type == pygame.VIDEORESIZE:
                         self._handle_resize(event.w, event.h)
                     elif event.type == pygame.KEYDOWN:
@@ -225,8 +228,13 @@ class Game:
                         self._handle_click(event)
                     elif event.type == pygame.MOUSEWHEEL:
                         self._handle_scroll(event)
-                    
-                    # Forward events to current scene
+
+                    # Forward events to current scene ONLY if state didn't change
+                    # (prevents event from being processed by both old and new scene)
+                    if self.state != state_before:
+                        print(f"DEBUG: State changed from {state_before} to {self.state}, skipping scene event forwarding")
+                        continue
+
                     if self.state == MENU:
                         for btn in self.menu_buttons:
                             btn.handle_event(event)
@@ -278,12 +286,28 @@ class Game:
         
         if self.state == BATTLE:
             if self.battle_scene.handle_click(mx, my, event.button, self.screen.get_size()):
-                if self.battle_scene.action_return_to_setup:
+                print(f"DEBUG: Battle scene handled click")
+                print(f"DEBUG: action_return_to_test_lab={self.battle_scene.action_return_to_test_lab}")
+                print(f"DEBUG: action_return_to_setup={self.battle_scene.action_return_to_setup}")
+
+                # Handle return to Combat Lab (from test mode)
+                if self.battle_scene.action_return_to_test_lab:
+                    print(f"DEBUG: Returning to Combat Lab from test")
+                    self.battle_scene.action_return_to_test_lab = False
+                    self.battle_scene.test_mode = False  # Reset test mode
+                    self.test_lab_scene.reset_selection()  # Clear selected test to prevent auto-rerun
+                    self.start_test_lab()
+                # Handle return to battle setup
+                elif self.battle_scene.action_return_to_setup:
+                    print(f"DEBUG: Returning to battle setup")
+                    print(f"DEBUG: return_state={getattr(self, 'return_state', 'NOT SET')}")
                     self.battle_scene.action_return_to_setup = False
-                    
+
                     if hasattr(self, 'return_state') and self.return_state == TEST_LAB:
+                        print(f"DEBUG: return_state is TEST_LAB, going to test lab")
                         self.start_test_lab()
                     else:
+                        print(f"DEBUG: return_state is not TEST_LAB, going to battle setup")
                         self.start_battle_setup(preserve_teams=True)
         elif self.state == STRATEGY:
             self.strategy_scene.handle_click(mx, my, event.button)

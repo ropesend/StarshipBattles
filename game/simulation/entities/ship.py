@@ -342,35 +342,48 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
     def update_derelict_status(self) -> None:
         """
-        Update derelict status based on CommandAndControl and CrewCapacity abilities.
-        Ship becomes derelict when:
-        1. No operational component has CommandAndControl ability (bridge destroyed)
-        2. CrewRequired exceeds CrewCapacity (insufficient crew quarters)
+        Update derelict status based on component requirements.
+
+        Ship becomes derelict when declared requirements are not met:
+        1. If ANY component has RequiresCommandAndControl ability:
+           → Must have operational CommandAndControl component
+        2. If ANY component has CrewRequired ability:
+           → Must have sufficient CrewCapacity
+
+        Ships without requirements (e.g., autonomous drones, test ships)
+        operate normally regardless of available components.
         """
-        # Check 1: CommandAndControl capability (essential for command)
-        has_command = any(
-            c.is_operational and c.has_ability('CommandAndControl')
-            for layer in self.layers.values()
-            for c in layer['components']
-        )
-        
-        if not has_command:
-            if not self.is_derelict:
-                print(f"{self.name} has become DERELICT (Bridge destroyed)")
-            self.is_derelict = True
-            self.bridge_destroyed = True
-            return
-        
-        # Check 2: Crew capacity (resource capability)
-        crew_capacity = self.get_total_ability_value('CrewCapacity')
+        # Check 1: CommandAndControl requirement (conditional)
+        # Only check if ANY component declares this requirement
+        requires_command = self.get_total_ability_value('RequiresCommandAndControl') > 0
+
+        if requires_command:
+            has_command = any(
+                c.is_operational and c.has_ability('CommandAndControl')
+                for layer in self.layers.values()
+                for c in layer['components']
+            )
+
+            if not has_command:
+                if not self.is_derelict:
+                    print(f"{self.name} has become DERELICT (Command and Control lost)")
+                self.is_derelict = True
+                self.bridge_destroyed = True
+                return
+
+        # Check 2: Crew capacity requirement (conditional)
+        # Only check if ANY component declares crew requirement
         crew_required = self.get_total_ability_value('CrewRequired')
-        
-        if crew_required > crew_capacity:
-            if not self.is_derelict:
-                print(f"{self.name} has become DERELICT (Insufficient crew capacity)")
-            self.is_derelict = True
-            return
-        
+
+        if crew_required > 0:
+            crew_capacity = self.get_total_ability_value('CrewCapacity')
+
+            if crew_required > crew_capacity:
+                if not self.is_derelict:
+                    print(f"{self.name} has become DERELICT (Insufficient crew capacity)")
+                self.is_derelict = True
+                return
+
         # All checks passed - ship is operational
         self.is_derelict = False
         self.bridge_destroyed = False

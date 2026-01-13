@@ -41,7 +41,10 @@ def registry_with_hull():
         "type": "Hull",
         "mass": 50,
         "hp": 100,  # Note: Component expects 'hp' not 'max_hp'
-        "abilities": {"HullComponent": True}
+        "abilities": {
+            "HullComponent": True,
+            "RequiresCommandAndControl": True  # Ship requires command and control
+        }
     }
     hull_component = Component(hull_data)
     mgr.components["hull_escort"] = hull_component

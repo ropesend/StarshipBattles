@@ -43,9 +43,15 @@ class BattleScene:
         # Headless mode
         self.headless_mode = False
         self.headless_start_time = None
-        
+
+        # Test mode (Combat Lab)
+        self.test_mode = False  # Set to True when running from Combat Lab
+        self.test_scenario = None  # The scenario being run (if in test mode)
+        self.test_tick_count = 0  # Track ticks for max_ticks limit
+
         # Actions for Game class
         self.action_return_to_setup = False
+        self.action_return_to_test_lab = False
 
     def handle_resize(self, width, height):
         """Handle window resize."""
@@ -81,24 +87,39 @@ class BattleScene:
     def ai_controllers(self):
         return self.engine.ai_controllers
 
-    def start(self, team1_ships, team2_ships, seed=None, headless=False):
-        """Start a battle between two teams."""
+    def start(self, team1_ships, team2_ships, seed=None, headless=False, start_paused=False, test_mode=False, test_scenario=None):
+        """Start a battle between two teams.
+
+        Args:
+            team1_ships: List of ships for team 0
+            team2_ships: List of ships for team 1
+            seed: Random seed for deterministic battles
+            headless: Run without rendering
+            start_paused: Start with simulation paused (useful for tests)
+            test_mode: Running from Combat Lab (shows return button when done)
+            test_scenario: The TestScenario instance (if running from Combat Lab)
+        """
         self.headless_mode = headless
         self.headless_start_time = None
         if headless:
             self.headless_start_time = time.time()
             print("\n=== STARTING HEADLESS BATTLE ===")
-        
+
         self.engine.start(team1_ships, team2_ships, seed)
         self.beams = []
         self.sim_tick_counter = 0
         self.action_return_to_setup = False
-        
+        self.action_return_to_test_lab = False
+        self.test_mode = test_mode
+        self.test_scenario = test_scenario
+        self.test_tick_count = 0
+
         # Reset UI
         self.ui.expanded_ships = set()
         self.ui.stats_scroll_offset = 0
-        
+
         self.sim_speed_multiplier = 1.0 # Reset speed on new battle
+        self.sim_paused = start_paused  # Set initial pause state
         
         if not headless:
             self.camera.fit_objects(self.engine.ships)
@@ -134,11 +155,28 @@ class BattleScene:
         """
         Update battle simulation for one tick.
         """
+        # Check if test scenario has completed
+        if self.test_mode and self.test_scenario:
+            self.test_tick_count += 1
+
+            # Call scenario's update method
+            self.test_scenario.update(self.engine)
+
+            # Check if test should end (engine handles all end conditions)
+            if self.engine.is_battle_over():
+                # Test complete - verify results
+                print(f"DEBUG: Test complete! ticks={self.test_tick_count}")
+                self.test_scenario.passed = self.test_scenario.verify(self.engine)
+                print(f"DEBUG: Test {'PASSED' if self.test_scenario.passed else 'FAILED'}")
+                # Signal test completion
+                self.test_scenario = None  # Stop calling update
+                return  # Don't update engine anymore
+
         if not self.engine.is_battle_over():
             self.sim_tick_counter = self.engine.tick_counter + 1 # Sync tick counter
             # Delegated Update
             self.engine.update()
-            
+
             # Sync Beams for Visuals
             for b in self.engine.recent_beams:
                 b_visual = b.copy()
@@ -185,6 +223,9 @@ class BattleScene:
 
     def is_battle_over(self):
         """Check if the battle has ended."""
+        # In test mode, battle is over when scenario completes
+        if self.test_mode and self.test_scenario is None and self.test_tick_count > 0:
+            return True  # Test has completed
         return self.engine.is_battle_over()
     
     def get_winner(self):

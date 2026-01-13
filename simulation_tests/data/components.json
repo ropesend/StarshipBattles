@@ -554,6 +554,169 @@
             "abilities": {
                 "HullMass": 50
             }
+        },
+        {
+            "_comment": "=== RESOURCE-FREE WEAPON VARIANTS ===",
+            "id": "test_beam_low_acc_no_resource",
+            "name": "Test Beam (Low Accuracy, No Resource)",
+            "type": "BeamWeaponAbility",
+            "mass": 5,
+            "hp": 20,
+            "sprite_index": 87,
+            "abilities": {
+                "BeamWeaponAbility": {
+                    "damage": 5,
+                    "range": 800,
+                    "reload": 0.0,
+                    "firing_arc": 360,
+                    "base_accuracy": 0.5,
+                    "accuracy_falloff": 0.002
+                }
+            }
+        },
+        {
+            "id": "test_beam_med_acc_no_resource",
+            "name": "Test Beam (Medium Accuracy, No Resource)",
+            "type": "BeamWeaponAbility",
+            "mass": 5,
+            "hp": 20,
+            "sprite_index": 87,
+            "abilities": {
+                "BeamWeaponAbility": {
+                    "damage": 5,
+                    "range": 800,
+                    "reload": 0.0,
+                    "firing_arc": 360,
+                    "base_accuracy": 2.0,
+                    "accuracy_falloff": 0.001
+                }
+            }
+        },
+        {
+            "id": "test_beam_high_acc_no_resource",
+            "name": "Test Beam (High Accuracy, No Resource)",
+            "type": "BeamWeaponAbility",
+            "mass": 5,
+            "hp": 20,
+            "sprite_index": 87,
+            "abilities": {
+                "BeamWeaponAbility": {
+                    "damage": 5,
+                    "range": 800,
+                    "reload": 0.0,
+                    "firing_arc": 360,
+                    "base_accuracy": 5.0,
+                    "accuracy_falloff": 0.0005
+                }
+            }
+        },
+        {
+            "id": "test_seeker_no_resource",
+            "name": "Test Seeker (No Resource)",
+            "type": "SeekerWeaponAbility",
+            "mass": 20,
+            "hp": 20,
+            "sprite_index": 86,
+            "abilities": {
+                "SeekerWeaponAbility": {
+                    "damage": 100,
+                    "range": 3000,
+                    "projectile_speed": 1000,
+                    "turn_rate": 90,
+                    "endurance": 5.0,
+                    "reload": 5.0,
+                    "firing_arc": 360
+                }
+            }
+        },
+        {
+            "_comment": "=== SMALL STORAGE FOR DEPLETION TESTS ===",
+            "id": "test_storage_energy_small",
+            "name": "Test Battery (Small)",
+            "type": "Tank",
+            "mass": 1,
+            "hp": 5,
+            "sprite_index": 19,
+            "abilities": {
+                "EnergyStorage": 25
+            }
+        },
+        {
+            "id": "test_storage_ammo_small",
+            "name": "Test Ammo Mag (Small)",
+            "type": "Tank",
+            "mass": 1,
+            "hp": 5,
+            "sprite_index": 19,
+            "abilities": {
+                "AmmoStorage": 10
+            }
+        },
+        {
+            "_comment": "=== ACCURACY TEST COMPONENTS ===",
+            "id": "test_armor_ultra_high_hp",
+            "name": "Test Armor (Ultra High HP)",
+            "type": "Armor",
+            "mass": 200,
+            "hp": 10000,
+            "sprite_index": 14,
+            "abilities": {
+                "Armor": true
+            }
+        },
+        {
+            "id": "test_beam_low_acc_1dmg",
+            "name": "Test Beam (Low Accuracy, 1 Damage)",
+            "type": "BeamWeaponAbility",
+            "mass": 5,
+            "hp": 20,
+            "sprite_index": 87,
+            "abilities": {
+                "BeamWeaponAbility": {
+                    "damage": 1,
+                    "range": 800,
+                    "reload": 0.0,
+                    "firing_arc": 360,
+                    "base_accuracy": 0.5,
+                    "accuracy_falloff": 0.002
+                }
+            }
+        },
+        {
+            "id": "test_beam_med_acc_1dmg",
+            "name": "Test Beam (Medium Accuracy, 1 Damage)",
+            "type": "BeamWeaponAbility",
+            "mass": 5,
+            "hp": 20,
+            "sprite_index": 87,
+            "abilities": {
+                "BeamWeaponAbility": {
+                    "damage": 1,
+                    "range": 800,
+                    "reload": 0.0,
+                    "firing_arc": 360,
+                    "base_accuracy": 2.0,
+                    "accuracy_falloff": 0.001
+                }
+            }
+        },
+        {
+            "id": "test_beam_high_acc_1dmg",
+            "name": "Test Beam (High Accuracy, 1 Damage)",
+            "type": "BeamWeaponAbility",
+            "mass": 5,
+            "hp": 20,
+            "sprite_index": 87,
+            "abilities": {
+                "BeamWeaponAbility": {
+                    "damage": 1,
+                    "range": 800,
+                    "reload": 0.0,
+                    "firing_arc": 360,
+                    "base_accuracy": 5.0,
+                    "accuracy_falloff": 0.0005
+                }
+            }
         }
     ]
 }

@@ -1,0 +1,41 @@
+{
+    "name": "Test Thruster Simple",
+    "color": [
+        0,
+        255,
+        255
+    ],
+    "team_id": 0,
+    "ship_class": "TestS_2L",
+    "theme_id": "Federation",
+    "ai_strategy": "do_nothing",
+    "layers": {
+        "CORE": [
+            {
+                "id": "test_engine_no_fuel"
+            },
+            {
+                "id": "test_thruster_std"
+            }
+        ],
+        "ARMOR": []
+    },
+    "_test_notes": "Minimal ship: 1 engine + 1 thruster. Mass = hull(20) + engine(20) + thruster(5) = 45",
+    "expected_stats": {
+        "max_hp": 170,
+        "max_fuel": 0.0,
+        "max_energy": 0.0,
+        "max_ammo": 0.0,
+        "max_speed": 277.78,
+        "acceleration_rate": 617.28,
+        "turn_speed": 826.45,
+        "total_thrust": 500.0,
+        "mass": 45.0,
+        "armor_hp_pool": 0
+    },
+    "resources": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+    }
+}
