@@ -16,6 +16,9 @@ from ui.colors import COLORS
 class StrategyScene:
     """Manages strategy layer simulation, rendering, and UI."""
     
+    SIDEBAR_WIDTH = 600
+    TOP_BAR_HEIGHT = 50
+    
     def __init__(self, screen_width, screen_height):
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -59,7 +62,11 @@ class StrategyScene:
                  # self.enemy_empire.add_fleet(f2)
 
         # Camera
-        self.camera = Camera(screen_width, screen_height)
+        # Viewport crops: Sidebar (right) and Top Bar (top)
+        # Offset Y = 50 (Top Bar)
+        # Width = Screen - Sidebar
+        # Height = Screen - Top Bar
+        self.camera = Camera(screen_width - self.SIDEBAR_WIDTH, screen_height - self.TOP_BAR_HEIGHT, offset_x=0, offset_y=self.TOP_BAR_HEIGHT)
         self.camera.max_zoom = 25.0
         self.camera.zoom = 2.0 # Start Zoomed In
         
@@ -210,8 +217,11 @@ class StrategyScene:
         # For now, let's keep camera full width but input will be blocked by UI.
         # Ideally: self.camera.viewport_width = width - 600
         # Adjust camera to exclude sidebar
-        self.camera.width = width - self.ui.sidebar_width 
-        self.camera.height = height
+        # Adjust camera to exclude sidebar
+        self.camera.width = width - self.SIDEBAR_WIDTH 
+        self.camera.height = height - self.TOP_BAR_HEIGHT # Top bar offset
+        # Maintain offsets
+        self.camera.offset_y = self.TOP_BAR_HEIGHT
         self.ui.handle_resize(width, height)
 
     def request_colonize_order(self, fleet):
@@ -471,11 +481,13 @@ class StrategyScene:
         # Filter events for Camera: Block MouseWheel if over sidebar
         cam_events = []
         mx, my = pygame.mouse.get_pos()
-        over_sidebar = (mx > self.screen_width - self.ui.sidebar_width)
+        over_sidebar = (mx > self.screen_width - self.SIDEBAR_WIDTH)
+        over_topbar = (my < self.TOP_BAR_HEIGHT)
         
         for e in events:
-            if e.type == pygame.MOUSEWHEEL and over_sidebar:
-                continue
+            if e.type == pygame.MOUSEWHEEL:
+                if over_sidebar or over_topbar:
+                    continue
             cam_events.append(e)
             
         self.camera.update_input(dt, cam_events)
@@ -825,8 +837,22 @@ class StrategyScene:
 
     def draw(self, screen):
         """Render the scene."""
-        screen.fill(COLORS['bg_deep']) 
+        # Set Clip to Galaxy Viewport
+        # x=0, y=50, w=screen-sidebar, h=screen-50
+        viewport_w = self.screen_width - self.SIDEBAR_WIDTH
+        viewport_h = self.screen_height - self.TOP_BAR_HEIGHT
         
+        # Valid clip?
+        if viewport_w > 0 and viewport_h > 0:
+            viewport_rect = pygame.Rect(0, self.TOP_BAR_HEIGHT, viewport_w, viewport_h)
+            screen.set_clip(viewport_rect)
+            
+            # Fill Viewport BG
+            screen.fill(COLORS['bg_deep'], viewport_rect)
+        else:
+            screen.fill(COLORS['bg_deep'])
+        
+        # Draw Galaxy Elements (Clipped)
         if self.camera.zoom >= 0.4:
             self._draw_grid(screen)
             
@@ -839,9 +865,15 @@ class StrategyScene:
              self._draw_move_preview(screen)
         
         # Hover Highlight
-        # Hover Highlight
         if self.hover_hex and self.camera.zoom >= 0.5:
              self._draw_hover_hex(screen)
+
+        # Remove Clip for UI
+        screen.set_clip(None)
+        
+        # Draw Border around Galaxy Viewport
+        if viewport_w > 0 and viewport_h > 0:
+             pygame.draw.rect(screen, COLORS['border_normal'], viewport_rect, 2)
         
         self.ui.draw(screen)
 

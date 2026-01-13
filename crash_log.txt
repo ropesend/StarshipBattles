@@ -1,27 +1,17 @@
 Traceback (most recent call last):
-  File "C:\Dev\Starship Battles\game\app.py", line 543, in main
+  File "C:\Developer\StarshipBattles\game\app.py", line 567, in main
     game.run()
-<<<<<<< HEAD
-  File "C:\Developer\StarshipBattles\game\app.py", line 225, in run
-    self._handle_click(event)
-  File "C:\Developer\StarshipBattles\game\app.py", line 289, in _handle_click
-    self.strategy_scene.handle_click(mx, my, event.button)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 496, in handle_click
-    self._handle_colonize_designation(mx, my)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 732, in _handle_colonize_designation
-    self.ui.prompt_planet_selection(candidates, on_selected)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_screen.py", line 600, in prompt_planet_selection
-    PlanetSelectionWindow(rect, self.manager, planets, on_select, self.format_planet_info)
-  File "C:\Developer\StarshipBattles\game\ui\screens\planet_selection_window.py", line 19, in __init__
-    pygame.Rect(10, 10, list_width, 30),
-    ^^^^^^
-NameError: name 'pygame' is not defined
-=======
-  File "C:\Dev\Starship Battles\game\app.py", line 232, in run
-    btn.handle_event(event)
-  File "C:\Dev\Starship Battles\ui\components.py", line 23, in handle_event
-    self.callback()
-  File "C:\Dev\Starship Battles\game\app.py", line 166, in start_test_lab
-    self.test_lab_scene.scan_scenarios()
-AttributeError: 'TestLabScene' object has no attribute 'scan_scenarios'
->>>>>>> 4697567ad5016ea44340c6917e3bf28a9a1cf61e
+  File "C:\Developer\StarshipBattles\game\app.py", line 248, in run
+    self.strategy_scene.handle_event(event)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 265, in handle_event
+    self.ui.handle_event(event)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_screen.py", line 532, in handle_event
+    self.open_planet_list()
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_screen.py", line 618, in open_planet_list
+    PlanetListWindow(rect, self.manager, galaxy, empire)
+  File "C:\Developer\StarshipBattles\game\ui\screens\planet_list_window.py", line 91, in __init__
+    self._rebuild_headers()
+  File "C:\Developer\StarshipBattles\game\ui\screens\planet_list_window.py", line 288, in _rebuild_headers
+    visible_cols = self._get_visible_columns()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'PlanetListWindow' object has no attribute '_get_visible_columns'

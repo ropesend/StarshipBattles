@@ -3,10 +3,12 @@ import pygame
 import pygame_gui
 from game.strategy.data.fleet import OrderType
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
+from game.ui.screens.planet_list_window import PlanetListWindow
 from game.core.constants import DATA_DIR
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 from game.ui.panels.system_tree_panel import SystemTreePanel
 import pygame_gui.windows # for raw data popup if needed
+import pygame_gui.elements as ui
 
 class StrategyInterface:
     """Handles all UI rendering and interaction for the StrategyScene."""
@@ -196,6 +198,9 @@ class StrategyInterface:
         
         # --- Main Buttons ---
         offset_main = 310
+        self.btn_planets = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(start_x + offset_main - 110, 5, 100, 40), text="Planets", manager=self.manager, container=self.top_bar
+        )
         self.btn_empire = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(start_x + offset_main, 5, 100, 40), text="Empire", manager=self.manager, container=self.top_bar
         )
@@ -523,7 +528,9 @@ class StrategyInterface:
              pass
              
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.btn_raw_data:
+            if event.ui_element == self.btn_planets:
+                self.open_planet_list()
+            elif event.ui_element == self.btn_raw_data:
                 self.show_raw_data_popup()
             elif event.ui_element == self.btn_colonize:
                 # Check current selection from detail panel context
@@ -598,3 +605,14 @@ class StrategyInterface:
         rect = pygame.Rect(x, y, width, height)
         # Use existing class
         PlanetSelectionWindow(rect, self.manager, planets, on_select, self.format_planet_info)
+
+    def open_planet_list(self):
+        """Open the Planet List Window."""
+        w, h = self.width * 0.9, self.height * 0.9
+        rect = pygame.Rect((self.width - w)/2, (self.height - h)/2, w, h)
+        
+        # Get Empire (current player)
+        empire = self.scene.current_empire
+        galaxy = self.scene.galaxy
+        
+        PlanetListWindow(rect, self.manager, galaxy, empire)
