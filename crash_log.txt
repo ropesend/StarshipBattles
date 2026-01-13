@@ -1,15 +1,17 @@
 Traceback (most recent call last):
   File "C:\Developer\StarshipBattles\game\app.py", line 543, in main
     game.run()
-  File "C:\Developer\StarshipBattles\game\app.py", line 244, in run
-    self._update_and_draw(frame_time, events)
-  File "C:\Developer\StarshipBattles\game\app.py", line 319, in _update_and_draw
-    self.strategy_scene.draw(self.screen)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 704, in draw
-    self._draw_systems(screen)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 1030, in _draw_systems
-    self._draw_system_details(screen, sys, world_pos)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 1074, in _draw_system_details
-    idx = hash(planet) % len(images)
-          ^^^^^^^^^^^^
-TypeError: unhashable type: 'Planet'
+  File "C:\Developer\StarshipBattles\game\app.py", line 225, in run
+    self._handle_click(event)
+  File "C:\Developer\StarshipBattles\game\app.py", line 289, in _handle_click
+    self.strategy_scene.handle_click(mx, my, event.button)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 496, in handle_click
+    self._handle_colonize_designation(mx, my)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 732, in _handle_colonize_designation
+    self.ui.prompt_planet_selection(candidates, on_selected)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_screen.py", line 600, in prompt_planet_selection
+    PlanetSelectionWindow(rect, self.manager, planets, on_select, self.format_planet_info)
+  File "C:\Developer\StarshipBattles\game\ui\screens\planet_selection_window.py", line 19, in __init__
+    pygame.Rect(10, 10, list_width, 30),
+    ^^^^^^
+NameError: name 'pygame' is not defined

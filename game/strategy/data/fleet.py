@@ -5,13 +5,13 @@ class OrderType(Enum):
     MOVE = auto()
     COLONIZE = auto()
 
-class Order:
+class FleetOrder:
     def __init__(self, order_type, target=None):
         self.type = order_type
         self.target = target # HexCoord for MOVE, Planet for COLONIZE
     
     def __repr__(self):
-        return f"Order({self.type.name}, {self.target})"
+        return f"FleetOrder({self.type.name}, {self.target})"
 
 class Fleet:
     """
@@ -56,3 +56,11 @@ class Fleet:
 
     def __repr__(self):
         return f"Fleet({self.id}, Owner:{self.owner_id}, Loc:{self.location}, Spd:{self.speed})"
+
+    def __eq__(self, other):
+        if not isinstance(other, Fleet):
+            return False
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)

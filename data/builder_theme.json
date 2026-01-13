@@ -176,5 +176,13 @@
             "text_vert_alignment": "center",
             "text_horiz_alignment_padding": "0"
         }
+    },
+    "#tree_item_label": {
+        "misc": {
+            "text_horiz_alignment": "left"
+        },
+        "colours": {
+            "normal_text": "#9aabcc"
+        }
     }
 }

@@ -4,8 +4,8 @@ import pygame_gui
 import random
 import os
 from game.strategy.engine.turn_engine import TurnEngine
+from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.empire import Empire
-from game.strategy.data.fleet import Order, OrderType, Fleet
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint, Planet
 from game.strategy.data.hex_math import hex_to_pixel, pixel_to_hex, HexCoord, hex_distance
 from game.ui.renderer.camera import Camera
@@ -24,8 +24,8 @@ class StrategyScene:
         self.turn_engine = TurnEngine()
         
         # Empires
-        self.player_empire = Empire(0, "Terran Command", (0, 0, 255))
-        self.enemy_empire = Empire(1, "Xeno Hive", (255, 0, 0))
+        self.player_empire = Empire(0, "Terran Command", (0, 0, 255), theme_path=r"C:\Developer\StarshipBattles\assets\ShipThemes\Atlantians")
+        self.enemy_empire = Empire(1, "Xeno Hive", (255, 0, 0), theme_path=r"C:\Developer\StarshipBattles\assets\ShipThemes\Federation")
         self.empires = [self.player_empire, self.enemy_empire]
         
         # Galaxy Data
@@ -78,13 +78,12 @@ class StrategyScene:
         # UI
         self.ui = StrategyInterface(self, screen_width, screen_height)
         
+
+        self.hover_hex = None
+        
         # Constants
         self.HEX_SIZE = 10
         self.DETAIL_ZOOM_LEVEL = 3.0
-        
-        # Input State
-        self.selected_object = None 
-        self.hover_hex = None
         
         # Fleets: Managed by Empires now, but scene needs 'flat' list for rendering?
         # Or we iterate empires.
@@ -92,6 +91,7 @@ class StrategyScene:
         
         # Selected Fleet Ref
         self.selected_fleet = None
+        self.selected_object = None # General selection (System, Planet, Fleet)
         
         # State
         self.turn_processing = False
@@ -102,6 +102,7 @@ class StrategyScene:
 
         # Assets
         self.assets = {}
+        self.empire_assets = {} # {empire_id: {'colony': Surface, 'fleet': Surface}}
         self._load_assets()
 
     def _load_assets(self):
@@ -141,9 +142,15 @@ class StrategyScene:
             else:
                 print(f"Warning: Asset not found: {full_path}")
                 
+        processed_base_path = os.path.join(base_path, "Planets/Processed")
+        use_processed = os.path.exists(processed_base_path)
+        
         # Load Planets (Scan directory)
-        if os.path.exists(planet_base_path):
-            files = os.listdir(planet_base_path)
+        # Use processed directory if available to skip slow transparency step
+        scan_path = processed_base_path if use_processed else planet_base_path
+        
+        if os.path.exists(scan_path):
+            files = os.listdir(scan_path)
             for f in files:
                 if f.endswith(".png"):
                     # Categorize by prefix: planet_gas_, planet_terr_, planet_ice_, planet_ven_, planet_moon_
@@ -159,8 +166,13 @@ class StrategyScene:
                     if cat not in self.assets['planets']:
                         self.assets['planets'][cat] = []
                     
-                    full_path = os.path.join(planet_base_path, f)
+                    full_path = os.path.join(scan_path, f)
                     img = pygame.image.load(full_path).convert_alpha()
+                    
+                    # Only apply expensive processing if we loaded from raw source
+                    if not use_processed:
+                        img = self._make_background_transparent(img)
+                        
                     self.assets['planets'][cat].append(img)
                     
         # Load Warp Points
@@ -172,6 +184,24 @@ class StrategyScene:
                     img = pygame.image.load(full_path).convert() # JPG no alpha
                    # img.set_colorkey((0,0,0)) # Optional if simple trans
                     self.assets['warp_points'].append(img)
+                    
+        # Load Empire Assets
+        for emp in self.empires:
+            self.empire_assets[emp.id] = {}
+            if emp.theme_path and os.path.exists(emp.theme_path):
+                # Colony Flag
+                colony_path = os.path.join(emp.theme_path, "Flags", "Colony_Flag.jpg")
+                if os.path.exists(colony_path):
+                    img = pygame.image.load(colony_path).convert()
+                    self.empire_assets[emp.id]['colony'] = img
+                
+                # Fleet Icon (Battlecruiser)
+                fleet_path = os.path.join(emp.theme_path, "Skins", "Battlecruiser.png")
+                if os.path.exists(fleet_path):
+                    img = pygame.image.load(fleet_path).convert_alpha()
+                    self.empire_assets[emp.id]['fleet'] = img
+            else:
+                print(f"Warning: Theme path not found for Empire {emp.name}: {emp.theme_path}")
 
     def handle_resize(self, width, height):
         self.screen_width = width
@@ -179,9 +209,38 @@ class StrategyScene:
         # Adjust camera to exclude sidebar? 
         # For now, let's keep camera full width but input will be blocked by UI.
         # Ideally: self.camera.viewport_width = width - 600
-        self.camera.width = width
+        # Adjust camera to exclude sidebar
+        self.camera.width = width - self.ui.sidebar_width 
         self.camera.height = height
         self.ui.handle_resize(width, height)
+
+    def request_colonize_order(self, fleet):
+        """Handle colonize request from UI."""
+        matches = []
+        sys = self._get_system_at_hex(fleet.location)
+        if sys:
+            for p in sys.planets:
+                 # Check if colonizable? (Unowned)
+                 if p.owner_id is None: 
+                     matches.append(p)
+                       
+        if len(matches) == 0:
+            print("No colonizable planets at fleet location.")
+            return
+        elif len(matches) == 1:
+            self._issue_colonize_order(fleet, matches[0])
+        else:
+            self.ui.prompt_planet_selection(matches, lambda p: self._issue_colonize_order(fleet, p))
+            
+    def _issue_colonize_order(self, fleet, planet):
+        from game.strategy.data.fleet import FleetOrder, OrderType
+        # Store Planet object directly
+        order = FleetOrder(OrderType.COLONIZE, target=planet) 
+        fleet.orders.append(order)
+        print(f"issued colonize order to {planet.name}")
+        
+    def _get_system_at_hex(self, hex_coord):
+        return self.galaxy.systems.get(hex_coord)
 
     def update(self, dt):
         self.camera.update(dt)
@@ -196,12 +255,11 @@ class StrategyScene:
         self.ui.handle_event(event)
 
         # Handle UI Selection Events from the Interface
-        if event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            if event.ui_element == self.ui.sector_list:
-                selected_label = event.text
-                obj = self.ui.current_sector_objects.get(selected_label)
-                if obj:
-                    self.on_ui_selection(obj)
+        # Handle UI Selection Events from the Interface
+        # Note: StrategyInterface now uses SystemTreePanel which triggers callbacks directly via
+        # self.ui.sector_tree.set_selection_callback -> self.on_ui_selection
+        # So no manual event handling is needed here for lists.
+        pass
                     
         # Button Events
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -317,7 +375,6 @@ class StrategyScene:
         # Requirements: Selected Fleet, Fleet at unowned Planet.
         # Check UI state/selected object?
         # The user likely selected the Fleet OR the Planet?
-        # If fleet selected, colonize what? The planet it's at.
         
         if not self.selected_fleet:
             return
@@ -331,7 +388,7 @@ class StrategyScene:
             for p in start_sys.planets:
                  if p.location == loc_local:
                      # Add filter for valid colonization? (e.g. not owned)
-                     if p.owner_id != self.player_empire.id:
+                     if p.owner_id is None: # Changed from 0 to None for neutral
                         valid_planets.append(p)
 
         if not valid_planets:
@@ -340,7 +397,7 @@ class StrategyScene:
             
         def execute_colonize(planet):
              print(f"Queueing Colonize Order for {planet.name}")
-             self.selected_fleet.add_order(Order(OrderType.COLONIZE, planet))
+             self.selected_fleet.add_order(FleetOrder(OrderType.COLONIZE, planet))
              self.on_ui_selection(self.selected_fleet) # Refresh UI
 
         if len(valid_planets) == 1:
@@ -411,7 +468,17 @@ class StrategyScene:
 
     def update_input(self, dt, events):
         """Update camera input."""
-        self.camera.update_input(dt, events)
+        # Filter events for Camera: Block MouseWheel if over sidebar
+        cam_events = []
+        mx, my = pygame.mouse.get_pos()
+        over_sidebar = (mx > self.screen_width - self.ui.sidebar_width)
+        
+        for e in events:
+            if e.type == pygame.MOUSEWHEEL and over_sidebar:
+                continue
+            cam_events.append(e)
+            
+        self.camera.update_input(dt, cam_events)
         
         # Hover Logic
         mx, my = pygame.mouse.get_pos()
@@ -575,6 +642,11 @@ class StrategyScene:
              if self.assets['warp_points']:
                  idx = id(obj) % len(self.assets['warp_points'])
                  return self.assets['warp_points'][idx]
+
+        elif hasattr(obj, 'ships'): # Fleet
+            emp_assets = self.empire_assets.get(obj.owner_id)
+            if emp_assets and 'fleet' in emp_assets:
+                return emp_assets['fleet']
                  
         return None
         
@@ -600,7 +672,7 @@ class StrategyScene:
         if path:
             print(f"Path confirmed: {len(path)} steps.")
             # Create Order
-            new_order = Order(OrderType.MOVE, target_hex)
+            new_order = FleetOrder(OrderType.MOVE, target_hex)
             self.selected_fleet.add_order(new_order)
             
             # Optimization: If Fleet has no path/orders, assign this path to 'current' immediately.
@@ -625,54 +697,112 @@ class StrategyScene:
         world_pos = self.camera.screen_to_world((mx, my))
         target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.HEX_SIZE)
         
-        # Find planet at this hex
+        # 1. Identify System at Target (Simplest lookup: System Global Location OR within radius?)
+        # _get_system_at_hex usually only checks if hex IS valid part of system?
+        # Actually in this simple hex map, 1 System = 1 Hex mostly, OR spread?
+        # _get_system_at_hex implementation delegates to pathfinding which checks if `hex` is close to system center?
+        # Let's trust _get_system_at_hex returns the system "owning" that hex.
+        
         target_system = self._get_system_at_hex(target_hex)
         if not target_system:
             print("No system at target location.")
             self.input_mode = 'SELECT'
             return
         
-        local_hex = target_hex - target_system.global_location
-        target_planet = None
-        for p in target_system.planets:
-            if p.location == local_hex:
-                target_planet = p
-                break
+        # 2. Get Candidates at the CLICKED Location
+        # User Feedback (Step 344): "dialog ... should only include planets in that sector."
         
-        if not target_planet:
-            print("No planet at target hex.")
+        local_hex = target_hex - target_system.global_location
+        
+        # Filter for planets exactly at this hex (Planet + Moons)
+        candidates = [p for p in target_system.planets if p.owner_id is None and p.location == local_hex]
+        
+        if not candidates:
+            print(f"No colonizable planets at hex {target_hex}.")
+            # Fallback? If user clicked empty space, they probably missed. 
+            # Do NOT show system-wide list.
             self.input_mode = 'SELECT'
             return
-        
-        # Determine start hex (current location or last queued destination)
-        start_hex = self.selected_fleet.location
-        for o in reversed(self.selected_fleet.orders):
-            if o.type == OrderType.MOVE:
-                start_hex = o.target
-                break
-        
-        # Calculate path to planet
-        path = self.calculate_hybrid_path(start_hex, target_hex)
-        
-        if path:
-            # Queue MOVE order to planet's hex
-            move_order = Order(OrderType.MOVE, target_hex)
-            self.selected_fleet.add_order(move_order)
-            
-            # Assign path if this is the first order
-            if len(self.selected_fleet.orders) == 1:
-                self.selected_fleet.path = path
-            
-            # Queue COLONIZE order for the planet
-            colonize_order = Order(OrderType.COLONIZE, target_planet)
-            self.selected_fleet.add_order(colonize_order)
-            
-            print(f"Queued MOVE to {target_hex} then COLONIZE {target_planet}")
+
+        if len(candidates) == 1:
+             # Only one option, proceed (Auto-Select)
+             self._queue_colonize_mission(target_hex, candidates[0], fleet=self.selected_fleet)
         else:
-            print("Cannot find path to target planet.")
+             # Multiple options (e.g. Planet + Moons) -> Dialog
+             # CAPTURE the fleet reference now, in case selection changes while dialog is open!
+             fleet_ref = self.selected_fleet
+             
+             def on_selected(planet):
+                 # Use captured fleet_ref
+                 self._queue_colonize_mission(target_hex, planet, fleet=fleet_ref)
+                 # Refresh UI if this fleet is still selected (opt)
+                 if self.selected_fleet == fleet_ref:
+                    self.on_ui_selection(self.selected_fleet)
+                 
+             self.ui.prompt_planet_selection(candidates, on_selected)
         
         self.input_mode = 'SELECT'
         self.on_ui_selection(self.selected_fleet)
+
+    def _queue_colonize_mission(self, target_hex, planet, fleet=None):
+        """Helper to queue Move + Colonize."""
+        # Use provided fleet ref or fallback to selection
+        target_fleet = fleet if fleet else self.selected_fleet
+        
+        if not target_fleet: return
+        
+        # Determine start hex
+        start_hex = target_fleet.location
+        if target_fleet.orders:
+             last = target_fleet.orders[-1]
+             if last.type == OrderType.MOVE:
+                 start_hex = last.target
+        
+        # Calculate Path
+        path = self.calculate_hybrid_path(start_hex, target_hex)
+        if path:
+            # Queue MOVE
+            # Only if start != target
+            if start_hex != target_hex:
+                from game.strategy.data.fleet import FleetOrder, OrderType # Ensure import
+                move = FleetOrder(OrderType.MOVE, target_hex)
+                target_fleet.add_order(move)
+                if len(target_fleet.orders) == 1:
+                    target_fleet.path = path
+            
+            # Queue COLONIZE
+            from game.strategy.data.fleet import FleetOrder, OrderType
+            col = FleetOrder(OrderType.COLONIZE, planet)
+            target_fleet.add_order(col)
+            
+            p_name = planet.name if planet else "Any Planet"
+            print(f"Mission Queued: Colonize {p_name} at {target_hex}")
+        else:
+            print("Cannot find path.")
+
+    def request_colonize_order(self, fleet, planet):
+        """Request colonization order from UI (e.g. detailed panel button)."""
+        self.selected_fleet = fleet
+        
+        # Resolve global hex of planet
+        # Planet -> System -> Global
+        # We need to find the system the planet belongs to.
+        # Efficient lookup?
+        target_hex = None
+        
+        # Search systems (Optimization: Map in Galaxy?)
+        found_sys = None
+        for sys in self.galaxy.systems.values():
+             if planet in sys.planets:
+                 found_sys = sys
+                 break
+        
+        if found_sys:
+             target_hex = found_sys.global_location + planet.location
+             self._queue_colonize_mission(target_hex, planet)
+             self.on_ui_selection(fleet) # Refresh UI to show new orders
+        else:
+             print("StrategyScene: Could not resolve system for planet.")
 
     def calculate_hybrid_path(self, start_hex, end_hex):
         """
@@ -799,8 +929,9 @@ class StrategyScene:
         # Global Base (screen space of 0,0)
         cam_x = self.camera.position.x
         cam_y = self.camera.position.y
-        base_x = (self.screen_width / 2) - cam_x * self.camera.zoom
-        base_y = (self.screen_height / 2) - cam_y * self.camera.zoom
+        # Use camera width for viewport center!
+        base_x = (self.camera.width / 2) - cam_x * self.camera.zoom
+        base_y = (self.camera.height / 2) - cam_y * self.camera.zoom
         
         # Pre-calc offsets
         # Left Snake Vertex Offsets (relative to row center)
@@ -1030,59 +1161,118 @@ class StrategyScene:
                 self._draw_system_details(screen, sys, world_pos)
 
     def _draw_system_details(self, screen, sys, sys_world_pos):
-        # Draw Planets & Warp Points
-        for i, planet in enumerate(sys.planets):
-            px, py = hex_to_pixel(planet.location, self.HEX_SIZE)
-            p_world = pygame.math.Vector2(sys_world_pos.x + px, sys_world_pos.y + py)
-            p_screen = self.camera.world_to_screen(p_world)
+        # Group by location
+        hex_groups = {}
+        for p in sys.planets:
+            key = (p.location.q, p.location.r)
+            if key not in hex_groups: hex_groups[key] = []
+            hex_groups[key].append(p)
             
-            # Highlight
-            if self.selected_object == planet:
-                 pygame.draw.circle(screen, (255, 255, 255), p_screen, max(10, int(10 * self.camera.zoom)), 1)
-
-            # Colony Marker (Specific Planet)
-            if planet.owner_id is not None:
-                owner_emp = next((e for e in self.empires if e.id == planet.owner_id), None)
-                if owner_emp:
-                    # Upper Left of Planet (World Space)
-                    # Planet radius is visualized as ~10 * zoom. 
-                    # To clear it, we need offset > 10 in world units?
-                    # No, zoom scales everything.
-                    # Base size is 10. So offset of 15 world units is safe?
-                    # Let's use HEX_SIZE (10) * 1.5
+        for key, planets in hex_groups.items():
+            # Base position
+            coord = planets[0].location
+            px, py = hex_to_pixel(coord, self.HEX_SIZE)
+            hex_center_world = pygame.math.Vector2(sys_world_pos.x + px, sys_world_pos.y + py)
+            hex_center_screen = self.camera.world_to_screen(hex_center_world)
+            
+            # Zoom Logic
+            zoom_limit = 4.0
+            
+            if self.camera.zoom > zoom_limit and len(planets) > 1:
+                # Distribute in pattern
+                # User request: "Main planet move a little... see other planets"
+                # Sort by mass
+                planets.sort(key=lambda x: x.mass, reverse=True)
+                largest = planets[0]
+                
+                # visual offsets (pixels in screen space? or hex space?)
+                # Hex space is better for scaling.
+                # Layout: Largest slightly offset top-left (-5, -5 pixels at scale 1).
+                # Others in grid or circle?
+                
+                # Define relative offsets in HEX space (0.0 to 1.0)
+                # Then project.
+                # Just do screen space offsets scaled by zoom.
+                
+                # Layout:
+                # 0 (Main): (-10, -10) * zoom/4 ?? 
+                # Others: Spiral out?
+                
+                # TIGHT PACKING LOGIC
+                # Target: All planets fit inside the Hex.
+                
+                hex_px_radius = self.HEX_SIZE * self.camera.zoom
+                
+                # Base Size: Scaled proportionate to Primary (0.5 -> 0.25)
+                base_r = hex_px_radius * 0.25
+                
+                for i, p in enumerate(planets):
+                    # Relative Scale
+                    rel_scale = p.radius / largest.radius
+                    if rel_scale < 0.4: rel_scale = 0.4
                     
-                    offset_world = pygame.math.Vector2(-0.75 * self.HEX_SIZE, -0.75 * self.HEX_SIZE)
-                    marker_world = p_world + offset_world
-                    marker_screen = self.camera.world_to_screen(marker_world)
+                    draw_r = max(2, int(base_r * rel_scale))
+                    
+                    # Layout
+                    if i == 0:
+                        # Largest (Primary)
+                        # "Shifted so center is to the left of center, can clip out"
+                        # Center of Hex is (0,0) offset.
+                        # Move left by ... say 50% of Hex Radius? 
+                        offset = pygame.math.Vector2(-hex_px_radius * 0.6, 0)
+                        
+                        # Maintain size? "Primary ... should maintain it's size"
+                        # User: "Zoomed in view to keep the planet the same size as the normal view"
+                        # Normal View = 5 * zoom. Hex is 10 * zoom. Multiplier 0.5.
+                        
+                        primary_draw_r = max(2, int((hex_px_radius * 0.5) * rel_scale))
+                        draw_r = primary_draw_r
+                        
+                    else:
+                        # Others orbit around? Or pack to the right?
+                        # "The others should be drawn to a proportionate size" (Small).
+                        
+                        # Let's pack them to the right of the primary.
+                        # Start packing from center-ish or right side.
+                        
+                        # Layout idea: Primary Left. Others cluster Right.
+                        
+                        # Ring layout for others?
+                        angle = (i-1) * (180 / max(1, len(planets)-1)) - 90 # -90 to +90 (Right side arc)
+                        dist = hex_px_radius * 0.5
+                        offset = pygame.math.Vector2(dist, 0).rotate(angle)
+                        
+                    p_screen = hex_center_screen + offset
+                    
+                    self._draw_planet_sprite(screen, p, p_screen, draw_r)
 
-                    pygame.draw.circle(screen, owner_emp.color, (int(marker_screen.x), int(marker_screen.y)), 4)
-                    pygame.draw.circle(screen, (255, 255, 255), (int(marker_screen.x), int(marker_screen.y)), 5, 1)
-
-            # Pick Asset
-            # Deterministic choice based on planet pointer or ID
-            # hash(planet) stable? usually. Or use index.
-            
-            p_type_name = planet.planet_type.name.lower()
-            cat = 'terran' # default
-            if 'gas' in p_type_name: cat = 'gas'
-            elif 'ice' in p_type_name: cat = 'ice'
-            elif 'desert' in p_type_name or 'hot' in p_type_name: cat = 'venus'
-            
-            images = self.assets['planets'].get(cat, [])
-            if images:
-                # Deterministic index
-                idx = id(planet) % len(images)
-                img = images[idx]
-                
-                size = int(10 * self.camera.zoom) # Base size
-                if 'Giant' in planet.planet_type.name: size = int(size * 1.5)
-                
-                scaled = pygame.transform.smoothscale(img, (size, size))
-                dest = scaled.get_rect(center=(int(p_screen.x), int(p_screen.y)))
-                screen.blit(scaled, dest)
             else:
-                pygame.draw.circle(screen, planet.planet_type.color, p_screen, max(2, int(3 * self.camera.zoom)))
-            
+                # Standard Mode (Stacked)
+                # Draw only largest? Or Draw all (painter's algo)?
+                # To imply containing multiple, maybe draw slight offset stack?
+                # User didn't verify stack viz on map, only "Zoom > 4".
+                # Standard: Draw largest centered.
+                
+                # Actually, draw all centered, sorted by size (largest first? No, smallest LAST to be on top?)
+                # To see "Main" planet, largest should be on top? Or largest covers others?
+                # Usually largest covers others.
+                # We'll draw largest only to represent the stack? 
+                # Or user says "Main Planet... see others" when zoomed.
+                # Implies normally you only see main?
+                
+                largest = max(planets, key=lambda x: x.radius)
+                base_r = 5 * self.camera.zoom 
+                if 'Giant' in largest.planet_type.name: base_r *= 1.5
+                
+                self._draw_planet_sprite(screen, largest, hex_center_screen, int(base_r))
+                
+                # Check Selection
+                # How to show selection if multiple? 
+                # Just highlight the stack if any is selected?
+                for p in planets:
+                    if self.selected_object == p:
+                         pygame.draw.circle(screen, (255, 255, 255), (int(hex_center_screen.x), int(hex_center_screen.y)), int(base_r)+4, 1)
+
         for i, wp in enumerate(sys.warp_points):
             wx, wy = hex_to_pixel(wp.location, self.HEX_SIZE)
             w_world = pygame.math.Vector2(sys_world_pos.x + wx, sys_world_pos.y + wy)
@@ -1105,6 +1295,56 @@ class StrategyScene:
             else:
                  pygame.draw.circle(screen, (200, 0, 255), w_screen, max(2, int(5 * self.camera.zoom)))
 
+    def _draw_planet_sprite(self, screen, planet, center_pos, size):
+        # Asset Selection (Copied from original loop)
+        p_type_name = planet.planet_type.name.lower()
+        cat = 'terran' # default
+        if 'gas' in p_type_name: cat = 'gas'
+        elif 'ice' in p_type_name: cat = 'ice'
+        elif 'desert' in p_type_name or 'hot' in p_type_name: cat = 'venus'
+        
+        images = self.assets['planets'].get(cat, [])
+        if images:
+            idx = id(planet) % len(images)
+            img = images[idx]
+            scaled = pygame.transform.smoothscale(img, (size*2, size*2)) # Size is radius
+            dest = scaled.get_rect(center=(int(center_pos.x), int(center_pos.y)))
+            screen.blit(scaled, dest)
+        else:
+            pygame.draw.circle(screen, planet.planet_type.color, (int(center_pos.x), int(center_pos.y)), size)
+            
+        # Owner Marker (Colony)
+        # Owner Marker (Colony Flag)
+        if planet.owner_id is not None: 
+             # Fetch Empire
+             owner_emp = next((e for e in self.empires if e.id == planet.owner_id), None)
+             
+             if owner_emp:
+                  # Calculate Flag Position (Top Right of Planet)
+                  # Ensure it's rendered ON TOP
+                  flag_offset = size * 0.8
+                  marker_pos = (int(center_pos.x + flag_offset), int(center_pos.y - flag_offset))
+                  
+                  # Check for Flag Asset
+                  emp_assets = self.empire_assets.get(owner_emp.id)
+                  if emp_assets and 'colony' in emp_assets:
+                      flag_img = emp_assets['colony']
+                      # Scale Flag
+                      # Flag aspect usually 3:2
+                      f_w = max(10, int(size * 1.5))
+                      f_h = int(f_w * 0.66)
+                      
+                      scaled_flag = pygame.transform.smoothscale(flag_img, (f_w, f_h))
+                      flag_rect = scaled_flag.get_rect(bottomleft=marker_pos) # Place bottom-left at marker pos (so it sticks out top-right)
+                      screen.blit(scaled_flag, flag_rect)
+                      
+                      # Border
+                      pygame.draw.rect(screen, (255, 255, 255), flag_rect, 1)
+                  else:
+                      # Fallback Circle
+                      pygame.draw.circle(screen, owner_emp.color, marker_pos, max(3, int(size/3)))
+                      pygame.draw.circle(screen, (255, 255, 255), marker_pos, max(3, int(size/3))+1, 1)
+
     def _draw_fleets(self, screen):
         for emp in self.empires:
             for f in emp.fleets:
@@ -1116,24 +1356,39 @@ class StrategyScene:
                 
                 # Draw fleet icon only if on screen
                 if fleet_on_screen:
-                    # Draw Triangle
-                    size = 10 * self.camera.zoom
-                    if size < 8: size = 8
-                    if size > 30: size = 30
-                    
-                    # Simple triangle shape
-                    points = [
-                        (f_screen.x, f_screen.y - size),
-                        (f_screen.x - size/2, f_screen.y + size/2),
-                        (f_screen.x + size/2, f_screen.y + size/2)
-                    ]
-                    
-                    # Color based on Empire
-                    color = emp.color
-                    if self.selected_fleet == f:
-                        color = (255, 255, 0) # Selected highlight
+                    emp_assets = self.empire_assets.get(emp.id)
+                    if emp_assets and 'fleet' in emp_assets:
+                         img = emp_assets['fleet']
+                         # Scale
+                         size = int(24 * self.camera.zoom)
+                         if size < 12: size = 12
+                         if size > 64: size = 64
+                         
+                         scaled = pygame.transform.smoothscale(img, (size, size))
+                         dest = scaled.get_rect(center=(int(f_screen.x), int(f_screen.y)))
+                         
+                         screen.blit(scaled, dest)
+                         
+                         # Selection Box
+                         if self.selected_fleet == f:
+                              pygame.draw.rect(screen, (255, 255, 0), dest.inflate(4, 4), 1)
+                    else:
+                        # Draw Triangle (Fallback)
+                        size = 10 * self.camera.zoom
+                        if size < 8: size = 8
+                        if size > 30: size = 30
                         
-                    pygame.draw.polygon(screen, color, points)
+                        points = [
+                            (f_screen.x, f_screen.y - size),
+                            (f_screen.x - size/2, f_screen.y + size/2),
+                            (f_screen.x + size/2, f_screen.y + size/2)
+                        ]
+                        
+                        color = emp.color
+                        if self.selected_fleet == f:
+                            color = (255, 255, 0)
+                            
+                        pygame.draw.polygon(screen, color, points)
                 
                 # Draw path only for the selected fleet (visible even when zoomed elsewhere)
                 if f == self.selected_fleet:
@@ -1181,3 +1436,14 @@ class StrategyScene:
                             
                         start_screen = end_screen
                     
+
+    def _make_background_transparent(self, image, threshold=30):
+        """Remove near-black background pixels."""
+        image = image.convert_alpha()
+        width, height = image.get_size()
+        for x in range(width):
+            for y in range(height):
+                c = image.get_at((x, y))
+                if c[0] < threshold and c[1] < threshold and c[2] < threshold:
+                    image.set_at((x, y), (0, 0, 0, 0))
+        return image

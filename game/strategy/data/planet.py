@@ -59,6 +59,19 @@ class Planet:
     owner_id: Optional[int] = None
     construction_queue: list = field(default_factory=list)
 
+    def __eq__(self, other):
+        if not isinstance(other, Planet):
+            return False
+        # Compare identity-defining properties only
+        # Name and Location (System-Local) should be unique enough for game logic
+        # OR better: Name + Location + OrbitDistance?
+        return (self.name == other.name and 
+                self.location == other.location and
+                self.orbit_distance == other.orbit_distance)
+
+    def __hash__(self):
+        return hash((self.name, self.location, self.orbit_distance))
+
     @property
     def total_pressure_atm(self) -> float:
         total_pa = sum(self.atmosphere.values())

@@ -2,10 +2,11 @@ class Empire:
     """
     Represents a player or AI faction.
     """
-    def __init__(self, empire_id, name, color):
+    def __init__(self, empire_id, name, color, theme_path=None):
         self.id = empire_id
         self.name = name
         self.color = color
+        self.theme_path = theme_path
         
         self.colonies = [] # List[Planet]
         self.fleets = [] # List[Fleet]

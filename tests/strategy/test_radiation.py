@@ -30,18 +30,20 @@ class TestRadiation(unittest.TestCase):
         self.assertAlmostEqual(result.red, 100.0)
         
     def test_falloff_distance_2(self):
-        # At distance 2, factor should be 1/2^3 = 1/8 = 0.125
+        # At distance 2, factor should be 1/2^2.1 = 1/4.287 = 0.23325
         target = HexCoord(2, 0) # 2 hexes away
         result = calculate_incident_radiation(target, [self.star])
         
-        self.assertAlmostEqual(result.gamma_ray, 12.5) # 100 * 0.125
+        # 100 * (1 / 2**2.1) = 23.325824788
+        self.assertAlmostEqual(result.gamma_ray, 23.3258248)
         
     def test_falloff_distance_10(self):
-        # At distance 10, factor should be 1/10^3 = 1/1000 = 0.001
+        # At distance 10, factor should be 1/10^2.1 = 1/125.89 = 0.007943
         target = HexCoord(10, 0)
         result = calculate_incident_radiation(target, [self.star])
         
-        self.assertAlmostEqual(result.gamma_ray, 0.1) # 100 * 0.001
+        # 100 * (1 / 10**2.1) = 0.79432823
+        self.assertAlmostEqual(result.gamma_ray, 0.7943282)
         
     def test_clamping(self):
         # At distance 0 (inside star), should clamp to 1.0

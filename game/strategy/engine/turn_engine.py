@@ -18,7 +18,7 @@ class TurnEngine:
             # Iterate copy since fleets might execute orders that change state? 
             # Actually colonization doesn't remove fleet usually, but we should be safe.
             for fleet in empire.fleets:
-                self._process_end_turn_orders(fleet, empire)
+                self._process_end_turn_orders(fleet, empire, galaxy)
                 
         # 3. Production Phase
         self.process_production(empires, galaxy)
@@ -178,7 +178,7 @@ class TurnEngine:
             return f1
         return f2
 
-    def _process_end_turn_orders(self, fleet, empire):
+    def _process_end_turn_orders(self, fleet, empire, galaxy):
         """Process static orders like COLONIZE.
         
         Returns:
@@ -190,28 +190,87 @@ class TurnEngine:
             
         if order.type == OrderType.COLONIZE:
             planet = order.target
-            # Check if at location? 
-            # We assume colonization target is local (at fleet location).
-            # Logic: If order target is Planet object, we need its location?
-            # Or we assume previous MOVE order brought us here.
             
-            # Let's assume planet has location relative to something? 
-            # In strategy_scene, planet.location is local to system.
-            # But fleet.location is global.
-            # For this test/phase, we need to be careful.
-            # Test passes 'planet' object.
-            
-            # Simplification: If OrderType.COLONIZE, we just do it.
-            # Real logic should verify location.
-            # But the order might not store location if reference is object.
+            # Resolve "Any Planet" (None target)
+            if planet is None:
+                # Find unowned planet at current location
+                # Global lookup
+                system = galaxy.systems.get(fleet.location)
+                
+                # If not at system center, maybe at planet offset? 
+                # Simplification: Colonize must be AT system or planet.
+                # If system is found at fleet.location (center hex):
+                if system:
+                    # Check ALL planets in system (assuming abstract 'in system' range)
+                    # OR check if we have to be at specific hex?
+                    # StrategyScene defaults to 'target_hex' which might be specific planet hex.
+                    # BUT if we moved to a specific hex, we are there.
+                    
+                    # 1. Check planets strictly at this hex
+                    local_candidates = []
+                    # System center is 0,0 relative.
+                    # Planets have relative locations.
+                    # Fleet location is global.
+                    
+                    # If we are at system center, can we colonize any? Usually yes in simple 4X.
+                    # But let's check strict location first.
+                    
+                    # Iterate all planets in system
+                    for p in system.planets:
+                        p_global = system.global_location + p.location
+                        if p_global == fleet.location and p.owner_id is None:
+                            local_candidates.append(p)
+                            
+                    # If no local matches, check if we are simply "In System" 
+                    # (Allow colonizing from center star hex?) -> User preference?
+                    # For now: strict location. If "Any" was picked for a multi-planet sector,
+                    # the fleet moved to that sector (hex). So planets should be there.
+                    
+                    if local_candidates:
+                        # Pick first (or random?)
+                        planet = local_candidates[0]
+                        print(f"TurnEngine: Deferred colonization selected {planet.name}")
+                    else:
+                        print(f"TurnEngine: No valid planets found at {fleet.location} for deferred colonize.")
+                else: 
+                     # Maybe fleet is at a peripheral hex that IS a planet location?
+                     # We need to find the system this hex belongs to.
+                     # Galaxy doesn't have reverse lookup easily?
+                     # Using brute force for now (fast enough for 80 systems)
+                     for sys in galaxy.systems.values():
+                         found = False
+                         for p in sys.planets:
+                             if sys.global_location + p.location == fleet.location:
+                                 if p.owner_id is None:
+                                     planet = p
+                                     found = True
+                                     print(f"TurnEngine: Deferred colonization resolved {planet.name} in {sys.name}")
+                                     break
+                         if found: break
             
             # Execute colonization
-            empire.add_colony(planet)
-            fleet.pop_order()
-            
-            # Colonizing ship is consumed to create the colony
-            empire.remove_fleet(fleet)
-            return True
+            if planet:
+                # Verify ownership again just in case (race condition double check)
+                if planet.owner_id is not None:
+                    print(f"TurnEngine: Colonization failed. {planet.name} is already owned.")
+                    # Abort order? Keep trying? 
+                    # For now, consume order to prevent infinite loop.
+                    fleet.pop_order()
+                    return False
+                    
+                empire.add_colony(planet)
+                fleet.pop_order()
+                
+                # Colonizing ship is consumed to create the colony
+                empire.remove_fleet(fleet)
+                print(f"TurnEngine: Colonization successful. {empire.name} claimed {planet.name}")
+                return True
+            else:
+                print("TurnEngine: Colonization skipped (No valid target).")
+                # Don't pop order? Retry next turn? 
+                # Or pop to avoid stuck fleet? 
+                # Pop it.
+                fleet.pop_order()
         
         return False
 

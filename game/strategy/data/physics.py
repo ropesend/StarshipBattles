@@ -21,7 +21,7 @@ def calculate_incident_radiation(target_local_hex, stars):
     Calculate the total incident radiation at a target hex from a list of stars.
     
     Physics Model:
-    - Falloff: 1 / r^3 (Inverse Cube Law per user request)
+    - Falloff: 1 / r^2.1 (Inverse 2.1 Power Law per user request)
     - Distance Unit: 1 Hex (Orbit of Mercury equivalent)
     - r < 1.0 is clamped to 1.0 to reflect surface/interior intensity maximums.
     """
@@ -38,8 +38,8 @@ def calculate_incident_radiation(target_local_hex, stars):
         # Assuming r=1 is the reference "surface" or close orbit intensity.
         r = max(dist, 1.0)
         
-        # Falloff Factor (1/r^3)
-        falloff = 1.0 / (r ** 3)
+        # Falloff Factor (1/r^2.1)
+        falloff = 1.0 / (r ** 2.1)
         
         # Add contributions
         s = star.spectrum
