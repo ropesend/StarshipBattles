@@ -5,9 +5,11 @@ import pygame
 class Camera:
     """Handles viewport panning, zooming, and coordinate transformations."""
     
-    def __init__(self, width, height):
+    def __init__(self, width, height, offset_x=0, offset_y=0):
         self.width = width
         self.height = height
+        self.offset_x = offset_x
+        self.offset_y = offset_y
         self.position = pygame.math.Vector2(0, 0)
         self.zoom = 1.0
         self.min_zoom = 0.01
@@ -48,6 +50,11 @@ class Camera:
 
         for event in events:
             if event.type == pygame.MOUSEWHEEL:
+                # 1. Get mouse position and convert to world coords BEFORE zoom
+                mx, my = pygame.mouse.get_pos()
+                current_mouse_world_pos = self.screen_to_world((mx, my))
+
+                # 2. Apply Zoom
                 if event.y > 0:
                     self.zoom *= 1.1
                 else:
@@ -55,16 +62,38 @@ class Camera:
                 
                 self.zoom = max(self.min_zoom, min(self.max_zoom, self.zoom))
 
+                # 3. Calculate where that world point is NOW on the screen
+                # The camera position (center) hasn't moved yet, so the screen position
+                # of our target world point will have drifted.
+                new_mouse_world_pos = self.screen_to_world((mx, my))
+                
+                # 4. We want new_mouse_world_pos to be equal to current_mouse_world_pos
+                # The difference is how much we need to shift the camera center.
+                # If new_mouse_world_pos < current_mouse_world_pos (e.g. 100 < 200),
+                # it means the camera center is too far "left" in world space (relative to where it should be).
+                # Wait, let's use the vectors directly.
+                # diff = old_world_pos - new_world_pos_with_old_center
+                # We need to ADD this difference to the camera position.
+                
+                diff = current_mouse_world_pos - new_mouse_world_pos
+                self.position += diff
+
     def world_to_screen(self, world_pos):
         """Convert world coordinates to screen coordinates."""
+        # Center of the VIEWPORT (not screen)
         screen_center = pygame.math.Vector2(self.width / 2, self.height / 2)
         offset = (world_pos - self.position) * self.zoom
-        return screen_center + offset
+        
+        # Result is relative to Viewport Top-Left. Add viewport offset.
+        return screen_center + offset + pygame.math.Vector2(self.offset_x, self.offset_y)
 
     def screen_to_world(self, screen_pos):
         """Convert screen coordinates to world coordinates."""
+        # Remove Viewport Offset first to get coordinate relative to Viewport
+        local_pos = pygame.math.Vector2(screen_pos) - pygame.math.Vector2(self.offset_x, self.offset_y)
+        
         screen_center = pygame.math.Vector2(self.width / 2, self.height / 2)
-        offset = pygame.math.Vector2(screen_pos) - screen_center
+        offset = local_pos - screen_center
         return self.position + (offset / self.zoom)
 
     def fit_objects(self, objects):
