@@ -55,6 +55,7 @@ from dataclasses import dataclass, field
 
 from test_framework.scenario import CombatScenario
 from game.simulation.entities.ship import Ship
+from simulation_tests.scenarios.validation import ValidationRule, Validator, ValidationResult
 
 
 @dataclass
@@ -85,6 +86,8 @@ class TestMetadata:
         battle_end_check_derelict: Count derelict ships as defeated (for hp_based mode, default: False)
         ui_priority: Display priority in Combat Lab (0=normal, higher=more important)
         tags: Optional tags for filtering (e.g., ["accuracy", "close_range"])
+        validation_rules: List of ValidationRule instances for automatic validation
+        outcome_metrics: Dictionary defining how test outcomes are measured
     """
     test_id: str
     category: str
@@ -101,6 +104,8 @@ class TestMetadata:
     battle_end_check_derelict: bool = False
     ui_priority: int = 0
     tags: List[str] = field(default_factory=list)
+    validation_rules: List[ValidationRule] = field(default_factory=list)
+    outcome_metrics: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert metadata to dictionary for serialization."""
@@ -119,7 +124,9 @@ class TestMetadata:
             'battle_end_mode': self.battle_end_mode,
             'battle_end_check_derelict': self.battle_end_check_derelict,
             'ui_priority': self.ui_priority,
-            'tags': self.tags
+            'tags': self.tags,
+            'validation_rules_count': len(self.validation_rules),
+            'outcome_metrics': self.outcome_metrics
         }
 
 
@@ -452,3 +459,47 @@ class TestScenario(CombatScenario):
             Dictionary containing all test metadata
         """
         return self.metadata.to_dict()
+
+    def run_validation(self, battle_engine) -> List[ValidationResult]:
+        """
+        Run validation rules after test completion.
+
+        This method is called automatically after verify() to validate:
+        1. Exact matches: Test metadata vs component data
+        2. Statistical tests: Expected vs measured outcomes
+
+        Args:
+            battle_engine: BattleEngine instance with test results
+
+        Returns:
+            List of ValidationResult objects
+        """
+        if not self.metadata.validation_rules:
+            return []
+
+        # Build validation context
+        context = {
+            'test_scenario': self,
+            'battle_engine': battle_engine,
+            'results': self.results if hasattr(self, 'results') else {},
+            'metadata': self.metadata
+        }
+
+        # Add ships to context if available
+        if hasattr(self, 'attacker'):
+            context['attacker'] = self.attacker
+        if hasattr(self, 'target'):
+            context['target'] = self.target
+
+        # Run validator
+        validator = Validator(self.metadata.validation_rules)
+        validation_results = validator.validate(context)
+
+        # Store in results for UI access
+        if hasattr(self, 'results'):
+            self.results['validation_results'] = [r.to_dict() for r in validation_results]
+            self.results['validation_summary'] = validator.get_summary(validation_results)
+            self.results['has_validation_failures'] = validator.has_failures(validation_results)
+            self.results['has_validation_warnings'] = validator.has_warnings(validation_results)
+
+        return validation_results

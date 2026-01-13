@@ -15,7 +15,12 @@
       "Bash(python:*)",
       "Bash(Select-String -Pattern \"DERELICT|Bridge|Command and Control\")",
       "Bash(Select-Object -First 10)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(pip install:*)",
+      "Bash(del:*)",
+      "Bash(ls:*)",
+      "Bash(timeout:*)",
+      "Bash(exit 0)"
     ]
   }
 }

@@ -16,7 +16,12 @@ Test Coverage:
 
 import pygame
 import math
-from simulation_tests.scenarios import TestScenario, TestMetadata
+from simulation_tests.scenarios import (
+    TestScenario,
+    TestMetadata,
+    ExactMatchRule,
+    StatisticalTestRule
+)
 
 
 def calculate_defense_score(mass: float, acceleration: float = 0.0, turn_speed: float = 0.0, ecm_score: float = 0.0) -> float:
@@ -98,7 +103,7 @@ class BeamLowAccuracyPointBlankScenario(TestScenario):
             "Distance: 50 pixels",
             "Range Penalty: 50 * 0.002 = 0.1",
             "Net Score: 0.5 - 0.1 = 0.4",
-            "Beam Damage: 5 per hit",
+            "Beam Damage: 1 per hit",
             "Test Duration: 500 ticks"
         ],
         edge_cases=[
@@ -106,13 +111,50 @@ class BeamLowAccuracyPointBlankScenario(TestScenario):
             "Target size bonus may apply",
             "Sigmoid formula: P = 1/(1+e^-0.4) ≈ 0.60 (60% hit rate)"
         ],
-        expected_outcome="High hit rate (~60-70%) with damage > 0 after 500 ticks",
+        expected_outcome="High hit rate (~50-55%) with damage > 0 after 500 ticks",
         pass_criteria="damage_dealt > 0",
         max_ticks=500,
         seed=42,
         battle_end_mode="time_based",  # Run for full 500 ticks regardless of ship status
         ui_priority=10,
-        tags=["accuracy", "low-accuracy", "point-blank", "beam-weapons"]
+        tags=["accuracy", "low-accuracy", "point-blank", "beam-weapons"],
+        validation_rules=[
+            # Exact match validations - comparing test metadata to component data
+            # Note: These will be implemented with component JSON lookups in UI
+            StatisticalTestRule(
+                name='Hit Rate',
+                test_type='binomial',
+                expected_probability=0.5171,  # Expected hit rate at 50px with defense
+                trials_expr='ticks_run',
+                successes_expr='damage_dealt',
+                description='Each beam hit = 1 damage, so damage_dealt = number of hits'
+            )
+        ],
+        outcome_metrics={
+            'primary_metric': 'hit_rate',
+            'measurements': {
+                'ticks_run': {
+                    'description': 'Number of simulation ticks (opportunities to fire)',
+                    'unit': 'ticks'
+                },
+                'damage_dealt': {
+                    'description': 'Total HP damage dealt to target (1 damage per hit)',
+                    'unit': 'hp'
+                },
+                'hit_rate': {
+                    'formula': 'damage_dealt / ticks_run',
+                    'description': 'Actual hit rate (shots that connected)',
+                    'unit': 'percentage',
+                    'expected': 0.5171,
+                    'tolerance': 0.05  # p-value threshold
+                },
+                'expected_hit_rate': {
+                    'description': 'Expected hit rate from sigmoid formula',
+                    'unit': 'percentage',
+                    'value': 0.5171
+                }
+            }
+        }
     )
 
     def setup(self, battle_engine):
@@ -168,6 +210,9 @@ class BeamLowAccuracyPointBlankScenario(TestScenario):
         self.results['ticks_run'] = battle_engine.tick_counter
         self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Run automatic validation
+        self.run_validation(battle_engine)
 
         # Pass if any damage was dealt
         return damage_dealt > 0

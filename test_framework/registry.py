@@ -173,7 +173,8 @@ class TestRegistry:
                             'class': attr,
                             'metadata': metadata,
                             'module': module_name,
-                            'file': str(file_path)
+                            'file': str(file_path),
+                            'last_run_results': None  # Will be populated after test runs
                         }
 
                         print(f"Registered scenario: {test_id} - {metadata.name}")
@@ -386,6 +387,26 @@ class TestRegistry:
         self.clear()
         self._discover_scenarios()
         self._initialized = True
+
+    def update_last_run_results(self, test_id: str, results: Dict[str, Any]):
+        """
+        Store the last run results for a test scenario.
+
+        This allows the Combat Lab UI to display validation results
+        from the most recent test run.
+
+        Args:
+            test_id: Test ID (e.g., "BEAM360-001")
+            results: Results dictionary from scenario.results
+
+        Example:
+            registry = TestRegistry()
+            # After running test
+            registry.update_last_run_results("BEAM360-001", scenario.results)
+        """
+        if test_id in self.scenarios:
+            self.scenarios[test_id]['last_run_results'] = results
+            print(f"Updated results for {test_id}")
 
     def print_summary(self):
         """

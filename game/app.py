@@ -342,6 +342,7 @@ class Game:
             self.strategy_scene.update(frame_time)
             self.strategy_scene.draw(self.screen)
         elif self.state == TEST_LAB:
+            self.test_lab_scene.update()
             self.test_lab_scene.draw(self.screen)
 
         if self.show_exit_dialog:

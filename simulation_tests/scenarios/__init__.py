@@ -34,5 +34,22 @@ Usage:
 """
 
 from simulation_tests.scenarios.base import TestScenario, TestMetadata
+from simulation_tests.scenarios.validation import (
+    ValidationRule,
+    ExactMatchRule,
+    StatisticalTestRule,
+    Validator,
+    ValidationResult,
+    ValidationStatus
+)
 
-__all__ = ['TestScenario', 'TestMetadata']
+__all__ = [
+    'TestScenario',
+    'TestMetadata',
+    'ValidationRule',
+    'ExactMatchRule',
+    'StatisticalTestRule',
+    'Validator',
+    'ValidationResult',
+    'ValidationStatus'
+]
