@@ -75,8 +75,14 @@ class Component:
         self.type_str = data['type']
         self.sprite_index = data.get('sprite_index', 0)
         self.cost = data.get('cost', 0)
-        
-        
+
+        # Damage threshold: HP percentage at which component becomes inactive
+        # Default: 0.5 (50%) - components fail when damaged to half HP
+        # Can be configured per-component:
+        #   - Fragile sensors: 0.8 (fail at 80% damage)
+        #   - Robust armor: 0.1 (fail at 90% damage)
+        self.damage_threshold = data.get('damage_threshold', 0.5)
+
         # Parse abilities from data
         self.abilities = self.data.get('abilities', {})
         

@@ -1,0 +1,7 @@
+=== BATTLE LOG STARTED ===
+Battle started: 1 vs 1 ships
+Ship 'Test Attacker Beam360 Med' (Team 0): HP=120/120 Mass=25.0 Thrust=0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00
+WARNING: Test Attacker Beam360 Med has NO THRUST!
+WARNING: Test Attacker Beam360 Med has LOW/NO TURN SPEED (0.0000)!
+Ship 'Test Target Erratic Small' (Team 1): HP=370/370 Mass=65.0 Thrust=500.0 Fuel=0.0 TurnSpeed=238.53 MaxSpeed=192.31
+=== BATTLE LOG ENDED ===

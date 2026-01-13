@@ -69,7 +69,8 @@ class ShipCombatMixin:
                         })
                     continue
 
-                print(f"DEBUG: Checking {comp.name}, is_active={comp.is_active}, has_WeaponAbility={comp.has_ability('WeaponAbility')}", flush=True)
+                # DEBUG: Commented out to reduce spam
+                # print(f"DEBUG: Checking {comp.name}, is_active={comp.is_active}, has_WeaponAbility={comp.has_ability('WeaponAbility')}", flush=True)
                 if comp.has_ability('WeaponAbility') and comp.is_active:
                     weapon_ab = comp.get_ability('WeaponAbility')
                     has_resource = comp.can_afford_activation()

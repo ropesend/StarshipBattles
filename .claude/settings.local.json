@@ -11,7 +11,11 @@
       "Bash(for i in {1..5})",
       "Bash(for i in {1..10})",
       "Bash(do pytest \"c:\\\\Dev\\\\Starship Battles\\\\tests\\\\unit\\\\ui\\\\test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_stats_generation_basic\" -q)",
-      "Bash(do pytest tests/unit/ -q)"
+      "Bash(do pytest tests/unit/ -q)",
+      "Bash(python:*)",
+      "Bash(Select-String -Pattern \"DERELICT|Bridge|Command and Control\")",
+      "Bash(Select-Object -First 10)",
+      "Bash(grep:*)"
     ]
   }
 }

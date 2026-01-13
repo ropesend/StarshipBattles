@@ -12,12 +12,12 @@
     "layers": {
         "CORE": [
             {
-                "id": "test_beam_med_acc_no_resource"
+                "id": "test_beam_med_acc_1dmg"
             }
         ],
         "ARMOR": []
     },
-    "_test_notes": "Attacker with Medium Accuracy (2.0) Beam - No Resource Required",
+    "_test_notes": "Attacker with Medium Accuracy (2.0) Beam - 1 Damage for accuracy testing",
     "expected_stats": {
         "max_hp": 120,
         "max_fuel": 0.0,

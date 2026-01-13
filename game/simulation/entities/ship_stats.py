@@ -73,7 +73,7 @@ class ShipStatsCalculator:
                 
                 # Check Damage Threshold (ignore Armor - armor uses HP pool, not individual component threshold)
                 if not comp.abilities.get('Armor', False):
-                     if comp.max_hp > 0 and (comp.current_hp / comp.max_hp) <= 0.5:
+                     if comp.max_hp > 0 and (comp.current_hp / comp.max_hp) <= comp.damage_threshold:
                          comp.is_active = False
                          comp.status = ComponentStatus.DAMAGED
                 
@@ -119,11 +119,6 @@ class ShipStatsCalculator:
             req_crew = 0
             for ab in comp.get_abilities('CrewRequired'):
                 req_crew += ab.amount
-            
-            # Satellite Exception: Satellites ignore crew requirements
-            if ship.vehicle_type == "Satellite":
-                req_crew = 0
-            
 
             ship.crew_required += req_crew
             

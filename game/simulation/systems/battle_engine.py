@@ -9,8 +9,7 @@ from game.engine.spatial import SpatialGrid
 from game.core.constants import AttackType
 from game.simulation.projectile_manager import ProjectileManager
 from game.engine.collision import CollisionSystem
-
-from game.engine.collision import CollisionSystem
+from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
 
 from game.simulation.entities.projectile import Projectile
 from game.simulation.entities.ship import Ship
@@ -74,15 +73,18 @@ class BattleEngine:
     def __init__(self, logger: Optional[BattleLogger] = None):
         self.ships: List['Ship'] = []
         self.ai_controllers: List[AIController] = []
-        
+
         self.projectile_manager = ProjectileManager()
         self.collision_system = CollisionSystem()
-        
-        self.recent_beams: List[Dict[str, Any]] = [] 
+
+        self.recent_beams: List[Dict[str, Any]] = []
         self.grid = SpatialGrid(cell_size=2000)
         self.tick_counter: int = 0
         self.winner: Optional[int] = None
-        
+
+        # Battle end condition (default: HP-based)
+        self.end_condition: BattleEndCondition = BattleEndCondition(mode=BattleEndMode.HP_BASED)
+
         # Use provided logger or create a default one (disabled by default to avoid side effects unless requested)
         self.logger = logger if logger else BattleLogger(enabled=False)
 
@@ -90,17 +92,37 @@ class BattleEngine:
     def projectiles(self) -> List[Any]:
         return self.projectile_manager.projectiles
 
-    def start(self, team1_ships: List['Ship'], team2_ships: List['Ship'], seed: Optional[int] = None) -> None:
-        """Initialize battle state."""
+    def start(
+        self,
+        team1_ships: List['Ship'],
+        team2_ships: List['Ship'],
+        seed: Optional[int] = None,
+        end_condition: Optional[BattleEndCondition] = None
+    ) -> None:
+        """
+        Initialize battle state with configurable end condition.
+
+        Args:
+            team1_ships: List of ships for team 0
+            team2_ships: List of ships for team 1
+            seed: Random seed for deterministic battles
+            end_condition: Battle end condition (default: HP_BASED)
+        """
         if seed is not None:
             random.seed(seed)
-        
+
         self.ships = []
         self.ai_controllers = []
         self.projectile_manager.clear()
         self.recent_beams = []
         self.tick_counter = 0
         self.winner = None
+
+        # Set end condition (default to HP_BASED if not provided)
+        if end_condition is not None:
+            self.end_condition = end_condition
+        else:
+            self.end_condition = BattleEndCondition(mode=BattleEndMode.HP_BASED)
         
         # Handle single ship args (though type hint implies lists)
         if not isinstance(team1_ships, list): team1_ships = [team1_ships]
@@ -246,9 +268,86 @@ class BattleEngine:
         self.projectile_manager.update(self.grid)
 
     def is_battle_over(self) -> bool:
-        team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
-        team2_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
-        return team1_alive == 0 or team2_alive == 0
+        """
+        Check if battle should end based on configured end condition.
+
+        Returns:
+            True if battle should end, False otherwise
+
+        End Condition Modes:
+            TIME_BASED: End after max_ticks reached
+            HP_BASED: End when any team has 0 alive ships
+            CAPABILITY_BASED: End when any team can't fight/move
+            MANUAL: Never end automatically
+        """
+
+        # TIME_BASED: Check tick count
+        if self.end_condition.mode == BattleEndMode.TIME_BASED:
+            if self.end_condition.max_ticks is not None:
+                return self.tick_counter >= self.end_condition.max_ticks
+            return False  # No max_ticks set, never end
+
+        # MANUAL: Never end automatically
+        if self.end_condition.mode == BattleEndMode.MANUAL:
+            return False
+
+        # HP_BASED: Check alive ships (optionally excluding derelict)
+        if self.end_condition.mode == BattleEndMode.HP_BASED:
+            team1_alive = sum(
+                1 for s in self.ships
+                if s.team_id == 0 and s.is_alive
+                and (not self.end_condition.check_derelict or not s.is_derelict)
+            )
+            team2_alive = sum(
+                1 for s in self.ships
+                if s.team_id == 1 and s.is_alive
+                and (not self.end_condition.check_derelict or not s.is_derelict)
+            )
+            return team1_alive == 0 or team2_alive == 0
+
+        # CAPABILITY_BASED: Check if any team can't fight
+        if self.end_condition.mode == BattleEndMode.CAPABILITY_BASED:
+            team1_capable = self._team_has_combat_capability(0)
+            team2_capable = self._team_has_combat_capability(1)
+            return not team1_capable or not team2_capable
+
+        # Fallback (should never reach here)
+        return False
+
+    def _team_has_combat_capability(self, team_id: int) -> bool:
+        """
+        Check if team has any ships that can fight or move.
+
+        A team has combat capability if ANY ship on that team:
+        - Is alive AND
+        - Has operational weapons OR movement capability
+
+        Args:
+            team_id: Team to check (0 or 1)
+
+        Returns:
+            True if team has at least one capable ship, False otherwise
+        """
+        for ship in self.ships:
+            if ship.team_id != team_id or not ship.is_alive:
+                continue
+
+            # Check for operational weapons
+            has_weapons = any(
+                comp.is_operational and comp.type == "Weapon"
+                for layer in ship.layers.values()
+                for comp in layer['components']
+            )
+
+            # Check for movement capability
+            has_engines = ship.total_thrust > 0
+            has_thrusters = ship.turn_speed > 0
+
+            # If ship has weapons OR movement, team is still capable
+            if has_weapons or has_engines or has_thrusters:
+                return True
+
+        return False
 
     def get_winner(self) -> int:
         team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)

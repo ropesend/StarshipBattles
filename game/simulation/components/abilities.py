@@ -306,15 +306,24 @@ class CommandAndControl(Ability):
     def get_ui_rows(self):
         return [{'label': 'Command', 'value': 'Active', 'color_hint': '#96FF96'}]
 
+    def get_primary_value(self) -> float:
+        return 1.0
+
 class RequiresCommandAndControl(Ability):
     """Marker ability: Component (e.g. Hull) requires Command and Control to be operational."""
     def get_ui_rows(self):
         return [{'label': 'Requires C&C', 'value': 'Yes', 'color_hint': '#FFCC66'}]
 
+    def get_primary_value(self) -> float:
+        return 1.0
+
 class RequiresCombatMovement(Ability):
     """Marker ability: Component (e.g. Hull) requires Combat Propulsion to be operational."""
     def get_ui_rows(self):
         return [{'label': 'Requires Propulsion', 'value': 'Yes', 'color_hint': '#FFCC66'}]
+
+    def get_primary_value(self) -> float:
+        return 1.0
 
 class StructuralIntegrity(Ability):
     """Marker ability: Hull provides structural integrity for the ship."""
@@ -568,7 +577,8 @@ class WeaponAbility(Ability):
     def fire(self, target: Any) -> bool:
         """Execute weapon fire logic. Returns True if successfully fired."""
         if self.can_fire():
-            print(f"DEBUG: {self.__class__.__name__}.fire() called for {self.component.name}", flush=True)
+            # DEBUG: Commented out to reduce spam
+            # print(f"DEBUG: {self.__class__.__name__}.fire() called for {self.component.name}", flush=True)
             # Consume resources via Component (Bridge to ResourceRegistry)
             if self.component:
                 self.component.consume_activation()

@@ -1,15 +1,10 @@
 Traceback (most recent call last):
-  File "C:\Developer\StarshipBattles\game\app.py", line 543, in main
+  File "C:\Dev\Starship Battles\game\app.py", line 543, in main
     game.run()
-  File "C:\Developer\StarshipBattles\game\app.py", line 244, in run
-    self._update_and_draw(frame_time, events)
-  File "C:\Developer\StarshipBattles\game\app.py", line 319, in _update_and_draw
-    self.strategy_scene.draw(self.screen)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 704, in draw
-    self._draw_systems(screen)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 1030, in _draw_systems
-    self._draw_system_details(screen, sys, world_pos)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 1074, in _draw_system_details
-    idx = hash(planet) % len(images)
-          ^^^^^^^^^^^^
-TypeError: unhashable type: 'Planet'
+  File "C:\Dev\Starship Battles\game\app.py", line 232, in run
+    btn.handle_event(event)
+  File "C:\Dev\Starship Battles\ui\components.py", line 23, in handle_event
+    self.callback()
+  File "C:\Dev\Starship Battles\game\app.py", line 166, in start_test_lab
+    self.test_lab_scene.scan_scenarios()
+AttributeError: 'TestLabScene' object has no attribute 'scan_scenarios'

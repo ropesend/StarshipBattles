@@ -58,35 +58,57 @@ class BattleInterface:
         """Draw the battle scene UI elements (excluding ships/projectiles)."""
         # Draw grid
         self.draw_grid(screen)
-        
+
         if self.show_overlay:
             self.draw_debug_overlay(screen)
-        
+
         # Draw Panels
         self.stats_panel.draw(screen)
         self.seeker_panel.draw(screen)
         self.control_panel.draw(screen)
 
+        # Draw "Return to Combat Lab" button if battle is over in test mode
+        if self.scene.is_battle_over():
+            print(f"DEBUG: Battle is over. test_mode={self.scene.test_mode}")
+            if self.scene.test_mode:
+                self._draw_return_button(screen)
+            else:
+                print(f"DEBUG: Not drawing Combat Lab button because test_mode=False")
+
     def handle_click(self, mx, my, button):
         """Handle mouse clicks. Returns True if click was handled."""
-        
+
+        print(f"DEBUG: BattleInterface.handle_click at ({mx}, {my})")
+        print(f"DEBUG: test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()}")
+
+        # Check "Return to Combat Lab" button first (highest priority)
+        if self.scene.test_mode and self.scene.is_battle_over():
+            button_rect = self._get_return_button_rect()
+            print(f"DEBUG: Return button rect: {button_rect}")
+            if button_rect.collidepoint(mx, my):
+                print(f"DEBUG: Return to Combat Lab button clicked!")
+                self.scene.action_return_to_test_lab = True
+                return True
+            else:
+                print(f"DEBUG: Click was not on return button")
+
         # Control Panel (Buttons usually top priority or overlay)
         # Check control panel first (e.g. End Battle button)
         res = self.control_panel.handle_click(mx, my)
         if res:
             return res
-            
+
         # Seeker Panel
         if self.seeker_panel.rect.collidepoint(mx, my):
              if self.seeker_panel.handle_click(mx, my):
                  return True
-        
+
         # Stats Panel
         if self.stats_panel.rect.collidepoint(mx, my):
             res = self.stats_panel.handle_click(mx, my)
             if res:
                 return res
-        
+
         return False
 
     def draw_grid(self, screen):
@@ -185,3 +207,50 @@ class BattleInterface:
                             pygame.draw.arc(screen, arc_col, rect, -r_end, -r_start, 1)
                         except Exception:
                             pass
+
+    def _get_return_button_rect(self):
+        """Get the rect for the Return to Combat Lab button."""
+        button_width = 300
+        button_height = 60
+        x = (self.width - button_width) // 2
+        y = (self.height - button_height) // 2
+        return pygame.Rect(x, y, button_width, button_height)
+
+    def _draw_return_button(self, screen):
+        """Draw the Return to Combat Lab button (shown when test completes)."""
+        print(f"DEBUG: Drawing Return to Combat Lab button (test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()})")
+        button_rect = self._get_return_button_rect()
+
+        # Check hover state
+        mx, my = pygame.mouse.get_pos()
+        is_hovered = button_rect.collidepoint(mx, my)
+
+        # Draw button
+        color = (0, 150, 200) if is_hovered else (0, 100, 150)
+        pygame.draw.rect(screen, color, button_rect, border_radius=8)
+        pygame.draw.rect(screen, (255, 255, 255), button_rect, 3, border_radius=8)
+
+        # Draw text
+        font = pygame.font.SysFont("Arial", 28, bold=True)
+        text = font.render("Return to Combat Lab", True, (255, 255, 255))
+        text_rect = text.get_rect(center=button_rect.center)
+        screen.blit(text, text_rect)
+
+        # Draw battle result above button
+        winner = self.scene.get_winner()
+        result_text = ""
+        result_color = (255, 255, 255)
+        if winner == 0:
+            result_text = "TEAM 0 WINS!"
+            result_color = (0, 255, 0)
+        elif winner == 1:
+            result_text = "TEAM 1 WINS!"
+            result_color = (0, 255, 0)
+        else:
+            result_text = "DRAW!"
+            result_color = (255, 255, 0)
+
+        result_font = pygame.font.SysFont("Arial", 48, bold=True)
+        result_surface = result_font.render(result_text, True, result_color)
+        result_rect = result_surface.get_rect(center=(button_rect.centerx, button_rect.top - 60))
+        screen.blit(result_surface, result_rect)

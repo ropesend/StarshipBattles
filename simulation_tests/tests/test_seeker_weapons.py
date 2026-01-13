@@ -1,317 +1,289 @@
 """
 Seeker Weapon Tests (SEEK360-001 through SEEK360-TRACK-004)
 
-Validates seeker/missile weapon behavior:
-- Lifetime/endurance tests (target at various distances)
-- Point defense interaction (seekers destroyed by PD)
-- Tracking behavior (following stationary, linear, and erratic targets)
+Pytest wrappers for seeker weapon test scenarios. These tests validate seeker/missile
+weapon behavior using the TestScenario framework.
 
-Seeker properties (from test_weapon_missile_omni):
-- projectile_speed: 1000
-- turn_rate: 90°/sec
-- endurance: 5.0 sec
-- range: 3000
-- damage: 100
+Seeker Mechanics:
+- Guided missiles that track targets in real-time
+- Speed: 1000 px/s, Turn Rate: 90°/sec
+- Endurance: 5.0 seconds (max travel ~5000px)
+- Damage: 100 per missile impact
+
+Test Coverage:
+- SEEK360-001 to SEEK360-004: Lifetime/endurance tests (4 distance variants)
+- SEEK360-TRACK-001 to SEEK360-TRACK-004: Tracking tests (4 target types)
+- SEEK360-PD-001 to SEEK360-PD-003: Point defense tests (placeholder - not implemented)
 """
 import pytest
-import os
-import json
-
-import pygame
-
-from game.simulation.entities.ship import Ship
-from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
+from test_framework.runner import TestRunner
+from simulation_tests.scenarios.seeker_scenarios import (
+    SeekerCloseRangeImpactScenario,
+    SeekerMidRangeImpactScenario,
+    SeekerBeyondRangeExpireScenario,
+    SeekerEdgeCaseRangeScenario,
+    SeekerTrackingStationaryScenario,
+    SeekerTrackingLinearScenario,
+    SeekerTrackingOrbitingScenario,
+    SeekerTrackingErraticScenario,
+    SeekerPointDefenseNoneScenario,
+    SeekerPointDefenseSingleScenario,
+    SeekerPointDefenseTripleScenario,
+)
 
 
 @pytest.mark.simulation
 class TestSeekerWeaponsLifetime:
-    """Test seeker/missile lifetime and range behavior."""
-    
+    """Test seeker/missile lifetime and endurance behavior using TestScenario wrappers."""
+
     @pytest.fixture(autouse=True)
-    def setup(self, isolated_registry, ships_dir):
-        """Use isolated registry and store ships_dir."""
-        self.ships_dir = ships_dir
-    
-    def _load_ship(self, filename: str) -> Ship:
-        """Load ship from JSON and calculate stats."""
-        path = os.path.join(self.ships_dir, filename)
-        with open(path, 'r') as f:
-            data = json.load(f)
-        ship = Ship.from_dict(data)
-        ship.recalculate_stats()
-        return ship
-    
-    def _run_seeker_battle(
-        self,
-        attacker: Ship,
-        target: Ship,
-        distance: float,
-        ticks: int = 600,
-        seed: int = 42
-    ) -> dict:
-        """
-        Run a seeker weapon battle simulation.
-        
-        Returns dict with damage_dealt, ticks_run, target_alive, projectiles_remaining.
-        """
-        # Position ships
-        attacker.position = pygame.math.Vector2(0, 0)
-        attacker.angle = 0  # Facing right
-        target.position = pygame.math.Vector2(distance, 0)
-        target.angle = 0
-        
-        initial_target_hp = target.hp
-        
-        engine = BattleEngine()
-        engine.start([attacker], [target], seed=seed)
-        
-        # Set target for attacker
-        attacker.current_target = target
-        
-        # Run simulation
-        for _ in range(ticks):
-            if not target.is_alive:
-                break
-            # Force weapon firing (test_do_nothing disables it)
-            attacker.comp_trigger_pulled = True
-            engine.update()
-        
-        damage_dealt = initial_target_hp - target.hp
-        projectiles_remaining = len([p for p in engine.projectiles if p.is_alive])
-        
-        engine.shutdown()
-        
-        return {
-            'damage_dealt': damage_dealt,
-            'ticks_run': engine.tick_counter,
-            'target_alive': target.is_alive,
-            'projectiles_remaining': projectiles_remaining,
-            'initial_hp': initial_target_hp,
-        }
-    
+    def setup(self, isolated_registry):
+        """Use isolated registry for each test."""
+        self.runner = TestRunner()
+
     def test_SEEK360_001_close_range_impact(self):
         """
-        SEEK360-001: Seeker impact at close range (500 pixels).
-        
+        SEEK360-001: Seeker impact at close range (500px).
+
         Seeker should reach target well before endurance limit.
-        At speed 1000, 500 pixels takes ~0.5 seconds (50 ticks).
+        At speed 1000 px/s, 500 pixels takes ~0.5 seconds (50 ticks).
         """
-        attacker = self._load_ship('Test_Attacker_Seeker360.json')
-        target = self._load_ship('Test_Target_Stationary.json')
-        
-        result = self._run_seeker_battle(attacker, target, distance=500, ticks=600)
-        
-        # Close range - seeker should hit and deal damage
-        assert result['damage_dealt'] > 0, \
-            "Seeker should impact and deal damage at close range"
-        
-        # Damage should be at least one missile (100 damage)
-        assert result['damage_dealt'] >= 100, \
-            f"Expected at least 100 damage from missile, got {result['damage_dealt']}"
-    
+        scenario = self.runner.run_scenario(
+            SeekerCloseRangeImpactScenario,
+            headless=True
+        )
+
+        assert scenario.passed, \
+            f"SEEK360-001 failed: {scenario.results.get('failure_reason', 'Unknown')}"
+        assert scenario.results['damage_dealt'] >= 100, \
+            f"Expected at least 100 damage from missile, got {scenario.results['damage_dealt']}"
+
+        # Print results for debugging
+        print(f"\nSEEK360-001 Results:")
+        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        print(f"  Ticks: {scenario.results['ticks_run']}")
+        print(f"  Target Alive: {scenario.results['target_alive']}")
+
     def test_SEEK360_002_mid_range_impact(self):
         """
-        SEEK360-002: Seeker impact at mid range (2500 pixels).
-        
+        SEEK360-002: Seeker impact at mid range (2500px).
+
         Seeker should reach target within endurance limit (5 seconds).
-        At speed 1000, 2500 pixels takes ~2.5 seconds (250 ticks).
+        At speed 1000 px/s, 2500 pixels takes ~2.5 seconds (250 ticks).
         """
-        attacker = self._load_ship('Test_Attacker_Seeker360.json')
-        target = self._load_ship('Test_Target_Stationary.json')
-        
-        result = self._run_seeker_battle(attacker, target, distance=2500, ticks=800)
-        
-        # Mid range - seeker should still reach target
-        assert result['damage_dealt'] > 0, \
+        scenario = self.runner.run_scenario(
+            SeekerMidRangeImpactScenario,
+            headless=True
+        )
+
+        assert scenario.passed, \
+            f"SEEK360-002 failed: {scenario.results.get('failure_reason', 'Unknown')}"
+        assert scenario.results['damage_dealt'] > 0, \
             "Seeker should impact target at mid range within endurance"
-    
+
+        # Print results for debugging
+        print(f"\nSEEK360-002 Results:")
+        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        print(f"  Ticks: {scenario.results['ticks_run']}")
+
     def test_SEEK360_003_beyond_range_expire(self):
         """
         SEEK360-003: Seeker expires before reaching target beyond range.
-        
-        Target at 5000 pixels (beyond range 3000 and endurance).
-        Seeker travels 1000 px/s × 5s = 5000 max distance, but likely expires.
+
+        Target at 5000 pixels (beyond weapon range 3000px).
+        Seeker travels 1000 px/s × 5s = 5000px max distance.
         """
-        attacker = self._load_ship('Test_Attacker_Seeker360.json')
-        target = self._load_ship('Test_Target_Stationary.json')
-        
-        # Position well beyond range
-        result = self._run_seeker_battle(attacker, target, distance=5000, ticks=800)
-        
-        # Beyond range - seeker should expire without hitting
-        # Note: Some damage may occur if weapon has multiple behaviors
-        assert result['ticks_run'] > 0, "Simulation should complete"
-    
+        scenario = self.runner.run_scenario(
+            SeekerBeyondRangeExpireScenario,
+            headless=True
+        )
+
+        assert scenario.passed, \
+            f"SEEK360-003 failed: {scenario.results.get('failure_reason', 'Unknown')}"
+        assert scenario.results['ticks_run'] > 0, "Simulation should complete"
+
+        # Print results for debugging
+        print(f"\nSEEK360-003 Results:")
+        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        print(f"  Ticks: {scenario.results['ticks_run']}")
+
     def test_SEEK360_004_edge_case_range(self):
         """
-        SEEK360-004: Edge case at range limit (4500 pixels).
-        
-        Right at the edge of range/endurance - may or may not hit.
+        SEEK360-004: Edge case at range limit (4500px).
+
+        Right at the edge of effective range/endurance - may or may not hit.
         """
-        attacker = self._load_ship('Test_Attacker_Seeker360.json')
-        target = self._load_ship('Test_Target_Stationary.json')
-        
-        result = self._run_seeker_battle(attacker, target, distance=4500, ticks=800)
-        
-        # Edge case - behavior may vary
-        assert result['ticks_run'] > 0, "Simulation should complete"
+        scenario = self.runner.run_scenario(
+            SeekerEdgeCaseRangeScenario,
+            headless=True
+        )
+
+        assert scenario.passed, \
+            f"SEEK360-004 failed: {scenario.results.get('failure_reason', 'Unknown')}"
+        assert scenario.results['ticks_run'] > 0, "Simulation should complete"
+
+        # Print results for debugging
+        print(f"\nSEEK360-004 Results:")
+        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        print(f"  Ticks: {scenario.results['ticks_run']}")
 
 
 @pytest.mark.simulation
 class TestSeekerWeaponsTracking:
-    """Test seeker tracking against moving targets."""
-    
+    """Test seeker tracking against moving targets using TestScenario wrappers."""
+
     @pytest.fixture(autouse=True)
-    def setup(self, isolated_registry, ships_dir):
-        """Use isolated registry and store ships_dir."""
-        self.ships_dir = ships_dir
-    
-    def _load_ship(self, filename: str) -> Ship:
-        """Load ship from JSON and calculate stats."""
-        path = os.path.join(self.ships_dir, filename)
-        with open(path, 'r') as f:
-            data = json.load(f)
-        ship = Ship.from_dict(data)
-        ship.recalculate_stats()
-        return ship
-    
-    def _run_seeker_battle(
-        self,
-        attacker: Ship,
-        target: Ship,
-        distance: float,
-        ticks: int = 600,
-        seed: int = 42
-    ) -> dict:
-        """Run battle and collect results."""
-        attacker.position = pygame.math.Vector2(0, 0)
-        attacker.angle = 0
-        target.position = pygame.math.Vector2(distance, 0)
-        target.angle = 0
-        
-        initial_target_hp = target.hp
-        
-        engine = BattleEngine()
-        engine.start([attacker], [target], seed=seed)
-        
-        # Set target for attacker
-        attacker.current_target = target
-        
-        for _ in range(ticks):
-            if not target.is_alive:
-                break
-            # Force weapon firing (test_do_nothing disables it)
-            attacker.comp_trigger_pulled = True
-            engine.update()
-        
-        damage_dealt = initial_target_hp - target.hp
-        engine.shutdown()
-        
-        return {
-            'damage_dealt': damage_dealt,
-            'ticks_run': engine.tick_counter,
-            'target_alive': target.is_alive,
-        }
-    
+    def setup(self, isolated_registry):
+        """Use isolated registry for each test."""
+        self.runner = TestRunner()
+
     def test_SEEK360_TRACK_001_stationary_target(self):
         """
         SEEK360-TRACK-001: Seeker tracking stationary target.
-        
+
         Direct flight path - should hit efficiently.
         """
-        attacker = self._load_ship('Test_Attacker_Seeker360.json')
-        target = self._load_ship('Test_Target_Stationary.json')
-        
-        result = self._run_seeker_battle(attacker, target, distance=1000, ticks=600)
-        
-        assert result['damage_dealt'] > 0, \
+        scenario = self.runner.run_scenario(
+            SeekerTrackingStationaryScenario,
+            headless=True
+        )
+
+        assert scenario.passed, \
+            f"SEEK360-TRACK-001 failed: {scenario.results.get('failure_reason', 'Unknown')}"
+        assert scenario.results['damage_dealt'] > 0, \
             "Seeker should hit stationary target with direct flight"
-    
+
+        # Print results for debugging
+        print(f"\nSEEK360-TRACK-001 Results:")
+        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        print(f"  Ticks: {scenario.results['ticks_run']}")
+
     def test_SEEK360_TRACK_002_linear_target(self):
         """
         SEEK360-TRACK-002: Seeker tracking linearly moving target.
-        
+
         Seeker should lead and/or curve to intercept.
         """
-        attacker = self._load_ship('Test_Attacker_Seeker360.json')
-        target = self._load_ship('Test_Target_Linear_Slow.json')
-        
-        # Target moving perpendicular to line-of-sight
-        target_ship = target
-        target_ship.angle = 90  # Moving up
-        
-        result = self._run_seeker_battle(attacker, target_ship, distance=1000, ticks=600)
-        
-        # Seeker with turn_rate 90 deg/s should track linear targets
-        assert result['ticks_run'] > 0, "Simulation should complete"
-    
+        scenario = self.runner.run_scenario(
+            SeekerTrackingLinearScenario,
+            headless=True
+        )
+
+        assert scenario.passed, \
+            f"SEEK360-TRACK-002 failed: {scenario.results.get('failure_reason', 'Unknown')}"
+        assert scenario.results['ticks_run'] > 0, "Simulation should complete"
+
+        # Print results for debugging
+        print(f"\nSEEK360-TRACK-002 Results:")
+        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        print(f"  Ticks: {scenario.results['ticks_run']}")
+
     def test_SEEK360_TRACK_003_orbiting_target(self):
         """
         SEEK360-TRACK-003: Seeker tracking orbiting target.
-        
+
         Curved pursuit - seeker should adjust heading to follow.
         """
-        attacker = self._load_ship('Test_Attacker_Seeker360.json')
-        target = self._load_ship('Test_Target_Orbiting.json')
-        
-        result = self._run_seeker_battle(attacker, target, distance=1000, ticks=800)
-        
-        # Orbiting target requires continuous tracking adjustment
-        assert result['ticks_run'] > 0, "Simulation should complete"
-    
+        scenario = self.runner.run_scenario(
+            SeekerTrackingOrbitingScenario,
+            headless=True
+        )
+
+        assert scenario.passed, \
+            f"SEEK360-TRACK-003 failed: {scenario.results.get('failure_reason', 'Unknown')}"
+        assert scenario.results['ticks_run'] > 0, "Simulation should complete"
+
+        # Print results for debugging
+        print(f"\nSEEK360-TRACK-003 Results:")
+        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        print(f"  Ticks: {scenario.results['ticks_run']}")
+
     def test_SEEK360_TRACK_004_erratic_target(self):
         """
         SEEK360-TRACK-004: Seeker vs highly maneuverable erratic target.
-        
+
         Erratic targets may out-turn seekers, causing SEEKER_EXPIRE.
         """
-        attacker = self._load_ship('Test_Attacker_Seeker360.json')
-        target = self._load_ship('Test_Target_Erratic_Small.json')
-        
-        result = self._run_seeker_battle(attacker, target, distance=1000, ticks=800)
-        
-        # Erratic small target may evade seekers - results vary
-        assert result['ticks_run'] > 0, "Simulation should complete"
+        scenario = self.runner.run_scenario(
+            SeekerTrackingErraticScenario,
+            headless=True
+        )
+
+        assert scenario.passed, \
+            f"SEEK360-TRACK-004 failed: {scenario.results.get('failure_reason', 'Unknown')}"
+        assert scenario.results['ticks_run'] > 0, "Simulation should complete"
+
+        # Print results for debugging
+        print(f"\nSEEK360-TRACK-004 Results:")
+        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        print(f"  Ticks: {scenario.results['ticks_run']}")
+
 
 
 @pytest.mark.simulation
 @pytest.mark.skip(reason="Requires Point Defense target ships - not yet implemented in test data")
 class TestSeekerPointDefense:
-    """Test seeker interaction with point defense systems.
-    
+    """Test seeker interaction with point defense systems using TestScenario wrappers.
+
     Placeholder tests - require target ships with PD weapons,
     which are not yet in the test data set.
     """
-    
+
     @pytest.fixture(autouse=True)
-    def setup(self, isolated_registry, ships_dir):
-        self.ships_dir = ships_dir
-    
-    def _load_ship(self, filename: str) -> Ship:
-        path = os.path.join(self.ships_dir, filename)
-        with open(path, 'r') as f:
-            data = json.load(f)
-        ship = Ship.from_dict(data)
-        ship.recalculate_stats()
-        return ship
-    
+    def setup(self, isolated_registry):
+        """Use isolated registry for each test."""
+        self.runner = TestRunner()
+
     def test_SEEK360_PD_001_no_pd_all_hit(self):
         """
         SEEK360-PD-001: No point defense - all seekers hit.
+
+        Baseline test - all missiles should reach target.
         """
-        pass  # TODO: Implement when PD target ships exist
-    
+        scenario = self.runner.run_scenario(
+            SeekerPointDefenseNoneScenario,
+            headless=True
+        )
+
+        # This test is expected to be skipped
+        assert 'skipped' in scenario.results, \
+            "Test should be marked as skipped until PD ships are implemented"
+
+        print(f"\nSEEK360-PD-001: Skipped - {scenario.results.get('skip_reason', 'Unknown')}")
+
     def test_SEEK360_PD_002_single_pd(self):
         """
         SEEK360-PD-002: Single point defense - measure destruction rate.
+
+        Some seekers intercepted, some reach target.
         """
-        pass  # TODO: Implement when PD target ships exist
-    
+        scenario = self.runner.run_scenario(
+            SeekerPointDefenseSingleScenario,
+            headless=True
+        )
+
+        # This test is expected to be skipped
+        assert 'skipped' in scenario.results, \
+            "Test should be marked as skipped until PD ships are implemented"
+
+        print(f"\nSEEK360-PD-002: Skipped - {scenario.results.get('skip_reason', 'Unknown')}")
+
     def test_SEEK360_PD_003_triple_pd(self):
         """
         SEEK360-PD-003: Triple point defense - higher destruction rate.
+
+        Most seekers intercepted, few reach target.
         """
-        pass  # TODO: Implement when PD target ships exist
+        scenario = self.runner.run_scenario(
+            SeekerPointDefenseTripleScenario,
+            headless=True
+        )
+
+        # This test is expected to be skipped
+        assert 'skipped' in scenario.results, \
+            "Test should be marked as skipped until PD ships are implemented"
+
+        print(f"\nSEEK360-PD-003: Skipped - {scenario.results.get('skip_reason', 'Unknown')}")
 
 
 if __name__ == '__main__':
