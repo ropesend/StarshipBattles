@@ -108,19 +108,47 @@ class PlanetListWindow(UIWindow):
         self.row_pool = [] # List of dicts: {'bg': panel, 'cols': [widgets]}
         self.virtual_scroll_y = 0.0
         
+        # Performance: Icon cache to avoid repeated smoothscale calls
+        self._icon_cache = {}
+        # Dirty tracking for row updates
+        self._last_scroll_pct = -1.0
+        self._last_filtered_count = -1
+        
         # --- Initial Population ---
         self._rebuild_headers()
         self._rebuild_row_pool()
         self.refresh_list()
         
     def _gather_planets(self):
-        """Collect all planets from the galaxy."""
+        """Collect all planets from the galaxy with pre-computed filter values."""
         planets = []
+        m_earth_const = 5.97e24
+        g_const = 9.81
+        
         if self.galaxy and self.galaxy.systems:
             for s in self.galaxy.systems.values():
                 for p in s.planets:
-                    # Attach system ref for cached access if needed
-                    p._temp_system_ref = s 
+                    # Attach system ref for cached access
+                    p._temp_system_ref = s
+                    
+                    # Pre-compute expensive filter values (avoids per-filter-iteration cost)
+                    p._cached_gravity_g = p.surface_gravity / g_const
+                    p._cached_mass_earth = p.mass / m_earth_const
+                    p._cached_name_lower = p.name.lower()
+                    
+                    # Pre-compute type category
+                    tn = p.planet_type.name.lower()
+                    if 'gas' in tn:
+                        p._cached_type_category = 'Gas'
+                    elif 'ice' in tn:
+                        p._cached_type_category = 'Ice'
+                    elif 'desert' in tn or 'hot' in tn:
+                        p._cached_type_category = 'Desert'
+                    elif 'moon' in tn:
+                        p._cached_type_category = 'Moon'
+                    else:
+                        p._cached_type_category = 'Terran'
+                    
                     planets.append(p)
         return planets
         
@@ -415,6 +443,7 @@ class PlanetListWindow(UIWindow):
         # 1. Update Filter State from UI (lazy sync)
         search = self.txt_name_filter.get_text()
         if search == "Search Name...": search = ""
+        search_lower = search.lower() if search else ""
         
         min_g = self.ui_filters['gravity']['min'].get_current_value()
         max_g = self.ui_filters['gravity']['max'].get_current_value()
@@ -422,80 +451,69 @@ class PlanetListWindow(UIWindow):
         min_t = self.ui_filters['temp']['min'].get_current_value()
         max_t = self.ui_filters['temp']['max'].get_current_value()
         
-        # Mass
         min_m = self.ui_filters['mass']['min'].get_current_value()
         max_m = self.ui_filters['mass']['max'].get_current_value()
         
+        # Use cached pre-computed values for faster filtering
+        filter_types = self.filter_types  # Local ref for speed
         
-        self.filtered_planets = []
-        for p in self.all_planets:
-            match = True
+        def matches_filter(p):
+            # Name (use cached lowercase)
+            if search_lower and search_lower not in p._cached_name_lower:
+                return False
             
-            # Name
-            if search and search.lower() not in p.name.lower(): match = False
+            # Type (use cached category)
+            if not filter_types.get(p._cached_type_category, True):
+                return False
             
-            # Type (Heuristic mapping)
-            p_type = 'Terran' # Default
-            tn = p.planet_type.name.lower()
-            if 'gas' in tn: p_type = 'Gas'
-            elif 'ice' in tn: p_type = 'Ice'
-            elif 'desert' in tn or 'hot' in tn: p_type = 'Desert'
-            # Moon detection? usually implicit in name or parent?
-            if 'moon' in tn: p_type = 'Moon'
+            # Ranges (use cached gravity_g and mass_earth)
+            if p._cached_gravity_g < min_g or p._cached_gravity_g > max_g:
+                return False
             
-            if not self.filter_types.get(p_type, True): match = False
+            if p.surface_temperature < min_t or p.surface_temperature > max_t:
+                return False
             
-            # Ranges
-            g = p.surface_gravity / 9.81
-            if g < min_g or g > max_g: match = False
+            if p._cached_mass_earth < min_m or p._cached_mass_earth > max_m:
+                return False
             
-            if p.surface_temperature < min_t or p.surface_temperature > max_t: match = False
-            
-            m_earth = p.mass / 5.97e24
-            if m_earth < min_m or m_earth > max_m: match = False
-            
-            if match:
-                self.filtered_planets.append(p)
+            return True
+        
+        # Use list comprehension with filter function
+        self.filtered_planets = [p for p in self.all_planets if matches_filter(p)]
                 
         # 1b. Sort
         if self.sort_column_id:
-            # Find col def
             col = next((c for c in self.columns if c['id'] == self.sort_column_id), None)
             if col:
-                def sort_key(p):
-                    val = None
-                    if 'func' in col:
-                        # This returns formatted string usually... dangerous for numeric sort
-                        # But wait, helper funcs return strings currently. 
-                        # We might need raw values. 
-                        # Hack: Re-derive raw value for known numeric columns?
-                        # Or rely on string sort? String sort "10.0" < "2.0" is bad.
-                        
-                        # Special case known numeric IDs or use attr if available
-                        # Actually 'func' is only used for system name, owner, mass, gravity
-                        if col['id'] == 'mass': return p.mass
-                        if col['id'] == 'grav': return p.surface_gravity
-                        val = col['func'](p)
-                        
-                    elif 'attr' in col:
-                         attrs = col['attr'].split('.')
-                         obj = p
-                         for a in attrs:
-                             if hasattr(obj, a): obj = getattr(obj, a)
-                             else: obj = ""
-                         val = obj
-                    
-                    if val is None: return ""
-                    return val
-                
-                self.filtered_planets.sort(key=sort_key, reverse=self.sort_descending)
+                # Use cached values for known numeric columns
+                if col['id'] == 'mass':
+                    self.filtered_planets.sort(key=lambda p: p.mass, reverse=self.sort_descending)
+                elif col['id'] == 'grav':
+                    self.filtered_planets.sort(key=lambda p: p.surface_gravity, reverse=self.sort_descending)
+                elif col['id'] == 'temp':
+                    self.filtered_planets.sort(key=lambda p: p.surface_temperature, reverse=self.sort_descending)
+                elif col['id'] == 'name':
+                    self.filtered_planets.sort(key=lambda p: p._cached_name_lower, reverse=self.sort_descending)
+                elif col['id'] == 'type':
+                    self.filtered_planets.sort(key=lambda p: p._cached_type_category, reverse=self.sort_descending)
+                else:
+                    # Fallback for other columns
+                    def sort_key(p):
+                        if 'func' in col:
+                            return col['func'](p)
+                        elif 'attr' in col:
+                            attrs = col['attr'].split('.')
+                            obj = p
+                            for a in attrs:
+                                if hasattr(obj, a): obj = getattr(obj, a)
+                                else: return ""
+                            return obj
+                        return ""
+                    self.filtered_planets.sort(key=sort_key, reverse=self.sort_descending)
                 
         # 2. Update Scrollbar
         total_h = len(self.filtered_planets) * self.row_height
         visible_h = self.list_view_rect.height
-        
-        # Debug
-        # print(f"Refresh List: {len(self.filtered_planets)} planets, TotalH: {total_h}, VisibleH: {visible_h}")
         
         if total_h > 0:
             percentage = min(1.0, visible_h / total_h)
@@ -503,12 +521,12 @@ class PlanetListWindow(UIWindow):
             percentage = 1.0
             
         self.scroll_bar.set_visible_percentage(percentage)
-        self.scroll_bar.scroll_position = 0.0 # Reset on refresh? Or try to keep?
+        self.scroll_bar.scroll_position = 0.0
         self.scroll_bar.bottom_limit = max(visible_h, total_h)
-        # Force update call
         self.scroll_bar.redraw_scrollbar()
         
-        # 3. Update Visible Rows
+        # 3. Update Visible Rows (force update by resetting dirty state)
+        self._last_scroll_pct = -1.0
         self._update_visible_rows()
         
     def _rebuild_row_pool(self):
@@ -571,27 +589,35 @@ class PlanetListWindow(UIWindow):
             
     def _update_visible_rows(self):
         """Update content of row pool based on scroll position."""
+        # Dirty check: skip if nothing changed
+        current_pct = self.scroll_bar.start_percentage
+        current_count = len(self.filtered_planets)
+        
+        if (current_pct == self._last_scroll_pct and 
+            current_count == self._last_filtered_count):
+            return  # Nothing changed, skip update
+        
+        self._last_scroll_pct = current_pct
+        self._last_filtered_count = current_count
+        
         # Use start_percentage for consistency with the percentage-based API
-        total_h = len(self.filtered_planets) * self.row_height
-        scroll_y = self.scroll_bar.start_percentage * total_h
+        total_h = current_count * self.row_height
+        scroll_y = current_pct * total_h
         start_index = int(scroll_y // self.row_height)
         offset_y = scroll_y % self.row_height
         
-        visible_h = self.list_view_rect.height
+        # Local refs for performance
+        filtered_planets = self.filtered_planets
+        asset_resolver = self.asset_resolver
+        icon_cache = self._icon_cache
         
         for i, row_data in enumerate(self.row_pool):
             data_index = start_index + i
             
             row_panel = row_data['bg']
             
-            if data_index < len(self.filtered_planets):
-                planet = self.filtered_planets[data_index]
-                
-                # Position
-                # We position the row relative to list_panel
-                # Visual Y = i * row_height - offset_y
-                # But to avoid "jumping" when scrolling large amounts, 
-                # we just need to cover the viewport.
+            if data_index < len(filtered_planets):
+                planet = filtered_planets[data_index]
                 
                 y_pos = (i * self.row_height) - offset_y
                 
@@ -625,18 +651,22 @@ class PlanetListWindow(UIWindow):
                     elif widget_data['type'] == 'image':
                         # Get image via asset resolver
                         img = None
-                        if self.asset_resolver:
-                            img = self.asset_resolver(planet)
+                        if asset_resolver:
+                            img = asset_resolver(planet)
                         elif hasattr(planet, 'image') and planet.image:
                             img = planet.image
                             
                         if img:
-                            # Scale to 40x40 to fit icon box
-                            scaled = pygame.transform.smoothscale(img, (40, 40))
-                            el.set_image(scaled)
+                            # Use cached scaled icon to avoid repeated smoothscale
+                            cache_key = id(img)
+                            if cache_key not in icon_cache:
+                                icon_cache[cache_key] = pygame.transform.smoothscale(img, (40, 40))
+                            el.set_image(icon_cache[cache_key])
                         else:
-                            # Fallback: blank surface
-                            el.set_image(pygame.Surface((40, 40)))
+                            # Fallback: blank surface (cached as well)
+                            if '_blank_icon' not in icon_cache:
+                                icon_cache['_blank_icon'] = pygame.Surface((40, 40))
+                            el.set_image(icon_cache['_blank_icon'])
             else:
                 # Scrolled past end
                 row_panel.hide()

@@ -12,12 +12,32 @@ class Camera:
         self.offset_y = offset_y
         self.position = pygame.math.Vector2(0, 0)
         self.zoom = 1.0
+        self.target_zoom = 1.0  # Target for smooth zoom interpolation
+        self.zoom_speed = 8.0   # How fast zoom animates (higher = faster)
         self.min_zoom = 0.01
         self.max_zoom = 5.0
         self.target = None # Object to follow (must have .position)
+        # For mouse-centered zoom, store the world position to keep stable
+        self._zoom_anchor_world = None
+        self._zoom_anchor_screen = None
         
     def update(self, dt):
-        """Update camera validation and target following."""
+        """Update camera validation, target following, and smooth zoom."""
+        # Smooth zoom interpolation
+        if abs(self.zoom - self.target_zoom) > 0.001:
+            # Exponential interpolation for smooth feel
+            self.zoom += (self.target_zoom - self.zoom) * min(1.0, self.zoom_speed * dt)
+            
+            # Keep the zoom anchor point stable on screen during animation
+            if self._zoom_anchor_world is not None and self._zoom_anchor_screen is not None:
+                new_world_at_anchor = self.screen_to_world(self._zoom_anchor_screen)
+                diff = self._zoom_anchor_world - new_world_at_anchor
+                self.position += diff
+        else:
+            self.zoom = self.target_zoom
+            self._zoom_anchor_world = None
+            self._zoom_anchor_screen = None
+        
         # Update target following
         if self.target:
              if hasattr(self.target, 'is_alive') and not self.target.is_alive:
@@ -50,33 +70,18 @@ class Camera:
 
         for event in events:
             if event.type == pygame.MOUSEWHEEL:
-                # 1. Get mouse position and convert to world coords BEFORE zoom
+                # 1. Get mouse position and store as anchor for smooth zoom
                 mx, my = pygame.mouse.get_pos()
-                current_mouse_world_pos = self.screen_to_world((mx, my))
+                self._zoom_anchor_screen = (mx, my)
+                self._zoom_anchor_world = self.screen_to_world((mx, my))
 
-                # 2. Apply Zoom
+                # 2. Set Target Zoom (will be interpolated smoothly in update())
                 if event.y > 0:
-                    self.zoom *= 1.1
+                    self.target_zoom *= 1.15
                 else:
-                    self.zoom /= 1.1
+                    self.target_zoom /= 1.15
                 
-                self.zoom = max(self.min_zoom, min(self.max_zoom, self.zoom))
-
-                # 3. Calculate where that world point is NOW on the screen
-                # The camera position (center) hasn't moved yet, so the screen position
-                # of our target world point will have drifted.
-                new_mouse_world_pos = self.screen_to_world((mx, my))
-                
-                # 4. We want new_mouse_world_pos to be equal to current_mouse_world_pos
-                # The difference is how much we need to shift the camera center.
-                # If new_mouse_world_pos < current_mouse_world_pos (e.g. 100 < 200),
-                # it means the camera center is too far "left" in world space (relative to where it should be).
-                # Wait, let's use the vectors directly.
-                # diff = old_world_pos - new_world_pos_with_old_center
-                # We need to ADD this difference to the camera position.
-                
-                diff = current_mouse_world_pos - new_mouse_world_pos
-                self.position += diff
+                self.target_zoom = max(self.min_zoom, min(self.max_zoom, self.target_zoom))
 
     def world_to_screen(self, world_pos):
         """Convert world coordinates to screen coordinates."""

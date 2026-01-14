@@ -19,6 +19,11 @@ class MockPlanet:
         self.owner_id = 1
         self.surface_water = 0.7
         self.total_pressure_atm = 1.0
+        # Pre-computed cached values (these are set by _gather_planets in real code)
+        self._cached_gravity_g = self.surface_gravity / 9.81
+        self._cached_mass_earth = self.mass / 5.97e24
+        self._cached_name_lower = self.name.lower()
+        self._cached_type_category = 'Terran'
 
 class MockSystem:
     def __init__(self, i):
