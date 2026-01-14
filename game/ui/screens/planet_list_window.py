@@ -7,12 +7,13 @@ from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollin
 from pygame_gui import UI_TEXT_ENTRY_FINISHED
 
 class PlanetListWindow(UIWindow):
-    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None):
+    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None):
         super().__init__(rect, manager, window_display_title="Galactic Planet Registry", resizable=True)
         
         self.galaxy = galaxy
         self.empire = empire # Current player empire for "Owner" context
         self.on_close_callback = on_close_callback
+        self.asset_resolver = asset_resolver  # Function to get image for planet
         
         # --- Layout Constants ---
         self.sidebar_width = 300
@@ -493,6 +494,9 @@ class PlanetListWindow(UIWindow):
         total_h = len(self.filtered_planets) * self.row_height
         visible_h = self.list_view_rect.height
         
+        # Debug
+        # print(f"Refresh List: {len(self.filtered_planets)} planets, TotalH: {total_h}, VisibleH: {visible_h}")
+        
         if total_h > 0:
             percentage = min(1.0, visible_h / total_h)
         else:
@@ -567,7 +571,9 @@ class PlanetListWindow(UIWindow):
             
     def _update_visible_rows(self):
         """Update content of row pool based on scroll position."""
-        scroll_y = self.scroll_bar.scroll_position
+        # Use start_percentage for consistency with the percentage-based API
+        total_h = len(self.filtered_planets) * self.row_height
+        scroll_y = self.scroll_bar.start_percentage * total_h
         start_index = int(scroll_y // self.row_height)
         offset_y = scroll_y % self.row_height
         
@@ -617,12 +623,20 @@ class PlanetListWindow(UIWindow):
                          el.set_text(val)
                          
                     elif widget_data['type'] == 'image':
-                        # Update image surface
-                        if hasattr(planet, 'image'):
-                            el.set_image(planet.image)
+                        # Get image via asset resolver
+                        img = None
+                        if self.asset_resolver:
+                            img = self.asset_resolver(planet)
+                        elif hasattr(planet, 'image') and planet.image:
+                            img = planet.image
+                            
+                        if img:
+                            # Scale to 40x40 to fit icon box
+                            scaled = pygame.transform.smoothscale(img, (40, 40))
+                            el.set_image(scaled)
                         else:
-                            # Fallback? Blank?
-                            pass
+                            # Fallback: blank surface
+                            el.set_image(pygame.Surface((40, 40)))
             else:
                 # Scrolled past end
                 row_panel.hide()
@@ -654,24 +668,26 @@ class PlanetListWindow(UIWindow):
                     except ValueError:
                         pass # Ignore invalid
 
-        # Wheel Handling
+        # Wheel Handling - Use scrollbar's official API
         if event.type == pygame.MOUSEWHEEL:
-             # Check collision with list panel
-             m_pos = pygame.mouse.get_pos()
-             if self.list_panel.get_abs_rect().collidepoint(m_pos):
-                 self.scroll_bar.scroll_wheel_down = event.y < 0
-                 self.scroll_bar.scroll_wheel_up = event.y > 0
-                 # pygame_gui scrollbars handle wheel events if focused or manually poked?
-                 # Actually UIVerticalScrollBar usually handles MOUSEWHEEL if hovered.
-                 # But we can force it.
-                 amount = 20 * event.y
-                 self.scroll_bar.scroll_position -= amount
-                 self.scroll_bar.scroll_position = min(self.scroll_bar.bottom_limit - self.scroll_bar.visible_percentage * self.scroll_bar.bottom_limit, max(0, self.scroll_bar.scroll_position))
-                 # Clamp logic is tricky with bottom_limit definition in pygame_gui
-                 # Actually simpler to let scrollbar handle it or use set_scroll_position
-                 # But let's trust internal handling often works if hovered. 
-                 # If not:
-                 pass
+            m_pos = pygame.mouse.get_pos()
+            # Check if mouse is over the list area
+            if self.list_panel.get_abs_rect().collidepoint(m_pos):
+                # Calculate scroll amount as percentage of total
+                total_h = len(self.filtered_planets) * self.row_height
+                if total_h > 0:
+                    # One row per wheel tick
+                    row_percent = self.row_height / total_h
+                    # Get current percentage
+                    current_pct = self.scroll_bar.start_percentage
+                    # Calculate new (wheel up = negative y = scroll up = lower percentage)
+                    new_pct = current_pct - (event.y * row_percent)
+                    # Clamp to valid range
+                    new_pct = max(0.0, min(1.0 - self.scroll_bar.visible_percentage, new_pct))
+                    # Apply using official method
+                    self.scroll_bar.set_scroll_from_start_percentage(new_pct)
+                    self._update_visible_rows()
+                return True  # Consume event
 
         return handled
 

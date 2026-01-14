@@ -34,7 +34,7 @@ class StrategyScene:
         # Galaxy Data
         self.galaxy = Galaxy(radius=4000)
         print("StrategyScene: Generating Galaxy...")
-        self.systems = self.galaxy.generate_systems(count=8, min_dist=400)
+        self.systems = self.galaxy.generate_systems(count=25, min_dist=400)
         self.galaxy.generate_warp_lanes()
         print(f"StrategyScene: Generated {len(self.systems)} systems.")
         
