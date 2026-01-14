@@ -24,8 +24,8 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 
 # Screen Dimensions
-WIDTH = 1920
-HEIGHT = 1080
+WIDTH = 3840
+HEIGHT = 2160
 
 # Fonts
 FONT_MAIN = "Arial"

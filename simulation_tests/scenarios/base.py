@@ -485,11 +485,11 @@ class TestScenario(CombatScenario):
             'metadata': self.metadata
         }
 
-        # Add ships to context if available
-        if hasattr(self, 'attacker'):
-            context['attacker'] = self.attacker
-        if hasattr(self, 'target'):
-            context['target'] = self.target
+        # Add ships to context with extracted component data
+        if hasattr(self, 'attacker') and self.attacker:
+            context['attacker'] = self._extract_ship_validation_data(self.attacker)
+        if hasattr(self, 'target') and self.target:
+            context['target'] = self._extract_ship_validation_data(self.target)
 
         # Run validator
         validator = Validator(self.metadata.validation_rules)
@@ -503,3 +503,46 @@ class TestScenario(CombatScenario):
             self.results['has_validation_warnings'] = validator.has_warnings(validation_results)
 
         return validation_results
+
+    def _extract_ship_validation_data(self, ship: Ship) -> Dict[str, Any]:
+        """
+        Extract ship and component data for validation.
+
+        Converts a Ship object into a dictionary structure suitable for
+        validation rule path resolution (e.g., 'attacker.weapon.damage').
+
+        Args:
+            ship: Ship instance to extract data from
+
+        Returns:
+            Dictionary with ship properties and component data
+        """
+        data = {
+            'ship': ship,  # Keep reference to ship object
+            'mass': ship.mass,
+            'hp': ship.hp,
+            'max_hp': ship.max_hp
+        }
+
+        # Extract weapon data from first weapon component
+        # This is simplified - assumes single weapon for testing
+        if hasattr(ship, 'layers') and ship.layers:
+            for layer_name, components in ship.layers.items():
+                for component in components:
+                    # Check if component has BeamWeaponAbility
+                    if hasattr(component, 'abilities'):
+                        for ability_name, ability in component.abilities.items():
+                            if ability_name == 'BeamWeaponAbility':
+                                # Extract beam weapon data
+                                data['weapon'] = {
+                                    'damage': ability.damage if hasattr(ability, 'damage') else None,
+                                    'range': ability.range if hasattr(ability, 'range') else None,
+                                    'base_accuracy': ability.base_accuracy if hasattr(ability, 'base_accuracy') else None,
+                                    'accuracy_falloff': ability.accuracy_falloff if hasattr(ability, 'accuracy_falloff') else None,
+                                    'reload': ability.reload if hasattr(ability, 'reload') else None,
+                                    'firing_arc': ability.firing_arc if hasattr(ability, 'firing_arc') else None
+                                }
+                                # Found weapon, return
+                                return data
+
+        return data
