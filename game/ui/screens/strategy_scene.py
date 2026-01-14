@@ -34,7 +34,7 @@ class StrategyScene:
         # Galaxy Data
         self.galaxy = Galaxy(radius=4000)
         print("StrategyScene: Generating Galaxy...")
-        self.systems = self.galaxy.generate_systems(count=8, min_dist=400)
+        self.systems = self.galaxy.generate_systems(count=25, min_dist=400)
         self.galaxy.generate_warp_lanes()
         print(f"StrategyScene: Generated {len(self.systems)} systems.")
         
@@ -99,6 +99,7 @@ class StrategyScene:
         # Selected Fleet Ref
         self.selected_fleet = None
         self.selected_object = None # General selection (System, Planet, Fleet)
+        self.last_selected_system = None  # Track last selected system for Shift+S quick zoom
         
         # State
         self.turn_processing = False
@@ -307,6 +308,11 @@ class StrategyScene:
                     print("Input Mode: COLONIZE - Select target planet.")
                 else:
                     print("Select a fleet first.")
+            # Quick Zoom Shortcuts
+            elif event.key == pygame.K_g and (event.mod & pygame.KMOD_SHIFT):
+                self._zoom_to_galaxy()
+            elif event.key == pygame.K_s and (event.mod & pygame.KMOD_SHIFT):
+                self._zoom_to_system()
 
     def advance_turn(self):
         """End current player's order phase. Process turn when all humans ready."""
@@ -465,6 +471,71 @@ class StrategyScene:
             print(f"Camera centered on {obj} at {target_hex}")
         else:
             print(f"Could not center camera on {obj}")
+    
+    def _zoom_to_galaxy(self):
+        """Zoom out to show entire galaxy (Shift+G)."""
+        if not self.systems:
+            return
+            
+        # Calculate bounds of all systems
+        all_positions = []
+        for sys in self.systems:
+            px, py = hex_to_pixel(sys.global_location, self.HEX_SIZE)
+            all_positions.append((px, py))
+        
+        if not all_positions:
+            return
+            
+        min_x = min(p[0] for p in all_positions)
+        max_x = max(p[0] for p in all_positions)
+        min_y = min(p[1] for p in all_positions)
+        max_y = max(p[1] for p in all_positions)
+        
+        # Center
+        center_x = (min_x + max_x) / 2
+        center_y = (min_y + max_y) / 2
+        self.camera.position.x = center_x
+        self.camera.position.y = center_y
+        
+        # Calculate zoom to fit all systems with margin
+        width = max_x - min_x + 600  # Larger margin for more zoom out
+        height = max_y - min_y + 600
+        
+        zoom_x = self.camera.width / width if width > 0 else 1.0
+        zoom_y = self.camera.height / height if height > 0 else 1.0
+        fit_zoom = min(zoom_x, zoom_y)
+        
+        # Set target zoom (smooth animation)
+        self.camera.target_zoom = max(self.camera.min_zoom, min(self.camera.max_zoom, fit_zoom))
+        self.camera.zoom = self.camera.target_zoom  # Instant for this shortcut
+        
+        print(f"Galaxy View: zoom={self.camera.zoom:.2f}")
+    
+    def _zoom_to_system(self):
+        """Zoom to 3x on the last selected system (Shift+S)."""
+        target_sys = self.last_selected_system
+        
+        # Fallback: if no system selected, try to infer from selected object
+        if not target_sys and self.selected_object:
+            if isinstance(self.selected_object, StarSystem):
+                target_sys = self.selected_object
+            elif hasattr(self.selected_object, 'location'):
+                target_sys = next((s for s in self.systems if self.selected_object in s.planets or self.selected_object in s.warp_points), None)
+        
+        if not target_sys:
+            print("No system selected for Shift+S zoom")
+            return
+        
+        # Center on system
+        px, py = hex_to_pixel(target_sys.global_location, self.HEX_SIZE)
+        self.camera.position.x = px
+        self.camera.position.y = py
+        
+        # Set zoom to 2x (smooth animation)
+        self.camera.target_zoom = 2.0
+        self.camera.zoom = 2.0  # Instant for this shortcut
+        
+        print(f"System View: {target_sys.name} at zoom=2.0")
              
     def on_build_ship_click(self):
          """Handle 'Build Ship' action."""
@@ -580,6 +651,8 @@ class StrategyScene:
             sys_contents.extend(clicked_system.planets)
             sys_contents.extend(clicked_system.warp_points)
             self.ui.show_system_info(clicked_system, sys_contents)
+            # Track this system for Shift+S zoom
+            self.last_selected_system = clicked_system
         else:
             self.ui.show_system_info(None, [])
             
@@ -602,6 +675,15 @@ class StrategyScene:
     def on_ui_selection(self, obj):
         """Called when user selects an item in the UI list."""
         self.selected_object = obj
+        
+        # Track last selected system (direct or inferred from planet/warp point)
+        if isinstance(obj, StarSystem):
+            self.last_selected_system = obj
+        elif hasattr(obj, 'location'):  # Planet, WarpPoint, etc.
+            # Find parent system
+            parent_sys = next((s for s in self.systems if obj in s.planets or obj in s.warp_points), None)
+            if parent_sys:
+                self.last_selected_system = parent_sys
         
         # --- Update Button Visibility ---
         # Get current player's empire ID
@@ -961,9 +1043,10 @@ class StrategyScene:
         # Global Base (screen space of 0,0)
         cam_x = self.camera.position.x
         cam_y = self.camera.position.y
-        # Use camera width for viewport center!
-        base_x = (self.camera.width / 2) - cam_x * self.camera.zoom
-        base_y = (self.camera.height / 2) - cam_y * self.camera.zoom
+        # Use camera width for viewport center AND include viewport offsets!
+        # This must match camera.world_to_screen() which adds offset_x and offset_y
+        base_x = (self.camera.width / 2) - cam_x * self.camera.zoom + self.camera.offset_x
+        base_y = (self.camera.height / 2) - cam_y * self.camera.zoom + self.camera.offset_y
         
         # Pre-calc offsets
         # Left Snake Vertex Offsets (relative to row center)
@@ -1207,36 +1290,25 @@ class StrategyScene:
             hex_center_world = pygame.math.Vector2(sys_world_pos.x + px, sys_world_pos.y + py)
             hex_center_screen = self.camera.world_to_screen(hex_center_world)
             
-            # Zoom Logic
-            zoom_limit = 4.0
+            # Gradual Expansion: Interpolate from 1.5x to 2.0x zoom
+            # At 1.5x: expansion_t = 0 (all centered)
+            # At 2.0x: expansion_t = 1 (fully expanded)
+            EXPAND_START = 1.5
+            EXPAND_END = 2.0
+            expansion_t = max(0.0, min(1.0, (self.camera.zoom - EXPAND_START) / (EXPAND_END - EXPAND_START)))
             
-            if self.camera.zoom > zoom_limit and len(planets) > 1:
-                # Distribute in pattern
-                # User request: "Main planet move a little... see other planets"
-                # Sort by mass
+            hex_px_radius = self.HEX_SIZE * self.camera.zoom
+            
+            if len(planets) > 1:
+                # Sort by mass (largest = primary)
                 planets.sort(key=lambda x: x.mass, reverse=True)
                 largest = planets[0]
                 
-                # visual offsets (pixels in screen space? or hex space?)
-                # Hex space is better for scaling.
-                # Layout: Largest slightly offset top-left (-5, -5 pixels at scale 1).
-                # Others in grid or circle?
-                
-                # Define relative offsets in HEX space (0.0 to 1.0)
-                # Then project.
-                # Just do screen space offsets scaled by zoom.
-                
-                # Layout:
-                # 0 (Main): (-10, -10) * zoom/4 ?? 
-                # Others: Spiral out?
-                
-                # TIGHT PACKING LOGIC
-                # Target: All planets fit inside the Hex.
-                
-                hex_px_radius = self.HEX_SIZE * self.camera.zoom
-                
-                # Base Size: Scaled proportionate to Primary (0.5 -> 0.25)
+                # Base Size: Scaled proportionate to Primary
                 base_r = hex_px_radius * 0.25
+                
+                # Build draw list: secondaries first, primary last (painter's algorithm)
+                draw_order = planets[1:] + [planets[0]]  # Primary last
                 
                 for i, p in enumerate(planets):
                     # Relative Scale
@@ -1245,65 +1317,50 @@ class StrategyScene:
                     
                     draw_r = max(2, int(base_r * rel_scale))
                     
-                    # Layout
-                    if i == 0:
-                        # Largest (Primary)
-                        # "Shifted so center is to the left of center, can clip out"
-                        # Center of Hex is (0,0) offset.
-                        # Move left by ... say 50% of Hex Radius? 
-                        offset = pygame.math.Vector2(-hex_px_radius * 0.6, 0)
-                        
-                        # Maintain size? "Primary ... should maintain it's size"
-                        # User: "Zoomed in view to keep the planet the same size as the normal view"
-                        # Normal View = 5 * zoom. Hex is 10 * zoom. Multiplier 0.5.
-                        
+                    # Calculate FINAL (expanded) position
+                    if p == largest:
+                        # Primary: shifted left when fully expanded
+                        final_offset = pygame.math.Vector2(-hex_px_radius * 0.6, 0)
+                        # Primary maintains larger size
                         primary_draw_r = max(2, int((hex_px_radius * 0.5) * rel_scale))
                         draw_r = primary_draw_r
-                        
                     else:
-                        # Others orbit around? Or pack to the right?
-                        # "The others should be drawn to a proportionate size" (Small).
-                        
-                        # Let's pack them to the right of the primary.
-                        # Start packing from center-ish or right side.
-                        
-                        # Layout idea: Primary Left. Others cluster Right.
-                        
-                        # Ring layout for others?
-                        angle = (i-1) * (180 / max(1, len(planets)-1)) - 90 # -90 to +90 (Right side arc)
+                        # Secondary: arc on right side when expanded
+                        idx = planets.index(p) - 1  # Index among secondaries
+                        angle = idx * (180 / max(1, len(planets)-1)) - 90
                         dist = hex_px_radius * 0.5
-                        offset = pygame.math.Vector2(dist, 0).rotate(angle)
-                        
-                    p_screen = hex_center_screen + offset
+                        final_offset = pygame.math.Vector2(dist, 0).rotate(angle)
                     
-                    self._draw_planet_sprite(screen, p, p_screen, draw_r)
+                    # Interpolate between centered (0,0) and final offset
+                    current_offset = final_offset * expansion_t
+                    p_screen = hex_center_screen + current_offset
+                    
+                    # Store for draw order (don't draw yet)
+                    p._temp_screen_pos = p_screen
+                    p._temp_draw_r = draw_r
+                
+                # Draw in order: secondaries first, primary last
+                for p in draw_order:
+                    self._draw_planet_sprite(screen, p, p._temp_screen_pos, p._temp_draw_r)
+                    # Selection highlight
+                    if self.selected_object == p:
+                        pygame.draw.circle(screen, (255, 255, 255), 
+                                         (int(p._temp_screen_pos.x), int(p._temp_screen_pos.y)), 
+                                         int(p._temp_draw_r) + 4, 1)
 
             else:
-                # Standard Mode (Stacked)
-                # Draw only largest? Or Draw all (painter's algo)?
-                # To imply containing multiple, maybe draw slight offset stack?
-                # User didn't verify stack viz on map, only "Zoom > 4".
-                # Standard: Draw largest centered.
-                
-                # Actually, draw all centered, sorted by size (largest first? No, smallest LAST to be on top?)
-                # To see "Main" planet, largest should be on top? Or largest covers others?
-                # Usually largest covers others.
-                # We'll draw largest only to represent the stack? 
-                # Or user says "Main Planet... see others" when zoomed.
-                # Implies normally you only see main?
-                
-                largest = max(planets, key=lambda x: x.radius)
+                # Single planet: draw centered
+                largest = planets[0]
                 base_r = 5 * self.camera.zoom 
                 if 'Giant' in largest.planet_type.name: base_r *= 1.5
                 
                 self._draw_planet_sprite(screen, largest, hex_center_screen, int(base_r))
                 
-                # Check Selection
-                # How to show selection if multiple? 
-                # Just highlight the stack if any is selected?
-                for p in planets:
-                    if self.selected_object == p:
-                         pygame.draw.circle(screen, (255, 255, 255), (int(hex_center_screen.x), int(hex_center_screen.y)), int(base_r)+4, 1)
+                # Selection highlight
+                if self.selected_object == largest:
+                    pygame.draw.circle(screen, (255, 255, 255), 
+                                     (int(hex_center_screen.x), int(hex_center_screen.y)), 
+                                     int(base_r) + 4, 1)
 
         for i, wp in enumerate(sys.warp_points):
             wx, wy = hex_to_pixel(wp.location, self.HEX_SIZE)

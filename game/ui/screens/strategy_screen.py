@@ -615,4 +615,4 @@ class StrategyInterface:
         empire = self.scene.current_empire
         galaxy = self.scene.galaxy
         
-        PlanetListWindow(rect, self.manager, galaxy, empire)
+        PlanetListWindow(rect, self.manager, galaxy, empire, asset_resolver=self._get_object_asset)
