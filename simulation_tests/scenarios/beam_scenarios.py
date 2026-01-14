@@ -265,7 +265,7 @@ class BeamLowAccuracyMidRangeScenario(TestScenario):
             "Distance: 400 pixels",
             "Range Penalty: 400 * 0.002 = 0.8",
             "Net Score: 0.5 - 0.8 = -0.3",
-            "Beam Damage: 5 per hit",
+            "Beam Damage: 1 per hit",
             "Test Duration: 500 ticks"
         ],
         edge_cases=[
@@ -362,7 +362,7 @@ class BeamLowAccuracyMaxRangeScenario(TestScenario):
             "Distance: 750 pixels (near max range of 800)",
             "Range Penalty: 750 * 0.002 = 1.5",
             "Net Score: 0.5 - 1.5 = -1.0",
-            "Beam Damage: 5 per hit",
+            "Beam Damage: 1 per hit",
             "Test Duration: 1000 ticks"
         ],
         edge_cases=[
@@ -464,7 +464,7 @@ class BeamMediumAccuracyPointBlankScenario(TestScenario):
             "Distance: 50 pixels",
             "Range Penalty: 50 * 0.001 = 0.05",
             "Net Score: 2.0 - 0.05 = 1.95",
-            "Beam Damage: 5 per hit",
+            "Beam Damage: 1 per hit",
             "Test Duration: 500 ticks"
         ],
         edge_cases=[
@@ -561,7 +561,7 @@ class BeamMediumAccuracyMidRangeScenario(TestScenario):
             "Distance: 400 pixels",
             "Range Penalty: 400 * 0.001 = 0.4",
             "Net Score: 2.0 - 0.4 = 1.6",
-            "Beam Damage: 5 per hit",
+            "Beam Damage: 1 per hit",
             "Test Duration: 500 ticks"
         ],
         edge_cases=[
@@ -658,7 +658,7 @@ class BeamMediumAccuracyMaxRangeScenario(TestScenario):
             "Distance: 750 pixels (near max range of 800)",
             "Range Penalty: 750 * 0.001 = 0.75",
             "Net Score: 2.0 - 0.75 = 1.25",
-            "Beam Damage: 5 per hit",
+            "Beam Damage: 1 per hit",
             "Test Duration: 1000 ticks"
         ],
         edge_cases=[
@@ -759,7 +759,7 @@ class BeamHighAccuracyPointBlankScenario(TestScenario):
             "Distance: 50 pixels",
             "Range Penalty: 50 * 0.0005 = 0.025",
             "Net Score: 5.0 - 0.025 = 4.975",
-            "Beam Damage: 5 per hit",
+            "Beam Damage: 1 per hit",
             "Test Duration: 500 ticks"
         ],
         edge_cases=[
@@ -856,7 +856,7 @@ class BeamHighAccuracyMaxRangeScenario(TestScenario):
             "Distance: 750 pixels (near max range of 800)",
             "Range Penalty: 750 * 0.0005 = 0.375",
             "Net Score: 5.0 - 0.375 = 4.625",
-            "Beam Damage: 5 per hit",
+            "Beam Damage: 1 per hit",
             "Test Duration: 500 ticks"
         ],
         edge_cases=[
@@ -957,7 +957,7 @@ class BeamMediumAccuracyErraticMidRangeScenario(TestScenario):
             "Distance: 400 pixels",
             "Range Penalty: 400 * 0.001 = 0.4",
             "Defense Penalty: From target maneuverability (variable)",
-            "Beam Damage: 5 per hit",
+            "Beam Damage: 1 per hit",
             "Test Duration: 1000 ticks"
         ],
         edge_cases=[
@@ -1057,7 +1057,7 @@ class BeamMediumAccuracyErraticMaxRangeScenario(TestScenario):
             "Distance: 750 pixels (near max range of 800)",
             "Range Penalty: 750 * 0.001 = 0.75",
             "Defense Penalty: From target maneuverability (variable)",
-            "Beam Damage: 5 per hit",
+            "Beam Damage: 1 per hit",
             "Test Duration: 1000 ticks"
         ],
         edge_cases=[
@@ -1158,7 +1158,7 @@ class BeamOutOfRangeScenario(TestScenario):
             "Target: Test_Target_Stationary.json",
             "Weapon Max Range: 800 pixels",
             "Distance: 900 pixels (100px beyond range)",
-            "Beam Damage: 5 per hit",
+            "Beam Damage: 1 per hit",
             "Test Duration: 500 ticks"
         ],
         edge_cases=[

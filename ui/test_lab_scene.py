@@ -2,11 +2,13 @@ import pygame
 import os
 import sys
 import json
+import time
 
 from game.core.constants import WHITE, BLACK, BLUE, WIDTH, HEIGHT, FONT_MAIN
 from ui.components import Button
 from test_framework.runner import TestRunner
 from test_framework.registry import TestRegistry
+from test_framework.test_history import TestHistory
 
 
 class JSONPopup:
@@ -610,6 +612,564 @@ class ComponentPanel:
         self.component_dropdown.draw(surface)  # Draw dropdown last so it's on top when expanded
 
 
+class TestRunCard:
+    """Card displaying a single test run (collapsed view only for selection)."""
+
+    def __init__(self, x, y, width, run_record, run_number, is_latest=False):
+        """
+        Initialize test run card.
+
+        Args:
+            x, y: Top-left position
+            width: Card width
+            run_record: TestRunRecord instance
+            run_number: Display number for this run
+            is_latest: True if this is the most recent run
+        """
+        self.x = x
+        self.y = y
+        self.width = width
+        self.run_record = run_record
+        self.run_number = run_number
+        self.is_latest = is_latest
+
+        self.card_height = 80  # Fixed height (no expansion)
+        self.is_selected = False
+
+        # Colors
+        self.bg_color = (35, 35, 40)
+        self.bg_hover_color = (45, 45, 50)
+        self.bg_selected_color = (55, 100, 150)  # Blue tint for selected
+        self.latest_bg_color = (40, 45, 50)  # Slightly different for latest
+        self.pass_color = (80, 255, 120)
+        self.fail_color = (255, 80, 80)
+        self.text_color = (220, 220, 220)
+        self.border_color = (100, 100, 120)
+        self.border_pass_color = (80, 255, 120)
+        self.border_fail_color = (255, 80, 80)
+        self.border_selected_color = (100, 150, 255)
+
+        # Fonts
+        self.title_font = pygame.font.SysFont(FONT_MAIN, 16)
+        self.body_font = pygame.font.SysFont(FONT_MAIN, 14)
+        self.small_font = pygame.font.SysFont(FONT_MAIN, 12)
+
+        self.is_hovered = False
+
+    def get_height(self):
+        """Get card height (always collapsed)."""
+        return self.card_height
+
+    def handle_click(self, mx, my):
+        """Check if card was clicked."""
+        rect = pygame.Rect(self.x, self.y, self.width, self.card_height)
+        if rect.collidepoint(mx, my):
+            return True
+        return False
+
+    def handle_hover(self, mx, my):
+        """Update hover state."""
+        rect = pygame.Rect(self.x, self.y, self.width, self.card_height)
+        self.is_hovered = rect.collidepoint(mx, my)
+
+    def draw(self, surface):
+        """Draw the test run card."""
+        height = self.card_height
+
+        # Background (show selection state)
+        if self.is_selected:
+            bg_color = self.bg_selected_color
+        elif self.is_latest:
+            bg_color = self.latest_bg_color
+        elif self.is_hovered:
+            bg_color = self.bg_hover_color
+        else:
+            bg_color = self.bg_color
+
+        pygame.draw.rect(surface, bg_color, (self.x, self.y, self.width, height), border_radius=5)
+
+        # Border (colored based on pass/fail, or selection)
+        if self.is_selected:
+            border_color = self.border_selected_color
+        else:
+            border_color = self.border_pass_color if self.run_record.passed else self.border_fail_color
+        pygame.draw.rect(surface, border_color, (self.x, self.y, self.width, height), 2, border_radius=5)
+
+        # Header (compact view)
+        self._draw_header(surface)
+
+    def _draw_header(self, surface):
+        """Draw collapsed header with key metrics."""
+        # Run number and timestamp
+        timestamp_str = self.run_record.get_formatted_timestamp()
+        header_text = f"Run #{self.run_number} - {timestamp_str}"
+        if self.is_latest:
+            header_text += " (Latest)"
+
+        header_surf = self.title_font.render(header_text, True, self.text_color)
+        surface.blit(header_surf, (self.x + 10, self.y + 10))
+
+        # Pass/Fail indicator
+        status_text = "✓ PASS" if self.run_record.passed else "✗ FAIL"
+        status_color = self.pass_color if self.run_record.passed else self.fail_color
+        status_surf = self.title_font.render(status_text, True, status_color)
+        status_x = self.x + self.width - status_surf.get_width() - 10
+        surface.blit(status_surf, (status_x, self.y + 10))
+
+        # Key metric: hit rate if available
+        metrics = self.run_record.metrics
+        if 'hit_rate' in metrics and 'expected_hit_chance' in metrics:
+            hit_rate = metrics['hit_rate']
+            expected = metrics['expected_hit_chance']
+            damage = metrics.get('damage_dealt', 0)
+            ticks = self.run_record.ticks_run
+
+            # Hit rate line
+            hit_text = f"Hit Rate: {hit_rate:.1%} ({damage}/{ticks})"
+            exp_text = f"Expected: {expected:.1%}"
+            hit_surf = self.body_font.render(hit_text, True, self.text_color)
+            surface.blit(hit_surf, (self.x + 10, self.y + 35))
+
+            exp_surf = self.body_font.render(exp_text, True, (180, 180, 180))
+            surface.blit(exp_surf, (self.x + 260, self.y + 35))
+
+        # P-value and validation summary
+        p_value = self.run_record.get_p_value()
+        val_summary = self.run_record.validation_summary
+
+        if p_value is not None:
+            # Color code p-value (p < 0.05 is red, p >= 0.05 is green)
+            p_color = self.fail_color if p_value < 0.05 else self.pass_color
+            p_text = f"P-value: {p_value:.4f}"
+            p_surf = self.body_font.render(p_text, True, p_color)
+            surface.blit(p_surf, (self.x + 10, self.y + 57))
+
+        if val_summary:
+            pass_count = val_summary.get('pass', 0)
+            fail_count = val_summary.get('fail', 0)
+            warn_count = val_summary.get('warn', 0)
+            summary_text = f"{pass_count}P {fail_count}F {warn_count}W"
+            summary_surf = self.body_font.render(summary_text, True, (180, 180, 180))
+            summary_x = self.x + self.width - summary_surf.get_width() - 10
+            surface.blit(summary_surf, (summary_x, self.y + 57))
+
+
+class TestRunDetailsPanel:
+    """Panel showing detailed information for selected test run."""
+
+    def __init__(self, x, y, width, height):
+        """Initialize test run details panel."""
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+
+        # Colors
+        self.bg_color = (30, 30, 35)
+        self.border_color = (80, 80, 90)
+        self.text_color = (220, 220, 220)
+        self.pass_color = (80, 255, 120)
+        self.fail_color = (255, 80, 80)
+        self.header_color = (150, 200, 255)
+
+        # Fonts
+        self.title_font = pygame.font.SysFont(FONT_MAIN, 20)
+        self.header_font = pygame.font.SysFont(FONT_MAIN, 16)
+        self.body_font = pygame.font.SysFont(FONT_MAIN, 14)
+        self.small_font = pygame.font.SysFont(FONT_MAIN, 12)
+
+        self.selected_run = None
+        self.scroll_offset = 0
+        self.max_scroll = 0
+
+    def set_run(self, run_record, run_number):
+        """Set the run to display details for."""
+        self.selected_run = (run_record, run_number)
+        self.scroll_offset = 0
+        self._calculate_scroll()
+
+    def clear(self):
+        """Clear selected run."""
+        self.selected_run = None
+        self.scroll_offset = 0
+
+    def _calculate_scroll(self):
+        """Calculate max scroll based on content height."""
+        if not self.selected_run:
+            self.max_scroll = 0
+            return
+
+        run_record, _ = self.selected_run
+        content_height = 150 + len(run_record.metrics) * 20 + 50 + len(run_record.validation_results) * 40
+        visible_height = self.height - 20
+        self.max_scroll = max(0, content_height - visible_height)
+
+    def handle_event(self, event):
+        """Handle scroll events."""
+        if not self.selected_run:
+            return False
+
+        if event.type == pygame.MOUSEWHEEL:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            if self.x <= mouse_x <= self.x + self.width and self.y <= mouse_y <= self.y + self.height:
+                self.scroll_offset -= event.y * 20
+                self.scroll_offset = max(0, min(self.scroll_offset, self.max_scroll))
+                return True
+        return False
+
+    def draw(self, surface):
+        """Draw the test run details panel."""
+        pygame.draw.rect(surface, self.bg_color, (self.x, self.y, self.width, self.height))
+        pygame.draw.rect(surface, self.border_color, (self.x, self.y, self.width, self.height), 2)
+
+        if not self.selected_run:
+            msg = self.body_font.render("Select a test run to view details", True, (150, 150, 150))
+            msg_x = self.x + (self.width - msg.get_width()) // 2
+            msg_y = self.y + self.height // 2
+            surface.blit(msg, (msg_x, msg_y))
+            return
+
+        run_record, run_number = self.selected_run
+        clip_rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        surface.set_clip(clip_rect)
+
+        y_offset = self.y + 10 - self.scroll_offset
+
+        # Header
+        timestamp_str = run_record.get_formatted_timestamp()
+        header_text = f"Run #{run_number} - {timestamp_str}"
+        header_surf = self.title_font.render(header_text, True, self.text_color)
+        surface.blit(header_surf, (self.x + 10, y_offset))
+        y_offset += 35
+
+        # Status
+        status_text = "✓ PASSED" if run_record.passed else "✗ FAILED"
+        status_color = self.pass_color if run_record.passed else self.fail_color
+        status_surf = self.title_font.render(status_text, True, status_color)
+        surface.blit(status_surf, (self.x + 10, y_offset))
+        y_offset += 40
+
+        # Metrics
+        metrics_title = self.header_font.render("Test Metrics", True, self.header_color)
+        surface.blit(metrics_title, (self.x + 10, y_offset))
+        y_offset += 25
+
+        for key, value in run_record.metrics.items():
+            if key not in ['validation_results', 'validation_summary']:
+                if isinstance(value, float):
+                    value_str = f"{value:.1%}" if 0 < value < 1 else f"{value:.2f}"
+                else:
+                    value_str = str(value)
+                display_key = key.replace('_', ' ').title()
+                metric_text = f"  {display_key}: {value_str}"
+                metric_surf = self.small_font.render(metric_text, True, self.text_color)
+                surface.blit(metric_surf, (self.x + 15, y_offset))
+                y_offset += 20
+
+        y_offset += 10
+
+        # Validation Results
+        if run_record.validation_results:
+            val_title = self.header_font.render("Validation Results", True, self.header_color)
+            surface.blit(val_title, (self.x + 10, y_offset))
+            y_offset += 25
+
+            for vr in run_record.validation_results:
+                status = vr['status']
+                name = vr['name']
+                expected = vr.get('expected')
+                actual = vr.get('actual')
+                p_value = vr.get('p_value')
+
+                if status == 'PASS':
+                    color, symbol = self.pass_color, "✓"
+                elif status == 'FAIL':
+                    color, symbol = self.fail_color, "✗"
+                else:
+                    color, symbol = (255, 200, 100), "⚠"
+
+                val_line = f"  {symbol} {name}"
+                val_surf = self.small_font.render(val_line, True, color)
+                surface.blit(val_surf, (self.x + 15, y_offset))
+                y_offset += 18
+
+                if expected is not None or actual is not None or p_value is not None:
+                    details = []
+                    if expected is not None:
+                        details.append(f"Exp: {expected:.1%}" if isinstance(expected, float) and 0 < expected < 1 else f"Exp: {expected}")
+                    if actual is not None:
+                        details.append(f"Act: {actual:.1%}" if isinstance(actual, float) and 0 < actual < 1 else f"Act: {actual}")
+                    if p_value is not None:
+                        details.append(f"p={p_value:.4f}")
+                    detail_line = "     " + ", ".join(details)
+                    detail_surf = self.small_font.render(detail_line, True, (160, 160, 160))
+                    surface.blit(detail_surf, (self.x + 15, y_offset))
+                    y_offset += 20
+
+        surface.set_clip(None)
+        if self.max_scroll > 0:
+            self._draw_scrollbar(surface)
+
+    def _draw_scrollbar(self, surface):
+        """Draw scrollbar indicator."""
+        visible_height = self.height
+        total_content_height = visible_height + self.max_scroll
+        scrollbar_width = 8
+        scrollbar_x = self.x + self.width - scrollbar_width - 5
+        scrollbar_track_y = self.y + 5
+        scrollbar_track_height = visible_height - 10
+        thumb_height = max(30, int(visible_height * (visible_height / total_content_height)))
+        thumb_y = scrollbar_track_y + int((self.scroll_offset / self.max_scroll) * (scrollbar_track_height - thumb_height))
+        pygame.draw.rect(surface, (100, 100, 120), (scrollbar_x, thumb_y, scrollbar_width, thumb_height), border_radius=4)
+
+
+class ResultsPanel:
+    """Panel showing test run history for selected test."""
+
+    def __init__(self, x, y, width, height, test_history):
+        """
+        Initialize results panel.
+
+        Args:
+            x, y: Top-left position
+            width, height: Panel dimensions
+            test_history: TestHistory instance
+        """
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.test_history = test_history
+
+        self.current_test_id = None
+        self.run_cards = []
+        self.scroll_offset = 0
+        self.max_scroll = 0
+        self.selected_card_index = None
+        self.details_panel = None  # Reference to TestRunDetailsPanel
+
+        # Fonts
+        self.title_font = pygame.font.SysFont(FONT_MAIN, 20)
+        self.body_font = pygame.font.SysFont(FONT_MAIN, 14)
+        self.small_font = pygame.font.SysFont(FONT_MAIN, 12)
+
+        # Colors
+        self.bg_color = (30, 30, 35)
+        self.border_color = (100, 100, 120)
+        self.title_color = (255, 255, 255)
+        self.button_color = (60, 120, 200)
+        self.button_hover_color = (80, 140, 220)
+
+        # Buttons
+        self.clear_test_button_rect = None
+        self.clear_all_button_rect = None
+
+    def set_details_panel(self, details_panel):
+        """Set reference to details panel for displaying selected run."""
+        self.details_panel = details_panel
+
+    def set_test(self, test_id):
+        """Update panel to show runs for specific test."""
+        self.current_test_id = test_id
+        self.scroll_offset = 0
+        self.selected_card_index = None
+
+        # Clear details panel
+        if self.details_panel:
+            self.details_panel.clear()
+
+        # Create cards for all runs (newest first)
+        runs = self.test_history.get_runs(test_id)
+        self.run_cards = []
+
+        y_offset = 90  # Space for header
+        for i, run in enumerate(reversed(runs)):  # Newest first
+            card = TestRunCard(
+                x=self.x + 10,
+                y=self.y + y_offset,
+                width=self.width - 20,
+                run_record=run,
+                run_number=len(runs) - i,
+                is_latest=(i == 0)
+            )
+            self.run_cards.append(card)
+            y_offset += card.get_height() + 10
+
+        # Calculate max scroll
+        self._recalculate_scroll()
+
+    def _recalculate_scroll(self):
+        """Recalculate maximum scroll offset."""
+        if not self.run_cards:
+            self.max_scroll = 0
+            return
+
+        # Calculate total content height
+        total_height = 90  # Header
+        for card in self.run_cards:
+            total_height += card.get_height() + 10
+
+        # Max scroll is content height - visible height
+        visible_height = self.height - 10
+        self.max_scroll = max(0, total_height - visible_height)
+
+    def handle_event(self, event):
+        """Handle mouse events."""
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            mx, my = event.pos
+
+            # Check clear buttons
+            if self.clear_test_button_rect and self.clear_test_button_rect.collidepoint(mx, my):
+                if self.current_test_id:
+                    self.test_history.clear_test(self.current_test_id)
+                    self.set_test(self.current_test_id)  # Refresh display
+                return True
+
+            if self.clear_all_button_rect and self.clear_all_button_rect.collidepoint(mx, my):
+                self.test_history.clear_all()
+                self.set_test(self.current_test_id)  # Refresh display
+                return True
+
+            # Check card clicks (accounting for scroll)
+            for i, card in enumerate(self.run_cards):
+                adjusted_my = my + self.scroll_offset
+                if card.handle_click(mx, adjusted_my):
+                    # Update selection
+                    self.selected_card_index = i
+                    # Update all cards' selection state
+                    for j, c in enumerate(self.run_cards):
+                        c.is_selected = (j == i)
+                    # Update details panel
+                    if self.details_panel:
+                        self.details_panel.set_run(card.run_record, card.run_number)
+                    return True
+
+        if event.type == pygame.MOUSEWHEEL:
+            mx, my = pygame.mouse.get_pos()
+            if self.x <= mx <= self.x + self.width and self.y <= my <= self.y + self.height:
+                self.scroll_offset -= event.y * 20
+                self.scroll_offset = max(0, min(self.scroll_offset, self.max_scroll))
+                return True
+
+        return False
+
+    def update(self):
+        """Update hover states."""
+        mx, my = pygame.mouse.get_pos()
+
+        # Update card hover states (accounting for scroll)
+        adjusted_my = my + self.scroll_offset
+        for card in self.run_cards:
+            card.handle_hover(mx, adjusted_my)
+
+    def draw(self, surface):
+        """Draw the results panel."""
+        # Draw background
+        pygame.draw.rect(surface, self.bg_color,
+                        (self.x, self.y, self.width, self.height), border_radius=5)
+        pygame.draw.rect(surface, self.border_color,
+                        (self.x, self.y, self.width, self.height), 2, border_radius=5)
+
+        # Draw header
+        self._draw_header(surface)
+
+        # Draw cards with scrolling and clipping
+        clip_rect = pygame.Rect(self.x, self.y + 90, self.width, self.height - 90)
+        surface.set_clip(clip_rect)
+
+        for card in self.run_cards:
+            # Adjust Y position for scrolling
+            card_y = card.y - self.scroll_offset
+            if self._is_card_visible(card_y, card.get_height()):
+                # Temporarily adjust position for drawing
+                original_y = card.y
+                card.y = card_y
+                card.draw(surface)
+                card.y = original_y  # Restore original position
+
+        surface.set_clip(None)
+
+        # Draw scrollbar
+        if self.max_scroll > 0:
+            self._draw_scrollbar(surface)
+
+    def _draw_header(self, surface):
+        """Draw panel header."""
+        # Title
+        title_text = "Test Run History"
+        title_surf = self.title_font.render(title_text, True, self.title_color)
+        surface.blit(title_surf, (self.x + 10, self.y + 10))
+
+        # Run count
+        if self.current_test_id:
+            run_count = self.test_history.get_run_count(self.current_test_id)
+            count_text = f"{run_count} run{'s' if run_count != 1 else ''}"
+            count_surf = self.body_font.render(count_text, True, (180, 180, 180))
+            surface.blit(count_surf, (self.x + 10, self.y + 38))
+
+        # Clear buttons
+        button_y = self.y + 60
+        button_height = 22
+        button_spacing = 5
+
+        # Clear This Test button
+        button1_width = 110
+        self.clear_test_button_rect = pygame.Rect(self.x + 10, button_y, button1_width, button_height)
+        mouse_pos = pygame.mouse.get_pos()
+        button1_hover = self.clear_test_button_rect.collidepoint(mouse_pos)
+        button1_color = self.button_hover_color if button1_hover else self.button_color
+
+        pygame.draw.rect(surface, button1_color, self.clear_test_button_rect, border_radius=3)
+        button1_text = self.small_font.render("Clear This Test", True, (255, 255, 255))
+        text1_x = self.clear_test_button_rect.x + (button1_width - button1_text.get_width()) // 2
+        text1_y = self.clear_test_button_rect.y + (button_height - button1_text.get_height()) // 2
+        surface.blit(button1_text, (text1_x, text1_y))
+
+        # Clear All button
+        button2_width = 80
+        button2_x = self.x + 10 + button1_width + button_spacing
+        self.clear_all_button_rect = pygame.Rect(button2_x, button_y, button2_width, button_height)
+        button2_hover = self.clear_all_button_rect.collidepoint(mouse_pos)
+        button2_color = self.button_hover_color if button2_hover else self.button_color
+
+        pygame.draw.rect(surface, button2_color, self.clear_all_button_rect, border_radius=3)
+        button2_text = self.small_font.render("Clear All", True, (255, 255, 255))
+        text2_x = self.clear_all_button_rect.x + (button2_width - button2_text.get_width()) // 2
+        text2_y = self.clear_all_button_rect.y + (button_height - button2_text.get_height()) // 2
+        surface.blit(button2_text, (text2_x, text2_y))
+
+    def _is_card_visible(self, card_y, card_height):
+        """Check if card is visible in viewport."""
+        visible_top = self.y + 90
+        visible_bottom = self.y + self.height
+
+        card_top = card_y
+        card_bottom = card_y + card_height
+
+        # Card is visible if it overlaps with visible area
+        return card_bottom > visible_top and card_top < visible_bottom
+
+    def _draw_scrollbar(self, surface):
+        """Draw scrollbar indicator."""
+        visible_height = self.height - 90
+        total_content_height = visible_height + self.max_scroll
+
+        # Scrollbar dimensions
+        scrollbar_width = 8
+        scrollbar_x = self.x + self.width - scrollbar_width - 5
+        scrollbar_track_y = self.y + 90
+        scrollbar_track_height = visible_height
+
+        # Calculate thumb size and position
+        thumb_height = max(30, int(visible_height * (visible_height / total_content_height)))
+        thumb_y = scrollbar_track_y + int((self.scroll_offset / self.max_scroll) * (scrollbar_track_height - thumb_height))
+
+        # Draw thumb
+        pygame.draw.rect(surface, (100, 100, 120),
+                        (scrollbar_x, thumb_y, scrollbar_width, thumb_height),
+                        border_radius=4)
+
+
 class TestLabScene:
     """
     Combat Lab UI - Enhanced with TestRegistry and rich metadata display.
@@ -649,6 +1209,7 @@ class TestLabScene:
         self.selected_test_id = None
         self.category_hover = None
         self.test_hover = None
+        self.headless_running = False  # Flag for showing "Running Test..." message
 
         # Layout dimensions
         self.category_width = 220
@@ -668,13 +1229,22 @@ class TestLabScene:
         self.confirmation_dialog = None  # For confirming metadata updates
         self.ship_panels = []  # Ship JSON panels
         self.component_panels = []  # Component JSON panels
+        self.results_panel = None  # Test run history panel
+        self.test_details_panel = None  # Test run details panel
         self._components_cache = None  # Cache for components.json
 
         # Update Expected Values button state
         self.update_expected_button_rect = None
         self.update_expected_button_visible = False
 
+        # Test history manager
+        self.test_history = TestHistory()
+
         self._create_ui()
+
+        # Validate all scenarios against component data (static validation)
+        # This must happen AFTER _components_cache is initialized
+        self._validate_all_scenarios()
 
     def _extract_ships_from_scenario(self, test_id):
         """
@@ -742,6 +1312,127 @@ class TestLabScene:
                     print(f"Error loading ship {filename}: {e}")
 
         return ships
+
+    def _validate_all_scenarios(self):
+        """
+        Validate all test scenarios against component/ship data files.
+
+        This performs static validation without running tests, checking if
+        test metadata matches actual component data.
+        """
+        print("\n=== Static Validation: Checking test metadata against component data ===")
+
+        from simulation_tests.scenarios.validation import Validator
+
+        for test_id, scenario_info in self.all_scenarios.items():
+            metadata = scenario_info['metadata']
+
+            # Skip scenarios without validation rules
+            if not metadata.validation_rules:
+                continue
+
+            # Only validate ExactMatchRules (not StatisticalTestRules which need actual test runs)
+            # Check by class name instead of isinstance due to import issues
+            exact_match_rules = [
+                rule for rule in metadata.validation_rules
+                if rule.__class__.__name__ == 'ExactMatchRule'
+            ]
+
+            if not exact_match_rules:
+                continue
+
+            try:
+                # Build validation context from file data
+                context = self._build_validation_context_from_files(test_id, metadata)
+
+                if not context:
+                    print(f"  {test_id}: Could not build validation context")
+                    continue
+
+
+                # Run validation
+                validator = Validator(exact_match_rules)
+                validation_results = validator.validate(context)
+
+                # Store results
+                results = {
+                    'validation_results': [r.to_dict() for r in validation_results],
+                    'validation_summary': validator.get_summary(validation_results),
+                    'has_validation_failures': validator.has_failures(validation_results),
+                    'has_validation_warnings': validator.has_warnings(validation_results)
+                }
+
+                # Update registry with validation results
+                scenario_info['last_run_results'] = results
+
+                # Log results
+                summary = results['validation_summary']
+                pass_count = summary.get('pass', 0)
+                fail_count = summary.get('fail', 0)
+                warn_count = summary.get('warn', 0)
+
+                if fail_count > 0 or warn_count > 0:
+                    print(f"  {test_id}: {pass_count} pass, {fail_count} fail, {warn_count} warn")
+
+            except Exception as e:
+                print(f"  {test_id}: Validation error - {e}")
+                import traceback
+                traceback.print_exc()
+
+        print("=== Static Validation Complete ===\n")
+
+    def _build_validation_context_from_files(self, test_id, metadata):
+        """
+        Build validation context from ship and component JSON files.
+
+        Args:
+            test_id: Test ID
+            metadata: TestMetadata object
+
+        Returns:
+            Dict with 'attacker', 'target', etc. containing component data
+        """
+        context = {}
+
+        # Parse conditions for ship files
+        ships = self._extract_ships_from_scenario(test_id)
+
+        for ship_info in ships:
+            role = ship_info['role'].lower()  # 'Attacker' -> 'attacker'
+            ship_data = ship_info['ship_data']
+            component_ids = ship_info['component_ids']
+
+            # Build ship validation data structure
+            ship_validation_data = {
+                'mass': ship_data.get('expected_stats', {}).get('mass', 0)
+            }
+
+            # Extract weapon data from first component with BeamWeaponAbility
+            if self._components_cache is None:
+                # Load components.json
+                self._load_component_data("dummy")  # This will populate cache
+
+            for comp_id in component_ids:
+                comp_data = self._components_cache.get(comp_id)
+                if comp_data and 'abilities' in comp_data:
+                    abilities = comp_data['abilities']
+
+                    # Check for BeamWeaponAbility
+                    if 'BeamWeaponAbility' in abilities:
+                        weapon_ability = abilities['BeamWeaponAbility']
+                        ship_validation_data['weapon'] = {
+                            'damage': weapon_ability.get('damage'),
+                            'range': weapon_ability.get('range'),
+                            'base_accuracy': weapon_ability.get('base_accuracy'),
+                            'accuracy_falloff': weapon_ability.get('accuracy_falloff'),
+                            'reload': weapon_ability.get('reload'),
+                            'firing_arc': weapon_ability.get('firing_arc')
+                        }
+                        break  # Found weapon, use first one
+
+            context[role] = ship_validation_data
+
+        return context
 
     def _load_component_data(self, component_id):
         """
@@ -849,38 +1540,58 @@ class TestLabScene:
                 content = f.read()
 
             # Apply changes using string replacement
-            # This is a simplified approach - in production we'd use AST parsing
+            # Update both: 1) Conditions text, 2) ExactMatchRule expected values
             for change in changes:
                 field = change['field']
                 old_val = change['old_value']
                 new_val = change['new_value']
 
-                # Map field names to their condition text patterns
-                # For example: "Beam Weapon Damage" -> "Beam Damage: {value}"
+                # 1. Update conditions text for display
                 if "Damage" in field and "Beam" in field:
-                    # Find the condition line like "Beam Damage: 1 per hit"
+                    # Update condition line like "Beam Damage: 1 per hit"
                     old_pattern = f'"Beam Damage: {old_val}'
                     new_pattern = f'"Beam Damage: {new_val}'
                     content = content.replace(old_pattern, new_pattern)
-                    print(f"Updated {field}: {old_val} → {new_val}")
+                    print(f"Updated condition text for {field}: {old_val} → {new_val}")
                 elif "Base Accuracy" in field:
                     old_pattern = f'"Base Accuracy: {old_val}"'
                     new_pattern = f'"Base Accuracy: {new_val}"'
                     content = content.replace(old_pattern, new_pattern)
-                    print(f"Updated {field}: {old_val} → {new_val}")
+                    print(f"Updated condition text for {field}: {old_val} → {new_val}")
                 elif "Accuracy Falloff" in field:
                     old_pattern = f'"Accuracy Falloff: {old_val}'
                     new_pattern = f'"Accuracy Falloff: {new_val}'
                     content = content.replace(old_pattern, new_pattern)
-                    print(f"Updated {field}: {old_val} → {new_val}")
+                    print(f"Updated condition text for {field}: {old_val} → {new_val}")
+
+                # 2. Update ExactMatchRule expected value in validation_rules
+                # Find the ExactMatchRule for this field and update its expected value
+                if "Damage" in field and "Beam" in field:
+                    # ExactMatchRule(name='Beam Weapon Damage', path='...', expected=1)
+                    old_rule = f"ExactMatchRule(\n                name='Beam Weapon Damage',\n                path='attacker.weapon.damage',\n                expected={old_val}\n            )"
+                    new_rule = f"ExactMatchRule(\n                name='Beam Weapon Damage',\n                path='attacker.weapon.damage',\n                expected={new_val}\n            )"
+                    content = content.replace(old_rule, new_rule)
+                    print(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
+                elif "Base Accuracy" in field:
+                    old_rule = f"ExactMatchRule(\n                name='Base Accuracy',\n                path='attacker.weapon.base_accuracy',\n                expected={old_val}\n            )"
+                    new_rule = f"ExactMatchRule(\n                name='Base Accuracy',\n                path='attacker.weapon.base_accuracy',\n                expected={new_val}\n            )"
+                    content = content.replace(old_rule, new_rule)
+                    print(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
+                elif "Accuracy Falloff" in field:
+                    old_rule = f"ExactMatchRule(\n                name='Accuracy Falloff',\n                path='attacker.weapon.accuracy_falloff',\n                expected={old_val}\n            )"
+                    new_rule = f"ExactMatchRule(\n                name='Accuracy Falloff',\n                path='attacker.weapon.accuracy_falloff',\n                expected={new_val}\n            )"
+                    content = content.replace(old_rule, new_rule)
+                    print(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
                 elif "Weapon Range" in field or "Range" in field:
-                    # This might not be in conditions, skip for now
-                    print(f"Skipping {field} (not in conditions text)")
+                    old_rule = f"ExactMatchRule(\n                name='Weapon Range',\n                path='attacker.weapon.range',\n                expected={old_val}\n            )"
+                    new_rule = f"ExactMatchRule(\n                name='Weapon Range',\n                path='attacker.weapon.range',\n                expected={new_val}\n            )"
+                    content = content.replace(old_rule, new_rule)
+                    print(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
                 elif "Target Mass" in field or "Mass" in field:
-                    # This might not be in conditions, skip for now
-                    print(f"Skipping {field} (not in conditions text)")
-                else:
-                    print(f"Unknown field type: {field}")
+                    old_rule = f"ExactMatchRule(\n                name='Target Mass',\n                path='target.mass',\n                expected={old_val}\n            )"
+                    new_rule = f"ExactMatchRule(\n                name='Target Mass',\n                path='target.mass',\n                expected={new_val}\n            )"
+                    content = content.replace(old_rule, new_rule)
+                    print(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
 
             # Write back to file
             with open(scenario_file, 'w') as f:
@@ -951,6 +1662,50 @@ class TestLabScene:
             )
             self.component_panels.append(component_panel)
 
+    def _create_results_panel(self, test_id):
+        """
+        Create results panel for selected test.
+
+        Positions panel to the right of ship panels, using remaining 4K display space.
+
+        Args:
+            test_id: Test ID (e.g., "BEAM360-001")
+        """
+        # Calculate position: after last ship panel or after Test Details
+        num_ships = len(self.ship_panels)
+        if num_ships == 0:
+            # No ships, place after Test Details panel
+            base_x = 20 + self.category_width + 20 + self.test_list_width + 20 + self.metadata_width + 20
+        else:
+            # Place after last ship panel
+            last_ship_panel = self.ship_panels[-1]
+            base_x = last_ship_panel.x + last_ship_panel.width + 20
+
+        # Create results panel (600px width)
+        self.results_panel = ResultsPanel(
+            x=base_x,
+            y=self.header_height + 20,
+            width=600,
+            height=HEIGHT - self.header_height - 120,
+            test_history=self.test_history
+        )
+
+        # Create test run details panel (to the right of results panel)
+        details_x = base_x + 600 + 20
+        self.test_details_panel = TestRunDetailsPanel(
+            x=details_x,
+            y=self.header_height + 20,
+            width=600,
+            height=HEIGHT - self.header_height - 120
+        )
+
+        # Link panels
+        self.results_panel.set_details_panel(self.test_details_panel)
+
+        self.results_panel.set_test(test_id)
+
+        print(f"Created results panel at x={base_x} and details panel at x={details_x} for test {test_id}")
+
     def _create_ui(self):
         """Create UI buttons."""
         self.buttons = []
@@ -962,6 +1717,10 @@ class TestLabScene:
         # Run Button (beside Back button)
         self.btn_run = Button(130, 20, 120, 40, "RUN TEST", self._on_run)
         self.buttons.append(self.btn_run)
+
+        # Run Headless Button (beside Run button)
+        self.btn_run_headless = Button(260, 20, 160, 40, "RUN HEADLESS", self._on_run_headless)
+        self.buttons.append(self.btn_run_headless)
 
     def _get_filtered_scenarios(self):
         """Get scenarios filtered by selected category."""
@@ -975,9 +1734,19 @@ class TestLabScene:
         # Store results from completed test before clearing
         if self.selected_test_id and hasattr(self.game.battle_scene, 'test_scenario'):
             scenario = self.game.battle_scene.test_scenario
-            if hasattr(scenario, 'results') and scenario.results:
-                print(f"DEBUG: Storing results for {self.selected_test_id}")
+            # Check if scenario exists and has results dict (even if empty, verify() may populate it)
+            if scenario and hasattr(scenario, 'results') and scenario.results is not None:
+                print(f"DEBUG: Storing results for {self.selected_test_id}, result keys: {list(scenario.results.keys())}")
                 self.registry.update_last_run_results(self.selected_test_id, scenario.results)
+
+                # Add to persistent test history
+                self.test_history.add_run(self.selected_test_id, scenario.results)
+
+                # Refresh results panel if it exists
+                if self.results_panel:
+                    self.results_panel.set_test(self.selected_test_id)
+            else:
+                print(f"DEBUG: No results to store - scenario={scenario}, has_results={hasattr(scenario, 'results') if scenario else False}")
 
         self.selected_test_id = None
         print(f"DEBUG: Test selection cleared")
@@ -1034,6 +1803,7 @@ class TestLabScene:
             self.game.battle_scene.test_mode = True   # Enable test mode
             self.game.battle_scene.test_scenario = scenario  # Pass scenario for update() calls
             self.game.battle_scene.test_tick_count = 0  # Reset tick counter
+            self.game.battle_scene.test_completed = False  # Reset completed flag
             self.game.battle_scene.action_return_to_test_lab = False
             print(f"DEBUG: AFTER: test_mode={self.game.battle_scene.test_mode}")
             print(f"DEBUG: Battle scene configured (paused=True, test_mode=True, scenario={scenario.metadata.test_id})")
@@ -1051,6 +1821,120 @@ class TestLabScene:
             self.output_log.append(f"Started test {self.selected_test_id}")
 
         except Exception as e:
+            self.output_log.append(f"ERROR: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def _on_run_headless(self):
+        """Run the selected test scenario in headless mode (fast, no visuals)."""
+        if self.selected_test_id is None:
+            self.output_log.append("ERROR: No test selected!")
+            return
+
+        scenario_info = self.registry.get_by_id(self.selected_test_id)
+        if scenario_info is None:
+            self.output_log.append(f"ERROR: Test {self.selected_test_id} not found!")
+            return
+
+        metadata = scenario_info['metadata']
+        self.output_log.append(f"Running {metadata.name} (headless)...")
+
+        runner = TestRunner()
+        engine = self.game.battle_scene.engine
+
+        try:
+            # Instantiate scenario
+            print(f"DEBUG: Instantiating scenario class for headless run")
+            scenario_cls = scenario_info['class']
+            scenario = scenario_cls()
+            print(f"DEBUG: Scenario instantiated: {scenario.name}")
+
+            # Load test data
+            print(f"DEBUG: Loading test data for scenario")
+            runner.load_data_for_scenario(scenario)
+            print(f"DEBUG: Test data loaded successfully")
+
+            # Clear battle engine
+            print(f"DEBUG: Clearing battle engine")
+            engine.start([], [])
+
+            # Setup scenario
+            print(f"DEBUG: Calling scenario.setup()")
+            scenario.setup(engine)
+            print(f"DEBUG: Scenario setup complete")
+
+            # Show "Running Test..." message
+            self.headless_running = True
+            self.game.screen.fill((20, 20, 25))
+            self.draw(self.game.screen)
+
+            # Draw "Running Test..." overlay
+            overlay = pygame.Surface((600, 200))
+            overlay.fill((40, 40, 45))
+            pygame.draw.rect(overlay, (100, 100, 120), overlay.get_rect(), 3)
+
+            title_text = self.header_font.render("Running Test...", True, (255, 255, 255))
+            test_text = self.body_font.render(f"{metadata.name}", True, (200, 200, 200))
+            ticks_text = self.body_font.render(f"Max ticks: {scenario.max_ticks}", True, (180, 180, 180))
+
+            overlay.blit(title_text, (300 - title_text.get_width()//2, 50))
+            overlay.blit(test_text, (300 - test_text.get_width()//2, 90))
+            overlay.blit(ticks_text, (300 - ticks_text.get_width()//2, 130))
+
+            screen_center_x = self.game.screen.get_width() // 2
+            screen_center_y = self.game.screen.get_height() // 2
+            self.game.screen.blit(overlay, (screen_center_x - 300, screen_center_y - 100))
+            pygame.display.flip()
+
+            # Run simulation headless (stay on Combat Lab screen)
+            start_time = time.time()
+            tick_count = 0
+            max_ticks = scenario.max_ticks
+
+            print(f"DEBUG: Starting headless simulation loop (max_ticks={max_ticks})")
+
+            # Run simulation as fast as possible
+            while tick_count < max_ticks:
+                # Call scenario update for dynamic logic
+                scenario.update(engine)
+
+                # Update engine one tick
+                engine.update()
+                tick_count += 1
+
+                # Check if battle ended naturally
+                if engine.is_battle_over():
+                    print(f"DEBUG: Battle ended naturally at tick {tick_count}")
+                    break
+
+            # Simulation complete - verify results
+            elapsed_time = time.time() - start_time
+            print(f"DEBUG: Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s ({tick_count/elapsed_time:.0f} ticks/sec)")
+
+            # Verify and collect results
+            scenario.passed = scenario.verify(engine)
+            print(f"DEBUG: Test {'PASSED' if scenario.passed else 'FAILED'}")
+
+            # Store results
+            scenario.results['ticks_run'] = tick_count
+            self.registry.update_last_run_results(self.selected_test_id, scenario.results)
+
+            # Add to persistent test history
+            self.test_history.add_run(self.selected_test_id, scenario.results)
+
+            # Refresh results panel if it exists
+            if self.results_panel:
+                self.results_panel.set_test(self.selected_test_id)
+
+            # Update output log
+            status = "PASSED" if scenario.passed else "FAILED"
+            self.output_log.append(f"Test {self.selected_test_id} {status} ({tick_count} ticks, {elapsed_time:.2f}s)")
+
+            # Clear running flag
+            self.headless_running = False
+
+        except Exception as e:
+            self.headless_running = False
             self.output_log.append(f"ERROR: {e}")
             import traceback
             traceback.print_exc()
@@ -1080,6 +1964,16 @@ class TestLabScene:
             # Handle component panel events (scrolling, dropdown clicks)
             for panel in self.component_panels:
                 if panel.handle_event(event):
+                    continue  # Event consumed by panel
+
+            # Handle results panel events (scrolling, card selection, clear buttons)
+            if self.results_panel:
+                if self.results_panel.handle_event(event):
+                    continue  # Event consumed by panel
+
+            # Handle test details panel events (scrolling)
+            if self.test_details_panel:
+                if self.test_details_panel.handle_event(event):
                     continue  # Event consumed by panel
 
             # Handle mouse motion for hover effects
@@ -1172,6 +2066,8 @@ class TestLabScene:
                 self.selected_test_id = test_id
                 # Create ship panels for the selected test
                 self._create_ship_panels(test_id)
+                # Create results panel for the selected test
+                self._create_results_panel(test_id)
                 return
 
         # Check "Update Expected Values" button click
@@ -1189,6 +2085,10 @@ class TestLabScene:
         # Update component panels (hover states)
         for panel in self.component_panels:
             panel.update()
+
+        # Update results panel (hover states for buttons/cards)
+        if self.results_panel:
+            self.results_panel.update()
 
     def draw(self, screen):
         """Draw the Combat Lab UI with category sidebar, test list, and metadata panel."""
@@ -1209,6 +2109,14 @@ class TestLabScene:
         # Component panels (drawn after ship panels)
         for panel in self.component_panels:
             panel.draw(screen)
+
+        # Results panel (drawn after component panels)
+        if self.results_panel:
+            self.results_panel.draw(screen)
+
+        # Test details panel (drawn after results panel)
+        if self.test_details_panel:
+            self.test_details_panel.draw(screen)
 
         # Output log
         self._draw_output_log(screen)
@@ -1384,8 +2292,13 @@ class TestLabScene:
         y = self._draw_section_wrapped(screen, x, y, "Summary", metadata.summary, (100, 200, 150))
         y += 15
 
-        # Conditions
-        y = self._draw_bullet_list(screen, x, y, "Conditions", metadata.conditions, (150, 200, 255))
+        # Get validation results if available
+        validation_results = None
+        if 'last_run_results' in scenario_info and scenario_info['last_run_results']:
+            validation_results = scenario_info['last_run_results'].get('validation_results', None)
+
+        # Conditions (with validation indicators)
+        y = self._draw_bullet_list(screen, x, y, "Conditions", metadata.conditions, (150, 200, 255), validation_results)
         y += 15
 
         # Edge Cases
@@ -1400,8 +2313,8 @@ class TestLabScene:
         y = self._draw_section_wrapped(screen, x, y, "Pass Criteria", metadata.pass_criteria, (255, 150, 150))
         y += 15
 
-        # Validation Results (if available from last run)
-        if hasattr(scenario_info, 'last_run_results') and scenario_info['last_run_results']:
+        # Validation Results (from static validation or test run)
+        if 'last_run_results' in scenario_info and scenario_info['last_run_results']:
             results = scenario_info['last_run_results']
             if 'validation_results' in results:
                 y += 20
@@ -1441,8 +2354,8 @@ class TestLabScene:
 
         return y
 
-    def _draw_bullet_list(self, screen, x, y, label, items, color):
-        """Draw a bullet list section."""
+    def _draw_bullet_list(self, screen, x, y, label, items, color, validation_results=None):
+        """Draw a bullet list section with optional validation indicators."""
         # Label
         label_surf = self.body_font.render(f"{label}:", True, color)
         screen.blit(label_surf, (x, y))
@@ -1457,9 +2370,78 @@ class TestLabScene:
             for item in items:
                 bullet_surf = self.small_font.render(f"• {item}", True, self.TEXT_COLOR)
                 screen.blit(bullet_surf, (x + 10, y))
+
+                # Check if this item is verified by validation results
+                if validation_results and self._is_condition_verified(item, validation_results):
+                    # Draw green "V" on right edge
+                    v_surf = self.body_font.render("V", True, (80, 255, 120))  # Green
+                    v_x = x + self.metadata_width - 40  # Right edge with padding
+                    screen.blit(v_surf, (v_x, y - 2))
+
                 y += 22
 
         return y
+
+    def _is_condition_verified(self, condition_text, validation_results):
+        """
+        Check if a condition is verified by a passing validation.
+
+        Args:
+            condition_text: Text like "Beam Damage: 5 per hit"
+            validation_results: List of validation result dicts
+
+        Returns:
+            True if condition matches a PASS validation
+        """
+        # Map condition text patterns to validation rule names
+        mappings = {
+            'Beam Damage': 'Beam Weapon Damage',
+            'Base Accuracy': 'Base Accuracy',
+            'Accuracy Falloff': 'Accuracy Falloff',
+            'Weapon Max Range': 'Weapon Range',
+            'Distance': None,  # Distance is test setup, not component property
+            'Net Score': None,  # Calculated value, complex validation
+            'Test Duration': None  # Test parameter, not validated
+        }
+
+        # Check direct validations
+        for pattern, validation_name in mappings.items():
+            if validation_name and pattern in condition_text:
+                # Find matching validation result
+                for vr in validation_results:
+                    if vr['name'] == validation_name and vr['status'] == 'PASS':
+                        return True
+
+        # Special case: Range Penalty (calculated from distance × accuracy_falloff)
+        if 'Range Penalty' in condition_text:
+            # Extract values from condition text like "Range Penalty: 50 * 0.002 = 0.1"
+            try:
+                import re
+                # Match pattern: "Range Penalty: {distance} * {falloff} = {result}"
+                match = re.search(r'Range Penalty:\s*(\d+\.?\d*)\s*\*\s*(\d+\.?\d*)\s*=\s*(\d+\.?\d*)', condition_text)
+                if match:
+                    distance_stated = float(match.group(1))
+                    falloff_stated = float(match.group(2))
+                    penalty_stated = float(match.group(3))
+
+                    # Check if falloff is verified
+                    falloff_verified = False
+                    falloff_actual = None
+                    for vr in validation_results:
+                        if vr['name'] == 'Accuracy Falloff' and vr['status'] == 'PASS':
+                            falloff_verified = True
+                            falloff_actual = vr['actual']
+                            break
+
+                    if falloff_verified and falloff_actual is not None:
+                        # Verify the calculation is correct
+                        calculated_penalty = distance_stated * falloff_actual
+                        if abs(calculated_penalty - penalty_stated) < 0.0001:  # Float comparison with tolerance
+                            return True
+            except:
+                pass  # If parsing fails, don't show V
+
+        return False
 
     def _draw_wrapped_text(self, screen, text, x, y, max_width, color):
         """Draw text with word wrapping."""

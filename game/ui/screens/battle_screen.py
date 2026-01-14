@@ -236,6 +236,30 @@ class BattleInterface:
         text_rect = text.get_rect(center=button_rect.center)
         screen.blit(text, text_rect)
 
+        # Draw "TEST COMPLETE" indicator above button
+        complete_font = pygame.font.SysFont("Arial", 56, bold=True)
+
+        # Color based on test pass/fail
+        if hasattr(self.scene, 'test_scenario') and self.scene.test_scenario:
+            if self.scene.test_scenario.passed:
+                complete_text = "TEST COMPLETE - PASSED"
+                complete_color = (80, 255, 120)  # Green
+            else:
+                complete_text = "TEST COMPLETE - FAILED"
+                complete_color = (255, 80, 80)  # Red
+        else:
+            complete_text = "TEST COMPLETE"
+            complete_color = (255, 200, 100)  # Yellow
+
+        complete_surface = complete_font.render(complete_text, True, complete_color)
+        complete_rect = complete_surface.get_rect(center=(button_rect.centerx, button_rect.top - 120))
+
+        # Draw background for text
+        bg_rect = complete_rect.inflate(40, 20)
+        pygame.draw.rect(screen, (0, 0, 0, 200), bg_rect, border_radius=10)
+        pygame.draw.rect(screen, complete_color, bg_rect, 3, border_radius=10)
+        screen.blit(complete_surface, complete_rect)
+
         # Draw battle result above button
         winner = self.scene.get_winner()
         result_text = ""

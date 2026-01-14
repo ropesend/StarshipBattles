@@ -1,22 +1,12 @@
 Traceback (most recent call last):
-  File "C:\Developer\StarshipBattles\game\app.py", line 568, in main
+  File "C:\Dev\Starship Battles\game\app.py", line 575, in main
     game.run()
-  File "C:\Developer\StarshipBattles\game\app.py", line 252, in run
+  File "C:\Dev\Starship Battles\game\app.py", line 252, in run
     self._update_and_draw(frame_time, events)
-  File "C:\Developer\StarshipBattles\game\app.py", line 342, in _update_and_draw
-    self.strategy_scene.update(frame_time)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 257, in update
-    self.ui.update(dt)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_screen.py", line 504, in update
-    self.manager.update(dt)
-  File "C:\Users\rossr\AppData\Roaming\Python\Python311\site-packages\pygame_gui\ui_manager.py", line 393, in update
-    self.ui_group.update(time_delta)
-  File "C:\Users\rossr\AppData\Roaming\Python\Python311\site-packages\pygame_gui\core\layered_gui_group.py", line 376, in update
-    sprite.update(*args, **kwargs)
-  File "C:\Developer\StarshipBattles\game\ui\screens\planet_list_window.py", line 710, in update
-    self._rebuild_row_pool() # Rebuild pool to match new col visibility
-    ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Developer\StarshipBattles\game\ui\screens\planet_list_window.py", line 474, in _rebuild_row_pool
-    w.kill()
-    ^^^^^^
-AttributeError: 'dict' object has no attribute 'kill'
+  File "C:\Dev\Starship Battles\game\app.py", line 336, in _update_and_draw
+    self._update_battle(frame_time, events)
+  File "C:\Dev\Starship Battles\game\app.py", line 449, in _update_battle
+    self.battle_scene.print_headless_summary()
+  File "C:\Dev\Starship Battles\game\ui\screens\battle_scene.py", line 305, in print_headless_summary
+    self.ui.print_headless_summary(self.headless_start_time, self.sim_tick_counter)
+AttributeError: 'BattleInterface' object has no attribute 'print_headless_summary'

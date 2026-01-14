@@ -48,6 +48,7 @@ class BattleScene:
         self.test_mode = False  # Set to True when running from Combat Lab
         self.test_scenario = None  # The scenario being run (if in test mode)
         self.test_tick_count = 0  # Track ticks for max_ticks limit
+        self.test_completed = False  # Flag indicating test has finished
 
         # Actions for Game class
         self.action_return_to_setup = False
@@ -156,7 +157,7 @@ class BattleScene:
         Update battle simulation for one tick.
         """
         # Check if test scenario has completed
-        if self.test_mode and self.test_scenario:
+        if self.test_mode and self.test_scenario and not self.test_completed:
             self.test_tick_count += 1
 
             # Call scenario's update method
@@ -164,12 +165,21 @@ class BattleScene:
 
             # Check if test should end (engine handles all end conditions)
             if self.engine.is_battle_over():
-                # Test complete - verify results
+                # Test complete - verify results and populate results dict
                 print(f"DEBUG: Test complete! ticks={self.test_tick_count}")
+
+                # Populate results dict (similar to headless mode)
+                if not hasattr(self.test_scenario, 'results') or not self.test_scenario.results:
+                    self.test_scenario.results = {}
+                self.test_scenario.results['ticks_run'] = self.test_tick_count
+
+                # Run verification (populates additional results)
                 self.test_scenario.passed = self.test_scenario.verify(self.engine)
                 print(f"DEBUG: Test {'PASSED' if self.test_scenario.passed else 'FAILED'}")
-                # Signal test completion
-                self.test_scenario = None  # Stop calling update
+                print(f"DEBUG: Results populated: {list(self.test_scenario.results.keys())}")
+
+                # Signal test completion (keep scenario reference for results retrieval)
+                self.test_completed = True
                 return  # Don't update engine anymore
 
         if not self.engine.is_battle_over():
@@ -301,5 +311,14 @@ class BattleScene:
         self.ui.handle_scroll(scroll_y, screen_height)
     
     def print_headless_summary(self):
-        """Print summary."""
-        self.ui.print_headless_summary(self.headless_start_time, self.sim_tick_counter)
+        """Print summary of headless battle results."""
+        # Skip summary for test mode - test framework handles results
+        if self.test_mode:
+            print(f"Headless test complete: {self.sim_tick_counter} ticks")
+            return
+
+        # For normal headless battles, print summary if UI supports it
+        if hasattr(self.ui, 'print_headless_summary'):
+            self.ui.print_headless_summary(self.headless_start_time, self.sim_tick_counter)
+        else:
+            print(f"Headless battle complete: {self.sim_tick_counter} ticks")
