@@ -104,6 +104,140 @@ class JSONPopup:
             pygame.draw.rect(screen, (100, 100, 120), scrollbar_rect, border_radius=5)
 
 
+class ConfirmationDialog:
+    """Dialog for confirming changes to test metadata."""
+
+    def __init__(self, title, changes, screen_width, screen_height, on_confirm, on_cancel):
+        """
+        Create confirmation dialog.
+
+        Args:
+            title: Dialog title
+            changes: List of dicts with 'field', 'old_value', 'new_value'
+            screen_width: Screen width
+            screen_height: Screen height
+            on_confirm: Callback function when confirmed
+            on_cancel: Callback function when canceled
+        """
+        self.title = title
+        self.changes = changes
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self.on_confirm = on_confirm
+        self.on_cancel = on_cancel
+
+        # Dialog dimensions (60% of screen, but smaller than JSON popup)
+        self.width = min(800, int(screen_width * 0.6))
+        self.height = min(600, int(screen_height * 0.6))
+        self.x = (screen_width - self.width) // 2
+        self.y = (screen_height - self.height) // 2
+
+        # Fonts
+        self.title_font = pygame.font.SysFont(FONT_MAIN, 24)
+        self.body_font = pygame.font.SysFont(FONT_MAIN, 16)
+        self.small_font = pygame.font.SysFont(FONT_MAIN, 14)
+
+        # Buttons
+        button_y = self.y + self.height - 60
+        button_width = 120
+        button_spacing = 20
+        total_button_width = button_width * 2 + button_spacing
+        button_start_x = self.x + (self.width - total_button_width) // 2
+
+        self.confirm_button = Button(
+            button_start_x, button_y, button_width, 40,
+            "Confirm", self._handle_confirm
+        )
+        self.cancel_button = Button(
+            button_start_x + button_width + button_spacing, button_y, button_width, 40,
+            "Cancel", self._handle_cancel
+        )
+
+        self.is_open = True
+        self.result = None  # Will be 'confirm' or 'cancel'
+
+    def _handle_confirm(self):
+        """User confirmed changes."""
+        self.result = 'confirm'
+        self.is_open = False
+        if self.on_confirm:
+            self.on_confirm()
+
+    def _handle_cancel(self):
+        """User canceled changes."""
+        self.result = 'cancel'
+        self.is_open = False
+        if self.on_cancel:
+            self.on_cancel()
+
+    def handle_event(self, event):
+        """Handle user input."""
+        # Handle button clicks
+        self.confirm_button.handle_event(event)
+        self.cancel_button.handle_event(event)
+
+        # Close on Escape
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self._handle_cancel()
+
+    def draw(self, screen):
+        """Draw the confirmation dialog."""
+        if not self.is_open:
+            return
+
+        # Semi-transparent overlay
+        overlay = pygame.Surface((self.screen_width, self.screen_height), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))
+        screen.blit(overlay, (0, 0))
+
+        # Dialog background
+        dialog_rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        pygame.draw.rect(screen, (30, 30, 35), dialog_rect, border_radius=10)
+        pygame.draw.rect(screen, (100, 100, 120), dialog_rect, 3, border_radius=10)
+
+        # Title
+        title_surf = self.title_font.render(self.title, True, (255, 200, 100))
+        screen.blit(title_surf, (self.x + 20, self.y + 15))
+
+        # Description
+        desc_y = self.y + 60
+        desc_text = "The following changes will be made to the test metadata:"
+        desc_surf = self.body_font.render(desc_text, True, (220, 220, 220))
+        screen.blit(desc_surf, (self.x + 20, desc_y))
+
+        # Changes list
+        changes_y = desc_y + 40
+        line_height = 25
+
+        for i, change in enumerate(self.changes):
+            change_y = changes_y + i * (line_height * 3 + 10)
+
+            # Field name
+            field_text = f"• {change['field']}:"
+            field_surf = self.body_font.render(field_text, True, (150, 200, 255))
+            screen.blit(field_surf, (self.x + 30, change_y))
+
+            # Old value (strikethrough)
+            old_text = f"  Old: {change['old_value']}"
+            old_surf = self.small_font.render(old_text, True, (255, 100, 100))
+            screen.blit(old_surf, (self.x + 50, change_y + line_height))
+
+            # Draw strikethrough line over old value
+            text_width = old_surf.get_width()
+            pygame.draw.line(screen, (255, 100, 100),
+                           (self.x + 50, change_y + line_height + 8),
+                           (self.x + 50 + text_width, change_y + line_height + 8), 2)
+
+            # New value
+            new_text = f"  New: {change['new_value']}"
+            new_surf = self.small_font.render(new_text, True, (100, 255, 150))
+            screen.blit(new_surf, (self.x + 50, change_y + line_height * 2))
+
+        # Buttons
+        self.confirm_button.draw(screen)
+        self.cancel_button.draw(screen)
+
+
 class ScrollableJSONViewer:
     """Scrollable panel for displaying formatted JSON with syntax highlighting."""
 
@@ -135,8 +269,8 @@ class ScrollableJSONViewer:
         self.visible_lines = max(1, self.content_height // self.line_height)
         self.max_scroll = max(0, len(self.lines) - self.visible_lines)
 
-        # Fonts
-        self.body_font = pygame.font.SysFont('Courier New', 14)
+        # Fonts (match Test Details panel style)
+        self.body_font = pygame.font.SysFont(FONT_MAIN, 14)
         self.title_font = pygame.font.SysFont(FONT_MAIN, 18)
 
         # Colors
@@ -363,61 +497,87 @@ class ComponentDropdown:
 
 
 class ShipPanel:
-    """Combined panel showing ship JSON + component dropdown + component JSON."""
+    """Panel showing ship JSON only (full height like Test Details)."""
 
-    def __init__(self, x, y, width, height, ship_info, load_component_callback):
+    def __init__(self, x, y, width, height, ship_info):
         """
         Initialize ship panel.
 
         Args:
             x, y: Top-left position
             width, height: Panel dimensions
-            ship_info: Dict with 'role', 'ship_data', 'component_ids'
-            load_component_callback: Function(component_id) -> Dict
+            ship_info: Dict with 'role', 'ship_data'
         """
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.ship_info = ship_info
-        self.load_component_callback = load_component_callback
 
-        # Layout: 55% ship, dropdown, 40% component
-        ship_height = int(height * 0.55)
-        dropdown_height = 40
-        component_height = height - ship_height - dropdown_height - 20  # 20px spacing
-
-        # Ship JSON viewer (top 55%)
+        # Ship JSON viewer (full height)
         self.ship_viewer = ScrollableJSONViewer(
             x=x,
             y=y,
             width=width,
-            height=ship_height,
+            height=height,
             title=f"Ship: {ship_info['role']}",
             json_data=ship_info['ship_data']
         )
 
-        # Component dropdown (middle)
-        dropdown_y = y + ship_height + 10
+    def handle_event(self, event):
+        """Handle input events (scrolling)."""
+        return self.ship_viewer.handle_scroll(event)
+
+    def update(self):
+        """Update hover states."""
+        pass
+
+    def draw(self, surface):
+        """Draw the ship panel."""
+        self.ship_viewer.draw(surface)
+
+
+class ComponentPanel:
+    """Panel showing component dropdown + component JSON (full height)."""
+
+    def __init__(self, x, y, width, height, component_ids, load_component_callback):
+        """
+        Initialize component panel.
+
+        Args:
+            x, y: Top-left position
+            width, height: Panel dimensions
+            component_ids: List of component IDs
+            load_component_callback: Function(component_id) -> Dict
+        """
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.load_component_callback = load_component_callback
+
+        # Component dropdown at top
+        dropdown_height = 40
         self.component_dropdown = ComponentDropdown(
             x=x + 10,
-            y=dropdown_y,
+            y=y + 10,
             width=width - 20,
             height=dropdown_height,
-            component_ids=ship_info['component_ids'],
+            component_ids=component_ids,
             load_callback=load_component_callback
         )
 
-        # Component JSON viewer (bottom 40%)
-        component_y = dropdown_y + dropdown_height + 10
+        # Component JSON viewer below dropdown
+        component_viewer_y = y + dropdown_height + 20
+        component_viewer_height = height - dropdown_height - 30
         selected_comp_id = self.component_dropdown.get_selected_component_id()
         component_data = load_component_callback(selected_comp_id) if selected_comp_id else {}
 
         self.component_viewer = ScrollableJSONViewer(
             x=x,
-            y=component_y,
+            y=component_viewer_y,
             width=width,
-            height=component_height,
+            height=component_viewer_height,
             title="Component JSON",
             json_data=component_data
         )
@@ -434,10 +594,6 @@ class ShipPanel:
                     self.component_viewer.update_json(component_data)
             return True
 
-        # Try scrolling on ship viewer
-        if self.ship_viewer.handle_scroll(event):
-            return True
-
         # Try scrolling on component viewer
         if self.component_viewer.handle_scroll(event):
             return True
@@ -449,10 +605,9 @@ class ShipPanel:
         self.component_dropdown.handle_hover()
 
     def draw(self, surface):
-        """Draw the complete ship panel."""
-        self.ship_viewer.draw(surface)
-        self.component_dropdown.draw(surface)
+        """Draw the component panel."""
         self.component_viewer.draw(surface)
+        self.component_dropdown.draw(surface)  # Draw dropdown last so it's on top when expanded
 
 
 class TestLabScene:
@@ -510,8 +665,15 @@ class TestLabScene:
 
         self.buttons = []
         self.json_popup = None  # For displaying JSON data
+        self.confirmation_dialog = None  # For confirming metadata updates
         self.ship_panels = []  # Ship JSON panels
+        self.component_panels = []  # Component JSON panels
         self._components_cache = None  # Cache for components.json
+
+        # Update Expected Values button state
+        self.update_expected_button_rect = None
+        self.update_expected_button_visible = False
+
         self._create_ui()
 
     def _extract_ships_from_scenario(self, test_id):
@@ -616,14 +778,136 @@ class TestLabScene:
 
         return self._components_cache.get(component_id)
 
+    def _handle_update_expected_values(self):
+        """Handle click on Update Expected Values button."""
+        if not self.selected_test_id:
+            return
+
+        # Get the scenario and its last run results
+        scenario_info = self.registry.get_by_id(self.selected_test_id)
+        if not scenario_info:
+            return
+
+        last_run_results = scenario_info.get('last_run_results')
+        if not last_run_results:
+            print("No test results available. Run the test first.")
+            return
+
+        validation_results = last_run_results.get('validation_results', [])
+        if not validation_results:
+            return
+
+        # Collect failed ExactMatchRules
+        changes = []
+        for vr in validation_results:
+            if vr['status'] == 'FAIL' and vr['expected'] is not None and vr['actual'] is not None:
+                # This is a failed exact match rule
+                field_name = vr['name']
+                old_value = vr['expected']
+                new_value = vr['actual']
+
+                changes.append({
+                    'field': field_name,
+                    'old_value': old_value,
+                    'new_value': new_value
+                })
+
+        if not changes:
+            print("No failed validation rules to update.")
+            return
+
+        # Show confirmation dialog
+        self.confirmation_dialog = ConfirmationDialog(
+            title="Update Expected Values",
+            changes=changes,
+            screen_width=self.game.screen.get_width(),
+            screen_height=self.game.screen.get_height(),
+            on_confirm=lambda: self._apply_metadata_updates(changes),
+            on_cancel=lambda: print("Update canceled")
+        )
+
+    def _apply_metadata_updates(self, changes):
+        """
+        Apply metadata updates to the test scenario file.
+
+        Args:
+            changes: List of dicts with 'field', 'old_value', 'new_value'
+        """
+        if not self.selected_test_id:
+            return
+
+        scenario_info = self.registry.get_by_id(self.selected_test_id)
+        if not scenario_info:
+            return
+
+        # Get the file path for the scenario
+        scenario_file = scenario_info['file']
+
+        try:
+            # Read the file
+            with open(scenario_file, 'r') as f:
+                content = f.read()
+
+            # Apply changes using string replacement
+            # This is a simplified approach - in production we'd use AST parsing
+            for change in changes:
+                field = change['field']
+                old_val = change['old_value']
+                new_val = change['new_value']
+
+                # Map field names to their condition text patterns
+                # For example: "Beam Weapon Damage" -> "Beam Damage: {value}"
+                if "Damage" in field and "Beam" in field:
+                    # Find the condition line like "Beam Damage: 1 per hit"
+                    old_pattern = f'"Beam Damage: {old_val}'
+                    new_pattern = f'"Beam Damage: {new_val}'
+                    content = content.replace(old_pattern, new_pattern)
+                    print(f"Updated {field}: {old_val} → {new_val}")
+                elif "Base Accuracy" in field:
+                    old_pattern = f'"Base Accuracy: {old_val}"'
+                    new_pattern = f'"Base Accuracy: {new_val}"'
+                    content = content.replace(old_pattern, new_pattern)
+                    print(f"Updated {field}: {old_val} → {new_val}")
+                elif "Accuracy Falloff" in field:
+                    old_pattern = f'"Accuracy Falloff: {old_val}'
+                    new_pattern = f'"Accuracy Falloff: {new_val}'
+                    content = content.replace(old_pattern, new_pattern)
+                    print(f"Updated {field}: {old_val} → {new_val}")
+                elif "Weapon Range" in field or "Range" in field:
+                    # This might not be in conditions, skip for now
+                    print(f"Skipping {field} (not in conditions text)")
+                elif "Target Mass" in field or "Mass" in field:
+                    # This might not be in conditions, skip for now
+                    print(f"Skipping {field} (not in conditions text)")
+                else:
+                    print(f"Unknown field type: {field}")
+
+            # Write back to file
+            with open(scenario_file, 'w') as f:
+                f.write(content)
+
+            print(f"Successfully updated {scenario_file}")
+
+            # Refresh the registry to reload the modified scenario
+            self.registry.refresh()
+            self.all_scenarios = self.registry.get_all_scenarios()
+
+            print("Registry refreshed. Metadata updated successfully!")
+
+        except Exception as e:
+            print(f"Error updating metadata: {e}")
+            import traceback
+            traceback.print_exc()
+
     def _create_ship_panels(self, test_id):
         """
-        Create ship panels for the selected test.
+        Create ship panels and component panels for the selected test.
 
         Args:
             test_id: Test ID (e.g., "BEAM360-001")
         """
         self.ship_panels = []
+        self.component_panels = []
 
         # Extract ships from scenario
         ships = self._extract_ships_from_scenario(test_id)
@@ -631,25 +915,41 @@ class TestLabScene:
         if not ships:
             return
 
-        # Create panel for each ship
+        # Panel dimensions
         base_x = 20 + self.category_width + 20 + self.test_list_width + 20 + self.metadata_width + 20
         panel_width = 540
-        panel_height = HEIGHT - self.header_height - 40
+
+        # Ship panel (top half) - ~960px tall (100-1060)
+        ship_panel_y_start = self.header_height + 20  # 100px
+        ship_panel_height = HEIGHT // 2 - ship_panel_y_start - 20  # Ends at ~1060px with 20px gap
+
+        # Component panel (bottom half) - ~980px tall (1080-2060)
+        component_panel_y_start = HEIGHT // 2 + 20  # 1080px (middle + 20px gap)
+        component_panel_height = HEIGHT - component_panel_y_start - 100  # ~980px tall
 
         for i, ship_info in enumerate(ships):
             panel_x = base_x + (i * (panel_width + 20))
-            panel_y = self.header_height + 20
 
-            panel = ShipPanel(
+            # Create ship panel (top)
+            ship_panel = ShipPanel(
                 x=panel_x,
-                y=panel_y,
+                y=ship_panel_y_start,
                 width=panel_width,
-                height=panel_height,
-                ship_info=ship_info,
+                height=ship_panel_height,
+                ship_info=ship_info
+            )
+            self.ship_panels.append(ship_panel)
+
+            # Create component panel (bottom)
+            component_panel = ComponentPanel(
+                x=panel_x,
+                y=component_panel_y_start,
+                width=panel_width,
+                height=component_panel_height,
+                component_ids=ship_info['component_ids'],
                 load_component_callback=self._load_component_data
             )
-
-            self.ship_panels.append(panel)
+            self.component_panels.append(component_panel)
 
     def _create_ui(self):
         """Create UI buttons."""
@@ -659,8 +959,8 @@ class TestLabScene:
         self.btn_back = Button(20, 20, 100, 40, "Back", self._on_back)
         self.buttons.append(self.btn_back)
 
-        # Run Button
-        self.btn_run = Button(WIDTH - 150, HEIGHT - 80, 120, 50, "RUN TEST", self._on_run)
+        # Run Button (beside Back button)
+        self.btn_run = Button(130, 20, 120, 40, "RUN TEST", self._on_run)
         self.buttons.append(self.btn_run)
 
     def _get_filtered_scenarios(self):
@@ -758,15 +1058,27 @@ class TestLabScene:
     def handle_input(self, events):
         """Handle user input for category selection, test selection, and buttons."""
         for event in events:
-            # Handle JSON popup first (if open)
+            # Handle confirmation dialog first (if open)
+            if self.confirmation_dialog and self.confirmation_dialog.is_open:
+                self.confirmation_dialog.handle_event(event)
+                if not self.confirmation_dialog.is_open:
+                    self.confirmation_dialog = None
+                continue  # Don't process other events while dialog is open
+
+            # Handle JSON popup (if open)
             if self.json_popup and self.json_popup.is_open:
                 self.json_popup.handle_event(event)
                 if not self.json_popup.is_open:
                     self.json_popup = None
                 continue  # Don't process other events while popup is open
 
-            # Handle ship panel events (scrolling, dropdown clicks)
+            # Handle ship panel events (scrolling)
             for panel in self.ship_panels:
+                if panel.handle_event(event):
+                    continue  # Event consumed by panel
+
+            # Handle component panel events (scrolling, dropdown clicks)
+            for panel in self.component_panels:
                 if panel.handle_event(event):
                     continue  # Event consumed by panel
 
@@ -809,7 +1121,7 @@ class TestLabScene:
 
         # Check test hover
         test_list_x = 20 + self.category_width + 20
-        test_list_y = self.header_height + 20
+        test_list_y = self.header_height + 20 + 40  # +40 for header offset
 
         filtered_scenarios = self._get_filtered_scenarios()
         sorted_test_ids = sorted(filtered_scenarios.keys())
@@ -849,7 +1161,7 @@ class TestLabScene:
 
         # Check test click
         test_list_x = 20 + self.category_width + 20
-        test_list_y = self.header_height + 20
+        test_list_y = self.header_height + 20 + 40  # +40 for header offset
 
         filtered_scenarios = self._get_filtered_scenarios()
         sorted_test_ids = sorted(filtered_scenarios.keys())
@@ -862,10 +1174,20 @@ class TestLabScene:
                 self._create_ship_panels(test_id)
                 return
 
+        # Check "Update Expected Values" button click
+        if self.update_expected_button_visible and self.update_expected_button_rect:
+            if self.update_expected_button_rect.collidepoint(mx, my):
+                self._handle_update_expected_values()
+                return
+
     def update(self):
         """Update UI state."""
         # Update ship panels (hover states)
         for panel in self.ship_panels:
+            panel.update()
+
+        # Update component panels (hover states)
+        for panel in self.component_panels:
             panel.update()
 
     def draw(self, screen):
@@ -884,6 +1206,10 @@ class TestLabScene:
         for panel in self.ship_panels:
             panel.draw(screen)
 
+        # Component panels (drawn after ship panels)
+        for panel in self.component_panels:
+            panel.draw(screen)
+
         # Output log
         self._draw_output_log(screen)
 
@@ -894,6 +1220,10 @@ class TestLabScene:
         # JSON popup (drawn last, on top of everything)
         if self.json_popup and self.json_popup.is_open:
             self.json_popup.draw(screen)
+
+        # Confirmation dialog (drawn last, on top of everything including popups)
+        if self.confirmation_dialog and self.confirmation_dialog.is_open:
+            self.confirmation_dialog.draw(screen)
 
     def _draw_header(self, screen):
         """Draw the header with title."""
@@ -1254,6 +1584,42 @@ class TestLabScene:
                 y += 18
 
             y += 5  # Space between validation items
+
+        # Add "Update Expected Values" button if there are failures
+        if fail_count > 0:
+            y += 10
+            button_width = 200
+            button_height = 35
+            button_x = x + 10
+            button_y = y
+
+            # Store button rect for click detection
+            self.update_expected_button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
+            self.update_expected_button_visible = True
+
+            # Draw button
+            button_color = (60, 120, 200)  # Blue
+            button_hover_color = (80, 140, 220)
+
+            # Check if mouse is over button
+            mouse_pos = pygame.mouse.get_pos()
+            is_hover = self.update_expected_button_rect.collidepoint(mouse_pos)
+            current_color = button_hover_color if is_hover else button_color
+
+            # Draw button background
+            pygame.draw.rect(screen, current_color, self.update_expected_button_rect)
+            pygame.draw.rect(screen, (100, 140, 200), self.update_expected_button_rect, 2)
+
+            # Draw button text
+            button_text = "Update Expected Values"
+            button_surf = self.small_font.render(button_text, True, (255, 255, 255))
+            text_x = button_x + (button_width - button_surf.get_width()) // 2
+            text_y = button_y + (button_height - button_surf.get_height()) // 2
+            screen.blit(button_surf, (text_x, text_y))
+
+            y += button_height + 10
+        else:
+            self.update_expected_button_visible = False
 
         return y
 

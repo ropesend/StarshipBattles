@@ -120,7 +120,32 @@ class BeamLowAccuracyPointBlankScenario(TestScenario):
         tags=["accuracy", "low-accuracy", "point-blank", "beam-weapons"],
         validation_rules=[
             # Exact match validations - comparing test metadata to component data
-            # Note: These will be implemented with component JSON lookups in UI
+            ExactMatchRule(
+                name='Beam Weapon Damage',
+                path='attacker.weapon.damage',
+                expected=1
+            ),
+            ExactMatchRule(
+                name='Base Accuracy',
+                path='attacker.weapon.base_accuracy',
+                expected=0.5
+            ),
+            ExactMatchRule(
+                name='Accuracy Falloff',
+                path='attacker.weapon.accuracy_falloff',
+                expected=0.002
+            ),
+            ExactMatchRule(
+                name='Weapon Range',
+                path='attacker.weapon.range',
+                expected=800
+            ),
+            ExactMatchRule(
+                name='Target Mass',
+                path='target.mass',
+                expected=400.0
+            ),
+            # Statistical validation - validates actual test outcomes
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
