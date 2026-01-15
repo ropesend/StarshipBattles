@@ -47,22 +47,10 @@ class TurnEngine:
         if not fleet:
             return ValidationResult(False, "Fleet does not exist.")
             
-        # 2. Get System/Location Context
-        system = galaxy.systems.get(fleet.location)
-        valid_candidates = []
-        
-        if system:
-             for p in system.planets:
-                 if (system.global_location + p.location) == fleet.location:
-                      if p.owner_id is None:
-                          valid_candidates.append(p)
-        else:
-            # Fallback for peripheral hexes (less common but possible)
-            for sys in galaxy.systems.values():
-                 for p in sys.planets:
-                     if (sys.global_location + p.location) == fleet.location:
-                          if p.owner_id is None:
-                              valid_candidates.append(p)
+        # 2. Get System/Location Context - Use O(1) spatial index
+        # Get all planets at the fleet's global hex location
+        all_planets_at_hex = galaxy.get_planets_at_global_hex(fleet.location)
+        valid_candidates = [p for p in all_planets_at_hex if p.owner_id is None]
         
         # 3. Check Logic
         if target_planet is None:
@@ -103,11 +91,10 @@ class TurnEngine:
                     colony.construction_queue.pop(0)
                     print(f"Production Complete: {item_name} at {colony.planet_type.name}")
                     
-                    # Spawn Logic
+                    # Spawn Logic - Use O(1) reverse lookup
                     spawn_loc = colony.location
                     if galaxy:
-                         # Expensive lookup, but needed until data structure improved
-                         parent_sys = next((s for s in galaxy.systems.values() if colony in s.planets), None)
+                         parent_sys = galaxy.get_system_of_planet(colony)
                          if parent_sys:
                              spawn_loc = parent_sys.global_location + colony.location
                     
@@ -407,23 +394,12 @@ class TurnEngine:
             final_planet = target_planet
             
             if final_planet is None:
-                # Re-find the candidate (Validation ensured one exists)
-                # Optimization: Validation could return the candidate?
-                # For now, re-scan or rely on the logic that we know one is there.
-                # Let's reuse logic from validation but simpler since we know it's valid.
-                system = galaxy.systems.get(fleet.location)
-                if system:
-                     for p in system.planets:
-                         if (system.global_location + p.location) == fleet.location and p.owner_id is None:
-                             final_planet = p
-                             break
-                else: 
-                    # Fallback
-                    for sys in galaxy.systems.values():
-                         for p in sys.planets:
-                             if (sys.global_location + p.location) == fleet.location and p.owner_id is None:
-                                  final_planet = p
-                                  break
+                # Use O(1) spatial index to find candidate at fleet location
+                planets_at_loc = galaxy.get_planets_at_global_hex(fleet.location)
+                for p in planets_at_loc:
+                    if p.owner_id is None:
+                        final_planet = p
+                        break
             
             if final_planet:
                 empire.add_colony(final_planet)

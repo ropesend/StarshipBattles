@@ -25,6 +25,7 @@ class Planet:
     Represents a planetary body (Planet or Moon).
     Physical properties are grounded in real physics units (SI).
     """
+    # Required fields (no defaults)
     name: str
     location: HexCoord # Local system coordinates
     orbit_distance: int # Ring number
@@ -45,6 +46,7 @@ class Planet:
     tectonic_activity: float # 0.0 (Dead) to 1.0 (Volcanic Hell)
     magnetic_field: float # Relative to Earth (0.0 to X.0)
     
+    # Fields with defaults (must come after non-default fields)
     # Atmosphere: Gas Name -> Partial Pressure (Pa) or Percentage? 
     # Plan said "Percentage/Pressure". Let's store Partial Pressure in Pa for simulation accuracy.
     # Total pressure is sum of these.
@@ -65,6 +67,9 @@ class Planet:
     # Resources
     # Key: Resource Name (from PLANET_RESOURCES) -> {'quantity': int, 'quality': float}
     resources: Dict[str, dict] = field(default_factory=dict)
+    
+    # Unique identifier assigned by Galaxy registry (default -1 means unregistered)
+    id: int = -1
 
 
     def __eq__(self, other):

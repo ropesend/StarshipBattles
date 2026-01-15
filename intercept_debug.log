@@ -2437,3 +2437,2020 @@ Target at intercept hex during turn: 10
 VERIFIED: Chaser arrives Turn 3 <= Target there Turn 10
 ============================================================
 
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 20:47:02
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 2.0
+Target Fleet ID: 2
+  Location: HexCoord(4, 0)
+  Speed: 1.0
+
+Target Projected Path (5 segments):
+  [0] Turn 1: HexCoord(5, 0)
+  [1] Turn 2: HexCoord(6, 0)
+  [2] Turn 3: HexCoord(7, 0)
+  [3] Turn 4: HexCoord(8, 0)
+  [4] Turn 5: HexCoord(9, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(5, 0) @ T1: path=5 steps, chaser_time=2.50 turns, valid=False
+  [1] HexCoord(6, 0) @ T2: path=6 steps, chaser_time=3.00 turns, valid=False
+  [2] HexCoord(7, 0) @ T3: path=7 steps, chaser_time=3.50 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [3] HexCoord(8, 0) @ T4: path=8 steps, chaser_time=4.00 turns, valid=True
+  [4] HexCoord(9, 0) @ T5: path=9 steps, chaser_time=4.50 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(7, 0)
+    Chaser arrives in 3.50 turns
+    Target at hex during turn 3
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 7 steps
+Chaser subticks: 350 (Turn 3, Subtick 50)
+Target at intercept hex during turn: 3
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 3
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 20:47:02
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 5.0
+Target Fleet ID: 2
+  Location: HexCoord(10, 0)
+  Speed: 10.0
+
+Target Projected Path (2 segments):
+  [0] Turn 5: HexCoord(30, 0)
+  [1] Turn 10: HexCoord(15, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(30, 0) @ T5: path=30 steps, chaser_time=6.00 turns, valid=False
+  [1] HexCoord(15, 0) @ T10: path=15 steps, chaser_time=3.00 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(15, 0)
+    Chaser arrives in 3.00 turns
+    Target at hex during turn 10
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 15 steps
+Chaser subticks: 300 (Turn 3, Subtick 0)
+Target at intercept hex during turn: 10
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 10
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:08:23
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 2.0
+Target Fleet ID: 2
+  Location: HexCoord(4, 0)
+  Speed: 1.0
+
+Target Projected Path (5 segments):
+  [0] Turn 1: HexCoord(5, 0)
+  [1] Turn 2: HexCoord(6, 0)
+  [2] Turn 3: HexCoord(7, 0)
+  [3] Turn 4: HexCoord(8, 0)
+  [4] Turn 5: HexCoord(9, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(5, 0) @ T1: path=5 steps, chaser_time=2.50 turns, valid=False
+  [1] HexCoord(6, 0) @ T2: path=6 steps, chaser_time=3.00 turns, valid=False
+  [2] HexCoord(7, 0) @ T3: path=7 steps, chaser_time=3.50 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [3] HexCoord(8, 0) @ T4: path=8 steps, chaser_time=4.00 turns, valid=True
+  [4] HexCoord(9, 0) @ T5: path=9 steps, chaser_time=4.50 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(7, 0)
+    Chaser arrives in 3.50 turns
+    Target at hex during turn 3
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 7 steps
+Chaser subticks: 350 (Turn 3, Subtick 50)
+Target at intercept hex during turn: 3
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 3
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:08:23
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 5.0
+Target Fleet ID: 2
+  Location: HexCoord(10, 0)
+  Speed: 10.0
+
+Target Projected Path (2 segments):
+  [0] Turn 5: HexCoord(30, 0)
+  [1] Turn 10: HexCoord(15, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(30, 0) @ T5: path=30 steps, chaser_time=6.00 turns, valid=False
+  [1] HexCoord(15, 0) @ T10: path=15 steps, chaser_time=3.00 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(15, 0)
+    Chaser arrives in 3.00 turns
+    Target at hex during turn 10
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 15 steps
+Chaser subticks: 300 (Turn 3, Subtick 0)
+Target at intercept hex during turn: 10
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 10
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:17:36
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 5.0
+Target Fleet ID: 2
+  Location: HexCoord(10, 0)
+  Speed: 10.0
+
+Target Projected Path (2 segments):
+  [0] Turn 5: HexCoord(30, 0)
+  [1] Turn 10: HexCoord(15, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(30, 0) @ T5: path=30 steps, chaser_time=6.00 turns, valid=False
+  [1] HexCoord(15, 0) @ T10: path=15 steps, chaser_time=3.00 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(15, 0)
+    Chaser arrives in 3.00 turns
+    Target at hex during turn 10
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 15 steps
+Chaser subticks: 300 (Turn 3, Subtick 0)
+Target at intercept hex during turn: 10
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 10
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:17:36
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 2.0
+Target Fleet ID: 2
+  Location: HexCoord(4, 0)
+  Speed: 1.0
+
+Target Projected Path (5 segments):
+  [0] Turn 1: HexCoord(5, 0)
+  [1] Turn 2: HexCoord(6, 0)
+  [2] Turn 3: HexCoord(7, 0)
+  [3] Turn 4: HexCoord(8, 0)
+  [4] Turn 5: HexCoord(9, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(5, 0) @ T1: path=5 steps, chaser_time=2.50 turns, valid=False
+  [1] HexCoord(6, 0) @ T2: path=6 steps, chaser_time=3.00 turns, valid=False
+  [2] HexCoord(7, 0) @ T3: path=7 steps, chaser_time=3.50 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [3] HexCoord(8, 0) @ T4: path=8 steps, chaser_time=4.00 turns, valid=True
+  [4] HexCoord(9, 0) @ T5: path=9 steps, chaser_time=4.50 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(7, 0)
+    Chaser arrives in 3.50 turns
+    Target at hex during turn 3
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 7 steps
+Chaser subticks: 350 (Turn 3, Subtick 50)
+Target at intercept hex during turn: 3
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 3
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:09
+============================================================
+Chaser Fleet ID: 65756
+  Location: HexCoord(544, 2687)
+  Speed: 5.0
+Target Fleet ID: 19511
+  Location: HexCoord(544, 2682)
+  Speed: 5.0
+
+Target Projected Path (6 segments):
+  [0] Turn 0: HexCoord(543, 2681)
+  [1] Turn 0: HexCoord(543, 2680)
+  [2] Turn 0: HexCoord(543, 2679)
+  [3] Turn 0: HexCoord(543, 2678)
+  [4] Turn 0: HexCoord(543, 2677)
+  [5] Turn 1: HexCoord(543, 2676)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2681) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(543, 2680) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(543, 2679) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(543, 2678) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(543, 2677) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+  [5] HexCoord(543, 2676) @ T1: path=12 steps, chaser_time=2.40 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:09
+============================================================
+Chaser Fleet ID: 65756
+  Location: HexCoord(544, 2686)
+  Speed: 5.0
+Target Fleet ID: 19511
+  Location: HexCoord(544, 2681)
+  Speed: 5.0
+
+Target Projected Path (5 segments):
+  [0] Turn 0: HexCoord(543, 2680)
+  [1] Turn 0: HexCoord(543, 2679)
+  [2] Turn 0: HexCoord(543, 2678)
+  [3] Turn 0: HexCoord(543, 2677)
+  [4] Turn 0: HexCoord(543, 2676)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2680) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(543, 2679) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(543, 2678) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(543, 2677) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(543, 2676) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:09
+============================================================
+Chaser Fleet ID: 65756
+  Location: HexCoord(544, 2685)
+  Speed: 5.0
+Target Fleet ID: 19511
+  Location: HexCoord(543, 2681)
+  Speed: 5.0
+
+Target Projected Path (4 segments):
+  [0] Turn 0: HexCoord(543, 2679)
+  [1] Turn 0: HexCoord(543, 2678)
+  [2] Turn 0: HexCoord(543, 2677)
+  [3] Turn 0: HexCoord(543, 2676)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2679) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(543, 2678) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(543, 2677) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(543, 2676) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:09
+============================================================
+Chaser Fleet ID: 65756
+  Location: HexCoord(544, 2684)
+  Speed: 5.0
+Target Fleet ID: 19511
+  Location: HexCoord(543, 2680)
+  Speed: 5.0
+
+Target Projected Path (3 segments):
+  [0] Turn 0: HexCoord(543, 2678)
+  [1] Turn 0: HexCoord(543, 2677)
+  [2] Turn 0: HexCoord(543, 2676)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2678) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(543, 2677) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(543, 2676) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:09
+============================================================
+Chaser Fleet ID: 65756
+  Location: HexCoord(544, 2683)
+  Speed: 5.0
+Target Fleet ID: 19511
+  Location: HexCoord(543, 2679)
+  Speed: 5.0
+
+Target Projected Path (2 segments):
+  [0] Turn 0: HexCoord(543, 2677)
+  [1] Turn 0: HexCoord(543, 2676)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2677) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(543, 2676) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:18
+============================================================
+Chaser Fleet ID: 65756
+  Location: HexCoord(544, 2682)
+  Speed: 5.0
+Target Fleet ID: 19511
+  Location: HexCoord(543, 2678)
+  Speed: 5.0
+
+Target Projected Path (1 segments):
+  [0] Turn 0: HexCoord(543, 2676)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2676) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:18
+============================================================
+Chaser Fleet ID: 19232
+  Location: HexCoord(544, 2687)
+  Speed: 5.0
+Target Fleet ID: 65756
+  Location: HexCoord(544, 2682)
+  Speed: 5.0
+
+Target Projected Path (6 segments):
+  [0] Turn 0: HexCoord(543, 2681)
+  [1] Turn 0: HexCoord(543, 2680)
+  [2] Turn 0: HexCoord(543, 2679)
+  [3] Turn 0: HexCoord(543, 2678)
+  [4] Turn 0: HexCoord(543, 2677)
+  [5] Turn 1: HexCoord(543, 2676)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2681) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(543, 2680) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(543, 2679) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(543, 2678) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(543, 2677) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+  [5] HexCoord(543, 2676) @ T1: path=12 steps, chaser_time=2.40 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:18
+============================================================
+Chaser Fleet ID: 65756
+  Location: HexCoord(544, 2681)
+  Speed: 5.0
+Target Fleet ID: 19511
+  Location: HexCoord(543, 2677)
+  Speed: 5.0
+
+Target Projected Path (1 segments):
+  [0] Turn 0: HexCoord(543, 2676)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2676) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:18
+============================================================
+Chaser Fleet ID: 19232
+  Location: HexCoord(544, 2686)
+  Speed: 5.0
+Target Fleet ID: 65756
+  Location: HexCoord(544, 2681)
+  Speed: 5.0
+
+Target Projected Path (5 segments):
+  [0] Turn 0: HexCoord(543, 2680)
+  [1] Turn 0: HexCoord(543, 2679)
+  [2] Turn 0: HexCoord(543, 2678)
+  [3] Turn 0: HexCoord(543, 2677)
+  [4] Turn 0: HexCoord(543, 2676)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2680) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(543, 2679) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(543, 2678) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(543, 2677) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(543, 2676) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:18
+============================================================
+Chaser Fleet ID: 65756
+  Location: HexCoord(543, 2681)
+  Speed: 5.0
+Target Fleet ID: 19511
+  Location: HexCoord(543, 2676)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2676) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+
+>>> FALLBACK: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:18
+============================================================
+Chaser Fleet ID: 19232
+  Location: HexCoord(544, 2685)
+  Speed: 5.0
+Target Fleet ID: 65756
+  Location: HexCoord(543, 2681)
+  Speed: 5.0
+
+Target Projected Path (4 segments):
+  [0] Turn 0: HexCoord(543, 2679)
+  [1] Turn 0: HexCoord(543, 2678)
+  [2] Turn 0: HexCoord(543, 2677)
+  [3] Turn 0: HexCoord(543, 2676)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2679) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(543, 2678) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(543, 2677) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(543, 2676) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:18
+============================================================
+Chaser Fleet ID: 65756
+  Location: HexCoord(543, 2680)
+  Speed: 5.0
+Target Fleet ID: 19511
+  Location: HexCoord(543, 2676)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2676) @ T0: path=4 steps, chaser_time=0.80 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(543, 2676)
+    Chaser arrives in 0.80 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 4 steps
+Chaser subticks: 80 (Turn 0, Subtick 80)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:18
+============================================================
+Chaser Fleet ID: 19232
+  Location: HexCoord(544, 2684)
+  Speed: 5.0
+Target Fleet ID: 65756
+  Location: HexCoord(543, 2680)
+  Speed: 5.0
+
+Target Projected Path (3 segments):
+  [0] Turn 0: HexCoord(543, 2678)
+  [1] Turn 0: HexCoord(543, 2677)
+  [2] Turn 0: HexCoord(543, 2676)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2678) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(543, 2677) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(543, 2676) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:18
+============================================================
+Chaser Fleet ID: 65756
+  Location: HexCoord(543, 2679)
+  Speed: 5.0
+Target Fleet ID: 19511
+  Location: HexCoord(543, 2676)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2676) @ T0: path=3 steps, chaser_time=0.60 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(543, 2676)
+    Chaser arrives in 0.60 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 3 steps
+Chaser subticks: 60 (Turn 0, Subtick 60)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:18
+============================================================
+Chaser Fleet ID: 19232
+  Location: HexCoord(544, 2683)
+  Speed: 5.0
+Target Fleet ID: 65756
+  Location: HexCoord(543, 2679)
+  Speed: 5.0
+
+Target Projected Path (2 segments):
+  [0] Turn 0: HexCoord(543, 2677)
+  [1] Turn 0: HexCoord(543, 2676)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2677) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(543, 2676) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:47
+============================================================
+Chaser Fleet ID: 65756
+  Location: HexCoord(543, 2678)
+  Speed: 5.0
+Target Fleet ID: 19511
+  Location: HexCoord(543, 2676)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2676) @ T0: path=2 steps, chaser_time=0.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(543, 2676)
+    Chaser arrives in 0.40 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 2 steps
+Chaser subticks: 40 (Turn 0, Subtick 40)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:47
+============================================================
+Chaser Fleet ID: 19232
+  Location: HexCoord(544, 2682)
+  Speed: 5.0
+Target Fleet ID: 65756
+  Location: HexCoord(543, 2678)
+  Speed: 5.0
+
+Target Projected Path (1 segments):
+  [0] Turn 0: HexCoord(543, 2676)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2676) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:47
+============================================================
+Chaser Fleet ID: 65756
+  Location: HexCoord(543, 2677)
+  Speed: 5.0
+Target Fleet ID: 19511
+  Location: HexCoord(543, 2676)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2676) @ T0: path=1 steps, chaser_time=0.20 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(543, 2676)
+    Chaser arrives in 0.20 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 1 steps
+Chaser subticks: 20 (Turn 0, Subtick 20)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:47
+============================================================
+Chaser Fleet ID: 19232
+  Location: HexCoord(544, 2681)
+  Speed: 5.0
+Target Fleet ID: 65756
+  Location: HexCoord(543, 2677)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2677) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+
+>>> FALLBACK: HexCoord(543, 2677)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:47
+============================================================
+Chaser Fleet ID: 19232
+  Location: HexCoord(544, 2680)
+  Speed: 5.0
+Target Fleet ID: 65756
+  Location: HexCoord(543, 2676)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2676) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+
+>>> FALLBACK: HexCoord(543, 2676)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:47
+============================================================
+Chaser Fleet ID: 19232
+  Location: HexCoord(544, 2679)
+  Speed: 5.0
+Target Fleet ID: 65756
+  Location: HexCoord(543, 2676)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2676) @ T0: path=4 steps, chaser_time=0.80 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(543, 2676)
+    Chaser arrives in 0.80 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 4 steps
+Chaser subticks: 80 (Turn 0, Subtick 80)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:47
+============================================================
+Chaser Fleet ID: 19232
+  Location: HexCoord(544, 2678)
+  Speed: 5.0
+Target Fleet ID: 65756
+  Location: HexCoord(543, 2676)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2676) @ T0: path=3 steps, chaser_time=0.60 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(543, 2676)
+    Chaser arrives in 0.60 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 3 steps
+Chaser subticks: 60 (Turn 0, Subtick 60)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:52
+============================================================
+Chaser Fleet ID: 19232
+  Location: HexCoord(543, 2678)
+  Speed: 5.0
+Target Fleet ID: 65756
+  Location: HexCoord(543, 2676)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2676) @ T0: path=2 steps, chaser_time=0.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(543, 2676)
+    Chaser arrives in 0.40 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 2 steps
+Chaser subticks: 40 (Turn 0, Subtick 40)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:54:52
+============================================================
+Chaser Fleet ID: 19232
+  Location: HexCoord(543, 2677)
+  Speed: 5.0
+Target Fleet ID: 65756
+  Location: HexCoord(543, 2676)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(543, 2676) @ T0: path=1 steps, chaser_time=0.20 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(543, 2676)
+    Chaser arrives in 0.20 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 1 steps
+Chaser subticks: 20 (Turn 0, Subtick 20)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:56:49
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 2.0
+Target Fleet ID: 2
+  Location: HexCoord(4, 0)
+  Speed: 1.0
+
+Target Projected Path (5 segments):
+  [0] Turn 1: HexCoord(5, 0)
+  [1] Turn 2: HexCoord(6, 0)
+  [2] Turn 3: HexCoord(7, 0)
+  [3] Turn 4: HexCoord(8, 0)
+  [4] Turn 5: HexCoord(9, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(5, 0) @ T1: path=5 steps, chaser_time=2.50 turns, valid=False
+  [1] HexCoord(6, 0) @ T2: path=6 steps, chaser_time=3.00 turns, valid=False
+  [2] HexCoord(7, 0) @ T3: path=7 steps, chaser_time=3.50 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [3] HexCoord(8, 0) @ T4: path=8 steps, chaser_time=4.00 turns, valid=True
+  [4] HexCoord(9, 0) @ T5: path=9 steps, chaser_time=4.50 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(7, 0)
+    Chaser arrives in 3.50 turns
+    Target at hex during turn 3
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 7 steps
+Chaser subticks: 350 (Turn 3, Subtick 50)
+Target at intercept hex during turn: 3
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 3
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 21:56:49
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 5.0
+Target Fleet ID: 2
+  Location: HexCoord(10, 0)
+  Speed: 10.0
+
+Target Projected Path (2 segments):
+  [0] Turn 5: HexCoord(30, 0)
+  [1] Turn 10: HexCoord(15, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(30, 0) @ T5: path=30 steps, chaser_time=6.00 turns, valid=False
+  [1] HexCoord(15, 0) @ T10: path=15 steps, chaser_time=3.00 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(15, 0)
+    Chaser arrives in 3.00 turns
+    Target at hex during turn 10
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 15 steps
+Chaser subticks: 300 (Turn 3, Subtick 0)
+Target at intercept hex during turn: 10
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 10
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:09:29
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 2.0
+Target Fleet ID: 2
+  Location: HexCoord(4, 0)
+  Speed: 1.0
+
+Target Projected Path (5 segments):
+  [0] Turn 1: HexCoord(5, 0)
+  [1] Turn 2: HexCoord(6, 0)
+  [2] Turn 3: HexCoord(7, 0)
+  [3] Turn 4: HexCoord(8, 0)
+  [4] Turn 5: HexCoord(9, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(5, 0) @ T1: path=5 steps, chaser_time=2.50 turns, valid=False
+  [1] HexCoord(6, 0) @ T2: path=6 steps, chaser_time=3.00 turns, valid=False
+  [2] HexCoord(7, 0) @ T3: path=7 steps, chaser_time=3.50 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [3] HexCoord(8, 0) @ T4: path=8 steps, chaser_time=4.00 turns, valid=True
+  [4] HexCoord(9, 0) @ T5: path=9 steps, chaser_time=4.50 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(7, 0)
+    Chaser arrives in 3.50 turns
+    Target at hex during turn 3
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 7 steps
+Chaser subticks: 350 (Turn 3, Subtick 50)
+Target at intercept hex during turn: 3
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 3
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:09:29
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 5.0
+Target Fleet ID: 2
+  Location: HexCoord(10, 0)
+  Speed: 10.0
+
+Target Projected Path (2 segments):
+  [0] Turn 5: HexCoord(30, 0)
+  [1] Turn 10: HexCoord(15, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(30, 0) @ T5: path=30 steps, chaser_time=6.00 turns, valid=False
+  [1] HexCoord(15, 0) @ T10: path=15 steps, chaser_time=3.00 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(15, 0)
+    Chaser arrives in 3.00 turns
+    Target at hex during turn 10
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 15 steps
+Chaser subticks: 300 (Turn 3, Subtick 0)
+Target at intercept hex during turn: 10
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 10
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:11:42
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 2.0
+Target Fleet ID: 2
+  Location: HexCoord(4, 0)
+  Speed: 1.0
+
+Target Projected Path (5 segments):
+  [0] Turn 1: HexCoord(5, 0)
+  [1] Turn 2: HexCoord(6, 0)
+  [2] Turn 3: HexCoord(7, 0)
+  [3] Turn 4: HexCoord(8, 0)
+  [4] Turn 5: HexCoord(9, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(5, 0) @ T1: path=5 steps, chaser_time=2.50 turns, valid=False
+  [1] HexCoord(6, 0) @ T2: path=6 steps, chaser_time=3.00 turns, valid=False
+  [2] HexCoord(7, 0) @ T3: path=7 steps, chaser_time=3.50 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [3] HexCoord(8, 0) @ T4: path=8 steps, chaser_time=4.00 turns, valid=True
+  [4] HexCoord(9, 0) @ T5: path=9 steps, chaser_time=4.50 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(7, 0)
+    Chaser arrives in 3.50 turns
+    Target at hex during turn 3
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 7 steps
+Chaser subticks: 350 (Turn 3, Subtick 50)
+Target at intercept hex during turn: 3
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 3
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:11:42
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 5.0
+Target Fleet ID: 2
+  Location: HexCoord(10, 0)
+  Speed: 10.0
+
+Target Projected Path (2 segments):
+  [0] Turn 5: HexCoord(30, 0)
+  [1] Turn 10: HexCoord(15, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(30, 0) @ T5: path=30 steps, chaser_time=6.00 turns, valid=False
+  [1] HexCoord(15, 0) @ T10: path=15 steps, chaser_time=3.00 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(15, 0)
+    Chaser arrives in 3.00 turns
+    Target at hex during turn 10
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 15 steps
+Chaser subticks: 300 (Turn 3, Subtick 0)
+Target at intercept hex during turn: 10
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 10
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:38
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(530, 1618)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(533, 1613)
+  Speed: 5.0
+
+Target Projected Path (10 segments):
+  [0] Turn 0: HexCoord(534, 1611)
+  [1] Turn 0: HexCoord(535, 1610)
+  [2] Turn 0: HexCoord(536, 1609)
+  [3] Turn 0: HexCoord(536, 1608)
+  [4] Turn 0: HexCoord(537, 1607)
+  [5] Turn 1: HexCoord(538, 1606)
+  [6] Turn 1: HexCoord(538, 1605)
+  [7] Turn 1: HexCoord(539, 1604)
+  [8] Turn 1: HexCoord(539, 1603)
+  [9] Turn 1: HexCoord(540, 1602)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(534, 1611) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(535, 1610) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(536, 1609) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(536, 1608) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(537, 1607) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+  [5] HexCoord(538, 1606) @ T1: path=12 steps, chaser_time=2.40 turns, valid=False
+  [6] HexCoord(538, 1605) @ T1: path=13 steps, chaser_time=2.60 turns, valid=False
+  [7] HexCoord(539, 1604) @ T1: path=14 steps, chaser_time=2.80 turns, valid=False
+  [8] HexCoord(539, 1603) @ T1: path=15 steps, chaser_time=3.00 turns, valid=False
+  [9] HexCoord(540, 1602) @ T1: path=16 steps, chaser_time=3.20 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(540, 1602)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:38
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(531, 1617)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(534, 1612)
+  Speed: 5.0
+
+Target Projected Path (9 segments):
+  [0] Turn 0: HexCoord(535, 1610)
+  [1] Turn 0: HexCoord(536, 1609)
+  [2] Turn 0: HexCoord(536, 1608)
+  [3] Turn 0: HexCoord(537, 1607)
+  [4] Turn 0: HexCoord(538, 1606)
+  [5] Turn 1: HexCoord(538, 1605)
+  [6] Turn 1: HexCoord(539, 1604)
+  [7] Turn 1: HexCoord(539, 1603)
+  [8] Turn 1: HexCoord(540, 1602)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(535, 1610) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(536, 1609) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(536, 1608) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(537, 1607) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(538, 1606) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+  [5] HexCoord(538, 1605) @ T1: path=12 steps, chaser_time=2.40 turns, valid=False
+  [6] HexCoord(539, 1604) @ T1: path=13 steps, chaser_time=2.60 turns, valid=False
+  [7] HexCoord(539, 1603) @ T1: path=14 steps, chaser_time=2.80 turns, valid=False
+  [8] HexCoord(540, 1602) @ T1: path=15 steps, chaser_time=3.00 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(540, 1602)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:38
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(531, 1616)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(534, 1611)
+  Speed: 5.0
+
+Target Projected Path (8 segments):
+  [0] Turn 0: HexCoord(536, 1609)
+  [1] Turn 0: HexCoord(536, 1608)
+  [2] Turn 0: HexCoord(537, 1607)
+  [3] Turn 0: HexCoord(538, 1606)
+  [4] Turn 0: HexCoord(538, 1605)
+  [5] Turn 1: HexCoord(539, 1604)
+  [6] Turn 1: HexCoord(539, 1603)
+  [7] Turn 1: HexCoord(540, 1602)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(536, 1609) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(536, 1608) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(537, 1607) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(538, 1606) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(538, 1605) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+  [5] HexCoord(539, 1604) @ T1: path=12 steps, chaser_time=2.40 turns, valid=False
+  [6] HexCoord(539, 1603) @ T1: path=13 steps, chaser_time=2.60 turns, valid=False
+  [7] HexCoord(540, 1602) @ T1: path=14 steps, chaser_time=2.80 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(540, 1602)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:38
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(532, 1615)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(535, 1610)
+  Speed: 5.0
+
+Target Projected Path (7 segments):
+  [0] Turn 0: HexCoord(536, 1608)
+  [1] Turn 0: HexCoord(537, 1607)
+  [2] Turn 0: HexCoord(538, 1606)
+  [3] Turn 0: HexCoord(538, 1605)
+  [4] Turn 0: HexCoord(539, 1604)
+  [5] Turn 1: HexCoord(539, 1603)
+  [6] Turn 1: HexCoord(540, 1602)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(536, 1608) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(537, 1607) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(538, 1606) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(538, 1605) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(539, 1604) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+  [5] HexCoord(539, 1603) @ T1: path=12 steps, chaser_time=2.40 turns, valid=False
+  [6] HexCoord(540, 1602) @ T1: path=13 steps, chaser_time=2.60 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(540, 1602)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:38
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(532, 1614)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(536, 1609)
+  Speed: 5.0
+
+Target Projected Path (6 segments):
+  [0] Turn 0: HexCoord(537, 1607)
+  [1] Turn 0: HexCoord(538, 1606)
+  [2] Turn 0: HexCoord(538, 1605)
+  [3] Turn 0: HexCoord(539, 1604)
+  [4] Turn 0: HexCoord(539, 1603)
+  [5] Turn 1: HexCoord(540, 1602)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(537, 1607) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(538, 1606) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(538, 1605) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(539, 1604) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(539, 1603) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+  [5] HexCoord(540, 1602) @ T1: path=12 steps, chaser_time=2.40 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(540, 1602)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:49
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3321, -2283)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3316, -2278)
+  Speed: 5.0
+
+Target Projected Path (10 segments):
+  [0] Turn 0: HexCoord(3314, -2276)
+  [1] Turn 0: HexCoord(3313, -2276)
+  [2] Turn 0: HexCoord(3312, -2275)
+  [3] Turn 0: HexCoord(3311, -2274)
+  [4] Turn 0: HexCoord(3310, -2273)
+  [5] Turn 1: HexCoord(3309, -2272)
+  [6] Turn 1: HexCoord(3308, -2271)
+  [7] Turn 1: HexCoord(3307, -2270)
+  [8] Turn 1: HexCoord(3306, -2269)
+  [9] Turn 1: HexCoord(3305, -2268)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(3314, -2276) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(3313, -2276) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(3312, -2275) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(3311, -2274) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(3310, -2273) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+  [5] HexCoord(3309, -2272) @ T1: path=12 steps, chaser_time=2.40 turns, valid=False
+  [6] HexCoord(3308, -2271) @ T1: path=13 steps, chaser_time=2.60 turns, valid=False
+  [7] HexCoord(3307, -2270) @ T1: path=14 steps, chaser_time=2.80 turns, valid=False
+  [8] HexCoord(3306, -2269) @ T1: path=15 steps, chaser_time=3.00 turns, valid=False
+  [9] HexCoord(3305, -2268) @ T1: path=16 steps, chaser_time=3.20 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(3305, -2268)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:49
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(533, 1613)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(536, 1608)
+  Speed: 5.0
+
+Target Projected Path (5 segments):
+  [0] Turn 0: HexCoord(538, 1606)
+  [1] Turn 0: HexCoord(538, 1605)
+  [2] Turn 0: HexCoord(539, 1604)
+  [3] Turn 0: HexCoord(539, 1603)
+  [4] Turn 0: HexCoord(540, 1602)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(538, 1606) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(538, 1605) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(539, 1604) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(539, 1603) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(540, 1602) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(540, 1602)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:49
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3320, -2282)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3315, -2277)
+  Speed: 5.0
+
+Target Projected Path (9 segments):
+  [0] Turn 0: HexCoord(3313, -2276)
+  [1] Turn 0: HexCoord(3312, -2275)
+  [2] Turn 0: HexCoord(3311, -2274)
+  [3] Turn 0: HexCoord(3310, -2273)
+  [4] Turn 0: HexCoord(3309, -2272)
+  [5] Turn 1: HexCoord(3308, -2271)
+  [6] Turn 1: HexCoord(3307, -2270)
+  [7] Turn 1: HexCoord(3306, -2269)
+  [8] Turn 1: HexCoord(3305, -2268)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(3313, -2276) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(3312, -2275) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(3311, -2274) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(3310, -2273) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(3309, -2272) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+  [5] HexCoord(3308, -2271) @ T1: path=12 steps, chaser_time=2.40 turns, valid=False
+  [6] HexCoord(3307, -2270) @ T1: path=13 steps, chaser_time=2.60 turns, valid=False
+  [7] HexCoord(3306, -2269) @ T1: path=14 steps, chaser_time=2.80 turns, valid=False
+  [8] HexCoord(3305, -2268) @ T1: path=15 steps, chaser_time=3.00 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(3305, -2268)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:49
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(534, 1612)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(537, 1607)
+  Speed: 5.0
+
+Target Projected Path (4 segments):
+  [0] Turn 0: HexCoord(538, 1605)
+  [1] Turn 0: HexCoord(539, 1604)
+  [2] Turn 0: HexCoord(539, 1603)
+  [3] Turn 0: HexCoord(540, 1602)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(538, 1605) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(539, 1604) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(539, 1603) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(540, 1602) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(540, 1602)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:49
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3319, -2281)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3314, -2276)
+  Speed: 5.0
+
+Target Projected Path (8 segments):
+  [0] Turn 0: HexCoord(3312, -2275)
+  [1] Turn 0: HexCoord(3311, -2274)
+  [2] Turn 0: HexCoord(3310, -2273)
+  [3] Turn 0: HexCoord(3309, -2272)
+  [4] Turn 0: HexCoord(3308, -2271)
+  [5] Turn 1: HexCoord(3307, -2270)
+  [6] Turn 1: HexCoord(3306, -2269)
+  [7] Turn 1: HexCoord(3305, -2268)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(3312, -2275) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(3311, -2274) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(3310, -2273) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(3309, -2272) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(3308, -2271) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+  [5] HexCoord(3307, -2270) @ T1: path=12 steps, chaser_time=2.40 turns, valid=False
+  [6] HexCoord(3306, -2269) @ T1: path=13 steps, chaser_time=2.60 turns, valid=False
+  [7] HexCoord(3305, -2268) @ T1: path=14 steps, chaser_time=2.80 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(3305, -2268)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:49
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(534, 1611)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(538, 1606)
+  Speed: 5.0
+
+Target Projected Path (3 segments):
+  [0] Turn 0: HexCoord(539, 1604)
+  [1] Turn 0: HexCoord(539, 1603)
+  [2] Turn 0: HexCoord(540, 1602)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(539, 1604) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(539, 1603) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(540, 1602) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(540, 1602)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:49
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3318, -2280)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3313, -2276)
+  Speed: 5.0
+
+Target Projected Path (7 segments):
+  [0] Turn 0: HexCoord(3311, -2274)
+  [1] Turn 0: HexCoord(3310, -2273)
+  [2] Turn 0: HexCoord(3309, -2272)
+  [3] Turn 0: HexCoord(3308, -2271)
+  [4] Turn 0: HexCoord(3307, -2270)
+  [5] Turn 1: HexCoord(3306, -2269)
+  [6] Turn 1: HexCoord(3305, -2268)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(3311, -2274) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(3310, -2273) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(3309, -2272) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(3308, -2271) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(3307, -2270) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+  [5] HexCoord(3306, -2269) @ T1: path=12 steps, chaser_time=2.40 turns, valid=False
+  [6] HexCoord(3305, -2268) @ T1: path=13 steps, chaser_time=2.60 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(3305, -2268)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:49
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(535, 1610)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(538, 1605)
+  Speed: 5.0
+
+Target Projected Path (2 segments):
+  [0] Turn 0: HexCoord(539, 1603)
+  [1] Turn 0: HexCoord(540, 1602)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(539, 1603) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(540, 1602) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(540, 1602)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:49
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3317, -2279)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3312, -2275)
+  Speed: 5.0
+
+Target Projected Path (6 segments):
+  [0] Turn 0: HexCoord(3310, -2273)
+  [1] Turn 0: HexCoord(3309, -2272)
+  [2] Turn 0: HexCoord(3308, -2271)
+  [3] Turn 0: HexCoord(3307, -2270)
+  [4] Turn 0: HexCoord(3306, -2269)
+  [5] Turn 1: HexCoord(3305, -2268)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(3310, -2273) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(3309, -2272) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(3308, -2271) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(3307, -2270) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(3306, -2269) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+  [5] HexCoord(3305, -2268) @ T1: path=12 steps, chaser_time=2.40 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(3305, -2268)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:12:49
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(536, 1609)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(539, 1604)
+  Speed: 5.0
+
+Target Projected Path (1 segments):
+  [0] Turn 0: HexCoord(540, 1602)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(540, 1602) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(540, 1602)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:01
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3316, -2278)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3311, -2274)
+  Speed: 5.0
+
+Target Projected Path (5 segments):
+  [0] Turn 0: HexCoord(3309, -2272)
+  [1] Turn 0: HexCoord(3308, -2271)
+  [2] Turn 0: HexCoord(3307, -2270)
+  [3] Turn 0: HexCoord(3306, -2269)
+  [4] Turn 0: HexCoord(3305, -2268)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(3309, -2272) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(3308, -2271) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(3307, -2270) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(3306, -2269) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+  [4] HexCoord(3305, -2268) @ T0: path=11 steps, chaser_time=2.20 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(3305, -2268)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:01
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(536, 1608)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(539, 1603)
+  Speed: 5.0
+
+Target Projected Path (1 segments):
+  [0] Turn 0: HexCoord(540, 1602)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(540, 1602) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(540, 1602)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:01
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3315, -2277)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3310, -2273)
+  Speed: 5.0
+
+Target Projected Path (4 segments):
+  [0] Turn 0: HexCoord(3308, -2271)
+  [1] Turn 0: HexCoord(3307, -2270)
+  [2] Turn 0: HexCoord(3306, -2269)
+  [3] Turn 0: HexCoord(3305, -2268)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(3308, -2271) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(3307, -2270) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(3306, -2269) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(3305, -2268) @ T0: path=10 steps, chaser_time=2.00 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(3305, -2268)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:01
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(537, 1607)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(540, 1602)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(540, 1602) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+
+>>> FALLBACK: HexCoord(540, 1602)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:01
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3314, -2276)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3309, -2272)
+  Speed: 5.0
+
+Target Projected Path (3 segments):
+  [0] Turn 0: HexCoord(3307, -2270)
+  [1] Turn 0: HexCoord(3306, -2269)
+  [2] Turn 0: HexCoord(3305, -2268)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(3307, -2270) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(3306, -2269) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(3305, -2268) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(3305, -2268)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:01
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(538, 1606)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(540, 1602)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(540, 1602) @ T0: path=4 steps, chaser_time=0.80 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(540, 1602)
+    Chaser arrives in 0.80 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 4 steps
+Chaser subticks: 80 (Turn 0, Subtick 80)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:01
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3313, -2276)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3308, -2271)
+  Speed: 5.0
+
+Target Projected Path (2 segments):
+  [0] Turn 0: HexCoord(3306, -2269)
+  [1] Turn 0: HexCoord(3305, -2268)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(3306, -2269) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(3305, -2268) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(3305, -2268)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:01
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(538, 1605)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(540, 1602)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(540, 1602) @ T0: path=3 steps, chaser_time=0.60 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(540, 1602)
+    Chaser arrives in 0.60 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 3 steps
+Chaser subticks: 60 (Turn 0, Subtick 60)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:01
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3312, -2275)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3307, -2270)
+  Speed: 5.0
+
+Target Projected Path (1 segments):
+  [0] Turn 0: HexCoord(3305, -2268)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(3305, -2268) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(3305, -2268)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:01
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(539, 1604)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(540, 1602)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(540, 1602) @ T0: path=2 steps, chaser_time=0.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(540, 1602)
+    Chaser arrives in 0.40 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 2 steps
+Chaser subticks: 40 (Turn 0, Subtick 40)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:05
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3311, -2274)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3306, -2269)
+  Speed: 5.0
+
+Target Projected Path (1 segments):
+  [0] Turn 0: HexCoord(3305, -2268)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(3305, -2268) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+
+>>> NO INTERCEPT FOUND - chasing endpoint: HexCoord(3305, -2268)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:05
+============================================================
+Chaser Fleet ID: 72193
+  Location: HexCoord(539, 1603)
+  Speed: 5.0
+Target Fleet ID: 41863
+  Location: HexCoord(540, 1602)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(540, 1602) @ T0: path=1 steps, chaser_time=0.20 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(540, 1602)
+    Chaser arrives in 0.20 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 1 steps
+Chaser subticks: 20 (Turn 0, Subtick 20)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:05
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3310, -2273)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3305, -2268)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(3305, -2268) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+
+>>> FALLBACK: HexCoord(3305, -2268)
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:05
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3309, -2272)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3305, -2268)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(3305, -2268) @ T0: path=4 steps, chaser_time=0.80 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(3305, -2268)
+    Chaser arrives in 0.80 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 4 steps
+Chaser subticks: 80 (Turn 0, Subtick 80)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:05
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3308, -2271)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3305, -2268)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(3305, -2268) @ T0: path=3 steps, chaser_time=0.60 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(3305, -2268)
+    Chaser arrives in 0.60 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 3 steps
+Chaser subticks: 60 (Turn 0, Subtick 60)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:05
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3307, -2270)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3305, -2268)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(3305, -2268) @ T0: path=2 steps, chaser_time=0.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(3305, -2268)
+    Chaser arrives in 0.40 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 2 steps
+Chaser subticks: 40 (Turn 0, Subtick 40)
+WARNING: Could not find intercept hex in target path
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 22:13:14
+============================================================
+Chaser Fleet ID: 49728
+  Location: HexCoord(3306, -2269)
+  Speed: 5.0
+Target Fleet ID: 58450
+  Location: HexCoord(3305, -2268)
+  Speed: 5.0
+
+Target Projected Path (0 segments):
+
+Target is STATIONARY - using current location
+
+Evaluating intercept candidates:
+  [0] HexCoord(3305, -2268) @ T0: path=1 steps, chaser_time=0.20 turns, valid=True
+      -> NEW BEST INTERCEPT
+
+>>> SELECTED INTERCEPT: HexCoord(3305, -2268)
+    Chaser arrives in 0.20 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 1 steps
+Chaser subticks: 20 (Turn 0, Subtick 20)
+WARNING: Could not find intercept hex in target path
+============================================================
+
