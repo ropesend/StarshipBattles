@@ -4,11 +4,13 @@ from enum import Enum, auto
 class OrderType(Enum):
     MOVE = auto()
     COLONIZE = auto()
+    MOVE_TO_FLEET = auto()
+    JOIN_FLEET = auto()
 
 class FleetOrder:
     def __init__(self, order_type, target=None):
         self.type = order_type
-        self.target = target # HexCoord for MOVE, Planet for COLONIZE
+        self.target = target # HexCoord for MOVE, Planet for COLONIZE, Fleet for MOVE_TO_FLEET/JOIN_FLEET
     
     def __repr__(self):
         return f"FleetOrder({self.type.name}, {self.target})"
@@ -53,6 +55,21 @@ class Fleet:
             self.path = [] # Clear path associated with that order
             return finished
         return None
+
+    def merge_with(self, other_fleet):
+        """
+        Merge this fleet into other_fleet.
+        Transfers all ships and clears this fleet.
+        """
+        if not isinstance(other_fleet, Fleet):
+            return
+            
+        # Transfer ships
+        other_fleet.ships.extend(self.ships)
+        self.ships.clear()
+        
+        # Clear orders (this fleet is effectively gone)
+        self.clear_orders()
 
     def __repr__(self):
         return f"Fleet({self.id}, Owner:{self.owner_id}, Loc:{self.location}, Spd:{self.speed})"

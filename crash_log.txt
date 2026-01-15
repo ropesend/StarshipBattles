@@ -1,6 +1,20 @@
 Traceback (most recent call last):
   File "C:\Dev\Starship Battles\game\app.py", line 575, in main
     game.run()
+<<<<<<< HEAD
+  File "C:\Developer\StarshipBattles\game\app.py", line 228, in run
+    self._handle_click(event)
+  File "C:\Developer\StarshipBattles\game\app.py", line 313, in _handle_click
+    self.strategy_scene.handle_click(mx, my, event.button)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 589, in handle_click
+    self._handle_colonize_designation(mx, my)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 818, in _handle_colonize_designation
+    self._queue_colonize_mission(target_hex, candidates[0], fleet=self.selected_fleet)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 847, in _queue_colonize_mission
+    if last.type == OrderType.MOVE:
+                    ^^^^^^^^^
+UnboundLocalError: cannot access local variable 'OrderType' where it is not associated with a value
+=======
   File "C:\Dev\Starship Battles\game\app.py", line 252, in run
     self._update_and_draw(frame_time, events)
   File "C:\Dev\Starship Battles\game\app.py", line 336, in _update_and_draw
@@ -10,3 +24,4 @@ Traceback (most recent call last):
   File "C:\Dev\Starship Battles\game\ui\screens\battle_scene.py", line 305, in print_headless_summary
     self.ui.print_headless_summary(self.headless_start_time, self.sim_tick_counter)
 AttributeError: 'BattleInterface' object has no attribute 'print_headless_summary'
+>>>>>>> 736e000ff4cb7a754228cbc7573aca24b133b968

@@ -293,3 +293,79 @@ def project_fleet_path(fleet, galaxy, max_turns=10):
              sim_orders.pop(0)
              
     return segments
+
+def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
+    """
+    Calculate the optimal interception hex.
+    
+    Uses real path lengths (via find_hybrid_path) rather than straight-line
+    distance to ensure the chaser takes an efficient route.
+    
+    Algorithm:
+    1. Project target's future path.
+    2. For each point on target's path, calculate how long chaser needs to get there.
+    3. Find the point with MINIMUM chaser arrival time where chaser_turns <= target_turn.
+    4. Early exit if we find a perfect intercept (chaser arrives in <= 1 turn).
+    5. If no intercept possible, chase the endpoint of target's path.
+    """
+    # Project target's future path
+    target_path = project_fleet_path(target_fleet, galaxy, max_turns=50)
+    
+    chaser_speed = chaser_fleet.speed
+    if chaser_speed <= 0:
+        return target_fleet.location
+    
+    # Build list: [(hex, target_turn), ...]
+    points_to_check = [{'hex': target_fleet.location, 'turn': 0}] + target_path
+    
+    best_intercept = None
+    best_intercept_time = float('inf')
+    fallback_hex = None  # Track closest reachable point if no intercept possible
+    
+    for pt in points_to_check:
+        target_turn = pt['turn']
+        target_hex = pt['hex']
+        
+        # Calculate REAL path length using hybrid pathfinding
+        path_to_target = find_hybrid_path(galaxy, chaser_fleet.location, target_hex)
+        
+        if not path_to_target:
+            # Can't reach this hex at all, skip
+            continue
+            
+        # Path length is number of steps
+        path_length = len(path_to_target)
+        
+        # Time for chaser = path_length / speed
+        chaser_turns = path_length / chaser_speed
+        
+        # Can we intercept at this point?
+        if chaser_turns <= target_turn:
+            # Valid intercept - track if this is the EARLIEST arrival for chaser
+            if chaser_turns < best_intercept_time:
+                best_intercept_time = chaser_turns
+                best_intercept = target_hex
+                
+                # Early exit: If chaser can reach in <= 1 turn, can't improve much
+                if chaser_turns <= 1.0:
+                    return best_intercept
+        else:
+            # Not a valid intercept, but track as fallback
+            if fallback_hex is None:
+                fallback_hex = target_hex
+                
+        # Early exit: If we found an intercept and target_turn exceeds our best time
+        # by a significant margin, later points can only be worse for chaser
+        if best_intercept is not None and target_turn > best_intercept_time + 5:
+            break
+    
+    # Return best intercept if found
+    if best_intercept is not None:
+        return best_intercept
+    
+    # No intercept found on projected path - chase the endpoint
+    if target_path:
+        return target_path[-1]['hex']
+        
+    return fallback_hex if fallback_hex else target_fleet.location
+

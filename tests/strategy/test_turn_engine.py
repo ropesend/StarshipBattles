@@ -3,14 +3,16 @@ from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 class MockGalaxy:
-    pass
+    def __init__(self):
+        self.systems = {}
 
 
 
-def test_movement_timing():
+@patch('game.strategy.data.pathfinding.find_hybrid_path')
+def test_movement_timing(mock_path):
     """Verify ships move at correct tick intervals based on speed."""
     engine = TurnEngine()
     
@@ -22,8 +24,12 @@ def test_movement_timing():
     
     # Speed 10: 100 // 10 = 10. Moves at 10, 20... 100.
     f10 = Fleet(2, 0, HexCoord(0, 0), speed=10.0)
-    f10.path = [HexCoord(1,0) for _ in range(10)] # Dummy path just to allow movement
+    f10.path = [HexCoord(i,0) for i in range(1, 11)] # 10 step path
     f10.add_order(FleetOrder(OrderType.MOVE, HexCoord(10,0)))
+    
+    # Mock pathfinding to return paths that match our expectations
+    # This prevents path recalculation from changing our test conditions
+    mock_path.return_value = None  # No recalc needed since paths are pre-set
     
     empires = [Empire(0, "P1", (255,0,0))]
     empires[0].add_fleet(f5)
@@ -39,26 +45,24 @@ def test_movement_timing():
     # Run tick 20
     engine._process_tick(20, empires, MockGalaxy())
     assert f5.location == HexCoord(1,0)   # Moved at tick 20
-    assert f10.location == HexCoord(1,0)  # Moved at tick 20 (accumulated 2nd step? No, just 1 step per valid tick)
-    # Wait, f10 moved at 10. Should move again at 20.
-    # We need to verify location updated.
-    
-    # Re-setup for precise tracking
-    f10.location = HexCoord(1,0) # Reset manually to avoid ambiguity 
-    # Actually, let's just trace the whole turn.
-    
-def test_full_turn_distance():
+    assert f10.location == HexCoord(2,0)  # Moved again at tick 20
+
+@patch('game.strategy.data.pathfinding.find_hybrid_path')
+def test_full_turn_distance(mock_path):
     """Verify total distance traveled in a turn."""
     engine = TurnEngine()
     
     f2 = Fleet(1, 0, HexCoord(0,0), speed=2.0) # Should move 2 steps
-    # Path long enough
-    f2.path = [HexCoord(i, 0) for i in range(1, 10)]
+    # Path must end at destination (10,0) to avoid path recalculation
+    f2.path = [HexCoord(i, 0) for i in range(1, 11)]  # 1..10
     f2.add_order(FleetOrder(OrderType.MOVE, HexCoord(10,0)))
     
     f5 = Fleet(2, 0, HexCoord(0,0), speed=5.0) # Should move 5 steps
-    f5.path = [HexCoord(i, 0) for i in range(1, 10)]
+    f5.path = [HexCoord(i, 0) for i in range(1, 11)]  # 1..10
     f5.add_order(FleetOrder(OrderType.MOVE, HexCoord(10,0)))
+    
+    # Mock pathfinding - return None to use pre-set paths
+    mock_path.return_value = None
     
     empires = [Empire(0, "P1", (0,0,0))]
     empires[0].add_fleet(f2)
@@ -109,10 +113,21 @@ def test_order_chaining():
     """Verify Colonize executes after Move finishes."""
     engine = TurnEngine()
     
+    # Create a mock planet with proper location
     planet = MagicMock()
     planet.name = "Test Planet"
     planet.owner_id = None
     planet.construction_queue = []
+    planet.location = HexCoord(0, 0)  # At system center (relative)
+    
+    # Create mock system containing the planet
+    mock_system = MagicMock()
+    mock_system.global_location = HexCoord(1, 0)
+    mock_system.planets = [planet]
+    
+    # Create galaxy with the system
+    galaxy = MockGalaxy()
+    galaxy.systems[HexCoord(1, 0)] = mock_system
     
     f1 = Fleet(1, 0, HexCoord(0,0), speed=100.0) # Fast, arrives instantly
     f1.path = [HexCoord(1,0)]
@@ -122,18 +137,13 @@ def test_order_chaining():
     e1 = Empire(0, "P1", (0,0,0))
     e1.add_fleet(f1)
     
-    # Mock TurnEngine's ability to see the planet? 
-    # Typically logic: verify f1 is at planet location.
-    # We need to ensure logic handles "At Destination" -> Pop Move -> Process Next Order immediately or next turn?
-    # Logic: "End-of-Turn Orders: Execute valid static orders"
-    
     # Set fleet to ALREADY be at target to test colonize logic specifically
     f1.location = HexCoord(1,0) 
     f1.path = []
     # Clear move order, just leave Colonize
     f1.orders = [FleetOrder(OrderType.COLONIZE, planet)]
     
-    engine.process_turn([e1], MockGalaxy())
+    engine.process_turn([e1], galaxy)
     
     assert planet.owner_id == 0
     assert planet in e1.colonies
@@ -143,10 +153,21 @@ def test_colonize_deletes_fleet():
     """Verify colonizing fleet is removed from empire after colonization."""
     engine = TurnEngine()
     
+    # Create a mock planet with proper location
     planet = MagicMock()
     planet.name = "Test Planet"
     planet.owner_id = None
     planet.construction_queue = []
+    planet.location = HexCoord(0, 0)  # At system center (relative)
+    
+    # Create mock system containing the planet
+    mock_system = MagicMock()
+    mock_system.global_location = HexCoord(1, 0)
+    mock_system.planets = [planet]
+    
+    # Create galaxy with the system
+    galaxy = MockGalaxy()
+    galaxy.systems[HexCoord(1, 0)] = mock_system
     
     f1 = Fleet(1, 0, HexCoord(1, 0), speed=5.0)
     f1.orders = [FleetOrder(OrderType.COLONIZE, planet)]
@@ -156,10 +177,9 @@ def test_colonize_deletes_fleet():
     
     assert len(e1.fleets) == 1  # Fleet exists before turn
     
-    engine.process_turn([e1], MockGalaxy())
+    engine.process_turn([e1], galaxy)
     
     # Fleet should be removed (consumed to create colony)
     assert len(e1.fleets) == 0
     assert planet.owner_id == 0
     assert planet in e1.colonies
-
