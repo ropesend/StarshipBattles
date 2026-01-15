@@ -49,6 +49,11 @@ import importlib
 import importlib.util
 from typing import Dict, List, Type, Any, Optional
 from pathlib import Path
+from simulation_tests.logging_config import get_logger, setup_combat_lab_logging
+
+# Setup logging
+setup_combat_lab_logging()
+logger = get_logger(__name__)
 
 
 class TestRegistry:
@@ -113,14 +118,14 @@ class TestRegistry:
         scenarios_dir = self._get_scenarios_dir()
 
         if not os.path.exists(scenarios_dir):
-            print(f"Warning: Scenarios directory not found: {scenarios_dir}")
+            logger.warning(f"Scenarios directory not found: {scenarios_dir}")
             return
 
         # Import TestScenario base class for type checking
         try:
             from simulation_tests.scenarios.base import TestScenario
         except ImportError as e:
-            print(f"Error: Could not import TestScenario base class: {e}")
+            logger.error(f"Could not import TestScenario base class: {e}", exc_info=True)
             return
 
         # Ensure project root is in path
@@ -144,7 +149,7 @@ class TestRegistry:
                 spec = importlib.util.spec_from_file_location(module_name, file_path)
 
                 if spec is None or spec.loader is None:
-                    print(f"Warning: Could not load spec for {file_path}")
+                    logger.warning(f"Could not load spec for {file_path}")
                     continue
 
                 module = importlib.util.module_from_spec(spec)
@@ -162,7 +167,7 @@ class TestRegistry:
 
                         # Check if it has metadata
                         if not hasattr(attr, 'metadata') or attr.metadata is None:
-                            print(f"Warning: {attr_name} in {filename} has no metadata")
+                            logger.warning(f"{attr_name} in {filename} has no metadata")
                             continue
 
                         metadata = attr.metadata
@@ -177,14 +182,12 @@ class TestRegistry:
                             'last_run_results': None  # Will be populated after test runs
                         }
 
-                        print(f"Registered scenario: {test_id} - {metadata.name}")
+                        logger.debug(f"Registered scenario: {test_id} - {metadata.name}")
 
             except Exception as e:
-                print(f"Error loading scenario from {filename}: {e}")
-                import traceback
-                traceback.print_exc()
+                logger.error(f"Error loading scenario from {filename}: {e}", exc_info=True)
 
-        print(f"TestRegistry: Discovered {len(self.scenarios)} scenarios")
+        logger.info(f"Discovered {len(self.scenarios)} scenarios")
 
     def get_all_scenarios(self) -> Dict[str, Dict[str, Any]]:
         """
@@ -406,7 +409,7 @@ class TestRegistry:
         """
         if test_id in self.scenarios:
             self.scenarios[test_id]['last_run_results'] = results
-            print(f"Updated results for {test_id}")
+            logger.debug(f"Updated results for {test_id}")
 
     def print_summary(self):
         """
@@ -414,19 +417,19 @@ class TestRegistry:
 
         Useful for debugging and verification.
         """
-        print("\n" + "=" * 80)
-        print("TEST REGISTRY SUMMARY")
-        print("=" * 80)
+        logger.info("\n" + "=" * 80)
+        logger.info("TEST REGISTRY SUMMARY")
+        logger.info("=" * 80)
 
         categories = self.get_categories()
 
         if not categories:
-            print("No scenarios registered.")
+            logger.info("No scenarios registered.")
             return
 
         for category in categories:
-            print(f"\n{category}")
-            print("-" * 80)
+            logger.info(f"\n{category}")
+            logger.info("-" * 80)
 
             category_scenarios = self.get_by_category(category)
             subcats = {}
@@ -440,15 +443,15 @@ class TestRegistry:
 
             # Print by subcategory
             for subcat in sorted(subcats.keys()):
-                print(f"\n  {subcat}:")
+                logger.info(f"\n  {subcat}:")
                 for test_id, info in sorted(subcats[subcat], key=lambda x: x[0]):
                     metadata = info['metadata']
-                    print(f"    {test_id}: {metadata.name}")
-                    print(f"        {metadata.summary}")
+                    logger.info(f"    {test_id}: {metadata.name}")
+                    logger.info(f"        {metadata.summary}")
 
-        print("\n" + "=" * 80)
-        print(f"Total scenarios: {len(self.scenarios)}")
-        print("=" * 80 + "\n")
+        logger.info("\n" + "=" * 80)
+        logger.info(f"Total scenarios: {len(self.scenarios)}")
+        logger.info("=" * 80 + "\n")
 
 
 # Convenience function for getting singleton instance

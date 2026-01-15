@@ -23,7 +23,10 @@
       "Bash(exit 0)",
       "Bash(dir:*)",
       "Bash(ping:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(if exist \"simulation_tests\\\\scenarios\\\\__pycache__\" rmdir /s /q \"simulation_tests\\\\scenarios\\\\__pycache__\")",
+      "Bash(find:*)",
+      "Bash([ -f combat_lab.log ])"
     ]
   }
 }

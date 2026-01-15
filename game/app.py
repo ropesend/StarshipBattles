@@ -449,7 +449,14 @@ class Game:
                     self.battle_scene.print_headless_summary()
                     self.battle_scene.engine.shutdown()
                     self.battle_scene.headless_mode = False
-                    self.start_battle_setup(preserve_teams=True)
+
+                    # Check if we're in test mode - if so, return to Combat Lab
+                    if self.battle_scene.test_mode:
+                        print(f"DEBUG: Headless test complete, returning to Combat Lab")
+                        self.battle_scene.action_return_to_test_lab = True
+                    else:
+                        # Normal headless battle - return to setup
+                        self.start_battle_setup(preserve_teams=True)
                     break
             
             # Progress indicator

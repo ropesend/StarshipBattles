@@ -1,9 +1,0 @@
-=== BATTLE LOG STARTED ===
-Battle started: 1 vs 1 ships
-Ship 'Test Attacker Beam360 Low' (Team 0): HP=120/120 Mass=25.0 Thrust=0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00
-WARNING: Test Attacker Beam360 Low has NO THRUST!
-WARNING: Test Attacker Beam360 Low has LOW/NO TURN SPEED (0.0000)!
-Ship 'Test Target Stationary' (Team 1): HP=10500/10500 Mass=400.0 Thrust=0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=0.00
-WARNING: Test Target Stationary has NO THRUST!
-WARNING: Test Target Stationary has LOW/NO TURN SPEED (0.0000)!
-=== BATTLE LOG ENDED ===

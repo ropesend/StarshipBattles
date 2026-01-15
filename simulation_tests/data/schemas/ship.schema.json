@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://starship-battles/schemas/ship.json",
+  "title": "Ship Configuration Schema",
+  "description": "Schema for validating ship configuration files in Combat Lab test data",
+  "type": "object",
+  "required": ["name", "color", "team_id", "ship_class", "layers"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Ship name"
+    },
+    "color": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "RGB color array [R, G, B]"
+    },
+    "team_id": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Team ID (0=neutral, 1=team1, 2=team2)"
+    },
+    "ship_class": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_]+$",
+      "description": "Reference to vehicle class"
+    },
+    "theme_id": {
+      "type": "string",
+      "description": "Visual theme identifier"
+    },
+    "ai_strategy": {
+      "type": "string",
+      "description": "AI strategy identifier"
+    },
+    "layers": {
+      "type": "object",
+      "patternProperties": {
+        "^(CORE|ARMOR|SURFACE|EXTERNAL|WEAPONS|INNER|OUTER)$": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/componentReference"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "Component assignments by layer"
+    },
+    "_test_notes": {
+      "type": "string",
+      "description": "Optional notes about test ship configuration"
+    },
+    "expected_stats": {
+      "type": "object",
+      "properties": {
+        "max_hp": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_fuel": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_energy": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_ammo": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_speed": {
+          "type": "number",
+          "minimum": 0
+        },
+        "acceleration_rate": {
+          "type": "number",
+          "minimum": 0
+        },
+        "turn_speed": {
+          "type": "number",
+          "minimum": 0
+        },
+        "total_thrust": {
+          "type": "number",
+          "minimum": 0
+        },
+        "mass": {
+          "type": "number",
+          "minimum": 0
+        },
+        "armor_hp_pool": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "description": "Expected ship statistics for validation"
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "fuel": {
+          "type": "number",
+          "minimum": 0
+        },
+        "energy": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ammo": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": ["fuel", "energy", "ammo"],
+      "description": "Initial resource levels"
+    }
+  },
+  "definitions": {
+    "componentReference": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "description": "Component ID reference"
+        },
+        "angle": {
+          "type": "number",
+          "description": "Component angle in radians (optional)"
+        },
+        "offset": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "description": "Component position offset (optional)"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

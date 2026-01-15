@@ -11,6 +11,11 @@ from game.core.registry import RegistryManager
 from game.simulation.systems.battle_engine import BattleEngine
 from game.simulation.components.component import load_components, load_modifiers
 from game.simulation.entities.ship import initialize_ship_data
+from simulation_tests.logging_config import get_logger, setup_combat_lab_logging
+
+# Setup logging
+setup_combat_lab_logging()
+logger = get_logger(__name__)
 
 class TestRunner:
     def __init__(self):
@@ -25,43 +30,41 @@ class TestRunner:
         to allow ship loading and validator creation. The registry will remain
         unfrozen until the test completes or the game restarts.
         """
-        print(f"Loading data for scenario: {scenario.name}")
+        logger.info(f"Loading data for scenario: {scenario.name}")
 
         paths = scenario.get_data_paths()
 
         # Reset Globals (unfreeze if needed for Combat Lab)
         registry = RegistryManager.instance()
         was_frozen = registry._frozen
-        print(f"DEBUG: RegistryManager frozen state: {was_frozen}")
+        logger.debug(f"RegistryManager frozen state: {was_frozen}")
 
         if was_frozen:
-            print("DEBUG: Unfreezing RegistryManager for test data loading")
+            logger.debug("Unfreezing RegistryManager for test data loading")
             registry._frozen = False
 
-        print("DEBUG: Clearing registry")
+        logger.debug("Clearing registry")
         registry.clear()
 
         # Load New Data
         try:
-            print(f"DEBUG: Loading modifiers from {paths['modifiers']}")
+            logger.debug(f"Loading modifiers from {paths['modifiers']}")
             load_modifiers(paths['modifiers'])
 
-            print(f"DEBUG: Loading components from {paths['components']}")
+            logger.debug(f"Loading components from {paths['components']}")
             load_components(paths['components'])
 
             # Helper needed in ship.py to accept direct path
             from game.simulation.entities.ship import load_vehicle_classes
-            print(f"DEBUG: Loading vehicle classes from {paths['vehicle_classes']}")
+            logger.debug(f"Loading vehicle classes from {paths['vehicle_classes']}")
             load_vehicle_classes(paths['vehicle_classes'])
 
             # IMPORTANT: Keep unfrozen to allow ship loading in scenario.setup()
             # The registry will remain unfrozen for the test duration
-            print("DEBUG: Registry remains unfrozen to allow ship loading")
+            logger.debug("Registry remains unfrozen to allow ship loading")
 
         except Exception as e:
-            print(f"CRITICAL: Failed to load test data: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.critical(f"Failed to load test data: {e}", exc_info=True)
             raise e
             
     def run_scenario(self, scenario_cls, headless=True, render_callback=None):
@@ -88,40 +91,40 @@ class TestRunner:
         scenario.setup(self.engine)
         
         # 4. Loop
-        print(f"Starting Scenario: {scenario.name} (Max Ticks: {scenario.max_ticks})")
+        logger.info(f"Starting Scenario: {scenario.name} (Max Ticks: {scenario.max_ticks})")
         start_time = time.time()
-        
+
         try:
             for tick in range(scenario.max_ticks):
                 # Update
                 self.engine.update()
                 scenario.update(self.engine)
-                
+
                 # Check for early exit?
                 if self.engine.is_battle_over():
-                     print(f"Battle ended at tick {tick}")
+                     logger.info(f"Battle ended at tick {tick}")
                      break
-                
+
                 # Render if needed
                 if render_callback:
                     render_callback(self.engine)
-                    
+
         except Exception as e:
-            print(f"Scenario Crash: {e}")
+            logger.error(f"Scenario Crash: {e}", exc_info=True)
             scenario.passed = False
             scenario.results['error'] = str(e)
             return scenario
-            
+
         end_time = time.time()
         duration = end_time - start_time
-        
+
         # 5. Verify
         scenario.passed = scenario.verify(self.engine)
         scenario.results['duration_real'] = duration
         scenario.results['ticks'] = self.engine.tick_counter
-        
+
         status = "PASSED" if scenario.passed else "FAILED"
-        print(f"Result: {status} in {duration:.2f}s")
+        logger.info(f"Result: {status} in {duration:.2f}s")
         return scenario
 
 if __name__ == "__main__":
@@ -157,15 +160,13 @@ if __name__ == "__main__":
                 break
         
         if not scenario_cls:
-            print(f"Error: No CombatScenario subclass found in {args.scenario}")
+            logger.error(f"No CombatScenario subclass found in {args.scenario}")
             sys.exit(1)
-            
+
         runner = TestRunner()
         runner.run_scenario(scenario_cls, headless=args.headless)
-        
+
     except ImportError as e:
-        print(f"Import Error: {e}")
+        logger.error(f"Import Error: {e}", exc_info=True)
     except Exception as e:
-        print(f"Execution Error: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Execution Error: {e}", exc_info=True)
