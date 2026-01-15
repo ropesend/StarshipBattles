@@ -30,6 +30,15 @@
         "mass": 30.0,
         "armor_hp_pool": 0
     },
+    "weapon_stats": {
+        "type": "Projectile360",
+        "component_id": "test_weapon_proj_omni",
+        "damage": 50,
+        "range": 1000,
+        "projectile_speed": 1500,
+        "reload_time": 1.0,
+        "firing_arc": 360
+    },
     "resources": {
         "fuel": 0.0,
         "energy": 0.0,

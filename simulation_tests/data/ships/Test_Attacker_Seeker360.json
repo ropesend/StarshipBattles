@@ -30,6 +30,17 @@
         "mass": 40.0,
         "armor_hp_pool": 0
     },
+    "weapon_stats": {
+        "type": "Seeker360",
+        "component_id": "test_seeker_no_resource",
+        "damage": 100,
+        "range": 3000,
+        "missile_speed": 1000,
+        "turn_rate": 90,
+        "endurance": 5.0,
+        "reload_time": 5.0,
+        "firing_arc": 360
+    },
     "resources": {
         "fuel": 0.0,
         "energy": 0.0,

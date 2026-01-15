@@ -1,5 +1,6 @@
 import pygame
 from game.engine.physics import PhysicsBody
+from game.simulation.physics_constants import K_SPEED, K_THRUST
 # Engine, Thruster imports removed - using ability-based checks (Phase 3)
 
 class ShipPhysicsMixin:
@@ -20,7 +21,6 @@ class ShipPhysicsMixin:
             
             # Recalculate acceleration for this frame based on available thrust
             # Mass constant for now
-            K_THRUST = 2500
             if self.mass > 0:
                 current_accel = (current_total_thrust * K_THRUST) / (self.mass * self.mass)
                 # Cap at max potential accel? Or just use it.
@@ -37,7 +37,6 @@ class ShipPhysicsMixin:
                 # Arcade physics: max_speed is usually a limit, but if Force is lower, do we cap speed lower?
                 # Formula: max_speed = (total_thrust * K_SPEED) / mass
                 # Let's dynamically calculate this frame's max speed potential.
-                K_SPEED = 25
                 potential_max_speed = (current_total_thrust * K_SPEED) / self.mass
                 
                 # Apply Throttle

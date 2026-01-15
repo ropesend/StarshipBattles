@@ -4,7 +4,7 @@ Propulsion Test Scenarios (PROP-001 to PROP-004)
 These tests validate the core propulsion physics for engines and thrusters.
 Propulsion is foundational for all combat tests, so these are high priority.
 
-Physics Constants (from ship_stats.py):
+Physics Constants (from game.simulation.physics_constants):
 - K_SPEED = 25 (speed multiplier)
 - K_THRUST = 2500 (thrust constant for acceleration)
 - Formula: max_speed = (thrust * K_SPEED) / mass
@@ -12,13 +12,9 @@ Physics Constants (from ship_stats.py):
 """
 
 import pygame
+from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
 from simulation_tests.scenarios import TestScenario, TestMetadata
 from simulation_tests.scenarios.templates import PropulsionScenario
-
-
-# Physics constants (must match ship_stats.py)
-K_SPEED = 25
-K_THRUST = 2500
 
 
 class PropEngineAccelerationScenario(PropulsionScenario):
@@ -287,7 +283,6 @@ class PropThrusterTurnRateScenario(PropulsionScenario):
         # Template already calculated: self.expected_max_speed, self.expected_acceleration_rate
 
         # Store expected values
-        K_TURN = 25000
         raw_turn_rate = 5.0  # From test_thruster_std component
         mass = self.ship.mass
         expected_turn_speed = (raw_turn_rate * K_TURN) / (mass ** 1.5)

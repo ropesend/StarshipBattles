@@ -1841,5 +1841,415 @@
       "validation_summary": null,
       "validation_results": []
     }
+  ],
+  "PROJ360-005": [
+    {
+      "timestamp": "2026-01-14T18:50:41.974454",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 2270,
+        "final_hp": 1970.0,
+        "damage_dealt": 300.0,
+        "ticks_run": 1000,
+        "target_alive": true
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "PROJ360-003": [
+    {
+      "timestamp": "2026-01-14T18:50:44.998836",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 850,
+        "final_hp": 600.0,
+        "damage_dealt": 250.0,
+        "ticks_run": 500,
+        "target_alive": true
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "PROJ360-002": [
+    {
+      "timestamp": "2026-01-14T18:50:46.664213",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 750,
+        "final_hp": 500,
+        "damage_dealt": 250,
+        "ticks_run": 500,
+        "target_alive": true
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "PROJ360-DMG-090": [
+    {
+      "timestamp": "2026-01-14T18:50:49.118578",
+      "ticks_run": 400,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000300.0,
+        "damage_dealt": 200.0,
+        "ticks_run": 400,
+        "target_alive": true,
+        "travel_time_seconds": 0.6,
+        "damage_per_hit": 50
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "PROP-001": [
+    {
+      "timestamp": "2026-01-14T18:51:13.976375",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "initial_position": [
+          0.0,
+          0.0
+        ],
+        "final_position": [
+          46875.0,
+          0.0
+        ],
+        "initial_velocity": 0.0,
+        "final_velocity": 156.25,
+        "initial_velocity_magnitude": 0.0,
+        "final_velocity_magnitude": 156.25,
+        "initial_angle": 0.0,
+        "final_angle": 0.0,
+        "distance_traveled": 46875.0,
+        "velocity_change": 156.25,
+        "angle_change": 0.0,
+        "ticks_run": 100,
+        "expected_max_speed": 312.5,
+        "expected_acceleration_rate": 781.25,
+        "thrust": 500.0,
+        "mass": 40.0,
+        "accelerated": true
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "PROP-002": [
+    {
+      "timestamp": "2026-01-14T18:51:16.768660",
+      "ticks_run": 200,
+      "passed": true,
+      "metrics": {
+        "low_mass": {
+          "mass": 40.0,
+          "thrust": 500.0,
+          "max_speed": 312.5,
+          "final_velocity": 156.25,
+          "distance": 93750.0
+        },
+        "med_mass": {
+          "mass": 2220.0,
+          "thrust": 500.0,
+          "max_speed": 5.63063063063063,
+          "final_velocity": 2.815315315315315,
+          "distance": 1599.6317263209062
+        },
+        "high_mass": {
+          "mass": 10220.0,
+          "thrust": 500.0,
+          "max_speed": 1.2230919765166341,
+          "final_velocity": 0.6115459882583171,
+          "distance": 274.0934758215534
+        },
+        "speed_ratio_low_med": 55.5,
+        "expected_ratio": 55.5,
+        "ratio_error_percent": 0.0,
+        "speed_ordering_correct": true,
+        "ratio_matches": true,
+        "ticks_run": 200
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "PROP-003": [
+    {
+      "timestamp": "2026-01-14T18:51:19.277630",
+      "ticks_run": 50,
+      "passed": true,
+      "metrics": {
+        "initial_position": [
+          0.0,
+          0.0
+        ],
+        "final_position": [
+          0.0,
+          0.0
+        ],
+        "initial_velocity": [
+          0.0,
+          0.0
+        ],
+        "final_velocity": [
+          0.0,
+          0.0
+        ],
+        "initial_velocity_magnitude": 0.0,
+        "final_velocity_magnitude": 0.0,
+        "initial_angle": 0.0,
+        "final_angle": 152.95666875001984,
+        "distance_traveled": 0.0,
+        "velocity_change": 0.0,
+        "angle_change": 152.95666875001984,
+        "ticks_run": 50,
+        "expected_max_speed": 277.77777777777777,
+        "expected_acceleration_rate": 617.283950617284,
+        "mass": 45.0,
+        "raw_turn_rate": 5.0,
+        "expected_turn_speed": 414.08666249996105,
+        "actual_turn_speed": 414.08666249996105,
+        "has_positive_turn_speed": true,
+        "error_percent": 0.0,
+        "matches_formula": true
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "PROP-004": [
+    {
+      "timestamp": "2026-01-14T18:51:21.852894",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "initial_position": [
+          0.0,
+          0.0
+        ],
+        "final_position": [
+          0.0,
+          0.0
+        ],
+        "initial_velocity": [
+          0.0,
+          0.0
+        ],
+        "final_velocity": [
+          0.0,
+          0.0
+        ],
+        "initial_velocity_magnitude": 0.0,
+        "final_velocity_magnitude": 0.0,
+        "initial_angle": 0.0,
+        "final_angle": 54.08666249996052,
+        "distance_traveled": 0.0,
+        "velocity_change": 0.0,
+        "angle_change": 54.08666249996052,
+        "ticks_run": 100,
+        "expected_max_speed": 277.77777777777777,
+        "expected_acceleration_rate": 617.283950617284,
+        "turn_speed": 414.08666249996105,
+        "angle_history_sample": [
+          0.0,
+          41.4086662499961,
+          82.81733249999218,
+          124.22599874998821,
+          165.63466499998424,
+          207.04333124998027,
+          248.4519974999763,
+          289.86066374997233,
+          331.26932999996836,
+          12.677996249964416,
+          54.08666249996052
+        ],
+        "rotation_detected": true,
+        "expected_direction_correct": true
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "RESOURCE-001": [
+    {
+      "timestamp": "2026-01-14T18:53:16.899163",
+      "ticks_run": 50,
+      "passed": true,
+      "metrics": {
+        "initial_energy": 25.0,
+        "final_energy": 4.0,
+        "initial_hp": 1000000500,
+        "final_hp": 1000000470.0,
+        "damage_dealt": 30.0,
+        "ticks_run": 50,
+        "target_alive": true
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "RESOURCE-002": [
+    {
+      "timestamp": "2026-01-14T18:53:24.208540",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "initial_energy": 25.0,
+        "final_energy": 5.0,
+        "initial_hp": 1000000500,
+        "final_hp": 1000000490.0,
+        "damage_dealt": 10.0,
+        "ticks_run": 100,
+        "target_alive": true
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "SEEK360-001": [
+    {
+      "timestamp": "2026-01-14T18:53:44.379935",
+      "ticks_run": 600,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000300.0,
+        "damage_dealt": 200.0,
+        "ticks_run": 600,
+        "target_alive": true,
+        "hit_rate": 0.3333333333333333,
+        "projectiles_remaining": 0
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "SEEK360-002": [
+    {
+      "timestamp": "2026-01-14T18:53:45.926444",
+      "ticks_run": 800,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000300.0,
+        "damage_dealt": 200.0,
+        "ticks_run": 800,
+        "target_alive": true,
+        "hit_rate": 0.25,
+        "projectiles_remaining": 0
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "SEEK360-003": [
+    {
+      "timestamp": "2026-01-14T18:53:47.096596",
+      "ticks_run": 800,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000400.0,
+        "damage_dealt": 100.0,
+        "ticks_run": 800,
+        "target_alive": true,
+        "hit_rate": 0.125,
+        "projectiles_remaining": 1
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "SEEK360-004": [
+    {
+      "timestamp": "2026-01-14T18:53:48.639783",
+      "ticks_run": 800,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000400.0,
+        "damage_dealt": 100.0,
+        "ticks_run": 800,
+        "target_alive": true,
+        "hit_rate": 0.125,
+        "projectiles_remaining": 1
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "SEEK360-TRACK-001": [
+    {
+      "timestamp": "2026-01-14T18:53:55.605002",
+      "ticks_run": 600,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000300.0,
+        "damage_dealt": 200.0,
+        "ticks_run": 600,
+        "target_alive": true,
+        "hit_rate": 0.3333333333333333
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "SEEK360-TRACK-002": [
+    {
+      "timestamp": "2026-01-14T18:53:57.435223",
+      "ticks_run": 600,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 750,
+        "final_hp": 550,
+        "damage_dealt": 200,
+        "ticks_run": 600,
+        "target_alive": true,
+        "hit_rate": 0.3333333333333333
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "SEEK360-TRACK-003": [
+    {
+      "timestamp": "2026-01-14T18:53:59.334722",
+      "ticks_run": 800,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 770,
+        "final_hp": 770,
+        "damage_dealt": 0,
+        "ticks_run": 800,
+        "target_alive": true
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
+  ],
+  "SEEK360-TRACK-004": [
+    {
+      "timestamp": "2026-01-14T18:54:01.134648",
+      "ticks_run": 800,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000170,
+        "final_hp": 999999970.0,
+        "damage_dealt": 200.0,
+        "ticks_run": 800,
+        "target_alive": true,
+        "hit_rate": 0.25
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
   ]
 }

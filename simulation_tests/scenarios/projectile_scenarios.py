@@ -147,7 +147,20 @@ class ProjectileStationaryTargetScenario(TestScenario):
             self.attacker.comp_trigger_pulled = True
 
     def verify(self, battle_engine) -> bool:
-        """Check if sufficient damage was dealt."""
+        """
+        Check if sufficient damage was dealt.
+
+        Expected Behavior:
+        - Projectile speed: 1500 px/s
+        - Distance: 200px → Travel time ~0.133 seconds (13 ticks)
+        - Reload time: 1.0s (100 ticks)
+        - Test duration: 500 ticks → 5 shots possible
+        - Damage: 50 per hit
+
+        Pass Criteria:
+        - At least 3 hits (damage_dealt >= 150)
+        - Stationary target should be hit by all or most shots
+        """
         damage_dealt = self.initial_hp - self.target.hp
 
         # Store results
@@ -159,8 +172,26 @@ class ProjectileStationaryTargetScenario(TestScenario):
         self.results['travel_time_seconds'] = self.travel_time
         self.results['expected_damage_min'] = 150
 
-        # Pass if at least 3 shots hit (3 * 50 = 150 damage)
-        return damage_dealt >= 150
+        # Store weapon info for output
+        self.results['weapon_type'] = 'Projectile360'
+        self.results['weapon_damage'] = 50
+        self.results['weapon_range'] = 1000
+        self.results['projectile_speed'] = 1500
+        self.results['reload_time'] = 1.0
+
+        # Calculate pass/fail
+        passed = damage_dealt >= 150
+
+        if not passed:
+            expected_hits = 3
+            actual_hits = damage_dealt / 50
+            self.results['failure_reason'] = (
+                f"Insufficient hits on stationary target. "
+                f"Expected at least {expected_hits} hits (150 damage), got {actual_hits:.1f} hits ({damage_dealt} damage). "
+                f"Check projectile physics, hit detection, and weapon firing."
+            )
+
+        return passed
 
 
 # ============================================================================
