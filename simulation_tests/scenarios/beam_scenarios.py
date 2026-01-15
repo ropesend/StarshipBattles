@@ -14,14 +14,13 @@ Test Coverage:
 - Range Limit Test: 1 out-of-range scenario
 """
 
-import pygame
 import math
 from simulation_tests.scenarios import (
-    TestScenario,
     TestMetadata,
     ExactMatchRule,
     StatisticalTestRule
 )
+from simulation_tests.scenarios.templates import StaticTargetScenario
 
 
 def calculate_defense_score(mass: float, acceleration: float = 0.0, turn_speed: float = 0.0, ecm_score: float = 0.0) -> float:
@@ -81,13 +80,18 @@ def calculate_expected_hit_chance(
 # LOW ACCURACY BEAM TESTS (base_accuracy=0.5, falloff=0.002)
 # ============================================================================
 
-class BeamLowAccuracyPointBlankScenario(TestScenario):
+class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
     """
     BEAM360-001: Low Accuracy Beam at Point-Blank Range
 
     Tests that a low accuracy beam weapon (0.5 base) hits consistently
     at point-blank range (50px) where range penalty is minimal.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Low.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 50
 
     metadata = TestMetadata(
         test_id="BEAM360-001",
@@ -186,32 +190,8 @@ class BeamLowAccuracyPointBlankScenario(TestScenario):
         }
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Low.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position ships at point-blank range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0  # Facing right
-        self.target.position = pygame.math.Vector2(50, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
             mass=400.0,
@@ -231,31 +211,33 @@ class BeamLowAccuracyPointBlankScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance (what combat system uses)
         self.expected_hit_chance = calculate_expected_hit_chance(0.5, 0.002, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
 
         # Pass if any damage was dealt
-        return damage_dealt > 0
+        return self.damage_dealt > 0
 
 
-class BeamLowAccuracyPointBlankHighTickScenario(TestScenario):
+class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
     """
     BEAM360-001-HT: Low Accuracy Beam at Point-Blank Range (High-Tick Version)
 
@@ -263,6 +245,11 @@ class BeamLowAccuracyPointBlankHighTickScenario(TestScenario):
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Low.json"
+    target_ship = "Test_Target_Stationary_HighTick.json"
+    distance = 50
 
     metadata = TestMetadata(
         test_id="BEAM360-001-HT",
@@ -362,32 +349,8 @@ class BeamLowAccuracyPointBlankHighTickScenario(TestScenario):
         }
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Low.json")
-        self.target = self._load_ship("Test_Target_Stationary_HighTick.json")
-
-        # Position ships at point-blank range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0  # Facing right
-        self.target.position = pygame.math.Vector2(50, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=600, stationary)
         target_defense = calculate_defense_score(
             mass=600.0,
@@ -407,37 +370,44 @@ class BeamLowAccuracyPointBlankHighTickScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance (what combat system uses)
         self.expected_hit_chance = calculate_expected_hit_chance(0.5, 0.002, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
 
         # Pass if any damage was dealt
-        return damage_dealt > 0
+        return self.damage_dealt > 0
 
 
-class BeamLowAccuracyMidRangeScenario(TestScenario):
+class BeamLowAccuracyMidRangeScenario(StaticTargetScenario):
     """
     BEAM360-002: Low Accuracy Beam at Mid-Range
 
     Tests that a low accuracy beam weapon (0.5 base) maintains reasonable
     accuracy at mid-range (400px) with moderate range penalty.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Low.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 400
 
     metadata = TestMetadata(
         test_id="BEAM360-002",
@@ -509,32 +479,8 @@ class BeamLowAccuracyMidRangeScenario(TestScenario):
         ]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Low.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position ships at mid-range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(400, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
             mass=400.0,
@@ -552,22 +498,24 @@ class BeamLowAccuracyMidRangeScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(0.5, 0.002, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
@@ -576,7 +524,7 @@ class BeamLowAccuracyMidRangeScenario(TestScenario):
         return battle_engine.tick_counter > 0
 
 
-class BeamLowAccuracyMidRangeHighTickScenario(TestScenario):
+class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
     """
     BEAM360-002-HT: Low Accuracy Beam at Mid-Range (High-Tick Version)
 
@@ -584,6 +532,11 @@ class BeamLowAccuracyMidRangeHighTickScenario(TestScenario):
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Low.json"
+    target_ship = "Test_Target_Stationary_HighTick.json"
+    distance = 400
 
     metadata = TestMetadata(
         test_id="BEAM360-002-HT",
@@ -683,32 +636,8 @@ class BeamLowAccuracyMidRangeHighTickScenario(TestScenario):
         }
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Low.json")
-        self.target = self._load_ship("Test_Target_Stationary_HighTick.json")
-
-        # Position ships at mid-range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(400, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=600, stationary)
         target_defense = calculate_defense_score(
             mass=600.0,
@@ -726,22 +655,24 @@ class BeamLowAccuracyMidRangeHighTickScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(0.5, 0.002, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
@@ -750,13 +681,18 @@ class BeamLowAccuracyMidRangeHighTickScenario(TestScenario):
         return battle_engine.tick_counter > 0
 
 
-class BeamLowAccuracyMaxRangeScenario(TestScenario):
+class BeamLowAccuracyMaxRangeScenario(StaticTargetScenario):
     """
     BEAM360-003: Low Accuracy Beam at Max Range
 
     Tests that a low accuracy beam weapon (0.5 base) has heavily degraded
     accuracy at max range (750px) with high range penalty.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Low.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 750
 
     metadata = TestMetadata(
         test_id="BEAM360-003",
@@ -829,32 +765,8 @@ class BeamLowAccuracyMaxRangeScenario(TestScenario):
         ]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Low.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position ships at max range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(750, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
             mass=400.0,
@@ -872,22 +784,24 @@ class BeamLowAccuracyMaxRangeScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(0.5, 0.002, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
@@ -900,13 +814,18 @@ class BeamLowAccuracyMaxRangeScenario(TestScenario):
 # MEDIUM ACCURACY BEAM TESTS (base_accuracy=2.0, falloff=0.001)
 # ============================================================================
 
-class BeamMediumAccuracyPointBlankScenario(TestScenario):
+class BeamMediumAccuracyPointBlankScenario(StaticTargetScenario):
     """
     BEAM360-004: Medium Accuracy Beam at Point-Blank Range
 
     Tests that a medium accuracy beam weapon (2.0 base) hits very consistently
     at point-blank range (50px).
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Med.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 50
 
     metadata = TestMetadata(
         test_id="BEAM360-004",
@@ -978,32 +897,8 @@ class BeamMediumAccuracyPointBlankScenario(TestScenario):
         ]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Med.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position ships at point-blank range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(50, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
             mass=400.0,
@@ -1021,31 +916,33 @@ class BeamMediumAccuracyPointBlankScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if significant damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
 
         # Pass if damage was dealt
-        return damage_dealt > 0
+        return self.damage_dealt > 0
 
 
-class BeamMediumAccuracyPointBlankHighTickScenario(TestScenario):
+class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
     """
     BEAM360-004-HT: Medium Accuracy Beam at Point-Blank Range (High-Tick Version)
 
@@ -1053,6 +950,11 @@ class BeamMediumAccuracyPointBlankHighTickScenario(TestScenario):
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Med.json"
+    target_ship = "Test_Target_Stationary_HighTick.json"
+    distance = 50
 
     metadata = TestMetadata(
         test_id="BEAM360-004-HT",
@@ -1152,32 +1054,8 @@ class BeamMediumAccuracyPointBlankHighTickScenario(TestScenario):
         }
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Med.json")
-        self.target = self._load_ship("Test_Target_Stationary_HighTick.json")
-
-        # Position ships at point-blank range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(50, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=600, stationary)
         target_defense = calculate_defense_score(
             mass=600.0,
@@ -1195,37 +1073,44 @@ class BeamMediumAccuracyPointBlankHighTickScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
 
         # Pass if damage was dealt
-        return damage_dealt > 0
+        return self.damage_dealt > 0
 
 
-class BeamMediumAccuracyMidRangeScenario(TestScenario):
+class BeamMediumAccuracyMidRangeScenario(StaticTargetScenario):
     """
     BEAM360-005: Medium Accuracy Beam at Mid-Range
 
     Tests that a medium accuracy beam weapon (2.0 base) maintains high
     accuracy at mid-range (400px).
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Med.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 400
 
     metadata = TestMetadata(
         test_id="BEAM360-005",
@@ -1297,32 +1182,8 @@ class BeamMediumAccuracyMidRangeScenario(TestScenario):
         ]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Med.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position ships at mid-range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(400, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
             mass=400.0,
@@ -1340,31 +1201,33 @@ class BeamMediumAccuracyMidRangeScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
 
         # Pass if damage was dealt
-        return damage_dealt > 0
+        return self.damage_dealt > 0
 
 
-class BeamMediumAccuracyMidRangeHighTickScenario(TestScenario):
+class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
     """
     BEAM360-005-HT: Medium Accuracy Beam at Mid-Range (High-Tick Version)
 
@@ -1372,6 +1235,11 @@ class BeamMediumAccuracyMidRangeHighTickScenario(TestScenario):
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Med.json"
+    target_ship = "Test_Target_Stationary_HighTick.json"
+    distance = 400
 
     metadata = TestMetadata(
         test_id="BEAM360-005-HT",
@@ -1471,32 +1339,8 @@ class BeamMediumAccuracyMidRangeHighTickScenario(TestScenario):
         }
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Med.json")
-        self.target = self._load_ship("Test_Target_Stationary_HighTick.json")
-
-        # Position ships at mid-range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(400, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=600, stationary)
         target_defense = calculate_defense_score(
             mass=600.0,
@@ -1514,37 +1358,44 @@ class BeamMediumAccuracyMidRangeHighTickScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
 
         # Pass if damage was dealt
-        return damage_dealt > 0
+        return self.damage_dealt > 0
 
 
-class BeamMediumAccuracyMaxRangeScenario(TestScenario):
+class BeamMediumAccuracyMaxRangeScenario(StaticTargetScenario):
     """
     BEAM360-006: Medium Accuracy Beam at Max Range
 
     Tests that a medium accuracy beam weapon (2.0 base) maintains reasonable
     accuracy even at max range (750px).
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Med.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 750
 
     metadata = TestMetadata(
         test_id="BEAM360-006",
@@ -1616,32 +1467,8 @@ class BeamMediumAccuracyMaxRangeScenario(TestScenario):
         ]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Med.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position ships at max range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(750, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
             mass=400.0,
@@ -1659,22 +1486,24 @@ class BeamMediumAccuracyMaxRangeScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
@@ -1683,7 +1512,7 @@ class BeamMediumAccuracyMaxRangeScenario(TestScenario):
         return battle_engine.tick_counter > 0
 
 
-class BeamMediumAccuracyMaxRangeHighTickScenario(TestScenario):
+class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
     """
     BEAM360-006-HT: Medium Accuracy Beam at Max Range (High-Tick Version)
 
@@ -1691,6 +1520,11 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(TestScenario):
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Med.json"
+    target_ship = "Test_Target_Stationary_HighTick.json"
+    distance = 750
 
     metadata = TestMetadata(
         test_id="BEAM360-006-HT",
@@ -1790,32 +1624,8 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(TestScenario):
         }
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Med.json")
-        self.target = self._load_ship("Test_Target_Stationary_HighTick.json")
-
-        # Position ships at max range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(750, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=600, stationary)
         target_defense = calculate_defense_score(
             mass=600.0,
@@ -1833,22 +1643,24 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
@@ -1861,13 +1673,18 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(TestScenario):
 # HIGH ACCURACY BEAM TESTS (base_accuracy=5.0, falloff=0.0005)
 # ============================================================================
 
-class BeamHighAccuracyPointBlankScenario(TestScenario):
+class BeamHighAccuracyPointBlankScenario(StaticTargetScenario):
     """
     BEAM360-007: High Accuracy Beam at Point-Blank Range
 
     Tests that a high accuracy beam weapon (5.0 base) has near-perfect
     accuracy at point-blank range (50px).
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_High.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 50
 
     metadata = TestMetadata(
         test_id="BEAM360-007",
@@ -1939,32 +1756,8 @@ class BeamHighAccuracyPointBlankScenario(TestScenario):
         ]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_High.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position ships at point-blank range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(50, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
             mass=400.0,
@@ -1982,31 +1775,33 @@ class BeamHighAccuracyPointBlankScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(5.0, 0.0005, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
 
         # Pass if damage was dealt
-        return damage_dealt > 0
+        return self.damage_dealt > 0
 
 
-class BeamHighAccuracyPointBlankHighTickScenario(TestScenario):
+class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
     """
     BEAM360-007-HT: High Accuracy Beam at Point-Blank Range (High-Tick Version)
 
@@ -2014,6 +1809,11 @@ class BeamHighAccuracyPointBlankHighTickScenario(TestScenario):
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_High.json"
+    target_ship = "Test_Target_Stationary_HighTick.json"
+    distance = 50
 
     metadata = TestMetadata(
         test_id="BEAM360-007-HT",
@@ -2113,32 +1913,8 @@ class BeamHighAccuracyPointBlankHighTickScenario(TestScenario):
         }
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_High.json")
-        self.target = self._load_ship("Test_Target_Stationary_HighTick.json")
-
-        # Position ships at point-blank range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(50, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=600, stationary)
         target_defense = calculate_defense_score(
             mass=600.0,
@@ -2156,37 +1932,44 @@ class BeamHighAccuracyPointBlankHighTickScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(5.0, 0.0005, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
 
         # Pass if damage was dealt
-        return damage_dealt > 0
+        return self.damage_dealt > 0
 
 
-class BeamHighAccuracyMaxRangeScenario(TestScenario):
+class BeamHighAccuracyMaxRangeScenario(StaticTargetScenario):
     """
     BEAM360-008: High Accuracy Beam at Max Range
 
     Tests that a high accuracy beam weapon (5.0 base) maintains excellent
     accuracy even at max range (750px).
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_High.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 750
 
     metadata = TestMetadata(
         test_id="BEAM360-008",
@@ -2258,32 +2041,8 @@ class BeamHighAccuracyMaxRangeScenario(TestScenario):
         ]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_High.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position ships at max range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(750, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
             mass=400.0,
@@ -2301,31 +2060,33 @@ class BeamHighAccuracyMaxRangeScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(5.0, 0.0005, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
 
         # Pass if damage was dealt
-        return damage_dealt > 0
+        return self.damage_dealt > 0
 
 
-class BeamHighAccuracyMaxRangeHighTickScenario(TestScenario):
+class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
     """
     BEAM360-008-HT: High Accuracy Beam at Max Range (High-Tick Version)
 
@@ -2333,6 +2094,11 @@ class BeamHighAccuracyMaxRangeHighTickScenario(TestScenario):
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_High.json"
+    target_ship = "Test_Target_Stationary_HighTick.json"
+    distance = 750
 
     metadata = TestMetadata(
         test_id="BEAM360-008-HT",
@@ -2432,32 +2198,8 @@ class BeamHighAccuracyMaxRangeHighTickScenario(TestScenario):
         }
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_High.json")
-        self.target = self._load_ship("Test_Target_Stationary_HighTick.json")
-
-        # Position ships at max range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(750, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=600, stationary)
         target_defense = calculate_defense_score(
             mass=600.0,
@@ -2475,41 +2217,48 @@ class BeamHighAccuracyMaxRangeHighTickScenario(TestScenario):
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(5.0, 0.0005, surface_distance, 0.0, target_defense)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
+        self.results['expected_hit_chance'] = self.expected_hit_chance
 
         # Run automatic validation
         self.run_validation(battle_engine)
 
         # Pass if damage was dealt
-        return damage_dealt > 0
+        return self.damage_dealt > 0
 
 
 # ============================================================================
 # MOVING TARGET TESTS
 # ============================================================================
 
-class BeamMediumAccuracyErraticMidRangeScenario(TestScenario):
+class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
     """
     BEAM360-009: Medium Accuracy Beam vs Erratic Small Target at Mid-Range
 
     Tests that target maneuverability adds defense penalty, reducing hit chance
     against a small erratic target.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Med.json"
+    target_ship = "Test_Target_Erratic_Small.json"
+    distance = 400
 
     metadata = TestMetadata(
         test_id="BEAM360-009",
@@ -2582,32 +2331,8 @@ class BeamMediumAccuracyErraticMidRangeScenario(TestScenario):
         ]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Med.json")
-        self.target = self._load_ship("Test_Target_Erratic_Small.json")
-
-        # Position ships at mid-range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(400, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=65, high maneuverability)
         target_defense = calculate_defense_score(
             mass=65.0,
@@ -2626,23 +2351,25 @@ class BeamMediumAccuracyErraticMidRangeScenario(TestScenario):
         self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
         self.expected_hit_chance_base = calculate_expected_hit_chance(2.0, 0.001, surface_distance)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
+        self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
         self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['expected_hit_chance_base'] = self.expected_hit_chance_base
-        self.results['target_alive'] = self.target.is_alive
 
         # Run automatic validation
         self.run_validation(battle_engine)
@@ -2651,13 +2378,18 @@ class BeamMediumAccuracyErraticMidRangeScenario(TestScenario):
         return battle_engine.tick_counter > 0
 
 
-class BeamMediumAccuracyErraticMaxRangeScenario(TestScenario):
+class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
     """
     BEAM360-010: Medium Accuracy Beam vs Erratic Small Target at Max Range
 
     Tests combined effects of range penalty and maneuverability penalty
     at maximum range.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Med.json"
+    target_ship = "Test_Target_Erratic_Small.json"
+    distance = 750
 
     metadata = TestMetadata(
         test_id="BEAM360-010",
@@ -2730,32 +2462,8 @@ class BeamMediumAccuracyErraticMaxRangeScenario(TestScenario):
         ]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Med.json")
-        self.target = self._load_ship("Test_Target_Erratic_Small.json")
-
-        # Position ships at max range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(750, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=65, high maneuverability)
         target_defense = calculate_defense_score(
             mass=65.0,
@@ -2774,23 +2482,25 @@ class BeamMediumAccuracyErraticMaxRangeScenario(TestScenario):
         self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
         self.expected_hit_chance_base = calculate_expected_hit_chance(2.0, 0.001, surface_distance)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
+        self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
         self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['expected_hit_chance_base'] = self.expected_hit_chance_base
-        self.results['target_alive'] = self.target.is_alive
 
         # Run automatic validation
         self.run_validation(battle_engine)
@@ -2803,13 +2513,18 @@ class BeamMediumAccuracyErraticMaxRangeScenario(TestScenario):
 # RANGE LIMIT TEST
 # ============================================================================
 
-class BeamOutOfRangeScenario(TestScenario):
+class BeamOutOfRangeScenario(StaticTargetScenario):
     """
     BEAM360-011: Beam Weapon Out of Range
 
     Tests that beam weapons cannot hit targets beyond their max range.
     Target at 900px when weapon range is 800px.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Beam360_Med.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 900
 
     metadata = TestMetadata(
         test_id="BEAM360-011",
@@ -2870,47 +2585,23 @@ class BeamOutOfRangeScenario(TestScenario):
         ]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Beam360_Med.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position target beyond max range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(900, 0)  # Beyond 800px range
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check that no damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store test-specific results
         self.results['distance'] = 900
         self.results['weapon_max_range'] = 800
 
@@ -2918,7 +2609,7 @@ class BeamOutOfRangeScenario(TestScenario):
         self.run_validation(battle_engine)
 
         # Pass if NO damage was dealt (out of range)
-        return damage_dealt == 0
+        return self.damage_dealt == 0
 
 
 # ============================================================================

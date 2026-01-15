@@ -84,12 +84,12 @@ class TestRunner:
         
         # 2. Setup Engine
         from game.simulation.systems.battle_engine import BattleLogger
-        logger = BattleLogger(enabled=True)
-        self.engine = BattleEngine(logger=logger) # Fresh engine with logging
-        
+        battle_logger = BattleLogger(enabled=True)
+        self.engine = BattleEngine(logger=battle_logger) # Fresh engine with logging
+
         # 3. Scenario Setup
         scenario.setup(self.engine)
-        
+
         # 4. Loop
         logger.info(f"Starting Scenario: {scenario.name} (Max Ticks: {scenario.max_ticks})")
         start_time = time.time()

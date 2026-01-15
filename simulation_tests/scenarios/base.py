@@ -528,14 +528,6 @@ class TestScenario(CombatScenario):
             'max_hp': ship.max_hp
         }
 
-        # DEBUG: Check ship structure
-        logger.debug(f"_extract_ship_validation_data: ship={ship.name}")
-        logger.debug(f"hasattr(ship, 'layers')={hasattr(ship, 'layers')}")
-        if hasattr(ship, 'layers'):
-            logger.debug(f"ship.layers={ship.layers is not None}")
-            if ship.layers:
-                logger.debug(f"ship.layers.keys()={list(ship.layers.keys())}")
-
         # Extract weapon data from first weapon component
         # This is simplified - assumes single weapon for testing
         if hasattr(ship, 'layers') and ship.layers:
@@ -543,15 +535,11 @@ class TestScenario(CombatScenario):
                 # Layer data is a dict with 'components' key containing the component list
                 if isinstance(layer_data, dict) and 'components' in layer_data:
                     component_list = layer_data['components']
-                    logger.debug(f"Checking layer {layer_name}, {len(component_list)} components")
                     for component in component_list:
-                        logger.debug(f"  Component: {component.id if hasattr(component, 'id') else component}")
                         # Check if component has ability_instances (the instantiated ability objects)
                         if hasattr(component, 'ability_instances') and component.ability_instances:
-                            logger.debug(f"  Found {len(component.ability_instances)} ability instances")
                             for ability in component.ability_instances:
                                 ability_class_name = ability.__class__.__name__
-                                logger.debug(f"  Checking ability instance: {ability_class_name}")
                                 if ability_class_name == 'BeamWeaponAbility':
                                     # Extract beam weapon data from ability object
                                     data['weapon'] = {
@@ -562,11 +550,7 @@ class TestScenario(CombatScenario):
                                         'reload': ability.reload if hasattr(ability, 'reload') else None,
                                         'firing_arc': ability.firing_arc if hasattr(ability, 'firing_arc') else None
                                     }
-                                    logger.debug(f"Extracted weapon data: {data['weapon']}")
+                                    logger.debug(f"Extracted weapon data from {ship.name}: damage={data['weapon']['damage']}, accuracy={data['weapon']['base_accuracy']}")
                                     # Found weapon, return
                                     return data
-                        else:
-                            logger.debug("  No ability_instances found on component")
-
-        logger.debug("No weapon found, returning data without weapon")
         return data
