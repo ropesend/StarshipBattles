@@ -1234,6 +1234,9 @@ class TestLabScene:
         self.update_expected_button_rect = None
         self.update_expected_button_visible = False
 
+        # Component data cache for UI panels
+        self._components_cache = None
+
         self._create_ui()
 
 
