@@ -170,11 +170,11 @@ class StrategyInterface:
         
         # Calculations for centering
         # Nav Group Width: (30+80+30) + 10 + (30+80+30) = 140 + 10 + 140 = 290
-        # Main Group Width: 100 + 10 + 100 + 10 + 150 = 370
-        # Total Width = 290 + 20 + 370 = 680
+        # Main Group Width: 100 + 10 + 100 + 10 + 100 + 10 + 150 = 480 (added Design button)
+        # Total Width = 290 + 20 + 480 = 790
         
         center_x = (screen_width - self.sidebar_width) / 2
-        start_x = center_x - (680 / 2)
+        start_x = center_x - (790 / 2)
         
         # --- Nav Buttons ---
         # Colony
@@ -211,8 +211,11 @@ class StrategyInterface:
         self.btn_research = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(start_x + offset_main + 110, 5, 100, 40), text="Research", manager=self.manager, container=self.top_bar
         )
+        self.btn_design = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(start_x + offset_main + 220, 5, 100, 40), text="Design", manager=self.manager, container=self.top_bar
+        )
         self.btn_next_turn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(start_x + offset_main + 220, 5, 150, 40), 
+            relative_rect=pygame.Rect(start_x + offset_main + 330, 5, 150, 40), 
             text="End Turn",
             manager=self.manager,
             container=self.top_bar
@@ -492,7 +495,14 @@ class StrategyInterface:
             # Show Fleet Buttons
             if obj.owner_id == current_empire_id:
                  self.btn_orders.show()
-                 self.btn_colonize.show()
+                 
+                 # Check if we can colonize (Ask Engine)
+                 # We query for 'Any Planet' (target=None) to see if *something* is possible here.
+                 if hasattr(self.scene, 'turn_engine'):
+                     # We need galaxy ref
+                     res = self.scene.turn_engine.validate_colonize_order(self.scene.galaxy, obj, None)
+                     if res.is_valid:
+                         self.btn_colonize.show()
 
         elif hasattr(obj, 'destination_id'): # Warp Point
              text = f"<b>Warp Point</b><br>"
@@ -589,13 +599,16 @@ class StrategyInterface:
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_planets:
                 self.open_planet_list()
+            elif event.ui_element == self.btn_design:
+                if hasattr(self.scene, 'on_design_click'):
+                    self.scene.on_design_click()
             elif event.ui_element == self.btn_raw_data:
                 self.show_raw_data_popup()
             elif event.ui_element == self.btn_colonize:
-                # Check current selection from detail panel context
-                # Assuming current selection is NOT just 'obj' but stored in self.current_selection
-                
-                obj = self.current_selection
+                # Logic handled by StrategyScene.on_colonize_click
+                pass
+            
+            elif event.ui_element == self.btn_orders:
                 
                 # Logic: Issues order mostly from Fleet
                 if hasattr(obj, 'ships'): # Is Fleet

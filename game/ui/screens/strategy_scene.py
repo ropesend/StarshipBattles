@@ -11,6 +11,7 @@ from game.strategy.data.hex_math import hex_to_pixel, pixel_to_hex, HexCoord, he
 from game.ui.renderer.camera import Camera
 from game.ui.screens.strategy_screen import StrategyInterface
 from game.strategy.data.pathfinding import find_path_interstellar, find_path_deep_space, project_fleet_path
+from game.strategy.engine.commands import IssueColonizeCommand
 from ui.colors import COLORS
 
 class StrategyScene:
@@ -19,48 +20,20 @@ class StrategyScene:
     SIDEBAR_WIDTH = 600
     TOP_BAR_HEIGHT = 50
     
-    def __init__(self, screen_width, screen_height):
+    def __init__(self, screen_width, screen_height, session=None):
         self.screen_width = screen_width
         self.screen_height = screen_height
         
-        # Engine
-        self.turn_engine = TurnEngine()
+        # Session Management
+        if session:
+            self.session = session
+        else:
+            from game.strategy.engine.game_session import GameSession
+            self.session = GameSession()
+            
+        # UI proxies to session state (for backward compatibility)
+        # Note: self.player_empire, self.enemy_empire, etc. are now properties below.
         
-        # Empires
-        self.player_empire = Empire(0, "Terran Command", (0, 0, 255), theme_path=r"C:\Developer\StarshipBattles\assets\ShipThemes\Atlantians")
-        self.enemy_empire = Empire(1, "Xeno Hive", (255, 0, 0), theme_path=r"C:\Developer\StarshipBattles\assets\ShipThemes\Federation")
-        self.empires = [self.player_empire, self.enemy_empire]
-        
-        # Galaxy Data
-        self.galaxy = Galaxy(radius=4000)
-        print("StrategyScene: Generating Galaxy...")
-        self.systems = self.galaxy.generate_systems(count=25, min_dist=400)
-        self.galaxy.generate_warp_lanes()
-        print(f"StrategyScene: Generated {len(self.systems)} systems.")
-        
-        # Initial Setup (Colonies/Fleets)
-        if self.systems:
-             # Player Home (Sys 0)
-             p_home_sys = self.systems[0]
-             if p_home_sys.planets:
-                 p_planet = p_home_sys.planets[0]
-                 self.player_empire.add_colony(p_planet)
-                 
-                 # Starting Fleet: REMOVED per user request (Start with 0 ships)
-                 # f1 = Fleet(1, 0, p_home_sys.global_location)
-                 # f1.ships.append("Scout")
-                 # self.player_empire.add_fleet(f1)
-                 
-             # Enemy Home (Far away?)
-             e_home_sys = self.systems[-1]
-             if e_home_sys.planets:
-                 e_planet = e_home_sys.planets[0]
-                 self.enemy_empire.add_colony(e_planet)
-                 
-                 # f2 = Fleet(2, 1, e_home_sys.global_location)
-                 # f2.ships.append("Invader")
-                 # self.enemy_empire.add_fleet(f2)
-
         # Camera
         # Viewport crops: Sidebar (right) and Top Bar (top)
         # Offset Y = 50 (Top Bar)
@@ -103,15 +76,36 @@ class StrategyScene:
         
         # State
         self.turn_processing = False
+        self.action_open_design = False  # Flag to signal app.py to open Ship Builder
         
         # Multi-player turn management
         self.current_player_index = 0
-        self.human_player_ids = [0, 1]  # Both players are human-controlled
-
+        
         # Assets
         self.assets = {}
         self.empire_assets = {} # {empire_id: {'colony': Surface, 'fleet': Surface}}
         self._load_assets()
+        
+    @property
+    def galaxy(self): return self.session.galaxy
+    
+    @property
+    def empires(self): return self.session.empires
+    
+    @property
+    def systems(self): return self.session.systems
+    
+    @property
+    def turn_engine(self): return self.session.turn_engine
+    
+    @property
+    def player_empire(self): return self.session.player_empire
+    
+    @property
+    def enemy_empire(self): return self.session.enemy_empire
+    
+    @property
+    def human_player_ids(self): return self.session.human_player_ids
 
     def _load_assets(self):
         """Load visual assets."""
@@ -226,30 +220,24 @@ class StrategyScene:
         self.ui.handle_resize(width, height)
 
     def request_colonize_order(self, fleet):
-        """Handle colonize request from UI."""
-        matches = []
-        sys = self._get_system_at_hex(fleet.location)
-        if sys:
-            for p in sys.planets:
-                 # Check if colonizable? (Unowned)
-                 if p.owner_id is None: 
-                     matches.append(p)
-                       
-        if len(matches) == 0:
-            print("No colonizable planets at fleet location.")
-            return
-        elif len(matches) == 1:
-            self._issue_colonize_order(fleet, matches[0])
-        else:
-            self.ui.prompt_planet_selection(matches, lambda p: self._issue_colonize_order(fleet, p))
+        """Handle colonize request from UI (Legacy entry point, redirect to on_colonize_click logic or command)."""
+        # This seems to be called by StrategyInterface if we keep that logic, 
+        # but we are removing logic from Interface. 
+        # However, for safety/compatibility:
+        self.selected_fleet = fleet
+        self.on_colonize_click()
             
     def _issue_colonize_order(self, fleet, planet):
-        from game.strategy.data.fleet import FleetOrder, OrderType
-        # Store Planet object directly
-        order = FleetOrder(OrderType.COLONIZE, target=planet) 
-        fleet.orders.append(order)
-        print(f"issued colonize order to {planet.name}")
+        """Issue the command to the session."""
+        cmd = IssueColonizeCommand(fleet.id, id(planet))
+        print(f"Issued IssueColonizeCommand for {planet.name}")
         
+        result = self.session.handle_command(cmd)
+        if not result.is_valid:
+            print(f"Command Failed: {result.message}")
+        else:
+             self.on_ui_selection(self.selected_fleet) # Refresh UI
+
     def _get_system_at_hex(self, hex_coord):
         return self.galaxy.systems.get(hex_coord)
 
@@ -367,7 +355,7 @@ class StrategyScene:
              pygame.display.flip()
         
         # Process turn for all empires simultaneously
-        self.turn_engine.process_turn(self.empires, self.galaxy)
+        self.session.process_turn()
         
         # Re-center Camera on current player's home
         current_player_id = self.human_player_ids[self.current_player_index]
@@ -394,39 +382,50 @@ class StrategyScene:
         
     def on_colonize_click(self):
         """Handle colonize action."""
-        # Requirements: Selected Fleet, Fleet at unowned Planet.
-        # Check UI state/selected object?
-        # The user likely selected the Fleet OR the Planet?
-        
         if not self.selected_fleet:
             return
             
-        # Find planets at fleet location
-        start_sys = self._get_system_at_hex(self.selected_fleet.location)
-        valid_planets = []
+        # 1. Identify valid candidates using Engine Validation
+        # We need to scan planets at location.
+        # Ideally TurnEngine provides a "get_colonizable_planets(fleet)" but "validate" is what we have.
+        # We'll use the scene's knowledge of location to find potential planets, 
+        # then ask Engine "Is this specific planet valid?".
         
+        start_sys = self._get_system_at_hex(self.selected_fleet.location)
+        potential_planets = []
+        
+        # Gather all planets at hex (System or Peripheral)
         if start_sys:
             loc_local = self.selected_fleet.location - start_sys.global_location
             for p in start_sys.planets:
-                 if p.location == loc_local:
-                     # Add filter for valid colonization? (e.g. not owned)
-                     if p.owner_id is None: # Changed from 0 to None for neutral
-                        valid_planets.append(p)
+                if p.location == loc_local:
+                    potential_planets.append(p)
+        else:
+             # Full scan (rare)
+             for sys in self.systems:
+                 loc_local = self.selected_fleet.location - sys.global_location
+                 for p in sys.planets:
+                     if p.location == loc_local:
+                         potential_planets.append(p)
+
+        # Filter by Validation
+        valid_planets = []
+        for p in potential_planets:
+            # Validate with Engine
+            res = self.turn_engine.validate_colonize_order(self.galaxy, self.selected_fleet, p)
+            if res.is_valid:
+                valid_planets.append(p)
 
         if not valid_planets:
-            print("No colonizable planets at fleet location.")
+            print("No colonizable planets at fleet location (Validation Failed).")
             return
             
-        def execute_colonize(planet):
-             print(f"Queueing Colonize Order for {planet.name}")
-             self.selected_fleet.add_order(FleetOrder(OrderType.COLONIZE, planet))
-             self.on_ui_selection(self.selected_fleet) # Refresh UI
-
+        # Execute
         if len(valid_planets) == 1:
-            execute_colonize(valid_planets[0])
+            self._issue_colonize_order(self.selected_fleet, valid_planets[0])
         else:
             print("Multiple planets detected. Requesting user selection...")
-            self.ui.prompt_planet_selection(valid_planets, execute_colonize)
+            self.ui.prompt_planet_selection(valid_planets, lambda p: self._issue_colonize_order(self.selected_fleet, p))
              
     def cycle_selection(self, obj_type, direction):
         """Cycle selection through colonies or fleets and Center Camera."""
@@ -544,14 +543,19 @@ class StrategyScene:
         print(f"System View: {target_sys.name} at zoom=2.0")
              
     def on_build_ship_click(self):
-         """Handle 'Build Ship' action."""
-         if isinstance(self.selected_object, Planet):
-             planet = self.selected_object
-             if planet.owner_id == self.current_empire.id:
-                 print(f"Queueing Ship at {planet}...")
-                 # Add to Queue (1 Turn)
-                 planet.add_production("Colony Ship", 1)
-                 print("Ship added to construction queue (1 Turn).")
+        """Handle 'Build Ship' action."""
+        if isinstance(self.selected_object, Planet):
+            planet = self.selected_object
+            if planet.owner_id == self.current_empire.id:
+                print(f"Queueing Ship at {planet}...")
+                # Add to Queue (1 Turn)
+                planet.add_production("Colony Ship", 1)
+                print("Ship added to construction queue (1 Turn).")
+
+    def on_design_click(self):
+        """Handle 'Design' button click - opens Ship Builder."""
+        print("Design button clicked - opening Ship Builder")
+        self.action_open_design = True
 
     def update_input(self, dt, events):
         """Update camera input."""
