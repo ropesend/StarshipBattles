@@ -58,23 +58,123 @@ class TurnEngine:
                     emp.add_fleet(new_fleet)
 
     def _process_tick(self, tick, empires, galaxy):
-        """Process 1 sub-tick of movement and combat."""
+        """Process 1 sub-tick of movement and combat.
         
-        # --- A. Movement ---
+        Four-phase processing:
+        Phase 0: Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
+        Phase 1: Calculate paths/next moves for all fleets (based on current positions)
+        Phase 2: Apply all movements simultaneously
+        Phase 3: Combat
+        """
+        
+        # --- Phase 0: Instant Orders (JOIN_FLEET) ---
+        # Process JOIN_FLEET orders for any fleets that are already co-located with their target.
+        # This happens every subtick so fleets can join as soon as they arrive.
+        fleets_to_remove = []
         for empire in empires:
-            # Iterate backwards or copy? Fleet death might happen in combat step later.
-            # Movement happens BEFORE combat check in this tick.
+            for fleet in list(empire.fleets):  # Copy list since we may modify it
+                order = fleet.get_current_order()
+                if order and order.type == OrderType.JOIN_FLEET:
+                    target_fleet = order.target
+                    if target_fleet and hasattr(target_fleet, 'location'):
+                        if fleet.location == target_fleet.location:
+                            print(f"TurnEngine [Tick {tick}]: Fleet {fleet.id} merging into {target_fleet.id}")
+                            fleet.merge_with(target_fleet)
+                            fleets_to_remove.append((empire, fleet))
+        
+        # Remove merged fleets
+        for empire, fleet in fleets_to_remove:
+            empire.remove_fleet(fleet)
+        
+        # --- Phase 1: Calculate Moves ---
+        # Collect (fleet, next_hex) pairs for all fleets that should move this tick
+        move_queue = []
+        
+        for empire in empires:
             for fleet in empire.fleets:
-                if fleet.speed <= 0: continue
+                if fleet.speed <= 0: 
+                    continue
                 
                 interval = int(100 // fleet.speed)
-                if interval <= 0: interval = 1 # Safety
+                if interval <= 0: 
+                    interval = 1  # Safety
                 
                 if tick % interval == 0:
-                    self._execute_move_step(fleet, galaxy)
+                    # Calculate next hex WITHOUT moving yet
+                    next_hex = self._calculate_next_hex(fleet, galaxy)
+                    if next_hex is not None:
+                        move_queue.append((fleet, next_hex))
+        
+        # --- Phase 2: Apply Moves ---
+        for fleet, next_hex in move_queue:
+            fleet.location = next_hex
+            
+            # If path complete, order is done
+            if not fleet.path:
+                fleet.pop_order()
 
-        # --- B. Combat ---
+        # --- Phase 3: Combat ---
         self._resolve_conflicts(empires)
+
+    def _calculate_next_hex(self, fleet, galaxy):
+        """Calculate (but don't apply) the next hex for a fleet.
+        
+        Returns the next hex to move to, or None if no movement.
+        Side effect: Updates fleet.path if needed.
+        """
+        order = fleet.get_current_order()
+        if not order:
+            return None
+
+        destination = None
+        
+        if order.type == OrderType.MOVE:
+            destination = order.target
+        elif order.type == OrderType.MOVE_TO_FLEET:
+            target_fleet = order.target
+            if not target_fleet or not hasattr(target_fleet, 'location'):
+                print(f"TurnEngine: Target fleet invalid. Order cancelled.")
+                fleet.pop_order()
+                return None
+            
+            # Use Predictive Intercept
+            from game.strategy.data.pathfinding import calculate_intercept_point
+            destination = calculate_intercept_point(fleet, target_fleet, galaxy)
+        else:
+            return None
+            
+        # Check for Re-Pathing (for Dynamic Targets)
+        if fleet.path:
+            current_dest = fleet.path[-1]
+            if current_dest != destination:
+                fleet.path = []  # Force recalc
+            
+        # Calculate path if needed
+        if not fleet.path:
+            from game.strategy.data.pathfinding import find_hybrid_path
+            
+            if fleet.location == destination:
+                fleet.pop_order()
+                return None
+
+            fleet.path = find_hybrid_path(galaxy, fleet.location, destination)
+            
+            # Remove start hex if path begins with current location
+            if fleet.path and fleet.path[0] == fleet.location:
+                fleet.path.pop(0)
+            
+            if not fleet.path:
+                if fleet.location != destination:
+                    pass  # Retry next tick
+                else: 
+                    fleet.pop_order()
+                return None
+
+        if fleet.path:
+            # Pop next hex from path (still part of calculation, applied in Phase 2)
+            return fleet.path.pop(0)
+        
+        return None
 
     def _execute_move_step(self, fleet, galaxy):
         """Advance fleet 1 hex if it has a MOVE order and path."""
@@ -125,6 +225,10 @@ class TurnEngine:
 
             # Use Hybrid Pathfinding (Warp Point Aware)
             fleet.path = find_hybrid_path(galaxy, fleet.location, destination)
+            
+            # Remove start hex if path begins with current location
+            if fleet.path and fleet.path[0] == fleet.location:
+                fleet.path.pop(0)
             
             # If path still empty (unreachable or error?), pop order.
             if not fleet.path:

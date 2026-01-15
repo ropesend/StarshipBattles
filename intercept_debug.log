@@ -1,0 +1,1928 @@
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:26:27
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 5.0
+Target Fleet ID: 2
+  Location: HexCoord(10, 0)
+  Speed: 10.0
+
+Target Projected Path (2 segments):
+  [0] Turn 5: HexCoord(30, 0)
+  [1] Turn 10: HexCoord(15, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(30, 0) @ T5: path=30 steps, chaser_time=6.00 turns, valid=False
+  [1] HexCoord(15, 0) @ T10: path=15 steps, chaser_time=3.00 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(15, 0)
+    Chaser arrives in 3.00 turns
+    Target at hex during turn 10
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 15 steps
+Chaser subticks: 300 (Turn 3, Subtick 0)
+Target at intercept hex during turn: 10
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 10
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:26:27
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 2.0
+Target Fleet ID: 2
+  Location: HexCoord(4, 0)
+  Speed: 1.0
+
+Target Projected Path (5 segments):
+  [0] Turn 1: HexCoord(5, 0)
+  [1] Turn 2: HexCoord(6, 0)
+  [2] Turn 3: HexCoord(7, 0)
+  [3] Turn 4: HexCoord(8, 0)
+  [4] Turn 5: HexCoord(9, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(5, 0) @ T1: path=5 steps, chaser_time=2.50 turns, valid=False
+  [1] HexCoord(6, 0) @ T2: path=6 steps, chaser_time=3.00 turns, valid=False
+  [2] HexCoord(7, 0) @ T3: path=7 steps, chaser_time=3.50 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [3] HexCoord(8, 0) @ T4: path=8 steps, chaser_time=4.00 turns, valid=True
+  [4] HexCoord(9, 0) @ T5: path=9 steps, chaser_time=4.50 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(7, 0)
+    Chaser arrives in 3.50 turns
+    Target at hex during turn 3
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 7 steps
+Chaser subticks: 350 (Turn 3, Subtick 50)
+Target at intercept hex during turn: 3
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 3
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:27:13
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 2.0
+Target Fleet ID: 2
+  Location: HexCoord(4, 0)
+  Speed: 1.0
+
+Target Projected Path (5 segments):
+  [0] Turn 1: HexCoord(5, 0)
+  [1] Turn 2: HexCoord(6, 0)
+  [2] Turn 3: HexCoord(7, 0)
+  [3] Turn 4: HexCoord(8, 0)
+  [4] Turn 5: HexCoord(9, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(5, 0) @ T1: path=5 steps, chaser_time=2.50 turns, valid=False
+  [1] HexCoord(6, 0) @ T2: path=6 steps, chaser_time=3.00 turns, valid=False
+  [2] HexCoord(7, 0) @ T3: path=7 steps, chaser_time=3.50 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [3] HexCoord(8, 0) @ T4: path=8 steps, chaser_time=4.00 turns, valid=True
+  [4] HexCoord(9, 0) @ T5: path=9 steps, chaser_time=4.50 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(7, 0)
+    Chaser arrives in 3.50 turns
+    Target at hex during turn 3
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 7 steps
+Chaser subticks: 350 (Turn 3, Subtick 50)
+Target at intercept hex during turn: 3
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 3
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:27:13
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 5.0
+Target Fleet ID: 2
+  Location: HexCoord(10, 0)
+  Speed: 10.0
+
+Target Projected Path (2 segments):
+  [0] Turn 5: HexCoord(30, 0)
+  [1] Turn 10: HexCoord(15, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(30, 0) @ T5: path=30 steps, chaser_time=6.00 turns, valid=False
+  [1] HexCoord(15, 0) @ T10: path=15 steps, chaser_time=3.00 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(15, 0)
+    Chaser arrives in 3.00 turns
+    Target at hex during turn 10
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 15 steps
+Chaser subticks: 300 (Turn 3, Subtick 0)
+Target at intercept hex during turn: 10
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 10
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:29:42
+============================================================
+Chaser Fleet ID: 54696
+  Location: HexCoord(2442, -276)
+  Speed: 5.0
+Target Fleet ID: 24246
+  Location: HexCoord(2442, -281)
+  Speed: 5.0
+
+Target Projected Path (57 segments):
+  [0] Turn 0: HexCoord(2442, -283)
+  [1] Turn 0: HexCoord(2442, -284)
+  [2] Turn 0: HexCoord(2442, -285)
+  [3] Turn 0: HexCoord(2441, -284)
+  [4] Turn 0: HexCoord(2440, -283)
+  [5] Turn 1: HexCoord(2439, -282)
+  [6] Turn 1: HexCoord(2438, -281)
+  [7] Turn 1: HexCoord(2437, -280)
+  [8] Turn 1: HexCoord(2436, -279)
+  [9] Turn 1: HexCoord(2435, -278)
+  [10] Turn 2: HexCoord(2434, -277)
+  [11] Turn 2: HexCoord(2433, -276)
+  [12] Turn 2: HexCoord(2433, -275)
+  [13] Turn 2: HexCoord(2433, -274)
+  [14] Turn 2: HexCoord(2433, -273)
+  ... (42 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(2442, -283) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(2442, -284) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(2442, -285) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [3] HexCoord(2441, -284) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [4] HexCoord(2440, -283) @ T0: path=9 steps, chaser_time=1.80 turns, valid=False
+  [5] HexCoord(2439, -282) @ T1: path=9 steps, chaser_time=1.80 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [6] HexCoord(2438, -281) @ T1: path=9 steps, chaser_time=1.80 turns, valid=True
+  [7] HexCoord(2437, -280) @ T1: path=9 steps, chaser_time=1.80 turns, valid=True
+  [8] HexCoord(2436, -279) @ T1: path=9 steps, chaser_time=1.80 turns, valid=True
+  [9] HexCoord(2435, -278) @ T1: path=9 steps, chaser_time=1.80 turns, valid=True
+  [10] HexCoord(2434, -277) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [11] HexCoord(2433, -276) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [12] HexCoord(2433, -275) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [13] HexCoord(2433, -274) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [14] HexCoord(2433, -273) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [15] HexCoord(2433, -272) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [16] HexCoord(2433, -271) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [17] HexCoord(2433, -270) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [18] HexCoord(2433, -269) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [19] HexCoord(2433, -268) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [20] HexCoord(2433, -267) @ T4: path=9 steps, chaser_time=1.80 turns, valid=True
+  [21] HexCoord(2434, -267) @ T4: path=9 steps, chaser_time=1.80 turns, valid=True
+  [22] HexCoord(2435, -267) @ T4: path=9 steps, chaser_time=1.80 turns, valid=True
+  [23] HexCoord(2436, -267) @ T4: path=9 steps, chaser_time=1.80 turns, valid=True
+  [24] HexCoord(2437, -267) @ T4: path=9 steps, chaser_time=1.80 turns, valid=True
+  [25] HexCoord(2438, -267) @ T5: path=9 steps, chaser_time=1.80 turns, valid=True
+  [26] HexCoord(2439, -267) @ T5: path=9 steps, chaser_time=1.80 turns, valid=True
+  [27] HexCoord(2440, -267) @ T5: path=9 steps, chaser_time=1.80 turns, valid=True
+  [28] HexCoord(2441, -267) @ T5: path=9 steps, chaser_time=1.80 turns, valid=True
+  [29] HexCoord(2442, -267) @ T5: path=9 steps, chaser_time=1.80 turns, valid=True
+  [30] HexCoord(2443, -268) @ T6: path=9 steps, chaser_time=1.80 turns, valid=True
+  [31] HexCoord(2444, -269) @ T6: path=9 steps, chaser_time=1.80 turns, valid=True
+  [32] HexCoord(2445, -270) @ T6: path=9 steps, chaser_time=1.80 turns, valid=True
+  [33] HexCoord(2446, -271) @ T6: path=9 steps, chaser_time=1.80 turns, valid=True
+  [34] HexCoord(2447, -272) @ T6: path=9 steps, chaser_time=1.80 turns, valid=True
+  [35] HexCoord(2448, -273) @ T7: path=9 steps, chaser_time=1.80 turns, valid=True
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(2439, -282)
+    Chaser arrives in 1.80 turns
+    Target at hex during turn 1
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 9 steps
+Chaser subticks: 180 (Turn 1, Subtick 80)
+Target at intercept hex during turn: 1
+VERIFIED: Chaser arrives Turn 1 <= Target there Turn 1
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:29:42
+============================================================
+Chaser Fleet ID: 54696
+  Location: HexCoord(2442, -277)
+  Speed: 5.0
+Target Fleet ID: 24246
+  Location: HexCoord(2442, -282)
+  Speed: 5.0
+
+Target Projected Path (56 segments):
+  [0] Turn 0: HexCoord(2442, -284)
+  [1] Turn 0: HexCoord(2442, -285)
+  [2] Turn 0: HexCoord(2441, -284)
+  [3] Turn 0: HexCoord(2440, -283)
+  [4] Turn 0: HexCoord(2439, -282)
+  [5] Turn 1: HexCoord(2438, -281)
+  [6] Turn 1: HexCoord(2437, -280)
+  [7] Turn 1: HexCoord(2436, -279)
+  [8] Turn 1: HexCoord(2435, -278)
+  [9] Turn 1: HexCoord(2434, -277)
+  [10] Turn 2: HexCoord(2433, -276)
+  [11] Turn 2: HexCoord(2433, -275)
+  [12] Turn 2: HexCoord(2433, -274)
+  [13] Turn 2: HexCoord(2433, -273)
+  [14] Turn 2: HexCoord(2433, -272)
+  ... (41 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(2442, -284) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(2442, -285) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(2441, -284) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [3] HexCoord(2440, -283) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [4] HexCoord(2439, -282) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [5] HexCoord(2438, -281) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [6] HexCoord(2437, -280) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [7] HexCoord(2436, -279) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [8] HexCoord(2435, -278) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [9] HexCoord(2434, -277) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [10] HexCoord(2433, -276) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [11] HexCoord(2433, -275) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [12] HexCoord(2433, -274) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [13] HexCoord(2433, -273) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [14] HexCoord(2433, -272) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [15] HexCoord(2433, -271) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [16] HexCoord(2433, -270) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [17] HexCoord(2433, -269) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [18] HexCoord(2433, -268) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [19] HexCoord(2433, -267) @ T3: path=10 steps, chaser_time=2.00 turns, valid=True
+  [20] HexCoord(2434, -267) @ T4: path=10 steps, chaser_time=2.00 turns, valid=True
+  [21] HexCoord(2435, -267) @ T4: path=10 steps, chaser_time=2.00 turns, valid=True
+  [22] HexCoord(2436, -267) @ T4: path=10 steps, chaser_time=2.00 turns, valid=True
+  [23] HexCoord(2437, -267) @ T4: path=10 steps, chaser_time=2.00 turns, valid=True
+  [24] HexCoord(2438, -267) @ T4: path=10 steps, chaser_time=2.00 turns, valid=True
+  [25] HexCoord(2439, -267) @ T5: path=10 steps, chaser_time=2.00 turns, valid=True
+  [26] HexCoord(2440, -267) @ T5: path=10 steps, chaser_time=2.00 turns, valid=True
+  [27] HexCoord(2441, -267) @ T5: path=10 steps, chaser_time=2.00 turns, valid=True
+  [28] HexCoord(2442, -267) @ T5: path=10 steps, chaser_time=2.00 turns, valid=True
+  [29] HexCoord(2443, -268) @ T5: path=10 steps, chaser_time=2.00 turns, valid=True
+  [30] HexCoord(2444, -269) @ T6: path=10 steps, chaser_time=2.00 turns, valid=True
+  [31] HexCoord(2445, -270) @ T6: path=10 steps, chaser_time=2.00 turns, valid=True
+  [32] HexCoord(2446, -271) @ T6: path=10 steps, chaser_time=2.00 turns, valid=True
+  [33] HexCoord(2447, -272) @ T6: path=10 steps, chaser_time=2.00 turns, valid=True
+  [34] HexCoord(2448, -273) @ T6: path=10 steps, chaser_time=2.00 turns, valid=True
+  [35] HexCoord(2449, -274) @ T7: path=10 steps, chaser_time=2.00 turns, valid=True
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(2438, -281)
+    Chaser arrives in 1.60 turns
+    Target at hex during turn 1
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 8 steps
+Chaser subticks: 160 (Turn 1, Subtick 60)
+Target at intercept hex during turn: 1
+VERIFIED: Chaser arrives Turn 1 <= Target there Turn 1
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:29:42
+============================================================
+Chaser Fleet ID: 54696
+  Location: HexCoord(2442, -278)
+  Speed: 5.0
+Target Fleet ID: 24246
+  Location: HexCoord(2442, -283)
+  Speed: 5.0
+
+Target Projected Path (55 segments):
+  [0] Turn 0: HexCoord(2442, -285)
+  [1] Turn 0: HexCoord(2441, -284)
+  [2] Turn 0: HexCoord(2440, -283)
+  [3] Turn 0: HexCoord(2439, -282)
+  [4] Turn 0: HexCoord(2438, -281)
+  [5] Turn 1: HexCoord(2437, -280)
+  [6] Turn 1: HexCoord(2436, -279)
+  [7] Turn 1: HexCoord(2435, -278)
+  [8] Turn 1: HexCoord(2434, -277)
+  [9] Turn 1: HexCoord(2433, -276)
+  [10] Turn 2: HexCoord(2433, -275)
+  [11] Turn 2: HexCoord(2433, -274)
+  [12] Turn 2: HexCoord(2433, -273)
+  [13] Turn 2: HexCoord(2433, -272)
+  [14] Turn 2: HexCoord(2433, -271)
+  ... (40 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(2442, -285) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(2441, -284) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [2] HexCoord(2440, -283) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [3] HexCoord(2439, -282) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [4] HexCoord(2438, -281) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [5] HexCoord(2437, -280) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [6] HexCoord(2436, -279) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+  [7] HexCoord(2435, -278) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+  [8] HexCoord(2434, -277) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [9] HexCoord(2433, -276) @ T1: path=9 steps, chaser_time=1.80 turns, valid=True
+  [10] HexCoord(2433, -275) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [11] HexCoord(2433, -274) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [12] HexCoord(2433, -273) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [13] HexCoord(2433, -272) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [14] HexCoord(2433, -271) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [15] HexCoord(2433, -270) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [16] HexCoord(2433, -269) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [17] HexCoord(2433, -268) @ T3: path=10 steps, chaser_time=2.00 turns, valid=True
+  [18] HexCoord(2433, -267) @ T3: path=11 steps, chaser_time=2.20 turns, valid=True
+  [19] HexCoord(2434, -267) @ T3: path=11 steps, chaser_time=2.20 turns, valid=True
+  [20] HexCoord(2435, -267) @ T4: path=11 steps, chaser_time=2.20 turns, valid=True
+  [21] HexCoord(2436, -267) @ T4: path=11 steps, chaser_time=2.20 turns, valid=True
+  [22] HexCoord(2437, -267) @ T4: path=11 steps, chaser_time=2.20 turns, valid=True
+  [23] HexCoord(2438, -267) @ T4: path=11 steps, chaser_time=2.20 turns, valid=True
+  [24] HexCoord(2439, -267) @ T4: path=11 steps, chaser_time=2.20 turns, valid=True
+  [25] HexCoord(2440, -267) @ T5: path=11 steps, chaser_time=2.20 turns, valid=True
+  [26] HexCoord(2441, -267) @ T5: path=11 steps, chaser_time=2.20 turns, valid=True
+  [27] HexCoord(2442, -267) @ T5: path=11 steps, chaser_time=2.20 turns, valid=True
+  [28] HexCoord(2443, -268) @ T5: path=11 steps, chaser_time=2.20 turns, valid=True
+  [29] HexCoord(2444, -269) @ T5: path=11 steps, chaser_time=2.20 turns, valid=True
+  [30] HexCoord(2445, -270) @ T6: path=11 steps, chaser_time=2.20 turns, valid=True
+  [31] HexCoord(2446, -271) @ T6: path=11 steps, chaser_time=2.20 turns, valid=True
+  [32] HexCoord(2447, -272) @ T6: path=11 steps, chaser_time=2.20 turns, valid=True
+  [33] HexCoord(2448, -273) @ T6: path=11 steps, chaser_time=2.20 turns, valid=True
+  [34] HexCoord(2449, -274) @ T6: path=11 steps, chaser_time=2.20 turns, valid=True
+  [35] HexCoord(2450, -275) @ T7: path=11 steps, chaser_time=2.20 turns, valid=True
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(2437, -280)
+    Chaser arrives in 1.40 turns
+    Target at hex during turn 1
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 7 steps
+Chaser subticks: 140 (Turn 1, Subtick 40)
+Target at intercept hex during turn: 1
+VERIFIED: Chaser arrives Turn 1 <= Target there Turn 1
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:29:42
+============================================================
+Chaser Fleet ID: 54696
+  Location: HexCoord(2441, -278)
+  Speed: 5.0
+Target Fleet ID: 24246
+  Location: HexCoord(2442, -284)
+  Speed: 5.0
+
+Target Projected Path (55 segments):
+  [0] Turn 0: HexCoord(2442, -285)
+  [1] Turn 0: HexCoord(2441, -284)
+  [2] Turn 0: HexCoord(2440, -283)
+  [3] Turn 0: HexCoord(2439, -282)
+  [4] Turn 0: HexCoord(2438, -281)
+  [5] Turn 1: HexCoord(2437, -280)
+  [6] Turn 1: HexCoord(2436, -279)
+  [7] Turn 1: HexCoord(2435, -278)
+  [8] Turn 1: HexCoord(2434, -277)
+  [9] Turn 1: HexCoord(2433, -276)
+  [10] Turn 2: HexCoord(2433, -275)
+  [11] Turn 2: HexCoord(2433, -274)
+  [12] Turn 2: HexCoord(2433, -273)
+  [13] Turn 2: HexCoord(2433, -272)
+  [14] Turn 2: HexCoord(2433, -271)
+  ... (40 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(2442, -285) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(2441, -284) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+  [2] HexCoord(2440, -283) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+  [3] HexCoord(2439, -282) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+  [4] HexCoord(2438, -281) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+  [5] HexCoord(2437, -280) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [6] HexCoord(2436, -279) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [7] HexCoord(2435, -278) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [8] HexCoord(2434, -277) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+  [9] HexCoord(2433, -276) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [10] HexCoord(2433, -275) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [11] HexCoord(2433, -274) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [12] HexCoord(2433, -273) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [13] HexCoord(2433, -272) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [14] HexCoord(2433, -271) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [15] HexCoord(2433, -270) @ T3: path=8 steps, chaser_time=1.60 turns, valid=True
+  [16] HexCoord(2433, -269) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [17] HexCoord(2433, -268) @ T3: path=10 steps, chaser_time=2.00 turns, valid=True
+  [18] HexCoord(2433, -267) @ T3: path=11 steps, chaser_time=2.20 turns, valid=True
+  [19] HexCoord(2434, -267) @ T3: path=11 steps, chaser_time=2.20 turns, valid=True
+  [20] HexCoord(2435, -267) @ T4: path=11 steps, chaser_time=2.20 turns, valid=True
+  [21] HexCoord(2436, -267) @ T4: path=11 steps, chaser_time=2.20 turns, valid=True
+  [22] HexCoord(2437, -267) @ T4: path=11 steps, chaser_time=2.20 turns, valid=True
+  [23] HexCoord(2438, -267) @ T4: path=11 steps, chaser_time=2.20 turns, valid=True
+  [24] HexCoord(2439, -267) @ T4: path=11 steps, chaser_time=2.20 turns, valid=True
+  [25] HexCoord(2440, -267) @ T5: path=11 steps, chaser_time=2.20 turns, valid=True
+  [26] HexCoord(2441, -267) @ T5: path=11 steps, chaser_time=2.20 turns, valid=True
+  [27] HexCoord(2442, -267) @ T5: path=12 steps, chaser_time=2.40 turns, valid=True
+  [28] HexCoord(2443, -268) @ T5: path=12 steps, chaser_time=2.40 turns, valid=True
+  [29] HexCoord(2444, -269) @ T5: path=12 steps, chaser_time=2.40 turns, valid=True
+  [30] HexCoord(2445, -270) @ T6: path=12 steps, chaser_time=2.40 turns, valid=True
+  [31] HexCoord(2446, -271) @ T6: path=12 steps, chaser_time=2.40 turns, valid=True
+  [32] HexCoord(2447, -272) @ T6: path=12 steps, chaser_time=2.40 turns, valid=True
+  [33] HexCoord(2448, -273) @ T6: path=12 steps, chaser_time=2.40 turns, valid=True
+  [34] HexCoord(2449, -274) @ T6: path=12 steps, chaser_time=2.40 turns, valid=True
+  [35] HexCoord(2450, -275) @ T7: path=12 steps, chaser_time=2.40 turns, valid=True
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(2437, -280)
+    Chaser arrives in 1.20 turns
+    Target at hex during turn 1
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 6 steps
+Chaser subticks: 120 (Turn 1, Subtick 20)
+Target at intercept hex during turn: 1
+VERIFIED: Chaser arrives Turn 1 <= Target there Turn 1
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:29:42
+============================================================
+Chaser Fleet ID: 54696
+  Location: HexCoord(2441, -279)
+  Speed: 5.0
+Target Fleet ID: 24246
+  Location: HexCoord(2442, -285)
+  Speed: 5.0
+
+Target Projected Path (53 segments):
+  [0] Turn 0: HexCoord(2440, -283)
+  [1] Turn 0: HexCoord(2439, -282)
+  [2] Turn 0: HexCoord(2438, -281)
+  [3] Turn 0: HexCoord(2437, -280)
+  [4] Turn 0: HexCoord(2436, -279)
+  [5] Turn 1: HexCoord(2435, -278)
+  [6] Turn 1: HexCoord(2434, -277)
+  [7] Turn 1: HexCoord(2433, -276)
+  [8] Turn 1: HexCoord(2433, -275)
+  [9] Turn 1: HexCoord(2433, -274)
+  [10] Turn 2: HexCoord(2433, -273)
+  [11] Turn 2: HexCoord(2433, -272)
+  [12] Turn 2: HexCoord(2433, -271)
+  [13] Turn 2: HexCoord(2433, -270)
+  [14] Turn 2: HexCoord(2433, -269)
+  ... (38 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(2440, -283) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [1] HexCoord(2439, -282) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [2] HexCoord(2438, -281) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [3] HexCoord(2437, -280) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [4] HexCoord(2436, -279) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [5] HexCoord(2435, -278) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [6] HexCoord(2434, -277) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+  [7] HexCoord(2433, -276) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [8] HexCoord(2433, -275) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [9] HexCoord(2433, -274) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [10] HexCoord(2433, -273) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [11] HexCoord(2433, -272) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [12] HexCoord(2433, -271) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [13] HexCoord(2433, -270) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [14] HexCoord(2433, -269) @ T2: path=10 steps, chaser_time=2.00 turns, valid=True
+  [15] HexCoord(2433, -268) @ T3: path=11 steps, chaser_time=2.20 turns, valid=True
+  [16] HexCoord(2433, -267) @ T3: path=12 steps, chaser_time=2.40 turns, valid=True
+  [17] HexCoord(2434, -267) @ T3: path=12 steps, chaser_time=2.40 turns, valid=True
+  [18] HexCoord(2435, -267) @ T3: path=12 steps, chaser_time=2.40 turns, valid=True
+  [19] HexCoord(2436, -267) @ T3: path=12 steps, chaser_time=2.40 turns, valid=True
+  [20] HexCoord(2437, -267) @ T4: path=12 steps, chaser_time=2.40 turns, valid=True
+  [21] HexCoord(2438, -267) @ T4: path=12 steps, chaser_time=2.40 turns, valid=True
+  [22] HexCoord(2439, -267) @ T4: path=12 steps, chaser_time=2.40 turns, valid=True
+  [23] HexCoord(2440, -267) @ T4: path=12 steps, chaser_time=2.40 turns, valid=True
+  [24] HexCoord(2441, -267) @ T4: path=12 steps, chaser_time=2.40 turns, valid=True
+  [25] HexCoord(2442, -267) @ T5: path=13 steps, chaser_time=2.60 turns, valid=True
+  [26] HexCoord(2443, -268) @ T5: path=13 steps, chaser_time=2.60 turns, valid=True
+  [27] HexCoord(2444, -269) @ T5: path=13 steps, chaser_time=2.60 turns, valid=True
+  [28] HexCoord(2445, -270) @ T5: path=13 steps, chaser_time=2.60 turns, valid=True
+  [29] HexCoord(2446, -271) @ T5: path=13 steps, chaser_time=2.60 turns, valid=True
+  [30] HexCoord(2447, -272) @ T6: path=13 steps, chaser_time=2.60 turns, valid=True
+  [31] HexCoord(2448, -273) @ T6: path=13 steps, chaser_time=2.60 turns, valid=True
+  [32] HexCoord(2449, -274) @ T6: path=13 steps, chaser_time=2.60 turns, valid=True
+  [33] HexCoord(2450, -275) @ T6: path=13 steps, chaser_time=2.60 turns, valid=True
+  [34] HexCoord(2451, -276) @ T6: path=13 steps, chaser_time=2.60 turns, valid=True
+  [35] HexCoord(2451, -277) @ T7: path=12 steps, chaser_time=2.40 turns, valid=True
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(2435, -278)
+    Chaser arrives in 1.20 turns
+    Target at hex during turn 1
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 6 steps
+Chaser subticks: 120 (Turn 1, Subtick 20)
+Target at intercept hex during turn: 1
+VERIFIED: Chaser arrives Turn 1 <= Target there Turn 1
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:30:14
+============================================================
+Chaser Fleet ID: 54696
+  Location: HexCoord(2440, -279)
+  Speed: 5.0
+Target Fleet ID: 24246
+  Location: HexCoord(2441, -284)
+  Speed: 5.0
+
+Target Projected Path (52 segments):
+  [0] Turn 0: HexCoord(2439, -282)
+  [1] Turn 0: HexCoord(2438, -281)
+  [2] Turn 0: HexCoord(2437, -280)
+  [3] Turn 0: HexCoord(2436, -279)
+  [4] Turn 0: HexCoord(2435, -278)
+  [5] Turn 1: HexCoord(2434, -277)
+  [6] Turn 1: HexCoord(2433, -276)
+  [7] Turn 1: HexCoord(2433, -275)
+  [8] Turn 1: HexCoord(2433, -274)
+  [9] Turn 1: HexCoord(2433, -273)
+  [10] Turn 2: HexCoord(2433, -272)
+  [11] Turn 2: HexCoord(2433, -271)
+  [12] Turn 2: HexCoord(2433, -270)
+  [13] Turn 2: HexCoord(2433, -269)
+  [14] Turn 2: HexCoord(2433, -268)
+  ... (37 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(2439, -282) @ T0: path=4 steps, chaser_time=0.80 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(2439, -282)
+    Chaser arrives in 0.80 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 4 steps
+Chaser subticks: 80 (Turn 0, Subtick 80)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:30:14
+============================================================
+Chaser Fleet ID: 54696
+  Location: HexCoord(2440, -280)
+  Speed: 5.0
+Target Fleet ID: 24246
+  Location: HexCoord(2440, -283)
+  Speed: 5.0
+
+Target Projected Path (51 segments):
+  [0] Turn 0: HexCoord(2438, -281)
+  [1] Turn 0: HexCoord(2437, -280)
+  [2] Turn 0: HexCoord(2436, -279)
+  [3] Turn 0: HexCoord(2435, -278)
+  [4] Turn 0: HexCoord(2434, -277)
+  [5] Turn 1: HexCoord(2433, -276)
+  [6] Turn 1: HexCoord(2433, -275)
+  [7] Turn 1: HexCoord(2433, -274)
+  [8] Turn 1: HexCoord(2433, -273)
+  [9] Turn 1: HexCoord(2433, -272)
+  [10] Turn 2: HexCoord(2433, -271)
+  [11] Turn 2: HexCoord(2433, -270)
+  [12] Turn 2: HexCoord(2433, -269)
+  [13] Turn 2: HexCoord(2433, -268)
+  [14] Turn 2: HexCoord(2433, -267)
+  ... (36 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(2438, -281) @ T0: path=3 steps, chaser_time=0.60 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(2438, -281)
+    Chaser arrives in 0.60 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 3 steps
+Chaser subticks: 60 (Turn 0, Subtick 60)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:30:14
+============================================================
+Chaser Fleet ID: 54696
+  Location: HexCoord(2439, -280)
+  Speed: 5.0
+Target Fleet ID: 24246
+  Location: HexCoord(2439, -282)
+  Speed: 5.0
+
+Target Projected Path (50 segments):
+  [0] Turn 0: HexCoord(2437, -280)
+  [1] Turn 0: HexCoord(2436, -279)
+  [2] Turn 0: HexCoord(2435, -278)
+  [3] Turn 0: HexCoord(2434, -277)
+  [4] Turn 0: HexCoord(2433, -276)
+  [5] Turn 1: HexCoord(2433, -275)
+  [6] Turn 1: HexCoord(2433, -274)
+  [7] Turn 1: HexCoord(2433, -273)
+  [8] Turn 1: HexCoord(2433, -272)
+  [9] Turn 1: HexCoord(2433, -271)
+  [10] Turn 2: HexCoord(2433, -270)
+  [11] Turn 2: HexCoord(2433, -269)
+  [12] Turn 2: HexCoord(2433, -268)
+  [13] Turn 2: HexCoord(2433, -267)
+  [14] Turn 2: HexCoord(2434, -267)
+  ... (35 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(2437, -280) @ T0: path=2 steps, chaser_time=0.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(2437, -280)
+    Chaser arrives in 0.40 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 2 steps
+Chaser subticks: 40 (Turn 0, Subtick 40)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:30:14
+============================================================
+Chaser Fleet ID: 54696
+  Location: HexCoord(2438, -280)
+  Speed: 5.0
+Target Fleet ID: 24246
+  Location: HexCoord(2438, -281)
+  Speed: 5.0
+
+Target Projected Path (49 segments):
+  [0] Turn 0: HexCoord(2436, -279)
+  [1] Turn 0: HexCoord(2435, -278)
+  [2] Turn 0: HexCoord(2434, -277)
+  [3] Turn 0: HexCoord(2433, -276)
+  [4] Turn 0: HexCoord(2433, -275)
+  [5] Turn 1: HexCoord(2433, -274)
+  [6] Turn 1: HexCoord(2433, -273)
+  [7] Turn 1: HexCoord(2433, -272)
+  [8] Turn 1: HexCoord(2433, -271)
+  [9] Turn 1: HexCoord(2433, -270)
+  [10] Turn 2: HexCoord(2433, -269)
+  [11] Turn 2: HexCoord(2433, -268)
+  [12] Turn 2: HexCoord(2433, -267)
+  [13] Turn 2: HexCoord(2434, -267)
+  [14] Turn 2: HexCoord(2435, -267)
+  ... (34 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(2436, -279) @ T0: path=2 steps, chaser_time=0.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(2436, -279)
+    Chaser arrives in 0.40 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 2 steps
+Chaser subticks: 40 (Turn 0, Subtick 40)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:30:14
+============================================================
+Chaser Fleet ID: 54696
+  Location: HexCoord(2437, -280)
+  Speed: 5.0
+Target Fleet ID: 24246
+  Location: HexCoord(2437, -280)
+  Speed: 5.0
+
+Target Projected Path (48 segments):
+  [0] Turn 0: HexCoord(2435, -278)
+  [1] Turn 0: HexCoord(2434, -277)
+  [2] Turn 0: HexCoord(2433, -276)
+  [3] Turn 0: HexCoord(2433, -275)
+  [4] Turn 0: HexCoord(2433, -274)
+  [5] Turn 1: HexCoord(2433, -273)
+  [6] Turn 1: HexCoord(2433, -272)
+  [7] Turn 1: HexCoord(2433, -271)
+  [8] Turn 1: HexCoord(2433, -270)
+  [9] Turn 1: HexCoord(2433, -269)
+  [10] Turn 2: HexCoord(2433, -268)
+  [11] Turn 2: HexCoord(2433, -267)
+  [12] Turn 2: HexCoord(2434, -267)
+  [13] Turn 2: HexCoord(2435, -267)
+  [14] Turn 2: HexCoord(2436, -267)
+  ... (33 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(2435, -278) @ T0: path=2 steps, chaser_time=0.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(2435, -278)
+    Chaser arrives in 0.40 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 2 steps
+Chaser subticks: 40 (Turn 0, Subtick 40)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:30:21
+============================================================
+Chaser Fleet ID: 54696
+  Location: HexCoord(2436, -279)
+  Speed: 5.0
+Target Fleet ID: 24246
+  Location: HexCoord(2436, -279)
+  Speed: 5.0
+
+Target Projected Path (47 segments):
+  [0] Turn 0: HexCoord(2434, -277)
+  [1] Turn 0: HexCoord(2433, -276)
+  [2] Turn 0: HexCoord(2433, -275)
+  [3] Turn 0: HexCoord(2433, -274)
+  [4] Turn 0: HexCoord(2433, -273)
+  [5] Turn 1: HexCoord(2433, -272)
+  [6] Turn 1: HexCoord(2433, -271)
+  [7] Turn 1: HexCoord(2433, -270)
+  [8] Turn 1: HexCoord(2433, -269)
+  [9] Turn 1: HexCoord(2433, -268)
+  [10] Turn 2: HexCoord(2433, -267)
+  [11] Turn 2: HexCoord(2434, -267)
+  [12] Turn 2: HexCoord(2435, -267)
+  [13] Turn 2: HexCoord(2436, -267)
+  [14] Turn 2: HexCoord(2437, -267)
+  ... (32 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(2434, -277) @ T0: path=2 steps, chaser_time=0.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(2434, -277)
+    Chaser arrives in 0.40 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 2 steps
+Chaser subticks: 40 (Turn 0, Subtick 40)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:30:21
+============================================================
+Chaser Fleet ID: 54696
+  Location: HexCoord(2435, -278)
+  Speed: 5.0
+Target Fleet ID: 24246
+  Location: HexCoord(2435, -278)
+  Speed: 5.0
+
+Target Projected Path (46 segments):
+  [0] Turn 0: HexCoord(2433, -276)
+  [1] Turn 0: HexCoord(2433, -275)
+  [2] Turn 0: HexCoord(2433, -274)
+  [3] Turn 0: HexCoord(2433, -273)
+  [4] Turn 0: HexCoord(2433, -272)
+  [5] Turn 1: HexCoord(2433, -271)
+  [6] Turn 1: HexCoord(2433, -270)
+  [7] Turn 1: HexCoord(2433, -269)
+  [8] Turn 1: HexCoord(2433, -268)
+  [9] Turn 1: HexCoord(2433, -267)
+  [10] Turn 2: HexCoord(2434, -267)
+  [11] Turn 2: HexCoord(2435, -267)
+  [12] Turn 2: HexCoord(2436, -267)
+  [13] Turn 2: HexCoord(2437, -267)
+  [14] Turn 2: HexCoord(2438, -267)
+  ... (31 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(2433, -276) @ T0: path=2 steps, chaser_time=0.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(2433, -276)
+    Chaser arrives in 0.40 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 2 steps
+Chaser subticks: 40 (Turn 0, Subtick 40)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:30:21
+============================================================
+Chaser Fleet ID: 54696
+  Location: HexCoord(2434, -277)
+  Speed: 5.0
+Target Fleet ID: 24246
+  Location: HexCoord(2434, -277)
+  Speed: 5.0
+
+Target Projected Path (46 segments):
+  [0] Turn 0: HexCoord(2433, -276)
+  [1] Turn 0: HexCoord(2433, -275)
+  [2] Turn 0: HexCoord(2433, -274)
+  [3] Turn 0: HexCoord(2433, -273)
+  [4] Turn 0: HexCoord(2433, -272)
+  [5] Turn 1: HexCoord(2433, -271)
+  [6] Turn 1: HexCoord(2433, -270)
+  [7] Turn 1: HexCoord(2433, -269)
+  [8] Turn 1: HexCoord(2433, -268)
+  [9] Turn 1: HexCoord(2433, -267)
+  [10] Turn 2: HexCoord(2434, -267)
+  [11] Turn 2: HexCoord(2435, -267)
+  [12] Turn 2: HexCoord(2436, -267)
+  [13] Turn 2: HexCoord(2437, -267)
+  [14] Turn 2: HexCoord(2438, -267)
+  ... (31 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(2433, -276) @ T0: path=1 steps, chaser_time=0.20 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(2433, -276)
+    Chaser arrives in 0.20 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 1 steps
+Chaser subticks: 20 (Turn 0, Subtick 20)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:38:26
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 2.0
+Target Fleet ID: 2
+  Location: HexCoord(4, 0)
+  Speed: 1.0
+
+Target Projected Path (5 segments):
+  [0] Turn 1: HexCoord(5, 0)
+  [1] Turn 2: HexCoord(6, 0)
+  [2] Turn 3: HexCoord(7, 0)
+  [3] Turn 4: HexCoord(8, 0)
+  [4] Turn 5: HexCoord(9, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(5, 0) @ T1: path=5 steps, chaser_time=2.50 turns, valid=False
+  [1] HexCoord(6, 0) @ T2: path=6 steps, chaser_time=3.00 turns, valid=False
+  [2] HexCoord(7, 0) @ T3: path=7 steps, chaser_time=3.50 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [3] HexCoord(8, 0) @ T4: path=8 steps, chaser_time=4.00 turns, valid=True
+  [4] HexCoord(9, 0) @ T5: path=9 steps, chaser_time=4.50 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(7, 0)
+    Chaser arrives in 3.50 turns
+    Target at hex during turn 3
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 7 steps
+Chaser subticks: 350 (Turn 3, Subtick 50)
+Target at intercept hex during turn: 3
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 3
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:38:26
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 5.0
+Target Fleet ID: 2
+  Location: HexCoord(10, 0)
+  Speed: 10.0
+
+Target Projected Path (2 segments):
+  [0] Turn 5: HexCoord(30, 0)
+  [1] Turn 10: HexCoord(15, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(30, 0) @ T5: path=30 steps, chaser_time=6.00 turns, valid=False
+  [1] HexCoord(15, 0) @ T10: path=15 steps, chaser_time=3.00 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(15, 0)
+    Chaser arrives in 3.00 turns
+    Target at hex during turn 10
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 15 steps
+Chaser subticks: 300 (Turn 3, Subtick 0)
+Target at intercept hex during turn: 10
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 10
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:39:47
+============================================================
+Chaser Fleet ID: 30606
+  Location: HexCoord(1882, 1400)
+  Speed: 5.0
+Target Fleet ID: 79242
+  Location: HexCoord(1882, 1395)
+  Speed: 5.0
+
+Target Projected Path (43 segments):
+  [0] Turn 0: HexCoord(1882, 1393)
+  [1] Turn 0: HexCoord(1881, 1394)
+  [2] Turn 0: HexCoord(1880, 1395)
+  [3] Turn 0: HexCoord(1879, 1396)
+  [4] Turn 0: HexCoord(1878, 1397)
+  [5] Turn 1: HexCoord(1877, 1398)
+  [6] Turn 1: HexCoord(1876, 1399)
+  [7] Turn 1: HexCoord(1875, 1400)
+  [8] Turn 1: HexCoord(1875, 1401)
+  [9] Turn 1: HexCoord(1875, 1402)
+  [10] Turn 2: HexCoord(1875, 1403)
+  [11] Turn 2: HexCoord(1875, 1404)
+  [12] Turn 2: HexCoord(1875, 1405)
+  [13] Turn 2: HexCoord(1875, 1406)
+  [14] Turn 2: HexCoord(1875, 1407)
+  ... (28 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(1882, 1393) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(1881, 1394) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [2] HexCoord(1880, 1395) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [3] HexCoord(1879, 1396) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [4] HexCoord(1878, 1397) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [5] HexCoord(1877, 1398) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [6] HexCoord(1876, 1399) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+  [7] HexCoord(1875, 1400) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+  [8] HexCoord(1875, 1401) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+  [9] HexCoord(1875, 1402) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+  [10] HexCoord(1875, 1403) @ T2: path=7 steps, chaser_time=1.40 turns, valid=True
+  [11] HexCoord(1875, 1404) @ T2: path=7 steps, chaser_time=1.40 turns, valid=True
+  [12] HexCoord(1875, 1405) @ T2: path=7 steps, chaser_time=1.40 turns, valid=True
+  [13] HexCoord(1875, 1406) @ T2: path=7 steps, chaser_time=1.40 turns, valid=True
+  [14] HexCoord(1875, 1407) @ T2: path=7 steps, chaser_time=1.40 turns, valid=True
+  [15] HexCoord(1876, 1407) @ T3: path=7 steps, chaser_time=1.40 turns, valid=True
+  [16] HexCoord(1877, 1407) @ T3: path=7 steps, chaser_time=1.40 turns, valid=True
+  [17] HexCoord(1878, 1407) @ T3: path=7 steps, chaser_time=1.40 turns, valid=True
+  [18] HexCoord(1879, 1407) @ T3: path=7 steps, chaser_time=1.40 turns, valid=True
+  [19] HexCoord(1880, 1407) @ T3: path=7 steps, chaser_time=1.40 turns, valid=True
+  [20] HexCoord(1881, 1407) @ T4: path=7 steps, chaser_time=1.40 turns, valid=True
+  [21] HexCoord(1882, 1407) @ T4: path=7 steps, chaser_time=1.40 turns, valid=True
+  [22] HexCoord(1883, 1406) @ T4: path=7 steps, chaser_time=1.40 turns, valid=True
+  [23] HexCoord(1884, 1405) @ T4: path=7 steps, chaser_time=1.40 turns, valid=True
+  [24] HexCoord(1885, 1404) @ T4: path=7 steps, chaser_time=1.40 turns, valid=True
+  [25] HexCoord(1886, 1403) @ T5: path=7 steps, chaser_time=1.40 turns, valid=True
+  [26] HexCoord(1887, 1402) @ T5: path=7 steps, chaser_time=1.40 turns, valid=True
+  [27] HexCoord(1888, 1401) @ T5: path=7 steps, chaser_time=1.40 turns, valid=True
+  [28] HexCoord(1889, 1400) @ T5: path=7 steps, chaser_time=1.40 turns, valid=True
+  [29] HexCoord(1889, 1399) @ T5: path=7 steps, chaser_time=1.40 turns, valid=True
+  [30] HexCoord(1889, 1398) @ T6: path=7 steps, chaser_time=1.40 turns, valid=True
+  [31] HexCoord(1889, 1397) @ T6: path=7 steps, chaser_time=1.40 turns, valid=True
+  [32] HexCoord(1889, 1396) @ T6: path=7 steps, chaser_time=1.40 turns, valid=True
+  [33] HexCoord(1889, 1395) @ T6: path=7 steps, chaser_time=1.40 turns, valid=True
+  [34] HexCoord(1889, 1394) @ T6: path=7 steps, chaser_time=1.40 turns, valid=True
+  [35] HexCoord(1889, 1393) @ T7: path=7 steps, chaser_time=1.40 turns, valid=True
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(1877, 1398)
+    Chaser arrives in 1.40 turns
+    Target at hex during turn 1
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 7 steps
+Chaser subticks: 140 (Turn 1, Subtick 40)
+Target at intercept hex during turn: 1
+VERIFIED: Chaser arrives Turn 1 <= Target there Turn 1
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:39:47
+============================================================
+Chaser Fleet ID: 30606
+  Location: HexCoord(1881, 1400)
+  Speed: 5.0
+Target Fleet ID: 79242
+  Location: HexCoord(1882, 1394)
+  Speed: 5.0
+
+Target Projected Path (43 segments):
+  [0] Turn 0: HexCoord(1882, 1393)
+  [1] Turn 0: HexCoord(1881, 1394)
+  [2] Turn 0: HexCoord(1880, 1395)
+  [3] Turn 0: HexCoord(1879, 1396)
+  [4] Turn 0: HexCoord(1878, 1397)
+  [5] Turn 1: HexCoord(1877, 1398)
+  [6] Turn 1: HexCoord(1876, 1399)
+  [7] Turn 1: HexCoord(1875, 1400)
+  [8] Turn 1: HexCoord(1875, 1401)
+  [9] Turn 1: HexCoord(1875, 1402)
+  [10] Turn 2: HexCoord(1875, 1403)
+  [11] Turn 2: HexCoord(1875, 1404)
+  [12] Turn 2: HexCoord(1875, 1405)
+  [13] Turn 2: HexCoord(1875, 1406)
+  [14] Turn 2: HexCoord(1875, 1407)
+  ... (28 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(1882, 1393) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(1881, 1394) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+  [2] HexCoord(1880, 1395) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+  [3] HexCoord(1879, 1396) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+  [4] HexCoord(1878, 1397) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+  [5] HexCoord(1877, 1398) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [6] HexCoord(1876, 1399) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [7] HexCoord(1875, 1400) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [8] HexCoord(1875, 1401) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [9] HexCoord(1875, 1402) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [10] HexCoord(1875, 1403) @ T2: path=6 steps, chaser_time=1.20 turns, valid=True
+  [11] HexCoord(1875, 1404) @ T2: path=6 steps, chaser_time=1.20 turns, valid=True
+  [12] HexCoord(1875, 1405) @ T2: path=6 steps, chaser_time=1.20 turns, valid=True
+  [13] HexCoord(1875, 1406) @ T2: path=6 steps, chaser_time=1.20 turns, valid=True
+  [14] HexCoord(1875, 1407) @ T2: path=7 steps, chaser_time=1.40 turns, valid=True
+  [15] HexCoord(1876, 1407) @ T3: path=7 steps, chaser_time=1.40 turns, valid=True
+  [16] HexCoord(1877, 1407) @ T3: path=7 steps, chaser_time=1.40 turns, valid=True
+  [17] HexCoord(1878, 1407) @ T3: path=7 steps, chaser_time=1.40 turns, valid=True
+  [18] HexCoord(1879, 1407) @ T3: path=7 steps, chaser_time=1.40 turns, valid=True
+  [19] HexCoord(1880, 1407) @ T3: path=7 steps, chaser_time=1.40 turns, valid=True
+  [20] HexCoord(1881, 1407) @ T4: path=7 steps, chaser_time=1.40 turns, valid=True
+  [21] HexCoord(1882, 1407) @ T4: path=8 steps, chaser_time=1.60 turns, valid=True
+  [22] HexCoord(1883, 1406) @ T4: path=8 steps, chaser_time=1.60 turns, valid=True
+  [23] HexCoord(1884, 1405) @ T4: path=8 steps, chaser_time=1.60 turns, valid=True
+  [24] HexCoord(1885, 1404) @ T4: path=8 steps, chaser_time=1.60 turns, valid=True
+  [25] HexCoord(1886, 1403) @ T5: path=8 steps, chaser_time=1.60 turns, valid=True
+  [26] HexCoord(1887, 1402) @ T5: path=8 steps, chaser_time=1.60 turns, valid=True
+  [27] HexCoord(1888, 1401) @ T5: path=8 steps, chaser_time=1.60 turns, valid=True
+  [28] HexCoord(1889, 1400) @ T5: path=8 steps, chaser_time=1.60 turns, valid=True
+  [29] HexCoord(1889, 1399) @ T5: path=8 steps, chaser_time=1.60 turns, valid=True
+  [30] HexCoord(1889, 1398) @ T6: path=8 steps, chaser_time=1.60 turns, valid=True
+  [31] HexCoord(1889, 1397) @ T6: path=8 steps, chaser_time=1.60 turns, valid=True
+  [32] HexCoord(1889, 1396) @ T6: path=8 steps, chaser_time=1.60 turns, valid=True
+  [33] HexCoord(1889, 1395) @ T6: path=8 steps, chaser_time=1.60 turns, valid=True
+  [34] HexCoord(1889, 1394) @ T6: path=8 steps, chaser_time=1.60 turns, valid=True
+  [35] HexCoord(1889, 1393) @ T7: path=8 steps, chaser_time=1.60 turns, valid=True
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(1877, 1398)
+    Chaser arrives in 1.20 turns
+    Target at hex during turn 1
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 6 steps
+Chaser subticks: 120 (Turn 1, Subtick 20)
+Target at intercept hex during turn: 1
+VERIFIED: Chaser arrives Turn 1 <= Target there Turn 1
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:39:47
+============================================================
+Chaser Fleet ID: 30606
+  Location: HexCoord(1881, 1399)
+  Speed: 5.0
+Target Fleet ID: 79242
+  Location: HexCoord(1882, 1393)
+  Speed: 5.0
+
+Target Projected Path (41 segments):
+  [0] Turn 0: HexCoord(1880, 1395)
+  [1] Turn 0: HexCoord(1879, 1396)
+  [2] Turn 0: HexCoord(1878, 1397)
+  [3] Turn 0: HexCoord(1877, 1398)
+  [4] Turn 0: HexCoord(1876, 1399)
+  [5] Turn 1: HexCoord(1875, 1400)
+  [6] Turn 1: HexCoord(1875, 1401)
+  [7] Turn 1: HexCoord(1875, 1402)
+  [8] Turn 1: HexCoord(1875, 1403)
+  [9] Turn 1: HexCoord(1875, 1404)
+  [10] Turn 2: HexCoord(1875, 1405)
+  [11] Turn 2: HexCoord(1875, 1406)
+  [12] Turn 2: HexCoord(1875, 1407)
+  [13] Turn 2: HexCoord(1876, 1407)
+  [14] Turn 2: HexCoord(1877, 1407)
+  ... (26 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(1880, 1395) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [1] HexCoord(1879, 1396) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [2] HexCoord(1878, 1397) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [3] HexCoord(1877, 1398) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [4] HexCoord(1876, 1399) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [5] HexCoord(1875, 1400) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [6] HexCoord(1875, 1401) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [7] HexCoord(1875, 1402) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [8] HexCoord(1875, 1403) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [9] HexCoord(1875, 1404) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [10] HexCoord(1875, 1405) @ T2: path=6 steps, chaser_time=1.20 turns, valid=True
+  [11] HexCoord(1875, 1406) @ T2: path=7 steps, chaser_time=1.40 turns, valid=True
+  [12] HexCoord(1875, 1407) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [13] HexCoord(1876, 1407) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [14] HexCoord(1877, 1407) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [15] HexCoord(1878, 1407) @ T3: path=8 steps, chaser_time=1.60 turns, valid=True
+  [16] HexCoord(1879, 1407) @ T3: path=8 steps, chaser_time=1.60 turns, valid=True
+  [17] HexCoord(1880, 1407) @ T3: path=8 steps, chaser_time=1.60 turns, valid=True
+  [18] HexCoord(1881, 1407) @ T3: path=8 steps, chaser_time=1.60 turns, valid=True
+  [19] HexCoord(1882, 1407) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [20] HexCoord(1883, 1406) @ T4: path=9 steps, chaser_time=1.80 turns, valid=True
+  [21] HexCoord(1884, 1405) @ T4: path=9 steps, chaser_time=1.80 turns, valid=True
+  [22] HexCoord(1885, 1404) @ T4: path=9 steps, chaser_time=1.80 turns, valid=True
+  [23] HexCoord(1886, 1403) @ T4: path=9 steps, chaser_time=1.80 turns, valid=True
+  [24] HexCoord(1887, 1402) @ T4: path=9 steps, chaser_time=1.80 turns, valid=True
+  [25] HexCoord(1888, 1401) @ T5: path=9 steps, chaser_time=1.80 turns, valid=True
+  [26] HexCoord(1889, 1400) @ T5: path=9 steps, chaser_time=1.80 turns, valid=True
+  [27] HexCoord(1889, 1399) @ T5: path=8 steps, chaser_time=1.60 turns, valid=True
+  [28] HexCoord(1889, 1398) @ T5: path=8 steps, chaser_time=1.60 turns, valid=True
+  [29] HexCoord(1889, 1397) @ T5: path=8 steps, chaser_time=1.60 turns, valid=True
+  [30] HexCoord(1889, 1396) @ T6: path=8 steps, chaser_time=1.60 turns, valid=True
+  [31] HexCoord(1889, 1395) @ T6: path=8 steps, chaser_time=1.60 turns, valid=True
+  [32] HexCoord(1889, 1394) @ T6: path=8 steps, chaser_time=1.60 turns, valid=True
+  [33] HexCoord(1889, 1393) @ T6: path=8 steps, chaser_time=1.60 turns, valid=True
+  [34] HexCoord(1888, 1393) @ T6: path=7 steps, chaser_time=1.40 turns, valid=True
+  [35] HexCoord(1887, 1393) @ T7: path=6 steps, chaser_time=1.20 turns, valid=True
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(1875, 1400)
+    Chaser arrives in 1.20 turns
+    Target at hex during turn 1
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 6 steps
+Chaser subticks: 120 (Turn 1, Subtick 20)
+Target at intercept hex during turn: 1
+VERIFIED: Chaser arrives Turn 1 <= Target there Turn 1
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:39:47
+============================================================
+Chaser Fleet ID: 30606
+  Location: HexCoord(1880, 1399)
+  Speed: 5.0
+Target Fleet ID: 79242
+  Location: HexCoord(1881, 1394)
+  Speed: 5.0
+
+Target Projected Path (40 segments):
+  [0] Turn 0: HexCoord(1879, 1396)
+  [1] Turn 0: HexCoord(1878, 1397)
+  [2] Turn 0: HexCoord(1877, 1398)
+  [3] Turn 0: HexCoord(1876, 1399)
+  [4] Turn 0: HexCoord(1875, 1400)
+  [5] Turn 1: HexCoord(1875, 1401)
+  [6] Turn 1: HexCoord(1875, 1402)
+  [7] Turn 1: HexCoord(1875, 1403)
+  [8] Turn 1: HexCoord(1875, 1404)
+  [9] Turn 1: HexCoord(1875, 1405)
+  [10] Turn 2: HexCoord(1875, 1406)
+  [11] Turn 2: HexCoord(1875, 1407)
+  [12] Turn 2: HexCoord(1876, 1407)
+  [13] Turn 2: HexCoord(1877, 1407)
+  [14] Turn 2: HexCoord(1878, 1407)
+  ... (25 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(1879, 1396) @ T0: path=4 steps, chaser_time=0.80 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(1879, 1396)
+    Chaser arrives in 0.80 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 4 steps
+Chaser subticks: 80 (Turn 0, Subtick 80)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:39:47
+============================================================
+Chaser Fleet ID: 30606
+  Location: HexCoord(1880, 1398)
+  Speed: 5.0
+Target Fleet ID: 79242
+  Location: HexCoord(1880, 1395)
+  Speed: 5.0
+
+Target Projected Path (39 segments):
+  [0] Turn 0: HexCoord(1878, 1397)
+  [1] Turn 0: HexCoord(1877, 1398)
+  [2] Turn 0: HexCoord(1876, 1399)
+  [3] Turn 0: HexCoord(1875, 1400)
+  [4] Turn 0: HexCoord(1875, 1401)
+  [5] Turn 1: HexCoord(1875, 1402)
+  [6] Turn 1: HexCoord(1875, 1403)
+  [7] Turn 1: HexCoord(1875, 1404)
+  [8] Turn 1: HexCoord(1875, 1405)
+  [9] Turn 1: HexCoord(1875, 1406)
+  [10] Turn 2: HexCoord(1875, 1407)
+  [11] Turn 2: HexCoord(1876, 1407)
+  [12] Turn 2: HexCoord(1877, 1407)
+  [13] Turn 2: HexCoord(1878, 1407)
+  [14] Turn 2: HexCoord(1879, 1407)
+  ... (24 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(1878, 1397) @ T0: path=3 steps, chaser_time=0.60 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(1878, 1397)
+    Chaser arrives in 0.60 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 3 steps
+Chaser subticks: 60 (Turn 0, Subtick 60)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:41:51
+============================================================
+Chaser Fleet ID: 30606
+  Location: HexCoord(1879, 1398)
+  Speed: 5.0
+Target Fleet ID: 79242
+  Location: HexCoord(1879, 1396)
+  Speed: 5.0
+
+Target Projected Path (38 segments):
+  [0] Turn 0: HexCoord(1877, 1398)
+  [1] Turn 0: HexCoord(1876, 1399)
+  [2] Turn 0: HexCoord(1875, 1400)
+  [3] Turn 0: HexCoord(1875, 1401)
+  [4] Turn 0: HexCoord(1875, 1402)
+  [5] Turn 1: HexCoord(1875, 1403)
+  [6] Turn 1: HexCoord(1875, 1404)
+  [7] Turn 1: HexCoord(1875, 1405)
+  [8] Turn 1: HexCoord(1875, 1406)
+  [9] Turn 1: HexCoord(1875, 1407)
+  [10] Turn 2: HexCoord(1876, 1407)
+  [11] Turn 2: HexCoord(1877, 1407)
+  [12] Turn 2: HexCoord(1878, 1407)
+  [13] Turn 2: HexCoord(1879, 1407)
+  [14] Turn 2: HexCoord(1880, 1407)
+  ... (23 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(1877, 1398) @ T0: path=2 steps, chaser_time=0.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(1877, 1398)
+    Chaser arrives in 0.40 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 2 steps
+Chaser subticks: 40 (Turn 0, Subtick 40)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:41:51
+============================================================
+Chaser Fleet ID: 30606
+  Location: HexCoord(1878, 1398)
+  Speed: 5.0
+Target Fleet ID: 79242
+  Location: HexCoord(1878, 1397)
+  Speed: 5.0
+
+Target Projected Path (37 segments):
+  [0] Turn 0: HexCoord(1876, 1399)
+  [1] Turn 0: HexCoord(1875, 1400)
+  [2] Turn 0: HexCoord(1875, 1401)
+  [3] Turn 0: HexCoord(1875, 1402)
+  [4] Turn 0: HexCoord(1875, 1403)
+  [5] Turn 1: HexCoord(1875, 1404)
+  [6] Turn 1: HexCoord(1875, 1405)
+  [7] Turn 1: HexCoord(1875, 1406)
+  [8] Turn 1: HexCoord(1875, 1407)
+  [9] Turn 1: HexCoord(1876, 1407)
+  [10] Turn 2: HexCoord(1877, 1407)
+  [11] Turn 2: HexCoord(1878, 1407)
+  [12] Turn 2: HexCoord(1879, 1407)
+  [13] Turn 2: HexCoord(1880, 1407)
+  [14] Turn 2: HexCoord(1881, 1407)
+  ... (22 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(1876, 1399) @ T0: path=2 steps, chaser_time=0.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(1876, 1399)
+    Chaser arrives in 0.40 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 2 steps
+Chaser subticks: 40 (Turn 0, Subtick 40)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:41:51
+============================================================
+Chaser Fleet ID: 30606
+  Location: HexCoord(1877, 1398)
+  Speed: 5.0
+Target Fleet ID: 79242
+  Location: HexCoord(1877, 1398)
+  Speed: 5.0
+
+Target Projected Path (36 segments):
+  [0] Turn 0: HexCoord(1875, 1400)
+  [1] Turn 0: HexCoord(1875, 1401)
+  [2] Turn 0: HexCoord(1875, 1402)
+  [3] Turn 0: HexCoord(1875, 1403)
+  [4] Turn 0: HexCoord(1875, 1404)
+  [5] Turn 1: HexCoord(1875, 1405)
+  [6] Turn 1: HexCoord(1875, 1406)
+  [7] Turn 1: HexCoord(1875, 1407)
+  [8] Turn 1: HexCoord(1876, 1407)
+  [9] Turn 1: HexCoord(1877, 1407)
+  [10] Turn 2: HexCoord(1878, 1407)
+  [11] Turn 2: HexCoord(1879, 1407)
+  [12] Turn 2: HexCoord(1880, 1407)
+  [13] Turn 2: HexCoord(1881, 1407)
+  [14] Turn 2: HexCoord(1882, 1407)
+  ... (21 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(1875, 1400) @ T0: path=2 steps, chaser_time=0.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(1875, 1400)
+    Chaser arrives in 0.40 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 2 steps
+Chaser subticks: 40 (Turn 0, Subtick 40)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:41:51
+============================================================
+Chaser Fleet ID: 30606
+  Location: HexCoord(1876, 1399)
+  Speed: 5.0
+Target Fleet ID: 79242
+  Location: HexCoord(1876, 1399)
+  Speed: 5.0
+
+Target Projected Path (36 segments):
+  [0] Turn 0: HexCoord(1875, 1400)
+  [1] Turn 0: HexCoord(1875, 1401)
+  [2] Turn 0: HexCoord(1875, 1402)
+  [3] Turn 0: HexCoord(1875, 1403)
+  [4] Turn 0: HexCoord(1875, 1404)
+  [5] Turn 1: HexCoord(1875, 1405)
+  [6] Turn 1: HexCoord(1875, 1406)
+  [7] Turn 1: HexCoord(1875, 1407)
+  [8] Turn 1: HexCoord(1876, 1407)
+  [9] Turn 1: HexCoord(1877, 1407)
+  [10] Turn 2: HexCoord(1878, 1407)
+  [11] Turn 2: HexCoord(1879, 1407)
+  [12] Turn 2: HexCoord(1880, 1407)
+  [13] Turn 2: HexCoord(1881, 1407)
+  [14] Turn 2: HexCoord(1882, 1407)
+  ... (21 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(1875, 1400) @ T0: path=1 steps, chaser_time=0.20 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (arrives in <=1 turn)
+
+>>> SELECTED INTERCEPT: HexCoord(1875, 1400)
+    Chaser arrives in 0.20 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 1 steps
+Chaser subticks: 20 (Turn 0, Subtick 20)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:42:59
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 2.0
+Target Fleet ID: 2
+  Location: HexCoord(4, 0)
+  Speed: 1.0
+
+Target Projected Path (5 segments):
+  [0] Turn 1: HexCoord(5, 0)
+  [1] Turn 2: HexCoord(6, 0)
+  [2] Turn 3: HexCoord(7, 0)
+  [3] Turn 4: HexCoord(8, 0)
+  [4] Turn 5: HexCoord(9, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(5, 0) @ T1: path=5 steps, chaser_time=2.50 turns, valid=False
+  [1] HexCoord(6, 0) @ T2: path=6 steps, chaser_time=3.00 turns, valid=False
+  [2] HexCoord(7, 0) @ T3: path=7 steps, chaser_time=3.50 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [3] HexCoord(8, 0) @ T4: path=8 steps, chaser_time=4.00 turns, valid=True
+  [4] HexCoord(9, 0) @ T5: path=9 steps, chaser_time=4.50 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(7, 0)
+    Chaser arrives in 3.50 turns
+    Target at hex during turn 3
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 7 steps
+Chaser subticks: 350 (Turn 3, Subtick 50)
+Target at intercept hex during turn: 3
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 3
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:42:59
+============================================================
+Chaser Fleet ID: 1
+  Location: HexCoord(0, 0)
+  Speed: 5.0
+Target Fleet ID: 2
+  Location: HexCoord(10, 0)
+  Speed: 10.0
+
+Target Projected Path (2 segments):
+  [0] Turn 5: HexCoord(30, 0)
+  [1] Turn 10: HexCoord(15, 0)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(30, 0) @ T5: path=30 steps, chaser_time=6.00 turns, valid=False
+  [1] HexCoord(15, 0) @ T10: path=15 steps, chaser_time=3.00 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (target_turn >> best_time)
+
+>>> SELECTED INTERCEPT: HexCoord(15, 0)
+    Chaser arrives in 3.00 turns
+    Target at hex during turn 10
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 15 steps
+Chaser subticks: 300 (Turn 3, Subtick 0)
+Target at intercept hex during turn: 10
+VERIFIED: Chaser arrives Turn 3 <= Target there Turn 10
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:44:09
+============================================================
+Chaser Fleet ID: 82040
+  Location: HexCoord(269, -315)
+  Speed: 5.0
+Target Fleet ID: 67537
+  Location: HexCoord(269, -320)
+  Speed: 5.0
+
+Target Projected Path (24 segments):
+  [0] Turn 0: HexCoord(269, -322)
+  [1] Turn 0: HexCoord(269, -323)
+  [2] Turn 0: HexCoord(268, -322)
+  [3] Turn 0: HexCoord(267, -321)
+  [4] Turn 0: HexCoord(266, -320)
+  [5] Turn 1: HexCoord(265, -319)
+  [6] Turn 1: HexCoord(264, -318)
+  [7] Turn 1: HexCoord(263, -317)
+  [8] Turn 1: HexCoord(262, -316)
+  [9] Turn 1: HexCoord(261, -315)
+  [10] Turn 2: HexCoord(260, -314)
+  [11] Turn 2: HexCoord(259, -313)
+  [12] Turn 2: HexCoord(258, -312)
+  [13] Turn 2: HexCoord(258, -311)
+  [14] Turn 2: HexCoord(258, -310)
+  ... (9 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(269, -322) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [1] HexCoord(269, -323) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [2] HexCoord(268, -322) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [3] HexCoord(267, -321) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [4] HexCoord(266, -320) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [5] HexCoord(265, -319) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [6] HexCoord(264, -318) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [7] HexCoord(263, -317) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [8] HexCoord(262, -316) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [9] HexCoord(261, -315) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [10] HexCoord(260, -314) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [11] HexCoord(259, -313) @ T2: path=10 steps, chaser_time=2.00 turns, valid=True
+  [12] HexCoord(258, -312) @ T2: path=11 steps, chaser_time=2.20 turns, valid=True
+  [13] HexCoord(258, -311) @ T2: path=11 steps, chaser_time=2.20 turns, valid=True
+  [14] HexCoord(258, -310) @ T2: path=11 steps, chaser_time=2.20 turns, valid=True
+  [15] HexCoord(258, -309) @ T3: path=11 steps, chaser_time=2.20 turns, valid=True
+  [16] HexCoord(258, -308) @ T3: path=11 steps, chaser_time=2.20 turns, valid=True
+  [17] HexCoord(258, -307) @ T3: path=11 steps, chaser_time=2.20 turns, valid=True
+  [18] HexCoord(258, -306) @ T3: path=11 steps, chaser_time=2.20 turns, valid=True
+  [19] HexCoord(258, -305) @ T3: path=11 steps, chaser_time=2.20 turns, valid=True
+  [20] HexCoord(258, -304) @ T4: path=11 steps, chaser_time=2.20 turns, valid=True
+  [21] HexCoord(258, -303) @ T4: path=12 steps, chaser_time=2.40 turns, valid=True
+  [22] HexCoord(258, -302) @ T4: path=13 steps, chaser_time=2.60 turns, valid=True
+  [23] HexCoord(258, -301) @ T4: path=14 steps, chaser_time=2.80 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(265, -319)
+    Chaser arrives in 1.60 turns
+    Target at hex during turn 1
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 8 steps
+Chaser subticks: 160 (Turn 1, Subtick 60)
+Target at intercept hex during turn: 1
+VERIFIED: Chaser arrives Turn 1 <= Target there Turn 1
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:44:09
+============================================================
+Chaser Fleet ID: 82040
+  Location: HexCoord(268, -315)
+  Speed: 5.0
+Target Fleet ID: 67537
+  Location: HexCoord(269, -321)
+  Speed: 5.0
+
+Target Projected Path (23 segments):
+  [0] Turn 0: HexCoord(269, -323)
+  [1] Turn 0: HexCoord(268, -322)
+  [2] Turn 0: HexCoord(267, -321)
+  [3] Turn 0: HexCoord(266, -320)
+  [4] Turn 0: HexCoord(265, -319)
+  [5] Turn 1: HexCoord(264, -318)
+  [6] Turn 1: HexCoord(263, -317)
+  [7] Turn 1: HexCoord(262, -316)
+  [8] Turn 1: HexCoord(261, -315)
+  [9] Turn 1: HexCoord(260, -314)
+  [10] Turn 2: HexCoord(259, -313)
+  [11] Turn 2: HexCoord(258, -312)
+  [12] Turn 2: HexCoord(258, -311)
+  [13] Turn 2: HexCoord(258, -310)
+  [14] Turn 2: HexCoord(258, -309)
+  ... (8 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(269, -323) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [1] HexCoord(268, -322) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [2] HexCoord(267, -321) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [3] HexCoord(266, -320) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [4] HexCoord(265, -319) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [5] HexCoord(264, -318) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [6] HexCoord(263, -317) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+  [7] HexCoord(262, -316) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+  [8] HexCoord(261, -315) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+  [9] HexCoord(260, -314) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [10] HexCoord(259, -313) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [11] HexCoord(258, -312) @ T2: path=10 steps, chaser_time=2.00 turns, valid=True
+  [12] HexCoord(258, -311) @ T2: path=10 steps, chaser_time=2.00 turns, valid=True
+  [13] HexCoord(258, -310) @ T2: path=10 steps, chaser_time=2.00 turns, valid=True
+  [14] HexCoord(258, -309) @ T2: path=10 steps, chaser_time=2.00 turns, valid=True
+  [15] HexCoord(258, -308) @ T3: path=10 steps, chaser_time=2.00 turns, valid=True
+  [16] HexCoord(258, -307) @ T3: path=10 steps, chaser_time=2.00 turns, valid=True
+  [17] HexCoord(258, -306) @ T3: path=10 steps, chaser_time=2.00 turns, valid=True
+  [18] HexCoord(258, -305) @ T3: path=10 steps, chaser_time=2.00 turns, valid=True
+  [19] HexCoord(258, -304) @ T3: path=11 steps, chaser_time=2.20 turns, valid=True
+  [20] HexCoord(258, -303) @ T4: path=12 steps, chaser_time=2.40 turns, valid=True
+  [21] HexCoord(258, -302) @ T4: path=13 steps, chaser_time=2.60 turns, valid=True
+  [22] HexCoord(258, -301) @ T4: path=14 steps, chaser_time=2.80 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(264, -318)
+    Chaser arrives in 1.40 turns
+    Target at hex during turn 1
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 7 steps
+Chaser subticks: 140 (Turn 1, Subtick 40)
+Target at intercept hex during turn: 1
+VERIFIED: Chaser arrives Turn 1 <= Target there Turn 1
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:44:09
+============================================================
+Chaser Fleet ID: 82040
+  Location: HexCoord(267, -315)
+  Speed: 5.0
+Target Fleet ID: 67537
+  Location: HexCoord(269, -322)
+  Speed: 5.0
+
+Target Projected Path (23 segments):
+  [0] Turn 0: HexCoord(269, -323)
+  [1] Turn 0: HexCoord(268, -322)
+  [2] Turn 0: HexCoord(267, -321)
+  [3] Turn 0: HexCoord(266, -320)
+  [4] Turn 0: HexCoord(265, -319)
+  [5] Turn 1: HexCoord(264, -318)
+  [6] Turn 1: HexCoord(263, -317)
+  [7] Turn 1: HexCoord(262, -316)
+  [8] Turn 1: HexCoord(261, -315)
+  [9] Turn 1: HexCoord(260, -314)
+  [10] Turn 2: HexCoord(259, -313)
+  [11] Turn 2: HexCoord(258, -312)
+  [12] Turn 2: HexCoord(258, -311)
+  [13] Turn 2: HexCoord(258, -310)
+  [14] Turn 2: HexCoord(258, -309)
+  ... (8 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(269, -323) @ T0: path=8 steps, chaser_time=1.60 turns, valid=False
+  [1] HexCoord(268, -322) @ T0: path=7 steps, chaser_time=1.40 turns, valid=False
+  [2] HexCoord(267, -321) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+  [3] HexCoord(266, -320) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+  [4] HexCoord(265, -319) @ T0: path=6 steps, chaser_time=1.20 turns, valid=False
+  [5] HexCoord(264, -318) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [6] HexCoord(263, -317) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [7] HexCoord(262, -316) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [8] HexCoord(261, -315) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [9] HexCoord(260, -314) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+  [10] HexCoord(259, -313) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [11] HexCoord(258, -312) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [12] HexCoord(258, -311) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [13] HexCoord(258, -310) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [14] HexCoord(258, -309) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [15] HexCoord(258, -308) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [16] HexCoord(258, -307) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [17] HexCoord(258, -306) @ T3: path=9 steps, chaser_time=1.80 turns, valid=True
+  [18] HexCoord(258, -305) @ T3: path=10 steps, chaser_time=2.00 turns, valid=True
+  [19] HexCoord(258, -304) @ T3: path=11 steps, chaser_time=2.20 turns, valid=True
+  [20] HexCoord(258, -303) @ T4: path=12 steps, chaser_time=2.40 turns, valid=True
+  [21] HexCoord(258, -302) @ T4: path=13 steps, chaser_time=2.60 turns, valid=True
+  [22] HexCoord(258, -301) @ T4: path=14 steps, chaser_time=2.80 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(264, -318)
+    Chaser arrives in 1.20 turns
+    Target at hex during turn 1
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 6 steps
+Chaser subticks: 120 (Turn 1, Subtick 20)
+Target at intercept hex during turn: 1
+VERIFIED: Chaser arrives Turn 1 <= Target there Turn 1
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:44:09
+============================================================
+Chaser Fleet ID: 82040
+  Location: HexCoord(267, -316)
+  Speed: 5.0
+Target Fleet ID: 67537
+  Location: HexCoord(269, -323)
+  Speed: 5.0
+
+Target Projected Path (21 segments):
+  [0] Turn 0: HexCoord(267, -321)
+  [1] Turn 0: HexCoord(266, -320)
+  [2] Turn 0: HexCoord(265, -319)
+  [3] Turn 0: HexCoord(264, -318)
+  [4] Turn 0: HexCoord(263, -317)
+  [5] Turn 1: HexCoord(262, -316)
+  [6] Turn 1: HexCoord(261, -315)
+  [7] Turn 1: HexCoord(260, -314)
+  [8] Turn 1: HexCoord(259, -313)
+  [9] Turn 1: HexCoord(258, -312)
+  [10] Turn 2: HexCoord(258, -311)
+  [11] Turn 2: HexCoord(258, -310)
+  [12] Turn 2: HexCoord(258, -309)
+  [13] Turn 2: HexCoord(258, -308)
+  [14] Turn 2: HexCoord(258, -307)
+  ... (6 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(267, -321) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [1] HexCoord(266, -320) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [2] HexCoord(265, -319) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [3] HexCoord(264, -318) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [4] HexCoord(263, -317) @ T0: path=5 steps, chaser_time=1.00 turns, valid=False
+  [5] HexCoord(262, -316) @ T1: path=5 steps, chaser_time=1.00 turns, valid=True
+      -> NEW BEST INTERCEPT
+      -> EARLY EXIT (perfectly synchronized)
+
+>>> SELECTED INTERCEPT: HexCoord(262, -316)
+    Chaser arrives in 1.00 turns
+    Target at hex during turn 1
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 5 steps
+Chaser subticks: 100 (Turn 1, Subtick 0)
+Target at intercept hex during turn: 1
+VERIFIED: Chaser arrives Turn 1 <= Target there Turn 1
+============================================================
+
+
+============================================================
+INTERCEPT CALCULATION - 2026-01-14 19:44:09
+============================================================
+Chaser Fleet ID: 82040
+  Location: HexCoord(266, -316)
+  Speed: 5.0
+Target Fleet ID: 67537
+  Location: HexCoord(268, -322)
+  Speed: 5.0
+
+Target Projected Path (20 segments):
+  [0] Turn 0: HexCoord(266, -320)
+  [1] Turn 0: HexCoord(265, -319)
+  [2] Turn 0: HexCoord(264, -318)
+  [3] Turn 0: HexCoord(263, -317)
+  [4] Turn 0: HexCoord(262, -316)
+  [5] Turn 1: HexCoord(261, -315)
+  [6] Turn 1: HexCoord(260, -314)
+  [7] Turn 1: HexCoord(259, -313)
+  [8] Turn 1: HexCoord(258, -312)
+  [9] Turn 1: HexCoord(258, -311)
+  [10] Turn 2: HexCoord(258, -310)
+  [11] Turn 2: HexCoord(258, -309)
+  [12] Turn 2: HexCoord(258, -308)
+  [13] Turn 2: HexCoord(258, -307)
+  [14] Turn 2: HexCoord(258, -306)
+  ... (5 more)
+
+Target is MOVING - using projected path only
+
+Evaluating intercept candidates:
+  [0] HexCoord(266, -320) @ T0: path=4 steps, chaser_time=0.80 turns, valid=True
+      -> NEW BEST INTERCEPT
+  [1] HexCoord(265, -319) @ T0: path=4 steps, chaser_time=0.80 turns, valid=True
+  [2] HexCoord(264, -318) @ T0: path=4 steps, chaser_time=0.80 turns, valid=True
+  [3] HexCoord(263, -317) @ T0: path=4 steps, chaser_time=0.80 turns, valid=True
+  [4] HexCoord(262, -316) @ T0: path=4 steps, chaser_time=0.80 turns, valid=True
+  [5] HexCoord(261, -315) @ T1: path=5 steps, chaser_time=1.00 turns, valid=True
+  [6] HexCoord(260, -314) @ T1: path=6 steps, chaser_time=1.20 turns, valid=True
+  [7] HexCoord(259, -313) @ T1: path=7 steps, chaser_time=1.40 turns, valid=True
+  [8] HexCoord(258, -312) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [9] HexCoord(258, -311) @ T1: path=8 steps, chaser_time=1.60 turns, valid=True
+  [10] HexCoord(258, -310) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [11] HexCoord(258, -309) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [12] HexCoord(258, -308) @ T2: path=8 steps, chaser_time=1.60 turns, valid=True
+  [13] HexCoord(258, -307) @ T2: path=9 steps, chaser_time=1.80 turns, valid=True
+  [14] HexCoord(258, -306) @ T2: path=10 steps, chaser_time=2.00 turns, valid=True
+  [15] HexCoord(258, -305) @ T3: path=11 steps, chaser_time=2.20 turns, valid=True
+  [16] HexCoord(258, -304) @ T3: path=12 steps, chaser_time=2.40 turns, valid=True
+  [17] HexCoord(258, -303) @ T3: path=13 steps, chaser_time=2.60 turns, valid=True
+  [18] HexCoord(258, -302) @ T3: path=14 steps, chaser_time=2.80 turns, valid=True
+  [19] HexCoord(258, -301) @ T3: path=15 steps, chaser_time=3.00 turns, valid=True
+
+>>> SELECTED INTERCEPT: HexCoord(266, -320)
+    Chaser arrives in 0.80 turns
+    Target at hex during turn 0
+
+--- CROSS-VERIFICATION ---
+Chaser path length: 4 steps
+Chaser subticks: 80 (Turn 0, Subtick 80)
+Target at intercept hex during turn: 0
+VERIFIED: Chaser arrives Turn 0 <= Target there Turn 0
+============================================================
+

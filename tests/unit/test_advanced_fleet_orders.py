@@ -134,21 +134,23 @@ class TestAdvancedFleetOrders(unittest.TestCase):
         ]
         
         # Mock find_hybrid_path to return paths of correct lengths
-        # Path to (4,0) = 4 steps. Time = 4/2 = 2 turns. Target at T=0. FAIL.
-        # Path to (5,0) = 5 steps. Time = 2.5 turns. Target at T=1. FAIL. 
-        # Path to (6,0) = 6 steps. Time = 3.0 turns. Target at T=2. FAIL.
-        # Path to (7,0) = 7 steps. Time = 3.5 turns. Target at T=3. FAIL.
-        # Path to (8,0) = 8 steps. Time = 4.0 turns. Target at T=4. SUCCESS!
+        # Path includes start hex, so path_length = dist + 1, steps = dist
+        # Target occupies hex for entire turn, so chaser can intercept if: chaser_turns < target_turn + 1
+        # Path to (4,0) = 4 steps. Time = 4/2 = 2 turns. Target at T=0. 2 < 1? FAIL.
+        # Path to (5,0) = 5 steps. Time = 2.5 turns. Target at T=1. 2.5 < 2? FAIL.
+        # Path to (6,0) = 6 steps. Time = 3.0 turns. Target at T=2. 3.0 < 3? FAIL.
+        # Path to (7,0) = 7 steps. Time = 3.5 turns. Target at T=3. 3.5 < 4? SUCCESS!
         def path_mock(galaxy, start, end):
-            # Return a list of length = distance
+            # Return a list including start hex (like real pathfinding)
             dist = abs(end.q - start.q) + abs(end.r - start.r)  # Simplified hex dist
-            return [HexCoord(i, 0) for i in range(dist)]
+            return [HexCoord(i, 0) for i in range(dist + 1)]  # +1 to include start
         
         mock_find_path.side_effect = path_mock
         
         result = calculate_intercept_point(self.f1, self.f2, self.galaxy)
         
-        self.assertEqual(result, HexCoord(8, 0))
+        # Now correctly intercepts at (7,0) - 1 turn earlier than old buggy result!
+        self.assertEqual(result, HexCoord(7, 0))
 
     def test_join_fleet_execution(self):
         """Verify JOIN_FLEET order merges fleets."""
@@ -217,10 +219,10 @@ class TestAdvancedFleetOrders(unittest.TestCase):
             {'hex': HexCoord(15, 0), 'turn': 10},  # Chaser needs 15 steps = 3 turns. VALID, arrives early!
         ]
         
-        # Mock pathfinding to return paths of correct length
+        # Mock pathfinding to return paths of correct length (includes start hex)
         def path_mock(galaxy, start, end):
             dist = abs(end.q - start.q)  # Simple distance for 1D case
-            return [HexCoord(i, 0) for i in range(dist)]
+            return [HexCoord(i, 0) for i in range(dist + 1)]  # +1 to include start
         
         mock_find_path.side_effect = path_mock
         

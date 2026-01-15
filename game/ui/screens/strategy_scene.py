@@ -784,12 +784,16 @@ class StrategyScene:
             path = self.calculate_hybrid_path(start_hex, target_hex)
             
             if path:
-                print(f"Path confirmed: {len(path)} steps.")
+                # Path includes start hex, so actual steps = len - 1
+                print(f"Path confirmed: {max(0, len(path) - 1)} steps.")
                 new_order = FleetOrder(OrderType.MOVE, target_hex)
                 self.selected_fleet.add_order(new_order)
                 
                 # Optimization if idle
                 if len(self.selected_fleet.orders) == 1:
+                    # Remove start hex from path before assigning
+                    if path and path[0] == self.selected_fleet.location:
+                        path = path[1:]
                     self.selected_fleet.path = path
                 
                 # Reset Input unless Shift
@@ -940,6 +944,9 @@ class StrategyScene:
                 move = FleetOrder(OrderType.MOVE, target_hex)
                 target_fleet.add_order(move)
                 if len(target_fleet.orders) == 1:
+                    # Remove start hex from path before assigning
+                    if path and path[0] == target_fleet.location:
+                        path = path[1:]
                     target_fleet.path = path
             
             # Queue COLONIZE
