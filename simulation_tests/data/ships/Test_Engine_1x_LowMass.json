@@ -30,6 +30,15 @@
         "mass": 40.0,
         "armor_hp_pool": 0
     },
+    "propulsion_details": {
+        "engine_component": "test_engine_no_fuel",
+        "engine_thrust": 500,
+        "total_mass": 40,
+        "formulas": {
+            "max_speed": "max_speed = (thrust * K_SPEED) / mass = (500 * 25) / 40 = 312.5",
+            "acceleration": "acceleration = (thrust * K_THRUST) / mass² = (500 * 2500) / 40² = 781.25"
+        }
+    },
     "resources": {
         "fuel": 0.0,
         "energy": 0.0,

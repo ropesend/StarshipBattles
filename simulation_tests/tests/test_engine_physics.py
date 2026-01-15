@@ -1,7 +1,7 @@
 """
 Engine Physics Tests (ENG-001 through ENG-005)
 
-Validates engine physics formulas from ship_stats.py:
+Validates engine physics formulas from game.simulation.physics_constants:
 - max_speed = (thrust * K_SPEED) / mass  where K_SPEED = 25
 - acceleration = (thrust * K_THRUST) / mass²  where K_THRUST = 2500
 """
@@ -11,10 +11,7 @@ import json
 import math
 
 from game.simulation.entities.ship import Ship
-
-# Physics constants (must match ship_stats.py)
-K_SPEED = 25
-K_THRUST = 2500
+from game.simulation.physics_constants import K_SPEED, K_THRUST
 
 
 @pytest.mark.simulation

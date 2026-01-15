@@ -4,7 +4,7 @@ Propulsion Test Scenarios (PROP-001 to PROP-004)
 These tests validate the core propulsion physics for engines and thrusters.
 Propulsion is foundational for all combat tests, so these are high priority.
 
-Physics Constants (from ship_stats.py):
+Physics Constants (from game.simulation.physics_constants):
 - K_SPEED = 25 (speed multiplier)
 - K_THRUST = 2500 (thrust constant for acceleration)
 - Formula: max_speed = (thrust * K_SPEED) / mass
@@ -12,15 +12,12 @@ Physics Constants (from ship_stats.py):
 """
 
 import pygame
+from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
 from simulation_tests.scenarios import TestScenario, TestMetadata
+from simulation_tests.scenarios.templates import PropulsionScenario
 
 
-# Physics constants (must match ship_stats.py)
-K_SPEED = 25
-K_THRUST = 2500
-
-
-class PropEngineAccelerationScenario(TestScenario):
+class PropEngineAccelerationScenario(PropulsionScenario):
     """
     PROP-001: Engine Provides Thrust - Ship Accelerates
 
@@ -58,17 +55,16 @@ class PropEngineAccelerationScenario(TestScenario):
         tags=["propulsion", "engine", "acceleration", "foundational"]
     )
 
-    def setup(self, battle_engine):
-        """Configure the test scenario."""
-        # Load minimal ship with engine
-        self.ship = self._load_ship('Test_Engine_1x_LowMass.json')
+    # Configuration attributes
+    ship_file = "Test_Engine_1x_LowMass.json"
+    thrust_forward = True
 
-        # Position at origin with zero velocity
-        self.ship.position = pygame.math.Vector2(0, 0)
-        self.ship.velocity = pygame.math.Vector2(0, 0)
-        self.ship.angle = 0  # Facing right (+x direction)
+    def custom_setup(self, battle_engine):
+        """Verify ship stats match expectations."""
+        # Template already loaded ship, positioned it, and started battle
+        # Template already stored: self.start_position, self.start_velocity, self.start_angle
+        # Template already calculated: self.expected_max_speed, self.expected_acceleration_rate
 
-        # Verify ship stats match expectations
         expected_thrust = 500
         expected_mass = 40
         expected_max_speed = (expected_thrust * K_SPEED) / expected_mass  # 312.5
@@ -80,42 +76,29 @@ class PropEngineAccelerationScenario(TestScenario):
         assert abs(self.ship.max_speed - expected_max_speed) < 0.1, \
             f"Expected max_speed {expected_max_speed}, got {self.ship.max_speed}"
 
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.ship], [],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Store initial state
-        self.initial_velocity = self.ship.velocity.length()
-        self.initial_position = self.ship.position.copy()
-
-    def update(self, battle_engine):
-        """Called every tick during simulation."""
-        # Apply thrust to make the ship accelerate
-        self.ship.thrust_forward()
-
     def verify(self, battle_engine) -> bool:
         """Check if the test passed."""
-        final_velocity = self.ship.velocity.length()
-        distance_traveled = self.ship.position.distance_to(self.initial_position)
+        # Call parent to calculate and store all standard results
+        try:
+            super().verify(battle_engine)
+        except NotImplementedError:
+            pass  # Expected - parent raises this for subclasses to override
 
-        # Store detailed results
-        self.results['initial_velocity'] = self.initial_velocity
+        # Now use the calculated values
+        final_velocity = self.final_velocity.length()
+        initial_velocity = self.start_velocity.length()
+
+        # Override the tuple results with scalar values for backward compatibility with tests
+        self.results['initial_velocity'] = initial_velocity
         self.results['final_velocity'] = final_velocity
-        self.results['distance_traveled'] = distance_traveled
-        self.results['expected_max_speed'] = self.ship.max_speed
+
+        # Add scenario-specific result fields
         self.results['thrust'] = self.ship.total_thrust
         self.results['mass'] = self.ship.mass
-        self.results['ticks_run'] = battle_engine.tick_counter
+        self.results['accelerated'] = final_velocity > initial_velocity and final_velocity > 0
 
-        # Test passes if ship accelerated from rest
-        accelerated = final_velocity > self.initial_velocity and final_velocity > 0
-        self.results['accelerated'] = accelerated
-
-        return accelerated
+        # Return pass/fail logic
+        return self.results['accelerated']
 
 
 class PropThrustMassRatioScenario(TestScenario):
@@ -253,7 +236,7 @@ class PropThrustMassRatioScenario(TestScenario):
         return ratio_matches and speed_ordering_correct
 
 
-class PropThrusterTurnRateScenario(TestScenario):
+class PropThrusterTurnRateScenario(PropulsionScenario):
     """
     PROP-003: Thruster Provides Turn Rate
 
@@ -289,39 +272,34 @@ class PropThrusterTurnRateScenario(TestScenario):
         tags=["propulsion", "thruster", "turn_rate", "foundational"]
     )
 
-    def setup(self, battle_engine):
-        """Configure the test scenario."""
-        # Load ship with thruster
-        # Note: We need a ship with engine + thruster for valid configuration
-        # We'll create a simple test ship or use existing one
-        self.ship = self._load_ship('Test_Thruster_Simple.json')
+    # Configuration attributes
+    ship_file = "Test_Thruster_Simple.json"
+    turn_left = True
 
-        # Position at origin
-        self.ship.position = pygame.math.Vector2(0, 0)
-        self.ship.velocity = pygame.math.Vector2(0, 0)
-        self.ship.angle = 0
+    def custom_setup(self, battle_engine):
+        """Verify ship stats match expectations."""
+        # Template already loaded ship, positioned it, and started battle
+        # Template already stored: self.start_position, self.start_velocity, self.start_angle
+        # Template already calculated: self.expected_max_speed, self.expected_acceleration_rate
 
         # Store expected values
-        K_TURN = 25000
         raw_turn_rate = 5.0  # From test_thruster_std component
         mass = self.ship.mass
         expected_turn_speed = (raw_turn_rate * K_TURN) / (mass ** 1.5)
 
         self.expected_turn_speed = expected_turn_speed
 
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.ship], [],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
     def verify(self, battle_engine) -> bool:
         """Check if the test passed."""
+        # Call parent to calculate and store all standard results
+        try:
+            super().verify(battle_engine)
+        except NotImplementedError:
+            pass  # Expected - parent raises this for subclasses to override
+
         actual_turn_speed = self.ship.turn_speed
 
-        # Store results
+        # Add scenario-specific result fields
         self.results['mass'] = self.ship.mass
         self.results['raw_turn_rate'] = 5.0  # Known from component
         self.results['expected_turn_speed'] = self.expected_turn_speed
@@ -341,7 +319,7 @@ class PropThrusterTurnRateScenario(TestScenario):
         return actual_turn_speed > 0 and matches_formula
 
 
-class PropThrusterRotationScenario(TestScenario):
+class PropThrusterRotationScenario(PropulsionScenario):
     """
     PROP-004: Turn Rate Allows Rotation
 
@@ -377,44 +355,35 @@ class PropThrusterRotationScenario(TestScenario):
         tags=["propulsion", "thruster", "rotation", "physics"]
     )
 
-    def setup(self, battle_engine):
-        """Configure the test scenario."""
-        # Load ship with thruster
-        self.ship = self._load_ship('Test_Thruster_Simple.json')
+    # Configuration attributes
+    ship_file = "Test_Thruster_Simple.json"
+    turn_right = True
 
-        # Position at origin
-        self.ship.position = pygame.math.Vector2(0, 0)
-        self.ship.velocity = pygame.math.Vector2(0, 0)
-        self.ship.angle = 0
-
-        # Store initial angle
-        self.initial_angle = self.ship.angle
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.ship], [],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
+    def custom_setup(self, battle_engine):
+        """Track angle changes during simulation."""
+        # Template already loaded ship, positioned it, and started battle
+        # Template already stored: self.start_position, self.start_velocity, self.start_angle
+        # Template already calculated: self.expected_max_speed, self.expected_acceleration_rate
 
         # Track angle changes
         self.angle_history = [self.ship.angle]
 
-    def update(self, battle_engine):
-        """Called every tick during simulation."""
-        # Command ship to turn (direction: 1 = right/clockwise, -1 = left/counter-clockwise)
-        self.ship.rotate(1)
-
-        # Record angle
+    def custom_update(self, battle_engine):
+        """Record angle each tick."""
+        # Template already handles turn_right command
+        # Just record the angle history
         self.angle_history.append(self.ship.angle)
 
     def verify(self, battle_engine) -> bool:
         """Check if the test passed."""
-        final_angle = self.ship.angle
+        # Call parent to calculate and store all standard results
+        try:
+            super().verify(battle_engine)
+        except NotImplementedError:
+            pass  # Expected - parent raises this for subclasses to override
 
         # Calculate total angle change
-        angle_change = final_angle - self.initial_angle
+        angle_change = self.final_angle - self.start_angle
 
         # Normalize angle to [-180, 180]
         while angle_change > 180:
@@ -422,12 +391,8 @@ class PropThrusterRotationScenario(TestScenario):
         while angle_change < -180:
             angle_change += 360
 
-        # Store results
-        self.results['initial_angle'] = self.initial_angle
-        self.results['final_angle'] = final_angle
-        self.results['angle_change'] = angle_change
+        # Add scenario-specific result fields
         self.results['turn_speed'] = self.ship.turn_speed
-        self.results['ticks_run'] = battle_engine.tick_counter
         self.results['angle_history_sample'] = self.angle_history[::10]  # Sample every 10 ticks
 
         # Check if rotation occurred

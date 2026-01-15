@@ -1,4 +1,5 @@
 from game.simulation.components.component import ComponentStatus, LayerType
+from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
 import math
 
 class ShipStatsCalculator:
@@ -241,15 +242,11 @@ class ShipStatsCalculator:
         # and ability-based logic in ClassRequirementsRule.
         
         # Physics Stats - INVERSE MASS SCALING
-        K_THRUST = 2500
-        K_TURN = 25000
-        
         if ship.mass > 0:
             ship.acceleration_rate = (ship.total_thrust * K_THRUST) / (ship.mass * ship.mass)
             raw_turn_speed = ship.turn_speed
             ship.turn_speed = (raw_turn_speed * K_TURN) / (ship.mass ** 1.5)
-            
-            K_SPEED = 25
+
             ship.max_speed = (ship.total_thrust * K_SPEED) / ship.mass if ship.total_thrust > 0 else 0
         else:
             ship.acceleration_rate = 0
