@@ -19,48 +19,20 @@ class StrategyScene:
     SIDEBAR_WIDTH = 600
     TOP_BAR_HEIGHT = 50
     
-    def __init__(self, screen_width, screen_height):
+    def __init__(self, screen_width, screen_height, session=None):
         self.screen_width = screen_width
         self.screen_height = screen_height
         
-        # Engine
-        self.turn_engine = TurnEngine()
+        # Session Management
+        if session:
+            self.session = session
+        else:
+            from game.strategy.engine.game_session import GameSession
+            self.session = GameSession()
+            
+        # UI proxies to session state (for backward compatibility)
+        # Note: self.player_empire, self.enemy_empire, etc. are now properties below.
         
-        # Empires
-        self.player_empire = Empire(0, "Terran Command", (0, 0, 255), theme_path=r"C:\Developer\StarshipBattles\assets\ShipThemes\Atlantians")
-        self.enemy_empire = Empire(1, "Xeno Hive", (255, 0, 0), theme_path=r"C:\Developer\StarshipBattles\assets\ShipThemes\Federation")
-        self.empires = [self.player_empire, self.enemy_empire]
-        
-        # Galaxy Data
-        self.galaxy = Galaxy(radius=4000)
-        print("StrategyScene: Generating Galaxy...")
-        self.systems = self.galaxy.generate_systems(count=25, min_dist=400)
-        self.galaxy.generate_warp_lanes()
-        print(f"StrategyScene: Generated {len(self.systems)} systems.")
-        
-        # Initial Setup (Colonies/Fleets)
-        if self.systems:
-             # Player Home (Sys 0)
-             p_home_sys = self.systems[0]
-             if p_home_sys.planets:
-                 p_planet = p_home_sys.planets[0]
-                 self.player_empire.add_colony(p_planet)
-                 
-                 # Starting Fleet: REMOVED per user request (Start with 0 ships)
-                 # f1 = Fleet(1, 0, p_home_sys.global_location)
-                 # f1.ships.append("Scout")
-                 # self.player_empire.add_fleet(f1)
-                 
-             # Enemy Home (Far away?)
-             e_home_sys = self.systems[-1]
-             if e_home_sys.planets:
-                 e_planet = e_home_sys.planets[0]
-                 self.enemy_empire.add_colony(e_planet)
-                 
-                 # f2 = Fleet(2, 1, e_home_sys.global_location)
-                 # f2.ships.append("Invader")
-                 # self.enemy_empire.add_fleet(f2)
-
         # Camera
         # Viewport crops: Sidebar (right) and Top Bar (top)
         # Offset Y = 50 (Top Bar)
@@ -103,15 +75,36 @@ class StrategyScene:
         
         # State
         self.turn_processing = False
+        self.action_open_design = False  # Flag to signal app.py to open Ship Builder
         
         # Multi-player turn management
         self.current_player_index = 0
-        self.human_player_ids = [0, 1]  # Both players are human-controlled
-
+        
         # Assets
         self.assets = {}
         self.empire_assets = {} # {empire_id: {'colony': Surface, 'fleet': Surface}}
         self._load_assets()
+        
+    @property
+    def galaxy(self): return self.session.galaxy
+    
+    @property
+    def empires(self): return self.session.empires
+    
+    @property
+    def systems(self): return self.session.systems
+    
+    @property
+    def turn_engine(self): return self.session.turn_engine
+    
+    @property
+    def player_empire(self): return self.session.player_empire
+    
+    @property
+    def enemy_empire(self): return self.session.enemy_empire
+    
+    @property
+    def human_player_ids(self): return self.session.human_player_ids
 
     def _load_assets(self):
         """Load visual assets."""
@@ -367,7 +360,7 @@ class StrategyScene:
              pygame.display.flip()
         
         # Process turn for all empires simultaneously
-        self.turn_engine.process_turn(self.empires, self.galaxy)
+        self.session.process_turn()
         
         # Re-center Camera on current player's home
         current_player_id = self.human_player_ids[self.current_player_index]
@@ -544,14 +537,19 @@ class StrategyScene:
         print(f"System View: {target_sys.name} at zoom=2.0")
              
     def on_build_ship_click(self):
-         """Handle 'Build Ship' action."""
-         if isinstance(self.selected_object, Planet):
-             planet = self.selected_object
-             if planet.owner_id == self.current_empire.id:
-                 print(f"Queueing Ship at {planet}...")
-                 # Add to Queue (1 Turn)
-                 planet.add_production("Colony Ship", 1)
-                 print("Ship added to construction queue (1 Turn).")
+        """Handle 'Build Ship' action."""
+        if isinstance(self.selected_object, Planet):
+            planet = self.selected_object
+            if planet.owner_id == self.current_empire.id:
+                print(f"Queueing Ship at {planet}...")
+                # Add to Queue (1 Turn)
+                planet.add_production("Colony Ship", 1)
+                print("Ship added to construction queue (1 Turn).")
+
+    def on_design_click(self):
+        """Handle 'Design' button click - opens Ship Builder."""
+        print("Design button clicked - opening Ship Builder")
+        self.action_open_design = True
 
     def update_input(self, dt, events):
         """Update camera input."""

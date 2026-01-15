@@ -127,14 +127,21 @@ class Game:
         ]
 
     @profile_action("App: Start Builder")
-    def start_builder(self):
+    def start_builder(self, return_to=None):
         """Enter ship builder."""
         self.state = BUILDER
+        self.builder_return_state = return_to  # Track where to return
         self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return)
     
     def on_builder_return(self, custom_ship=None):
-        """Return from builder to main menu."""
-        self.state = MENU
+        """Return from builder to caller or main menu."""
+        if self.builder_return_state == STRATEGY:
+            self.state = STRATEGY
+            if hasattr(self.strategy_scene, 'handle_resize'):
+                self.strategy_scene.handle_resize(WIDTH, HEIGHT)
+        else:
+            self.state = MENU
+        self.builder_return_state = None
     
     @profile_action("App: Start Battle Setup")
     def start_battle_setup(self, preserve_teams=False):
@@ -341,6 +348,10 @@ class Game:
             self.strategy_scene.update_input(frame_time, events)
             self.strategy_scene.update(frame_time)
             self.strategy_scene.draw(self.screen)
+            # Check for action flags
+            if self.strategy_scene.action_open_design:
+                self.strategy_scene.action_open_design = False
+                self.start_builder(return_to=STRATEGY)
         elif self.state == TEST_LAB:
             self.test_lab_scene.update()
             self.test_lab_scene.draw(self.screen)
