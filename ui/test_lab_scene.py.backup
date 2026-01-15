@@ -1202,14 +1202,17 @@ class TestLabScene:
         self.body_font = pygame.font.SysFont(FONT_MAIN, 18)
         self.small_font = pygame.font.SysFont(FONT_MAIN, 14)
 
-        # Initialize controller (handles all business logic)
-        from test_framework.services.test_lab_controller import TestLabUIController
+        # Get all scenarios from registry
         self.registry = TestRegistry()
-        self.test_history = TestHistory()
-        self.controller = TestLabUIController(game, self.registry, self.test_history)
-
-        # Get categories for sidebar
+        self.all_scenarios = self.registry.get_all_scenarios()
         self.categories = self.registry.get_categories()
+
+        # UI State
+        self.selected_category = None  # None = show all
+        self.selected_test_id = None
+        self.category_hover = None
+        self.test_hover = None
+        self.headless_running = False  # Flag for showing "Running Test..." message
 
         # Layout dimensions
         self.category_width = 220
@@ -1221,7 +1224,9 @@ class TestLabScene:
         self.test_scroll_offset = 0
         self.metadata_scroll_offset = 0
 
-        # UI components
+        # Output log
+        self.output_log = ["Select a test to view details..."]
+
         self.buttons = []
         self.json_popup = None  # For displaying JSON data
         self.confirmation_dialog = None  # For confirming metadata updates
@@ -1229,61 +1234,20 @@ class TestLabScene:
         self.component_panels = []  # Component JSON panels
         self.results_panel = None  # Test run history panel
         self.test_details_panel = None  # Test run details panel
+        self._components_cache = None  # Cache for components.json
 
         # Update Expected Values button state
         self.update_expected_button_rect = None
         self.update_expected_button_visible = False
 
+        # Test history manager
+        self.test_history = TestHistory()
+
         self._create_ui()
 
-
-    @property
-    def selected_category(self):
-        return self.controller.ui_state.get_selected_category()
-
-    @selected_category.setter
-    def selected_category(self, value):
-        self.controller.ui_state.select_category(value)
-
-    @property
-    def selected_test_id(self):
-        return self.controller.ui_state.get_selected_test_id()
-
-    @selected_test_id.setter
-    def selected_test_id(self, value):
-        self.controller.ui_state.select_test(value)
-
-    @property
-    def category_hover(self):
-        return self.controller.ui_state.get_category_hover()
-
-    @category_hover.setter
-    def category_hover(self, value):
-        self.controller.ui_state.set_category_hover(value)
-
-    @property
-    def test_hover(self):
-        return self.controller.ui_state.get_test_hover()
-
-    @test_hover.setter
-    def test_hover(self, value):
-        self.controller.ui_state.set_test_hover(value)
-
-    @property
-    def headless_running(self):
-        return self.controller.ui_state.is_headless_running()
-
-    @headless_running.setter
-    def headless_running(self, value):
-        self.controller.ui_state.set_headless_running(value)
-
-    @property
-    def output_log(self):
-        return self.controller.output_log
-
-    @property
-    def all_scenarios(self):
-        return self.controller.all_scenarios
+        # Validate all scenarios against component data (static validation)
+        # This must happen AFTER _components_cache is initialized
+        self._validate_all_scenarios()
 
     def _extract_ships_from_scenario(self, test_id):
         """

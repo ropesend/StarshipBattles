@@ -176,26 +176,52 @@ class ExactMatchRule(ValidationRule):
 
     def _resolve_path(self, context: Dict[str, Any], path: str) -> Any:
         """
-        Resolve dot-notation path to value.
+        Resolve dot-notation path to value with detailed error reporting.
 
         Args:
             context: Context dictionary
             path: Dot-notation path (e.g., 'attacker.weapon.damage')
 
         Returns:
-            Value at path, or None if not found
+            Value at path
+
+        Raises:
+            ValueError: If path resolution fails, with detailed error message
         """
         parts = path.split('.')
         current = context
+        path_trace = []
 
-        for part in parts:
+        for i, part in enumerate(parts):
+            path_trace.append(part)
+
             if isinstance(current, dict):
-                current = current.get(part)
+                if part not in current:
+                    available = list(current.keys())
+                    raise ValueError(
+                        f"Path resolution failed at '{'.'.join(path_trace)}'\n"
+                        f"  Key '{part}' not found in dict.\n"
+                        f"  Available keys: {available[:10]}" +  # Show first 10 keys
+                        (f"... ({len(available) - 10} more)" if len(available) > 10 else "")
+                    )
+                current = current[part]
             else:
-                current = getattr(current, part, None)
+                # Object attribute access
+                if not hasattr(current, part):
+                    available = [a for a in dir(current) if not a.startswith('_')]
+                    raise ValueError(
+                        f"Path resolution failed at '{'.'.join(path_trace)}'\n"
+                        f"  Attribute '{part}' not found on {type(current).__name__}.\n"
+                        f"  Available attributes: {available[:10]}" +  # Show first 10 attributes
+                        (f"... ({len(available) - 10} more)" if len(available) > 10 else "")
+                    )
+                current = getattr(current, part)
 
             if current is None:
-                return None
+                raise ValueError(
+                    f"Path resolution encountered None at '{'.'.join(path_trace)}'\n"
+                    f"  Path '{'.'.join(parts)}' cannot be fully resolved."
+                )
 
         return current
 

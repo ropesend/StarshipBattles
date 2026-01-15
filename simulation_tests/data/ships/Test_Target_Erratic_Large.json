@@ -1,44 +1,50 @@
 {
-    "name": "Test Target Erratic Large",
-    "color": [
-        0,
-        0,
-        255
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_last_modified": "2026-01-14T21:37:36.975467",
+    "_description": "Combat Lab test ship: Test_Target_Erratic_Large"
+  },
+  "name": "Test Target Erratic Large",
+  "color": [
+    0,
+    0,
+    255
+  ],
+  "team_id": 2,
+  "ship_class": "TestL_2L",
+  "theme_id": "Federation",
+  "ai_strategy": "test_erratic_maneuver",
+  "layers": {
+    "CORE": [
+      {
+        "id": "test_armor_std"
+      },
+      {
+        "id": "test_engine_no_fuel"
+      },
+      {
+        "id": "test_thruster_std"
+      }
     ],
-    "team_id": 2,
-    "ship_class": "TestL_2L",
-    "theme_id": "Federation",
-    "ai_strategy": "test_erratic_maneuver",
-    "layers": {
-        "CORE": [
-            {
-                "id": "test_armor_std"
-            },
-            {
-                "id": "test_engine_no_fuel"
-            },
-            {
-                "id": "test_thruster_std"
-            }
-        ],
-        "ARMOR": []
-    },
-    "_test_notes": "Large erratic target",
-    "expected_stats": {
-        "max_hp": 2270,
-        "max_fuel": 0.0,
-        "max_energy": 0.0,
-        "max_ammo": 0.0,
-        "max_speed": 6.112469437652812,
-        "acceleration_rate": 0.29889826100991745,
-        "turn_speed": 1.3516680381627337,
-        "total_thrust": 500.0,
-        "mass": 2045.0,
-        "armor_hp_pool": 200
-    },
-    "resources": {
-        "fuel": 0.0,
-        "energy": 0.0,
-        "ammo": 0.0
-    }
+    "ARMOR": []
+  },
+  "_test_notes": "Large erratic target",
+  "expected_stats": {
+    "max_hp": 2270,
+    "max_fuel": 0.0,
+    "max_energy": 0.0,
+    "max_ammo": 0.0,
+    "max_speed": 6.112469437652812,
+    "acceleration_rate": 0.29889826100991745,
+    "turn_speed": 1.3516680381627337,
+    "total_thrust": 500.0,
+    "mass": 2045.0,
+    "armor_hp_pool": 200
+  },
+  "resources": {
+    "fuel": 0.0,
+    "energy": 0.0,
+    "ammo": 0.0
+  }
 }

@@ -23,6 +23,13 @@ Test Coverage:
 
 from simulation_tests.scenarios import TestMetadata
 from simulation_tests.scenarios.templates import StaticTargetScenario
+from simulation_tests.test_constants import (
+    STANDARD_DISTANCE,
+    STANDARD_TEST_TICKS,
+    SEEKER_DAMAGE,
+    SEEKER_RANGE,
+    STANDARD_SEED
+)
 
 
 # ============================================================================
@@ -40,7 +47,7 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
     # Template configuration
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Stationary.json"
-    distance = 500
+    distance = STANDARD_DISTANCE
 
     metadata = TestMetadata(
         test_id="SEEK360-001",
@@ -68,7 +75,7 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
         expected_outcome="Seeker impacts target and deals 100+ damage within 1 second",
         pass_criteria="damage_dealt >= 100",
         max_ticks=600,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=10,
         tags=["seeker", "missile", "tracking", "close-range", "guided"]
@@ -167,7 +174,7 @@ class SeekerMidRangeImpactScenario(StaticTargetScenario):
         expected_outcome="Seeker impacts target and deals damage within endurance limit",
         pass_criteria="damage_dealt > 0",
         max_ticks=800,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=9,
         tags=["seeker", "missile", "tracking", "mid-range", "guided"]
@@ -234,7 +241,7 @@ class SeekerBeyondRangeExpireScenario(StaticTargetScenario):
         expected_outcome="Simulation completes, seeker likely expires before impact or doesn't fire",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=800,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=7,
         tags=["seeker", "missile", "endurance-limit", "expire", "edge-case"]
@@ -302,7 +309,7 @@ class SeekerEdgeCaseRangeScenario(StaticTargetScenario):
         expected_outcome="Simulation completes, results may vary based on firing range check",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=800,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=6,
         tags=["seeker", "missile", "endurance-limit", "edge-case"]
@@ -373,7 +380,7 @@ class SeekerTrackingStationaryScenario(StaticTargetScenario):
         expected_outcome="Seeker tracks directly to target and impacts, dealing damage",
         pass_criteria="damage_dealt > 0",
         max_ticks=600,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=10,
         tags=["seeker", "missile", "tracking", "stationary", "guided"]
@@ -438,7 +445,7 @@ class SeekerTrackingLinearScenario(StaticTargetScenario):
         expected_outcome="Seeker adjusts course to intercept moving target",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=600,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=9,
         tags=["seeker", "missile", "tracking", "linear-target", "intercept"]
@@ -503,7 +510,7 @@ class SeekerTrackingOrbitingScenario(StaticTargetScenario):
         expected_outcome="Seeker follows curved pursuit path, adjusting continuously",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=800,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=8,
         tags=["seeker", "missile", "tracking", "orbiting", "curved-pursuit"]
@@ -569,7 +576,7 @@ class SeekerTrackingErraticScenario(StaticTargetScenario):
         expected_outcome="Seeker attempts to track but may fail to intercept highly maneuverable target",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=800,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=7,
         tags=["seeker", "missile", "tracking", "erratic", "evasion", "edge-case"]
@@ -636,7 +643,7 @@ class SeekerPointDefenseNoneScenario(StaticTargetScenario):
         expected_outcome="All seekers hit target without interception",
         pass_criteria="SKIPPED - requires_point_defense_implementation",
         max_ticks=600,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=5,
         tags=["seeker", "missile", "point-defense", "baseline", "placeholder", "not-implemented"]
@@ -693,7 +700,7 @@ class SeekerPointDefenseSingleScenario(StaticTargetScenario):
         expected_outcome="Partial interception - some seekers destroyed, some hit target",
         pass_criteria="SKIPPED - requires_point_defense_implementation",
         max_ticks=600,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=4,
         tags=["seeker", "missile", "point-defense", "interception", "placeholder", "not-implemented"]
@@ -751,7 +758,7 @@ class SeekerPointDefenseTripleScenario(StaticTargetScenario):
         expected_outcome="High interception rate - most seekers destroyed before impact",
         pass_criteria="SKIPPED - requires_point_defense_implementation",
         max_ticks=600,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=3,
         tags=["seeker", "missile", "point-defense", "layered-defense", "placeholder", "not-implemented"]

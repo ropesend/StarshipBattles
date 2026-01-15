@@ -1,11 +1,38 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://starship-battles/schemas/components.json",
-  "title": "Component Library Schema",
+  "title": "Component Library Schema v1.0",
   "description": "Schema for validating component definitions in Combat Lab test data",
   "type": "object",
-  "required": ["components"],
+  "required": ["_metadata", "components"],
   "properties": {
+    "_metadata": {
+      "type": "object",
+      "required": ["_schema_version", "_data_version"],
+      "properties": {
+        "_schema_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+$",
+          "description": "Schema version (semver major.minor)"
+        },
+        "_data_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+$",
+          "description": "Data version (semver major.minor)"
+        },
+        "_last_modified": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of last modification"
+        },
+        "_description": {
+          "type": "string",
+          "description": "Optional description of this data file"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Version metadata for schema/data compatibility tracking"
+    },
     "components": {
       "type": "array",
       "items": {

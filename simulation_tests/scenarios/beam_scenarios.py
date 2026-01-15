@@ -21,6 +21,26 @@ from simulation_tests.scenarios import (
     StatisticalTestRule
 )
 from simulation_tests.scenarios.templates import StaticTargetScenario
+from simulation_tests.test_constants import (
+    POINT_BLANK_DISTANCE,
+    MID_RANGE_DISTANCE,
+    STANDARD_TEST_TICKS,
+    HIGH_TICK_TEST_TICKS,
+    BEAM_LOW_ACCURACY,
+    BEAM_LOW_FALLOFF,
+    BEAM_LOW_RANGE,
+    BEAM_LOW_DAMAGE,
+    BEAM_MED_ACCURACY,
+    BEAM_MED_FALLOFF,
+    BEAM_MED_RANGE,
+    BEAM_HIGH_ACCURACY,
+    BEAM_HIGH_FALLOFF,
+    BEAM_HIGH_RANGE,
+    STATIONARY_TARGET_MASS,
+    STANDARD_MARGIN,
+    HIGH_PRECISION_MARGIN,
+    STANDARD_SEED
+)
 
 
 def calculate_defense_score(mass: float, acceleration: float = 0.0, turn_speed: float = 0.0, ecm_score: float = 0.0) -> float:
@@ -120,8 +140,8 @@ class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
         ],
         expected_outcome="High hit rate (~50-55%) with damage > 0 after 500 ticks",
         pass_criteria="damage_dealt > 0",
-        max_ticks=500,
-        seed=42,
+        max_ticks=STANDARD_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full 500 ticks regardless of ship status
         ui_priority=10,
         tags=["accuracy", "low-accuracy", "point-blank", "beam-weapons"],
@@ -130,34 +150,34 @@ class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=0.5
+                expected=BEAM_LOW_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.002
+                expected=BEAM_LOW_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=400.0
+                expected=STATIONARY_TARGET_MASS
             ),
             # Statistical validation - validates actual test outcomes using TOST equivalence testing
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.5318,  # At surface distance 20.53px (not 50px center distance)
-                equivalence_margin=0.06,  # ±6% margin for 500-tick test (99% confidence, ~1% failure rate)
+                equivalence_margin=STANDARD_MARGIN,  # ±6% margin for 500-tick test (99% confidence, ~1% failure rate)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits'
@@ -194,7 +214,7 @@ class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
         """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
-            mass=400.0,
+            mass=STATIONARY_TARGET_MASS,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
@@ -203,13 +223,13 @@ class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
         # Calculate target radius (for surface distance calculation)
         # Beam weapons hit the target SURFACE, not center
         # Distance to surface = center_distance - target_radius
-        target_mass = 400.0
+        target_mass = STATIONARY_TARGET_MASS
         target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.24px
-        center_distance = 50.0  # Ships positioned 50px apart
+        center_distance = POINT_BLANK_DISTANCE  # Ships positioned 50px apart
         surface_distance = center_distance - target_radius  # ≈ 20.76px
 
         # Calculate expected hit chance using SURFACE distance (what combat system uses)
-        self.expected_hit_chance = calculate_expected_hit_chance(0.5, 0.002, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_LOW_ACCURACY, BEAM_LOW_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
@@ -279,8 +299,8 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         ],
         expected_outcome="Hit rate within ±1% of expected (51.71%) with 99% confidence",
         pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=100000,
-        seed=42,
+        max_ticks=HIGH_TICK_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "low-accuracy", "point-blank", "beam-weapons", "high-tick", "precision"],
@@ -289,22 +309,22 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=0.5
+                expected=BEAM_LOW_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.002
+                expected=BEAM_LOW_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
@@ -316,7 +336,7 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.5702,  # At surface distance 16.26px (not 50px center distance)
-                equivalence_margin=0.01,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
+                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
@@ -364,11 +384,11 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         # Distance to surface = center_distance - target_radius
         target_mass = 600.0
         target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 33.74px
-        center_distance = 50.0  # Ships positioned 50px apart
+        center_distance = POINT_BLANK_DISTANCE  # Ships positioned 50px apart
         surface_distance = center_distance - target_radius  # ≈ 16.26px
 
         # Calculate expected hit chance using SURFACE distance (what combat system uses)
-        self.expected_hit_chance = calculate_expected_hit_chance(0.5, 0.002, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_LOW_ACCURACY, BEAM_LOW_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
@@ -436,8 +456,8 @@ class BeamLowAccuracyMidRangeScenario(StaticTargetScenario):
         ],
         expected_outcome="Moderate hit rate (~36%) with some damage dealt",
         pass_criteria="simulation_completes (ticks_run > 0)",
-        max_ticks=500,
-        seed=42,
+        max_ticks=STANDARD_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=9,
         tags=["accuracy", "low-accuracy", "mid-range", "beam-weapons"],
@@ -445,33 +465,33 @@ class BeamLowAccuracyMidRangeScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=0.5
+                expected=BEAM_LOW_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.002
+                expected=BEAM_LOW_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=400.0
+                expected=STATIONARY_TARGET_MASS
             ),
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.3607,
-                equivalence_margin=0.06,
+                equivalence_margin=STANDARD_MARGIN,
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits'
@@ -483,20 +503,20 @@ class BeamLowAccuracyMidRangeScenario(StaticTargetScenario):
         """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
-            mass=400.0,
+            mass=STATIONARY_TARGET_MASS,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
         )
 
         # Calculate target radius (for surface distance calculation)
-        target_mass = 400.0
+        target_mass = STATIONARY_TARGET_MASS
         target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = 400.0
+        center_distance = MID_RANGE_DISTANCE
         surface_distance = center_distance - target_radius
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(0.5, 0.002, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_LOW_ACCURACY, BEAM_LOW_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
@@ -567,8 +587,8 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
         ],
         expected_outcome="Hit rate within ±1% of expected (39.71%) with 99% confidence",
         pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=100000,
-        seed=42,
+        max_ticks=HIGH_TICK_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "low-accuracy", "mid-range", "beam-weapons", "high-tick", "precision"],
@@ -576,22 +596,22 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=0.5
+                expected=BEAM_LOW_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.002
+                expected=BEAM_LOW_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
@@ -603,7 +623,7 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.3971,  # At surface distance 366.26px
-                equivalence_margin=0.01,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
+                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
@@ -649,11 +669,11 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
         # Calculate target radius (for surface distance calculation)
         target_mass = 600.0
         target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 33.74px
-        center_distance = 400.0
+        center_distance = MID_RANGE_DISTANCE
         surface_distance = center_distance - target_radius  # ≈ 366.26px
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(0.5, 0.002, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_LOW_ACCURACY, BEAM_LOW_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
@@ -723,7 +743,7 @@ class BeamLowAccuracyMaxRangeScenario(StaticTargetScenario):
         expected_outcome="Low hit rate (~22%) with possible damage dealt",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=8,
         tags=["accuracy", "low-accuracy", "max-range", "beam-weapons"],
@@ -731,33 +751,33 @@ class BeamLowAccuracyMaxRangeScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=0.5
+                expected=BEAM_LOW_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.002
+                expected=BEAM_LOW_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=400.0
+                expected=STATIONARY_TARGET_MASS
             ),
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.2186,
-                equivalence_margin=0.06,
+                equivalence_margin=STANDARD_MARGIN,
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits'
@@ -769,20 +789,20 @@ class BeamLowAccuracyMaxRangeScenario(StaticTargetScenario):
         """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
-            mass=400.0,
+            mass=STATIONARY_TARGET_MASS,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
         )
 
         # Calculate target radius (for surface distance calculation)
-        target_mass = 400.0
+        target_mass = STATIONARY_TARGET_MASS
         target_radius = 40 * ((target_mass / 1000) ** (1/3))
         center_distance = 750.0
         surface_distance = center_distance - target_radius
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(0.5, 0.002, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_LOW_ACCURACY, BEAM_LOW_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
@@ -854,8 +874,8 @@ class BeamMediumAccuracyPointBlankScenario(StaticTargetScenario):
         ],
         expected_outcome="Very high hit rate (~84%) with significant damage dealt",
         pass_criteria="damage_dealt > 0",
-        max_ticks=500,
-        seed=42,
+        max_ticks=STANDARD_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=10,
         tags=["accuracy", "medium-accuracy", "point-blank", "beam-weapons"],
@@ -863,33 +883,33 @@ class BeamMediumAccuracyPointBlankScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=2.0
+                expected=BEAM_MED_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.001
+                expected=BEAM_MED_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=400.0
+                expected=STATIONARY_TARGET_MASS
             ),
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.8385,
-                equivalence_margin=0.06,
+                equivalence_margin=STANDARD_MARGIN,
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits'
@@ -901,20 +921,20 @@ class BeamMediumAccuracyPointBlankScenario(StaticTargetScenario):
         """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
-            mass=400.0,
+            mass=STATIONARY_TARGET_MASS,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
         )
 
         # Calculate target radius (for surface distance calculation)
-        target_mass = 400.0
+        target_mass = STATIONARY_TARGET_MASS
         target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = 50.0
+        center_distance = POINT_BLANK_DISTANCE
         surface_distance = center_distance - target_radius
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if significant damage was dealt."""
@@ -985,8 +1005,8 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         ],
         expected_outcome="Hit rate within ±1% of expected (85.82%) with 99% confidence",
         pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=100000,
-        seed=42,
+        max_ticks=HIGH_TICK_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "medium-accuracy", "point-blank", "beam-weapons", "high-tick", "precision"],
@@ -994,22 +1014,22 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=2.0
+                expected=BEAM_MED_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.001
+                expected=BEAM_MED_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
@@ -1021,7 +1041,7 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.8582,  # At surface distance 16.26px
-                equivalence_margin=0.01,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
+                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
@@ -1067,11 +1087,11 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         # Calculate target radius (for surface distance calculation)
         target_mass = 600.0
         target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 33.74px
-        center_distance = 50.0
+        center_distance = POINT_BLANK_DISTANCE
         surface_distance = center_distance - target_radius  # ≈ 16.26px
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
@@ -1139,8 +1159,8 @@ class BeamMediumAccuracyMidRangeScenario(StaticTargetScenario):
         ],
         expected_outcome="High hit rate (~79%) with damage dealt",
         pass_criteria="damage_dealt > 0",
-        max_ticks=500,
-        seed=42,
+        max_ticks=STANDARD_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=9,
         tags=["accuracy", "medium-accuracy", "mid-range", "beam-weapons"],
@@ -1148,33 +1168,33 @@ class BeamMediumAccuracyMidRangeScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=2.0
+                expected=BEAM_MED_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.001
+                expected=BEAM_MED_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=400.0
+                expected=STATIONARY_TARGET_MASS
             ),
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.7855,
-                equivalence_margin=0.06,
+                equivalence_margin=STANDARD_MARGIN,
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits'
@@ -1186,20 +1206,20 @@ class BeamMediumAccuracyMidRangeScenario(StaticTargetScenario):
         """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
-            mass=400.0,
+            mass=STATIONARY_TARGET_MASS,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
         )
 
         # Calculate target radius (for surface distance calculation)
-        target_mass = 400.0
+        target_mass = STATIONARY_TARGET_MASS
         target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = 400.0
+        center_distance = MID_RANGE_DISTANCE
         surface_distance = center_distance - target_radius
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
@@ -1270,8 +1290,8 @@ class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
         ],
         expected_outcome="Hit rate within ±1% of expected (80.98%) with 99% confidence",
         pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=100000,
-        seed=42,
+        max_ticks=HIGH_TICK_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "medium-accuracy", "mid-range", "beam-weapons", "high-tick", "precision"],
@@ -1279,22 +1299,22 @@ class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=2.0
+                expected=BEAM_MED_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.001
+                expected=BEAM_MED_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
@@ -1306,7 +1326,7 @@ class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.8098,  # At surface distance 366.26px
-                equivalence_margin=0.01,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
+                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
@@ -1352,11 +1372,11 @@ class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
         # Calculate target radius (for surface distance calculation)
         target_mass = 600.0
         target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 33.74px
-        center_distance = 400.0
+        center_distance = MID_RANGE_DISTANCE
         surface_distance = center_distance - target_radius  # ≈ 366.26px
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
@@ -1425,7 +1445,7 @@ class BeamMediumAccuracyMaxRangeScenario(StaticTargetScenario):
         expected_outcome="Good hit rate (~72%) with damage dealt",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=8,
         tags=["accuracy", "medium-accuracy", "max-range", "beam-weapons"],
@@ -1433,33 +1453,33 @@ class BeamMediumAccuracyMaxRangeScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=2.0
+                expected=BEAM_MED_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.001
+                expected=BEAM_MED_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=400.0
+                expected=STATIONARY_TARGET_MASS
             ),
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.7207,
-                equivalence_margin=0.06,
+                equivalence_margin=STANDARD_MARGIN,
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits'
@@ -1471,20 +1491,20 @@ class BeamMediumAccuracyMaxRangeScenario(StaticTargetScenario):
         """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
-            mass=400.0,
+            mass=STATIONARY_TARGET_MASS,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
         )
 
         # Calculate target radius (for surface distance calculation)
-        target_mass = 400.0
+        target_mass = STATIONARY_TARGET_MASS
         target_radius = 40 * ((target_mass / 1000) ** (1/3))
         center_distance = 750.0
         surface_distance = center_distance - target_radius
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
@@ -1555,8 +1575,8 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
         ],
         expected_outcome="Hit rate within ±1% of expected (75.00%) with 99% confidence",
         pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=100000,
-        seed=42,
+        max_ticks=HIGH_TICK_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "medium-accuracy", "max-range", "beam-weapons", "high-tick", "precision"],
@@ -1564,22 +1584,22 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=2.0
+                expected=BEAM_MED_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.001
+                expected=BEAM_MED_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
@@ -1591,7 +1611,7 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.7500,  # At surface distance 716.26px
-                equivalence_margin=0.01,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
+                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
@@ -1641,7 +1661,7 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
         surface_distance = center_distance - target_radius  # ≈ 716.26px
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
@@ -1713,8 +1733,8 @@ class BeamHighAccuracyPointBlankScenario(StaticTargetScenario):
         ],
         expected_outcome="Near-perfect hit rate (~99%+) with consistent damage",
         pass_criteria="damage_dealt > 0",
-        max_ticks=500,
-        seed=42,
+        max_ticks=STANDARD_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=10,
         tags=["accuracy", "high-accuracy", "point-blank", "beam-weapons"],
@@ -1722,33 +1742,33 @@ class BeamHighAccuracyPointBlankScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=5.0
+                expected=BEAM_HIGH_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.0005
+                expected=BEAM_HIGH_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=400.0
+                expected=STATIONARY_TARGET_MASS
             ),
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.9906,
-                equivalence_margin=0.06,
+                equivalence_margin=STANDARD_MARGIN,
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits'
@@ -1760,20 +1780,20 @@ class BeamHighAccuracyPointBlankScenario(StaticTargetScenario):
         """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
-            mass=400.0,
+            mass=STATIONARY_TARGET_MASS,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
         )
 
         # Calculate target radius (for surface distance calculation)
-        target_mass = 400.0
+        target_mass = STATIONARY_TARGET_MASS
         target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = 50.0
+        center_distance = POINT_BLANK_DISTANCE
         surface_distance = center_distance - target_radius
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(5.0, 0.0005, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_HIGH_ACCURACY, BEAM_HIGH_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
@@ -1844,8 +1864,8 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         ],
         expected_outcome="Hit rate within ±1% of expected (99.19%) with 99% confidence",
         pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=100000,
-        seed=42,
+        max_ticks=HIGH_TICK_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "high-accuracy", "point-blank", "beam-weapons", "high-tick", "precision"],
@@ -1853,22 +1873,22 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=5.0
+                expected=BEAM_HIGH_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.0005
+                expected=BEAM_HIGH_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
@@ -1880,7 +1900,7 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.9919,  # At surface distance 16.26px
-                equivalence_margin=0.01,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
+                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
@@ -1926,11 +1946,11 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         # Calculate target radius (for surface distance calculation)
         target_mass = 600.0
         target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 33.74px
-        center_distance = 50.0
+        center_distance = POINT_BLANK_DISTANCE
         surface_distance = center_distance - target_radius  # ≈ 16.26px
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(5.0, 0.0005, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_HIGH_ACCURACY, BEAM_HIGH_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
@@ -1998,8 +2018,8 @@ class BeamHighAccuracyMaxRangeScenario(StaticTargetScenario):
         ],
         expected_outcome="Near-perfect hit rate (~99%+) with consistent damage",
         pass_criteria="damage_dealt > 0",
-        max_ticks=500,
-        seed=42,
+        max_ticks=STANDARD_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=9,
         tags=["accuracy", "high-accuracy", "max-range", "beam-weapons"],
@@ -2007,33 +2027,33 @@ class BeamHighAccuracyMaxRangeScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=5.0
+                expected=BEAM_HIGH_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.0005
+                expected=BEAM_HIGH_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=400.0
+                expected=STATIONARY_TARGET_MASS
             ),
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.9866,
-                equivalence_margin=0.06,
+                equivalence_margin=STANDARD_MARGIN,
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits'
@@ -2045,20 +2065,20 @@ class BeamHighAccuracyMaxRangeScenario(StaticTargetScenario):
         """Calculate test-specific expected hit chance."""
         # Calculate target defense score (mass=400, stationary)
         target_defense = calculate_defense_score(
-            mass=400.0,
+            mass=STATIONARY_TARGET_MASS,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
         )
 
         # Calculate target radius (for surface distance calculation)
-        target_mass = 400.0
+        target_mass = STATIONARY_TARGET_MASS
         target_radius = 40 * ((target_mass / 1000) ** (1/3))
         center_distance = 750.0
         surface_distance = center_distance - target_radius
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(5.0, 0.0005, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_HIGH_ACCURACY, BEAM_HIGH_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
@@ -2129,8 +2149,8 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
         ],
         expected_outcome="Hit rate within ±1% of expected (98.85%) with 99% confidence",
         pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=100000,
-        seed=42,
+        max_ticks=HIGH_TICK_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "high-accuracy", "max-range", "beam-weapons", "high-tick", "precision"],
@@ -2138,22 +2158,22 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=5.0
+                expected=BEAM_HIGH_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.0005
+                expected=BEAM_HIGH_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
@@ -2165,7 +2185,7 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.9885,  # At surface distance 716.26px
-                equivalence_margin=0.01,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
+                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
@@ -2215,7 +2235,7 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
         surface_distance = center_distance - target_radius  # ≈ 716.26px
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(5.0, 0.0005, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_HIGH_ACCURACY, BEAM_HIGH_FALLOFF, surface_distance, 0.0, target_defense)
 
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
@@ -2289,7 +2309,7 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
         expected_outcome="Reduced hit rate (~5%) due to target maneuverability, some damage dealt",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=7,
         tags=["accuracy", "medium-accuracy", "moving-target", "erratic", "beam-weapons"],
@@ -2297,22 +2317,22 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=2.0
+                expected=BEAM_MED_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.001
+                expected=BEAM_MED_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
@@ -2323,7 +2343,7 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.0484,
-                equivalence_margin=0.06,
+                equivalence_margin=STANDARD_MARGIN,
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits'
@@ -2344,12 +2364,12 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
         # Calculate target radius (for surface distance calculation)
         target_mass = 65.0
         target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = 400.0
+        center_distance = MID_RANGE_DISTANCE
         surface_distance = center_distance - target_radius
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
-        self.expected_hit_chance_base = calculate_expected_hit_chance(2.0, 0.001, surface_distance)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance_base = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance)
 
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
@@ -2420,7 +2440,7 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
         expected_outcome="Low hit rate (~3.5%) due to combined penalties, minimal damage expected",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=6,
         tags=["accuracy", "medium-accuracy", "moving-target", "erratic", "max-range", "beam-weapons"],
@@ -2428,22 +2448,22 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=2.0
+                expected=BEAM_MED_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.001
+                expected=BEAM_MED_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
@@ -2454,7 +2474,7 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
                 name='Hit Rate',
                 test_type='binomial',
                 expected_probability=0.0347,
-                equivalence_margin=0.06,
+                equivalence_margin=STANDARD_MARGIN,
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
                 description='Each beam hit = 1 damage, so damage_dealt = number of hits'
@@ -2479,8 +2499,8 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
         surface_distance = center_distance - target_radius
 
         # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(2.0, 0.001, surface_distance, 0.0, target_defense)
-        self.expected_hit_chance_base = calculate_expected_hit_chance(2.0, 0.001, surface_distance)
+        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
+        self.expected_hit_chance_base = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance)
 
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
@@ -2551,8 +2571,8 @@ class BeamOutOfRangeScenario(StaticTargetScenario):
         ],
         expected_outcome="No damage dealt (damage_dealt == 0)",
         pass_criteria="damage_dealt == 0",
-        max_ticks=500,
-        seed=42,
+        max_ticks=STANDARD_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=8,
         tags=["range-limit", "out-of-range", "beam-weapons"],
@@ -2560,27 +2580,27 @@ class BeamOutOfRangeScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Beam Weapon Damage',
                 path='attacker.weapon.damage',
-                expected=1
+                expected=BEAM_LOW_DAMAGE
             ),
             ExactMatchRule(
                 name='Base Accuracy',
                 path='attacker.weapon.base_accuracy',
-                expected=2.0
+                expected=BEAM_MED_ACCURACY
             ),
             ExactMatchRule(
                 name='Accuracy Falloff',
                 path='attacker.weapon.accuracy_falloff',
-                expected=0.001
+                expected=BEAM_MED_FALLOFF
             ),
             ExactMatchRule(
                 name='Weapon Range',
                 path='attacker.weapon.range',
-                expected=800
+                expected=BEAM_LOW_RANGE
             ),
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=400.0
+                expected=STATIONARY_TARGET_MASS
             )
         ]
     )

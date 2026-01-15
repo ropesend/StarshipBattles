@@ -27,7 +27,8 @@
       "Bash(if exist \"simulation_tests\\\\scenarios\\\\__pycache__\" rmdir /s /q \"simulation_tests\\\\scenarios\\\\__pycache__\")",
       "Bash(find:*)",
       "Bash([ -f combat_lab.log ])",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }

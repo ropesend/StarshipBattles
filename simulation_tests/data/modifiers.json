@@ -1,3 +1,9 @@
 {
-    "modifiers": []
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_last_modified": "2026-01-14T21:37:36.975467",
+    "_description": "Combat Lab test modifiers"
+  },
+  "modifiers": []
 }

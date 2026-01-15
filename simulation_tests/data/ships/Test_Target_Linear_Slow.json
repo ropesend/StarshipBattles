@@ -1,41 +1,47 @@
 {
-    "name": "Test Target Linear Slow",
-    "color": [
-        0,
-        0,
-        255
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_last_modified": "2026-01-14T21:37:36.975467",
+    "_description": "Combat Lab test ship: Test_Target_Linear_Slow"
+  },
+  "name": "Test Target Linear Slow",
+  "color": [
+    0,
+    0,
+    255
+  ],
+  "team_id": 2,
+  "ship_class": "TestM_2L",
+  "theme_id": "Federation",
+  "ai_strategy": "test_straight_line",
+  "layers": {
+    "CORE": [
+      {
+        "id": "test_armor_std"
+      },
+      {
+        "id": "test_engine_slow"
+      }
     ],
-    "team_id": 2,
-    "ship_class": "TestM_2L",
-    "theme_id": "Federation",
-    "ai_strategy": "test_straight_line",
-    "layers": {
-        "CORE": [
-            {
-                "id": "test_armor_std"
-            },
-            {
-                "id": "test_engine_slow"
-            }
-        ],
-        "ARMOR": []
-    },
-    "_test_notes": "Linearly moving target, slow speed",
-    "expected_stats": {
-        "max_hp": 750,
-        "max_fuel": 0.0,
-        "max_energy": 0.0,
-        "max_ammo": 0.0,
-        "max_speed": 5.0,
-        "acceleration_rate": 2.0,
-        "turn_speed": 0.0,
-        "total_thrust": 50.0,
-        "mass": 240.0,
-        "armor_hp_pool": 200
-    },
-    "resources": {
-        "fuel": 0.0,
-        "energy": 0.0,
-        "ammo": 0.0
-    }
+    "ARMOR": []
+  },
+  "_test_notes": "Linearly moving target, slow speed",
+  "expected_stats": {
+    "max_hp": 750,
+    "max_fuel": 0.0,
+    "max_energy": 0.0,
+    "max_ammo": 0.0,
+    "max_speed": 5.0,
+    "acceleration_rate": 2.0,
+    "turn_speed": 0.0,
+    "total_thrust": 50.0,
+    "mass": 240.0,
+    "armor_hp_pool": 200
+  },
+  "resources": {
+    "fuel": 0.0,
+    "energy": 0.0,
+    "ammo": 0.0
+  }
 }

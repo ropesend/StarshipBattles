@@ -56,6 +56,91 @@ class ValidationResult:
             return f"[FAIL] {self.file_path}: Invalid\n  {error_str}"
 
 
+def parse_version(version_str: str) -> Tuple[int, int]:
+    """
+    Parse a version string (e.g., '1.0') into (major, minor).
+
+    Args:
+        version_str: Version string in format 'major.minor'
+
+    Returns:
+        Tuple of (major, minor) as integers
+
+    Raises:
+        ValueError: If version string is malformed
+    """
+    try:
+        parts = version_str.split('.')
+        if len(parts) != 2:
+            raise ValueError(f"Version must be in format 'major.minor', got '{version_str}'")
+        major = int(parts[0])
+        minor = int(parts[1])
+        return (major, minor)
+    except (AttributeError, ValueError) as e:
+        raise ValueError(f"Invalid version string '{version_str}': {e}")
+
+
+def validate_version_compatibility(data: Dict, schema_file: str) -> Optional[str]:
+    """
+    Check if data version is compatible with schema version.
+
+    Args:
+        data: Data dictionary (must have _metadata._schema_version)
+        schema_file: Schema filename for error messages
+
+    Returns:
+        Error message if incompatible, None if compatible
+
+    Raises:
+        ValueError: If version metadata is missing or malformed
+    """
+    # Extract schema version from title (e.g., "Component Library Schema v1.0")
+    schema = load_schema(schema_file)
+    if not schema:
+        return f"Schema {schema_file} not found"
+
+    schema_title = schema.get('title', '')
+    schema_version = None
+
+    # Parse version from title
+    if ' v' in schema_title:
+        schema_version = schema_title.split(' v')[-1]
+    else:
+        # Default to 1.0 if no version in title
+        schema_version = '1.0'
+
+    # Extract data's schema version
+    metadata = data.get('_metadata', {})
+    data_schema_version = metadata.get('_schema_version')
+
+    if not data_schema_version:
+        raise ValueError("Missing _schema_version in data file _metadata")
+
+    # Parse versions
+    try:
+        schema_major, schema_minor = parse_version(schema_version)
+        data_major, data_minor = parse_version(data_schema_version)
+    except ValueError as e:
+        return f"Version parsing error: {e}"
+
+    # Check compatibility
+    # Data schema version must not be newer than the schema version
+    if data_major > schema_major:
+        return (
+            f"Data schema version {data_schema_version} is newer than schema {schema_version}. "
+            f"Update schema or use compatible data version."
+        )
+
+    if data_major == schema_major and data_minor > schema_minor:
+        return (
+            f"Data schema version {data_schema_version} is newer than schema {schema_version}. "
+            f"Minor version mismatch - data may use features not in schema."
+        )
+
+    # Compatible
+    return None
+
+
 def load_schema(schema_name: str) -> Optional[Dict]:
     """
     Load a JSON schema file.
@@ -115,7 +200,15 @@ def validate_file(
     except json.JSONDecodeError as e:
         return ValidationResult(data_file, False, [f"Invalid JSON: {e}"])
 
-    # Validate
+    # Check version compatibility
+    try:
+        version_error = validate_version_compatibility(data, schema_file)
+        if version_error:
+            return ValidationResult(data_file, False, [version_error])
+    except ValueError as e:
+        return ValidationResult(data_file, False, [f"Version validation error: {e}"])
+
+    # Validate against schema
     try:
         validate(instance=data, schema=schema)
         return ValidationResult(data_file, True)

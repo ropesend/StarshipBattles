@@ -35,6 +35,13 @@ Projectile Weapon Stats:
 import pygame
 import math
 from simulation_tests.scenarios import TestScenario, TestMetadata
+from simulation_tests.test_constants import (
+    STANDARD_DISTANCE,
+    STANDARD_TEST_TICKS,
+    PROJECTILE_DAMAGE,
+    PROJECTILE_RANGE,
+    STANDARD_SEED
+)
 
 
 def calculate_projectile_travel_time(distance: float, projectile_speed: float) -> float:
@@ -104,8 +111,8 @@ class ProjectileStationaryTargetScenario(TestScenario):
         ],
         expected_outcome="High damage (≥150, 3+ hits) from projectile hits",
         pass_criteria="damage_dealt >= 150",
-        max_ticks=500,
-        seed=42,
+        max_ticks=STANDARD_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=10,
         tags=["accuracy", "projectile", "stationary-target", "point-blank"]
@@ -231,8 +238,8 @@ class ProjectileLinearSlowTargetScenario(TestScenario):
         ],
         expected_outcome="Moderate damage (>0) from successful leading predictions",
         pass_criteria="damage_dealt > 0 (test marked as skip - target config issue)",
-        max_ticks=500,
-        seed=42,
+        max_ticks=STANDARD_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=8,
         tags=["accuracy", "projectile", "moving-target", "linear", "leading"]
@@ -317,8 +324,8 @@ class ProjectileLinearFastTargetScenario(TestScenario):
         ],
         expected_outcome="Possible damage (≥0) - fast targets may evade",
         pass_criteria="simulation_completes (ticks_run > 0)",
-        max_ticks=500,
-        seed=42,
+        max_ticks=STANDARD_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=7,
         tags=["accuracy", "projectile", "moving-target", "linear", "fast", "leading"]
@@ -409,7 +416,7 @@ class ProjectileErraticSmallTargetScenario(TestScenario):
         expected_outcome="Low or zero damage due to erratic movement",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=6,
         tags=["accuracy", "projectile", "moving-target", "erratic", "small", "difficult"]
@@ -495,7 +502,7 @@ class ProjectileErraticLargeTargetScenario(TestScenario):
         expected_outcome="Potentially higher hit rate than small erratic target",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=5,
         tags=["accuracy", "projectile", "moving-target", "erratic", "large"]
@@ -583,8 +590,8 @@ class ProjectileOutOfRangeScenario(TestScenario):
         ],
         expected_outcome="No damage dealt (damage_dealt == 0)",
         pass_criteria="damage_dealt == 0",
-        max_ticks=500,
-        seed=42,
+        max_ticks=STANDARD_TEST_TICKS,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=9,
         tags=["range-limit", "out-of-range", "projectile"]
@@ -675,7 +682,7 @@ class ProjectileDamageCloseRangeScenario(TestScenario):
         expected_outcome="Damage dealt in multiples of 50 (full weapon damage)",
         pass_criteria="damage_dealt > 0 and (damage_dealt % 50 == 0 or damage_dealt > 0)",
         max_ticks=200,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=10,
         tags=["damage", "projectile", "close-range", "consistency"]
@@ -765,7 +772,7 @@ class ProjectileDamageMidRangeScenario(TestScenario):
         expected_outcome="Full damage (50) per hit at mid-range",
         pass_criteria="damage_dealt > 0",
         max_ticks=300,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=9,
         tags=["damage", "projectile", "mid-range", "consistency"]
@@ -856,7 +863,7 @@ class ProjectileDamageLongRangeScenario(TestScenario):
         expected_outcome="Full damage per hit at edge of range (simulation may complete)",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=400,
-        seed=42,
+        seed=STANDARD_SEED,
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=8,
         tags=["damage", "projectile", "long-range", "max-range", "consistency"]

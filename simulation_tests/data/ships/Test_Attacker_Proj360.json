@@ -1,47 +1,53 @@
 {
-    "name": "Test Attacker Proj360",
-    "color": [
-        255,
-        0,
-        0
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_last_modified": "2026-01-14T21:37:36.975467",
+    "_description": "Combat Lab test ship: Test_Attacker_Proj360"
+  },
+  "name": "Test Attacker Proj360",
+  "color": [
+    255,
+    0,
+    0
+  ],
+  "team_id": 1,
+  "ship_class": "TestS_2L",
+  "theme_id": "Federation",
+  "ai_strategy": "test_do_nothing",
+  "layers": {
+    "CORE": [
+      {
+        "id": "test_weapon_proj_omni"
+      }
     ],
-    "team_id": 1,
-    "ship_class": "TestS_2L",
-    "theme_id": "Federation",
-    "ai_strategy": "test_do_nothing",
-    "layers": {
-        "CORE": [
-            {
-                "id": "test_weapon_proj_omni"
-            }
-        ],
-        "ARMOR": []
-    },
-    "_test_notes": "Attacker with 360 degree projectile weapon (already no resource req)",
-    "expected_stats": {
-        "max_hp": 150,
-        "max_fuel": 0.0,
-        "max_energy": 0.0,
-        "max_ammo": 0.0,
-        "max_speed": 0,
-        "acceleration_rate": 0.0,
-        "turn_speed": 0.0,
-        "total_thrust": 0,
-        "mass": 30.0,
-        "armor_hp_pool": 0
-    },
-    "weapon_stats": {
-        "type": "Projectile360",
-        "component_id": "test_weapon_proj_omni",
-        "damage": 50,
-        "range": 1000,
-        "projectile_speed": 1500,
-        "reload_time": 1.0,
-        "firing_arc": 360
-    },
-    "resources": {
-        "fuel": 0.0,
-        "energy": 0.0,
-        "ammo": 0.0
-    }
+    "ARMOR": []
+  },
+  "_test_notes": "Attacker with 360 degree projectile weapon (already no resource req)",
+  "expected_stats": {
+    "max_hp": 150,
+    "max_fuel": 0.0,
+    "max_energy": 0.0,
+    "max_ammo": 0.0,
+    "max_speed": 0,
+    "acceleration_rate": 0.0,
+    "turn_speed": 0.0,
+    "total_thrust": 0,
+    "mass": 30.0,
+    "armor_hp_pool": 0
+  },
+  "weapon_stats": {
+    "type": "Projectile360",
+    "component_id": "test_weapon_proj_omni",
+    "damage": 50,
+    "range": 1000,
+    "projectile_speed": 1500,
+    "reload_time": 1.0,
+    "firing_arc": 360
+  },
+  "resources": {
+    "fuel": 0.0,
+    "energy": 0.0,
+    "ammo": 0.0
+  }
 }

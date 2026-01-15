@@ -1,755 +1,761 @@
 {
-    "components": [
-        {
-            "id": "test_bridge_basic",
-            "name": "Test Bridge (Basic)",
-            "type": "Bridge",
-            "mass": 10,
-            "hp": 50,
-            "allowed_vehicle_types": [
-                "Ship"
-            ],
-            "sprite_index": 3,
-            "abilities": {
-                "CommandAndControl": true
-            }
-        },
-        {
-            "id": "test_engine_no_fuel",
-            "name": "Test Engine (No Fuel)",
-            "type": "Engine",
-            "mass": 20,
-            "hp": 50,
-            "thrust_force": 500,
-            "sprite_index": 10,
-            "abilities": {
-                "CombatPropulsion": 500
-            }
-        },
-        {
-            "id": "test_engine_slow",
-            "name": "Test Engine (Slow)",
-            "type": "Engine",
-            "mass": 20,
-            "hp": 50,
-            "thrust_force": 50,
-            "sprite_index": 10,
-            "abilities": {
-                "CombatPropulsion": 50
-            }
-        },
-        {
-            "id": "test_engine_std",
-            "name": "Test Engine (Std)",
-            "type": "Engine",
-            "mass": 20,
-            "hp": 50,
-            "thrust_force": 500,
-            "sprite_index": 10,
-            "abilities": {
-                "CombatPropulsion": 500,
-                "ResourceConsumption": [
-                    {
-                        "resource": "fuel",
-                        "amount": 0.1,
-                        "trigger": "constant"
-                    }
-                ]
-            }
-        },
-        {
-            "id": "test_thruster_std",
-            "name": "Test Thruster (Std)",
-            "type": "Thruster",
-            "mass": 5,
-            "hp": 20,
-            "turn_speed": 5.0,
-            "sprite_index": 78,
-            "abilities": {
-                "ManeuveringThruster": 5.0
-            }
-        },
-        {
-            "id": "test_gen_fusion",
-            "name": "Test Generator (Fusion)",
-            "type": "Generator",
-            "mass": 20,
-            "hp": 100,
-            "sprite_index": 81,
-            "abilities": {
-                "EnergyGeneration": 100
-            }
-        },
-        {
-            "id": "test_storage_fuel",
-            "name": "Test Fuel Tank",
-            "type": "Tank",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 20,
-            "abilities": {
-                "FuelStorage": 1000
-            }
-        },
-        {
-            "id": "test_storage_ammo",
-            "name": "Test Ammo Mag",
-            "type": "Tank",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 19,
-            "abilities": {
-                "AmmoStorage": 1000
-            }
-        },
-        {
-            "id": "test_storage_energy",
-            "name": "Test Battery",
-            "type": "Tank",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 19,
-            "abilities": {
-                "EnergyStorage": 1000
-            }
-        },
-        {
-            "id": "test_armor_std",
-            "name": "Test Armor (Std)",
-            "type": "Armor",
-            "mass": 20,
-            "hp": 200,
-            "sprite_index": 14,
-            "abilities": {
-                "Armor": true
-            }
-        },
-        {
-            "id": "test_weapon_proj_omni",
-            "name": "Test Weapon (Proj, Omni)",
-            "type": "ProjectileWeaponAbility",
-            "mass": 10,
-            "hp": 50,
-            "sprite_index": 85,
-            "abilities": {
-                "ProjectileWeaponAbility": {
-                    "damage": 50,
-                    "range": 1000,
-                    "projectile_speed": 1500,
-                    "reload": 1.0,
-                    "firing_arc": 360
-                }
-            }
-        },
-        {
-            "id": "test_weapon_proj_fixed",
-            "name": "Test Weapon (Proj, Fixed)",
-            "type": "ProjectileWeaponAbility",
-            "mass": 10,
-            "hp": 50,
-            "sprite_index": 85,
-            "allowed_vehicle_types": [
-                "Ship",
-                "Satellite"
-            ],
-            "abilities": {
-                "ProjectileWeaponAbility": {
-                    "damage": 500,
-                    "range": 1000,
-                    "projectile_speed": 1500,
-                    "reload": 1.0,
-                    "firing_arc": 45
-                },
-                "ResourceConsumption": [
-                    {
-                        "resource": "ammo",
-                        "amount": 1,
-                        "trigger": "activation"
-                    }
-                ]
-            }
-        },
-        {
-            "id": "test_weapon_beam_std",
-            "name": "Test Weapon (Beam, Std)",
-            "type": "BeamWeaponAbility",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 87,
-            "allowed_vehicle_types": [
-                "Ship",
-                "Satellite"
-            ],
-            "abilities": {
-                "BeamWeaponAbility": {
-                    "damage": 5,
-                    "range": 800,
-                    "reload": 0.0,
-                    "firing_arc": 360,
-                    "base_accuracy": 2.0,
-                    "accuracy_falloff": 0.001
-                },
-                "ResourceConsumption": [
-                    {
-                        "resource": "energy",
-                        "amount": 10,
-                        "trigger": "activation"
-                    }
-                ]
-            }
-        },
-        {
-            "id": "test_weapon_beam_fixed",
-            "name": "Test Weapon (Beam, Fixed)",
-            "type": "BeamWeaponAbility",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 87,
-            "allowed_vehicle_types": [
-                "Ship",
-                "Satellite"
-            ],
-            "abilities": {
-                "BeamWeaponAbility": {
-                    "damage": 5,
-                    "range": 800,
-                    "reload": 0.0,
-                    "firing_arc": 45,
-                    "base_accuracy": 2.0,
-                    "accuracy_falloff": 0.001
-                },
-                "ResourceConsumption": [
-                    {
-                        "resource": "energy",
-                        "amount": 10,
-                        "trigger": "activation"
-                    }
-                ]
-            }
-        },
-        {
-            "id": "test_weapon_missile_omni",
-            "name": "Test Weapon (Missile, Std)",
-            "type": "SeekerWeaponAbility",
-            "mass": 20,
-            "hp": 20,
-            "sprite_index": 86,
-            "abilities": {
-                "SeekerWeaponAbility": {
-                    "damage": 100,
-                    "range": 3000,
-                    "projectile_speed": 1000,
-                    "turn_rate": 90,
-                    "endurance": 5.0,
-                    "reload": 5.0,
-                    "firing_arc": 360
-                },
-                "ResourceConsumption": [
-                    {
-                        "resource": "ammo",
-                        "amount": 5,
-                        "trigger": "activation"
-                    }
-                ]
-            }
-        },
-        {
-            "id": "test_weapon_pd_omni",
-            "name": "Test Weapon (PD, Std)",
-            "type": "BeamWeaponAbility",
-            "mass": 5,
-            "hp": 10,
-            "sprite_index": 151,
-            "abilities": {
-                "BeamWeaponAbility": {
-                    "damage": 2,
-                    "range": 500,
-                    "reload": 0.1,
-                    "firing_arc": 360,
-                    "base_accuracy": 10.0,
-                    "accuracy_falloff": 0.01,
-                    "tags": [
-                        "pdc"
-                    ]
-                },
-                "ResourceConsumption": [
-                    {
-                        "resource": "energy",
-                        "amount": 1,
-                        "trigger": "activation"
-                    }
-                ]
-            }
-        },
-        {
-            "id": "test_shield_std",
-            "name": "Test Shield (Std)",
-            "type": "Shield",
-            "mass": 20,
-            "hp": 50,
-            "sprite_index": 16,
-            "abilities": {
-                "ShieldProjection": 200
-            }
-        },
-        {
-            "id": "test_shield_regen",
-            "name": "Test Shield (Regen)",
-            "type": "ShieldRegenerator",
-            "mass": 20,
-            "hp": 50,
-            "sprite_index": 18,
-            "abilities": {
-                "ShieldRegeneration": 5.0,
-                "EnergyConsumption": 5.0
-            }
-        },
-        {
-            "id": "test_sensor_std",
-            "name": "Test Sensor (Std)",
-            "type": "Sensor",
-            "mass": 10,
-            "hp": 20,
-            "sprite_index": 25,
-            "abilities": {
-                "ToHitAttackModifier": {
-                    "value": 0.5,
-                    "stack_group": "Sensor"
-                }
-            }
-        },
-        {
-            "id": "test_ecm_std",
-            "name": "Test ECM (Std)",
-            "type": "Electronics",
-            "mass": 10,
-            "hp": 20,
-            "sprite_index": 26,
-            "abilities": {
-                "ToHitDefenseModifier": {
-                    "value": 0.5,
-                    "stack_group": "ECM"
-                }
-            }
-        },
-        {
-            "id": "test_cockpit_fighter",
-            "name": "Test Fighter Cockpit",
-            "type": "Bridge",
-            "mass": 2,
-            "hp": 2,
-            "allowed_vehicle_types": [
-                "Fighter"
-            ],
-            "sprite_index": 53,
-            "abilities": {
-                "CommandAndControl": true,
-                "LifeSupportCapacity": 1,
-                "CrewCapacity": 1
-            }
-        },
-        {
-            "id": "test_core_satellite",
-            "name": "Test Satellite Core",
-            "type": "Bridge",
-            "mass": 10,
-            "hp": 50,
-            "allowed_vehicle_types": [
-                "Satellite"
-            ],
-            "sprite_index": 9,
-            "abilities": {
-                "CommandAndControl": true
-            }
-        },
-        {
-            "id": "test_crew_quarters",
-            "name": "Test Crew Quarters",
-            "type": "CrewQuarters",
-            "mass": 30,
-            "hp": 60,
-            "sprite_index": 5,
-            "abilities": {
-                "CrewCapacity": 10
-            }
-        },
-        {
-            "id": "test_life_support",
-            "name": "Test Life Support",
-            "type": "LifeSupport",
-            "mass": 20,
-            "hp": 40,
-            "sprite_index": 4,
-            "abilities": {
-                "LifeSupportCapacity": 25
-            }
-        },
-        {
-            "_comment": "=== MASS SIMULATORS (Ballast for testing thrust/mass relationships) ===",
-            "id": "test_mass_sim_1k",
-            "name": "Mass Simulator (1,000t)",
-            "type": "Ballast",
-            "mass": 1000,
-            "hp": 1,
-            "sprite_index": 0,
-            "abilities": {}
-        },
-        {
-            "id": "test_mass_sim_10k",
-            "name": "Mass Simulator (10,000t)",
-            "type": "Ballast",
-            "mass": 10000,
-            "hp": 1,
-            "sprite_index": 0,
-            "abilities": {}
-        },
-        {
-            "id": "test_mass_sim_100k",
-            "name": "Mass Simulator (100,000t)",
-            "type": "Ballast",
-            "mass": 100000,
-            "hp": 1,
-            "sprite_index": 0,
-            "abilities": {}
-        },
-        {
-            "_comment": "=== BEAM WEAPON ACCURACY VARIANTS ===",
-            "id": "test_beam_low_acc",
-            "name": "Test Beam (Low Accuracy)",
-            "type": "BeamWeaponAbility",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 87,
-            "abilities": {
-                "BeamWeaponAbility": {
-                    "damage": 5,
-                    "range": 800,
-                    "reload": 0.0,
-                    "firing_arc": 360,
-                    "base_accuracy": 0.5,
-                    "accuracy_falloff": 0.002
-                },
-                "ResourceConsumption": [
-                    {
-                        "resource": "energy",
-                        "amount": 10,
-                        "trigger": "activation"
-                    }
-                ]
-            }
-        },
-        {
-            "id": "test_beam_med_acc",
-            "name": "Test Beam (Medium Accuracy)",
-            "type": "BeamWeaponAbility",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 87,
-            "abilities": {
-                "BeamWeaponAbility": {
-                    "damage": 5,
-                    "range": 800,
-                    "reload": 0.0,
-                    "firing_arc": 360,
-                    "base_accuracy": 2.0,
-                    "accuracy_falloff": 0.001
-                },
-                "ResourceConsumption": [
-                    {
-                        "resource": "energy",
-                        "amount": 10,
-                        "trigger": "activation"
-                    }
-                ]
-            }
-        },
-        {
-            "id": "test_beam_high_acc",
-            "name": "Test Beam (High Accuracy)",
-            "type": "BeamWeaponAbility",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 87,
-            "abilities": {
-                "BeamWeaponAbility": {
-                    "damage": 5,
-                    "range": 800,
-                    "reload": 0.0,
-                    "firing_arc": 360,
-                    "base_accuracy": 5.0,
-                    "accuracy_falloff": 0.0005
-                },
-                "ResourceConsumption": [
-                    {
-                        "resource": "energy",
-                        "amount": 10,
-                        "trigger": "activation"
-                    }
-                ]
-            }
-        },
-        {
-            "_comment": "=== TEST HULLS (Phase 6 Migration) ===",
-            "id": "hull_test_s",
-            "name": "Test Hull (Small)",
-            "type": "Hull",
-            "mass": 20,
-            "hp": 100,
-            "major_classification": "Hull",
-            "sprite_index": 0,
-            "abilities": {
-                "HullMass": 20
-            }
-        },
-        {
-            "id": "hull_test_m",
-            "name": "Test Hull (Medium)",
-            "type": "Hull",
-            "mass": 200,
-            "hp": 500,
-            "major_classification": "Hull",
-            "sprite_index": 0,
-            "abilities": {
-                "HullMass": 200
-            }
-        },
-        {
-            "id": "hull_test_l",
-            "name": "Test Hull (Large)",
-            "type": "Hull",
-            "mass": 2000,
-            "hp": 2000,
-            "major_classification": "Hull",
-            "sprite_index": 0,
-            "abilities": {
-                "HullMass": 2000
-            }
-        },
-        {
-            "id": "hull_test_fighter",
-            "name": "Test Hull (Fighter)",
-            "type": "Hull",
-            "mass": 5,
-            "hp": 25,
-            "major_classification": "Hull",
-            "allowed_vehicle_types": [
-                "Fighter"
-            ],
-            "sprite_index": 0,
-            "abilities": {
-                "HullMass": 5
-            }
-        },
-        {
-            "id": "hull_test_satellite",
-            "name": "Test Hull (Satellite)",
-            "type": "Hull",
-            "mass": 50,
-            "hp": 100,
-            "major_classification": "Hull",
-            "allowed_vehicle_types": [
-                "Satellite"
-            ],
-            "sprite_index": 0,
-            "abilities": {
-                "HullMass": 50
-            }
-        },
-        {
-            "_comment": "=== RESOURCE-FREE WEAPON VARIANTS ===",
-            "id": "test_beam_low_acc_no_resource",
-            "name": "Test Beam (Low Accuracy, No Resource)",
-            "type": "BeamWeaponAbility",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 87,
-            "abilities": {
-                "BeamWeaponAbility": {
-                    "damage": 5,
-                    "range": 800,
-                    "reload": 0.0,
-                    "firing_arc": 360,
-                    "base_accuracy": 0.5,
-                    "accuracy_falloff": 0.002
-                }
-            }
-        },
-        {
-            "id": "test_beam_med_acc_no_resource",
-            "name": "Test Beam (Medium Accuracy, No Resource)",
-            "type": "BeamWeaponAbility",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 87,
-            "abilities": {
-                "BeamWeaponAbility": {
-                    "damage": 5,
-                    "range": 800,
-                    "reload": 0.0,
-                    "firing_arc": 360,
-                    "base_accuracy": 2.0,
-                    "accuracy_falloff": 0.001
-                }
-            }
-        },
-        {
-            "id": "test_beam_high_acc_no_resource",
-            "name": "Test Beam (High Accuracy, No Resource)",
-            "type": "BeamWeaponAbility",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 87,
-            "abilities": {
-                "BeamWeaponAbility": {
-                    "damage": 5,
-                    "range": 800,
-                    "reload": 0.0,
-                    "firing_arc": 360,
-                    "base_accuracy": 5.0,
-                    "accuracy_falloff": 0.0005
-                }
-            }
-        },
-        {
-            "id": "test_seeker_no_resource",
-            "name": "Test Seeker (No Resource)",
-            "type": "SeekerWeaponAbility",
-            "mass": 20,
-            "hp": 20,
-            "sprite_index": 86,
-            "abilities": {
-                "SeekerWeaponAbility": {
-                    "damage": 100,
-                    "range": 3000,
-                    "projectile_speed": 1000,
-                    "turn_rate": 90,
-                    "endurance": 5.0,
-                    "reload": 5.0,
-                    "firing_arc": 360
-                }
-            }
-        },
-        {
-            "_comment": "=== SMALL STORAGE FOR DEPLETION TESTS ===",
-            "id": "test_storage_energy_small",
-            "name": "Test Battery (Small)",
-            "type": "Tank",
-            "mass": 1,
-            "hp": 5,
-            "sprite_index": 19,
-            "abilities": {
-                "EnergyStorage": 25
-            }
-        },
-        {
-            "id": "test_storage_ammo_small",
-            "name": "Test Ammo Mag (Small)",
-            "type": "Tank",
-            "mass": 1,
-            "hp": 5,
-            "sprite_index": 19,
-            "abilities": {
-                "AmmoStorage": 10
-            }
-        },
-        {
-            "_comment": "=== ACCURACY TEST COMPONENTS ===",
-            "id": "test_armor_ultra_high_hp",
-            "name": "Test Armor (Ultra High HP)",
-            "type": "Armor",
-            "mass": 200,
-            "hp": 10000,
-            "sprite_index": 14,
-            "abilities": {
-                "Armor": true
-            }
-        },
-        {
-            "id": "test_armor_extreme_hp",
-            "name": "Test Armor (Extreme HP - 1 Billion)",
-            "type": "Armor",
-            "mass": 200,
-            "hp": 1000000000,
-            "sprite_index": 14,
-            "abilities": {
-                "Armor": true
-            }
-        },
-        {
-            "id": "test_armor_extreme_hp_heavy",
-            "name": "Test Armor (Extreme HP Heavy - 1 Billion, Mass 400)",
-            "type": "Armor",
-            "mass": 400,
-            "hp": 1000000000,
-            "sprite_index": 14,
-            "abilities": {
-                "Armor": true
-            }
-        },
-        {
-            "id": "test_armor_small_extreme_hp",
-            "name": "Test Armor (Small, Extreme HP - 1 Billion)",
-            "type": "Armor",
-            "mass": 20,
-            "hp": 1000000000,
-            "sprite_index": 14,
-            "abilities": {
-                "Armor": true
-            }
-        },
-        {
-            "id": "test_beam_low_acc_1dmg",
-            "name": "Test Beam (Low Accuracy, 1 Damage)",
-            "type": "BeamWeaponAbility",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 87,
-            "abilities": {
-                "BeamWeaponAbility": {
-                    "damage": 1,
-                    "range": 800,
-                    "reload": 0.0,
-                    "firing_arc": 360,
-                    "base_accuracy": 0.5,
-                    "accuracy_falloff": 0.002
-                }
-            }
-        },
-        {
-            "id": "test_beam_med_acc_1dmg",
-            "name": "Test Beam (Medium Accuracy, 1 Damage)",
-            "type": "BeamWeaponAbility",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 87,
-            "abilities": {
-                "BeamWeaponAbility": {
-                    "damage": 1,
-                    "range": 800,
-                    "reload": 0.0,
-                    "firing_arc": 360,
-                    "base_accuracy": 2.0,
-                    "accuracy_falloff": 0.001
-                }
-            }
-        },
-        {
-            "id": "test_beam_high_acc_1dmg",
-            "name": "Test Beam (High Accuracy, 1 Damage)",
-            "type": "BeamWeaponAbility",
-            "mass": 5,
-            "hp": 20,
-            "sprite_index": 87,
-            "abilities": {
-                "BeamWeaponAbility": {
-                    "damage": 1,
-                    "range": 800,
-                    "reload": 0.0,
-                    "firing_arc": 360,
-                    "base_accuracy": 5.0,
-                    "accuracy_falloff": 0.0005
-                }
-            }
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_last_modified": "2026-01-14T21:37:36.975467",
+    "_description": "Combat Lab test component library"
+  },
+  "components": [
+    {
+      "id": "test_bridge_basic",
+      "name": "Test Bridge (Basic)",
+      "type": "Bridge",
+      "mass": 10,
+      "hp": 50,
+      "allowed_vehicle_types": [
+        "Ship"
+      ],
+      "sprite_index": 3,
+      "abilities": {
+        "CommandAndControl": true
+      }
+    },
+    {
+      "id": "test_engine_no_fuel",
+      "name": "Test Engine (No Fuel)",
+      "type": "Engine",
+      "mass": 20,
+      "hp": 50,
+      "thrust_force": 500,
+      "sprite_index": 10,
+      "abilities": {
+        "CombatPropulsion": 500
+      }
+    },
+    {
+      "id": "test_engine_slow",
+      "name": "Test Engine (Slow)",
+      "type": "Engine",
+      "mass": 20,
+      "hp": 50,
+      "thrust_force": 50,
+      "sprite_index": 10,
+      "abilities": {
+        "CombatPropulsion": 50
+      }
+    },
+    {
+      "id": "test_engine_std",
+      "name": "Test Engine (Std)",
+      "type": "Engine",
+      "mass": 20,
+      "hp": 50,
+      "thrust_force": 500,
+      "sprite_index": 10,
+      "abilities": {
+        "CombatPropulsion": 500,
+        "ResourceConsumption": [
+          {
+            "resource": "fuel",
+            "amount": 0.1,
+            "trigger": "constant"
+          }
+        ]
+      }
+    },
+    {
+      "id": "test_thruster_std",
+      "name": "Test Thruster (Std)",
+      "type": "Thruster",
+      "mass": 5,
+      "hp": 20,
+      "turn_speed": 5.0,
+      "sprite_index": 78,
+      "abilities": {
+        "ManeuveringThruster": 5.0
+      }
+    },
+    {
+      "id": "test_gen_fusion",
+      "name": "Test Generator (Fusion)",
+      "type": "Generator",
+      "mass": 20,
+      "hp": 100,
+      "sprite_index": 81,
+      "abilities": {
+        "EnergyGeneration": 100
+      }
+    },
+    {
+      "id": "test_storage_fuel",
+      "name": "Test Fuel Tank",
+      "type": "Tank",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 20,
+      "abilities": {
+        "FuelStorage": 1000
+      }
+    },
+    {
+      "id": "test_storage_ammo",
+      "name": "Test Ammo Mag",
+      "type": "Tank",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 19,
+      "abilities": {
+        "AmmoStorage": 1000
+      }
+    },
+    {
+      "id": "test_storage_energy",
+      "name": "Test Battery",
+      "type": "Tank",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 19,
+      "abilities": {
+        "EnergyStorage": 1000
+      }
+    },
+    {
+      "id": "test_armor_std",
+      "name": "Test Armor (Std)",
+      "type": "Armor",
+      "mass": 20,
+      "hp": 200,
+      "sprite_index": 14,
+      "abilities": {
+        "Armor": true
+      }
+    },
+    {
+      "id": "test_weapon_proj_omni",
+      "name": "Test Weapon (Proj, Omni)",
+      "type": "ProjectileWeaponAbility",
+      "mass": 10,
+      "hp": 50,
+      "sprite_index": 85,
+      "abilities": {
+        "ProjectileWeaponAbility": {
+          "damage": 50,
+          "range": 1000,
+          "projectile_speed": 1500,
+          "reload": 1.0,
+          "firing_arc": 360
         }
-    ]
+      }
+    },
+    {
+      "id": "test_weapon_proj_fixed",
+      "name": "Test Weapon (Proj, Fixed)",
+      "type": "ProjectileWeaponAbility",
+      "mass": 10,
+      "hp": 50,
+      "sprite_index": 85,
+      "allowed_vehicle_types": [
+        "Ship",
+        "Satellite"
+      ],
+      "abilities": {
+        "ProjectileWeaponAbility": {
+          "damage": 500,
+          "range": 1000,
+          "projectile_speed": 1500,
+          "reload": 1.0,
+          "firing_arc": 45
+        },
+        "ResourceConsumption": [
+          {
+            "resource": "ammo",
+            "amount": 1,
+            "trigger": "activation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "test_weapon_beam_std",
+      "name": "Test Weapon (Beam, Std)",
+      "type": "BeamWeaponAbility",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 87,
+      "allowed_vehicle_types": [
+        "Ship",
+        "Satellite"
+      ],
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 5,
+          "range": 800,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 2.0,
+          "accuracy_falloff": 0.001
+        },
+        "ResourceConsumption": [
+          {
+            "resource": "energy",
+            "amount": 10,
+            "trigger": "activation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "test_weapon_beam_fixed",
+      "name": "Test Weapon (Beam, Fixed)",
+      "type": "BeamWeaponAbility",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 87,
+      "allowed_vehicle_types": [
+        "Ship",
+        "Satellite"
+      ],
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 5,
+          "range": 800,
+          "reload": 0.0,
+          "firing_arc": 45,
+          "base_accuracy": 2.0,
+          "accuracy_falloff": 0.001
+        },
+        "ResourceConsumption": [
+          {
+            "resource": "energy",
+            "amount": 10,
+            "trigger": "activation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "test_weapon_missile_omni",
+      "name": "Test Weapon (Missile, Std)",
+      "type": "SeekerWeaponAbility",
+      "mass": 20,
+      "hp": 20,
+      "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 100,
+          "range": 3000,
+          "projectile_speed": 1000,
+          "turn_rate": 90,
+          "endurance": 5.0,
+          "reload": 5.0,
+          "firing_arc": 360
+        },
+        "ResourceConsumption": [
+          {
+            "resource": "ammo",
+            "amount": 5,
+            "trigger": "activation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "test_weapon_pd_omni",
+      "name": "Test Weapon (PD, Std)",
+      "type": "BeamWeaponAbility",
+      "mass": 5,
+      "hp": 10,
+      "sprite_index": 151,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 2,
+          "range": 500,
+          "reload": 0.1,
+          "firing_arc": 360,
+          "base_accuracy": 10.0,
+          "accuracy_falloff": 0.01,
+          "tags": [
+            "pdc"
+          ]
+        },
+        "ResourceConsumption": [
+          {
+            "resource": "energy",
+            "amount": 1,
+            "trigger": "activation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "test_shield_std",
+      "name": "Test Shield (Std)",
+      "type": "Shield",
+      "mass": 20,
+      "hp": 50,
+      "sprite_index": 16,
+      "abilities": {
+        "ShieldProjection": 200
+      }
+    },
+    {
+      "id": "test_shield_regen",
+      "name": "Test Shield (Regen)",
+      "type": "ShieldRegenerator",
+      "mass": 20,
+      "hp": 50,
+      "sprite_index": 18,
+      "abilities": {
+        "ShieldRegeneration": 5.0,
+        "EnergyConsumption": 5.0
+      }
+    },
+    {
+      "id": "test_sensor_std",
+      "name": "Test Sensor (Std)",
+      "type": "Sensor",
+      "mass": 10,
+      "hp": 20,
+      "sprite_index": 25,
+      "abilities": {
+        "ToHitAttackModifier": {
+          "value": 0.5,
+          "stack_group": "Sensor"
+        }
+      }
+    },
+    {
+      "id": "test_ecm_std",
+      "name": "Test ECM (Std)",
+      "type": "Electronics",
+      "mass": 10,
+      "hp": 20,
+      "sprite_index": 26,
+      "abilities": {
+        "ToHitDefenseModifier": {
+          "value": 0.5,
+          "stack_group": "ECM"
+        }
+      }
+    },
+    {
+      "id": "test_cockpit_fighter",
+      "name": "Test Fighter Cockpit",
+      "type": "Bridge",
+      "mass": 2,
+      "hp": 2,
+      "allowed_vehicle_types": [
+        "Fighter"
+      ],
+      "sprite_index": 53,
+      "abilities": {
+        "CommandAndControl": true,
+        "LifeSupportCapacity": 1,
+        "CrewCapacity": 1
+      }
+    },
+    {
+      "id": "test_core_satellite",
+      "name": "Test Satellite Core",
+      "type": "Bridge",
+      "mass": 10,
+      "hp": 50,
+      "allowed_vehicle_types": [
+        "Satellite"
+      ],
+      "sprite_index": 9,
+      "abilities": {
+        "CommandAndControl": true
+      }
+    },
+    {
+      "id": "test_crew_quarters",
+      "name": "Test Crew Quarters",
+      "type": "CrewQuarters",
+      "mass": 30,
+      "hp": 60,
+      "sprite_index": 5,
+      "abilities": {
+        "CrewCapacity": 10
+      }
+    },
+    {
+      "id": "test_life_support",
+      "name": "Test Life Support",
+      "type": "LifeSupport",
+      "mass": 20,
+      "hp": 40,
+      "sprite_index": 4,
+      "abilities": {
+        "LifeSupportCapacity": 25
+      }
+    },
+    {
+      "_comment": "=== MASS SIMULATORS (Ballast for testing thrust/mass relationships) ===",
+      "id": "test_mass_sim_1k",
+      "name": "Mass Simulator (1,000t)",
+      "type": "Ballast",
+      "mass": 1000,
+      "hp": 1,
+      "sprite_index": 0,
+      "abilities": {}
+    },
+    {
+      "id": "test_mass_sim_10k",
+      "name": "Mass Simulator (10,000t)",
+      "type": "Ballast",
+      "mass": 10000,
+      "hp": 1,
+      "sprite_index": 0,
+      "abilities": {}
+    },
+    {
+      "id": "test_mass_sim_100k",
+      "name": "Mass Simulator (100,000t)",
+      "type": "Ballast",
+      "mass": 100000,
+      "hp": 1,
+      "sprite_index": 0,
+      "abilities": {}
+    },
+    {
+      "_comment": "=== BEAM WEAPON ACCURACY VARIANTS ===",
+      "id": "test_beam_low_acc",
+      "name": "Test Beam (Low Accuracy)",
+      "type": "BeamWeaponAbility",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 5,
+          "range": 800,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 0.5,
+          "accuracy_falloff": 0.002
+        },
+        "ResourceConsumption": [
+          {
+            "resource": "energy",
+            "amount": 10,
+            "trigger": "activation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "test_beam_med_acc",
+      "name": "Test Beam (Medium Accuracy)",
+      "type": "BeamWeaponAbility",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 5,
+          "range": 800,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 2.0,
+          "accuracy_falloff": 0.001
+        },
+        "ResourceConsumption": [
+          {
+            "resource": "energy",
+            "amount": 10,
+            "trigger": "activation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "test_beam_high_acc",
+      "name": "Test Beam (High Accuracy)",
+      "type": "BeamWeaponAbility",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 5,
+          "range": 800,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 5.0,
+          "accuracy_falloff": 0.0005
+        },
+        "ResourceConsumption": [
+          {
+            "resource": "energy",
+            "amount": 10,
+            "trigger": "activation"
+          }
+        ]
+      }
+    },
+    {
+      "_comment": "=== TEST HULLS (Phase 6 Migration) ===",
+      "id": "hull_test_s",
+      "name": "Test Hull (Small)",
+      "type": "Hull",
+      "mass": 20,
+      "hp": 100,
+      "major_classification": "Hull",
+      "sprite_index": 0,
+      "abilities": {
+        "HullMass": 20
+      }
+    },
+    {
+      "id": "hull_test_m",
+      "name": "Test Hull (Medium)",
+      "type": "Hull",
+      "mass": 200,
+      "hp": 500,
+      "major_classification": "Hull",
+      "sprite_index": 0,
+      "abilities": {
+        "HullMass": 200
+      }
+    },
+    {
+      "id": "hull_test_l",
+      "name": "Test Hull (Large)",
+      "type": "Hull",
+      "mass": 2000,
+      "hp": 2000,
+      "major_classification": "Hull",
+      "sprite_index": 0,
+      "abilities": {
+        "HullMass": 2000
+      }
+    },
+    {
+      "id": "hull_test_fighter",
+      "name": "Test Hull (Fighter)",
+      "type": "Hull",
+      "mass": 5,
+      "hp": 25,
+      "major_classification": "Hull",
+      "allowed_vehicle_types": [
+        "Fighter"
+      ],
+      "sprite_index": 0,
+      "abilities": {
+        "HullMass": 5
+      }
+    },
+    {
+      "id": "hull_test_satellite",
+      "name": "Test Hull (Satellite)",
+      "type": "Hull",
+      "mass": 50,
+      "hp": 100,
+      "major_classification": "Hull",
+      "allowed_vehicle_types": [
+        "Satellite"
+      ],
+      "sprite_index": 0,
+      "abilities": {
+        "HullMass": 50
+      }
+    },
+    {
+      "_comment": "=== RESOURCE-FREE WEAPON VARIANTS ===",
+      "id": "test_beam_low_acc_no_resource",
+      "name": "Test Beam (Low Accuracy, No Resource)",
+      "type": "BeamWeaponAbility",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 5,
+          "range": 800,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 0.5,
+          "accuracy_falloff": 0.002
+        }
+      }
+    },
+    {
+      "id": "test_beam_med_acc_no_resource",
+      "name": "Test Beam (Medium Accuracy, No Resource)",
+      "type": "BeamWeaponAbility",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 5,
+          "range": 800,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 2.0,
+          "accuracy_falloff": 0.001
+        }
+      }
+    },
+    {
+      "id": "test_beam_high_acc_no_resource",
+      "name": "Test Beam (High Accuracy, No Resource)",
+      "type": "BeamWeaponAbility",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 5,
+          "range": 800,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 5.0,
+          "accuracy_falloff": 0.0005
+        }
+      }
+    },
+    {
+      "id": "test_seeker_no_resource",
+      "name": "Test Seeker (No Resource)",
+      "type": "SeekerWeaponAbility",
+      "mass": 20,
+      "hp": 20,
+      "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 100,
+          "range": 3000,
+          "projectile_speed": 1000,
+          "turn_rate": 90,
+          "endurance": 5.0,
+          "reload": 5.0,
+          "firing_arc": 360
+        }
+      }
+    },
+    {
+      "_comment": "=== SMALL STORAGE FOR DEPLETION TESTS ===",
+      "id": "test_storage_energy_small",
+      "name": "Test Battery (Small)",
+      "type": "Tank",
+      "mass": 1,
+      "hp": 5,
+      "sprite_index": 19,
+      "abilities": {
+        "EnergyStorage": 25
+      }
+    },
+    {
+      "id": "test_storage_ammo_small",
+      "name": "Test Ammo Mag (Small)",
+      "type": "Tank",
+      "mass": 1,
+      "hp": 5,
+      "sprite_index": 19,
+      "abilities": {
+        "AmmoStorage": 10
+      }
+    },
+    {
+      "_comment": "=== ACCURACY TEST COMPONENTS ===",
+      "id": "test_armor_ultra_high_hp",
+      "name": "Test Armor (Ultra High HP)",
+      "type": "Armor",
+      "mass": 200,
+      "hp": 10000,
+      "sprite_index": 14,
+      "abilities": {
+        "Armor": true
+      }
+    },
+    {
+      "id": "test_armor_extreme_hp",
+      "name": "Test Armor (Extreme HP - 1 Billion)",
+      "type": "Armor",
+      "mass": 200,
+      "hp": 1000000000,
+      "sprite_index": 14,
+      "abilities": {
+        "Armor": true
+      }
+    },
+    {
+      "id": "test_armor_extreme_hp_heavy",
+      "name": "Test Armor (Extreme HP Heavy - 1 Billion, Mass 400)",
+      "type": "Armor",
+      "mass": 400,
+      "hp": 1000000000,
+      "sprite_index": 14,
+      "abilities": {
+        "Armor": true
+      }
+    },
+    {
+      "id": "test_armor_small_extreme_hp",
+      "name": "Test Armor (Small, Extreme HP - 1 Billion)",
+      "type": "Armor",
+      "mass": 20,
+      "hp": 1000000000,
+      "sprite_index": 14,
+      "abilities": {
+        "Armor": true
+      }
+    },
+    {
+      "id": "test_beam_low_acc_1dmg",
+      "name": "Test Beam (Low Accuracy, 1 Damage)",
+      "type": "BeamWeaponAbility",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 1,
+          "range": 800,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 0.5,
+          "accuracy_falloff": 0.002
+        }
+      }
+    },
+    {
+      "id": "test_beam_med_acc_1dmg",
+      "name": "Test Beam (Medium Accuracy, 1 Damage)",
+      "type": "BeamWeaponAbility",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 1,
+          "range": 800,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 2.0,
+          "accuracy_falloff": 0.001
+        }
+      }
+    },
+    {
+      "id": "test_beam_high_acc_1dmg",
+      "name": "Test Beam (High Accuracy, 1 Damage)",
+      "type": "BeamWeaponAbility",
+      "mass": 5,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 1,
+          "range": 800,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 5.0,
+          "accuracy_falloff": 0.0005
+        }
+      }
+    }
+  ]
 }
