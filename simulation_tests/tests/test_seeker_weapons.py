@@ -17,6 +17,7 @@ Test Coverage:
 """
 import pytest
 from test_framework.runner import TestRunner
+from simulation_tests.logging_config import get_logger
 from simulation_tests.scenarios.seeker_scenarios import (
     SeekerCloseRangeImpactScenario,
     SeekerMidRangeImpactScenario,
@@ -30,6 +31,8 @@ from simulation_tests.scenarios.seeker_scenarios import (
     SeekerPointDefenseSingleScenario,
     SeekerPointDefenseTripleScenario,
 )
+
+logger = get_logger(__name__)
 
 
 @pytest.mark.simulation
@@ -53,16 +56,39 @@ class TestSeekerWeaponsLifetime:
             headless=True
         )
 
+        # Print detailed configuration
+        logger.info(f"\n{'='*70}")
+        logger.info(f"SEEK360-001: Seeker Impact at Close Range")
+        logger.info(f"{'='*70}")
+        logger.info(f"\nWeapon Configuration:")
+        logger.info(f"  Type: {scenario.results.get('weapon_type', 'Seeker360')}")
+        logger.info(f"  Damage: {scenario.results.get('missile_damage', 100)} per missile")
+        logger.info(f"  Missile Speed: {scenario.results.get('missile_speed', 1000)} px/s")
+        logger.info(f"  Turn Rate: {scenario.results.get('missile_turn_rate', 90)}°/s")
+        logger.info(f"  Endurance: {scenario.results.get('missile_endurance', 5.0)}s (5000px max)")
+        logger.info(f"  Reload Time: 5.0s (500 ticks)")
+        logger.info(f"\nTest Configuration:")
+        logger.info(f"  Attacker: Test_Attacker_Seeker360")
+        logger.info(f"  Target: Test_Target_Stationary")
+        logger.info(f"  Distance: 500 px (close range)")
+        logger.info(f"  Expected Travel Time: ~{scenario.results.get('expected_travel_time_ticks', 50)} ticks (~0.5s)")
+        logger.info(f"  Test Duration: 600 ticks (6 seconds)")
+        logger.info(f"\nExpected Outcome:")
+        logger.info(f"  Missiles should track and hit target")
+        logger.info(f"  Travel distance << endurance limit (500px vs 5000px)")
+        logger.info(f"  Expected Damage: ≥100 (1+ missile hits)")
+        logger.info(f"\nActual Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Ticks Run: {scenario.results['ticks_run']}")
+        logger.info(f"  Target HP: {scenario.results.get('initial_hp', 0)} → {scenario.results.get('final_hp', 0)}")
+        logger.info(f"  Target Alive: {scenario.results['target_alive']}")
+        logger.info(f"  Missiles Remaining: {scenario.results.get('projectiles_remaining', 0)}")
+        logger.info(f"{'='*70}\n")
+
         assert scenario.passed, \
             f"SEEK360-001 failed: {scenario.results.get('failure_reason', 'Unknown')}"
         assert scenario.results['damage_dealt'] >= 100, \
             f"Expected at least 100 damage from missile, got {scenario.results['damage_dealt']}"
-
-        # Print results for debugging
-        print(f"\nSEEK360-001 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
-        print(f"  Target Alive: {scenario.results['target_alive']}")
 
     def test_SEEK360_002_mid_range_impact(self):
         """
@@ -82,9 +108,9 @@ class TestSeekerWeaponsLifetime:
             "Seeker should impact target at mid range within endurance"
 
         # Print results for debugging
-        print(f"\nSEEK360-002 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nSEEK360-002 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
 
     def test_SEEK360_003_beyond_range_expire(self):
         """
@@ -103,9 +129,9 @@ class TestSeekerWeaponsLifetime:
         assert scenario.results['ticks_run'] > 0, "Simulation should complete"
 
         # Print results for debugging
-        print(f"\nSEEK360-003 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nSEEK360-003 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
 
     def test_SEEK360_004_edge_case_range(self):
         """
@@ -123,9 +149,9 @@ class TestSeekerWeaponsLifetime:
         assert scenario.results['ticks_run'] > 0, "Simulation should complete"
 
         # Print results for debugging
-        print(f"\nSEEK360-004 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nSEEK360-004 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
 
 
 @pytest.mark.simulation
@@ -154,9 +180,9 @@ class TestSeekerWeaponsTracking:
             "Seeker should hit stationary target with direct flight"
 
         # Print results for debugging
-        print(f"\nSEEK360-TRACK-001 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nSEEK360-TRACK-001 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
 
     def test_SEEK360_TRACK_002_linear_target(self):
         """
@@ -174,9 +200,9 @@ class TestSeekerWeaponsTracking:
         assert scenario.results['ticks_run'] > 0, "Simulation should complete"
 
         # Print results for debugging
-        print(f"\nSEEK360-TRACK-002 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nSEEK360-TRACK-002 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
 
     def test_SEEK360_TRACK_003_orbiting_target(self):
         """
@@ -194,9 +220,9 @@ class TestSeekerWeaponsTracking:
         assert scenario.results['ticks_run'] > 0, "Simulation should complete"
 
         # Print results for debugging
-        print(f"\nSEEK360-TRACK-003 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nSEEK360-TRACK-003 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
 
     def test_SEEK360_TRACK_004_erratic_target(self):
         """
@@ -214,9 +240,9 @@ class TestSeekerWeaponsTracking:
         assert scenario.results['ticks_run'] > 0, "Simulation should complete"
 
         # Print results for debugging
-        print(f"\nSEEK360-TRACK-004 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nSEEK360-TRACK-004 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
 
 
 
@@ -249,7 +275,7 @@ class TestSeekerPointDefense:
         assert 'skipped' in scenario.results, \
             "Test should be marked as skipped until PD ships are implemented"
 
-        print(f"\nSEEK360-PD-001: Skipped - {scenario.results.get('skip_reason', 'Unknown')}")
+        logger.info(f"\nSEEK360-PD-001: Skipped - {scenario.results.get('skip_reason', 'Unknown')}")
 
     def test_SEEK360_PD_002_single_pd(self):
         """
@@ -266,7 +292,7 @@ class TestSeekerPointDefense:
         assert 'skipped' in scenario.results, \
             "Test should be marked as skipped until PD ships are implemented"
 
-        print(f"\nSEEK360-PD-002: Skipped - {scenario.results.get('skip_reason', 'Unknown')}")
+        logger.info(f"\nSEEK360-PD-002: Skipped - {scenario.results.get('skip_reason', 'Unknown')}")
 
     def test_SEEK360_PD_003_triple_pd(self):
         """
@@ -283,7 +309,7 @@ class TestSeekerPointDefense:
         assert 'skipped' in scenario.results, \
             "Test should be marked as skipped until PD ships are implemented"
 
-        print(f"\nSEEK360-PD-003: Skipped - {scenario.results.get('skip_reason', 'Unknown')}")
+        logger.info(f"\nSEEK360-PD-003: Skipped - {scenario.results.get('skip_reason', 'Unknown')}")
 
 
 if __name__ == '__main__':

@@ -9,6 +9,9 @@ from ui.components import Button
 from test_framework.runner import TestRunner
 from test_framework.registry import TestRegistry
 from test_framework.test_history import TestHistory
+from simulation_tests.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class JSONPopup:
@@ -1313,7 +1316,7 @@ class TestLabScene:
                     })
 
                 except Exception as e:
-                    print(f"Error loading ship {filename}: {e}")
+                    logger.error(f"Error loading ship {filename}: {e}")
 
         return ships
 
@@ -1324,7 +1327,7 @@ class TestLabScene:
         This performs static validation without running tests, checking if
         test metadata matches actual component data.
         """
-        print("\n=== Static Validation: Checking test metadata against component data ===")
+        logger.info("\n=== Static Validation: Checking test metadata against component data ===")
 
         from simulation_tests.scenarios.validation import Validator
 
@@ -1350,7 +1353,7 @@ class TestLabScene:
                 context = self._build_validation_context_from_files(test_id, metadata)
 
                 if not context:
-                    print(f"  {test_id}: Could not build validation context")
+                    logger.info(f"  {test_id}: Could not build validation context")
                     continue
 
 
@@ -1376,14 +1379,14 @@ class TestLabScene:
                 warn_count = summary.get('warn', 0)
 
                 if fail_count > 0 or warn_count > 0:
-                    print(f"  {test_id}: {pass_count} pass, {fail_count} fail, {warn_count} warn")
+                    logger.info(f"  {test_id}: {pass_count} pass, {fail_count} fail, {warn_count} warn")
 
             except Exception as e:
-                print(f"  {test_id}: Validation error - {e}")
+                logger.info(f"  {test_id}: Validation error - {e}")
                 import traceback
                 traceback.print_exc()
 
-        print("=== Static Validation Complete ===\n")
+        logger.info("=== Static Validation Complete ===\n")
 
     def _build_validation_context_from_files(self, test_id, metadata):
         """
@@ -1468,7 +1471,7 @@ class TestLabScene:
                         for comp in components_list
                     }
             except Exception as e:
-                print(f"Error loading components.json: {e}")
+                logger.error(f"Error loading components.json: {e}")
                 self._components_cache = {}
 
         return self._components_cache.get(component_id)
@@ -1485,7 +1488,7 @@ class TestLabScene:
 
         last_run_results = scenario_info.get('last_run_results')
         if not last_run_results:
-            print("No test results available. Run the test first.")
+            logger.info("No test results available. Run the test first.")
             return
 
         validation_results = last_run_results.get('validation_results', [])
@@ -1508,7 +1511,7 @@ class TestLabScene:
                 })
 
         if not changes:
-            print("No failed validation rules to update.")
+            logger.info("No failed validation rules to update.")
             return
 
         # Show confirmation dialog
@@ -1518,7 +1521,7 @@ class TestLabScene:
             screen_width=self.game.screen.get_width(),
             screen_height=self.game.screen.get_height(),
             on_confirm=lambda: self._apply_metadata_updates(changes),
-            on_cancel=lambda: print("Update canceled")
+            on_cancel=lambda: logger.info("Update canceled")
         )
 
     def _apply_metadata_updates(self, changes):
@@ -1556,17 +1559,17 @@ class TestLabScene:
                     old_pattern = f'"Beam Damage: {old_val}'
                     new_pattern = f'"Beam Damage: {new_val}'
                     content = content.replace(old_pattern, new_pattern)
-                    print(f"Updated condition text for {field}: {old_val} → {new_val}")
+                    logger.info(f"Updated condition text for {field}: {old_val} → {new_val}")
                 elif "Base Accuracy" in field:
                     old_pattern = f'"Base Accuracy: {old_val}"'
                     new_pattern = f'"Base Accuracy: {new_val}"'
                     content = content.replace(old_pattern, new_pattern)
-                    print(f"Updated condition text for {field}: {old_val} → {new_val}")
+                    logger.info(f"Updated condition text for {field}: {old_val} → {new_val}")
                 elif "Accuracy Falloff" in field:
                     old_pattern = f'"Accuracy Falloff: {old_val}'
                     new_pattern = f'"Accuracy Falloff: {new_val}'
                     content = content.replace(old_pattern, new_pattern)
-                    print(f"Updated condition text for {field}: {old_val} → {new_val}")
+                    logger.info(f"Updated condition text for {field}: {old_val} → {new_val}")
 
                 # 2. Update ExactMatchRule expected value in validation_rules
                 # Find the ExactMatchRule for this field and update its expected value
@@ -1575,42 +1578,42 @@ class TestLabScene:
                     old_rule = f"ExactMatchRule(\n                name='Beam Weapon Damage',\n                path='attacker.weapon.damage',\n                expected={old_val}\n            )"
                     new_rule = f"ExactMatchRule(\n                name='Beam Weapon Damage',\n                path='attacker.weapon.damage',\n                expected={new_val}\n            )"
                     content = content.replace(old_rule, new_rule)
-                    print(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
+                    logger.info(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
                 elif "Base Accuracy" in field:
                     old_rule = f"ExactMatchRule(\n                name='Base Accuracy',\n                path='attacker.weapon.base_accuracy',\n                expected={old_val}\n            )"
                     new_rule = f"ExactMatchRule(\n                name='Base Accuracy',\n                path='attacker.weapon.base_accuracy',\n                expected={new_val}\n            )"
                     content = content.replace(old_rule, new_rule)
-                    print(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
+                    logger.info(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
                 elif "Accuracy Falloff" in field:
                     old_rule = f"ExactMatchRule(\n                name='Accuracy Falloff',\n                path='attacker.weapon.accuracy_falloff',\n                expected={old_val}\n            )"
                     new_rule = f"ExactMatchRule(\n                name='Accuracy Falloff',\n                path='attacker.weapon.accuracy_falloff',\n                expected={new_val}\n            )"
                     content = content.replace(old_rule, new_rule)
-                    print(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
+                    logger.info(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
                 elif "Weapon Range" in field or "Range" in field:
                     old_rule = f"ExactMatchRule(\n                name='Weapon Range',\n                path='attacker.weapon.range',\n                expected={old_val}\n            )"
                     new_rule = f"ExactMatchRule(\n                name='Weapon Range',\n                path='attacker.weapon.range',\n                expected={new_val}\n            )"
                     content = content.replace(old_rule, new_rule)
-                    print(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
+                    logger.info(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
                 elif "Target Mass" in field or "Mass" in field:
                     old_rule = f"ExactMatchRule(\n                name='Target Mass',\n                path='target.mass',\n                expected={old_val}\n            )"
                     new_rule = f"ExactMatchRule(\n                name='Target Mass',\n                path='target.mass',\n                expected={new_val}\n            )"
                     content = content.replace(old_rule, new_rule)
-                    print(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
+                    logger.info(f"Updated ExactMatchRule for {field}: expected={old_val} → {new_val}")
 
             # Write back to file
             with open(scenario_file, 'w') as f:
                 f.write(content)
 
-            print(f"Successfully updated {scenario_file}")
+            logger.info(f"Successfully updated {scenario_file}")
 
             # Refresh the registry to reload the modified scenario
             self.registry.refresh()
             self.all_scenarios = self.registry.get_all_scenarios()
 
-            print("Registry refreshed. Metadata updated successfully!")
+            logger.info("Registry refreshed. Metadata updated successfully!")
 
         except Exception as e:
-            print(f"Error updating metadata: {e}")
+            logger.error(f"Error updating metadata: {e}")
             import traceback
             traceback.print_exc()
 
@@ -1708,7 +1711,7 @@ class TestLabScene:
 
         self.results_panel.set_test(test_id)
 
-        print(f"Created results panel at x={base_x} and details panel at x={details_x} for test {test_id}")
+        logger.debug(f"Created results panel at x={base_x} and details panel at x={details_x} for test {test_id}")
 
     def _create_ui(self):
         """Create UI buttons."""
@@ -1740,7 +1743,7 @@ class TestLabScene:
             scenario = self.game.battle_scene.test_scenario
             # Check if scenario exists and has results dict (even if empty, verify() may populate it)
             if scenario and hasattr(scenario, 'results') and scenario.results is not None:
-                print(f"DEBUG: Storing results for {self.selected_test_id}, result keys: {list(scenario.results.keys())}")
+                logger.debug(f" Storing results for {self.selected_test_id}, result keys: {list(scenario.results.keys())}")
                 self.registry.update_last_run_results(self.selected_test_id, scenario.results)
 
                 # Add to persistent test history
@@ -1750,10 +1753,10 @@ class TestLabScene:
                 if self.results_panel:
                     self.results_panel.set_test(self.selected_test_id)
             else:
-                print(f"DEBUG: No results to store - scenario={scenario}, has_results={hasattr(scenario, 'results') if scenario else False}")
+                logger.debug(f" No results to store - scenario={scenario}, has_results={hasattr(scenario, 'results') if scenario else False}")
 
         self.selected_test_id = None
-        print(f"DEBUG: Test selection cleared")
+        logger.debug(f" Test selection cleared")
 
     def _on_back(self):
         """Return to main menu."""
@@ -1780,28 +1783,28 @@ class TestLabScene:
 
         try:
             # Instantiate scenario
-            print(f"DEBUG: Instantiating scenario class")
+            logger.debug(f" Instantiating scenario class")
             scenario_cls = scenario_info['class']
             scenario = scenario_cls()
-            print(f"DEBUG: Scenario instantiated: {scenario.name}")
+            logger.debug(f" Scenario instantiated: {scenario.name}")
 
             # Load test data
-            print(f"DEBUG: Loading test data for scenario")
+            logger.debug(f" Loading test data for scenario")
             runner.load_data_for_scenario(scenario)
-            print(f"DEBUG: Test data loaded successfully")
+            logger.debug(f" Test data loaded successfully")
 
             # Clear battle engine
-            print(f"DEBUG: Clearing battle engine")
+            logger.debug(f" Clearing battle engine")
             self.game.battle_scene.engine.start([], [])
 
             # Setup scenario
-            print(f"DEBUG: Calling scenario.setup()")
+            logger.debug(f" Calling scenario.setup()")
             scenario.setup(self.game.battle_scene.engine)
-            print(f"DEBUG: Scenario setup complete")
+            logger.debug(f" Scenario setup complete")
 
             # Configure battle scene for test mode
-            print(f"DEBUG: Configuring battle scene for test mode")
-            print(f"DEBUG: BEFORE: test_mode={self.game.battle_scene.test_mode}")
+            logger.debug(f" Configuring battle scene for test mode")
+            logger.debug(f" BEFORE: test_mode={self.game.battle_scene.test_mode}")
             self.game.battle_scene.headless_mode = False
             self.game.battle_scene.sim_paused = True  # Start paused
             self.game.battle_scene.test_mode = True   # Enable test mode
@@ -1809,17 +1812,17 @@ class TestLabScene:
             self.game.battle_scene.test_tick_count = 0  # Reset tick counter
             self.game.battle_scene.test_completed = False  # Reset completed flag
             self.game.battle_scene.action_return_to_test_lab = False
-            print(f"DEBUG: AFTER: test_mode={self.game.battle_scene.test_mode}")
-            print(f"DEBUG: Battle scene configured (paused=True, test_mode=True, scenario={scenario.metadata.test_id})")
+            logger.debug(f" AFTER: test_mode={self.game.battle_scene.test_mode}")
+            logger.debug(f" Battle scene configured (paused=True, test_mode=True, scenario={scenario.metadata.test_id})")
 
             # Fit camera to ships
             if self.game.battle_scene.engine.ships:
                 self.game.battle_scene.camera.fit_objects(self.game.battle_scene.engine.ships)
-                print(f"DEBUG: Camera fitted to ships")
+                logger.debug(f" Camera fitted to ships")
 
             # Switch to battle state
             from game.core.constants import GameState
-            print(f"DEBUG: Switching to BATTLE state")
+            logger.debug(f" Switching to BATTLE state")
             self.game.state = GameState.BATTLE
 
             self.output_log.append(f"Started test {self.selected_test_id}")
@@ -1848,24 +1851,24 @@ class TestLabScene:
 
         try:
             # Instantiate scenario
-            print(f"DEBUG: Instantiating scenario class for headless run")
+            logger.debug(f" Instantiating scenario class for headless run")
             scenario_cls = scenario_info['class']
             scenario = scenario_cls()
-            print(f"DEBUG: Scenario instantiated: {scenario.name}")
+            logger.debug(f" Scenario instantiated: {scenario.name}")
 
             # Load test data
-            print(f"DEBUG: Loading test data for scenario")
+            logger.debug(f" Loading test data for scenario")
             runner.load_data_for_scenario(scenario)
-            print(f"DEBUG: Test data loaded successfully")
+            logger.debug(f" Test data loaded successfully")
 
             # Clear battle engine
-            print(f"DEBUG: Clearing battle engine")
+            logger.debug(f" Clearing battle engine")
             engine.start([], [])
 
             # Setup scenario
-            print(f"DEBUG: Calling scenario.setup()")
+            logger.debug(f" Calling scenario.setup()")
             scenario.setup(engine)
-            print(f"DEBUG: Scenario setup complete")
+            logger.debug(f" Scenario setup complete")
 
             # Show "Running Test..." message
             self.headless_running = True
@@ -1895,7 +1898,7 @@ class TestLabScene:
             tick_count = 0
             max_ticks = scenario.max_ticks
 
-            print(f"DEBUG: Starting headless simulation loop (max_ticks={max_ticks})")
+            logger.debug(f" Starting headless simulation loop (max_ticks={max_ticks})")
 
             # Run simulation as fast as possible
             while tick_count < max_ticks:
@@ -1908,23 +1911,28 @@ class TestLabScene:
 
                 # Check if battle ended naturally
                 if engine.is_battle_over():
-                    print(f"DEBUG: Battle ended naturally at tick {tick_count}")
+                    logger.debug(f" Battle ended naturally at tick {tick_count}")
                     break
 
             # Simulation complete - verify results
             elapsed_time = time.time() - start_time
-            print(f"DEBUG: Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s ({tick_count/elapsed_time:.0f} ticks/sec)")
+            logger.debug(f" Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s ({tick_count/elapsed_time:.0f} ticks/sec)")
 
             # Verify and collect results
             scenario.passed = scenario.verify(engine)
-            print(f"DEBUG: Test {'PASSED' if scenario.passed else 'FAILED'}")
+            logger.debug(f" Test {'PASSED' if scenario.passed else 'FAILED'}")
 
             # Store results
             scenario.results['ticks_run'] = tick_count
+            scenario.results['duration_real'] = elapsed_time
+            scenario.results['ticks'] = tick_count  # Alias for consistency with runner
             self.registry.update_last_run_results(self.selected_test_id, scenario.results)
 
             # Add to persistent test history
             self.test_history.add_run(self.selected_test_id, scenario.results)
+
+            # Log test execution (for UI vs headless comparison)
+            runner._log_test_execution(scenario, headless=True)
 
             # Refresh results panel if it exists
             if self.results_panel:

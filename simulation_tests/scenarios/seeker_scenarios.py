@@ -75,7 +75,20 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
     )
 
     def verify(self, battle_engine) -> bool:
-        """Check if at least one missile hit."""
+        """
+        Check if at least one missile hit.
+
+        Expected Behavior:
+        - Missile speed: 1000 px/s, Turn rate: 90°/sec
+        - Distance: 500px → Travel time ~0.5 seconds (50 ticks)
+        - Endurance: 5.0 seconds (5000px max travel)
+        - Damage: 100 per missile impact
+        - Reload: 5.0 seconds (500 ticks)
+
+        Pass Criteria:
+        - At least 1 missile hits (damage_dealt >= 100)
+        - Target should be impacted well before endurance expires
+        """
         # Calculate damage dealt (template stores initial_hp automatically)
         self.damage_dealt = self.initial_hp - self.target.hp
 
@@ -93,8 +106,27 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
         # Store scenario-specific results
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
 
-        # Pass if at least one missile hit (100 damage)
-        return self.damage_dealt >= 100
+        # Store weapon info for output
+        self.results['weapon_type'] = 'Seeker360'
+        self.results['missile_speed'] = 1000
+        self.results['missile_turn_rate'] = 90
+        self.results['missile_damage'] = 100
+        self.results['missile_endurance'] = 5.0
+        self.results['expected_travel_time_ticks'] = 50
+
+        # Calculate pass/fail
+        passed = self.damage_dealt >= 100
+
+        if not passed:
+            missiles_hit = self.damage_dealt / 100
+            self.results['failure_reason'] = (
+                f"No missiles hit target at close range. "
+                f"Expected at least 1 hit (100 damage), got {missiles_hit:.1f} hits ({self.damage_dealt} damage). "
+                f"At 500px range with 1000 px/s speed, missile should reach target in ~50 ticks. "
+                f"Check missile tracking, guidance system, and collision detection."
+            )
+
+        return passed
 
 
 class SeekerMidRangeImpactScenario(StaticTargetScenario):

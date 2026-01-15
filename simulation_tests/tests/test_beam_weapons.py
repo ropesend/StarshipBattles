@@ -18,6 +18,7 @@ Test Coverage:
 """
 import pytest
 from test_framework.runner import TestRunner
+from simulation_tests.logging_config import get_logger
 from simulation_tests.scenarios.beam_scenarios import (
     BeamLowAccuracyPointBlankScenario,
     BeamLowAccuracyMidRangeScenario,
@@ -31,6 +32,8 @@ from simulation_tests.scenarios.beam_scenarios import (
     BeamMediumAccuracyErraticMaxRangeScenario,
     BeamOutOfRangeScenario
 )
+
+logger = get_logger(__name__)
 
 
 @pytest.mark.simulation
@@ -61,10 +64,10 @@ class TestBeamWeapons:
             "Low accuracy beam should deal damage at point-blank"
 
         # Print results for debugging
-        print(f"\nBEAM360-001 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nBEAM360-001 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
     
     def test_BEAM360_002_low_acc_mid_range(self):
         """
@@ -82,10 +85,10 @@ class TestBeamWeapons:
         assert scenario.results['ticks_run'] > 0, "Simulation should run"
 
         # Print results for debugging
-        print(f"\nBEAM360-002 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nBEAM360-002 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
     
     def test_BEAM360_003_low_acc_max_range(self):
         """
@@ -103,10 +106,10 @@ class TestBeamWeapons:
         assert scenario.results['ticks_run'] > 0, "Simulation should complete"
 
         # Print results for debugging
-        print(f"\nBEAM360-003 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nBEAM360-003 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
     
     # ===== MEDIUM ACCURACY BEAM TESTS (base_accuracy=2.0, falloff=0.001) =====
 
@@ -127,10 +130,10 @@ class TestBeamWeapons:
             "Medium accuracy beam should deal significant damage at point-blank"
 
         # Print results for debugging
-        print(f"\nBEAM360-004 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nBEAM360-004 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
     
     def test_BEAM360_005_med_acc_mid_range(self):
         """
@@ -149,10 +152,10 @@ class TestBeamWeapons:
             "Medium accuracy beam should deal damage at mid-range"
 
         # Print results for debugging
-        print(f"\nBEAM360-005 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nBEAM360-005 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
     
     def test_BEAM360_006_med_acc_max_range(self):
         """
@@ -170,10 +173,10 @@ class TestBeamWeapons:
         assert scenario.results['ticks_run'] > 0, "Simulation should complete"
 
         # Print results for debugging
-        print(f"\nBEAM360-006 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nBEAM360-006 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
     
     # ===== HIGH ACCURACY BEAM TESTS (base_accuracy=5.0, falloff=0.0005) =====
 
@@ -194,10 +197,10 @@ class TestBeamWeapons:
             "High accuracy beam should hit consistently at point-blank"
 
         # Print results for debugging
-        print(f"\nBEAM360-007 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nBEAM360-007 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
     
     def test_BEAM360_008_high_acc_max_range(self):
         """
@@ -216,10 +219,10 @@ class TestBeamWeapons:
             "High accuracy beam should hit at max range"
 
         # Print results for debugging
-        print(f"\nBEAM360-008 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nBEAM360-008 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Expected Hit Chance: {scenario.results['expected_hit_chance']:.2%}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
     
     # ===== MOVING TARGET TESTS =====
 
@@ -240,11 +243,11 @@ class TestBeamWeapons:
         assert scenario.results['ticks_run'] > 0, "Simulation should complete"
 
         # Print results for debugging
-        print(f"\nBEAM360-009 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Expected Hit Chance (with defense): {scenario.results['expected_hit_chance']:.2%}")
-        print(f"  Expected Hit Chance (base only): {scenario.results['expected_hit_chance_base']:.2%}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nBEAM360-009 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Expected Hit Chance (with defense): {scenario.results['expected_hit_chance']:.2%}")
+        logger.info(f"  Expected Hit Chance (base only): {scenario.results['expected_hit_chance_base']:.2%}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
     
     def test_BEAM360_010_med_acc_vs_erratic_small_max_range(self):
         """
@@ -263,11 +266,11 @@ class TestBeamWeapons:
         assert scenario.results['ticks_run'] > 0, "Simulation should complete"
 
         # Print results for debugging
-        print(f"\nBEAM360-010 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Expected Hit Chance (with defense): {scenario.results['expected_hit_chance']:.2%}")
-        print(f"  Expected Hit Chance (base only): {scenario.results['expected_hit_chance_base']:.2%}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nBEAM360-010 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Expected Hit Chance (with defense): {scenario.results['expected_hit_chance']:.2%}")
+        logger.info(f"  Expected Hit Chance (base only): {scenario.results['expected_hit_chance_base']:.2%}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
     
     def test_BEAM360_011_out_of_range(self):
         """
@@ -286,11 +289,11 @@ class TestBeamWeapons:
             f"Target beyond range should take 0 damage, got {scenario.results['damage_dealt']}"
 
         # Print results for debugging
-        print(f"\nBEAM360-011 Results:")
-        print(f"  Damage Dealt: {scenario.results['damage_dealt']}")
-        print(f"  Distance: {scenario.results['distance']}")
-        print(f"  Weapon Max Range: {scenario.results['weapon_max_range']}")
-        print(f"  Ticks: {scenario.results['ticks_run']}")
+        logger.info(f"\nBEAM360-011 Results:")
+        logger.info(f"  Damage Dealt: {scenario.results['damage_dealt']}")
+        logger.info(f"  Distance: {scenario.results['distance']}")
+        logger.info(f"  Weapon Max Range: {scenario.results['weapon_max_range']}")
+        logger.info(f"  Ticks: {scenario.results['ticks_run']}")
 
 
 if __name__ == '__main__':

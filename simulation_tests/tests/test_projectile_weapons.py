@@ -19,6 +19,7 @@ import pygame
 
 from game.simulation.entities.ship import Ship
 from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
+from simulation_tests.logging_config import get_logger
 from simulation_tests.scenarios.projectile_scenarios import (
     ProjectileStationaryTargetScenario,
     ProjectileLinearSlowTargetScenario,
@@ -31,6 +32,8 @@ from simulation_tests.scenarios.projectile_scenarios import (
     ProjectileDamageLongRangeScenario
 )
 from test_framework.runner import TestRunner
+
+logger = get_logger(__name__)
 
 
 @pytest.mark.simulation
@@ -52,9 +55,36 @@ class TestProjectileWeapons:
         # Run scenario using TestRunner in headless mode
         scenario = self.runner.run_scenario(ProjectileStationaryTargetScenario, headless=True)
 
+        # Print detailed configuration
+        logger.info(f"\n{'='*70}")
+        logger.info(f"PROJ360-001: Projectile Accuracy vs Stationary Target")
+        logger.info(f"{'='*70}")
+        logger.info(f"\nWeapon Configuration:")
+        logger.info(f"  Type: {scenario.results.get('weapon_type', 'Projectile360')}")
+        logger.info(f"  Damage: {scenario.results.get('weapon_damage', 50)} per hit")
+        logger.info(f"  Range: {scenario.results.get('weapon_range', 1000)} px")
+        logger.info(f"  Projectile Speed: {scenario.results.get('projectile_speed', 1500)} px/s")
+        logger.info(f"  Reload Time: {scenario.results.get('reload_time', 1.0)}s (100 ticks)")
+        logger.info(f"\nTest Configuration:")
+        logger.info(f"  Attacker: Test_Attacker_Proj360")
+        logger.info(f"  Target: Test_Target_Stationary")
+        logger.info(f"  Distance: 200 px (point-blank)")
+        logger.info(f"  Travel Time: {scenario.results.get('travel_time_seconds', 0.133):.3f}s (~13 ticks)")
+        logger.info(f"  Test Duration: 500 ticks (5 seconds)")
+        logger.info(f"\nExpected Outcome:")
+        logger.info(f"  Shots Possible: ~5 (500 ticks / 100 tick reload)")
+        logger.info(f"  Hit Rate: ~100% (stationary, close range)")
+        logger.info(f"  Expected Damage: ≥150 (3+ hits × 50 dmg)")
+        logger.info(f"\nActual Results:")
+        logger.info(f"  Damage Dealt: {scenario.results.get('damage_dealt', 0)}")
+        logger.info(f"  Ticks Run: {scenario.results.get('ticks_run', 0)}")
+        logger.info(f"  Target HP: {scenario.results.get('initial_hp', 0)} → {scenario.results.get('final_hp', 0)}")
+        logger.info(f"  Target Alive: {scenario.results.get('target_alive', False)}")
+        logger.info(f"{'='*70}\n")
+
         # Assert scenario passed
         assert scenario.passed, \
-            f"PROJ360-001 failed: {scenario.results.get('error', 'Unknown error')}"
+            f"PROJ360-001 failed: {scenario.results.get('failure_reason', 'Unknown error')}"
 
         # Additional assertions from original test
         damage_dealt = scenario.results.get('damage_dealt', 0)

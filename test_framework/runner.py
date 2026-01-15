@@ -3,6 +3,9 @@ import os
 import pygame
 import importlib
 import time
+import json
+from datetime import datetime
+from pathlib import Path
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,6 +24,7 @@ class TestRunner:
     def __init__(self):
         self.engine = BattleEngine()
         self.current_scenario = None
+        self.test_log = []  # Store log of all test executions
         
     def load_data_for_scenario(self, scenario):
         """
@@ -67,21 +71,22 @@ class TestRunner:
             logger.critical(f"Failed to load test data: {e}", exc_info=True)
             raise e
             
-    def run_scenario(self, scenario_cls, headless=True, render_callback=None):
+    def run_scenario(self, scenario_cls, headless=True, render_callback=None, log_results=True):
         """
         Execute a scenario.
-        
+
         Args:
             scenario_cls: Class of the scenario to run
             headless: If True, run fast without rendering (unless render_callback provided)
             render_callback: Optional function(engine) -> None to draw the state
+            log_results: If True, log results to test_log and file (default: True)
         """
         scenario = scenario_cls()
         self.current_scenario = scenario
-        
+
         # 1. Load Data
         self.load_data_for_scenario(scenario)
-        
+
         # 2. Setup Engine
         from game.simulation.systems.battle_engine import BattleLogger
         battle_logger = BattleLogger(enabled=True)
@@ -113,6 +118,8 @@ class TestRunner:
             logger.error(f"Scenario Crash: {e}", exc_info=True)
             scenario.passed = False
             scenario.results['error'] = str(e)
+            if log_results:
+                self._log_test_execution(scenario, headless)
             return scenario
 
         end_time = time.time()
@@ -125,7 +132,67 @@ class TestRunner:
 
         status = "PASSED" if scenario.passed else "FAILED"
         logger.info(f"Result: {status} in {duration:.2f}s")
+
+        # 6. Log results if enabled
+        if log_results:
+            self._log_test_execution(scenario, headless)
+
         return scenario
+
+    def _log_test_execution(self, scenario, headless):
+        """
+        Log test execution results for comparison between UI and headless modes.
+
+        Args:
+            scenario: Completed scenario instance with results
+            headless: True if run in headless mode, False if run in UI mode
+        """
+        # Create log entry
+        log_entry = {
+            'timestamp': datetime.now().isoformat(),
+            'test_id': scenario.metadata.test_id,
+            'test_name': scenario.metadata.name,
+            'mode': 'headless' if headless else 'ui',
+            'passed': scenario.passed,
+            'ticks_run': scenario.results.get('ticks', 0),
+            'damage_dealt': scenario.results.get('damage_dealt', 0),
+            'duration_real': scenario.results.get('duration_real', 0),
+            'results': self._sanitize_results(scenario.results)
+        }
+
+        # Add to in-memory log
+        self.test_log.append(log_entry)
+
+        # Write to persistent log file
+        log_file = Path("combat_lab_test_log.jsonl")
+        try:
+            with open(log_file, 'a') as f:
+                f.write(json.dumps(log_entry) + '\n')
+            logger.debug(f"Logged test execution to {log_file}")
+        except Exception as e:
+            logger.warning(f"Failed to write test log: {e}")
+
+        # Print summary
+        mode_str = 'Headless' if headless else 'UI'
+        result_str = 'PASS' if scenario.passed else 'FAIL'
+        logger.info(f"[TEST LOG] {scenario.metadata.test_id} - Mode: {mode_str} - Result: {result_str}")
+
+    def _sanitize_results(self, results):
+        """
+        Sanitize results dict to ensure JSON serialization.
+
+        Removes non-serializable objects and converts them to strings.
+        """
+        sanitized = {}
+        for key, value in results.items():
+            try:
+                # Test if value is JSON serializable
+                json.dumps(value)
+                sanitized[key] = value
+            except (TypeError, ValueError):
+                # Convert non-serializable to string
+                sanitized[key] = str(value)
+        return sanitized
 
 if __name__ == "__main__":
     import argparse
