@@ -1,5 +1,13 @@
 import random
 from game.strategy.data.fleet import OrderType
+from dataclasses import dataclass
+from typing import Optional
+
+@dataclass
+class ValidationResult:
+    is_valid: bool
+    message: str = ""
+    error_code: Optional[str] = None
 
 class TurnEngine:
     def __init__(self):
@@ -23,6 +31,60 @@ class TurnEngine:
         # 3. Production Phase
         self.process_production(empires, galaxy)
         
+    def validate_colonize_order(self, galaxy, fleet, target_planet) -> ValidationResult:
+        """
+        Validate if a fleet can colonize a specific planet (or 'Any' if target_planet is None).
+        
+        Args:
+            galaxy: The Galaxy object
+            fleet: The Fleet object attempting to colonize
+            target_planet: The Planet object or None for 'Any'
+            
+        Returns:
+            ValidationResult
+        """
+        # 1. Base Validation: Fleet must exist
+        if not fleet:
+            return ValidationResult(False, "Fleet does not exist.")
+            
+        # 2. Get System/Location Context
+        system = galaxy.systems.get(fleet.location)
+        valid_candidates = []
+        
+        if system:
+             for p in system.planets:
+                 if (system.global_location + p.location) == fleet.location:
+                      if p.owner_id is None:
+                          valid_candidates.append(p)
+        else:
+            # Fallback for peripheral hexes (less common but possible)
+            for sys in galaxy.systems.values():
+                 for p in sys.planets:
+                     if (sys.global_location + p.location) == fleet.location:
+                          if p.owner_id is None:
+                              valid_candidates.append(p)
+        
+        # 3. Check Logic
+        if target_planet is None:
+            # "Any Planet"
+            if not valid_candidates:
+                return ValidationResult(False, "No colonizable planets at this location.", "NO_CANDIDATES")
+            return ValidationResult(True, "Valid candidate found.")
+            
+        else:
+            # Specific Planet
+            if target_planet.owner_id is not None:
+                return ValidationResult(False, f"Planet {target_planet.name} is already owned.", "ALREADY_OWNED")
+            
+            # Check if planet is in valid candidates (verifies location)
+            # We strictly check reference equality or ID equality if we had IDs
+            if target_planet not in valid_candidates:
+                # Determine detailed reason for better feedback
+                # If owner is none (checked above), then it must be location.
+                 return ValidationResult(False, f"Planet {target_planet.name} is not at fleet location.", "WRONG_LOCATION")
+                 
+            return ValidationResult(True, "Planet is valid for colonization.")
+
     def process_production(self, empires, galaxy=None):
         """Process construction queues for all colonies."""
         for emp in empires:
@@ -332,57 +394,37 @@ class TurnEngine:
         if order.type == OrderType.COLONIZE:
             target_planet = order.target
             
-            # 1. Identify valid candidates at current location
-            valid_candidates = []
+            # Validate
+            validation = self.validate_colonize_order(galaxy, fleet, target_planet)
             
-            # Find System (Optimized or Lookup)
-            # We need the system to resolve global locations of its planets
-            # Try direct lookup first (if at system center)
-            system = galaxy.systems.get(fleet.location)
-            
-            if system:
-                # Check planets in this system
-                for p in system.planets:
-                    if (system.global_location + p.location) == fleet.location:
-                         if p.owner_id is None:
-                             valid_candidates.append(p)
-            else:
-                # Brute force if fleet is not at system center (peripheral hex)
-                # TODO: Add reverse lookup map if this is slow
-                for sys in galaxy.systems.values():
-                     # Optimization: Check distance? strict equality sufficient
-                     # Check if any planet in this system matches location
-                     for p in sys.planets:
-                         if (sys.global_location + p.location) == fleet.location:
-                              if p.owner_id is None:
-                                  valid_candidates.append(p)
-                                  
-            # 2. Resolve target
-            final_planet = None
-            
-            if target_planet is None:
-                # "Any Planet": Pick first valid candidate
-                if valid_candidates:
-                    final_planet = valid_candidates[0]
-                    print(f"TurnEngine: Deferred 'Any' colonization selected {final_planet.name}")
-            else:
-                # Specific Planet: Validate it is here and unowned
-                if target_planet in valid_candidates:
-                    final_planet = target_planet
-                else:
-                    # Validation Failed
-                    # Why?
-                    # A. Not here
-                    # B. Owned
-                    if target_planet.owner_id is not None:
-                         print(f"TurnEngine: Colonize failed - {target_planet.name} is already owned.")
-                    else:
-                         # Check location mismatch
-                         # We can't easily check global loc of target_planet without system ref, 
-                         # but we know it wasn't in valid_candidates (which matched location).
-                         print(f"TurnEngine: Colonize failed - {target_planet.name} not in sector {fleet.location}.")
+            if not validation.is_valid:
+                 print(f"TurnEngine: Colonize failed - {validation.message}")
+                 fleet.pop_order()
+                 return False
 
-            # 3. Execute
+            # If valid, execute
+            # If target_planet was None ("Any"), we need to pick one.
+            final_planet = target_planet
+            
+            if final_planet is None:
+                # Re-find the candidate (Validation ensured one exists)
+                # Optimization: Validation could return the candidate?
+                # For now, re-scan or rely on the logic that we know one is there.
+                # Let's reuse logic from validation but simpler since we know it's valid.
+                system = galaxy.systems.get(fleet.location)
+                if system:
+                     for p in system.planets:
+                         if (system.global_location + p.location) == fleet.location and p.owner_id is None:
+                             final_planet = p
+                             break
+                else: 
+                    # Fallback
+                    for sys in galaxy.systems.values():
+                         for p in sys.planets:
+                             if (sys.global_location + p.location) == fleet.location and p.owner_id is None:
+                                  final_planet = p
+                                  break
+            
             if final_planet:
                 empire.add_colony(final_planet)
                 fleet.pop_order()
@@ -390,9 +432,9 @@ class TurnEngine:
                 print(f"TurnEngine: Colonization successful. {empire.name} claimed {final_planet.name}")
                 return True
             else:
-                # Failed / No Valid Target
-                print("TurnEngine: Colonize order failed (Review logs). Order removed.")
-                fleet.pop_order()
+                 # Should not happen if validation passed
+                 print("TurnEngine: Colonization execution failed unexpectedly (Candidate missing?).")
+                 fleet.pop_order()
 
         elif order.type == OrderType.JOIN_FLEET:
             target_fleet = order.target

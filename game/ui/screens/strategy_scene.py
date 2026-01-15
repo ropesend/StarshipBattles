@@ -11,6 +11,7 @@ from game.strategy.data.hex_math import hex_to_pixel, pixel_to_hex, HexCoord, he
 from game.ui.renderer.camera import Camera
 from game.ui.screens.strategy_screen import StrategyInterface
 from game.strategy.data.pathfinding import find_path_interstellar, find_path_deep_space, project_fleet_path
+from game.strategy.engine.commands import IssueColonizeCommand
 from ui.colors import COLORS
 
 class StrategyScene:
@@ -219,30 +220,24 @@ class StrategyScene:
         self.ui.handle_resize(width, height)
 
     def request_colonize_order(self, fleet):
-        """Handle colonize request from UI."""
-        matches = []
-        sys = self._get_system_at_hex(fleet.location)
-        if sys:
-            for p in sys.planets:
-                 # Check if colonizable? (Unowned)
-                 if p.owner_id is None: 
-                     matches.append(p)
-                       
-        if len(matches) == 0:
-            print("No colonizable planets at fleet location.")
-            return
-        elif len(matches) == 1:
-            self._issue_colonize_order(fleet, matches[0])
-        else:
-            self.ui.prompt_planet_selection(matches, lambda p: self._issue_colonize_order(fleet, p))
+        """Handle colonize request from UI (Legacy entry point, redirect to on_colonize_click logic or command)."""
+        # This seems to be called by StrategyInterface if we keep that logic, 
+        # but we are removing logic from Interface. 
+        # However, for safety/compatibility:
+        self.selected_fleet = fleet
+        self.on_colonize_click()
             
     def _issue_colonize_order(self, fleet, planet):
-        from game.strategy.data.fleet import FleetOrder, OrderType
-        # Store Planet object directly
-        order = FleetOrder(OrderType.COLONIZE, target=planet) 
-        fleet.orders.append(order)
-        print(f"issued colonize order to {planet.name}")
+        """Issue the command to the session."""
+        cmd = IssueColonizeCommand(fleet.id, id(planet))
+        print(f"Issued IssueColonizeCommand for {planet.name}")
         
+        result = self.session.handle_command(cmd)
+        if not result.is_valid:
+            print(f"Command Failed: {result.message}")
+        else:
+             self.on_ui_selection(self.selected_fleet) # Refresh UI
+
     def _get_system_at_hex(self, hex_coord):
         return self.galaxy.systems.get(hex_coord)
 
@@ -387,39 +382,50 @@ class StrategyScene:
         
     def on_colonize_click(self):
         """Handle colonize action."""
-        # Requirements: Selected Fleet, Fleet at unowned Planet.
-        # Check UI state/selected object?
-        # The user likely selected the Fleet OR the Planet?
-        
         if not self.selected_fleet:
             return
             
-        # Find planets at fleet location
-        start_sys = self._get_system_at_hex(self.selected_fleet.location)
-        valid_planets = []
+        # 1. Identify valid candidates using Engine Validation
+        # We need to scan planets at location.
+        # Ideally TurnEngine provides a "get_colonizable_planets(fleet)" but "validate" is what we have.
+        # We'll use the scene's knowledge of location to find potential planets, 
+        # then ask Engine "Is this specific planet valid?".
         
+        start_sys = self._get_system_at_hex(self.selected_fleet.location)
+        potential_planets = []
+        
+        # Gather all planets at hex (System or Peripheral)
         if start_sys:
             loc_local = self.selected_fleet.location - start_sys.global_location
             for p in start_sys.planets:
-                 if p.location == loc_local:
-                     # Add filter for valid colonization? (e.g. not owned)
-                     if p.owner_id is None: # Changed from 0 to None for neutral
-                        valid_planets.append(p)
+                if p.location == loc_local:
+                    potential_planets.append(p)
+        else:
+             # Full scan (rare)
+             for sys in self.systems:
+                 loc_local = self.selected_fleet.location - sys.global_location
+                 for p in sys.planets:
+                     if p.location == loc_local:
+                         potential_planets.append(p)
+
+        # Filter by Validation
+        valid_planets = []
+        for p in potential_planets:
+            # Validate with Engine
+            res = self.turn_engine.validate_colonize_order(self.galaxy, self.selected_fleet, p)
+            if res.is_valid:
+                valid_planets.append(p)
 
         if not valid_planets:
-            print("No colonizable planets at fleet location.")
+            print("No colonizable planets at fleet location (Validation Failed).")
             return
             
-        def execute_colonize(planet):
-             print(f"Queueing Colonize Order for {planet.name}")
-             self.selected_fleet.add_order(FleetOrder(OrderType.COLONIZE, planet))
-             self.on_ui_selection(self.selected_fleet) # Refresh UI
-
+        # Execute
         if len(valid_planets) == 1:
-            execute_colonize(valid_planets[0])
+            self._issue_colonize_order(self.selected_fleet, valid_planets[0])
         else:
             print("Multiple planets detected. Requesting user selection...")
-            self.ui.prompt_planet_selection(valid_planets, execute_colonize)
+            self.ui.prompt_planet_selection(valid_planets, lambda p: self._issue_colonize_order(self.selected_fleet, p))
              
     def cycle_selection(self, obj_type, direction):
         """Cycle selection through colonies or fleets and Center Camera."""

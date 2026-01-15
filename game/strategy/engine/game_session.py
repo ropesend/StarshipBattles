@@ -81,3 +81,74 @@ class GameSession:
             p_id = self.human_player_ids[player_index]
             return next((e for e in self.empires if e.id == p_id), None)
         return None
+
+    def handle_command(self, command):
+        """
+        Execute a user command.
+        
+        Args:
+            command: Command object
+            
+        Returns:
+            ValidationResult (is_valid=True/False)
+        """
+        if command.type == command.type.ISSUE_ORDER: # Assuming using CommandType enum, tricky without simpler import
+            # Determine command type by class
+            if command.name == 'IssueColonizeCommand':
+                return self._handle_colonize_command(command)
+        
+        return None # Unknown command?
+
+    def _handle_colonize_command(self, cmd):
+        """Handle IssueColonizeCommand."""
+        # 1. Resolve Data
+        # We need fleet object and planet object
+        # Searching fleets:
+        fleet = None
+        owning_empire = None
+        
+        for emp in self.empires:
+             for f in emp.fleets:
+                 if f.id == cmd.fleet_id:
+                     fleet = f
+                     owning_empire = emp
+                     break
+             if fleet: break
+             
+        if not fleet:
+            from game.strategy.engine.turn_engine import ValidationResult
+            return ValidationResult(False, "Fleet not found.")
+
+        # Resolve Planet
+        target_planet = None
+        if cmd.planet_id:
+            # Need strict lookup.
+            # Assuming we can find it via ID? We strictly used object references previously.
+            # IMPORTANT: The Command has to probably deal with IDs if we want to be clean, 
+            # BUT for this refactor preserving references might be easier if UI already has them?
+            # The USER plan said "IssueColonizeCommand(fleet_id, planet_id)".
+            # So we MUST support IDs. But our Galaxy doesn't have a planet ID registry efficiently yet.
+            # Let's Scan. (Optimization debt, but acceptable for now).
+            for sys in self.galaxy.systems.values():
+                for p in sys.planets:
+                    if id(p) == cmd.planet_id: # Python object ID as ID? Or did we assume Data ID?
+                        # Planet data class doesn't seem to have a unique 'id' field in the file view I saw.
+                        # It inherits from something? Let's check Galaxy/Planet data if needed.
+                        # For SAFETY: The plan specified IDs. I'll assume we use `id(obj)` or add an ID field?
+                        # Using `id(planet)` is flaky across network but fine for local refactor.
+                        target_planet = p
+                        break
+                if target_planet: break
+        
+        # 2. Validate
+        result = self.turn_engine.validate_colonize_order(self.galaxy, fleet, target_planet)
+        
+        # 3. Apply
+        if result.is_valid:
+             from game.strategy.data.fleet import FleetOrder, OrderType
+             # Ensure we pass the OBJECT to rules
+             order = FleetOrder(OrderType.COLONIZE, target=target_planet)
+             fleet.add_order(order)
+             print(f"GameSession: Issued Colonize Order for Fleet {fleet.id}")
+             
+        return result

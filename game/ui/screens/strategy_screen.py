@@ -495,7 +495,14 @@ class StrategyInterface:
             # Show Fleet Buttons
             if obj.owner_id == current_empire_id:
                  self.btn_orders.show()
-                 self.btn_colonize.show()
+                 
+                 # Check if we can colonize (Ask Engine)
+                 # We query for 'Any Planet' (target=None) to see if *something* is possible here.
+                 if hasattr(self.scene, 'turn_engine'):
+                     # We need galaxy ref
+                     res = self.scene.turn_engine.validate_colonize_order(self.scene.galaxy, obj, None)
+                     if res.is_valid:
+                         self.btn_colonize.show()
 
         elif hasattr(obj, 'destination_id'): # Warp Point
              text = f"<b>Warp Point</b><br>"
@@ -598,10 +605,10 @@ class StrategyInterface:
             elif event.ui_element == self.btn_raw_data:
                 self.show_raw_data_popup()
             elif event.ui_element == self.btn_colonize:
-                # Check current selection from detail panel context
-                # Assuming current selection is NOT just 'obj' but stored in self.current_selection
-                
-                obj = self.current_selection
+                # Logic handled by StrategyScene.on_colonize_click
+                pass
+            
+            elif event.ui_element == self.btn_orders:
                 
                 # Logic: Issues order mostly from Fleet
                 if hasattr(obj, 'ships'): # Is Fleet
