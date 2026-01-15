@@ -172,11 +172,20 @@ class BattleScene:
                 if not hasattr(self.test_scenario, 'results') or not self.test_scenario.results:
                     self.test_scenario.results = {}
                 self.test_scenario.results['ticks_run'] = self.test_tick_count
+                self.test_scenario.results['ticks'] = self.test_tick_count  # Alias for consistency
 
                 # Run verification (populates additional results)
                 self.test_scenario.passed = self.test_scenario.verify(self.engine)
                 print(f"DEBUG: Test {'PASSED' if self.test_scenario.passed else 'FAILED'}")
                 print(f"DEBUG: Results populated: {list(self.test_scenario.results.keys())}")
+
+                # Log test execution (for UI vs headless comparison)
+                try:
+                    from test_framework.runner import TestRunner
+                    runner = TestRunner()
+                    runner._log_test_execution(self.test_scenario, headless=False)
+                except Exception as e:
+                    print(f"Warning: Failed to log UI test execution: {e}")
 
                 # Signal test completion (keep scenario reference for results retrieval)
                 self.test_completed = True
