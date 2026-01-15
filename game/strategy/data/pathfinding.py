@@ -293,3 +293,61 @@ def project_fleet_path(fleet, galaxy, max_turns=10):
              sim_orders.pop(0)
              
     return segments
+
+def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
+    """
+    Calculate the optimal interception hex.
+    
+    Uses real path lengths (via find_hybrid_path) rather than straight-line
+    distance to ensure the chaser takes an efficient route.
+    
+    Algorithm:
+    1. Project target's future path.
+    2. For each point on target's path, calculate how long chaser needs to get there.
+    3. Find the earliest point where chaser_arrival_time <= target_arrival_time.
+    4. If no intercept possible, chase the endpoint of target's path.
+    """
+    # Project target's future path
+    target_path = project_fleet_path(target_fleet, galaxy, max_turns=50)
+    
+    chaser_speed = chaser_fleet.speed
+    if chaser_speed <= 0:
+        return target_fleet.location
+    
+    # Build list: [(hex, target_turn), ...]
+    points_to_check = [{'hex': target_fleet.location, 'turn': 0}] + target_path
+    
+    best_intercept = None
+    
+    for pt in points_to_check:
+        target_turn = pt['turn']
+        target_hex = pt['hex']
+        
+        # Calculate REAL path length using hybrid pathfinding
+        path_to_target = find_hybrid_path(galaxy, chaser_fleet.location, target_hex)
+        
+        if not path_to_target:
+            # Can't reach this hex at all, skip
+            continue
+            
+        # Path length is number of steps
+        path_length = len(path_to_target)
+        
+        # Time for chaser = path_length / speed
+        chaser_turns = path_length / chaser_speed
+        
+        # Can we intercept?
+        if chaser_turns <= target_turn:
+            # Found earliest intercept point
+            return target_hex
+            
+        # Track as fallback if this is the closest we can get
+        if best_intercept is None:
+            best_intercept = target_hex
+    
+    # No intercept found on projected path - chase the endpoint
+    if target_path:
+        return target_path[-1]['hex']
+        
+    return best_intercept if best_intercept else target_fleet.location
+

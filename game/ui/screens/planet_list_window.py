@@ -2,6 +2,7 @@ import pygame
 import pygame_gui
 import json
 import os
+from game.strategy.data.planet import PLANET_RESOURCES
 from game.core.constants import DATA_DIR
 from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UITextEntryLine, UISelectionList, UIHorizontalSlider, UIDropDownMenu, UIImage, UIVerticalScrollBar
 from pygame_gui import UI_TEXT_ENTRY_FINISHED
@@ -55,6 +56,17 @@ class PlanetListWindow(UIWindow):
             {'id': 'water', 'width': 90, 'title': 'Water %', 'attr': 'surface_water', 'fmt': "{:.0%}", 'visible': False},
             {'id': 'pressure', 'width': 100, 'title': 'Press (atm)', 'attr': 'total_pressure_atm', 'fmt': "{:.2f}", 'visible': False}
         ]
+
+        
+        # Add Resource Columns
+        for res in PLANET_RESOURCES:
+            self.columns.append({
+                'id': f'res_{res}',
+                'width': 110,
+                'title': res,
+                'func': lambda p, r=res: self._get_resource_str(p, r),
+                'visible': False # hidden by default
+            })
         
         # --- UI Containers ---
         
@@ -165,6 +177,22 @@ class PlanetListWindow(UIWindow):
     def _get_mass_earth(self, planet):
          m_earth = 5.97e24
          return f"{planet.mass/m_earth:.2f}"
+
+    def _get_resource_str(self, planet, resource_name):
+        if hasattr(planet, 'resources') and resource_name in planet.resources:
+            r = planet.resources[resource_name]
+            qty = r['quantity']
+            # Format k/M
+            if qty >= 1000000:
+                q_str = f"{qty/1000000:.1f}M"
+            elif qty >= 1000:
+                q_str = f"{qty/1000:.0f}k"
+            else:
+                q_str = str(qty)
+                
+            qual = r['quality']
+            return f"{q_str} (Q{qual:.0f})"
+        return "-"
 
     def _init_sidebar(self):
         """Initialize Filter and Config controls."""

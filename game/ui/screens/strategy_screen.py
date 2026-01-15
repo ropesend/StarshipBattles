@@ -3,7 +3,9 @@ import pygame
 import pygame_gui
 from game.strategy.data.fleet import OrderType
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
+from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_list_window import PlanetListWindow
+from game.ui.screens.fleet_orders_window import FleetOrdersWindow
 from game.core.constants import DATA_DIR
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 from game.ui.panels.system_tree_panel import SystemTreePanel
@@ -18,6 +20,8 @@ class StrategyInterface:
         self.width = screen_width
         self.height = screen_height
         self.sidebar_width = 600
+        self.fleet_orders_window = None # active window instance
+
         
         # UI State
         theme_path = os.path.join(DATA_DIR, 'builder_theme.json')
@@ -239,6 +243,15 @@ class StrategyInterface:
             container=self.detail_panel,
             visible=0 # Hidden by default
         )
+        
+        self.btn_orders = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(80, rect_detail.height - 50, 120, 40),
+            text="Orders",
+            manager=self.manager,
+            container=self.detail_panel,
+            visible=0 # Hidden by default
+        )
+
 
         
     def handle_resize(self, width, height):
@@ -357,9 +370,25 @@ class StrategyInterface:
 
     def show_detailed_report(self, obj, portrait_surface=None):
         """Update the detail report implementation."""
+        self.current_selection = obj # UPDATE STATE
+        
         # Reset state
         self.btn_raw_data.hide()
         self.graph_image.hide()
+        
+        # Default hidden, shown based on context below
+        self.btn_colonize.hide()
+        self.btn_build_ship.hide()
+        self.btn_orders.hide()
+        self.current_raw_data = ""
+        
+        # Determine Current Player (Local to UI or passed?) 
+        # StrategyInterface doesn't know "Current Player" easily without accessing scene.
+        # But scene.current_empire exists.
+        current_empire_id = -1
+        if hasattr(self.scene, 'current_empire'):
+            current_empire_id = self.scene.current_empire.id
+
         self.current_raw_data = ""
         
         if portrait_surface:
@@ -459,6 +488,11 @@ class StrategyInterface:
                          text += f" {i+1}. {order.type.name}<br>"
             else:
                  text += " (No Orders)<br>"
+                 
+            # Show Fleet Buttons
+            if obj.owner_id == current_empire_id:
+                 self.btn_orders.show()
+                 self.btn_colonize.show()
 
         elif hasattr(obj, 'destination_id'): # Warp Point
              text = f"<b>Warp Point</b><br>"
@@ -490,6 +524,26 @@ class StrategyInterface:
         text += f"<b>Temp:</b> {int(obj.surface_temperature)} K<br>"
         text += f"<b>Water:</b> {obj.surface_water*100:.0f}%<br>"
         text += f"<b>Pressure:</b> {obj.total_pressure_atm:.2f} atm<br>"
+
+        if hasattr(obj, 'resources') and obj.resources:
+            text += "<br><b>Resources:</b><br>"
+            for r_name, r_data in obj.resources.items():
+                qty = r_data['quantity']
+                if qty >= 1000000: q_str = f"{qty/1000000:.1f}M"
+                elif qty >= 1000: q_str = f"{qty/1000:.0f}k"
+                else: q_str = str(qty)
+                
+                qual = r_data['quality']
+                text += f" {r_name}: {q_str} (Q:{qual:.0f})<br>"
+        
+        # Show Build Button if owned by current player
+        current_empire_id = -1
+        if hasattr(self.scene, 'current_empire'):
+            current_empire_id = self.scene.current_empire.id
+            
+        if hasattr(obj, 'owner_id') and obj.owner_id == current_empire_id:
+             self.btn_build_ship.show()
+             
         return text
 
     def _format_atmosphere_raw(self, planet):
@@ -520,6 +574,11 @@ class StrategyInterface:
     def handle_event(self, event):
         """Pass events to pygame_gui and handle custom UI logic."""
         self.manager.process_events(event)
+        self.process_custom_ui_events(event)
+        
+        # Pass generic events to orders window if active (e.g. for confirmation dialogs)
+        if self.fleet_orders_window:
+             self.fleet_orders_window.handle_global_event(event)
         
         if self.system_tree.process_event(event):
              pass
@@ -578,6 +637,15 @@ class StrategyInterface:
                                  self.scene.request_colonize_order(obj, planet)
                                  
                          self.prompt_planet_selection(candidates, on_planet_selected)
+            
+            elif event.ui_element == self.btn_orders:
+                if self.current_selection and hasattr(self.current_selection, 'orders'):
+                     self.open_orders_window(self.current_selection)
+
+            elif event.type == pygame_gui.UI_WINDOW_CLOSE:
+                 if event.ui_element == self.fleet_orders_window:
+                      self.fleet_orders_window = None
+
                     
         
     def handle_click(self, mx, my, button):
@@ -606,6 +674,72 @@ class StrategyInterface:
         # Use existing class
         PlanetSelectionWindow(rect, self.manager, planets, on_select, self.format_planet_info)
 
+    def prompt_move_choice(self, fleet, target_hex, on_move_sector, on_intercept_fleet):
+        """
+        Dialog to choose between moving to the sector or intercepting the fleet.
+        """
+        # We can use a confirmation dialog with custom buttons or a small custom window.
+        # pygame_gui doesn't natively support "3 buttons" easily in standard dialogs without custom class.
+        # Let's use a standard UIConfirmationDialog but we need 2 positive options? No.
+        # Let's use a small custom UIWindow or UIMessageWindow?
+        # Simpler: A Custom UIWindow with 2 Buttons.
+        
+        width = 300
+        height = 150
+        x = (self.width - width) / 2
+        y = (self.height - height) / 2
+        rect = pygame.Rect(x, y, width, height)
+        
+        win = pygame_gui.elements.UIWindow(
+            rect=rect,
+            manager=self.manager,
+            window_display_title="Select Move Type"
+        )
+        
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, 10, 280, 30),
+            text=f"Fleet detected at target.",
+            manager=self.manager,
+            container=win
+        )
+        
+        btn_sector = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(10, 50, 280, 30),
+            text="Move to Sector (Static)",
+            manager=self.manager,
+            container=win
+        )
+        
+        btn_intercept = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(10, 90, 280, 30),
+            text="Intercept Fleet (Dynamic)",
+            manager=self.manager,
+            container=win
+        )
+        
+        # We need to bind click events. 
+        # Since we can't easily pass callbacks to generic UIElements without a wrapper class or external event handling,
+        # we will use a small inline class or rely on the fact that StrategyInterface handles events?
+        # StrategyInterface.handle_event handles UI_BUTTON_PRESSED.
+        # But we don't store references to these dyanmic buttons easily.
+        
+        # Pattern: Store callback map?
+        # self.active_callbacks[btn_element] = callback
+        
+        if not hasattr(self, 'ui_callbacks'):
+            self.ui_callbacks = {}
+            
+        self.ui_callbacks[btn_sector] = lambda: (on_move_sector(), win.kill())
+        self.ui_callbacks[btn_intercept] = lambda: (on_intercept_fleet(), win.kill())
+
+    def process_custom_ui_events(self, event):
+        """Helper to process custom callbacks."""
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if hasattr(self, 'ui_callbacks') and event.ui_element in self.ui_callbacks:
+                self.ui_callbacks[event.ui_element]()
+                del self.ui_callbacks[event.ui_element] # Cleanup
+
+
     def open_planet_list(self):
         """Open the Planet List Window."""
         w, h = self.width * 0.9, self.height * 0.9
@@ -616,3 +750,14 @@ class StrategyInterface:
         galaxy = self.scene.galaxy
         
         PlanetListWindow(rect, self.manager, galaxy, empire, asset_resolver=self._get_object_asset)
+
+    def open_orders_window(self, fleet):
+        """Open the Fleet Orders Window."""
+        if self.fleet_orders_window:
+            self.fleet_orders_window.kill()
+            
+        w, h = 400, 500
+        rect = pygame.Rect((self.width - w)/2, (self.height - h)/2, w, h)
+        
+        self.fleet_orders_window = FleetOrdersWindow(rect, self.manager, fleet)
+

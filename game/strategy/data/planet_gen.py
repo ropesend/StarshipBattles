@@ -1,7 +1,7 @@
 import random
 import math
 from typing import List, Dict, Tuple
-from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planet import Planet, PlanetType, PLANET_RESOURCES
 from game.strategy.data.hex_math import HexCoord, hex_ring
 from game.strategy.data.physics import calculate_incident_radiation
 from game.strategy.data.stars import Star
@@ -202,7 +202,8 @@ class PlanetGenerator:
                     planet_type=p_type,
                     surface_water=water,
                     tectonic_activity=activity,
-                    magnetic_field=mag_field
+                    magnetic_field=mag_field,
+                    resources=self._generate_resources(mass)
                 )
                 bodies.append(p)
 
@@ -471,3 +472,45 @@ class PlanetGenerator:
                 n -= val[i]
             i += 1
         return roman_num
+
+    def _generate_resources(self, mass):
+        """
+        Generate resources based on mass.
+        Large planets -> High Quantity, Low Quality (hard to extract)
+        Small planets -> Low Quantity, High Quality (easy to extract)
+        """
+        resources = {}
+        # Log scale for size factor
+        # Ceres ~ 21, Jupiter ~ 27.3
+        log_mass = math.log10(max(mass, 1.0))
+        min_log = 20.0
+        max_log = 28.0
+        
+        # 0.0 (Small) to 1.0 (Large)
+        size_factor = (log_mass - min_log) / (max_log - min_log)
+        size_factor = max(0.0, min(1.0, size_factor))
+        
+        for res in PLANET_RESOURCES:
+            # Quantity: Correlates with Size
+            # 0 to 1,000,000
+            # Bias towards size_factor
+            r_qty = random.random()
+            # If factor is 0.5 and r is 0.5 -> 0.5.
+            # If factor is 1.0 and r is 0.0 -> 0.7?
+            # Let's weight size heavily
+            qty_norm = (size_factor * 0.7) + (r_qty * 0.3)
+            quantity = int(qty_norm * 1000000)
+            
+            # Quality: Inversely correlates with Size
+            # 0 to 100
+            qual_bias = 1.0 - size_factor
+            r_qual = random.random()
+            qual_norm = (qual_bias * 0.7) + (r_qual * 0.3)
+            quality = qual_norm * 100.0
+            
+            resources[res] = {
+                'quantity': quantity,
+                'quality': quality
+            }
+            
+        return resources

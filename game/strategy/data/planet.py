@@ -3,6 +3,9 @@ from enum import Enum, auto
 from typing import Dict, List, Optional
 from game.strategy.data.hex_math import HexCoord
 
+# Global Resource Definition
+PLANET_RESOURCES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+
 class PlanetType(Enum):
     """
     Broad classification of planetary bodies.
@@ -58,6 +61,11 @@ class Planet:
     # Empire
     owner_id: Optional[int] = None
     construction_queue: list = field(default_factory=list)
+    
+    # Resources
+    # Key: Resource Name (from PLANET_RESOURCES) -> {'quantity': int, 'quality': float}
+    resources: Dict[str, dict] = field(default_factory=dict)
+
 
     def __eq__(self, other):
         if not isinstance(other, Planet):

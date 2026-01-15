@@ -298,8 +298,14 @@ class StrategyScene:
                     print("Input Mode: MOVE - Click designation for fleet.")
                 else:
                     print("Select a fleet first.")
+            elif event.key == pygame.K_j:
+                if self.selected_fleet:
+                    self.input_mode = 'JOIN'
+                    print("Input Mode: JOIN - Select fleet to join.")
+                else:
+                    print("Select a fleet first.")
             elif event.key == pygame.K_ESCAPE:
-                if getattr(self, 'input_mode', 'SELECT') in ('MOVE', 'COLONIZE_TARGET'):
+                if getattr(self, 'input_mode', 'SELECT') in ('MOVE', 'COLONIZE_TARGET', 'JOIN'):
                     self.input_mode = 'SELECT'
                     print("Input Mode: SELECT")
             elif event.key == pygame.K_c:
@@ -583,6 +589,15 @@ class StrategyScene:
                 self.input_mode = 'SELECT'
                 print("Input Mode: SELECT")
                 return True
+                
+        elif current_mode == 'JOIN':
+            if button == 1: # Left Click to Join
+                self._handle_join_designation(mx, my)
+                return True
+            elif button == 3: # Right click cancels
+                self.input_mode = 'SELECT'
+                print("Input Mode: SELECT")
+                return True
         
         elif current_mode == 'COLONIZE_TARGET':
             if button == 1: # Left Click to select planet
@@ -690,19 +705,14 @@ class StrategyScene:
         current_player_id = self.human_player_ids[self.current_player_index]
         
         # 1. Colonize (Fleet Selected + At Planet?)
-        # Show if current player's Fleet Selected
+        # Logic moved to StrategyInterface.show_detailed_report
         if isinstance(obj, Fleet) and obj.owner_id == current_player_id:
             self.selected_fleet = obj
-            self.ui.btn_colonize.show()
         else:
             if not isinstance(obj, Fleet): self.selected_fleet = None # Clear if not fleet
-            self.ui.btn_colonize.hide()
             
         # 2. Build Ship (Current Player's Planet Selected)
-        if isinstance(obj, Planet) and obj.owner_id == current_player_id:
-            self.ui.btn_build_ship.show()
-        else:
-            self.ui.btn_build_ship.hide()
+        # Logic moved to StrategyInterface.show_detailed_report
             
         
         # Get Portrait
@@ -752,36 +762,105 @@ class StrategyScene:
         world_pos = self.camera.screen_to_world((mx, my))
         target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.HEX_SIZE)
         
-        print(f"Calculating path to {target_hex}...")
-        # Determine Start Hex (Current Location or Last Queued Destination)
-        start_hex = self.selected_fleet.location
-        for o in reversed(self.selected_fleet.orders):
-             if o.type == OrderType.MOVE:
-                 start_hex = o.target
-                 break
-
-        print(f"Calculating path from {start_hex} to {target_hex}...")
-        path = self.calculate_hybrid_path(start_hex, target_hex)
+        # Check for Fleet at target
+        target_fleet = self._get_fleet_at_hex(target_hex)
         
-        if path:
-            print(f"Path confirmed: {len(path)} steps.")
-            # Create Order
-            new_order = FleetOrder(OrderType.MOVE, target_hex)
+        # Define Standard Move Logic as a closure/helper
+        def execute_standard_move():
+            print(f"Calculating path to {target_hex}...")
+            # Determine Start Hex (Current Location or Last Queued Destination)
+            start_hex = self.selected_fleet.location
+            if self.selected_fleet.orders:
+                 # Last order target
+                 last_order = self.selected_fleet.orders[-1]
+                 if last_order.type in (OrderType.MOVE, OrderType.MOVE_TO_FLEET):
+                     # For MOVE_TO_FLEET, target is fleet object, get its location?
+                     if hasattr(last_order.target, 'location'):
+                         start_hex = last_order.target.location
+                     elif isinstance(last_order.target, HexCoord):
+                         start_hex = last_order.target
+
+            print(f"Calculating path from {start_hex} to {target_hex}...")
+            path = self.calculate_hybrid_path(start_hex, target_hex)
+            
+            if path:
+                print(f"Path confirmed: {len(path)} steps.")
+                new_order = FleetOrder(OrderType.MOVE, target_hex)
+                self.selected_fleet.add_order(new_order)
+                
+                # Optimization if idle
+                if len(self.selected_fleet.orders) == 1:
+                    self.selected_fleet.path = path
+                
+                # Reset Input unless Shift
+                keys = pygame.key.get_pressed()
+                if not (keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]):
+                    self.input_mode = 'SELECT'
+                    
+                self.on_ui_selection(self.selected_fleet)
+            else:
+                print("Cannot find path to target.")
+
+        # Define Intercept Logic
+        def execute_intercept():
+            print(f"Intercepting Fleet {target_fleet.id}...")
+            new_order = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
             self.selected_fleet.add_order(new_order)
             
-            # Optimization: If Fleet has no path/orders, assign this path to 'current' immediately.
-            if len(self.selected_fleet.orders) == 1:
-                self.selected_fleet.path = path
-            
-            # Check modifier keys for Shift-Click (Chain orders)
-            keys = pygame.key.get_pressed()
-            if not (keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]):
-                self.input_mode = 'SELECT' # Revert to select after cmd unless Shift held
-                
-            # Refresh UI to show new order
+            # Reset Input
+            self.input_mode = 'SELECT'
             self.on_ui_selection(self.selected_fleet)
+
+        if target_fleet and target_fleet != self.selected_fleet:
+            # Prompt User (Move vs Intercept)
+            self.ui.prompt_move_choice(target_fleet, target_hex, execute_standard_move, execute_intercept)
         else:
-            print("Cannot find path to target.")
+            # No fleet, just move
+            execute_standard_move()
+            
+    def _handle_join_designation(self, mx, my):
+        """Handle designating a fleet to join."""
+        if not self.selected_fleet:
+            return
+
+        world_pos = self.camera.screen_to_world((mx, my))
+        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.HEX_SIZE)
+        
+        target_fleet = self._get_fleet_at_hex(target_hex)
+        
+        if not target_fleet:
+            print("No fleet at target location.")
+            return # Keep input mode active? Or cancel?
+            
+        if target_fleet == self.selected_fleet:
+            print("Cannot join self.")
+            return
+            
+        # Must be friendly? (Usually yes, but maybe mechanics allow boarding later? For now assume friendly)
+        if target_fleet.owner_id != self.selected_fleet.owner_id:
+            print("Cannot join enemy fleet.")
+            return
+            
+        print(f"Queueing Join Order with Fleet {target_fleet.id}...")
+        
+        # 1. Move Towards
+        order_move = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
+        self.selected_fleet.add_order(order_move)
+        
+        # 2. Join
+        order_join = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        self.selected_fleet.add_order(order_join)
+        
+        self.input_mode = 'SELECT'
+        self.on_ui_selection(self.selected_fleet)
+
+    def _get_fleet_at_hex(self, hex_coord):
+        """Find the first fleet at the given hex."""
+        for emp in self.empires:
+            for f in emp.fleets:
+                if f.location == hex_coord:
+                    return f
+        return None
 
     def _handle_colonize_designation(self, mx, my):
         """Handle selecting a planet for colonization with movement."""
@@ -858,14 +937,12 @@ class StrategyScene:
             # Queue MOVE
             # Only if start != target
             if start_hex != target_hex:
-                from game.strategy.data.fleet import FleetOrder, OrderType # Ensure import
                 move = FleetOrder(OrderType.MOVE, target_hex)
                 target_fleet.add_order(move)
                 if len(target_fleet.orders) == 1:
                     target_fleet.path = path
             
             # Queue COLONIZE
-            from game.strategy.data.fleet import FleetOrder, OrderType
             col = FleetOrder(OrderType.COLONIZE, planet)
             target_fleet.add_order(col)
             

@@ -1,22 +1,15 @@
 Traceback (most recent call last):
   File "C:\Developer\StarshipBattles\game\app.py", line 568, in main
     game.run()
-  File "C:\Developer\StarshipBattles\game\app.py", line 252, in run
-    self._update_and_draw(frame_time, events)
-  File "C:\Developer\StarshipBattles\game\app.py", line 342, in _update_and_draw
-    self.strategy_scene.update(frame_time)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 257, in update
-    self.ui.update(dt)
-  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_screen.py", line 504, in update
-    self.manager.update(dt)
-  File "C:\Users\rossr\AppData\Roaming\Python\Python311\site-packages\pygame_gui\ui_manager.py", line 393, in update
-    self.ui_group.update(time_delta)
-  File "C:\Users\rossr\AppData\Roaming\Python\Python311\site-packages\pygame_gui\core\layered_gui_group.py", line 376, in update
-    sprite.update(*args, **kwargs)
-  File "C:\Developer\StarshipBattles\game\ui\screens\planet_list_window.py", line 710, in update
-    self._rebuild_row_pool() # Rebuild pool to match new col visibility
-    ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Developer\StarshipBattles\game\ui\screens\planet_list_window.py", line 474, in _rebuild_row_pool
-    w.kill()
-    ^^^^^^
-AttributeError: 'dict' object has no attribute 'kill'
+  File "C:\Developer\StarshipBattles\game\app.py", line 228, in run
+    self._handle_click(event)
+  File "C:\Developer\StarshipBattles\game\app.py", line 313, in _handle_click
+    self.strategy_scene.handle_click(mx, my, event.button)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 589, in handle_click
+    self._handle_colonize_designation(mx, my)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 818, in _handle_colonize_designation
+    self._queue_colonize_mission(target_hex, candidates[0], fleet=self.selected_fleet)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 847, in _queue_colonize_mission
+    if last.type == OrderType.MOVE:
+                    ^^^^^^^^^
+UnboundLocalError: cannot access local variable 'OrderType' where it is not associated with a value
