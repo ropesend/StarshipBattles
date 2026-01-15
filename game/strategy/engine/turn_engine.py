@@ -226,74 +226,26 @@ class TurnEngine:
         return None
 
     def _execute_move_step(self, fleet, galaxy):
-        """Advance fleet 1 hex if it has a MOVE order and path."""
-        order = fleet.get_current_order()
-        if not order:
-            return
-
-        destination = None
+        """Advance fleet 1 hex if it has a MOVE order and path.
         
-        if order.type == OrderType.MOVE:
-            destination = order.target
-        elif order.type == OrderType.MOVE_TO_FLEET:
-            target_fleet = order.target
-            if not target_fleet or not hasattr(target_fleet, 'location'):
-                print(f"TurnEngine: Target fleet invalid. Order cancelled.")
-                fleet.pop_order()
-                return
-            
-            # Use Predictive Intercept
-            from game.strategy.data.pathfinding import calculate_intercept_point
-            destination = calculate_intercept_point(fleet, target_fleet, galaxy)
-            
-        else:
-            return
-            
-        # Check for Re-Pathing (for Dynamic Targets)
-        # If we have a path but the destination has changed, clear path.
-        if fleet.path:
-            # Current path ends at...?
-            # We don't store "target hex" in path easily, but path[-1] is the final step.
-            # If our calculated intercept point changed, we must recalc.
-            current_dest = fleet.path[-1]
-            if current_dest != destination:
-                fleet.path = [] # Force recalc
-            
-        # Check if we have a path. If not, calculate it.
-        if not fleet.path:
-            # Need pathfinding!
-            # We need to import here to avoid circular dependencies if any, 
-            # or move imports to top if safe. Pathfinding usually safe.
-            from game.strategy.data.pathfinding import find_path_interstellar, find_path_deep_space, find_hybrid_path
-            from game.strategy.data.hex_math import hex_distance
-            
-            # If already at destination?
-            if fleet.location == destination:
-                fleet.pop_order()
-                return
-
-            # Use Hybrid Pathfinding (Warp Point Aware)
-            fleet.path = find_hybrid_path(galaxy, fleet.location, destination)
-            
-            # Remove start hex if path begins with current location
-            if fleet.path and fleet.path[0] == fleet.location:
-                fleet.path.pop(0)
-            
-            # If path still empty (unreachable or error?), pop order.
-            if not fleet.path:
-                # If we are adjacent or something? No, empty path usually means 0 steps needed or unreachable.
-                # If pathfinding fails (unreachable), we should probably cancel.
-                if fleet.location != destination:
-                    # Retry next turn? or Cancel?
-                    # For now, if moving to fleet, maybe it just jumped?
-                    pass 
-                else: 
-                     fleet.pop_order()
-                return
-
-        if fleet.path:
-            # Advance
-            next_hex = fleet.path.pop(0)
+        .. deprecated::
+            This method exists for backward compatibility with tests.
+            Use _calculate_next_hex directly in new code.
+            In the main turn loop, _calculate_next_hex is called in Phase 1,
+            and movement is applied in Phase 2.
+        """
+        import warnings
+        warnings.warn(
+            "_execute_move_step is deprecated. Use _calculate_next_hex and apply movement manually.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
+        # Use the canonical calculation method
+        next_hex = self._calculate_next_hex(fleet, galaxy)
+        
+        if next_hex:
+            # Apply the movement
             fleet.location = next_hex
             
             # If path complete, order is done

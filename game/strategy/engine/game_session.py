@@ -1,5 +1,6 @@
 import os
 from game.strategy.engine.turn_engine import TurnEngine
+from game.strategy.engine.game_config import GameConfig
 from game.strategy.data.empire import Empire
 from game.strategy.data.galaxy import Galaxy
 
@@ -9,36 +10,48 @@ class GameSession:
     Owns the Galaxy, Empires, and the Turn Engine.
     Running completely decoupled from the UI/Rendering layer.
     """
-    def __init__(self, galaxy_radius=4000, system_count=25):
+    def __init__(self, config: GameConfig = None, galaxy_radius: int = None, system_count: int = None):
+        # Use provided config or create default
+        if config is None:
+            config = GameConfig()
+        
+        # Allow legacy parameters to override config for backward compatibility
+        if galaxy_radius is not None:
+            config.galaxy_radius = galaxy_radius
+        if system_count is not None:
+            config.system_count = system_count
+            
+        self.config = config
         self.turn_number = 1
         
         # Engine
         self.turn_engine = TurnEngine()
         
-        # Empires
-        # Hardcoding paths for now as per original StrategyScene, 
-        # but this should eventually be configurable/injected.
-        # NOTE: Using absolute paths based on original code, but this is fragile. 
-        #Ideally we used a relative path resolver or constants.
-        base_asset_path = r"C:\Developer\StarshipBattles\assets\ShipThemes"
-        
-        self.player_empire = Empire(0, "Terran Command", (0, 0, 255), 
-                                  theme_path=os.path.join(base_asset_path, "Atlantians"))
-        self.enemy_empire = Empire(1, "Xeno Hive", (255, 0, 0), 
-                                 theme_path=os.path.join(base_asset_path, "Federation"))
+        # Empires - using config paths instead of hardcoded values
+        self.player_empire = Empire(
+            0, 
+            config.player_name, 
+            config.player_color, 
+            theme_path=config.player_theme_path
+        )
+        self.enemy_empire = Empire(
+            1, 
+            config.enemy_name, 
+            config.enemy_color, 
+            theme_path=config.enemy_theme_path
+        )
         
         self.empires = [self.player_empire, self.enemy_empire]
         
-        # Human Players (indices in empires list, or IDs? Original scene used IDs)
-        # StrategyScene used self.human_player_ids = [0, 1]
+        # Human Players (indices in empires list)
         self.human_player_ids = [0, 1]
         
         # Galaxy
-        self.galaxy = Galaxy(radius=galaxy_radius)
+        self.galaxy = Galaxy(radius=config.galaxy_radius)
         self.systems = []
         
         # Initialization
-        self._initialize_galaxy(system_count)
+        self._initialize_galaxy(config.system_count)
         self._setup_initial_scenario()
 
     def _initialize_galaxy(self, count):

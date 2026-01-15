@@ -1,6 +1,10 @@
 import heapq
+import logging
 from game.strategy.data.hex_math import hex_distance, hex_linedraw
 from game.strategy.data.fleet import OrderType
+
+# Module-level logger for pathfinding debug output
+logger = logging.getLogger('strategy.pathfinding')
 
 def find_path_deep_space(start, end):
     """
@@ -189,6 +193,9 @@ def find_hybrid_path(galaxy, start_hex, end_hex):
 def project_fleet_path(fleet, galaxy, max_turns=10):
     """
     Simulate future fleet movement based on current speed and orders.
+    
+    Delegates to FleetMovementSimulator for consistent movement logic.
+    
     Returns a list of segment dictionaries:
     {
         'start': HexCoord,
@@ -198,105 +205,10 @@ def project_fleet_path(fleet, galaxy, max_turns=10):
         'hex': HexCoord (alias for end)
     }
     """
-    segments = []
+    from game.strategy.engine.fleet_movement import FleetMovementSimulator
     
-    # Clone fleet state for simulation (path, location, orders)
-    # We don't want to modify actual fleet
-    sim_location = fleet.location
-    sim_path = list(fleet.path) # Copy
-    sim_orders = list(fleet.orders) # Copy
-    
-    moves_per_turn = int(fleet.speed)
-    moves_left_in_turn = moves_per_turn
-    current_turn = 0
-    
-    # Safety
-    iterations = 0
-    max_steps = max_turns * moves_per_turn
-    
-    # 1. Process active path first
-    # 2. Then pop orders and generate new paths
-    
-    # We loop until path empty AND orders empty OR max turns reached
-    while (sim_path or sim_orders) and current_turn < max_turns:
-        iterations += 1
-        if iterations > max_steps + 100: break # Safety brake
-        
-        # If no path but have orders, generate path
-        if not sim_path and sim_orders:
-            # Check if we need to pop an old order?
-            # If path was empty to start with, sim_orders[0] is the active one if logic aligns with fleet.py
-            # fleet.get_current_order() returns orders[0].
-            # If fleet.path is empty, it means we either just finished an order or haven't started.
-            
-            # Logic: If we are here, we need a path for the *current* order.
-            # If sim_orders[0] is MOVE, gen path.
-            # If COLONIZE, it consumes no movement? Or consumes turn?
-            # For visualization, we skip non-move orders or maybe mark them?
-            # Let's assume non-move orders are instantaneous or consume 0 movement for this "path line" viz.
-            
-            order = sim_orders[0]
-            if order.type != OrderType.MOVE:
-                sim_orders.pop(0)
-                continue
-                
-            # It is a MOVE order.
-            # Generate path from sim_location to order.target
-            target = order.target
-            
-            # Use hybrid path
-            new_path_segment = find_hybrid_path(galaxy, sim_location, target)
-            if new_path_segment:
-                if new_path_segment and new_path_segment[0] == sim_location:
-                    new_path_segment.pop(0)
-                sim_path = new_path_segment
-                # We do NOT pop order yet; we pop it when path finished.
-            else:
-                # Cannot reach? Abort
-                break
-                
-        if not sim_path:
-             break # No path and no orders left
-             
-        # Execute one step
-        next_hex = sim_path.pop(0)
-        
-        # Check if Warp Jump
-        # Detection: If distance > 1, it's a warp jump (teleport)
-        is_warp = False
-        if hex_distance(sim_location, next_hex) > 1:
-            is_warp = True
-            
-        segment = {
-            'start': sim_location,
-            'end': next_hex,
-            'hex': next_hex, # For convenience
-            'turn': current_turn,
-            'is_warp': is_warp
-        }
-        segments.append(segment)
-        
-        sim_location = next_hex
-        
-        # Cost Logic
-        if not is_warp:
-             moves_left_in_turn -= 1
-        else:
-             # Warp Jump cost?
-             # Usually consumes movement?
-             # Let's assume it costs 1 MP for entering/exiting warp
-             moves_left_in_turn -= 1
-             
-        if moves_left_in_turn <= 0:
-            current_turn += 1
-            moves_left_in_turn = moves_per_turn
-            
-        # Check if Order Finished
-        if not sim_path and sim_orders:
-             # Just finished this order's path
-             sim_orders.pop(0)
-             
-    return segments
+    simulator = FleetMovementSimulator()
+    return simulator.project_path_as_dicts(fleet, galaxy, max_turns)
 
 def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
     """
@@ -312,60 +224,45 @@ def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
     4. Early exit if we find a perfect intercept (chaser arrives in <= 1 turn).
     5. If no intercept possible, chase the endpoint of target's path.
     """
-    import os
-    from datetime import datetime
-    
-    # Debug logging setup
-    log_enabled = True
-    log_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'intercept_debug.log')
-    
-    def log(msg):
-        if log_enabled:
-            try:
-                with open(log_path, 'a', encoding='utf-8') as f:
-                    f.write(msg + '\n')
-            except:
-                pass
-    
-    # Start new log entry
-    log(f"\n{'='*60}")
-    log(f"INTERCEPT CALCULATION - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    log(f"{'='*60}")
-    log(f"Chaser Fleet ID: {getattr(chaser_fleet, 'id', 'unknown')}")
-    log(f"  Location: {chaser_fleet.location}")
-    log(f"  Speed: {chaser_fleet.speed}")
-    log(f"Target Fleet ID: {getattr(target_fleet, 'id', 'unknown')}")
-    log(f"  Location: {target_fleet.location}")
-    log(f"  Speed: {getattr(target_fleet, 'speed', 'unknown')}")
+    # Log header
+    logger.debug("=" * 60)
+    logger.debug("INTERCEPT CALCULATION")
+    logger.debug("=" * 60)
+    logger.debug(f"Chaser Fleet ID: {getattr(chaser_fleet, 'id', 'unknown')}")
+    logger.debug(f"  Location: {chaser_fleet.location}")
+    logger.debug(f"  Speed: {chaser_fleet.speed}")
+    logger.debug(f"Target Fleet ID: {getattr(target_fleet, 'id', 'unknown')}")
+    logger.debug(f"  Location: {target_fleet.location}")
+    logger.debug(f"  Speed: {getattr(target_fleet, 'speed', 'unknown')}")
     
     # Project target's future path
     target_path = project_fleet_path(target_fleet, galaxy, max_turns=50)
     
-    log(f"\nTarget Projected Path ({len(target_path)} segments):")
+    logger.debug(f"Target Projected Path ({len(target_path)} segments):")
     for i, seg in enumerate(target_path[:15]):  # Log first 15
-        log(f"  [{i}] Turn {seg['turn']}: {seg['hex']}")
+        logger.debug(f"  [{i}] Turn {seg['turn']}: {seg['hex']}")
     if len(target_path) > 15:
-        log(f"  ... ({len(target_path) - 15} more)")
+        logger.debug(f"  ... ({len(target_path) - 15} more)")
     
     chaser_speed = chaser_fleet.speed
     if chaser_speed <= 0:
-        log(f"ERROR: Chaser speed <= 0, returning target location")
+        logger.debug("ERROR: Chaser speed <= 0, returning target location")
         return target_fleet.location
     
     # Build list of intercept candidates
     if target_path:
         points_to_check = target_path
-        log(f"\nTarget is MOVING - using projected path only")
+        logger.debug("Target is MOVING - using projected path only")
     else:
         points_to_check = [{'hex': target_fleet.location, 'turn': 0}]
-        log(f"\nTarget is STATIONARY - using current location")
+        logger.debug("Target is STATIONARY - using current location")
     
     best_intercept = None
     best_intercept_time = float('inf')
     best_target_turn = None
     fallback_hex = None
     
-    log(f"\nEvaluating intercept candidates:")
+    logger.debug("Evaluating intercept candidates:")
     
     for i, pt in enumerate(points_to_check):
         target_turn = pt['turn']
@@ -375,7 +272,7 @@ def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
         path_to_target = find_hybrid_path(galaxy, chaser_fleet.location, target_hex)
         
         if not path_to_target:
-            log(f"  [{i}] {target_hex} @ T{target_turn}: UNREACHABLE")
+            logger.debug(f"  [{i}] {target_hex} @ T{target_turn}: UNREACHABLE")
             continue
             
         path_length = max(0, len(path_to_target) - 1)
@@ -384,7 +281,7 @@ def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
         # Condition: chaser_turns < target_turn + 1
         valid = chaser_turns < target_turn + 1
         
-        log(f"  [{i}] {target_hex} @ T{target_turn}: path={path_length} steps, "
+        logger.debug(f"  [{i}] {target_hex} @ T{target_turn}: path={path_length} steps, "
             f"chaser_time={chaser_turns:.2f} turns, valid={valid}")
         
         if valid:
@@ -392,12 +289,12 @@ def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
                 best_intercept_time = chaser_turns
                 best_intercept = target_hex
                 best_target_turn = target_turn
-                log(f"      -> NEW BEST INTERCEPT")
+                logger.debug("      -> NEW BEST INTERCEPT")
                 
                 # Early exit ONLY if chaser would arrive at the SAME subtick as target
                 # (i.e., chaser_turns matches target_turn closely)
                 if abs(chaser_turns - target_turn) < 0.1:
-                    log(f"      -> EARLY EXIT (perfectly synchronized)")
+                    logger.debug("      -> EARLY EXIT (perfectly synchronized)")
                     break
         else:
             if fallback_hex is None:
@@ -405,26 +302,26 @@ def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
                 
         # Early exit if we've clearly passed the optimal point
         if best_intercept is not None and target_turn > best_intercept_time + 3:
-            log(f"      -> EARLY EXIT (target_turn >> best_time)")
+            logger.debug("      -> EARLY EXIT (target_turn >> best_time)")
             break
     
     # Determine result
     if best_intercept is not None:
         result = best_intercept
-        log(f"\n>>> SELECTED INTERCEPT: {result}")
-        log(f"    Chaser arrives in {best_intercept_time:.2f} turns")
-        log(f"    Target at hex during turn {best_target_turn}")
+        logger.debug(f">>> SELECTED INTERCEPT: {result}")
+        logger.debug(f"    Chaser arrives in {best_intercept_time:.2f} turns")
+        logger.debug(f"    Target at hex during turn {best_target_turn}")
         
         # Cross-verification: simulate chaser path to verify
         chaser_path = find_hybrid_path(galaxy, chaser_fleet.location, result)
         if chaser_path:
-            log(f"\n--- CROSS-VERIFICATION ---")
+            logger.debug("--- CROSS-VERIFICATION ---")
             chaser_path_len = len(chaser_path) - 1
             chaser_subticks_total = int(chaser_path_len * (100 / chaser_speed))
             chaser_arrival_turn = chaser_subticks_total // 100
             chaser_arrival_subtick = chaser_subticks_total % 100
-            log(f"Chaser path length: {chaser_path_len} steps")
-            log(f"Chaser subticks: {chaser_subticks_total} (Turn {chaser_arrival_turn}, Subtick {chaser_arrival_subtick})")
+            logger.debug(f"Chaser path length: {chaser_path_len} steps")
+            logger.debug(f"Chaser subticks: {chaser_subticks_total} (Turn {chaser_arrival_turn}, Subtick {chaser_arrival_subtick})")
             
             # Find when target is at intercept hex
             target_at_intercept = None
@@ -435,23 +332,23 @@ def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
             
             if target_at_intercept:
                 target_turn_at_intercept = target_at_intercept['turn']
-                log(f"Target at intercept hex during turn: {target_turn_at_intercept}")
+                logger.debug(f"Target at intercept hex during turn: {target_turn_at_intercept}")
                 
                 # Check if they actually meet
                 if chaser_arrival_turn <= target_turn_at_intercept:
-                    log(f"VERIFIED: Chaser arrives Turn {chaser_arrival_turn} <= Target there Turn {target_turn_at_intercept}")
+                    logger.debug(f"VERIFIED: Chaser arrives Turn {chaser_arrival_turn} <= Target there Turn {target_turn_at_intercept}")
                 else:
-                    log(f"*** MISMATCH! Chaser Turn {chaser_arrival_turn} > Target leaves after Turn {target_turn_at_intercept} ***")
+                    logger.debug(f"*** MISMATCH! Chaser Turn {chaser_arrival_turn} > Target leaves after Turn {target_turn_at_intercept} ***")
             else:
-                log(f"WARNING: Could not find intercept hex in target path")
+                logger.debug("WARNING: Could not find intercept hex in target path")
     elif target_path:
         result = target_path[-1]['hex']
-        log(f"\n>>> NO INTERCEPT FOUND - chasing endpoint: {result}")
+        logger.debug(f">>> NO INTERCEPT FOUND - chasing endpoint: {result}")
     else:
         result = fallback_hex if fallback_hex else target_fleet.location
-        log(f"\n>>> FALLBACK: {result}")
+        logger.debug(f">>> FALLBACK: {result}")
     
-    log(f"{'='*60}\n")
+    logger.debug("=" * 60)
     
     return result
 
