@@ -189,3 +189,44 @@ class TestAdvancedFleetOrders(unittest.TestCase):
         self.assertIn(self.f1, self.empire.fleets)
         self.assertIsNone(self.f1.get_current_order()) # Should have popped failed order
 
+    @patch('game.strategy.data.pathfinding.find_hybrid_path')
+    @patch('game.strategy.data.pathfinding.project_fleet_path')
+    def test_intercept_picks_earliest_chaser_arrival(self, mock_project, mock_find_path):
+        """
+        Regression test: Algorithm must pick EARLIEST chaser arrival, not first valid point.
+        
+        Scenario: Target path goes through point A (turn 5) then B (turn 10).
+        Chaser can reach A in 6 turns (invalid - too slow) and B in 4 turns (valid).
+        The old buggy code would never find B since it returns on first valid.
+        The fix should find B since 4 < 6.
+        """
+        from game.strategy.data.pathfinding import calculate_intercept_point
+        
+        # Chaser @ 0,0. Speed 5.
+        self.f1.location = HexCoord(0, 0)
+        self.f1.speed = 5.0
+        
+        # Target @ 10,0.
+        self.f2.location = HexCoord(10, 0)
+        
+        # Mock Target Path: Goes far then loops back closer
+        # Turn 5: at (30, 0) - far away
+        # Turn 10: at (15, 0) - closer 
+        mock_project.return_value = [
+            {'hex': HexCoord(30, 0), 'turn': 5},   # Chaser needs 30 steps = 6 turns. INVALID.
+            {'hex': HexCoord(15, 0), 'turn': 10},  # Chaser needs 15 steps = 3 turns. VALID, arrives early!
+        ]
+        
+        # Mock pathfinding to return paths of correct length
+        def path_mock(galaxy, start, end):
+            dist = abs(end.q - start.q)  # Simple distance for 1D case
+            return [HexCoord(i, 0) for i in range(dist)]
+        
+        mock_find_path.side_effect = path_mock
+        
+        result = calculate_intercept_point(self.f1, self.f2, self.galaxy)
+        
+        # Should pick (15, 0) at turn 10 - chaser arrives in 3 turns, much earlier!
+        # NOT (10, 0) at turn 0 (unreachable) or (30, 0) at turn 5 (can't reach in time)
+        self.assertEqual(result, HexCoord(15, 0))
+
