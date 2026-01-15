@@ -202,21 +202,22 @@ class ExactMatchRule(ValidationRule):
 
 class StatisticalTestRule(ValidationRule):
     """
-    Validates that measured outcome matches expected using statistical test.
+    Validates that measured outcome matches expected using TOST equivalence testing.
 
-    Supports:
-    - Binomial test: For hit rates, success/failure outcomes
-    - Future: t-test, chi-square, etc.
+    Uses TOST (Two One-Sided Tests) for equivalence testing:
+    - H0 (Null): Actual differs from expected by MORE than equivalence margin (system is broken)
+    - H1 (Alternative): Actual is WITHIN equivalence margin of expected (system works)
+    - p < 0.05: Reject H0, proven equivalent → PASS ✓
+    - p ≥ 0.05: Fail to reject H0, not proven equivalent → FAIL ✗
 
-    Uses p-value < 0.05 as threshold:
-    - p >= 0.05: Result is consistent with expectation (PASS)
-    - p < 0.05: Result is statistically different from expectation (FAIL)
+    This is the scientifically correct approach for validation testing!
 
     Example:
         rule = StatisticalTestRule(
             name='Beam Hit Rate',
             test_type='binomial',
             expected_probability=0.5171,
+            equivalence_margin=0.02,  # ±2% is acceptable
             trials_expr='ticks_run',
             successes_expr='damage_dealt',
             description='Each hit = 1 damage, so damage_dealt = hits'
@@ -229,6 +230,7 @@ class StatisticalTestRule(ValidationRule):
         test_type: Literal['binomial', 't_test', 'chi_square'],
         expected_probability: Optional[float] = None,
         expected_mean: Optional[float] = None,
+        equivalence_margin: float = 0.02,  # ±2% default
         trials_expr: Optional[str] = None,
         successes_expr: Optional[str] = None,
         samples_expr: Optional[str] = None,
@@ -242,6 +244,7 @@ class StatisticalTestRule(ValidationRule):
             test_type: Type of statistical test ('binomial', 't_test', 'chi_square')
             expected_probability: For binomial test, expected success probability
             expected_mean: For t-test, expected mean
+            equivalence_margin: Acceptable deviation from expected (default 0.02 = ±2%)
             trials_expr: For binomial, expression for number of trials (e.g., 'ticks_run')
             successes_expr: For binomial, expression for successes (e.g., 'damage_dealt')
             samples_expr: For t-test, expression for sample values
@@ -251,6 +254,7 @@ class StatisticalTestRule(ValidationRule):
         self.test_type = test_type
         self.expected_probability = expected_probability
         self.expected_mean = expected_mean
+        self.equivalence_margin = equivalence_margin
         self.trials_expr = trials_expr
         self.successes_expr = successes_expr
         self.samples_expr = samples_expr
@@ -283,19 +287,25 @@ class StatisticalTestRule(ValidationRule):
 
     def _binomial_test(self, context: Dict[str, Any]) -> ValidationResult:
         """
-        Perform binomial test.
+        Perform TOST equivalence test for proportions.
 
-        H0: The observed success rate is consistent with expected probability
-        H1: The observed success rate differs from expected probability
+        H0 (Null): Actual rate differs from expected by MORE than margin (system broken)
+        H1 (Alternative): Actual rate is WITHIN margin of expected (system works)
+
+        Uses TOST (Two One-Sided Tests):
+        - Test 1: Is actual > expected - margin? (lower bound)
+        - Test 2: Is actual < expected + margin? (upper bound)
+        - If both tests pass (p < 0.05), we've proven equivalence → PASS
 
         Args:
             context: Contains 'results' dict
 
         Returns:
-            ValidationResult with p-value
+            ValidationResult with p-value (p < 0.05 = PASS)
         """
         try:
-            from scipy.stats import binomtest
+            from scipy.stats import norm
+            import math
         except ImportError:
             return ValidationResult(
                 name=self.name,
@@ -320,26 +330,58 @@ class StatisticalTestRule(ValidationRule):
                 actual=None
             )
 
-        # Perform binomial test
-        result = binomtest(k=int(successes), n=int(trials), p=self.expected_probability)
-        p_value = result.pvalue
-
         # Calculate observed rate
         observed_rate = successes / trials if trials > 0 else 0.0
 
-        # Determine status
-        if p_value >= 0.05:
+        # Define equivalence bounds
+        p_expected = self.expected_probability
+        margin = self.equivalence_margin
+        lower_bound = p_expected - margin
+        upper_bound = p_expected + margin
+
+        # Standard error using observed proportion
+        se = math.sqrt(observed_rate * (1 - observed_rate) / trials) if trials > 0 else 1.0
+
+        # Avoid division by zero
+        if se < 1e-10:
+            se = 1e-10
+
+        # TOST Test 1: Is observed > lower_bound?
+        # H0: p_obs <= lower_bound, H1: p_obs > lower_bound
+        z1 = (observed_rate - lower_bound) / se
+        p1 = 1 - norm.cdf(z1)  # One-sided test (upper tail)
+
+        # TOST Test 2: Is observed < upper_bound?
+        # H0: p_obs >= upper_bound, H1: p_obs < upper_bound
+        z2 = (observed_rate - upper_bound) / se
+        p2 = norm.cdf(z2)  # One-sided test (lower tail)
+
+        # TOST p-value is the maximum of the two tests
+        # We need BOTH tests to reject H0, so we take the worst-case p-value
+        p_value = max(p1, p2)
+
+        # NEW INTERPRETATION: p < 0.05 means PASS (proven equivalent)
+        if p_value < 0.05:
             status = ValidationStatus.PASS
             symbol = "✓"
+            verdict = "proven equivalent"
         else:
             status = ValidationStatus.FAIL
             symbol = "✗"
+            verdict = "not proven equivalent"
+
+        # Calculate deviation from expected
+        deviation = observed_rate - p_expected
+        deviation_pct = (deviation / p_expected * 100) if p_expected > 0 else 0
 
         # Build message
         message = (
-            f"{self.name}: {symbol} Expected {self.expected_probability:.2%}, "
+            f"{self.name}: {symbol} Expected {p_expected:.2%}, "
             f"observed {observed_rate:.2%} ({int(successes)}/{int(trials)}), "
-            f"p={p_value:.4f}"
+            f"deviation {deviation_pct:+.1f}%, "
+            f"p={p_value:.4f} ({verdict})\n"
+            f"  Equivalence margin: ±{margin:.1%} "
+            f"[{lower_bound:.2%}, {upper_bound:.2%}]"
         )
 
         if self.description:
@@ -352,7 +394,7 @@ class StatisticalTestRule(ValidationRule):
             expected=self.expected_probability,
             actual=observed_rate,
             p_value=p_value,
-            tolerance=0.05  # p-value threshold
+            tolerance=0.05  # p-value threshold (p < 0.05 = PASS)
         )
 
     def _t_test(self, context: Dict[str, Any]) -> ValidationResult:

@@ -665,6 +665,39 @@
             }
         },
         {
+            "id": "test_armor_extreme_hp",
+            "name": "Test Armor (Extreme HP - 1 Billion)",
+            "type": "Armor",
+            "mass": 200,
+            "hp": 1000000000,
+            "sprite_index": 14,
+            "abilities": {
+                "Armor": true
+            }
+        },
+        {
+            "id": "test_armor_extreme_hp_heavy",
+            "name": "Test Armor (Extreme HP Heavy - 1 Billion, Mass 400)",
+            "type": "Armor",
+            "mass": 400,
+            "hp": 1000000000,
+            "sprite_index": 14,
+            "abilities": {
+                "Armor": true
+            }
+        },
+        {
+            "id": "test_armor_small_extreme_hp",
+            "name": "Test Armor (Small, Extreme HP - 1 Billion)",
+            "type": "Armor",
+            "mass": 20,
+            "hp": 1000000000,
+            "sprite_index": 14,
+            "abilities": {
+                "Armor": true
+            }
+        },
+        {
             "id": "test_beam_low_acc_1dmg",
             "name": "Test Beam (Low Accuracy, 1 Damage)",
             "type": "BeamWeaponAbility",

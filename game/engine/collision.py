@@ -68,7 +68,7 @@ class CollisionSystem:
                         
                     # Calculate Chance with Sigmoid Logic using ability
                     chance = beam_ab.calculate_hit_chance(hit_dist, attack_score, defense_score)
-                    
+
                     if random.random() < chance:
                         # Evaluate damage at hit distance using ability
                         damage = beam_ab.get_damage(hit_dist)

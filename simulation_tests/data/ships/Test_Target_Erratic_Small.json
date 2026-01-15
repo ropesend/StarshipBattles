@@ -12,7 +12,7 @@
     "layers": {
         "CORE": [
             {
-                "id": "test_armor_std"
+                "id": "test_armor_small_extreme_hp"
             },
             {
                 "id": "test_engine_no_fuel"
@@ -23,9 +23,9 @@
         ],
         "ARMOR": []
     },
-    "_test_notes": "Small erratic target",
+    "_test_notes": "Small erratic target with extreme HP armor (1 billion)",
     "expected_stats": {
-        "max_hp": 370,
+        "max_hp": 1000000170,
         "max_fuel": 0.0,
         "max_energy": 0.0,
         "max_ammo": 0.0,
@@ -34,7 +34,7 @@
         "turn_speed": 238.5283357484778,
         "total_thrust": 500.0,
         "mass": 65.0,
-        "armor_hp_pool": 200
+        "armor_hp_pool": 1000000000
     },
     "resources": {
         "fuel": 0.0,

@@ -738,8 +738,8 @@ class TestRunCard:
         val_summary = self.run_record.validation_summary
 
         if p_value is not None:
-            # Color code p-value (p < 0.05 is red, p >= 0.05 is green)
-            p_color = self.fail_color if p_value < 0.05 else self.pass_color
+            # Color code p-value (TOST: p < 0.05 is green/PASS, p >= 0.05 is red/FAIL)
+            p_color = self.pass_color if p_value < 0.05 else self.fail_color
             p_text = f"P-value: {p_value:.4f}"
             p_surf = self.body_font.render(p_text, True, p_color)
             surface.blit(p_surf, (self.x + 10, self.y + 57))
@@ -1272,12 +1272,16 @@ class TestLabScene:
         ships = []
 
         # Parse conditions for ship filenames
-        # Format: "Attacker: Test_Attacker_Beam360_Low.json"
+        # Format: "Attacker: Test_Attacker_Beam360_Low.json" or "Target: Test_Target_Stationary.json (mass=400)"
         for condition in metadata.conditions:
             if '.json' in condition and ':' in condition:
                 parts = condition.split(':', 1)
                 role = parts[0].strip()
-                filename = parts[1].strip()
+                filename_part = parts[1].strip()
+
+                # Extract only the .json filename (ignore anything after .json like "(mass=400)")
+                json_end = filename_part.index('.json') + 5  # +5 for '.json'
+                filename = filename_part[:json_end]
 
                 # Load ship JSON file
                 ship_path = os.path.join(
@@ -2553,13 +2557,13 @@ class TestLabScene:
                 screen.blit(exp_act_surf, (x + 25, y))
                 y += 18
 
-            # P-value (for statistical tests)
+            # P-value (for statistical tests - TOST interpretation)
             if p_value is not None:
                 p_text = f"p-value: {p_value:.4f}"
                 if p_value < 0.05:
-                    p_color = (255, 100, 100)  # Red - significant difference
+                    p_color = (100, 255, 150)  # Green - proven equivalent (PASS)
                 else:
-                    p_color = (100, 255, 150)  # Green - consistent
+                    p_color = (255, 100, 100)  # Red - not proven equivalent (FAIL)
 
                 p_surf = self.small_font.render(p_text, True, p_color)
                 screen.blit(p_surf, (x + 25, y))

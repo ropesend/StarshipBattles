@@ -1,5 +1,5 @@
 {
-    "name": "Test Target Stationary",
+    "name": "Test Target Stationary (High-Tick)",
     "color": [
         0,
         0,
@@ -12,12 +12,12 @@
     "layers": {
         "CORE": [
             {
-                "id": "test_armor_extreme_hp"
+                "id": "test_armor_extreme_hp_heavy"
             }
         ],
         "ARMOR": []
     },
-    "_test_notes": "Stationary target with extreme HP armor (1 billion) for beam weapon testing",
+    "_test_notes": "Stationary target with extreme HP armor (1 billion) for high-tick accuracy testing (100k+ ticks)",
     "expected_stats": {
         "max_hp": 1000000500,
         "max_fuel": 0.0,
@@ -27,7 +27,7 @@
         "acceleration_rate": 0.0,
         "turn_speed": 0.0,
         "total_thrust": 0,
-        "mass": 400.0,
+        "mass": 600.0,
         "armor_hp_pool": 1000000000
     },
     "resources": {

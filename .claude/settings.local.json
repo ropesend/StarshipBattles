@@ -24,7 +24,8 @@
       "Bash(dir:*)",
       "Bash(ping:*)",
       "Bash(taskkill:*)",
-      "Bash(if exist \"simulation_tests\\\\scenarios\\\\__pycache__\" rmdir /s /q \"simulation_tests\\\\scenarios\\\\__pycache__\")"
+      "Bash(if exist \"simulation_tests\\\\scenarios\\\\__pycache__\" rmdir /s /q \"simulation_tests\\\\scenarios\\\\__pycache__\")",
+      "Bash(find:*)"
     ]
   }
 }

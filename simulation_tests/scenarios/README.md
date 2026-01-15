@@ -1,209 +1,99 @@
-# Test Scenarios Directory
+# Test Scenarios
 
-This directory contains **TestScenario** subclasses that define reproducible test cases for the Starship Battles combat simulator.
+## Overview
 
-## Purpose
+This directory contains all test scenario implementations for Combat Lab.
 
-TestScenarios work identically in both:
-- **pytest** (headless, automated testing)
-- **Combat Lab** (visual, interactive debugging)
+## Current Scenario Files
 
-This ensures that automated tests and visual debugging use the exact same simulation logic.
+### beam_scenarios.py
 
-## Structure
+Complete test suite for beam weapon mechanics (18 tests).
 
-```
-simulation_tests/scenarios/
-    base.py              # TestScenario base class and TestMetadata
-    __init__.py          # Exports TestScenario and TestMetadata
-    example_beam_test.py # Example scenario demonstrating the pattern
+**Test Categories**:
+- Accuracy tests (point blank, mid-range, max range)
+- Moving target tests (erratic small targets)
+- Boundary tests (out of range)
+- High-tick precision tests (100k ticks)
 
-    # Future scenario files:
-    beam_accuracy.py     # BEAM360-001 through BEAM360-011
-    projectile_damage.py # PROJ360-001 through PROJ360-010
-    seeker_tracking.py   # SEEK360-001 through SEEK360-008
-    # ... more scenarios
-```
+**See**: Full beam weapon test documentation below.
 
-## Creating a New Scenario
+## Beam Weapon Tests
 
-### 1. Define TestMetadata
+### Test Suite Overview (18 Total Tests)
+
+#### Standard Tests (11 tests, 500 ticks, ±6% margin)
+
+| Test ID | Weapon | Distance | Target | Expected Hit Rate |
+|---------|--------|----------|--------|-------------------|
+| BEAM360-001 | Low Acc | 50px PB | Stat. 400 | 53.18% |
+| BEAM360-002 | Low Acc | 400px MR | Stat. 400 | 36.06% |
+| BEAM360-003 | Low Acc | 750px Max | Stat. 400 | 21.86% |
+| BEAM360-004 | Med Acc | 50px PB | Stat. 400 | 83.86% |
+| BEAM360-005 | Med Acc | 400px MR | Stat. 400 | 78.55% |
+| BEAM360-006 | Med Acc | 750px Max | Stat. 400 | 72.07% |
+| BEAM360-007 | High Acc | 50px PB | Stat. 400 | 99.06% |
+| BEAM360-008 | High Acc | 750px Max | Stat. 400 | 98.66% |
+| BEAM360-009 | Med Acc | 400px MR | Erratic 65 | 4.84% |
+| BEAM360-010 | Med Acc | 750px Max | Erratic 65 | 3.47% |
+| BEAM360-011 | Low Acc | 900px OOR | Stat. 400 | 0% (deterministic) |
+
+#### High-Tick Tests (7 tests, 100k ticks, ±1% margin)
+
+| Test ID | Weapon | Distance | Target | Expected Hit Rate |
+|---------|--------|----------|--------|-------------------|
+| BEAM360-001-HT | Low Acc | 50px PB | Stat. 600 | 57.02% |
+| BEAM360-002-HT | Low Acc | 400px MR | Stat. 600 | 39.71% |
+| BEAM360-004-HT | Med Acc | 50px PB | Stat. 600 | 85.82% |
+| BEAM360-005-HT | Med Acc | 400px MR | Stat. 600 | 80.98% |
+| BEAM360-006-HT | Med Acc | 750px Max | Stat. 600 | 75.00% |
+| BEAM360-007-HT | High Acc | 50px PB | Stat. 600 | 99.19% |
+| BEAM360-008-HT | High Acc | 750px Max | Stat. 600 | 98.85% |
+
+### Critical Implementation Details
+
+#### Surface Distance Calculation
+
+**ALWAYS use surface distance, not center-to-center distance:**
 
 ```python
-from simulation_tests.scenarios import TestMetadata
+# Target radius formula
+target_radius = 40 * (mass / 1000) ** (1/3)
 
-metadata = TestMetadata(
-    test_id="BEAM-001",           # Unique identifier
-    category="Weapons",            # Major category
-    subcategory="Beam Accuracy",   # Specific area
-    name="Point-blank beam test",  # Short name
-    summary="Validates beam weapons hit at minimum range",
-    conditions=["Distance: 50px", "Stationary target"],
-    edge_cases=["Minimum range"],
-    expected_outcome="Beam hits consistently",
-    pass_criteria="Damage dealt > 0",
-    max_ticks=500,
-    seed=42
+# Surface distance (what beam weapon actually uses)
+surface_distance = center_distance - target_radius
+
+# Use this in expected hit chance calculation!
+expected_hit_chance = calculate_expected_hit_chance(
+    base_acc, falloff, surface_distance, attack_bonus, defense_penalty
 )
 ```
 
-### 2. Create TestScenario Class
+**Why**: Beam weapons use raycasting to find intersection with target's collision circle. The hit distance is to the circle surface, not the center.
+
+#### Helper Functions
+
+Located at top of `beam_scenarios.py`:
 
 ```python
-import pygame
-from simulation_tests.scenarios import TestScenario, TestMetadata
+def calculate_defense_score(mass, acceleration, turn_speed, ecm_score):
+    """Calculate target defense score."""
+    size_score = 0.5 * (1.0 - (mass / 1000.0))
+    maneuver_score = (acceleration / 1000.0) + (turn_speed / 500.0)
+    return size_score + maneuver_score + ecm_score
 
-class MyWeaponTest(TestScenario):
-    """Description of what this test validates."""
-
-    metadata = TestMetadata(...)  # From step 1
-
-    def setup(self, battle_engine):
-        """Configure ships and initial state."""
-        attacker = self._load_ship('Test_Attacker.json')
-        target = self._load_ship('Test_Target.json')
-
-        attacker.position = pygame.math.Vector2(0, 0)
-        target.position = pygame.math.Vector2(50, 0)
-
-        self.initial_hp = target.hp
-
-        battle_engine.start([attacker], [target], seed=self.metadata.seed)
-
-        attacker.current_target = target
-        self.attacker = attacker
-        self.target = target
-
-    def update(self, battle_engine):
-        """Optional: Called every tick."""
-        self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine):
-        """Return True if test passed."""
-        damage_dealt = self.initial_hp - self.target.hp
-        self.results['damage_dealt'] = damage_dealt
-        return damage_dealt > 0
+def calculate_expected_hit_chance(base_acc, falloff, distance,
+                                  attack_bonus, defense_penalty):
+    """Calculate beam weapon hit chance using sigmoid formula."""
+    range_penalty = distance * falloff
+    net_score = (base_acc + attack_bonus) - (range_penalty + defense_penalty)
+    return 1.0 / (1.0 + math.exp(-net_score))
 ```
 
-### 3. Save the File
+## See Also
 
-Save to a `.py` file in this directory (e.g., `my_test.py`).
-
-The **TestRegistry** will automatically discover it.
-
-### 4. Create Pytest Wrapper
-
-```python
-# In simulation_tests/tests/test_my_scenarios.py
-import pytest
-from test_framework.runner import TestRunner
-from simulation_tests.scenarios.my_test import MyWeaponTest
-
-@pytest.mark.simulation
-class TestMyScenarios:
-    @pytest.fixture(autouse=True)
-    def setup(self, isolated_registry):
-        self.runner = TestRunner()
-
-    def test_my_weapon_test(self):
-        scenario = self.runner.run_scenario(MyWeaponTest, headless=True)
-        assert scenario.passed
-```
-
-## Helper Methods
-
-### _load_ship(filename)
-
-Loads a ship from `simulation_tests/data/ships/`:
-
-```python
-attacker = self._load_ship('Test_Attacker_Beam360_Low.json')
-```
-
-### _get_test_data_path(relative_path)
-
-Gets absolute path to test data:
-
-```python
-path = self._get_test_data_path('ships/Test_Ship.json')
-```
-
-## Discovery
-
-The **TestRegistry** automatically discovers all scenarios:
-
-```python
-from test_framework.registry import TestRegistry
-
-registry = TestRegistry()
-
-# Get all scenarios
-all_scenarios = registry.get_all_scenarios()
-
-# Filter by category
-weapon_tests = registry.get_by_category("Weapons")
-
-# Get specific scenario
-scenario_info = registry.get_by_id("BEAM-001")
-scenario_cls = scenario_info['class']
-```
-
-## Running Scenarios
-
-### In Pytest (Headless)
-
-```bash
-pytest simulation_tests/tests/ -v -m simulation
-```
-
-### In Combat Lab (Visual)
-
-```python
-from test_framework.registry import TestRegistry
-from test_framework.runner import TestRunner
-
-registry = TestRegistry()
-scenario_info = registry.get_by_id("BEAM-001")
-scenario_cls = scenario_info['class']
-
-runner = TestRunner()
-runner.run_scenario(scenario_cls, headless=False, render_callback=draw_fn)
-```
-
-## Best Practices
-
-1. **Use Fixed Seeds**: Always set `seed` in metadata for reproducibility
-2. **Simplified Data**: Use minimal test data in `simulation_tests/data/`
-3. **Clear Metadata**: Provide detailed conditions, edge cases, and pass criteria
-4. **Store State**: Save initial values in `setup()` for use in `verify()`
-5. **Detailed Results**: Store detailed results in `self.results` dict
-
-## Example
-
-See `example_beam_test.py` for a complete working example demonstrating:
-- TestMetadata definition
-- Ship loading
-- Setup configuration
-- Per-tick updates
-- Verification logic
-- Result storage
-
-## Documentation
-
-See `docs/test_migration_guide.md` for:
-- Complete migration guide
-- Before/after examples
-- Common patterns
-- Troubleshooting
-
-## Categories
-
-Organize scenarios by category:
-- **Weapons**: Beam, projectile, seeker weapon tests
-- **Propulsion**: Engine physics, maneuvering
-- **Abilities**: Special abilities and effects
-- **Resources**: Energy, fuel, ammo consumption
-- **Shields**: Shield mechanics
-- **Damage**: Damage calculations and armor
-
-Each category can have multiple subcategories for organization.
+- **Main Documentation**: `../COMBAT_LAB_DOCUMENTATION.md` - Complete system overview
+- **Quick Start**: `../QUICK_START_GUIDE.md` - Create your first test in 10 minutes
+- **Test Framework**: `../../test_framework/README.md` - Architecture details
+- **Validation**: `../validation/README.md` - TOST and validation rules
+- **Data Files**: `../data/README.md` - Components and ship configurations
