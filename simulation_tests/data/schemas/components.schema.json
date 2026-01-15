@@ -1,0 +1,153 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://starship-battles/schemas/components.json",
+  "title": "Component Library Schema",
+  "description": "Schema for validating component definitions in Combat Lab test data",
+  "type": "object",
+  "required": ["components"],
+  "properties": {
+    "components": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/component"
+      }
+    }
+  },
+  "definitions": {
+    "component": {
+      "type": "object",
+      "required": ["id", "name", "type", "mass", "hp"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "description": "Unique component identifier"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable component name"
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Component type/category (e.g., Bridge, Engine, BeamWeapon, etc.)"
+        },
+        "mass": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Component mass in tons"
+        },
+        "hp": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Component hit points"
+        },
+        "allowed_vehicle_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["Ship", "Fighter", "Station", "Base", "Satellite"]
+          },
+          "description": "Vehicle types that can mount this component"
+        },
+        "sprite_index": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Sprite index for rendering"
+        },
+        "abilities": {
+          "type": "object",
+          "description": "Component abilities and capabilities"
+        },
+        "thrust_force": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Thrust force for engines/thrusters"
+        },
+        "fuel_consumption": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Fuel consumption rate"
+        },
+        "damage": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Weapon damage"
+        },
+        "accuracy": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Weapon base accuracy (0-1)"
+        },
+        "accuracy_falloff": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Accuracy falloff per pixel distance"
+        },
+        "range": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Weapon range in pixels"
+        },
+        "fire_rate": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Weapon fire rate (ticks between shots)"
+        },
+        "energy_cost": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Energy cost per shot"
+        },
+        "ammo_cost": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Ammo cost per shot"
+        },
+        "projectile_speed": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Projectile speed (for projectile/seeker weapons)"
+        },
+        "projectile_lifetime": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Projectile lifetime in ticks"
+        },
+        "turning_rate": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Turning rate for seekers (radians per tick)"
+        },
+        "fuel_capacity": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Fuel tank capacity"
+        },
+        "energy_capacity": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Energy storage capacity"
+        },
+        "ammo_capacity": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Ammo storage capacity"
+        },
+        "power_generation": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Power generation per tick"
+        },
+        "armor_points": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Armor protection points"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

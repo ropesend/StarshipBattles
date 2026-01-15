@@ -37,6 +37,11 @@ from dataclasses import dataclass, field, asdict
 from datetime import datetime
 import json
 import os
+from simulation_tests.logging_config import get_logger, setup_combat_lab_logging
+
+# Setup logging
+setup_combat_lab_logging()
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -168,12 +173,12 @@ class TestHistory:
                         self.history[test_id] = [
                             TestRunRecord.from_dict(run) for run in runs
                         ]
-                print(f"TestHistory: Loaded {len(self.history)} test histories from {self.history_file}")
+                logger.info(f"Loaded {len(self.history)} test histories from {self.history_file}")
             except Exception as e:
-                print(f"Error loading test history: {e}")
+                logger.error(f"Error loading test history: {e}", exc_info=True)
                 self.history = {}
         else:
-            print(f"TestHistory: No existing history file found, starting fresh")
+            logger.info("No existing history file found, starting fresh")
 
     def _save(self):
         """Save history to JSON file."""
@@ -190,9 +195,9 @@ class TestHistory:
             with open(self.history_file, 'w') as f:
                 json.dump(data, f, indent=2)
 
-            print(f"TestHistory: Saved {sum(len(runs) for runs in self.history.values())} total runs")
+            logger.debug(f"Saved {sum(len(runs) for runs in self.history.values())} total runs")
         except Exception as e:
-            print(f"Error saving test history: {e}")
+            logger.error(f"Error saving test history: {e}", exc_info=True)
 
     def add_run(self, test_id: str, results: Dict[str, Any], max_runs: int = 10):
         """
@@ -215,7 +220,7 @@ class TestHistory:
         if len(self.history[test_id]) > max_runs:
             self.history[test_id] = self.history[test_id][-max_runs:]
 
-        print(f"TestHistory: Added run for {test_id} ({'PASS' if record.passed else 'FAIL'}), now {len(self.history[test_id])} runs")
+        logger.info(f"Added run for {test_id} ({'PASS' if record.passed else 'FAIL'}), now {len(self.history[test_id])} runs")
 
         self._save()
 
@@ -253,14 +258,14 @@ class TestHistory:
         if test_id in self.history:
             run_count = len(self.history[test_id])
             del self.history[test_id]
-            print(f"TestHistory: Cleared {run_count} runs for {test_id}")
+            logger.info(f"Cleared {run_count} runs for {test_id}")
             self._save()
 
     def clear_all(self):
         """Clear all test history."""
         total_runs = sum(len(runs) for runs in self.history.values())
         self.history = {}
-        print(f"TestHistory: Cleared all history ({total_runs} total runs)")
+        logger.info(f"Cleared all history ({total_runs} total runs)")
         self._save()
 
     def get_latest_run(self, test_id: str) -> Optional[TestRunRecord]:

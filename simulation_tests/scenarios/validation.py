@@ -339,8 +339,8 @@ class StatisticalTestRule(ValidationRule):
         lower_bound = p_expected - margin
         upper_bound = p_expected + margin
 
-        # Standard error using observed proportion
-        se = math.sqrt(observed_rate * (1 - observed_rate) / trials) if trials > 0 else 1.0
+        # Standard error using expected proportion (correct for TOST)
+        se = math.sqrt(p_expected * (1 - p_expected) / trials) if trials > 0 else 1.0
 
         # Avoid division by zero
         if se < 1e-10:
