@@ -92,6 +92,7 @@ class StaticTargetScenario(TestScenario):
     # Advanced pass criteria configuration
     expect_no_damage: bool = False  # For out-of-range tests (expects damage == 0)
     min_damage_threshold: int = 0  # For damage >= threshold tests
+    measurement_mode: bool = False  # For statistical tests (always passes if simulation completes)
 
     # Result customization
     custom_result_keys: list = []  # List of attribute names to store in results
@@ -194,7 +195,10 @@ class StaticTargetScenario(TestScenario):
             self.run_validation(battle_engine)
 
         # Apply configured pass criteria
-        if self.expect_no_damage:
+        if self.measurement_mode:
+            # Measurement tests always pass if simulation completes (validation rules check statistics)
+            return battle_engine.tick_counter > 0
+        elif self.expect_no_damage:
             # Out-of-range tests expect NO damage
             return self.damage_dealt == 0
         elif self.min_damage_threshold > 0:
@@ -207,7 +211,7 @@ class StaticTargetScenario(TestScenario):
             # Subclasses must implement custom verification
             raise NotImplementedError(
                 f"{self.__class__.__name__} must implement verify() or configure pass criteria "
-                f"(verify_damage_dealt, expect_no_damage, or min_damage_threshold)"
+                f"(measurement_mode, verify_damage_dealt, expect_no_damage, or min_damage_threshold)"
             )
 
 
