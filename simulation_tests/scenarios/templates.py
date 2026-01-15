@@ -466,9 +466,9 @@ class PropulsionScenario(TestScenario):
             if self.thrust_backward:
                 self.ship.thrust_backward()
             if self.turn_left:
-                self.ship.turn_left()
+                self.ship.rotate(-1)  # -1 = counter-clockwise/left
             if self.turn_right:
-                self.ship.turn_right()
+                self.ship.rotate(1)  # 1 = clockwise/right
 
         # Call custom update hook if defined
         if hasattr(self, 'custom_update'):

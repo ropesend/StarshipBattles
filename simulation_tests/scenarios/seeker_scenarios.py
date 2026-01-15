@@ -21,21 +21,26 @@ Test Coverage:
 - Point Defense: 3 placeholder scenarios (not yet implemented)
 """
 
-import pygame
-from simulation_tests.scenarios import TestScenario, TestMetadata
+from simulation_tests.scenarios import TestMetadata
+from simulation_tests.scenarios.templates import StaticTargetScenario
 
 
 # ============================================================================
 # SEEKER LIFETIME/ENDURANCE TESTS
 # ============================================================================
 
-class SeekerCloseRangeImpactScenario(TestScenario):
+class SeekerCloseRangeImpactScenario(StaticTargetScenario):
     """
     SEEK360-001: Seeker Impact at Close Range
 
     Tests that seeker missiles successfully launch, track, and impact
     a stationary target at close range (500px) well before endurance expires.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Seeker360.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 500
 
     metadata = TestMetadata(
         test_id="SEEK360-001",
@@ -69,60 +74,41 @@ class SeekerCloseRangeImpactScenario(TestScenario):
         tags=["seeker", "missile", "tracking", "close-range", "guided"]
     )
 
-    def setup(self, battle_engine):
-        """Setup close range seeker test."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Seeker360.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position ships at close range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0  # Facing right
-        self.target.position = pygame.math.Vector2(500, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if at least one missile hit."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate if applicable
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store scenario-specific results
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
 
         # Pass if at least one missile hit (100 damage)
-        return damage_dealt >= 100
+        return self.damage_dealt >= 100
 
 
-class SeekerMidRangeImpactScenario(TestScenario):
+class SeekerMidRangeImpactScenario(StaticTargetScenario):
     """
     SEEK360-002: Seeker Impact at Mid Range
 
     Tests that seeker missiles successfully reach and impact a target
     at mid range (2500px) within endurance limit.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Seeker360.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 2500
 
     metadata = TestMetadata(
         test_id="SEEK360-002",
@@ -155,60 +141,41 @@ class SeekerMidRangeImpactScenario(TestScenario):
         tags=["seeker", "missile", "tracking", "mid-range", "guided"]
     )
 
-    def setup(self, battle_engine):
-        """Setup mid range seeker test."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Seeker360.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position ships at mid range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(2500, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate if applicable
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store scenario-specific results
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
 
         # Pass if any damage was dealt
-        return damage_dealt > 0
+        return self.damage_dealt > 0
 
 
-class SeekerBeyondRangeExpireScenario(TestScenario):
+class SeekerBeyondRangeExpireScenario(StaticTargetScenario):
     """
     SEEK360-003: Seeker Expires Beyond Range
 
     Tests that seeker missiles expire due to endurance limit when
     target is positioned beyond effective range (5000px).
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Seeker360.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 5000
 
     metadata = TestMetadata(
         test_id="SEEK360-003",
@@ -241,60 +208,41 @@ class SeekerBeyondRangeExpireScenario(TestScenario):
         tags=["seeker", "missile", "endurance-limit", "expire", "edge-case"]
     )
 
-    def setup(self, battle_engine):
-        """Setup beyond range seeker test."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Seeker360.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position target beyond effective range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(5000, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate if applicable
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store scenario-specific results
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
 
         # Pass if simulation completed (damage or no damage)
         return battle_engine.tick_counter > 0
 
 
-class SeekerEdgeCaseRangeScenario(TestScenario):
+class SeekerEdgeCaseRangeScenario(StaticTargetScenario):
     """
     SEEK360-004: Seeker at Edge Case Range
 
     Tests seeker behavior at edge of effective range (4500px),
     where endurance limit becomes critical factor.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Seeker360.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 4500
 
     metadata = TestMetadata(
         test_id="SEEK360-004",
@@ -328,47 +276,23 @@ class SeekerEdgeCaseRangeScenario(TestScenario):
         tags=["seeker", "missile", "endurance-limit", "edge-case"]
     )
 
-    def setup(self, battle_engine):
-        """Setup edge case range seeker test."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Seeker360.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position target at edge case range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(4500, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate if applicable
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
+        # Store scenario-specific results
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
 
         # Pass if simulation completed
@@ -379,13 +303,18 @@ class SeekerEdgeCaseRangeScenario(TestScenario):
 # SEEKER TRACKING TESTS
 # ============================================================================
 
-class SeekerTrackingStationaryScenario(TestScenario):
+class SeekerTrackingStationaryScenario(StaticTargetScenario):
     """
     SEEK360-TRACK-001: Seeker Tracking Stationary Target
 
     Tests basic seeker tracking and impact against a stationary target.
     Direct flight path - validates core tracking mechanics.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Seeker360.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 1000
 
     metadata = TestMetadata(
         test_id="SEEK360-TRACK-001",
@@ -418,59 +347,39 @@ class SeekerTrackingStationaryScenario(TestScenario):
         tags=["seeker", "missile", "tracking", "stationary", "guided"]
     )
 
-    def setup(self, battle_engine):
-        """Setup stationary target tracking test."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Seeker360.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
-
-        # Position ships
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(1000, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
         self.results['target_alive'] = self.target.is_alive
 
+        # Calculate hit rate if applicable
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+
         # Pass if damage was dealt
-        return damage_dealt > 0
+        return self.damage_dealt > 0
 
 
-class SeekerTrackingLinearScenario(TestScenario):
+class SeekerTrackingLinearScenario(StaticTargetScenario):
     """
     SEEK360-TRACK-002: Seeker Tracking Linear Moving Target
 
     Tests seeker tracking against a target moving in a straight line.
     Seeker must lead target and adjust trajectory for intercept.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Seeker360.json"
+    target_ship = "Test_Target_Linear_Slow.json"
+    distance = 1000
+    target_angle = 90  # Moving up
 
     metadata = TestMetadata(
         test_id="SEEK360-TRACK-002",
@@ -503,59 +412,38 @@ class SeekerTrackingLinearScenario(TestScenario):
         tags=["seeker", "missile", "tracking", "linear-target", "intercept"]
     )
 
-    def setup(self, battle_engine):
-        """Setup linear target tracking test."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Seeker360.json")
-        self.target = self._load_ship("Test_Target_Linear_Slow.json")
-
-        # Position ships
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(1000, 0)
-        self.target.angle = 90  # Moving up
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate if applicable
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
 
         # Pass if simulation completed
         return battle_engine.tick_counter > 0
 
 
-class SeekerTrackingOrbitingScenario(TestScenario):
+class SeekerTrackingOrbitingScenario(StaticTargetScenario):
     """
     SEEK360-TRACK-003: Seeker Tracking Orbiting Target
 
     Tests seeker tracking against a target following a curved/orbiting path.
     Requires continuous tracking adjustments and curved pursuit.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Seeker360.json"
+    target_ship = "Test_Target_Orbiting.json"
+    distance = 1000
 
     metadata = TestMetadata(
         test_id="SEEK360-TRACK-003",
@@ -589,59 +477,38 @@ class SeekerTrackingOrbitingScenario(TestScenario):
         tags=["seeker", "missile", "tracking", "orbiting", "curved-pursuit"]
     )
 
-    def setup(self, battle_engine):
-        """Setup orbiting target tracking test."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Seeker360.json")
-        self.target = self._load_ship("Test_Target_Orbiting.json")
-
-        # Position ships
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(1000, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate if applicable
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
 
         # Pass if simulation completed
         return battle_engine.tick_counter > 0
 
 
-class SeekerTrackingErraticScenario(TestScenario):
+class SeekerTrackingErraticScenario(StaticTargetScenario):
     """
     SEEK360-TRACK-004: Seeker vs Highly Maneuverable Erratic Target
 
     Tests seeker tracking limits against a small, highly maneuverable
     target performing erratic evasive maneuvers. Target may out-turn seeker.
     """
+
+    # Template configuration
+    attacker_ship = "Test_Attacker_Seeker360.json"
+    target_ship = "Test_Target_Erratic_Small.json"
+    distance = 1000
 
     metadata = TestMetadata(
         test_id="SEEK360-TRACK-004",
@@ -676,47 +543,21 @@ class SeekerTrackingErraticScenario(TestScenario):
         tags=["seeker", "missile", "tracking", "erratic", "evasion", "edge-case"]
     )
 
-    def setup(self, battle_engine):
-        """Setup erratic target tracking test."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Seeker360.json")
-        self.target = self._load_ship("Test_Target_Erratic_Small.json")
-
-        # Position ships
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(1000, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
     def verify(self, battle_engine) -> bool:
         """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
+        # Calculate damage dealt (template stores initial_hp automatically)
+        self.damage_dealt = self.initial_hp - self.target.hp
 
-        # Store results
+        # Store all standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
         self.results['target_alive'] = self.target.is_alive
+
+        # Calculate hit rate if applicable
+        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
+            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
 
         # Pass if simulation completed
         return battle_engine.tick_counter > 0
@@ -726,7 +567,7 @@ class SeekerTrackingErraticScenario(TestScenario):
 # POINT DEFENSE TESTS (PLACEHOLDER - NOT YET IMPLEMENTED)
 # ============================================================================
 
-class SeekerPointDefenseNoneScenario(TestScenario):
+class SeekerPointDefenseNoneScenario(StaticTargetScenario):
     """
     SEEK360-PD-001: Seeker vs No Point Defense (Baseline)
 
@@ -735,6 +576,11 @@ class SeekerPointDefenseNoneScenario(TestScenario):
 
     STATUS: SKIPPED - Requires point defense component implementation
     """
+
+    # Template configuration (not used - scenario is skipped)
+    attacker_ship = "Test_Attacker_Seeker360.json"
+    target_ship = "Test_Target_No_PD.json"  # NOT IMPLEMENTED
+    distance = 1000
 
     metadata = TestMetadata(
         test_id="SEEK360-PD-001",
@@ -777,7 +623,7 @@ class SeekerPointDefenseNoneScenario(TestScenario):
         return False
 
 
-class SeekerPointDefenseSingleScenario(TestScenario):
+class SeekerPointDefenseSingleScenario(StaticTargetScenario):
     """
     SEEK360-PD-002: Seeker vs Single Point Defense
 
@@ -786,6 +632,11 @@ class SeekerPointDefenseSingleScenario(TestScenario):
 
     STATUS: SKIPPED - Requires point defense component implementation
     """
+
+    # Template configuration (not used - scenario is skipped)
+    attacker_ship = "Test_Attacker_Seeker360.json"
+    target_ship = "Test_Target_Single_PD.json"  # NOT IMPLEMENTED
+    distance = 1000
 
     metadata = TestMetadata(
         test_id="SEEK360-PD-002",
@@ -829,7 +680,7 @@ class SeekerPointDefenseSingleScenario(TestScenario):
         return False
 
 
-class SeekerPointDefenseTripleScenario(TestScenario):
+class SeekerPointDefenseTripleScenario(StaticTargetScenario):
     """
     SEEK360-PD-003: Seeker vs Triple Point Defense
 
@@ -838,6 +689,11 @@ class SeekerPointDefenseTripleScenario(TestScenario):
 
     STATUS: SKIPPED - Requires point defense component implementation
     """
+
+    # Template configuration (not used - scenario is skipped)
+    attacker_ship = "Test_Attacker_Seeker360.json"
+    target_ship = "Test_Target_Triple_PD.json"  # NOT IMPLEMENTED
+    distance = 1000
 
     metadata = TestMetadata(
         test_id="SEEK360-PD-003",

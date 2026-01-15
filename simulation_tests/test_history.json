@@ -1823,5 +1823,23 @@
         }
       ]
     }
+  ],
+  "PROJ360-001": [
+    {
+      "timestamp": "2026-01-14T18:37:36.229252",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000250.0,
+        "damage_dealt": 250.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "travel_time_seconds": 0.13333333333333333,
+        "expected_damage_min": 150
+      },
+      "validation_summary": null,
+      "validation_results": []
+    }
   ]
 }
