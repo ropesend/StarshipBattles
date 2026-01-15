@@ -390,14 +390,17 @@ def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
                 best_target_turn = target_turn
                 log(f"      -> NEW BEST INTERCEPT")
                 
-                if chaser_turns <= 1.0:
-                    log(f"      -> EARLY EXIT (arrives in <=1 turn)")
+                # Early exit ONLY if chaser would arrive at the SAME subtick as target
+                # (i.e., chaser_turns matches target_turn closely)
+                if abs(chaser_turns - target_turn) < 0.1:
+                    log(f"      -> EARLY EXIT (perfectly synchronized)")
                     break
         else:
             if fallback_hex is None:
                 fallback_hex = target_hex
                 
-        if best_intercept is not None and target_turn > best_intercept_time + 5:
+        # Early exit if we've clearly passed the optimal point
+        if best_intercept is not None and target_turn > best_intercept_time + 3:
             log(f"      -> EARLY EXIT (target_turn >> best_time)")
             break
     

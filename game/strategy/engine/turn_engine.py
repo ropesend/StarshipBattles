@@ -60,10 +60,31 @@ class TurnEngine:
     def _process_tick(self, tick, empires, galaxy):
         """Process 1 sub-tick of movement and combat.
         
-        Two-phase processing ensures simultaneous movement:
+        Four-phase processing:
+        Phase 0: Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
         Phase 1: Calculate paths/next moves for all fleets (based on current positions)
         Phase 2: Apply all movements simultaneously
+        Phase 3: Combat
         """
+        
+        # --- Phase 0: Instant Orders (JOIN_FLEET) ---
+        # Process JOIN_FLEET orders for any fleets that are already co-located with their target.
+        # This happens every subtick so fleets can join as soon as they arrive.
+        fleets_to_remove = []
+        for empire in empires:
+            for fleet in list(empire.fleets):  # Copy list since we may modify it
+                order = fleet.get_current_order()
+                if order and order.type == OrderType.JOIN_FLEET:
+                    target_fleet = order.target
+                    if target_fleet and hasattr(target_fleet, 'location'):
+                        if fleet.location == target_fleet.location:
+                            print(f"TurnEngine [Tick {tick}]: Fleet {fleet.id} merging into {target_fleet.id}")
+                            fleet.merge_with(target_fleet)
+                            fleets_to_remove.append((empire, fleet))
+        
+        # Remove merged fleets
+        for empire, fleet in fleets_to_remove:
+            empire.remove_fleet(fleet)
         
         # --- Phase 1: Calculate Moves ---
         # Collect (fleet, next_hex) pairs for all fleets that should move this tick
