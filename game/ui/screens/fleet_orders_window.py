@@ -191,12 +191,22 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         
         if 0 <= new_index < len(orders):
             orders[index], orders[new_index] = orders[new_index], orders[index]
+            
+            # If we moved the active order (index 0), we must invalidate current path
+            if index == 0 or new_index == 0:
+                self.fleet.path = []
+                
             self.rebuild_list()
             
     def delete_order(self, index):
         """Remove order and add to undo stack."""
         if 0 <= index < len(self.fleet.orders):
             order = self.fleet.orders.pop(index)
+            
+            # If we deleted the active order (index 0), invalidate current path
+            if index == 0:
+                self.fleet.path = []
+                
             # Store (original_index, order)
             self.deleted_history.append((index, order))
             self.btn_undo.enable()
@@ -213,6 +223,10 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
                 original_index = len(self.fleet.orders)
                 
             self.fleet.orders.insert(original_index, order)
+            
+            # If we restored to the active slot, invalidate path to be safe
+            if original_index == 0:
+                self.fleet.path = []
             
             if not self.deleted_history:
                 self.btn_undo.disable()

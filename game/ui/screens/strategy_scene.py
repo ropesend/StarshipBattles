@@ -10,7 +10,6 @@ from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint, Planet
 from game.strategy.data.hex_math import hex_to_pixel, pixel_to_hex, HexCoord, hex_distance
 from game.ui.renderer.camera import Camera
 from game.ui.screens.strategy_screen import StrategyInterface
-from game.strategy.data.pathfinding import find_path_interstellar, find_path_deep_space, project_fleet_path
 from game.strategy.engine.commands import IssueColonizeCommand
 from ui.colors import COLORS
 
@@ -82,7 +81,6 @@ class StrategyScene:
         self.current_player_index = 0
         
         # Assets
-        self.assets = {}
         self.empire_assets = {} # {empire_id: {'colony': Surface, 'fleet': Surface}}
         self._load_assets()
         
@@ -108,85 +106,12 @@ class StrategyScene:
     def human_player_ids(self): return self.session.human_player_ids
 
     def _load_assets(self):
-        """Load visual assets."""
-        self.assets['stars'] = {}
-        self.assets['planets'] = {}
-        self.assets['warp_points'] = []
+        """Load visual assets using AssetManager."""
+        from game.assets.asset_manager import get_asset_manager
         
-        # Base Paths
-        base_path = "assets/Images/Stellar Objects"
-        star_path = os.path.join(base_path, "Stars")
-        planet_base_path = os.path.join(base_path, "Planets/Planets")
-        wp_path = os.path.join(base_path, "Warp Points")
+        am = get_asset_manager()
+        am.load_manifest()  # Ensure manifest is loaded
         
-        # Load Stars
-        # Map simple colors (from generation) to asset filenames
-        # Our generator uses RGB tuples. Let's map approximate colors.
-        # (255, 200, 200) -> Red, (200, 200, 255) -> Blue/White, etc.
-        # For now, let's just load specific files and map arbitrarily or by name if possible.
-        # Files: StarBlueAsset.png, StarRedAsset.png, StarYellowAsset.png, etc.
-        
-        star_files = {
-            'blue': 'StarBlueAsset.png',
-            'red': 'StarRedAsset.png',
-            'yellow': 'StarYellowAsset.png',
-            'white': 'StarWhiteAsset.png',
-            'orange': 'StarOrangeAsset.png',
-            'neutron': 'StarNeutronAsset.png',
-            'black': 'StarBlackAsset.png'
-        }
-        
-        for k, filename in star_files.items():
-            full_path = os.path.join(star_path, filename)
-            if os.path.exists(full_path):
-                img = pygame.image.load(full_path).convert_alpha()
-                self.assets['stars'][k] = img
-            else:
-                print(f"Warning: Asset not found: {full_path}")
-                
-        processed_base_path = os.path.join(base_path, "Planets/Processed")
-        use_processed = os.path.exists(processed_base_path)
-        
-        # Load Planets (Scan directory)
-        # Use processed directory if available to skip slow transparency step
-        scan_path = processed_base_path if use_processed else planet_base_path
-        
-        if os.path.exists(scan_path):
-            files = os.listdir(scan_path)
-            for f in files:
-                if f.endswith(".png"):
-                    # Categorize by prefix: planet_gas_, planet_terr_, planet_ice_, planet_ven_, planet_moon_
-                    cat = "unknown"
-                    if "planet_gas_" in f: cat = "gas"
-                    elif "planet_terr_" in f: cat = "terran"
-                    elif "planet_ice_" in f: cat = "ice"
-                    elif "planet_ven_" in f: cat = "venus" # Desert/Hot
-                    elif "planet_moon_" in f: cat = "moon"
-                    elif "planet_earth" in f: cat = "terran"
-                    elif "planet_mars" in f: cat = "terran" # weak mapping
-                    
-                    if cat not in self.assets['planets']:
-                        self.assets['planets'][cat] = []
-                    
-                    full_path = os.path.join(scan_path, f)
-                    img = pygame.image.load(full_path).convert_alpha()
-                    
-                    # Only apply expensive processing if we loaded from raw source
-                    if not use_processed:
-                        img = self._make_background_transparent(img)
-                        
-                    self.assets['planets'][cat].append(img)
-                    
-        # Load Warp Points
-        if os.path.exists(wp_path):
-            for i in range(1, 4):
-                fname = f"Warp_Point_{i}.jpg"
-                full_path = os.path.join(wp_path, fname)
-                if os.path.exists(full_path):
-                    img = pygame.image.load(full_path).convert() # JPG no alpha
-                   # img.set_colorkey((0,0,0)) # Optional if simple trans
-                    self.assets['warp_points'].append(img)
-                    
         # Load Empire Assets
         for emp in self.empires:
             self.empire_assets[emp.id] = {}
@@ -194,16 +119,15 @@ class StrategyScene:
                 # Colony Flag
                 colony_path = os.path.join(emp.theme_path, "Flags", "Colony_Flag.jpg")
                 if os.path.exists(colony_path):
-                    img = pygame.image.load(colony_path).convert()
-                    self.empire_assets[emp.id]['colony'] = img
+                    self.empire_assets[emp.id]['colony'] = am.load_external_image(colony_path)
                 
                 # Fleet Icon (Battlecruiser)
                 fleet_path = os.path.join(emp.theme_path, "Skins", "Battlecruiser.png")
                 if os.path.exists(fleet_path):
-                    img = pygame.image.load(fleet_path).convert_alpha()
-                    self.empire_assets[emp.id]['fleet'] = img
+                    self.empire_assets[emp.id]['fleet'] = am.load_external_image(fleet_path)
             else:
-                print(f"Warning: Theme path not found for Empire {emp.name}: {emp.theme_path}")
+               # Silent warning or log?
+               pass
 
     def handle_resize(self, width, height):
         self.screen_width = width
@@ -229,7 +153,8 @@ class StrategyScene:
             
     def _issue_colonize_order(self, fleet, planet):
         """Issue the command to the session."""
-        cmd = IssueColonizeCommand(fleet.id, id(planet))
+        # Use proper planet.id instead of Python id()
+        cmd = IssueColonizeCommand(fleet.id, planet.id)
         print(f"Issued IssueColonizeCommand for {planet.name}")
         
         result = self.session.handle_command(cmd)
@@ -548,9 +473,16 @@ class StrategyScene:
             planet = self.selected_object
             if planet.owner_id == self.current_empire.id:
                 print(f"Queueing Ship at {planet}...")
-                # Add to Queue (1 Turn)
-                planet.add_production("Colony Ship", 1)
-                print("Ship added to construction queue (1 Turn).")
+                # Add to Queue via Command using planet.id (proper ID, not Python id())
+                from game.strategy.engine.commands import IssueBuildShipCommand
+                
+                cmd = IssueBuildShipCommand(planet.id, "Colony Ship")
+                
+                res = self.session.handle_command(cmd)
+                if res.is_valid:
+                    print("Ship added to construction queue (via Command).")
+                else:
+                    print(f"Build Failed: {res.message}")
 
     def on_design_click(self):
         """Handle 'Design' button click - opens Ship Builder."""
@@ -725,6 +657,9 @@ class StrategyScene:
         
     def _get_object_asset(self, obj):
         """Resolve the visual asset for a data object."""
+        from game.assets.asset_manager import get_asset_manager
+        am = get_asset_manager()
+
         if hasattr(obj, 'color') and hasattr(obj, 'mass'): # Star
             color = obj.color
             asset_key = 'yellow'
@@ -732,7 +667,7 @@ class StrategyScene:
             elif color[2] > 200 and color[0] < 100: asset_key = 'blue'
             elif color[0] > 200 and color[1] > 200 and color[2] > 200: asset_key = 'white'
             elif color[0] > 200 and color[1] > 150: asset_key = 'orange'
-            return self.assets['stars'].get(asset_key)
+            return am.get_image('stars', asset_key)
             
         elif hasattr(obj, 'planet_type'):
             p_type_name = obj.planet_type.name.lower()
@@ -741,16 +676,11 @@ class StrategyScene:
             elif 'ice' in p_type_name: cat = 'ice'
             elif 'desert' in p_type_name or 'hot' in p_type_name: cat = 'venus'
             
-            images = self.assets['planets'].get(cat, [])
-            if images:
-                idx = id(obj) % len(images)
-                return images[idx]
+            return am.get_random_from_group('planets', cat, seed_id=id(obj))
                 
         elif hasattr(obj, 'destination_id'): # Warp Point
-             if self.assets['warp_points']:
-                 idx = id(obj) % len(self.assets['warp_points'])
-                 return self.assets['warp_points'][idx]
-
+             return am.get_random_from_group('warp_points', 'default', seed_id=id(obj))
+             
         elif hasattr(obj, 'ships'): # Fleet
             emp_assets = self.empire_assets.get(obj.owner_id)
             if emp_assets and 'fleet' in emp_assets:
@@ -772,46 +702,52 @@ class StrategyScene:
         # Define Standard Move Logic as a closure/helper
         def execute_standard_move():
             print(f"Calculating path to {target_hex}...")
-            # Determine Start Hex (Current Location or Last Queued Destination)
-            start_hex = self.selected_fleet.location
-            if self.selected_fleet.orders:
-                 # Last order target
-                 last_order = self.selected_fleet.orders[-1]
-                 if last_order.type in (OrderType.MOVE, OrderType.MOVE_TO_FLEET):
-                     # For MOVE_TO_FLEET, target is fleet object, get its location?
-                     if hasattr(last_order.target, 'location'):
-                         start_hex = last_order.target.location
-                     elif isinstance(last_order.target, HexCoord):
-                         start_hex = last_order.target
-
-            print(f"Calculating path from {start_hex} to {target_hex}...")
-            path = self.calculate_hybrid_path(start_hex, target_hex)
             
-            if path:
-                # Path includes start hex, so actual steps = len - 1
-                print(f"Path confirmed: {max(0, len(path) - 1)} steps.")
-                new_order = FleetOrder(OrderType.MOVE, target_hex)
-                self.selected_fleet.add_order(new_order)
+            # Use Session to Preview Path (Visual Feedback / Validation)
+            preview_path = self.session.preview_fleet_path(self.selected_fleet, target_hex)
+            
+            if preview_path:
+                print(f"Path confirmed: {len(preview_path)} steps.")
                 
-                # Optimization if idle
-                if len(self.selected_fleet.orders) == 1:
-                    # Remove start hex from path before assigning
-                    if path and path[0] == self.selected_fleet.location:
-                        path = path[1:]
-                    self.selected_fleet.path = path
+                # Issue Command via Session
+                from game.strategy.engine.commands import IssueMoveCommand
+                cmd = IssueMoveCommand(self.selected_fleet.id, target_hex)
                 
-                # Reset Input unless Shift
-                keys = pygame.key.get_pressed()
-                if not (keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]):
-                    self.input_mode = 'SELECT'
-                    
-                self.on_ui_selection(self.selected_fleet)
+                result = self.session.handle_command(cmd)
+                
+                if result and result.is_valid:
+                     # Reset Input unless Shift
+                    keys = pygame.key.get_pressed()
+                    if not (keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]):
+                        self.input_mode = 'SELECT'
+                        
+                    self.on_ui_selection(self.selected_fleet)
+                else:
+                    print(f"Move Failed: {result.message if result else 'Unknown'}")
             else:
-                print("Cannot find path to target.")
+                print("Cannot find path to target (Unreachable).")
 
         # Define Intercept Logic
         def execute_intercept():
             print(f"Intercepting Fleet {target_fleet.id}...")
+            from game.strategy.data.fleet import FleetOrder, OrderType
+            # TODO: We need a Command for Intercept too!
+            # For Phase 1/2, let's keep it direct or create IssueInterceptCommand?
+            # Creating IssueMoveCommand with target as Fleet?
+            # IssueMoveCommand expects target_hex in our current def, but type 'Any'.
+            # Session handle_move expects target_hex to be passed to preview_path.
+            # preview_path expects hex.
+            
+            # To support Intercept via Command, we need IssueInterceptCommand or overload IssueMoveCommand.
+            # Let's direct map for now to unblock, but mark for todo.
+            # Actually, let's just use IssueMoveCommand but we need to handle the target being a fleet.
+            # BUT our IssueMoveCommand definition in Session calls preview_path(fleet, cmd.target_hex).
+            
+            # Fallback: keep legacy logic for Intercept for this moment as it wasn't in Phase 1 scope explicitly?
+            # "Refactor StrategyScene to use IssueMoveCommand"
+            # I should make IssueMoveCommand support Fleets or create IssueInterceptCommand.
+            # Let's keep legacy mutation for Intercept to reduce risk, since Phase 1 didn't add InterceptCommand.
+            
             new_order = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
             self.selected_fleet.add_order(new_order)
             
@@ -1334,7 +1270,9 @@ class StrategyScene:
                     elif color[0] > 200 and color[1] > 200 and color[2] > 200: asset_key = 'white'
                     elif color[0] > 200 and color[1] > 150: asset_key = 'orange'
                     
-                    star_img = self.assets['stars'].get(asset_key)
+                    from game.assets.asset_manager import get_asset_manager
+                    am = get_asset_manager()
+                    star_img = am.get_image('stars', asset_key)
                     
                     # Size calculation
                     # Base size: diameter=1 -> 15px radius?
@@ -1459,10 +1397,12 @@ class StrategyScene:
                  pygame.draw.circle(screen, (255, 255, 255), w_screen, max(12, int(12 * self.camera.zoom)), 1)
             
             # Warp Asset
-            if self.assets['warp_points']:
-                 idx = hash(wp) % len(self.assets['warp_points'])
-                 img = self.assets['warp_points'][idx]
-                 
+            # Warp Asset
+            from game.assets.asset_manager import get_asset_manager
+            am = get_asset_manager()
+            img = am.get_random_from_group('warp_points', 'default', seed_id=hash(wp))
+            
+            if img:
                  size = int(12 * self.camera.zoom)
                  scaled = pygame.transform.smoothscale(img, (size, size))
                  dest = scaled.get_rect(center=(int(w_screen.x), int(w_screen.y)))
@@ -1480,10 +1420,11 @@ class StrategyScene:
         elif 'ice' in p_type_name: cat = 'ice'
         elif 'desert' in p_type_name or 'hot' in p_type_name: cat = 'venus'
         
-        images = self.assets['planets'].get(cat, [])
-        if images:
-            idx = id(planet) % len(images)
-            img = images[idx]
+        from game.assets.asset_manager import get_asset_manager
+        am = get_asset_manager()
+        
+        img = am.get_random_from_group('planets', cat, seed_id=id(planet))
+        if img:
             scaled = pygame.transform.smoothscale(img, (size*2, size*2)) # Size is radius
             dest = scaled.get_rect(center=(int(center_pos.x), int(center_pos.y)))
             screen.blit(scaled, dest)
@@ -1569,7 +1510,7 @@ class StrategyScene:
                 
                 # Draw path only for the selected fleet (visible even when zoomed elsewhere)
                 if f == self.selected_fleet:
-                    segments = project_fleet_path(f, self.galaxy, max_turns=50)
+                    segments = self.session.get_fleet_path_projection(f, max_turns=50)
                     
                     start_screen = f_screen
                     font = None

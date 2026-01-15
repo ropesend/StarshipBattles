@@ -168,16 +168,14 @@ class StrategyInterface:
         # Nav Group: [< Col >] [< Fleet >]
         # Main Group: [Empire] [Research] [Next Turn]
         
-        # Calculations for centering
-        # Nav Group Width: (30+80+30) + 10 + (30+80+30) = 140 + 10 + 140 = 290
-        # Main Group Width: 100 + 10 + 100 + 10 + 100 + 10 + 150 = 480 (added Design button)
-        # Total Width = 290 + 20 + 480 = 790
+        # --- Top Bar Layout ---
+        # Strategy: Left Align after Player Label to avoid centering overlap issues.
+        # Player Label ends at x=210.
         
-        center_x = (screen_width - self.sidebar_width) / 2
-        start_x = center_x - (790 / 2)
+        start_x = 230 
         
         # --- Nav Buttons ---
-        # Colony
+        # Group 1: Colony (Width ~140)
         self.btn_prev_colony = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(start_x, 5, 30, 40), text="<", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
         )
@@ -188,34 +186,43 @@ class StrategyInterface:
             relative_rect=pygame.Rect(start_x + 110, 5, 30, 40), text=">", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
         )
         
-        # Fleet
-        offset_fleet = 150
+        # Group 2: Fleet (Width ~140)
+        # Position: Right of Colony Group + Gap
+        fleet_start_x = start_x + 140 + 20 
+        
         self.btn_prev_fleet = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(start_x + offset_fleet, 5, 30, 40), text="<", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
+            relative_rect=pygame.Rect(fleet_start_x, 5, 30, 40), text="<", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
         )
         self.lbl_fleet = pygame_gui.elements.UILabel(
-             relative_rect=pygame.Rect(start_x + offset_fleet + 30, 5, 80, 40), text="Fleet", manager=self.manager, container=self.top_bar
+             relative_rect=pygame.Rect(fleet_start_x + 30, 5, 80, 40), text="Fleet", manager=self.manager, container=self.top_bar
         )
         self.btn_next_fleet = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(start_x + offset_fleet + 110, 5, 30, 40), text=">", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
+            relative_rect=pygame.Rect(fleet_start_x + 110, 5, 30, 40), text=">", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
         )
         
         # --- Main Buttons ---
-        offset_main = 310
+        # Position: Right of Fleet Group + Gap
+        # Fleet ends at fleet_start_x + 140
+        main_start_x = fleet_start_x + 140 + 40
+        btn_w = 100
+        gap = 10
+        
         self.btn_planets = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(start_x + offset_main - 110, 5, 100, 40), text="Planets", manager=self.manager, container=self.top_bar
+            relative_rect=pygame.Rect(main_start_x, 5, btn_w, 40), text="Planets", manager=self.manager, container=self.top_bar
         )
         self.btn_empire = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(start_x + offset_main, 5, 100, 40), text="Empire", manager=self.manager, container=self.top_bar
+            relative_rect=pygame.Rect(main_start_x + 1*(btn_w+gap), 5, btn_w, 40), text="Empire", manager=self.manager, container=self.top_bar
         )
         self.btn_research = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(start_x + offset_main + 110, 5, 100, 40), text="Research", manager=self.manager, container=self.top_bar
+            relative_rect=pygame.Rect(main_start_x + 2*(btn_w+gap), 5, btn_w, 40), text="Research", manager=self.manager, container=self.top_bar
         )
         self.btn_design = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(start_x + offset_main + 220, 5, 100, 40), text="Design", manager=self.manager, container=self.top_bar
+            relative_rect=pygame.Rect(main_start_x + 3*(btn_w+gap), 5, btn_w, 40), text="Design", manager=self.manager, container=self.top_bar
         )
+        
+        # End Turn (Larger)
         self.btn_next_turn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(start_x + offset_main + 330, 5, 150, 40), 
+            relative_rect=pygame.Rect(main_start_x + 4*(btn_w+gap), 5, 150, 40), 
             text="End Turn",
             manager=self.manager,
             container=self.top_bar
@@ -605,13 +612,9 @@ class StrategyInterface:
             elif event.ui_element == self.btn_raw_data:
                 self.show_raw_data_popup()
             elif event.ui_element == self.btn_colonize:
-                # Logic handled by StrategyScene.on_colonize_click
-                pass
-            
-            elif event.ui_element == self.btn_orders:
-                
                 # Logic: Issues order mostly from Fleet
-                if hasattr(obj, 'ships'): # Is Fleet
+                obj = self.current_selection
+                if obj and hasattr(obj, 'ships'): # Is Fleet
                      # Find Uncolonized Planets at Fleet Location
                      from game.strategy.data.hex_math import hex_distance # Import if needed or check equality
                      
@@ -650,6 +653,11 @@ class StrategyInterface:
                                  self.scene.request_colonize_order(obj, planet)
                                  
                          self.prompt_planet_selection(candidates, on_planet_selected)
+            
+            elif event.ui_element == self.btn_orders:
+                 obj = self.current_selection
+                 if obj and hasattr(obj, 'ships'):
+                      self.open_orders_window(obj)
             
             elif event.ui_element == self.btn_orders:
                 if self.current_selection and hasattr(self.current_selection, 'orders'):

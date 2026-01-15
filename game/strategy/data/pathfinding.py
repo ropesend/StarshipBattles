@@ -85,6 +85,11 @@ def find_path_interstellar(start_system, end_system, galaxy):
 
 def get_system_at_hex(galaxy, hex_c, radius=50):
     """Find which system implies ownership of this hex (simplistic radius check)."""
+    # Fast path: O(1) exact match
+    if hex_c in galaxy.systems:
+        return galaxy.systems[hex_c]
+    
+    # Slow path: radius search for nearby systems
     best_sys = None
     min_dist = float('inf')
     
@@ -179,7 +184,6 @@ def find_hybrid_path(galaxy, start_hex, end_hex):
         return full_path
         
     # Fallback: Just direct line (Deep Space logic)
-    return find_path_deep_space(start_hex, end_hex)
     return find_path_deep_space(start_hex, end_hex)
 
 def project_fleet_path(fleet, galaxy, max_turns=10):

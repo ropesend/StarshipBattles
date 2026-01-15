@@ -1,6 +1,7 @@
 Traceback (most recent call last):
-  File "C:\Dev\Starship Battles\game\app.py", line 575, in main
+  File "C:\Developer\StarshipBattles\game\app.py", line 586, in main
     game.run()
+<<<<<<< HEAD
   File "C:\Dev\Starship Battles\game\app.py", line 250, in run
     self.test_lab_scene.handle_input([event])
   File "C:\Dev\Starship Battles\ui\test_lab_scene.py", line 2035, in handle_input
@@ -14,3 +15,13 @@ Traceback (most recent call last):
   File "C:\Dev\Starship Battles\ui\test_lab_scene.py", line 1491, in _load_component_data
     if self._components_cache is None:
 AttributeError: 'TestLabScene' object has no attribute '_components_cache'
+=======
+  File "C:\Developer\StarshipBattles\game\app.py", line 255, in run
+    self.strategy_scene.handle_event(event)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_scene.py", line 178, in handle_event
+    self.ui.handle_event(event)
+  File "C:\Developer\StarshipBattles\game\ui\screens\strategy_screen.py", line 632, in handle_event
+    system = self.scene.galaxy.get_system_of_object(obj)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Galaxy' object has no attribute 'get_system_of_object'
+>>>>>>> 21d6e7ee182c45f20d134e21c686c9bf7dcd5747

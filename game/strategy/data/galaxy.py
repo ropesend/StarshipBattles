@@ -37,17 +37,20 @@ class StarSystem:
         return f"System('{self.name}', Loc:{self.global_location}, Stars:{star_count}, Primary:{p_name})"
 
 class Galaxy:
-    # ... (__init__, add_system, generate_planets remain unchanged, only create_vars_link changes)
     def __init__(self, radius=100):
         self.radius = radius
         self.systems = {} # keys: HexCoord, values: StarSystem
         self.name_map = {} # keys: str (name), values: StarSystem
         
+        # Entity Registries (Issue #1 fix: proper IDs instead of id())
+        self._next_planet_id = 1
+        self.planets_by_id = {}  # int -> Planet
+        
+        # Spatial Indexes (Issue #2 fix: O(1) lookups instead of O(n²))
+        self._planet_to_system = {}    # Planet -> StarSystem
+        self._global_hex_planets = {}  # HexCoord -> List[Planet]
+        
         # Initialize Naming Registry
-        # Assuming run from root of repo
-        data_path = os.path.join(os.getcwd(), 'data', 'StarSystemNames.YAML')
-        # Initialize Naming Registry
-        # Assuming run from root of repo
         data_path = os.path.join(os.getcwd(), 'data', 'StarSystemNames.YAML')
         self.naming = NameRegistry(data_path)
         self.star_generator = StarGenerator()
@@ -61,6 +64,74 @@ class Galaxy:
     def get_system_by_name(self, name):
         """Get system by name."""
         return self.name_map.get(name)
+
+    def get_system_of_object(self, obj):
+        """
+        Find the system containing a given object (Fleet, Planet, etc).
+        
+        Args:
+            obj: Object with a 'location' attribute (HexCoord).
+        
+        Returns:
+            StarSystem or None.
+        """
+        if not hasattr(obj, 'location'):
+            return None
+            
+        # Optimization: Map logic handles global hexes?
+        # StarSystem.global_location is standard.
+        # Check if object is AT a system location.
+        if obj.location in self.systems:
+            return self.systems[obj.location]
+            
+        # If object is a planet, it might be in a system's list but location is relative?
+        # Standard: Fleet location is GLOBAL. Planet location is RELATIVE to System?
+        # Wait, previous code: collision check used `(system.global_location + p.location)`.
+        # so Planet.location is relative.
+        # But Fleet.location is global.
+        
+        # If obj is Fleet:
+        # It is strictly at a global hex.
+        # If that hex matches a system's global hex, it is "at the system".
+        # If it is in deep space, it returns None?
+        # The calling code says: "Find Uncolonized Planets at Fleet Location". 
+        # So it expects that if a fleet is at (X,Y) and there is a system at (X,Y), 
+        # then we return that system.
+        
+        if obj.location in self.systems:
+            return self.systems[obj.location]
+            
+        return None
+    
+    def register_planet(self, system, planet):
+        """Register a planet with the galaxy, assigning ID and updating indexes."""
+        # Assign unique ID
+        planet.id = self._next_planet_id
+        self._next_planet_id += 1
+        
+        # Add to ID registry
+        self.planets_by_id[planet.id] = planet
+        
+        # Add to reverse lookup
+        self._planet_to_system[planet] = system
+        
+        # Add to spatial index (global hex)
+        global_hex = system.global_location + planet.location
+        if global_hex not in self._global_hex_planets:
+            self._global_hex_planets[global_hex] = []
+        self._global_hex_planets[global_hex].append(planet)
+    
+    def get_planet_by_id(self, planet_id):
+        """O(1) lookup of planet by ID."""
+        return self.planets_by_id.get(planet_id)
+    
+    def get_system_of_planet(self, planet):
+        """O(1) reverse lookup: Planet -> StarSystem."""
+        return self._planet_to_system.get(planet)
+    
+    def get_planets_at_global_hex(self, global_hex):
+        """O(1) spatial lookup: get all planets at a global hex coordinate."""
+        return self._global_hex_planets.get(global_hex, [])
     
     def generate_planets(self, system):
         """Generate planets for a system based on its star type."""
@@ -71,6 +142,10 @@ class Galaxy:
         
         # Sort by distance, then mass (descending) for consistent ordering
         system.planets.sort(key=lambda p: (p.orbit_distance, -p.mass))
+        
+        # Register all planets with the galaxy
+        for planet in system.planets:
+            self.register_planet(system, planet)
 
     def generate_systems(self, count, min_dist=10):
         """

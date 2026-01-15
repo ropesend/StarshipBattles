@@ -8,6 +8,15 @@ from unittest.mock import MagicMock, patch
 class MockGalaxy:
     def __init__(self):
         self.systems = {}
+        
+    def get_planets_at_global_hex(self, global_hex):
+        """Return planets at the given global hex (calculates from system data)."""
+        result = []
+        for sys in self.systems.values():
+            for p in sys.planets:
+                if hasattr(p, 'location') and (sys.global_location + p.location) == global_hex:
+                    result.append(p)
+        return result
 
 
 

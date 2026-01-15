@@ -26,6 +26,16 @@ class TestCommands(unittest.TestCase):
         self.system.planets = [self.planet]
         
         self.galaxy.systems = {HexCoord(10, 10): self.system}
+        
+        # Mock the new spatial index method
+        def get_planets_at_global_hex(global_hex):
+            result = []
+            for sys in self.galaxy.systems.values():
+                for p in sys.planets:
+                    if (sys.global_location + p.location) == global_hex:
+                        result.append(p)
+            return result
+        self.galaxy.get_planets_at_global_hex = get_planets_at_global_hex
 
     def test_issue_colonize_command_validation_success(self):
         # Setup: Fleet at planet location (Global System 10,10 + Planet Local 0,0 = 10,10)
