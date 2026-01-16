@@ -1,5 +1,7 @@
 from game.simulation.components.component import ComponentStatus, LayerType
 from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
+from game.simulation.entities.ability_aggregator import calculate_ability_totals, get_ability_total
+from game.simulation.entities.combat_endurance import calculate_combat_endurance
 import math
 
 class ShipStatsCalculator:
@@ -333,151 +335,7 @@ class ShipStatsCalculator:
         
         # 7. Combat Endurance Stats
         # -------------------------
-        self._calculate_combat_endurance(ship, component_pool)
-
-    def _calculate_combat_endurance(self, ship, component_pool):
-        """Calculate endurance times for Fuel, Ammo, and Energy."""
-        from game.simulation.systems.resource_manager import ResourceConsumption
-
-        
-        # Rate = Sum of ResourceConsumption(fuel, constant)
-        # A. Fuel
-        fuel_consumption = 0.0
-        potential_fuel = 0.0
-        
-        # B. Ordinance (Ammo)
-        ammo_consumption = 0.0
-        potential_ammo = 0.0
-        
-        # C. Energy
-        energy_consumption = 0.0
-        potential_energy = 0.0
-
-        for c in component_pool:
-            # Local accumulators for this component
-            c_fuel = 0.0
-            c_ammo = 0.0
-            c_energy = 0.0
-            
-            # Iterate Abilities for Source of Truth
-            if hasattr(c, 'ability_instances'):
-                for ab in c.ability_instances:
-                    ab_cls = ab.__class__.__name__
-                    # Resource Storage dealt with in Phase 3 aggregation
-                    
-                    if ab_cls == 'ResourceConsumption':
-                        # Constant Consumption (Generic)
-                        trigger = getattr(ab, 'trigger', 'constant')
-                        resource_name = getattr(ab, 'resource_name', '')
-                        amount = getattr(ab, 'amount', 0.0)
-                        
-                        if trigger == 'constant':
-                            if resource_name == 'fuel':
-                                c_fuel += amount
-                            elif resource_name == 'energy':
-                                c_energy += amount
-                            elif resource_name == 'ammo':
-                                c_ammo += amount
-                            
-                        # Activation Costs (Energy/Ammo) -> Convert to Rate
-                        elif trigger == 'activation':
-                            # Get fire rate (1/reload)
-                            # Look for associated WeaponAbility to get accurate reload time
-                            reload_t = 1.0
-                            found_weapon = False
-                            
-                            # Try to find WeaponAbility on component
-                            if hasattr(c, 'ability_instances'):
-                                for inst in c.ability_instances:
-                                    if inst.__class__.__name__ in ['WeaponAbility', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility']:
-                                        reload_t = getattr(inst, 'reload_time', 1.0)
-                                        found_weapon = True
-                                        break
-                            
-                            # Fallback to component attribute (Legacy)
-                            if not found_weapon:
-                                reload_t = getattr(c, 'reload_time', 1.0)
-                                
-                            if reload_t > 0:
-                                rate = ab.amount / reload_t
-                                if ab.resource_name == 'ammo':
-                                    c_ammo += rate
-                                elif ab.resource_name == 'energy':
-                                    c_energy += rate
-
-            # Add to Potentials (Always)
-            potential_fuel += c_fuel
-            potential_ammo += c_ammo
-            potential_energy += c_energy
-            
-            # Add to Actuals (Only if Active)
-            if c.is_active:
-                fuel_consumption += c_fuel
-                ammo_consumption += c_ammo
-                energy_consumption += c_energy
-
-        # Store Actuals (used for physics/endurance)
-        ship.fuel_consumption = fuel_consumption
-        ship.ammo_consumption = ammo_consumption
-        ship.energy_consumption = energy_consumption
-
-        # Store Potentials (used for UI projections)
-        ship.potential_fuel_consumption = potential_fuel
-        ship.potential_ammo_consumption = potential_ammo
-        ship.potential_energy_consumption = potential_energy
-        
-        # Use registry directly
-        max_fuel = ship.resources.get_max_value('fuel')
-        # Endurance calculation uses ACTIVE consumption
-        ship.fuel_endurance = (max_fuel / fuel_consumption) if fuel_consumption > 0 else float('inf')
-
-        max_ammo = ship.resources.get_max_value('ammo')
-        ship.ammo_endurance = (max_ammo / ammo_consumption) if ammo_consumption > 0 else float('inf')
-        
-        # Energy Gen Rate
-        r_energy = ship.resources.get_resource('energy')
-        energy_gen_rate = r_energy.regen_rate if r_energy else 0.0
-        
-        ship.energy_net = energy_gen_rate - energy_consumption
-        
-        max_energy = ship.resources.get_max_value('energy')
-        
-        if ship.energy_net < 0:
-            # Draining
-            drain_rate = abs(ship.energy_net)
-            ship.energy_endurance = max_energy / drain_rate
-        else:
-            # Sustainable
-            ship.energy_endurance = float('inf')
-            
-        # Recharge Time
-        # Assume starting from 0 to Full using only Generation (no consumption)
-        # Or should it be Net Recharge? Prompt says "if consumption stops". So purely Generation.
-        if energy_gen_rate > 0:
-            ship.energy_recharge = max_energy / energy_gen_rate
-        else:
-            ship.energy_recharge = float('inf')
-
-        # Populate Cached Summary
-        dps = 0
-        from game.simulation.components.abilities import WeaponAbility
-        
-        # Calculate theoretical max DPS (all weapons)
-        for c in ship.get_all_components():
-            # Use get_abilities to handle polymorphism
-            for ab in c.get_abilities('WeaponAbility'):
-                if ab.reload_time > 0:
-                    dps += ab.damage / ab.reload_time
-        
-        ship._cached_summary = {
-            'mass': ship.mass,
-            'max_hp': ship.max_hp,
-            'speed': ship.max_speed,
-            'turn': ship.turn_speed,
-            'shield': ship.max_shields,
-            'dps': dps,
-            'range': ship.max_weapon_range
-        }
+        calculate_combat_endurance(ship, component_pool)
 
     def _priority_sort_key(self, c):
         # Bridge (Command)
@@ -557,122 +415,12 @@ class ShipStatsCalculator:
         ship._prev_max_shields = ship.max_shields
 
     def calculate_ability_totals(self, components):
+        """Calculate total values for all abilities from components.
+
+        Delegates to the extracted ability_aggregator module.
         """
-        Calculate total values for all abilities from components.
-        Supports 'stack_group' in ability definition for redundancy (MAX) vs stacking (SUM/MULT).
-        """
-        totals = {}
-        
-        # Abilities that should multiply instead of sum
-        MULTIPLICATIVE_ABILITIES = {'ToHitAttackModifier', 'ToHitDefenseModifier'}
-        
-        # Intermediate structure: ability -> { group_key -> [values] }
-        ability_groups = {}
-
-        for comp in components:
-            # 1. Process Ability Instances (New System - Scaled Values)
-            # Track which abilities are handled to avoid double counting from dict
-            handled_abilities = set()
-            
-            if hasattr(comp, 'ability_instances'):
-                # Handle List (Current Implementation)
-                if isinstance(comp.ability_instances, list):
-                    for ab in comp.ability_instances:
-                        ability_name = ab.__class__.__name__
-                        handled_abilities.add(ability_name)
-                        
-                        # Extract value using polymorphic interface
-                        value = ab.get_primary_value()
-                        
-                        # Marker abilities (no numeric value) return 0.0 from get_primary_value()
-                        # For class requirements, these need boolean True semantics
-                        MARKER_ABILITIES = {'CommandAndControl', 'Armor', 'RequiresCommandAndControl', 'RequiresCombatMovement'}
-                        if ability_name in MARKER_ABILITIES:
-                            value = True
-                        
-                        stack_group = getattr(ab, 'stack_group', None)
-                        group_key = stack_group if stack_group else comp
-
-                        if ability_name not in ability_groups: ability_groups[ability_name] = {}
-                        if group_key not in ability_groups[ability_name]: ability_groups[ability_name][group_key] = []
-                        
-                        ability_groups[ability_name][group_key].append(value)
-                        
-                        # Fix for BUG-08: Alias ResourceStorage(fuel) to FuelStorage for ClassRequirementsRule
-                        if ability_name == 'ResourceStorage' and getattr(ab, 'resource_type', '') == 'fuel':
-                             alias = 'FuelStorage'
-                             if alias not in ability_groups: ability_groups[alias] = {}
-                             if group_key not in ability_groups[alias]: ability_groups[alias][group_key] = []
-                             ability_groups[alias][group_key].append(value)
-                
-                # Handle Dict
-                elif isinstance(comp.ability_instances, dict):
-                     # ... (omitted for brevity, assume debug print sufficient in list block)
-                     pass
-
-            # 2. Process Raw Dictionary
-            abilities = getattr(comp, 'abilities', {})
-            if isinstance(abilities, dict):
-                for ability_name, raw_value in abilities.items():
-                    # Check handled
-                    if ability_name in handled_abilities:
-                        continue
-                    
-                    # Parse Value & Group
-                    value = raw_value
-                    stack_group = None
-                    
-                    if isinstance(raw_value, dict) and 'value' in raw_value:
-                        value = raw_value['value']
-                        stack_group = raw_value.get('stack_group')
-                    
-                    # Determine Group Key
-                    group_key = stack_group if stack_group else comp
-
-                    if ability_name not in ability_groups:
-                        ability_groups[ability_name] = {}
-                    if group_key not in ability_groups[ability_name]:
-                        ability_groups[ability_name][group_key] = []
-                    
-                    ability_groups[ability_name][group_key].append(value)
-
-        # Aggregate
-        for ability_name, groups in ability_groups.items():
-            # 1. Intra-Group Aggregation (MAX / Redundancy)
-            # All items in a Named Group provide redundancy -> Take MAX
-            group_contributions = []
-            
-            for key, values in groups.items():
-                # Filter for numeric
-                nums = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
-                if nums:
-                    group_contributions.append(max(nums))
-                elif any(v is True for v in values):
-                     # Boolean support (if any is True, the group is True)
-                     group_contributions.append(True)
-
-            if not group_contributions:
-                continue
-
-            # 2. Inter-Group Aggregation (Sum or Multiply)
-            first = group_contributions[0]
-            
-            if isinstance(first, bool):
-                # If any group contributes True, result is True
-                totals[ability_name] = True
-            else:
-                if ability_name in MULTIPLICATIVE_ABILITIES:
-                    val = 1.0
-                    for v in group_contributions:
-                         if isinstance(v, (int, float)): val *= v
-                    totals[ability_name] = val
-                else:
-                    val = sum(v for v in group_contributions if isinstance(v, (int, float)))
-                    totals[ability_name] = val
-        
-        return totals
+        return calculate_ability_totals(components)
 
     def _get_ability_total(self, component_list, ability_name):
         """Calculate total value of a specific ability across provided components."""
-        totals = self.calculate_ability_totals(component_list)
-        return totals.get(ability_name, 0)
+        return get_ability_total(component_list, ability_name)

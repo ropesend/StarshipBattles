@@ -3,15 +3,16 @@ import pygame
 import pygame_gui
 from game.core.logger import log_debug
 from game.core.config import UIConfig
-from game.strategy.data.fleet import OrderType
-from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_list_window import PlanetListWindow
 from game.ui.screens.fleet_orders_window import FleetOrdersWindow
 from game.core.constants import DATA_DIR
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 from game.ui.panels.system_tree_panel import SystemTreePanel
-import pygame_gui.windows # for raw data popup if needed
+from game.ui.screens.strategy_detail_fmt import (
+    format_spectrum_html, format_atmosphere_raw, get_label_for_object
+)
+import pygame_gui.windows
 import pygame_gui.elements as ui
 
 class StrategyInterface:
@@ -340,13 +341,7 @@ class StrategyInterface:
         self.sector_tree.set_items(contents, self, flat_view=True)
         
     def _get_label_for_obj(self, obj):
-        if hasattr(obj, 'stars'): return f"System: {obj.name}"
-        elif hasattr(obj, 'color') and hasattr(obj, 'mass'): return f"Star: {obj.name}"
-        elif hasattr(obj, 'planet_type'): return f"Planet: {obj.name}"
-        elif hasattr(obj, 'destination_id'): return f"Warp Point -> {obj.destination_id}"
-        elif hasattr(obj, 'ships'): return f"Fleet {obj.id} ({len(obj.ships)})"
-        elif hasattr(obj, 'calculate_radiation'): return "Local Radiation Analysis"
-        return "Unknown Object"
+        return get_label_for_object(obj)
 
     def _get_object_asset(self, obj):
         """Proxy to scene for asset resolution."""
@@ -355,18 +350,7 @@ class StrategyInterface:
         return None
         
     def _format_spectrum(self, star):
-        s = star.spectrum
-        html = "<br><b>Spectrum Intensity (W/m^2 rel):</b><br>"
-        html += f" Gamma: {s.gamma_ray:.2e}<br>"
-        html += f" X-Ray: {s.xray:.2e}<br>"
-        html += f" UV:    {s.ultraviolet:.2e}<br>"
-        html += f" Blue:  {s.blue:.2e}<br>"
-        html += f" Green: {s.green:.2e}<br>"
-        html += f" Red:   {s.red:.2e}<br>"
-        html += f" IR:    {s.infrared:.2e}<br>"
-        html += f" Micro: {s.microwave:.2e}<br>"
-        html += f" Radio: {s.radio:.2e}<br>"
-        return html
+        return format_spectrum_html(star)
 
     def show_raw_data_popup(self):
         """Show raw data in a message window."""
@@ -566,10 +550,7 @@ class StrategyInterface:
         return text
 
     def _format_atmosphere_raw(self, planet):
-        html = f"<b>Atmosphere ({planet.total_pressure_atm:.2f} atm):</b><br>"
-        for gas, pa in planet.atmosphere.items():
-            html += f" {gas}: {pa:.1f} Pa<br>"
-        return html
+        return format_atmosphere_raw(planet)
 
         
     def update(self, dt):

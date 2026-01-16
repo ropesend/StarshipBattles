@@ -1,12 +1,10 @@
 import pygame
-import pygame_gui
-import os
-from game.core.logger import log_info
 from game.strategy.data.planet import PLANET_RESOURCES
-from game.core.constants import DATA_DIR
-from game.core.json_utils import load_json, save_json
-from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UITextEntryLine, UISelectionList, UIHorizontalSlider, UIDropDownMenu, UIImage, UIVerticalScrollBar
+from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UITextEntryLine, UIHorizontalSlider, UIDropDownMenu, UIImage, UIVerticalScrollBar
 from pygame_gui import UI_TEXT_ENTRY_FINISHED
+
+from game.ui.screens.planet_list_filters import gather_planets, filter_planets, sort_planets, get_column_value
+from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
 
 class PlanetListWindow(UIWindow):
     def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None):
@@ -23,8 +21,11 @@ class PlanetListWindow(UIWindow):
         self.row_height = 50
         
         # --- State ---
-        self.all_planets = self._gather_planets()
+        self.all_planets = gather_planets(galaxy, empire)
         self.filtered_planets = []
+
+        # Preset manager
+        self.preset_manager = PresetManager()
         
         # Filter States
         self.filter_name = ""
@@ -131,39 +132,6 @@ class PlanetListWindow(UIWindow):
         self._rebuild_headers()
         self._rebuild_row_pool()
         self.refresh_list()
-        
-    def _gather_planets(self):
-        """Collect all planets from the galaxy with pre-computed filter values."""
-        planets = []
-        m_earth_const = 5.97e24
-        g_const = 9.81
-        
-        if self.galaxy and self.galaxy.systems:
-            for s in self.galaxy.systems.values():
-                for p in s.planets:
-                    # Attach system ref for cached access
-                    p._temp_system_ref = s
-                    
-                    # Pre-compute expensive filter values (avoids per-filter-iteration cost)
-                    p._cached_gravity_g = p.surface_gravity / g_const
-                    p._cached_mass_earth = p.mass / m_earth_const
-                    p._cached_name_lower = p.name.lower()
-                    
-                    # Pre-compute type category
-                    tn = p.planet_type.name.lower()
-                    if 'gas' in tn:
-                        p._cached_type_category = 'Gas'
-                    elif 'ice' in tn:
-                        p._cached_type_category = 'Ice'
-                    elif 'desert' in tn or 'hot' in tn:
-                        p._cached_type_category = 'Desert'
-                    elif 'moon' in tn:
-                        p._cached_type_category = 'Moon'
-                    else:
-                        p._cached_type_category = 'Terran'
-                    
-                    planets.append(p)
-        return planets
         
     def _get_system_name(self, planet):
         if hasattr(planet, '_temp_system_ref'):
@@ -343,14 +311,9 @@ class PlanetListWindow(UIWindow):
         y_off += 20
         UILabel(pygame.Rect(10, y_off, width, 25), "PRESETS", self.ui_manager, container=content_container)
         y_off += 30
-        
-        # Load Presets
-        self.presets = self._load_presets_from_disk()
-        opts = list(self.presets.keys())
-        if "Default" not in opts: opts.insert(0, "Default")
-        
+
         self.dd_presets = UIDropDownMenu(
-            options_list=opts,
+            options_list=self.preset_manager.get_preset_names(),
             starting_option="Default",
             relative_rect=pygame.Rect(10, y_off, width, 30),
             manager=self.ui_manager,
@@ -471,74 +434,25 @@ class PlanetListWindow(UIWindow):
         """Filter and update scrollbar."""
         # 1. Update Filter State from UI (lazy sync)
         search = self.txt_name_filter.get_text()
-        if search == "Search Name...": search = ""
+        if search == "Search Name...":
+            search = ""
         search_lower = search.lower() if search else ""
-        
+
         min_g = self.ui_filters['gravity']['min'].get_current_value()
         max_g = self.ui_filters['gravity']['max'].get_current_value()
-        
         min_t = self.ui_filters['temp']['min'].get_current_value()
         max_t = self.ui_filters['temp']['max'].get_current_value()
-        
         min_m = self.ui_filters['mass']['min'].get_current_value()
         max_m = self.ui_filters['mass']['max'].get_current_value()
-        
-        # Use cached pre-computed values for faster filtering
-        filter_types = self.filter_types  # Local ref for speed
-        
-        def matches_filter(p):
-            # Name (use cached lowercase)
-            if search_lower and search_lower not in p._cached_name_lower:
-                return False
-            
-            # Type (use cached category)
-            if not filter_types.get(p._cached_type_category, True):
-                return False
-            
-            # Ranges (use cached gravity_g and mass_earth)
-            if p._cached_gravity_g < min_g or p._cached_gravity_g > max_g:
-                return False
-            
-            if p.surface_temperature < min_t or p.surface_temperature > max_t:
-                return False
-            
-            if p._cached_mass_earth < min_m or p._cached_mass_earth > max_m:
-                return False
-            
-            return True
-        
-        # Use list comprehension with filter function
-        self.filtered_planets = [p for p in self.all_planets if matches_filter(p)]
-                
-        # 1b. Sort
-        if self.sort_column_id:
-            col = next((c for c in self.columns if c['id'] == self.sort_column_id), None)
-            if col:
-                # Use cached values for known numeric columns
-                if col['id'] == 'mass':
-                    self.filtered_planets.sort(key=lambda p: p.mass, reverse=self.sort_descending)
-                elif col['id'] == 'grav':
-                    self.filtered_planets.sort(key=lambda p: p.surface_gravity, reverse=self.sort_descending)
-                elif col['id'] == 'temp':
-                    self.filtered_planets.sort(key=lambda p: p.surface_temperature, reverse=self.sort_descending)
-                elif col['id'] == 'name':
-                    self.filtered_planets.sort(key=lambda p: p._cached_name_lower, reverse=self.sort_descending)
-                elif col['id'] == 'type':
-                    self.filtered_planets.sort(key=lambda p: p._cached_type_category, reverse=self.sort_descending)
-                else:
-                    # Fallback for other columns
-                    def sort_key(p):
-                        if 'func' in col:
-                            return col['func'](p)
-                        elif 'attr' in col:
-                            attrs = col['attr'].split('.')
-                            obj = p
-                            for a in attrs:
-                                if hasattr(obj, a): obj = getattr(obj, a)
-                                else: return ""
-                            return obj
-                        return ""
-                    self.filtered_planets.sort(key=sort_key, reverse=self.sort_descending)
+
+        # Use extracted filter function
+        self.filtered_planets = filter_planets(
+            self.all_planets, search_lower, self.filter_types,
+            min_g, max_g, min_t, max_t, min_m, max_m
+        )
+
+        # 1b. Sort using extracted function
+        sort_planets(self.filtered_planets, self.sort_column_id, self.sort_descending, self.columns)
                 
         # 2. Update Scrollbar
         total_h = len(self.filtered_planets) * self.row_height
@@ -660,22 +574,8 @@ class PlanetListWindow(UIWindow):
                     el = widget_data['el']
                     
                     if widget_data['type'] == 'label':
-                         val = ""
-                         if 'func' in col:
-                             val = col['func'](planet)
-                         elif 'attr' in col:
-                             attrs = col['attr'].split('.')
-                             obj = planet
-                             for a in attrs:
-                                 if hasattr(obj, a): obj = getattr(obj, a)
-                                 else: obj = "?"
-                             
-                             fmt = col.get('fmt')
-                             if fmt and isinstance(obj, (int, float)):
-                                 val = fmt.format(obj)
-                             else:
-                                 val = str(obj)
-                         el.set_text(val)
+                        val = get_column_value(planet, col)
+                        el.set_text(val)
                          
                     elif widget_data['type'] == 'image':
                         # Get image via asset resolver
@@ -855,27 +755,21 @@ class PlanetListWindow(UIWindow):
             # Change detected
             self.last_preset_selection = self.dd_presets.selected_option
             name = self.last_preset_selection
-            if name in self.presets:
-                self._apply_state(self.presets[name])
-                
+            if self.preset_manager.has_preset(name):
+                self._apply_state(self.preset_manager.get_preset(name))
+
         if self.btn_save_preset.check_pressed():
             name = self.txt_preset_name.get_text()
             if name:
                 state = self._capture_current_state()
-                self.presets[name] = state
-                self._save_presets_to_disk()
-                log_info(f"Saved Preset: {name}")
+                self.preset_manager.save_preset(name, state)
                 # Refresh Dropdown (Recreate)
-                # Keep rect
                 rect = self.dd_presets.relative_rect
                 container = self.dd_presets.ui_container
                 self.dd_presets.kill()
-                
-                opts = list(self.presets.keys())
-                if "Default" not in opts: opts.insert(0, "Default")
-                
+
                 self.dd_presets = UIDropDownMenu(
-                    options_list=opts,
+                    options_list=self.preset_manager.get_preset_names(),
                     starting_option=name,
                     relative_rect=rect,
                     manager=self.ui_manager,
@@ -883,100 +777,19 @@ class PlanetListWindow(UIWindow):
                 )
                 self.last_preset_selection = name
             
-    def _load_presets_from_disk(self):
-        path = os.path.join(DATA_DIR, 'ui_presets.json')
-        return load_json(path, default={})
-
-    def _save_presets_to_disk(self):
-        path = os.path.join(DATA_DIR, 'ui_presets.json')
-        save_json(path, self.presets)
-
     def _capture_current_state(self):
         """Serialize current filters and column config."""
-        # Columns: order and visibility
-        cols_data = []
-        for c in self.columns:
-            cols_data.append({'id': c['id'], 'visible': c['visible']})
-            
-        # Filters
-        filters_data = {
-            'name': self.txt_name_filter.get_text(),
-            'types': self.filter_types,
-            'owner': self.filter_owner,
-            'ranges': {
-                'gravity': [self.ui_filters['gravity']['min'].get_current_value(), self.ui_filters['gravity']['max'].get_current_value()],
-                'temp': [self.ui_filters['temp']['min'].get_current_value(), self.ui_filters['temp']['max'].get_current_value()],
-                'mass': [self.ui_filters['mass']['min'].get_current_value(), self.ui_filters['mass']['max'].get_current_value()]
-            }
-        }
-        
-        return {
-            'columns': cols_data,
-            'filters': filters_data
-        }
+        return capture_planet_list_state(
+            self.columns, self.txt_name_filter, self.filter_types,
+            self.filter_owner, self.ui_filters
+        )
 
     def _apply_state(self, state):
         """Restore state."""
-        # Restore Columns
-        if 'columns' in state:
-            # Reorder self.columns to match saved order
-            saved_order = state['columns'] # List of {id, visible}
-            
-            new_cols = []
-            # Create map of current columns
-            current_map = {c['id']: c for c in self.columns}
-            
-            for item in saved_order:
-                cid = item['id']
-                if cid in current_map:
-                    col = current_map[cid]
-                    col['visible'] = item['visible']
-                    new_cols.append(col)
-                    del current_map[cid]
-            
-            # Append any remaining new columns (code updates)
-            for c in current_map.values():
-                new_cols.append(c)
-                
-            self.columns = new_cols
-            
-            # Update UI Checkboxes
-            for cid, btn in self.ui_filters.get('columns', {}).items():
-                # Find col
-                col = next((c for c in self.columns if c['id'] == cid), None)
-                if col:
-                    t = f"[x] {col['title'] or col['id']}" if col['visible'] else f"[ ] {col['title'] or col['id']}"
-                    btn.set_text(t)
-                    
-        # Restore Filters
-        if 'filters' in state:
-            f = state['filters']
-            if 'name' in f: self.txt_name_filter.set_text(f['name'])
-            if 'types' in f: self.filter_types = f['types']
-            # Update Type Toggles UI? We didn't save refs explicitly in a clean way for updates.
-            # But we can iterate.
-            for t, btn in self.ui_filters.get('types', {}).items():
-                if t in self.filter_types:
-                    # Update visual state
-                    if self.filter_types[t]:
-                        btn.select()
-                        btn.set_text(f"[{t}]")
-                    else:
-                        btn.unselect()
-                        btn.set_text(f"{t}")
-                        
-            if 'ranges' in f:
-                r = f['ranges']
-                if 'gravity' in r: 
-                    self.ui_filters['gravity']['min'].set_current_value(r['gravity'][0])
-                    self.ui_filters['gravity']['max'].set_current_value(r['gravity'][1])
-                if 'temp' in r:
-                    self.ui_filters['temp']['min'].set_current_value(r['temp'][0])
-                    self.ui_filters['temp']['max'].set_current_value(r['temp'][1])
-                if 'mass' in r:
-                    self.ui_filters['mass']['min'].set_current_value(r['mass'][0])
-                    self.ui_filters['mass']['max'].set_current_value(r['mass'][1])
-                
+        self.columns = apply_planet_list_state(
+            state, self.columns, self.txt_name_filter,
+            self.filter_types, self.ui_filters
+        )
         self._rebuild_headers()
         self._rebuild_row_pool()
         self.refresh_list()

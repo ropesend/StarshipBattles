@@ -1,516 +1,342 @@
+"""
+Planet generation system for star systems.
+
+Generates planetary bodies with realistic physical properties including
+mass distribution, moons, atmospheres, and resources.
+"""
 import random
 import math
-from typing import List, Dict, Tuple
+from typing import List, Dict
+
 from game.strategy.data.planet import Planet, PlanetType, PLANET_RESOURCES
 from game.strategy.data.hex_math import HexCoord, hex_ring
 from game.strategy.data.physics import calculate_incident_radiation
 from game.strategy.data.stars import Star
+from game.strategy.data.planet_physics import (
+    MASS_CERES, MASS_MARS, MASS_EARTH, MASS_NEPTUNE, MASS_JUPITER, ATM_TO_PA,
+    calculate_radius_density_from_mass, calculate_escape_velocity,
+    calculate_surface_gravity, calculate_surface_area, calculate_blackbody_temperature
+)
+from game.strategy.data.planet_atmosphere import generate_atmosphere
+from game.strategy.data.planet_naming import assign_body_names
 
-# Physics Constants
-G = 6.67430e-11
-BOLTZMANN_K = 1.380649e-23
-PROTON_MASS = 1.6726e-27
-ATM_TO_PA = 101325.0
-
-# Reference Masses (kg)
-MASS_CERES = 9.39e20
-MASS_MOON = 7.34e22
-MASS_MERCURY = 3.30e23
-MASS_MARS = 6.42e23
-MASS_EARTH = 5.97e24
-MASS_NEPTUNE = 1.02e26
-MASS_JUPITER = 1.89e27
-
-# Gas Properties: Molar Mass (kg/mol) approx
-GASES = {
-    "H2": 0.002,
-    "He": 0.004,
-    "CH4": 0.016,
-    "NH3": 0.017,
-    "H2O": 0.018,
-    "N2": 0.028,
-    "O2": 0.032,
-    "Ar": 0.040,
-    "CO2": 0.044,
-    "SO2": 0.064
-}
 
 class PlanetGenerator:
+    """Generator for creating planetary bodies within star systems."""
+
     def __init__(self):
         pass
 
     def generate_system_bodies(self, system_name: str, stars: List[Star]) -> List[Planet]:
         """
         Generate all planetary bodies for a system.
-        Returns a flat list of Planet objects.
+
+        Args:
+            system_name: Name of the star system
+            stars: List of stars in the system
+
+        Returns:
+            List of Planet objects with assigned names
         """
         bodies = []
-        
-        # 1. Determine Number of Primary "Orbit Centers" (Occupied Hexes)
-        # User Request: "Decrease number of sectors with planets, but increase number of planets per sector"
-        # Let's say 3 to 10 occupied hexes.
-        primary_count = random.randint(3, 10)
-        
+
+        # Determine orbital slots and their masses
+        occupied_slots = self._generate_orbital_slots(stars)
+
+        # Generate moons for each primary body
+        self._generate_moons(occupied_slots)
+
+        # Create Planet objects for each mass
+        bodies = self._create_planet_objects(occupied_slots, stars)
+
+        # Assign names based on distance and mass
+        assign_body_names(bodies, system_name)
+
+        return bodies
+
+    def _generate_orbital_slots(self, stars: List[Star]) -> Dict[HexCoord, List[float]]:
+        """
+        Generate primary orbital slots with masses.
+
+        Returns dict mapping location to list of masses at that location.
+        """
         primary = stars[0]
         safe_start = int(primary.diameter_hexes / 2) + 2
         max_dist = 20
-        
+
+        # 3-10 occupied hexes (fewer locations, more bodies per location)
+        primary_count = random.randint(3, 10)
+
         occupied_locations = set()
-        occupied_slots = {} # Loc -> List[Mass]
-        
-        # 2. Generate Primaries
+        occupied_slots = {}
+
         for _ in range(primary_count):
-            # Find unique location
             for attempt in range(20):
                 dist = random.randint(safe_start, max_dist)
                 ring_coords = hex_ring(dist)
-                if not ring_coords: continue
+                if not ring_coords:
+                    continue
                 loc = random.choice(ring_coords)
                 if loc not in occupied_locations:
                     occupied_locations.add(loc)
-                    
-                    # Generate Mass for Primary
-                    # Full range, but primary is usually significant
                     mass = self._generate_mass(is_companion=False)
                     occupied_slots[loc] = [mass]
                     break
-        
-        # 3. Generate Moons / Co-orbitals for each Primary
+
+        return occupied_slots
+
+    def _generate_moons(self, occupied_slots: Dict[HexCoord, List[float]]) -> None:
+        """
+        Generate moons/co-orbitals for each primary body.
+
+        Larger primaries have higher chance of additional bodies.
+        Moon mass is normally distributed around 10% of primary mass.
+        """
         for loc, masses in occupied_slots.items():
             primary_mass = masses[0]
-            
-            # User Algorithm:
-            # "For a jupitor sized massed planet have the odds of a aditional planet be 80%... 
-            # keep rolling the dice for each additional planet."
-            # "Earth mass planet it is 10% to start... ceries would be about 1%."
-            
-            # Linear Log Interpolation for Base Chance
-            # Log10(Jupiter=1.89e27) = 27.27 -> 0.80
-            # Log10(Earth=5.97e24) = 24.77 -> 0.10
-            # Log10(Ceres=9.39e20) = 20.97 -> 0.01
-            
-            log_m = math.log10(primary_mass)
-            
-            # Piecewise Linear Interpolation
-            if log_m >= 27.27:
-                 chance = 0.8
-            elif log_m >= 24.77:
-                 # Interp between Earth and Jupiter
-                 # Slope = (0.8 - 0.1) / (27.27 - 24.77) = 0.7 / 2.5 = 0.28
-                 chance = 0.1 + (log_m - 24.77) * 0.28
-            elif log_m >= 20.97:
-                 # Interp between Ceres and Earth
-                 # Slope = (0.1 - 0.01) / (24.77 - 20.97) = 0.09 / 3.8 = 0.0237
-                 chance = 0.01 + (log_m - 20.97) * 0.0237
-            else:
-                 chance = 0.01 # Floor
-                 
-            # Clamp
-            chance = max(0.0, min(0.95, chance))
-            
-            # Keep Rolling
+
+            # Calculate chance based on primary mass (log interpolation)
+            chance = self._calculate_moon_chance(primary_mass)
+
+            # Keep rolling for additional moons
             while random.random() < chance:
-                # Limit max moons to avoid infinite loops or memory issues (e.g. 50)
-                if len(masses) > 50: break
-                
-                # "Size of the moons should be ... normal distibution centered around 10% of the parent planets mass"
-                # Sigma? Let's assume 2% of primary mass (so 3-sigma is 4% to 16%)
-                
-                target_mu = primary_mass * 0.10
-                target_sigma = primary_mass * 0.02 # 2% std dev
-                
-                moon_mass = random.gauss(target_mu, target_sigma)
-                
-                # Physical min mass check
-                # If calculated mass < Ceres (9e20), should we discard or clamp?
-                # User says "Ceries would be about 1% [chance]", implying small things exist.
-                # If we clamp to MIN, we get 'Ceres' clones.
-                # Let's clamp to MIN_MASS or simply discard if negative/too small?
-                # "Infinite loop" issue was max < min.
-                # Here we just generate value.
-                
-                if moon_mass < MASS_CERES: 
-                     moon_mass = MASS_CERES # Floor at dwarf planet size
-                     
-                # Also ensure moon isn't >= primary (unlikely with 10% mean, but possible with huge sigma)
-                if moon_mass >= primary_mass:
-                     moon_mass = primary_mass * 0.5
-                     
+                if len(masses) > 50:
+                    break
+
+                moon_mass = self._generate_moon_mass(primary_mass)
                 masses.append(moon_mass)
 
-        # 3. Create Planet Objects for each Mass
-        for loc, masses in occupied_slots.items():
-            # Sort masses descending
-            masses.sort(reverse=True)
-            
-            orbit_dist = max(abs(loc.q), abs(loc.r), abs(-loc.q-loc.r))
-            
-            # Calculate Radiation / Temperature for this location
-            # Using physics library
-            incident_spec = calculate_incident_radiation(loc, stars)
-            total_flux = incident_spec.get_total_output() # W/m^2
-            
-            # Determine base blackbody temp
-            # Stefan-Boltzmann: P/A = sigma * T^4  => T = ((P/A)/sigma)^0.25
-            # P/A is flux.
-            sigma = 5.670374e-8
-            base_temp = (total_flux / sigma) ** 0.25
-            
-            for i, mass in enumerate(masses):
-                # Naming
-                if i == 0:
-                    suffix = "I" # Roman 1 (simplified)
-                    # We could do actual roman numerals conversion if needed, but for now simple I is fine or use index+1
-                    # Actually standard is b, c, d... but user asked for "System I, Ia, Ib"
-                    # Wait, user said "Largest = I, others Ia, Ib". 
-                    # Actually usually stars are A, B... Planets b, c, d...
-                    # User request: "Planet Name I" then "Planet Name II" (Roman by distance).
-                    # User update in Step 28: "System Name I", "System Name II" romans by distance.
-                    # Moon update: "a large jupitor sized planet has a 80% chance of a moons... separate by naming convention with small letter a,b,c after roman numeral"
-                    # So: Planet at distance X -> "System I". Moons -> "System Ia", "System Ib".
-                    # But we have multiple planets at different distances.
-                    # We need to assign user-visible Roman numerals based on OUTWARD DISTANCE from star, not just local sorting.
-                    pass # Will handle naming in a second pass
-                
-                # Generate Physical Properties
-                radius, density = self._calculate_radius_density_from_mass(mass)
-                gravity = (G * mass) / (radius ** 2)
-                surface_area = 4 * math.pi * (radius ** 2)
-                
-                # Atmosphere & Pressure & Greenhouse
-                escape_vel = math.sqrt(2 * G * mass / radius)
-                atmosphere, pressure, final_temp = self._generate_atmosphere(mass, escape_vel, base_temp, total_flux)
-                
-                # Surface Water / Conditions
-                water, activity, mag_field = self._generate_surface_flags(mass, final_temp)
-                
-                # Classification
-                p_type = self._determine_type(mass, final_temp, pressure, water, atmosphere, activity)
-                
-                p = Planet(
-                    name="TEMP", # Assigned later
-                    location=loc,
-                    orbit_distance=orbit_dist,
-                    mass=mass,
-                    radius=radius,
-                    surface_area=surface_area,
-                    density=density,
-                    surface_gravity=gravity,
-                    surface_pressure=pressure,
-                    surface_temperature=final_temp,
-                    atmosphere=atmosphere,
-                    planet_type=p_type,
-                    surface_water=water,
-                    tectonic_activity=activity,
-                    magnetic_field=mag_field,
-                    resources=self._generate_resources(mass)
-                )
-                bodies.append(p)
+    def _calculate_moon_chance(self, primary_mass: float) -> float:
+        """
+        Calculate probability of having additional moons.
 
-        # 4. Naming Pass
-        # Sort entire list by distance, then mass
-        # Group by Orbit Distance (or Hex?)
-        # User said: "Naming convention for planets within a system (e.g., 'System Name I', 'System Name II'), using Roman numerals based on distance."
-        # "Naming convention for secondary bodies at the same location as a planet (e.g., 'Planet Name IIa', 'Planet Name IIb')."
-        
-        # Group bodies by Location
-        bodies_by_loc = {}
-        for b in bodies:
-            if b.location not in bodies_by_loc:
-                bodies_by_loc[b.location] = []
-            bodies_by_loc[b.location].append(b)
-            
-        # Sort locations by distance
-        sorted_locs = sorted(bodies_by_loc.keys(), key=lambda l: max(abs(l.q), abs(l.r), abs(-l.q-l.r)))
-        
-        planet_idx = 1
-        for loc in sorted_locs:
-            group = bodies_by_loc[loc]
-            # Sort group by Mass Descending (Largest is Planet, others are moons)
-            group.sort(key=lambda x: x.mass, reverse=True)
-            
-            roman = self._to_roman(planet_idx)
-            base_name = f"{system_name} {roman}"
-            
-            # Primary
-            group[0].name = base_name
-            
-            # Moons
-            import string
-            moon_suffixes = list(string.ascii_lowercase)
-            for i in range(1, len(group)):
-                if i-1 < len(moon_suffixes):
-                     suffix = moon_suffixes[i-1]
-                else:
-                     suffix = f"z{i-1}" # Fallback for absurd counts
-                group[i].name = f"{base_name}{suffix}"
-            
-            planet_idx += 1
-            
+        Jupiter-sized: 80% base chance
+        Earth-sized: 10% base chance
+        Ceres-sized: 1% base chance
+        """
+        log_m = math.log10(primary_mass)
+
+        if log_m >= 27.27:  # Jupiter+
+            chance = 0.8
+        elif log_m >= 24.77:  # Earth to Jupiter
+            chance = 0.1 + (log_m - 24.77) * 0.28
+        elif log_m >= 20.97:  # Ceres to Earth
+            chance = 0.01 + (log_m - 20.97) * 0.0237
+        else:
+            chance = 0.01
+
+        return max(0.0, min(0.95, chance))
+
+    def _generate_moon_mass(self, primary_mass: float) -> float:
+        """
+        Generate moon mass (normal distribution around 10% of primary).
+        """
+        target_mu = primary_mass * 0.10
+        target_sigma = primary_mass * 0.02
+
+        moon_mass = random.gauss(target_mu, target_sigma)
+
+        # Floor at dwarf planet size
+        if moon_mass < MASS_CERES:
+            moon_mass = MASS_CERES
+
+        # Ensure moon isn't larger than primary
+        if moon_mass >= primary_mass:
+            moon_mass = primary_mass * 0.5
+
+        return moon_mass
+
+    def _create_planet_objects(
+        self,
+        occupied_slots: Dict[HexCoord, List[float]],
+        stars: List[Star]
+    ) -> List[Planet]:
+        """
+        Create Planet objects from mass distributions.
+        """
+        bodies = []
+
+        for loc, masses in occupied_slots.items():
+            masses.sort(reverse=True)
+            orbit_dist = max(abs(loc.q), abs(loc.r), abs(-loc.q - loc.r))
+
+            # Calculate radiation and temperature for this location
+            incident_spec = calculate_incident_radiation(loc, stars)
+            total_flux = incident_spec.get_total_output()
+            base_temp = calculate_blackbody_temperature(total_flux)
+
+            for mass in masses:
+                planet = self._create_single_planet(
+                    loc, orbit_dist, mass, base_temp, total_flux
+                )
+                bodies.append(planet)
+
         return bodies
 
-
-    def _generate_mass(self, is_companion=False, primary_mass=None):
+    def _create_single_planet(
+        self,
+        loc: HexCoord,
+        orbit_dist: int,
+        mass: float,
+        base_temp: float,
+        total_flux: float
+    ) -> Planet:
         """
-        Generate Planet Mass in kg.
-        Range: Ceres (9e20) to Jupiter (1.9e27).
-        Weighted towards Mars (6e23) - Super Earth (1e25).
+        Create a single Planet object with all physical properties.
+        """
+        # Physical properties
+        radius, density = calculate_radius_density_from_mass(mass)
+        gravity = calculate_surface_gravity(mass, radius)
+        surface_area = calculate_surface_area(radius)
+
+        # Atmosphere
+        escape_vel = calculate_escape_velocity(mass, radius)
+        atmosphere, pressure, final_temp = generate_atmosphere(
+            mass, escape_vel, base_temp, total_flux
+        )
+
+        # Surface conditions
+        water, activity, mag_field = self._generate_surface_flags(mass, final_temp)
+
+        # Classification
+        p_type = self._determine_type(
+            mass, final_temp, pressure, water, atmosphere, activity
+        )
+
+        return Planet(
+            name="TEMP",  # Assigned later by naming pass
+            location=loc,
+            orbit_distance=orbit_dist,
+            mass=mass,
+            radius=radius,
+            surface_area=surface_area,
+            density=density,
+            surface_gravity=gravity,
+            surface_pressure=pressure,
+            surface_temperature=final_temp,
+            atmosphere=atmosphere,
+            planet_type=p_type,
+            surface_water=water,
+            tectonic_activity=activity,
+            magnetic_field=mag_field,
+            resources=self._generate_resources(mass)
+        )
+
+    def _generate_mass(self, is_companion=False, primary_mass=None) -> float:
+        """
+        Generate planet mass in kg using log-normal distribution.
+
+        Range: Ceres (9e20) to Jupiter (1.9e27)
+        Weighted towards Mars - Super Earth range.
         """
         min_mass = MASS_CERES
         max_mass = MASS_JUPITER
+
         if primary_mass:
-            # Moon should be smaller than primary (e.g. < 40%)
             target_max = primary_mass * 0.4
-            
             if target_max < min_mass:
-                # Primary is too small to have a strictly smaller moon that meets min_mass.
-                # Return min_mass (result is a binary/double object) to avoid infinite loop.
                 return min_mass
-                
             max_mass = min(MASS_JUPITER, target_max)
-            
+
         while True:
-            # Log-Normal Distribution
-            # We want peak around Earth/Super-Earth? 
-            # Log10(Earth) = 24.7.
-            # Let's try mu=24.5 (log10), sigma=1.5
             log_val = random.gauss(24.5, 1.5)
             mass = 10 ** log_val
-            
-            if mass < min_mass: continue
-            if mass > max_mass: continue
-            
-            return mass
 
-    def _calculate_radius_density_from_mass(self, mass):
-        """
-        Approximate radius and density from mass.
-        """
-        # Simplified models
-        if mass > 1e26: # Gas Giant
-            # Density ~ 1000-1500 kg/m^3
-            density = random.uniform(900, 1600)
-        elif mass > 5e24: # Earth / Super Earth
-            # Density ~ 4000-6000 kg/m^3 (Iron/Rock)
-            density = random.uniform(4000, 6000)
-        else: # Small rocky / icy
-            # Density ~ 2000-4000
-            density = random.uniform(2000, 4500)
-            
-        # Volume = Mass / Density
-        volume = mass / density
-        # V = 4/3 pi r^3 => r = (3V / 4pi)^(1/3)
-        radius = ((3 * volume) / (4 * math.pi)) ** (1.0/3.0)
-        return radius, density
+            if min_mass <= mass <= max_mass:
+                return mass
 
-    def _generate_atmosphere(self, mass, escape_vel, base_temp, flux_wm2):
+    def _generate_surface_flags(self, mass: float, temp: float):
         """
-        Generate composition and pressure.
+        Generate surface water, tectonic activity, and magnetic field.
         """
-        # Gas Retention: Need v_rms < 1/6 v_escape for long term retention
-        # v_rms = sqrt(3kT / m)
-        # Check specific gases
-        
-        composition = {}
-        
-        # Temp estimate for gas retention (Exosphere is hotter than surface usually)
-        # Using base_temp is a simplistic approx.
-        retention_temp = base_temp * 1.5 if base_temp > 0 else 50
-        
-        retained_gases = []
-        for gas_name, molar_kg in GASES.items():
-            molecular_mass_kg = molar_kg / 6.022e23
-            v_rms = math.sqrt(3 * BOLTZMANN_K * retention_temp / molecular_mass_kg)
-            if v_rms < (escape_vel / 6.0):
-                retained_gases.append(gas_name)
-                
-        if not retained_gases:
-            return {}, 0.0, base_temp
-            
-        # Pressure Potential based on Mass (Heavier planets hold more)
-        # Earth ~ 1e24 kg -> 1 ATM
-        # Venus ~ 0.8 Earth -> 90 ATM (Volatiles matter!)
-        # Mars ~ 0.1 Earth -> 0.01 ATM
-        
-        # Volatile inventory roll
-        volatile_richness = random.lognormvariate(0, 1.5) # multiplier
-        
-        # Base pressure scaling with mass^2 (gravity pulls harder, more mass to accrete)
-        mass_earth_units = mass / MASS_EARTH
-        base_pressure_atm = (mass_earth_units ** 2) * volatile_richness
-        
-        if 'H2' in retained_gases: # Gas Giant territory
-            base_pressure_atm *= 1000 # Massive atmosphere
-            
-        # Hot planets strip atmosphere
-        if base_temp > 500 and mass < MASS_EARTH:
-            base_pressure_atm *= 0.1
-            
-        pressure_pa = base_pressure_atm * ATM_TO_PA
-        
-        # Distribute pressure among retained gases
-        # Gas Giants: Mostly H2/He
-        # Terrestrial: CO2, N2 dominant usually. O2 if life (rare).
-        
-        props = {}
-        if 'H2' in retained_gases and mass > MASS_EARTH * 2: # Gas/Ice Giant
-            props['H2'] = 75
-            props['He'] = 24
-            # Trace others
-            remaining = 1.0
-            for g in retained_gases:
-                if g not in ['H2', 'He']: 
-                    props[g] = random.uniform(0, 1)
-        else:
-            # Rocky atmosphere
-            # CO2 is common default
-            total_weight = 0
-            for g in retained_gases:
-                w = 1.0
-                if g == 'CO2': w = 50
-                if g == 'N2': w = 20
-                if g == 'O2': w = 0.1 # Rare
-                if g == 'H2O': w = 5
-                props[g] = random.uniform(0, w)
-                
-        # Normalize
-        total_prop = sum(props.values())
-        if total_prop > 0:
-            for g in props:
-                props[g] /= total_prop
-                composition[g] = props[g] * pressure_pa
-        
-        # Greenhouse Effect
-        # dTx = T_effective * (P_greenhouse / P_ref)^0.2 ?
-        # Simplified:
-        greenhouse_add = 0
-        p_atm = base_pressure_atm
-        
-        # CO2, H2O, CH4 are greenhouse
-        gh_factor = 0
-        if 'CO2' in composition: gh_factor += composition['CO2'] / pressure_pa
-        if 'H2O' in composition: gh_factor += composition['H2O'] / pressure_pa * 2
-        if 'CH4' in composition: gh_factor += composition['CH4'] / pressure_pa * 5
-        
-        # Venus: 90 ATM CO2 -> +400K
-        # Earth: 1 ATM (small CO2/H2O) -> +33K
-        # Formula debug:
-        # Delta T ~ (Pressure * GHG_Conc)^(0.25) * Const?
-        
-        if p_atm > 0.01:
-             greenhouse_add = 10 * (p_atm ** 0.2) * (1 + gh_factor * 5)
-        
-        final_temp = base_temp + greenhouse_add
-        
-        return composition, pressure_pa, final_temp
-
-    def _generate_surface_flags(self, mass, coords_temp):
         activity = 0.0
         mag_field = 0.0
         water = 0.0
-        
-        # Tectonics: Mass keeps heat. Young planets hot.
-        # Assume medium age.
+
         if mass > MASS_MARS:
-             activity = random.uniform(0.1, 0.8)
-             mag_field = random.uniform(0.5, 2.0)
+            activity = random.uniform(0.1, 0.8)
+            mag_field = random.uniform(0.5, 2.0)
         else:
-             activity = random.uniform(0, 0.2)
-             mag_field = random.uniform(0, 0.5)
-             
-        # Water
-        # Needs temp 273 - 373 K (at 1 atm, differs by pressure)
-        # Simplified
-        if 250 < coords_temp < 350:
-             water = random.uniform(0.1, 0.9)
-        elif coords_temp <= 250:
-             # Ice
-             water = random.uniform(0.1, 0.9) # Frozen surface
+            activity = random.uniform(0, 0.2)
+            mag_field = random.uniform(0, 0.5)
+
+        # Water presence based on temperature
+        if 250 < temp < 350:
+            water = random.uniform(0.1, 0.9)
+        elif temp <= 250:
+            water = random.uniform(0.1, 0.9)  # Frozen
         else:
-             water = 0 # Boiled off
-             
+            water = 0  # Boiled off
+
         return water, activity, mag_field
 
-    def _determine_type(self, mass, temp, pressure, water, atmosphere, activity=0.0):
+    def _determine_type(
+        self,
+        mass: float,
+        temp: float,
+        pressure: float,
+        water: float,
+        atmosphere: dict,
+        activity: float = 0.0
+    ) -> PlanetType:
+        """
+        Determine planet type based on physical properties.
+        """
         p_atm = pressure / ATM_TO_PA
-        
+
         if mass > MASS_NEPTUNE * 0.8:
             return PlanetType.GAS_GIANT
-        if mass > MASS_EARTH * 8: # Arbitrary cutoff
+        if mass > MASS_EARTH * 8:
             return PlanetType.ICE_GIANT
-            
+
         if p_atm < 0.01:
             return PlanetType.BARREN
-            
-        if temp > 1000 or (temp > 400 and activity > 0.8): # Error: 'activity' not defined in scope, assume hot
-             return PlanetType.LAVA # Or close orbit
-         
+
+        if temp > 1000 or (temp > 400 and activity > 0.8):
+            return PlanetType.LAVA
+
         if 'H2O' in atmosphere and water > 0 and 260 < temp < 340:
             return PlanetType.TERRESTRIAL
-            
+
         if water > 0.5 and temp < 250:
             return PlanetType.ICE_WORLD
-            
+
         if temp > 700:
             return PlanetType.LAVA
-            
-        return PlanetType.TERRESTRIAL # Default generic rocky
 
-    def _to_roman(self, n):
-        # Simplified 1-20
-        val = [
-            10, 9, 5, 4, 1
-            ]
-        syb = [
-            "X", "IX", "V", "IV", "I"
-            ]
-        roman_num = ''
-        i = 0
-        while  n > 0:
-            for _ in range(n // val[i]):
-                roman_num += syb[i]
-                n -= val[i]
-            i += 1
-        return roman_num
+        return PlanetType.TERRESTRIAL
 
-    def _generate_resources(self, mass):
+    def _generate_resources(self, mass: float) -> dict:
         """
         Generate resources based on mass.
-        Large planets -> High Quantity, Low Quality (hard to extract)
-        Small planets -> Low Quantity, High Quality (easy to extract)
+
+        Large planets: High quantity, low quality (hard to extract)
+        Small planets: Low quantity, high quality (easy to extract)
         """
         resources = {}
-        # Log scale for size factor
-        # Ceres ~ 21, Jupiter ~ 27.3
+
         log_mass = math.log10(max(mass, 1.0))
         min_log = 20.0
         max_log = 28.0
-        
-        # 0.0 (Small) to 1.0 (Large)
+
         size_factor = (log_mass - min_log) / (max_log - min_log)
         size_factor = max(0.0, min(1.0, size_factor))
-        
+
         for res in PLANET_RESOURCES:
-            # Quantity: Correlates with Size
-            # 0 to 1,000,000
-            # Bias towards size_factor
+            # Quantity correlates with size
             r_qty = random.random()
-            # If factor is 0.5 and r is 0.5 -> 0.5.
-            # If factor is 1.0 and r is 0.0 -> 0.7?
-            # Let's weight size heavily
             qty_norm = (size_factor * 0.7) + (r_qty * 0.3)
             quantity = int(qty_norm * 1000000)
-            
-            # Quality: Inversely correlates with Size
-            # 0 to 100
+
+            # Quality inversely correlates with size
             qual_bias = 1.0 - size_factor
             r_qual = random.random()
             qual_norm = (qual_bias * 0.7) + (r_qual * 0.3)
             quality = qual_norm * 100.0
-            
+
             resources[res] = {
                 'quantity': quantity,
                 'quality': quality
             }
-            
+
         return resources

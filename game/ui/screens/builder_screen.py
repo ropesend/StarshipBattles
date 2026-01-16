@@ -34,6 +34,7 @@ from game.core.screenshot_manager import ScreenshotManager
 from game.ui.screens.builder_event_router import BuilderEventRouter
 from game.ui.screens.builder_data_loader import BuilderDataLoader
 from game.ui.screens.builder_viewmodel import BuilderViewModel
+from game.ui.screens.builder_selection import process_selection_change, get_primary_selection
 
 # Initialize Tkinter root and hide it (for simpledialog)
 try:
@@ -256,87 +257,22 @@ class BuilderSceneGUI:
         self.event_bus.emit('SHIP_UPDATED', self.ship)
         
     def on_selection_changed(self, new_selection, append=False, toggle=False):
-        """
-        Handle selection changes.
-        new_selection: can be a single component tuple (layer, idx, comp), a list of them, or None.
-        append: If True, add to existing selection instead of replacing.
-        toggle: If True, toggles selection state of existing items (Ctrl+Click behavior).
-        """
-        if new_selection is None:
-            if not append:
-                self.selected_components = []
-        else:
-            if not isinstance(new_selection, list):
-                new_selection = [new_selection]
-            
-            # Normalize to tuples if possible, or wrapping objects
-            # Ideally we want (layer, index, comp)
-            # If we get just component, we'll have to find it or wrap it
-            
-            norm_selection = []
-            for item in new_selection:
-                if isinstance(item, tuple) and len(item) == 3:
-                    norm_selection.append(item)
-                elif hasattr(item, 'id'): # It's a component
-                     # Find it in ship?
-                     found = False
-                     for l_type, l_data in self.ship.layers.items():
-                         try:
-                             idx = l_data['components'].index(item)
-                             norm_selection.append((l_type, idx, item))
-                             found = True
-                             break
-                         except ValueError:
-                             continue
-                     if not found:
-                         # Maybe it's a template (dragged)
-                         norm_selection.append((None, -1, item))
-            
-            if append:
-                # 1. Enforce Homogeneity
-                # Check if new items match the type (definition ID) of existing selection
-                if self.selected_components and norm_selection:
-                    # Get definition ID of currently selected items (assuming they are homogeneous)
-                    # We can check the first one.
-                    current_def_id = self.selected_components[0][2].id
-                    
-                    # Check if all new items match this ID
-                    matches_type = all(item[2].id == current_def_id for item in norm_selection)
-                    
-                    if not matches_type:
-                        # User clicked a different type. Standard behavior: Replace selection.
-                        # This feels cleaner than ignoring it.
-                        self.selected_components = norm_selection
-                        append = False # Treat as replace
-                    else:
-                        # Add unique items (Uniqueness based on OBJECT IDENTITY, not Def ID)
-                        current_objs = {c[2] for c in self.selected_components}
-                        for item in norm_selection:
-                            if item[2] in current_objs:
-                                if toggle:
-                                    # Toggle OFF
-                                    self.selected_components = [x for x in self.selected_components if x[2] is not item[2]]
-                                else:
-                                    # Ensure selected (do nothing if already there)
-                                    pass
-                            else:
-                                self.selected_components.append(item)
-                else:
-                    # Nothing currently selected, just append (which effectively is a set)
-                     self.selected_components = norm_selection
-            else:
-                self.selected_components = norm_selection
+        """Handle selection changes.
 
-        # Update dependent UI
-        # For properties panel, we generally show the LAST selected item (or first?)
-        # Let's show the last one added to selection as "primary"
-        self.selected_component = self.selected_components[-1] if self.selected_components else None
-        
-        # Update Builder State for Panel
-        if self.selected_components:
-             # If we have a group selected, layer panel needs to know?
-             # Layer panel now highlights based on builder.selected_components check in its rebuild
-             pass
+        Args:
+            new_selection: Single component tuple (layer, idx, comp), list of them, or None
+            append: If True, add to existing selection instead of replacing
+            toggle: If True, toggle selection state of existing items (Ctrl+Click)
+        """
+        # Use extracted selection logic
+        new_list, _ = process_selection_change(
+            self.selected_components, new_selection, self.ship,
+            append=append, toggle=toggle
+        )
+        self.selected_components = new_list
+
+        # Update primary selection
+        self.selected_component = get_primary_selection(self.selected_components)
 
         self.rebuild_modifier_ui()
         self.event_bus.emit('SELECTION_CHANGED', self.selected_component)
