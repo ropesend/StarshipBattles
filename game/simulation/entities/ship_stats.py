@@ -31,8 +31,9 @@ class ShipStatsCalculator:
             
         # Update cached values via property setters
         ship.mass = ship.current_mass + ship.base_mass
-        ship.max_hp = sum(c.max_hp for layer in ship.layers.values() for c in layer['components'])
-        ship.hp = sum(c.current_hp for layer in ship.layers.values() for c in layer['components'])
+        all_components = ship.get_all_components()
+        ship.max_hp = sum(c.max_hp for c in all_components)
+        ship.hp = sum(c.current_hp for c in all_components)
 
         # Base Stats Reset
         ship.total_thrust = 0
@@ -462,12 +463,11 @@ class ShipStatsCalculator:
         from game.simulation.components.abilities import WeaponAbility
         
         # Calculate theoretical max DPS (all weapons)
-        for layer in ship.layers.values():
-            for c in layer['components']:
-                 # Use get_abilities to handle polymorphism
-                 for ab in c.get_abilities('WeaponAbility'):
-                     if ab.reload_time > 0:
-                         dps += ab.damage / ab.reload_time
+        for c in ship.get_all_components():
+            # Use get_abilities to handle polymorphism
+            for ab in c.get_abilities('WeaponAbility'):
+                if ab.reload_time > 0:
+                    dps += ab.damage / ab.reload_time
         
         ship._cached_summary = {
             'mass': ship.mass,

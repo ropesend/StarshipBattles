@@ -151,13 +151,10 @@ class BattleInterface:
             
             # Weapon range
             max_range = 0
-            for layer in s.layers.values():
-                for comp in layer['components']:
-                    if comp.has_ability('WeaponAbility') and comp.is_active:
-                        # Phase 7: Use ability-based access for weapon properties
-                        weapon_ab = comp.get_ability('WeaponAbility')
-                        if weapon_ab and weapon_ab.range > max_range:
-                            max_range = weapon_ab.range
+            for comp in s.get_components_by_ability('WeaponAbility', operational_only=True):
+                weapon_ab = comp.get_ability('WeaponAbility')
+                if weapon_ab and weapon_ab.range > max_range:
+                    max_range = weapon_ab.range
             
             if max_range > 0:
                 r_screen = int(max_range * camera.zoom)
@@ -177,36 +174,34 @@ class BattleInterface:
             
             # Firing arcs
             center = camera.world_to_screen(s.position)
-            for layer in s.layers.values():
-                for comp in layer['components']:
-                    if comp.has_ability('WeaponAbility') and comp.is_active:
-                        # Phase 7: Use ability-based access for weapon properties
-                        weapon_ab = comp.get_ability('WeaponAbility')
-                        if not weapon_ab: continue
-                        ship_angle = s.angle
-                        facing = weapon_ab.facing_angle
-                        arc = weapon_ab.firing_arc
-                        rng = weapon_ab.range * camera.zoom
-                        
-                        start_angle = math.radians(ship_angle + facing - arc)
-                        end_angle = math.radians(ship_angle + facing + arc)
-                        
-                        x1 = center.x + math.cos(start_angle) * rng
-                        y1 = center.y + math.sin(start_angle) * rng
-                        x2 = center.x + math.cos(end_angle) * rng
-                        y2 = center.y + math.sin(end_angle) * rng
-                        
-                        arc_col = (255, 165, 0)
-                        pygame.draw.line(screen, arc_col, center, (x1, y1), 1)
-                        pygame.draw.line(screen, arc_col, center, (x2, y2), 1)
-                        
-                        try:
-                            rect = pygame.Rect(center.x - rng, center.y - rng, rng*2, rng*2)
-                            r_start = math.radians(ship_angle + facing - arc)
-                            r_end = math.radians(ship_angle + facing + arc)
-                            pygame.draw.arc(screen, arc_col, rect, -r_end, -r_start, 1)
-                        except Exception:
-                            pass
+            for comp in s.get_components_by_ability('WeaponAbility', operational_only=True):
+                weapon_ab = comp.get_ability('WeaponAbility')
+                if not weapon_ab:
+                    continue
+                ship_angle = s.angle
+                facing = weapon_ab.facing_angle
+                arc = weapon_ab.firing_arc
+                rng = weapon_ab.range * camera.zoom
+
+                start_angle = math.radians(ship_angle + facing - arc)
+                end_angle = math.radians(ship_angle + facing + arc)
+
+                x1 = center.x + math.cos(start_angle) * rng
+                y1 = center.y + math.sin(start_angle) * rng
+                x2 = center.x + math.cos(end_angle) * rng
+                y2 = center.y + math.sin(end_angle) * rng
+
+                arc_col = (255, 165, 0)
+                pygame.draw.line(screen, arc_col, center, (x1, y1), 1)
+                pygame.draw.line(screen, arc_col, center, (x2, y2), 1)
+
+                try:
+                    rect = pygame.Rect(center.x - rng, center.y - rng, rng*2, rng*2)
+                    r_start = math.radians(ship_angle + facing - arc)
+                    r_end = math.radians(ship_angle + facing + arc)
+                    pygame.draw.arc(screen, arc_col, rect, -r_end, -r_start, 1)
+                except Exception:
+                    pass
 
     def _get_return_button_rect(self):
         """Get the rect for the Return to Combat Lab button."""

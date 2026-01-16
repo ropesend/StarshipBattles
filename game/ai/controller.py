@@ -456,26 +456,26 @@ class AIController:
     @staticmethod
     def _stat_is_in_pdc_arc(ship, target):
         import math
-        
-        for layer in ship.layers.values():
-            for comp in layer.get('components', []):
-                # Phase 7: Use ability-based access for all weapon properties
-                if comp.has_ability('WeaponAbility') and comp.is_active and comp.has_pdc_ability():
-                    weapon_ab = comp.get_ability('WeaponAbility')
-                    dist = ship.position.distance_to(target.position)
-                    if dist > weapon_ab.range: continue
-                    
-                    vec_to_target = target.position - ship.position
-                    if vec_to_target.length_squared() == 0: continue
-                    
-                    angle_to_target = math.degrees(math.atan2(vec_to_target.y, vec_to_target.x)) % 360
-                    
-                    ship_angle = ship.angle
-                    comp_facing = (ship_angle + weapon_ab.facing_angle) % 360
-                    diff = (angle_to_target - comp_facing + 180) % 360 - 180
-                    
-                    if abs(diff) <= (weapon_ab.firing_arc / 2):
-                        return True
+
+        for comp in ship.get_components_by_ability('WeaponAbility', operational_only=True):
+            if comp.has_pdc_ability():
+                weapon_ab = comp.get_ability('WeaponAbility')
+                dist = ship.position.distance_to(target.position)
+                if dist > weapon_ab.range:
+                    continue
+
+                vec_to_target = target.position - ship.position
+                if vec_to_target.length_squared() == 0:
+                    continue
+
+                angle_to_target = math.degrees(math.atan2(vec_to_target.y, vec_to_target.x)) % 360
+
+                ship_angle = ship.angle
+                comp_facing = (ship_angle + weapon_ab.facing_angle) % 360
+                diff = (angle_to_target - comp_facing + 180) % 360 - 180
+
+                if abs(diff) <= (weapon_ab.firing_arc / 2):
+                    return True
         return False
         
     def _is_in_pdc_arc(self, target):
@@ -593,14 +593,16 @@ class AIController:
             self.ship.turn_throttle = min(self.ship.turn_throttle, 0.75)
 
     def _check_formation_integrity(self):
-        # Phase 4: Use ability-based checks instead of isinstance(Engine, Thruster)
+        # Check if propulsion components are damaged
         dmg = False
-        for layer in self.ship.layers.values():
-            for comp in layer.get('components', []):
-                if comp.has_ability('CombatPropulsion') or comp.has_ability('ManeuveringThruster'):
-                    if getattr(comp, 'current_hp', 1) < getattr(comp, 'max_hp', 1):
-                        dmg = True; break
-            if dmg: break
+        propulsion_comps = (
+            self.ship.get_components_by_ability('CombatPropulsion', operational_only=False) +
+            self.ship.get_components_by_ability('ManeuveringThruster', operational_only=False)
+        )
+        for comp in propulsion_comps:
+            if getattr(comp, 'current_hp', 1) < getattr(comp, 'max_hp', 1):
+                dmg = True
+                break
         
         if dmg:
             self.ship.in_formation = False

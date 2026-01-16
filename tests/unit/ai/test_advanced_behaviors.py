@@ -139,28 +139,28 @@ class TestAdvancedBehaviors(unittest.TestCase):
         # This logic is in AIController._check_formation_integrity
         # But we can test it by manually creating a controller or moving logic to mixin?
         # It's a method on AIController. Let's instanciate a real one with mocks.
-        
+
         real_controller = AIController(self.mock_controller.ship, MagicMock(), 0)
-        
+
         # Setup Ship with Ability-based Logic
-        layer = {'components': []}
-        real_controller.ship.layers = {'core': layer}
         real_controller.ship.in_formation = True
         real_controller.ship.formation_master = MagicMock()
-        
+
         # Case 1: Ability Healthy
         comp = MagicMock()
         comp.has_ability.side_effect = lambda x: x == 'CombatPropulsion'
         comp.current_hp = 100
         comp.max_hp = 100
-        layer['components'].append(comp)
-        
+
+        # Mock the Ship helper methods to return our component
+        real_controller.ship.get_components_by_ability = MagicMock(return_value=[comp])
+
         real_controller._check_formation_integrity()
         self.assertTrue(real_controller.ship.in_formation)
-        
+
         # Case 2: Ability Damaged
         comp.current_hp = 50
-        
+
         real_controller._check_formation_integrity()
         self.assertFalse(real_controller.ship.in_formation)
 

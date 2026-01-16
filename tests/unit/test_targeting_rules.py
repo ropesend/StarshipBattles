@@ -107,35 +107,34 @@ class TestTargetingRules(unittest.TestCase):
         # Case 2: Missile in arc. Need to mock ship's PDC ability logic.
         # TargetEvaluator calls AIController._stat_is_in_pdc_arc(ship, target)
         # We need to set up self.ship with a mock weapon in arc.
-        
+
         # Setup Ship with PDC Weapon
-        layer = {'components': []}
-        self.ship.layers = {'outer': layer}
         self.ship.angle = 0
-        
+
         # Mock Component
         comp = MagicMock()
         comp.has_ability.side_effect = lambda x: True if x == 'WeaponAbility' else False
         comp.is_active = True
         comp.has_pdc_ability.return_value = True
-        
+
         # Mock WeaponAbility
         ab = MagicMock()
         ab.range = 500
         ab.facing_angle = 0
         ab.firing_arc = 90
         comp.get_ability.return_value = ab
-        
-        layer['components'].append(comp)
-        
+
+        # Mock the Ship helper method to return our component
+        self.ship.get_components_by_ability = MagicMock(return_value=[comp])
+
         # Now Check Missile (In Arc)
         score_missile = TargetEvaluator.evaluate(self.ship, missile, rules)
-        self.assertGreater(score_missile, 0) # Should get weight val
-        
+        self.assertGreater(score_missile, 0)  # Should get weight val
+
         # Case 3: Missile Out of Arc (Behind)
         missile.position = pygame.math.Vector2(-100, 0)
         score_missile_out = TargetEvaluator.evaluate(self.ship, missile, rules)
-        self.assertEqual(score_missile_out, -float('inf')) # Required rule failed
+        self.assertEqual(score_missile_out, -float('inf'))  # Required rule failed
         
     def test_rule_required_flag(self):
         """Test that failure of a required rule returns -inf."""

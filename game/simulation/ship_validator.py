@@ -48,11 +48,10 @@ class UniqueComponentRule(ValidationRule):
             return result # This rule only checks addition for now, or could check full ship for duplicates
 
         if component.data.get('is_unique', False):
-             for layer in ship.layers.values():
-                 for c in layer['components']:
-                     if c.id == component.id:
-                         result.add_error(f"Usage limit exceeded for unique component {component.name}")
-                         return result
+            for c in ship.get_all_components():
+                if c.id == component.id:
+                    result.add_error(f"Usage limit exceeded for unique component {component.name}")
+                    return result
         return result
 
 class ExclusiveGroupRule(ValidationRule):
@@ -63,11 +62,10 @@ class ExclusiveGroupRule(ValidationRule):
         
         ex_group = component.data.get('exclusive_group')
         if ex_group:
-             for layer in ship.layers.values():
-                 for c in layer['components']:
-                     if c.data.get('exclusive_group') == ex_group:
-                         result.add_error(f"Key component conflict: {ex_group}")
-                         return result
+            for c in ship.get_all_components():
+                if c.data.get('exclusive_group') == ex_group:
+                    result.add_error(f"Key component conflict: {ex_group}")
+                    return result
         return result
 
 class MountDependencyRule(ValidationRule):
@@ -190,9 +188,9 @@ class ClassRequirementsRule(ValidationRule):
         classes = RegistryManager.instance().vehicle_classes
         class_def = classes.get(ship.ship_class, {})
         
-        all_components = [c for layer in ship.layers.values() for c in layer['components']]
+        all_components = ship.get_all_components()
         if component:
-            all_components.append(component)
+            all_components = all_components + [component]
             
         from game.simulation.entities.ship_stats import ShipStatsCalculator
         stats_calculator = ShipStatsCalculator(classes)
@@ -233,10 +231,8 @@ class ResourceDependencyRule(ValidationRule):
         # Scan all components to determine needs vs sources
         needed_resources = set()
         stored_resources = set()
-        
-        all_components = []
-        for l in ship.layers.values():
-            all_components.extend(l['components'])
+
+        all_components = ship.get_all_components()
             
         from game.simulation.systems.resource_manager import ResourceConsumption, ResourceStorage
             

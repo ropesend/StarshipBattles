@@ -51,193 +51,169 @@ class ShipCombatMixin:
     def fire_weapons(self, context=None):
         attacks = []
         if not self.is_alive or getattr(self, 'is_derelict', False): return attacks
-        
-        for layer_type, layer in self.layers.items():
-            for comp in layer['components']:
-                # Handle Hangar Launch (Phase 4: ability-based check)
-                if comp.has_ability('VehicleLaunch') and comp.is_active:
-                    vl_ability = comp.get_ability('VehicleLaunch')
-                    # Auto-launch if we have a target (or maybe strategy dictates?)
-                    # For now, if we have a target, we launch.
-                    if self.current_target and vl_ability.try_launch():
-                        attacks.append({
-                            'type': AttackType.LAUNCH,
-                            'source': self,
-                            'origin': self.position,
-                            'hangar': comp,
-                            'fighter_class': vl_ability.fighter_class
-                        })
-                    continue
 
-                # DEBUG: Commented out to reduce spam
-                # print(f"DEBUG: Checking {comp.name}, is_active={comp.is_active}, has_WeaponAbility={comp.has_ability('WeaponAbility')}", flush=True)
-                if comp.has_ability('WeaponAbility') and comp.is_active:
-                    weapon_ab = comp.get_ability('WeaponAbility')
-                    has_resource = comp.can_afford_activation()
-                    # if not has_resource: print(f"DEBUG: {comp.name} cannot afford activation", flush=True)
-                    
-                    # Tracer
-                    dist = 0
-                    diff = 0
-                    comp_facing = self.angle + getattr(comp, 'facing_angle', 0)
+        for layer_type, comp in self.iter_components():
+            # Handle Hangar Launch (Phase 4: ability-based check)
+            if comp.has_ability('VehicleLaunch') and comp.is_active:
+                vl_ability = comp.get_ability('VehicleLaunch')
+                # Auto-launch if we have a target (or maybe strategy dictates?)
+                # For now, if we have a target, we launch.
+                if self.current_target and vl_ability.try_launch():
+                    attacks.append({
+                        'type': AttackType.LAUNCH,
+                        'source': self,
+                        'origin': self.position,
+                        'hangar': comp,
+                        'fighter_class': vl_ability.fighter_class
+                    })
+                continue
+
+            if comp.has_ability('WeaponAbility') and comp.is_active:
+                weapon_ab = comp.get_ability('WeaponAbility')
+                has_resource = comp.can_afford_activation()
+
+                # Tracer
+                dist = 0
+                diff = 0
+                comp_facing = self.angle + getattr(comp, 'facing_angle', 0)
+                if self.current_target:
+                    rel_pos = self.current_target.position - self.position
+                    target_angle = math.degrees(math.atan2(rel_pos.y, rel_pos.x))
+                    diff = (target_angle - comp_facing + 180) % 360 - 180
+                    dist = rel_pos.length()
+
+                if has_resource and weapon_ab.can_fire():
+                    # TARGETING logic
+                    valid_target = False
+                    target = None
+
+                    # Potential targets list: Primary + Secondaries
+                    potential_targets = []
                     if self.current_target:
-                        rel_pos = self.current_target.position - self.position
-                        target_angle = math.degrees(math.atan2(rel_pos.y, rel_pos.x))
-                        diff = (target_angle - comp_facing + 180) % 360 - 180
-                        dist = rel_pos.length()
-                    
-                    if has_resource and weapon_ab.can_fire():
-                        # TARGETING logic
-                        valid_target = False
-                        target = None
-                        
-                        # Potential targets list: Primary + Secondaries
-                        potential_targets = []
-                        if self.current_target:
-                            potential_targets.append(self.current_target)
-                        
-                        # Only consider secondary targets if we have the capability
-                        # (Although max_targets should handle the list population, safe to check)
-                        if getattr(self, 'max_targets', 1) > 1 and hasattr(self, 'secondary_targets'):
-                            potential_targets.extend(self.secondary_targets)
+                        potential_targets.append(self.current_target)
 
-                        # PDC Override REMOVED - Rely on AI prioritization in secondary_targets
-                        
-                        # Iterate through potential targets to find the first one we can hit
-                        for candidate in potential_targets:
-                            if not candidate: continue
-                            
-                            # Safety: don't target dead things or friendlies
-                            if not getattr(candidate, 'is_alive', True): continue
-                            if getattr(candidate, 'team_id', -1) == self.team_id: continue
+                    # Only consider secondary targets if we have the capability
+                    if getattr(self, 'max_targets', 1) > 1 and hasattr(self, 'secondary_targets'):
+                        potential_targets.extend(self.secondary_targets)
 
-                            # Specialization check: Non-PDC weapons should NOT fire at missiles
-                            # Phase 4: Use ability tags instead of legacy dict
-                            is_pdc = comp.has_pdc_ability()
-                            t_type = getattr(candidate, 'type', 'ship')
-                            if t_type == 'missile' and not is_pdc:
-                                continue # Standard guns ignore missiles
-                                
-                            # Simplified Phase 9 Logic: Delegate to Ability
-                            # Note: SeekerWeapons handle their own range/arc logic inside check_firing_solution override if needed,
-                            # or we handle special seeker logic here.
-                            
+                    # Iterate through potential targets to find the first one we can hit
+                    for candidate in potential_targets:
+                        if not candidate:
+                            continue
+
+                        # Safety: don't target dead things or friendlies
+                        if not getattr(candidate, 'is_alive', True):
+                            continue
+                        if getattr(candidate, 'team_id', -1) == self.team_id:
+                            continue
+
+                        # Specialization check: Non-PDC weapons should NOT fire at missiles
+                        is_pdc = comp.has_pdc_ability()
+                        t_type = getattr(candidate, 'type', 'ship')
+                        if t_type == 'missile' and not is_pdc:
+                            continue  # Standard guns ignore missiles
+
+                        # Simplified Phase 9 Logic: Delegate to Ability
+                        if comp.has_ability('SeekerWeaponAbility'):
+                            # Seeker Weapons have unique rules (infinite arc, range = speed*endurance)
+                            seeker_ab = comp.get_ability('SeekerWeaponAbility')
+                            # Simple proximity check for Seekers
+                            dist = self.position.distance_to(candidate.position)
+                            max_range = seeker_ab.projectile_speed * seeker_ab.endurance * 2.0
+                            if dist <= max_range:
+                                valid_target = True
+                                target = candidate
+                                break
+                        else:
+                            # Standard Direct-Fire Weapons
+                            # 1. Solve Lead
+                            aim_pos, aim_vec = self._calculate_firing_solution(comp, candidate)
+
+                            # 2. Check Arc/Range using Intercept Point
+                            if weapon_ab.check_firing_solution(self.position, self.angle, aim_pos):
+                                valid_target = True
+                                target = candidate
+                                break
+
+                    if valid_target and target and weapon_ab.fire(target):
+                        self.total_shots_fired += 1
+                        if not hasattr(comp, 'shots_fired'):
+                            comp.shots_fired = 0
+                        comp.shots_fired += 1
+
+                        if comp.has_ability('BeamWeaponAbility'):
+                            if not hasattr(comp, 'shots_hit'):
+                                comp.shots_hit = 0
+                            comp.shots_hit += 1
+
+                            attacks.append({
+                                'type': AttackType.BEAM,
+                                'source': self,
+                                'target': target,
+                                'damage': weapon_ab.damage,
+                                'range': weapon_ab.range,
+                                'origin': self.position,
+                                'component': comp,
+                                'direction': aim_vec.normalize() if aim_vec.length() > 0 else pygame.math.Vector2(1, 0),
+                                'hit': True
+                            })
+                        else:
+                            from game.simulation.entities.projectile import Projectile
+
                             if comp.has_ability('SeekerWeaponAbility'):
-                                # Seeker Weapons have unique rules (infinite arc, range = speed*endurance)
                                 seeker_ab = comp.get_ability('SeekerWeaponAbility')
-                                # Simple proximity check for Seekers (they chase, so arc is irrelevant for launch usually)
-                                dist = self.position.distance_to(candidate.position)
-                                max_range = seeker_ab.projectile_speed * seeker_ab.endurance * 2.0
-                                if dist <= max_range:
-                                    valid_target = True
-                                    target = candidate
-                                    break
+
+                                # Calculate aim_vec for seeker launch direction
+                                aim_pos, aim_vec = self._calculate_firing_solution(comp, target)
+
+                                # Launch vector
+                                comp_facing = self.angle + getattr(comp, 'facing_angle', 0)
+                                rad = math.radians(comp_facing)
+                                launch_vec = pygame.math.Vector2(math.cos(rad), math.sin(rad))
+
+                                # If target in arc, launch at target
+                                if abs(diff) <= (weapon_ab.firing_arc / 2):
+                                    launch_vec = aim_vec.normalize() if aim_vec.length() > 0 else launch_vec
+
+                                speed = seeker_ab.projectile_speed / 100.0  # Pixels/tick
+                                p_vel = launch_vec * speed + self.velocity
+
+                                proj = Projectile(
+                                    owner=self,
+                                    position=pygame.math.Vector2(self.position),
+                                    velocity=p_vel,
+                                    damage=seeker_ab.damage,
+                                    range_val=seeker_ab.projectile_speed * seeker_ab.endurance,
+                                    endurance=seeker_ab.endurance,
+                                    proj_type=AttackType.MISSILE,
+                                    turn_rate=seeker_ab.turn_rate,
+                                    max_speed=speed,
+                                    target=target,
+                                    hp=getattr(seeker_ab, 'missile_hp', 1),
+                                    color=(255, 50, 50),
+                                    source_weapon=comp
+                                )
+                                attacks.append(proj)
+
                             else:
-                                # Standard Direct-Fire Weapons
-                                # 1. Solve Lead
-                                aim_pos, aim_vec = self._calculate_firing_solution(comp, candidate)
-                                
-                                # 2. Check Arc/Range using Intercept Point
-                                if weapon_ab.check_firing_solution(self.position, self.angle, aim_pos):
-                                    valid_target = True
-                                    target = candidate
-                                    break
-                                # else:
-                                #     print(f"DEBUG: fire_weapons Solution FAIL for {comp.name} against {candidate.name}", flush=True)
+                                # Standard Projectile
+                                projectile_ab = comp.get_ability('ProjectileWeaponAbility')
+                                speed = projectile_ab.projectile_speed / 100.0
+                                p_vel = aim_vec.normalize() * speed + self.velocity
 
-                        if valid_target and target and weapon_ab.fire(target):
-                            self.total_shots_fired += 1
-                            # Phase 7: Safe attribute access after Weapon alias conversion
-                            if not hasattr(comp, 'shots_fired'): comp.shots_fired = 0
-                            comp.shots_fired += 1
-                            
-                            # Deduct Resource generically - REMOVED (Ability handles it)
-                            # comp.consume_activation()
-                            
-                            # Deduct Resource
-                            if comp.has_ability('BeamWeaponAbility'):
-                                # Phase 7: Safe attribute access
-                                if not hasattr(comp, 'shots_hit'): comp.shots_hit = 0
-                                comp.shots_hit += 1 # Beams are hitscan and we only fire if valid_target (in arc/range)
-                                # Technically valid_target means "can hit", but accuracy fail?
-                                # BeamWeapon has accuracy falloff. 
-                                # Current 'fire_weapons' logic assumes 100% hit if valid_target?
-                                # Lines 120-129 create 'beam' attack dict with 'hit': True.
-                                # So yes, increment hits.
-                                
-                                attacks.append({
-                                    'type': AttackType.BEAM,
-                                    'source': self,
-                                    'target': target,
-                                    'damage': weapon_ab.damage,
-                                    'range': weapon_ab.range,
-                                    'origin': self.position,
-                                    'component': comp,
-                                    'direction': aim_vec.normalize() if aim_vec.length() > 0 else pygame.math.Vector2(1, 0),
-                                    'hit': True
-                                })
-                            else:
-                                from game.simulation.entities.projectile import Projectile
-                                
-                                # Seeker Logic
-                                
-                                # Seeker Logic
-                                if comp.has_ability('SeekerWeaponAbility'):
-                                    seeker_ab = comp.get_ability('SeekerWeaponAbility')
-                                    
-                                    # Calculate aim_vec for seeker launch direction
-                                    aim_pos, aim_vec = self._calculate_firing_solution(comp, target)
-                                    
-                                    # Launch vector
-                                    comp_facing = self.angle + getattr(comp, 'facing_angle', 0)
-                                    # Use target angle if we have a valid targeting solution
-                                    rad = math.radians(comp_facing)
-                                    launch_vec = pygame.math.Vector2(math.cos(rad), math.sin(rad))
-                                    
-                                    # If target in arc, launch at target (diff calculated in Tracer)
-                                    if abs(diff) <= (weapon_ab.firing_arc / 2):
-                                        launch_vec = aim_vec.normalize() if aim_vec.length() > 0 else launch_vec
-
-                                    speed = seeker_ab.projectile_speed / 100.0  # Pixels/tick
-                                    p_vel = launch_vec * speed + self.velocity
-                                    
-                                    proj = Projectile(
-                                        owner=self,
-                                        position=pygame.math.Vector2(self.position),
-                                        velocity=p_vel,
-                                        damage=seeker_ab.damage,
-                                        range_val=seeker_ab.projectile_speed * seeker_ab.endurance,
-                                        endurance=seeker_ab.endurance,
-                                        proj_type=AttackType.MISSILE,
-                                        turn_rate=seeker_ab.turn_rate,
-                                        max_speed=speed,
-                                        target=target,
-                                        hp=getattr(seeker_ab, 'missile_hp', 1),  # Use Ability stats
-                                        color=(255, 50, 50),
-                                        source_weapon=comp
-                                    )
-                                    attacks.append(proj)
-                                    
-                                else:
-                                    # Standard Projectile
-                                    projectile_ab = comp.get_ability('ProjectileWeaponAbility')
-                                    speed = projectile_ab.projectile_speed / 100.0
-                                    p_vel = aim_vec.normalize() * speed + self.velocity
-                                    
-                                    proj = Projectile(
-                                        owner=self,
-                                        position=pygame.math.Vector2(self.position),
-                                        velocity=p_vel,
-                                        damage=projectile_ab.damage,
-                                        range_val=projectile_ab.range,
-                                        endurance=None, # Range limited
-                                        proj_type=AttackType.PROJECTILE,
-                                        color=(255, 200, 50),
-                                        source_weapon=comp,
-                                        target=target
-                                    )
-
-                                    attacks.append(proj)
+                                proj = Projectile(
+                                    owner=self,
+                                    position=pygame.math.Vector2(self.position),
+                                    velocity=p_vel,
+                                    damage=projectile_ab.damage,
+                                    range_val=projectile_ab.range,
+                                    endurance=None,  # Range limited
+                                    proj_type=AttackType.PROJECTILE,
+                                    color=(255, 200, 50),
+                                    source_weapon=comp,
+                                    target=target
+                                )
+                                attacks.append(proj)
         return attacks
 
     def _find_pdc_target(self, comp, context):
@@ -417,11 +393,10 @@ class ShipCombatMixin:
         # Filter for live components only (HP > 0) to avoid reviving dead parts (unless desired?)
         # For now, sticking to repairing 'damaged' but not strict 'destroyed' logic,
         # but consistency with `_damage_layer` which stops at 0 suggests 0 is dead.
-        damaged_candidates = []
-        for layer in self.layers.values():
-            for comp in layer['components']:
-                if 0 < comp.current_hp < comp.max_hp:
-                     damaged_candidates.append(comp)
+        damaged_candidates = [
+            c for c in self.get_all_components()
+            if 0 < c.current_hp < c.max_hp
+        ]
 
         if not damaged_candidates:
             return

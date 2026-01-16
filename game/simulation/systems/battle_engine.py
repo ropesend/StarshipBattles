@@ -336,8 +336,7 @@ class BattleEngine:
             # Check for operational weapons
             has_weapons = any(
                 comp.is_operational and comp.type == "Weapon"
-                for layer in ship.layers.values()
-                for comp in layer['components']
+                for comp in ship.get_all_components()
             )
 
             # Check for movement capability

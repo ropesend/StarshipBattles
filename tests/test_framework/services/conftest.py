@@ -1,61 +1,100 @@
 """
-Pytest fixtures for Phase 3 service tests.
+Pytest fixtures for Combat Lab service tests.
 
-Provides mock objects, sample data, and test utilities for testing
-the Combat Lab service layer.
+This module imports shared fixtures from tests/fixtures/ and provides
+any service-specific fixtures needed for testing the Combat Lab service layer.
 """
 
 import pytest
 import json
-from pathlib import Path
-from unittest.mock import Mock, MagicMock, patch
 from typing import Dict, Any
 
-
-# =============================================================================
-# Helper Functions
-# =============================================================================
-
-def create_test_metadata(
-    test_id="TEST-001",
-    name="Sample Test",
-    category="Test",
-    subcategory="Test Subcategory",
-    summary="A sample test",
-    conditions=None,
-    edge_cases=None,
-    expected_outcome="Expected outcome",
-    pass_criteria="Pass criteria",
-    validation_rules=None,
-    max_ticks=500,
-    seed=42
-):
-    """Helper to create TestMetadata with sensible defaults."""
-    from simulation_tests.scenarios.base import TestMetadata
-
-    return TestMetadata(
-        test_id=test_id,
-        name=name,
-        category=category,
-        subcategory=subcategory,
-        summary=summary,
-        conditions=conditions or [],
-        edge_cases=edge_cases or [],
-        expected_outcome=expected_outcome,
-        pass_criteria=pass_criteria,
-        validation_rules=validation_rules or [],
-        max_ticks=max_ticks,
-        seed=seed
-    )
+# Import shared fixtures from consolidated location
+from tests.fixtures.battle import (
+    create_mock_battle_engine,
+    create_mock_battle_scene,
+)
+from tests.fixtures.test_scenarios import (
+    create_test_metadata,
+    create_mock_test_scenario,
+    create_mock_test_registry,
+    create_mock_test_runner,
+    create_mock_test_history,
+    create_scenario_info,
+)
 
 
 # =============================================================================
-# Test Data Fixtures
+# Re-export fixtures for pytest discovery
 # =============================================================================
 
 @pytest.fixture
+def mock_battle_engine():
+    """Mock battle engine."""
+    return create_mock_battle_engine()
+
+
+@pytest.fixture
+def mock_battle_scene(mock_battle_engine):
+    """Mock battle scene with engine."""
+    return create_mock_battle_scene(engine=mock_battle_engine)
+
+
+@pytest.fixture
+def mock_game(mock_battle_scene):
+    """Mock game object."""
+    from unittest.mock import Mock
+    game = Mock()
+    game.battle_scene = mock_battle_scene
+    game.state = None
+    return game
+
+
+@pytest.fixture
+def mock_test_scenario():
+    """Mock test scenario instance."""
+    return create_mock_test_scenario()
+
+
+@pytest.fixture
+def mock_test_runner():
+    """Mock test runner."""
+    return create_mock_test_runner()
+
+
+@pytest.fixture
+def mock_test_registry():
+    """Mock test registry."""
+    return create_mock_test_registry()
+
+
+@pytest.fixture
+def mock_test_history():
+    """Mock test history."""
+    return create_mock_test_history()
+
+
+@pytest.fixture
+def sample_test_metadata():
+    """Sample test metadata object with ship conditions for service tests."""
+    return create_test_metadata(
+        conditions=[
+            "Attacker: Test_Attacker_Beam360_Low.json",
+            "Target: Test_Target_Stationary.json (mass=400)"
+        ],
+        edge_cases=["Sample edge case"],
+    )
+
+
+@pytest.fixture
+def sample_scenario_info(sample_test_metadata):
+    """Sample scenario info dict from registry."""
+    return create_scenario_info(metadata=sample_test_metadata)
+
+
+@pytest.fixture
 def sample_ship_data() -> Dict[str, Any]:
-    """Sample ship JSON data."""
+    """Sample ship JSON data matching Test_Attacker_Beam360_Low.json."""
     return {
         "name": "Test Attacker",
         "vehicle_class": "Cruiser",
@@ -76,7 +115,7 @@ def sample_ship_data() -> Dict[str, Any]:
 
 @pytest.fixture
 def sample_target_data() -> Dict[str, Any]:
-    """Sample target ship JSON data."""
+    """Sample target ship JSON data matching Test_Target_Stationary.json."""
     return {
         "name": "Test Target",
         "vehicle_class": "Cruiser",
@@ -97,7 +136,7 @@ def sample_target_data() -> Dict[str, Any]:
 
 @pytest.fixture
 def sample_component_data() -> Dict[str, Any]:
-    """Sample component JSON data."""
+    """Sample component JSON data matching test_beam_low_acc_1dmg."""
     return {
         "id": "test_beam_low_acc_1dmg",
         "name": "Test Beam Weapon",
@@ -116,7 +155,7 @@ def sample_component_data() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def sample_components_file() -> Dict[str, Any]:
+def sample_components_file(sample_component_data) -> Dict[str, Any]:
     """Sample components.json structure."""
     return {
         "_metadata": {
@@ -124,21 +163,7 @@ def sample_components_file() -> Dict[str, Any]:
             "_data_version": "1.0"
         },
         "components": [
-            {
-                "id": "test_beam_low_acc_1dmg",
-                "name": "Test Beam Weapon",
-                "type": "weapon",
-                "abilities": {
-                    "BeamWeaponAbility": {
-                        "damage": 1,
-                        "range": 1000,
-                        "base_accuracy": 0.5,
-                        "accuracy_falloff": 0.002,
-                        "reload": 60,
-                        "firing_arc": 360
-                    }
-                }
-            },
+            sample_component_data,
             {
                 "id": "Hull_Base",
                 "name": "Base Hull",
@@ -147,129 +172,6 @@ def sample_components_file() -> Dict[str, Any]:
             }
         ]
     }
-
-
-@pytest.fixture
-def sample_test_metadata():
-    """Sample test metadata object."""
-    from simulation_tests.scenarios.base import TestMetadata
-
-    return TestMetadata(
-        test_id="TEST-001",
-        name="Sample Test",
-        category="Test Category",
-        subcategory="Test Subcategory",
-        summary="A sample test for unit testing",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_Low.json",
-            "Target: Test_Target_Stationary.json (mass=400)"
-        ],
-        edge_cases=["Sample edge case"],
-        expected_outcome="Expected outcome description",
-        pass_criteria="Pass criteria description",
-        validation_rules=[],
-        max_ticks=500,
-        seed=42
-    )
-
-
-@pytest.fixture
-def sample_scenario_info(sample_test_metadata):
-    """Sample scenario info dict from registry."""
-    return {
-        'test_id': 'TEST-001',
-        'metadata': sample_test_metadata,
-        'class': Mock(),
-        'file': 'simulation_tests/scenarios/test_scenarios.py',
-        'last_run_results': None
-    }
-
-
-# =============================================================================
-# Mock Object Fixtures
-# =============================================================================
-
-@pytest.fixture
-def mock_battle_engine():
-    """Mock battle engine."""
-    engine = Mock()
-    engine.tick_counter = 0
-    engine.ships = []
-    engine.update = Mock()
-    engine.is_battle_over = Mock(return_value=False)
-    engine.start = Mock()
-    return engine
-
-
-@pytest.fixture
-def mock_battle_scene(mock_battle_engine):
-    """Mock battle scene with engine."""
-    scene = Mock()
-    scene.engine = mock_battle_engine
-    scene.headless_mode = False
-    scene.sim_paused = True
-    scene.test_mode = False
-    scene.test_scenario = None
-    scene.test_tick_count = 0
-    scene.test_completed = False
-    scene.action_return_to_test_lab = False
-    scene.camera = Mock()
-    scene.camera.fit_objects = Mock()
-    return scene
-
-
-@pytest.fixture
-def mock_game(mock_battle_scene):
-    """Mock game object."""
-    game = Mock()
-    game.battle_scene = mock_battle_scene
-    game.state = None
-    return game
-
-
-@pytest.fixture
-def mock_test_scenario():
-    """Mock test scenario instance."""
-    scenario = Mock()
-    scenario.name = "Test Scenario"
-    scenario.metadata = Mock()
-    scenario.metadata.test_id = "TEST-001"
-    scenario.metadata.max_ticks = 500
-    scenario.max_ticks = 500
-    scenario.passed = False
-    scenario.results = {}
-    scenario.setup = Mock()
-    scenario.update = Mock()
-    scenario.verify = Mock(return_value=True)
-    return scenario
-
-
-@pytest.fixture
-def mock_test_runner():
-    """Mock test runner."""
-    runner = Mock()
-    runner.load_data_for_scenario = Mock()
-    runner._log_test_execution = Mock()
-    return runner
-
-
-@pytest.fixture
-def mock_test_registry():
-    """Mock test registry."""
-    registry = Mock()
-    registry.get_all_scenarios = Mock(return_value={})
-    registry.get_by_id = Mock(return_value=None)
-    registry.refresh = Mock()
-    return registry
-
-
-@pytest.fixture
-def mock_test_history():
-    """Mock test history."""
-    history = Mock()
-    history.add_run = Mock()
-    history.get_latest_run = Mock(return_value=None)
-    return history
 
 
 # =============================================================================

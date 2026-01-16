@@ -9,6 +9,7 @@ Available modules:
     - ships: Ship creation fixtures (basic_ship, armed_ship, etc.)
     - components: Component creation fixtures
     - battle: Battle engine fixtures
+    - test_scenarios: Combat Lab test scenario fixtures
 """
 from tests.fixtures.paths import (
     get_project_root,
@@ -33,6 +34,16 @@ from tests.fixtures.battle import (
     create_mock_battle_engine,
     create_mock_battle_scene,
 )
+from tests.fixtures.test_scenarios import (
+    create_test_metadata,
+    create_mock_test_scenario,
+    create_mock_test_registry,
+    create_mock_test_runner,
+    create_mock_test_history,
+    create_scenario_info,
+    create_sample_ship_data,
+    create_sample_component_data,
+)
 
 __all__ = [
     # Path utilities
@@ -54,4 +65,13 @@ __all__ = [
     'create_battle_engine_with_ships',
     'create_mock_battle_engine',
     'create_mock_battle_scene',
+    # Test scenario factories
+    'create_test_metadata',
+    'create_mock_test_scenario',
+    'create_mock_test_registry',
+    'create_mock_test_runner',
+    'create_mock_test_history',
+    'create_scenario_info',
+    'create_sample_ship_data',
+    'create_sample_component_data',
 ]
