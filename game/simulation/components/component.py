@@ -1,8 +1,8 @@
-import json
 import math
 from enum import Enum, auto
 from game.simulation.formula_system import evaluate_math_formula
 from game.core.registry import get_component_registry, get_modifier_registry
+from game.core.json_utils import load_json_required
 
 class ComponentStatus(Enum):
     ACTIVE = auto()
@@ -596,29 +596,27 @@ def load_components(filepath="data/components.json"):
             return
 
     try:
-        with open(filepath, 'r') as f:
-            import json
-            data = json.load(f)
-            
+        data = load_json_required(filepath)
+
         temp_cache = {}
         for comp_def in data['components']:
             c_type = comp_def['type']
             try:
-                cls = Component 
+                cls = Component
                 obj = cls(comp_def)
                 temp_cache[comp_def['id']] = obj
             except Exception as e:
                 print(f"ERROR creating component {comp_def.get('id')}: {e}")
-        
+
         # Populate Cache
         _COMPONENT_CACHE = temp_cache
         _LAST_COMPONENT_FILE = filepath
-        
+
         # Populate Registry from Cache
         comps = get_component_registry()
         for c_id, comp in _COMPONENT_CACHE.items():
             comps[c_id] = comp.clone()
-            
+
     except Exception as e:
         print(f"ERROR loading/parsing components json: {e}")
 
@@ -641,22 +639,20 @@ def load_modifiers(filepath="data/modifiers.json"):
          filepath = os.path.join(base_dir, filepath)
     
     try:
-        with open(filepath, 'r') as f:
-            import json
-            data = json.load(f)
-            
+        data = load_json_required(filepath)
+
         temp_cache = {}
         for mod_def in data['modifiers']:
             mod = Modifier(mod_def)
             temp_cache[mod.id] = mod
-        
+
         _MODIFIER_CACHE = temp_cache
         _LAST_MODIFIER_FILE = filepath
-        
+
         mods = get_modifier_registry()
         for m_id, mod in _MODIFIER_CACHE.items():
             mods[m_id] = copy.deepcopy(mod)
-            
+
     except Exception as e:
         print(f"ERROR loading modifiers: {e}")
 

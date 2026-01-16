@@ -4,20 +4,19 @@ import pygame
 from game.simulation.entities.ship import Ship, initialize_ship_data, LayerType
 from game.simulation.components.component import load_components, create_component
 from game.core.registry import RegistryManager
-import os
+from tests.fixtures.paths import get_project_root, get_data_dir
 
 class TestBuilderLogic(unittest.TestCase):
     """Test ship validation logic used by the builder."""
-    
+
     def tearDown(self):
         pygame.quit()
         RegistryManager.instance().clear()
 
     def setUp(self):
         pygame.init()
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        initialize_ship_data(base_dir)
-        load_components(os.path.join(base_dir, "data", "components.json"))
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         self.ship = Ship("BuilderTarget", 0, 0, (255,255,255), ship_class="Escort")
 
     def test_mass_limit_validation(self):

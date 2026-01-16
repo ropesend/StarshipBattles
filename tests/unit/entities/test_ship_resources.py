@@ -1,23 +1,21 @@
 """Tests for Ship resource management, life support, and crew requirements."""
 import unittest
-import os
 import pygame
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component, ComponentStatus
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_project_root, get_data_dir
 
 class TestShipResources(unittest.TestCase):
     """Test resource initialization, capacity, life support, and crew logic."""
-    
-    
-        
+
+
+
     def setUp(self):
         pygame.init()
-        # Ensure data dir is accessible
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        initialize_ship_data(base_dir)
-        load_components(os.path.join(base_dir, "data", "components.json"))
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         self.ship = Ship("ResourceTest", 0, 0, (255, 255, 255), ship_class="Cruiser")
         # Add minimal functional core
         self.ship.add_component(create_component('bridge'), LayerType.CORE)

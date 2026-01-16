@@ -21,7 +21,7 @@ pygame.init()
 pygame.display.set_mode((800, 600))
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.ai.controller import AIController, STRATEGY_MANAGER
+from game.ai.controller import AIController, StrategyManager
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.registry import RegistryManager
@@ -240,7 +240,7 @@ def run_tournament():
             print("ERROR: No ship file found")
             return
 
-        strategies = list(STRATEGY_MANAGER.strategies.keys()) if STRATEGY_MANAGER else []
+        strategies = list(StrategyManager.instance().strategies.keys())
         if not strategies:
             print("ERROR: No strategies found")
             return

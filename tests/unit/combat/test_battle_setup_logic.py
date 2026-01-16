@@ -1,32 +1,32 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import pygame
-import os
 
 from game.engine.spatial import SpatialGrid
 from game.ui.screens.battle_scene import BattleScene
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import load_components
 
-from game.ai.controller import STRATEGY_MANAGER
+from game.ai.controller import StrategyManager
+from tests.fixtures.paths import get_project_root, get_data_dir, get_unit_test_data_dir
 
 class TestBattleSetupLogic(unittest.TestCase):
     """Test SpatialGrid functionality and BattleScene setup logic."""
-    
-        
+
+
     def setUp(self):
         pygame.init()
         # Ensure data dir is accessible
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        initialize_ship_data(base_dir)
-        load_components(os.path.join(base_dir, "data", "components.json"))
-        test_data_path = os.path.join(os.getcwd(), "tests", "unit", "data")
-        STRATEGY_MANAGER.load_data(
-             test_data_path, 
-             targeting_file="test_targeting_policies.json", 
-             movement_file="test_movement_policies.json", 
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
+        manager = StrategyManager.instance()
+        manager.load_data(
+             str(get_unit_test_data_dir()),
+             targeting_file="test_targeting_policies.json",
+             movement_file="test_movement_policies.json",
              strategy_file="test_combat_strategies.json"
         )
+        manager._loaded = True
         # Mock window surface if BattleScene needs it for initialization
         # This part was in the user's provided 'Code Edit' but not directly related to the original file's tests.
         # Keeping it commented out as it might be for a different test context.

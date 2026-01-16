@@ -6,7 +6,7 @@ Tests visual and headless test execution, progress callbacks, and error handling
 
 import pytest
 import time
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock
 from test_framework.services.test_execution_service import TestExecutionService
 
 
@@ -113,10 +113,12 @@ class TestRunVisual:
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
 
-        with patch('test_framework.services.test_execution_service.GameState') as mock_game_state:
-            service.run_visual(sample_scenario_info, mock_battle_scene, mock_game)
+        # Import the actual GameState to check against
+        from game.core.constants import GameState
 
-            assert mock_game.state == mock_game_state.BATTLE
+        service.run_visual(sample_scenario_info, mock_battle_scene, mock_game)
+
+        assert mock_game.state == GameState.BATTLE
 
     def test_run_visual_error_handling(
         self,

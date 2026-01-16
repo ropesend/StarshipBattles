@@ -403,15 +403,15 @@ class BuilderEventRouter:
     def _handle_ai_dropdown(self, event) -> bool:
         """Handle AI strategy dropdown change."""
         gui = self.gui
-        from game.ai.controller import STRATEGY_MANAGER
+        from game.ai.controller import StrategyManager
         selected_name = event.text
-        if STRATEGY_MANAGER:
-            for strategy_id, strat in STRATEGY_MANAGER.strategies.items():
-                if strat.get('name', '') == selected_name:
-                    gui.ship.ai_strategy = strategy_id
-                    break
-            else:
-                gui.ship.ai_strategy = event.text.lower().replace(' ', '_')
+        manager = StrategyManager.instance()
+        for strategy_id, strat in manager.strategies.items():
+            if strat.get('name', '') == selected_name:
+                gui.ship.ai_strategy = strategy_id
+                break
+        else:
+            gui.ship.ai_strategy = event.text.lower().replace(' ', '_')
         return True
     
     def _handle_confirmation(self, event) -> bool:

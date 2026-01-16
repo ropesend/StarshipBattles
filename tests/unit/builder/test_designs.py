@@ -6,18 +6,19 @@ from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components  # Phase 7: Removed legacy class imports
 from game.simulation.designs import create_brick, create_interceptor
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_project_root, get_data_dir
 
 class TestDesignFactories(unittest.TestCase):
     """Test programmatic ship creation functions."""
-    
+
     def tearDown(self):
         pygame.quit()
         RegistryManager.instance().clear()
-    
+
     def setUp(self):
         pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
     
     
     def test_create_brick_returns_ship(self):

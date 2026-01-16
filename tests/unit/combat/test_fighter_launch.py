@@ -1,12 +1,12 @@
 import unittest
-import os
 import pygame
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import load_components, LayerType
 from game.core.registry import RegistryManager
 from game.simulation.systems.battle_engine import BattleEngine
 from game.core.constants import AttackType
-from game.ai.controller import STRATEGY_MANAGER
+from game.ai.controller import StrategyManager
+from tests.fixtures.paths import get_unit_test_data_dir
 
 class TestFighterLaunch(unittest.TestCase):
 
@@ -14,13 +14,14 @@ class TestFighterLaunch(unittest.TestCase):
         initialize_ship_data()
         load_components()
         pygame.init()
-        test_data_path = os.path.join(os.getcwd(), "tests", "unit", "data")
-        STRATEGY_MANAGER.load_data(
-             test_data_path, 
-             targeting_file="test_targeting_policies.json", 
-             movement_file="test_movement_policies.json", 
+        manager = StrategyManager.instance()
+        manager.load_data(
+             str(get_unit_test_data_dir()),
+             targeting_file="test_targeting_policies.json",
+             movement_file="test_movement_policies.json",
              strategy_file="test_combat_strategies.json"
         )
+        manager._loaded = True
 
     def test_hangar_initialization(self):
         """Test Hangar component loads correctly."""

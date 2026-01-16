@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import patch, MagicMock
 import os
 import pygame
 
@@ -14,9 +14,8 @@ class TestFleetComposition(unittest.TestCase):
         pass
 
     @patch('game.ui.screens.setup_screen.Ship')
-    @patch('builtins.open', new_callable=mock_open, read_data='{"name": "Test Ship", "mass": 100}')
-    @patch('game.ui.screens.setup_screen.json.load')
-    def test_load_ships_from_entries_basic(self, mock_json_load, mock_file, MockShip):
+    @patch('game.ui.screens.setup_screen.load_json_required')
+    def test_load_ships_from_entries_basic(self, mock_load_json_required, MockShip):
         """Test loading simple ships without formation."""
         # Setup
         # Create distinct mocks for each iteration
@@ -40,8 +39,8 @@ class TestFleetComposition(unittest.TestCase):
             }
         ]
         
-        mock_json_load.return_value = {"name": "Test Ship"} 
-        
+        mock_load_json_required.return_value = {"name": "Test Ship"}
+
         # Execute
         ships = load_ships_from_entries(team_entries, team_id=0, start_x=100, start_y=200, facing_angle=90)
         
@@ -59,9 +58,8 @@ class TestFleetComposition(unittest.TestCase):
         
 
     @patch('game.ui.screens.setup_screen.Ship')
-    @patch('builtins.open', new_callable=mock_open)
-    @patch('game.ui.screens.setup_screen.json.load')
-    def test_load_ships_from_entries_formation(self, mock_json_load, mock_file, MockShip):
+    @patch('game.ui.screens.setup_screen.load_json_required')
+    def test_load_ships_from_entries_formation(self, mock_load_json_required, MockShip):
         """Test formation linking and positioning."""
         
         # Create distinct ship mocks
@@ -74,7 +72,7 @@ class TestFleetComposition(unittest.TestCase):
         follower_ship.position = pygame.math.Vector2(0, 0)
         
         MockShip.from_dict.side_effect = [master_ship, follower_ship]
-        mock_json_load.return_value = {}
+        mock_load_json_required.return_value = {}
         
         team_entries = [
             {
@@ -128,32 +126,31 @@ class TestFleetComposition(unittest.TestCase):
         self.assertEqual(follower_ship.formation_rotation_mode, 'fixed')
 
     @patch('game.ui.screens.setup_screen.glob.glob')
-    @patch('builtins.open', new_callable=mock_open)
-    @patch('game.ui.screens.setup_screen.json.load')
-    def test_scan_ship_designs(self, mock_json_load, mock_file, mock_glob):
+    @patch('game.ui.screens.setup_screen.load_json')
+    def test_scan_ship_designs(self, mock_load_json, mock_glob):
         """Test scanning ship designs with valid and invalid files."""
         # Setup
         # List of files returned by glob
         mock_glob.return_value = [
             os.path.join('ships', 'valid.json'),
-            os.path.join('ships', 'corrupt.json'), # Will raise JSON error
+            os.path.join('ships', 'corrupt.json'), # Will return None (simulating error)
             os.path.join('ships', 'missing_layers.json'), # Valid JSON but missing schema
             os.path.join('ships', 'builder_theme.json') # Should be skipped by name
         ]
-        
-        # Behavior for json.load
+
+        # Behavior for load_json
         # 1. valid.json -> Success
-        # 2. corrupt.json -> Exception (simulate malformed file)
+        # 2. corrupt.json -> None (simulating malformed file)
         # 3. missing_layers.json -> Dict without 'layers' key
-        mock_json_load.side_effect = [
-            {'name': 'Valid Ship', 'layers': []}, 
-            Exception("JSON Decode Error"),
+        mock_load_json.side_effect = [
+            {'name': 'Valid Ship', 'layers': []},
+            None,  # Simulates load_json returning None on error
             {'name': 'Invalid Schema Ship'}
         ]
-        
+
         # Execute
         designs = scan_ship_designs()
-        
+
         # Assert
         # Only the first one should make it
         self.assertEqual(len(designs), 1)
@@ -164,9 +161,8 @@ class TestFleetComposition(unittest.TestCase):
     @patch('game.ui.screens.setup_screen.filedialog.askopenfilename')
     @patch('game.ui.screens.setup_screen.tk.Tk')
     @patch('uuid.uuid4')
-    @patch('builtins.open', new_callable=mock_open, read_data='{}')
-    @patch('game.ui.screens.setup_screen.json.load')
-    def test_add_formation_to_team(self, mock_json_load, mock_file, mock_uuid, mock_tk, mock_dialog, MockShip):
+    @patch('game.ui.screens.setup_screen.load_json_required')
+    def test_add_formation_to_team(self, mock_load_json_required, mock_uuid, mock_tk, mock_dialog, MockShip):
         """Test adding a formation to a team."""
         # Setup
         setup_screen = BattleSetupScreen()
@@ -187,7 +183,7 @@ class TestFleetComposition(unittest.TestCase):
         mock_dialog.return_value = '/abs/path/to/ship.json'
         
         # Mock Ship loaded data
-        mock_json_load.return_value = {'name': 'Test Ship', 'ship_class': 'Frigate', 'ai_strategy': 'test_strat'}
+        mock_load_json_required.return_value = {'name': 'Test Ship', 'ship_class': 'Frigate', 'ai_strategy': 'test_strat'}
         
         # Mock Ship instance processing
         mock_ship = MagicMock()

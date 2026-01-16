@@ -1,26 +1,25 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import pygame
-import os
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component, LayerType  # Phase 7: Removed Bridge, Armor, Weapon imports
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_project_root
 
 class TestBuilderValidation(unittest.TestCase):
     def tearDown(self):
         pygame.quit()
         RegistryManager.instance().clear()
+
     def setUp(self):
         # Initialize pygame for Vector2
         if not pygame.get_init():
             pygame.init()
-            
+
         # Ensure data is loaded
         from game.simulation.entities.ship import initialize_ship_data
-        # Resolve path to project root
-        root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        initialize_ship_data(root_dir)
+        initialize_ship_data(str(get_project_root()))
             
         # Create a standard ship for testing
         # Use Cruiser because it uses Capital_Standard which has INNER layer (Frigate/Escort no longer does)
@@ -249,9 +248,8 @@ class TestComplexRules(unittest.TestCase):
             pygame.init()
         # Initialize ship logic
         from game.simulation.entities.ship import initialize_ship_data, Ship
-        root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        initialize_ship_data(root_dir)
-        
+        initialize_ship_data(str(get_project_root()))
+
         self.ship = Ship("Complex Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
         
         from game.simulation.ship_validator import ShipDesignValidator

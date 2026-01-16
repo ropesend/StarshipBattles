@@ -85,15 +85,12 @@ class BuilderDataLoader:
     
     def clear_registries(self) -> None:
         """Clear all game data registries before loading new data."""
-        from game.ai.controller import STRATEGY_MANAGER
-        
+        from game.ai.controller import StrategyManager
+
         RegistryManager.instance().clear()
-        
-        # Clear STRATEGY_MANAGER data if it exists
-        if STRATEGY_MANAGER:
-            STRATEGY_MANAGER.strategies.clear()
-            STRATEGY_MANAGER.targeting_policies.clear()
-            STRATEGY_MANAGER.movement_policies.clear()
+
+        # Clear StrategyManager data
+        StrategyManager.instance().clear()
     
     def load_all(self) -> LoadResult:
         """
@@ -106,8 +103,8 @@ class BuilderDataLoader:
         """
         from game.simulation.components.component import load_components, load_modifiers
         from game.simulation.entities.ship import load_vehicle_classes
-        from game.ai.controller import STRATEGY_MANAGER, load_combat_strategies
-        
+        from game.ai.controller import load_combat_strategies
+
         result = LoadResult()
         
         try:
@@ -150,20 +147,21 @@ class BuilderDataLoader:
     
     def _load_strategies(self, result: LoadResult) -> None:
         """Load combat strategies with test mode detection."""
-        from game.ai.controller import STRATEGY_MANAGER, load_combat_strategies
-        
+        from game.ai.controller import StrategyManager, load_combat_strategies
+
         # Check if test files exist (with test_ prefix)
         test_strat = os.path.join(self.directory, "test_combat_strategies.json")
-        
+
         if os.path.exists(test_strat):
             # Test data mode - use test_ prefixed files
-            if STRATEGY_MANAGER:
-                STRATEGY_MANAGER.load_data(
-                    self.directory,
-                    targeting_file="test_targeting_policies.json",
-                    movement_file="test_movement_policies.json",
-                    strategy_file="test_combat_strategies.json"
-                )
+            manager = StrategyManager.instance()
+            manager.load_data(
+                self.directory,
+                targeting_file="test_targeting_policies.json",
+                movement_file="test_movement_policies.json",
+                strategy_file="test_combat_strategies.json"
+            )
+            manager._loaded = True
             logger.info(f"Loaded strategies from test data in {self.directory}")
         else:
             # Production mode - try standard names

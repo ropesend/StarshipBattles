@@ -4,12 +4,11 @@ import sys
 import os
 import pygame
 
-
-
 from game.ui.renderer.sprites import SpriteManager
+from tests.fixtures.paths import get_project_root, get_assets_dir
 
 class TestSprites(unittest.TestCase):
-        
+
 
     def setUp(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
@@ -17,11 +16,11 @@ class TestSprites(unittest.TestCase):
         # Initialize display for convert() calls
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
         # Point to the project root
-        self.base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        
+        self.base_path = str(get_project_root())
+
     def test_load_sprites(self):
         """Test loading sprites using the new directory method."""
-        components_dir = os.path.join(self.base_path, "assets", "Images", "Components")
+        components_dir = str(get_assets_dir() / "Images" / "Components")
         if not os.path.exists(components_dir):
             self.skipTest(f"Components directory not found at {components_dir}")
             

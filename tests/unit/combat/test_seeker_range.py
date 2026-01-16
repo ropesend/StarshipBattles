@@ -1,10 +1,12 @@
 import unittest
 
-from game.simulation.components.component import load_components, get_all_components, create_component
+from game.simulation.components.component import load_components, load_modifiers, get_all_components, create_component
+from tests.fixtures.paths import get_data_dir
 
 class TestSeekerRange(unittest.TestCase):
     def setUp(self):
-        load_components("data/components.json")
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
 
     def test_seeker_initial_range_is_80_percent(self):
         """Test that seeker weapon range is 80% of speed * endurance (via ability)."""
@@ -30,8 +32,7 @@ class TestSeekerRange(unittest.TestCase):
         """
         missile = create_component('capital_missile')
         
-        from game.simulation.components.component import load_modifiers
-        load_modifiers("data/modifiers.json")
+        load_modifiers(str(get_data_dir() / "modifiers.json"))
         
         # Get base values
         seeker_ab = missile.get_ability('SeekerWeaponAbility')

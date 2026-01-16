@@ -2,14 +2,15 @@ import unittest
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import Component, load_components, create_component
 import pygame
+from tests.fixtures.paths import get_project_root, get_data_dir
 
 class TestShields(unittest.TestCase):
     def setUp(self):
         # Minimal init
         pygame.init()
         # Load components for crew support
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         
         self.ship = Ship("TestShip", 0, 0, (255,0,0))
         self.ship.ship_class = "Escort"

@@ -1,19 +1,18 @@
 import unittest
-import os
 import pygame
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import load_components, create_component, Component, LayerType
 from game.simulation.entities.ship_stats import ShipStatsCalculator
+from tests.fixtures.paths import get_project_root, get_data_dir
 
 class TestCombatEndurance(unittest.TestCase):
 
 
     def setUp(self):
         pygame.init()
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        initialize_ship_data(base_dir)
-        load_components(os.path.join(base_dir, "data", "components.json"))
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         self.ship = Ship("EnduranceTest", 0, 0, (255, 255, 255), ship_class="Cruiser")
         # Add basic crew support
         self.ship.add_component(create_component('bridge'), LayerType.CORE)

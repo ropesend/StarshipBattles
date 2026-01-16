@@ -3,6 +3,7 @@ import math
 
 from game.simulation.components.component import Component, load_components
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_data_dir
 
 class MockShip:
     def __init__(self, max_mass):
@@ -13,7 +14,7 @@ class TestBridgeScaling(unittest.TestCase):
         # Load components to ensure Bridge is available
         # But we can also just manually load the json if we want to be independent of global loading
         # For this test, let's try to load the actual definition from file to ensure we test the file edits.
-        load_components("data/components.json")
+        load_components(str(get_data_dir() / "components.json"))
         self.bridge_def = RegistryManager.instance().components.get("bridge")
         
     def test_bridge_scaling_1000(self):

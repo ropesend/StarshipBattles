@@ -5,14 +5,16 @@ import math
 from game.simulation.components.component import load_components, load_modifiers, create_component
 from game.core.registry import RegistryManager
 from game.simulation.components.modifiers import ModifierEffects, apply_modifier_effects, SPECIAL_EFFECT_HANDLERS
+from tests.fixtures.paths import get_data_dir
 
 
 class TestModifierEffectsFunctions(unittest.TestCase):
     """Test individual modifier effect functions from ModifierEffects class."""
-    
+
     def setUp(self):
-        load_components("data/components.json")
-        load_modifiers("data/modifiers.json")
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
+        load_modifiers(str(data_dir / "modifiers.json"))
     
     def _create_default_stats(self):
         """Create a fresh default stats dictionary."""
@@ -116,8 +118,9 @@ class TestApplyModifierEffects(unittest.TestCase):
     """Test the apply_modifier_effects function."""
     
     def setUp(self):
-        load_components("data/components.json")
-        load_modifiers("data/modifiers.json")
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
+        load_modifiers(str(data_dir / "modifiers.json"))
     
     def _create_default_stats(self):
         return {
@@ -149,8 +152,9 @@ class TestModifierStackingIntegration(unittest.TestCase):
     """Test modifier stacking on actual components."""
     
     def setUp(self):
-        load_components("data/components.json")
-        load_modifiers("data/modifiers.json")
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
+        load_modifiers(str(data_dir / "modifiers.json"))
     
     def test_range_mount_increases_component_mass(self):
         """Range mount modifier should increase component mass."""

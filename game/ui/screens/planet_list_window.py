@@ -1,9 +1,9 @@
 import pygame
 import pygame_gui
-import json
 import os
 from game.strategy.data.planet import PLANET_RESOURCES
 from game.core.constants import DATA_DIR
+from game.core.json_utils import load_json, save_json
 from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UITextEntryLine, UISelectionList, UIHorizontalSlider, UIDropDownMenu, UIImage, UIVerticalScrollBar
 from pygame_gui import UI_TEXT_ENTRY_FINISHED
 
@@ -884,18 +884,11 @@ class PlanetListWindow(UIWindow):
             
     def _load_presets_from_disk(self):
         path = os.path.join(DATA_DIR, 'ui_presets.json')
-        if os.path.exists(path):
-            try:
-                with open(path, 'r') as f:
-                    return json.load(f)
-            except:
-                return {}
-        return {}
+        return load_json(path, default={})
 
     def _save_presets_to_disk(self):
         path = os.path.join(DATA_DIR, 'ui_presets.json')
-        with open(path, 'w') as f:
-            json.dump(self.presets, f, indent=2)
+        save_json(path, self.presets)
 
     def _capture_current_state(self):
         """Serialize current filters and column config."""

@@ -3,11 +3,13 @@ import math
 
 from game.simulation.components.component import load_components, create_component, load_modifiers
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_data_dir
 
 class TestScalingLogic(unittest.TestCase):
     def setUp(self):
-        load_components("data/components.json")
-        load_modifiers("data/modifiers.json")
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
+        load_modifiers(str(data_dir / "modifiers.json"))
 
     def tearDown(self):
         RegistryManager.instance().clear()

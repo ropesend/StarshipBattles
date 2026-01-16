@@ -1,6 +1,5 @@
 """Tests for AI Controller behavior."""
 import unittest
-import os
 import pygame
 import math
 import inspect
@@ -8,26 +7,30 @@ import inspect
 from game.simulation.entities.ship import Ship, LayerType
 from game.ai import controller as ai
 from game.ai.controller import AIController
-from game.ai import controller as ai
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, create_component
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 
 
 class TestAIController(unittest.TestCase):
-    
+
     def setUp(self):
-        load_components("data/components.json")
+        data_dir = get_data_dir()
+        unit_test_data_dir = get_unit_test_data_dir()
+
+        load_components(str(data_dir / "components.json"))
         from game.simulation.entities.ship import load_vehicle_classes
-        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"))
         # Load test data for AI strategies to ensure reproducible tests
-        test_data_path = os.path.join(os.getcwd(), "tests", "unit", "data")
-        ai.STRATEGY_MANAGER.load_data(
-            test_data_path, 
-            targeting_file="test_targeting_policies.json", 
-            movement_file="test_movement_policies.json", 
+        manager = ai.StrategyManager.instance()
+        manager.load_data(
+            str(unit_test_data_dir),
+            targeting_file="test_targeting_policies.json",
+            movement_file="test_movement_policies.json",
             strategy_file="test_combat_strategies.json"
         )
+        manager._loaded = True
 
         self.grid = SpatialGrid(cell_size=2000)
         
@@ -57,7 +60,7 @@ class TestAIController(unittest.TestCase):
         
     def tearDown(self):
         RegistryManager.instance().clear()
-        ai.STRATEGY_MANAGER.clear()
+        ai.StrategyManager.instance().clear()
         super().tearDown()
     
     def test_find_target(self):
@@ -133,20 +136,23 @@ class TestAIController(unittest.TestCase):
 
 class TestAIStrategyStates(unittest.TestCase):
     """Test AI attack run state machine."""
-    
-    
+
     def setUp(self):
-        load_components("data/components.json")
+        data_dir = get_data_dir()
+        unit_test_data_dir = get_unit_test_data_dir()
+
+        load_components(str(data_dir / "components.json"))
         from game.simulation.entities.ship import load_vehicle_classes
-        load_vehicle_classes("tests/unit/data/test_vehicleclasses.json")
+        load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"))
         # Load test data for AI strategies to ensure reproducible tests
-        test_data_path = os.path.join(os.getcwd(), "tests", "unit", "data")
-        ai.STRATEGY_MANAGER.load_data(
-            test_data_path, 
-            targeting_file="test_targeting_policies.json", 
-            movement_file="test_movement_policies.json", 
+        manager = ai.StrategyManager.instance()
+        manager.load_data(
+            str(unit_test_data_dir),
+            targeting_file="test_targeting_policies.json",
+            movement_file="test_movement_policies.json",
             strategy_file="test_combat_strategies.json"
         )
+        manager._loaded = True
         self.grid = SpatialGrid(cell_size=2000)
         
         self.ship = Ship("Attacker", 0, 0, (0, 255, 0), team_id=0, ship_class="TestM_4L")
@@ -172,7 +178,7 @@ class TestAIStrategyStates(unittest.TestCase):
 
     def tearDown(self):
         RegistryManager.instance().clear()
-        ai.STRATEGY_MANAGER.clear()
+        ai.StrategyManager.instance().clear()
         super().tearDown()
     
     def test_attack_run_state_initialization(self):

@@ -163,7 +163,8 @@ class TestExecutionService:
 
             # Simulation complete - verify results
             elapsed_time = time.time() - start_time
-            logger.debug(f" Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s ({tick_count/elapsed_time:.0f} ticks/sec)")
+            ticks_per_sec = tick_count / elapsed_time if elapsed_time > 0 else 0
+            logger.debug(f" Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s ({ticks_per_sec:.0f} ticks/sec)")
 
             # Verify and collect results
             scenario.passed = scenario.verify(battle_engine)

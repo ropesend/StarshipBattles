@@ -1,16 +1,16 @@
 import pygame
 import random
 import math
-import json
 import os
 import typing
-from typing import List, Dict, Tuple, Optional, Any, Union, Set, TYPE_CHECKING
+from typing import List, Dict, Tuple, Optional, Any, Union, Set, Iterator, TYPE_CHECKING
 
 from game.engine.physics import PhysicsBody
 from game.simulation.components.component import (
     Component, LayerType, create_component
 )
 from game.core.logger import log_debug
+from game.core.json_utils import load_json, load_json_required
 from game.core.registry import RegistryManager, get_vehicle_classes, get_validator, get_component_registry, get_modifier_registry
 from game.simulation.ship_validator import ShipDesignValidator, ValidationResult
 from .ship_stats import ShipStatsCalculator
@@ -37,7 +37,7 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_file
     Load vehicle class definitions from JSON.
     This should be called explicitly during game initialization.
     """
-    
+
     # Check if we need to resolve path relative to this file
     if not os.path.exists(filepath):
         # Try finding it relative to module
@@ -46,47 +46,42 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_file
         if os.path.exists(abs_path):
             filepath = abs_path
 
-    # Try to load layer definitions
+    # Try to load layer definitions (optional)
     layer_definitions = {}
-    
+
     if layers_filepath:
         layers_path = layers_filepath
     else:
         layers_path = os.path.join(os.path.dirname(filepath), "vehiclelayers.json")
-        
-    if os.path.exists(layers_path):
-        try:
-            with open(layers_path, 'r') as f:
-                layer_data = json.load(f)
-                layer_definitions = layer_data.get('definitions', {})
-                print(f"Loaded {len(layer_definitions)} layer configurations from {os.path.basename(layers_path)}.")
-        except Exception as e:
-            print(f"Error loading layers from {layers_path}: {e}")
-            
-    try:
-        with open(filepath, 'r') as f:
-            data = json.load(f)
-            # Update in place to preserve references
-            classes = get_vehicle_classes()
-            classes.clear()
-            
-            raw_classes = data.get('classes', {})
-            
-            # Post-process to resolve layer configurations
-            for cls_name, cls_def in raw_classes.items():
-                if 'layer_config' in cls_def:
-                     config_id = cls_def['layer_config']
-                     if config_id in layer_definitions:
-                         cls_def['layers'] = layer_definitions[config_id]
-                     else:
-                         print(f"Warning: Class {cls_name} references unknown layer config {config_id}")
-            
-            classes.update(raw_classes)
-            
 
-            print(f"Loaded {len(classes)} vehicle classes.")
+    layer_data = load_json(layers_path, default={})
+    if layer_data:
+        layer_definitions = layer_data.get('definitions', {})
+        print(f"Loaded {len(layer_definitions)} layer configurations from {os.path.basename(layers_path)}.")
+
+    # Load vehicle classes (required)
+    try:
+        data = load_json_required(filepath)
     except FileNotFoundError:
         raise RuntimeError(f"Critical Error: {filepath} not found. Vehicle class data is required for game operation.")
+
+    # Update in place to preserve references
+    classes = get_vehicle_classes()
+    classes.clear()
+
+    raw_classes = data.get('classes', {})
+
+    # Post-process to resolve layer configurations
+    for cls_name, cls_def in raw_classes.items():
+        if 'layer_config' in cls_def:
+            config_id = cls_def['layer_config']
+            if config_id in layer_definitions:
+                cls_def['layers'] = layer_definitions[config_id]
+            else:
+                print(f"Warning: Class {cls_name} references unknown layer config {config_id}")
+
+    classes.update(raw_classes)
+    print(f"Loaded {len(classes)} vehicle classes.")
         
 
 
@@ -684,6 +679,77 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         """
         result = self.get_ability_total('ToHitDefenseModifier')
         return float(result) if isinstance(result, (int, float)) else 0.0
+
+    # =========================================================================
+    # Component Access Helper Methods (Phase 2 Consolidation)
+    # =========================================================================
+
+    def get_all_components(self) -> List[Component]:
+        """
+        Return a list of all components across all layers.
+
+        Returns:
+            List of Component instances from all layers (HULL, CORE, INNER, OUTER, ARMOR).
+            Returns a fresh list each call (not a reference to internal storage).
+        """
+        result = []
+        for layer_data in self.layers.values():
+            result.extend(layer_data['components'])
+        return result
+
+    def iter_components(self) -> Iterator[Tuple[LayerType, Component]]:
+        """
+        Iterate through (layer_type, component) tuples for all components.
+
+        Yields:
+            Tuple of (LayerType, Component) for each component in the ship.
+            Iterates through layers in dictionary order.
+        """
+        for layer_type, layer_data in self.layers.items():
+            for component in layer_data['components']:
+                yield layer_type, component
+
+    def get_components_by_ability(
+        self,
+        ability_name: str,
+        operational_only: bool = True
+    ) -> List[Component]:
+        """
+        Return all components that have a specific ability.
+
+        Args:
+            ability_name: Name of the ability to search for (e.g., 'WeaponAbility').
+            operational_only: If True (default), only return operational components.
+                            If False, return all components with the ability.
+
+        Returns:
+            List of Component instances that have the specified ability.
+        """
+        result = []
+        for layer_data in self.layers.values():
+            for comp in layer_data['components']:
+                if operational_only and not comp.is_operational:
+                    continue
+                if comp.has_ability(ability_name):
+                    result.append(comp)
+        return result
+
+    def get_components_by_layer(self, layer_type: LayerType) -> List[Component]:
+        """
+        Return all components in a specific layer.
+
+        Args:
+            layer_type: The LayerType to get components from.
+
+        Returns:
+            List of Component instances in the specified layer.
+            Returns empty list if layer doesn't exist or has no components.
+            Returns a fresh list each call (not a reference to internal storage).
+        """
+        layer_data = self.layers.get(layer_type)
+        if layer_data is None:
+            return []
+        return list(layer_data['components'])
 
     def check_validity(self) -> bool:
         """Check if the current ship design is valid."""

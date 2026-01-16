@@ -3,6 +3,7 @@ import unittest
 from game.simulation.components.component import Component, load_modifiers
 from game.core.registry import RegistryManager
 from game.simulation.entities.ship import Ship, LayerType
+from tests.fixtures.paths import get_data_dir
 import pygame
 
 # Mocking builder logic
@@ -32,7 +33,7 @@ class MockBuilder:
 class TestModifierGroupPropagation(unittest.TestCase):
     def setUp(self):
         # Load modifiers to ensure registry is populated
-        load_modifiers('data/modifiers.json')
+        load_modifiers(str(get_data_dir() / 'modifiers.json'))
         
         self.builder = MockBuilder()
         

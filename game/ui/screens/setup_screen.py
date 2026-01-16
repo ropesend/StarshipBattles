@@ -1,13 +1,13 @@
 """Battle setup screen module for configuring teams before battle."""
 import pygame
-import json
 import os
 import glob
 import tkinter as tk
 from tkinter import filedialog, simpledialog
 
 from game.simulation.entities.ship import Ship
-from game.ai.controller import STRATEGY_MANAGER
+from game.ai.controller import StrategyManager
+from game.core.json_utils import load_json, load_json_required, save_json
 
 
 def scan_ship_designs():
@@ -25,9 +25,8 @@ def scan_ship_designs():
             continue
         # Try to load and verify it's a ship design
         try:
-            with open(filepath, 'r') as f:
-                data = json.load(f)
-            if 'name' in data and 'layers' in data:
+            data = load_json(filepath)
+            if data and 'name' in data and 'layers' in data:
                 designs.append({
                     'path': filepath,
                     'name': data.get('name', filename),
@@ -57,11 +56,9 @@ def scan_formations():
             continue
             
         try:
-            with open(filepath, 'r') as f:
-                data = json.load(f)
-            
+            data = load_json(filepath)
             # Check for formation data (arrows list)
-            if 'arrows' in data:
+            if data and 'arrows' in data:
                 formations.append({
                     'path': filepath,
                     'name': filename.replace('.json', ''),
@@ -78,8 +75,7 @@ def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angl
     formation_masters = {}
     
     for i, entry in enumerate(team_entries):
-        with open(entry['design']['path'], 'r') as f:
-            data = json.load(f)
+        data = load_json_required(entry['design']['path'])
         ship = Ship.from_dict(data)
         
         # Position Logic
@@ -137,7 +133,7 @@ class BattleSetupScreen:
         self.team2 = []
         self.scroll_offset = 0
         self.ai_dropdown_open = None  # (team_idx, ship_idx) or None
-        self.ai_strategies = list(STRATEGY_MANAGER.strategies.keys())
+        self.ai_strategies = list(StrategyManager.instance().strategies.keys())
         
         # Action flags for Game class to check
         self.action_start_battle = False
@@ -210,12 +206,10 @@ class BattleSetupScreen:
         serialize_team(self.team1, data["team1"])
         serialize_team(self.team2, data["team2"])
             
-        try:
-            with open(filepath, 'w') as f:
-                json.dump(data, f, indent=2)
+        if save_json(filepath, data):
             print(f"Saved battle setup to {filepath}")
-        except Exception as e:
-            print(f"Error saving setup: {e}")
+        else:
+            print(f"Error saving setup to {filepath}")
 
     def load_setup(self):
         """Open dialog to load a battle setup."""
@@ -238,9 +232,8 @@ class BattleSetupScreen:
             return
             
         try:
-            with open(filepath, 'r') as f:
-                data = json.load(f)
-            
+            data = load_json_required(filepath)
+
             # Helper to find design by filename
             def find_design(filename):
                 for d in self.available_ship_designs:
@@ -303,9 +296,7 @@ class BattleSetupScreen:
             if not arrows:
                 return
 
-            with open(ship_path, 'r') as f:
-                ship_data = json.load(f)
-            
+            ship_data = load_json_required(ship_path)
             temp_ship = Ship.from_dict(ship_data)
             temp_ship.recalculate_stats()
             diameter = temp_ship.radius * 2
@@ -609,7 +600,7 @@ class BattleSetupScreen:
                 y = 150 + i * 35
                 name = item['name']
                 strategy = item['strategy']
-                strat_name = STRATEGY_MANAGER.strategies.get(strategy, {}).get('name', strategy)[:12]
+                strat_name = StrategyManager.instance().strategies.get(strategy, {}).get('name', strategy)[:12]
                 
                 is_formation = (item['type'] == 'formation')
                 
@@ -669,7 +660,7 @@ class BattleSetupScreen:
             pygame.draw.rect(screen, (100, 100, 150), (col_x, ship_y, dropdown_w, dropdown_h), 1)
             
             for idx, strat_id in enumerate(self.ai_strategies):
-                strat_name = STRATEGY_MANAGER.strategies.get(strat_id, {}).get('name', strat_id)
+                strat_name = StrategyManager.instance().strategies.get(strat_id, {}).get('name', strat_id)
                 opt_y = ship_y + idx * 22
                 text_color = (220, 220, 220)
                 opt_text = item_font.render(strat_name, True, text_color)

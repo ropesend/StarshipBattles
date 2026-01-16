@@ -7,12 +7,13 @@ from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import (
     load_components, create_component
 )
+from tests.fixtures.paths import get_project_root, get_data_dir
 
 
 class TestWeaponBasics(unittest.TestCase):
     def setUp(self):
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
     
     def test_weapon_initialization(self):
         """Weapon should initialize with correct stats via ability."""
@@ -89,10 +90,10 @@ class TestWeaponBasics(unittest.TestCase):
 
 
 class TestWeaponFiring(unittest.TestCase):
-    
+
     def setUp(self):
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         # Create ship with weapons
         self.ship = Ship("Gunship", 0, 0, (255, 255, 255), team_id=0, ship_class="Cruiser")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
@@ -152,10 +153,10 @@ class TestWeaponFiring(unittest.TestCase):
 
 
 class TestLeadCalculation(unittest.TestCase):
-    
+
     def setUp(self):
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         self.ship = Ship("Shooter", 0, 0, (255, 255, 255))
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.recalculate_stats()

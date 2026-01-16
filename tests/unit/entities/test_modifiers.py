@@ -5,12 +5,14 @@ from game.simulation.components.component import (
     load_components, load_modifiers, create_component, Component
 )
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_data_dir
 
 
 class TestModifiers(unittest.TestCase):
     def setUp(self):
-        load_components("data/components.json")
-        load_modifiers("data/modifiers.json")
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
+        load_modifiers(str(data_dir / "modifiers.json"))
     
     def test_modifiers_loaded(self):
         """Verify modifiers.json is loaded correctly."""
@@ -86,8 +88,9 @@ class TestModifiers(unittest.TestCase):
 
 class TestComponentCloning(unittest.TestCase):
     def setUp(self):
-        load_components("data/components.json")
-        load_modifiers("data/modifiers.json")
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
+        load_modifiers(str(data_dir / "modifiers.json"))
     
     def test_clone_creates_independent_copy(self):
         """Cloned component should be independent."""

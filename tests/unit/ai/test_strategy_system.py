@@ -1,22 +1,27 @@
 import unittest
 import pygame
-import os
 import json
 from unittest.mock import MagicMock, patch
-from game.ai.controller import StrategyManager, TargetEvaluator, load_combat_strategies, STRATEGY_MANAGER
+from game.ai.controller import StrategyManager, TargetEvaluator, load_combat_strategies
+from tests.fixtures.paths import get_unit_test_data_dir
+
 
 class TestStrategySystem(unittest.TestCase):
     def setUp(self):
-        # Setup mock StrategyManager with test data
-        self.manager = StrategyManager()
+        # Setup StrategyManager with test data
+        # Reset singleton to get a fresh instance
+        StrategyManager.reset()
+        self.manager = StrategyManager.instance()
         # Point to unit_tests/data which we populated earlier
-        test_data_path = os.path.join(os.getcwd(), "tests", "unit", "data")
+        unit_test_data_dir = get_unit_test_data_dir()
         self.manager.load_data(
-            test_data_path, 
-            targeting_file="test_targeting_policies.json", 
-            movement_file="test_movement_policies.json", 
+            str(unit_test_data_dir),
+            targeting_file="test_targeting_policies.json",
+            movement_file="test_movement_policies.json",
             strategy_file="test_combat_strategies.json"
         )
+        # Mark as loaded to prevent ensure_loaded() from overwriting with production data
+        self.manager._loaded = True
         
     def tearDown(self):
         pygame.quit()

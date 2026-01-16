@@ -4,11 +4,13 @@ from game.simulation.components.component import (
     load_components, load_modifiers, get_all_components, create_component
 )
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_data_dir
 
 class TestComponents(unittest.TestCase):
     def setUp(self):
-        load_components("data/components.json")
-        load_modifiers("data/modifiers.json")
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
+        load_modifiers(str(data_dir / "modifiers.json"))
 
     def test_load_components(self):
         """Verify components.json is loaded correctly."""
@@ -45,10 +47,11 @@ class TestComponents(unittest.TestCase):
 
 class TestModifierStacking(unittest.TestCase):
     """Test that modifiers stack multiplicatively, not override each other."""
-    
+
     def setUp(self):
-        load_components("data/components.json")
-        load_modifiers("data/modifiers.json")
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
+        load_modifiers(str(data_dir / "modifiers.json"))
     
     def test_single_size_modifier(self):
         """Size mount 2x should double mass."""
@@ -134,10 +137,11 @@ class TestModifierStacking(unittest.TestCase):
 
 class TestModifierOrder(unittest.TestCase):
     """Ensure modifier application order doesn't affect final result."""
-    
+
     def setUp(self):
-        load_components("data/components.json")
-        load_modifiers("data/modifiers.json")
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
+        load_modifiers(str(data_dir / "modifiers.json"))
     
     def test_order_independence(self):
         """Adding modifiers in different order should give same result."""
@@ -159,10 +163,11 @@ class TestModifierOrder(unittest.TestCase):
 
 class TestTurretMount(unittest.TestCase):
     """Test turret mount logarithmic diminishing returns."""
-    
+
     def setUp(self):
-        load_components("data/components.json")
-        load_modifiers("data/modifiers.json")
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
+        load_modifiers(str(data_dir / "modifiers.json"))
     
     def test_turret_0_degrees_no_change(self):
         """0 degree turret should not increase mass."""

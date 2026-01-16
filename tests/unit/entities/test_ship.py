@@ -1,15 +1,15 @@
 import unittest
-import os
 import pygame
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component  # Phase 7: Removed Bridge import
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_project_root, get_data_dir
 
 class TestShip(unittest.TestCase):
     def setUp(self):
-        initialize_ship_data() 
-        load_components("data/components.json")
+        initialize_ship_data()
+        load_components(str(get_data_dir() / "components.json"))
 
     def tearDown(self):
         RegistryManager.instance().clear()
@@ -128,8 +128,8 @@ class TestShipClassMutation(unittest.TestCase):
     def setUp(self):
         if not pygame.get_init():
             pygame.init()
-        initialize_ship_data(os.getcwd())
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         self.ship = Ship("Mutation Test", 0, 0, (255, 255, 255), ship_class="Frigate")
 
     def tearDown(self):

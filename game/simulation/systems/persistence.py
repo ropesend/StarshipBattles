@@ -1,9 +1,9 @@
-import json
 import os
 import tkinter
 from tkinter import filedialog
 import pygame
 from game.simulation.entities.ship import Ship
+from game.core.json_utils import load_json_required, save_json
 
 # Initialize Tkinter root and hide it (for file dialogs)
 try:
@@ -43,9 +43,9 @@ class ShipIO:
             )
             
             if filename:
-                with open(filename, 'w') as f:
-                    json.dump(data, f, indent=4)
-                return True, f"Saved ship to {os.path.basename(filename)}"
+                if save_json(filename, data, indent=4):
+                    return True, f"Saved ship to {os.path.basename(filename)}"
+                return False, "Failed to save ship file"
             return False, None  # Cancelled
             
         except Exception as e:
@@ -69,9 +69,7 @@ class ShipIO:
             )
             
             if filename:
-                with open(filename, 'r') as f:
-                    data = json.load(f)
-                    
+                data = load_json_required(filename)
                 new_ship = Ship.from_dict(data)
                 new_ship.position = pygame.math.Vector2(screen_width // 2, screen_height // 2)
                 new_ship.recalculate_stats()

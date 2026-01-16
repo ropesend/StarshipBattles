@@ -1,7 +1,7 @@
-import json
 import os
 import pygame
 import logging
+from game.core.json_utils import load_json
 
 class AssetManager:
     _instance = None
@@ -32,12 +32,12 @@ class AssetManager:
             logging.error(f"Asset Manifest not found: {self.manifest_path}")
             return
 
-        try:
-            with open(self.manifest_path, 'r') as f:
-                self.manifest = json.load(f)
+        data = load_json(self.manifest_path)
+        if data:
+            self.manifest = data
             logging.info(f"Loaded asset manifest from {self.manifest_path}")
-        except Exception as e:
-            logging.error(f"Failed to load asset manifest: {e}")
+        else:
+            logging.error(f"Failed to load asset manifest from {self.manifest_path}")
 
     def get_image(self, category, key):
         """Get a single image. Loads if not cached."""

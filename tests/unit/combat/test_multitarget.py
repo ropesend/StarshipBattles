@@ -141,19 +141,21 @@ class TestMultitarget(unittest.TestCase):
         self.grid.insert(m2)
         
         # Inject Strategy into StrategyManager (new data-driven system)
-        from game.ai.controller import STRATEGY_MANAGER
-        
+        from game.ai.controller import StrategyManager
+        manager = StrategyManager.instance()
+        manager._loaded = True  # Prevent ensure_loaded() from overwriting test data
+
         # Add test targeting policy with missiles_in_pdc_arc rule
-        STRATEGY_MANAGER.targeting_policies['test_pdc_target'] = {
+        manager.targeting_policies['test_pdc_target'] = {
             'name': 'Test PDC Targeting',
             'rules': [
                 {'type': 'missiles_in_pdc_arc', 'weight': 2000, 'required': True},
                 {'type': 'nearest', 'weight': 100}
             ]
         }
-        
+
         # Add test strategy that uses this targeting policy
-        STRATEGY_MANAGER.strategies['test_strat'] = {
+        manager.strategies['test_strat'] = {
             'name': 'Test Strategy',
             'targeting_policy': 'test_pdc_target',
             'movement_policy': 'kite_max'

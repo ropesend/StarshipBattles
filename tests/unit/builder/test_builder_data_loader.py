@@ -126,13 +126,13 @@ class TestBuilderDataLoader(unittest.TestCase):
 
 class TestBuilderDataLoaderIntegration(unittest.TestCase):
     """Integration tests using real data files."""
-    
+
     def setUp(self):
         pygame.init()
         RegistryManager.instance().clear()
-        # Get the project root (where data/ folder is)
-        self.base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-        self.data_dir = os.path.join(self.base_dir, "data")
+        # Get the data directory using path fixture
+        from tests.fixtures.paths import get_data_dir
+        self.data_dir = str(get_data_dir())
     
     def tearDown(self):
         RegistryManager.instance().clear()

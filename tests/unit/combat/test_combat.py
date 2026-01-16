@@ -1,23 +1,23 @@
 """Tests for ship combat damage mechanics."""
 import unittest
-import os
 import pygame
 import random
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component  # Phase 7: Removed Bridge import
 from unittest.mock import MagicMock
+from tests.fixtures.paths import get_project_root, get_data_dir
 
 
 
 class TestDamageLayerLogic(unittest.TestCase):
     """Test damage distribution through ship layers."""
-    
+
     def setUp(self):
         if not pygame.get_init():
             pygame.init()
-        initialize_ship_data(os.getcwd())
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
 
         # Save random state and set deterministic seed for reproducible tests
         # State is restored in tearDown to prevent pollution of other tests
@@ -164,12 +164,12 @@ class TestDamageLayerLogic(unittest.TestCase):
 
 class TestEnergyRegeneration(unittest.TestCase):
     """Test energy and shield regeneration mechanics."""
-    
+
     def setUp(self):
         if not pygame.get_init():
             pygame.init()
-        initialize_ship_data(os.getcwd())
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
@@ -212,12 +212,12 @@ class TestEnergyRegeneration(unittest.TestCase):
 
 class TestWeaponCooldowns(unittest.TestCase):
     """Test weapon cooldown mechanics."""
-    
+
     def setUp(self):
         if not pygame.get_init():
             pygame.init()
-        initialize_ship_data(os.getcwd())
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255))
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
@@ -256,13 +256,13 @@ class TestWeaponCooldowns(unittest.TestCase):
 
 class TestCombatFlow(unittest.TestCase):
     """Refactored Tests for Combat Flow (Firing and Damage)."""
-    
+
     def setUp(self):
         if not pygame.get_init():
             pygame.init()
         # Initialize data for component creation
-        initialize_ship_data(os.getcwd())
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
             
     def test_firing_solution_lead(self):
         """Test lead calculation for moving targets."""

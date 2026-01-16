@@ -5,17 +5,18 @@ import os
 from game.simulation.entities.ship import initialize_ship_data
 from game.core.registry import RegistryManager
 from game.simulation.ship_theme import ShipThemeManager
+from tests.fixtures.paths import get_project_root
 
 class TestShipClasses(unittest.TestCase):
     def setUp(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
-        # Initialize with CWD
-        cwd = os.getcwd()
-        initialize_ship_data(cwd)
+        # Initialize with project root
+        project_root = str(get_project_root())
+        initialize_ship_data(project_root)
         self.theme_manager = ShipThemeManager.get_instance()
-        # Initialize theme manager with CWD to load themes
-        self.theme_manager.initialize(cwd)
+        # Initialize theme manager with project root to load themes
+        self.theme_manager.initialize(project_root)
 
     def tearDown(self):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)

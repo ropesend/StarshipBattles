@@ -10,17 +10,18 @@ from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.entities.ship_formation import ShipFormation
 from game.simulation.components.component import load_components
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_data_dir
 
 
 class TestShipFormationUnit(unittest.TestCase):
     """Unit tests for ShipFormation class in isolation."""
-    
+
     def setUp(self):
         """Initialize game data for each test."""
         if not pygame.get_init():
             pygame.init()
         initialize_ship_data()
-        load_components("data/components.json")
+        load_components(str(get_data_dir() / "components.json"))
     
     def tearDown(self):
         """Clean up after each test."""
@@ -132,13 +133,13 @@ class TestShipFormationUnit(unittest.TestCase):
 
 class TestShipFormationIntegration(unittest.TestCase):
     """Integration tests for ShipFormation with Ship class."""
-    
+
     def setUp(self):
         """Initialize game data for each test."""
         if not pygame.get_init():
             pygame.init()
         initialize_ship_data()
-        load_components("data/components.json")
+        load_components(str(get_data_dir() / "components.json"))
     
     def tearDown(self):
         """Clean up after each test."""

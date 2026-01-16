@@ -1,9 +1,8 @@
 
 import unittest
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import patch, MagicMock
 import pygame
 import os
-import json
 from game.simulation.ship_theme import ShipThemeManager
 
 class TestShipThemeLogic(unittest.TestCase):
@@ -60,10 +59,9 @@ class TestShipThemeLogic(unittest.TestCase):
     @patch('game.simulation.ship_theme.log_error')
     @patch('game.simulation.ship_theme.os.scandir')
     @patch('game.simulation.ship_theme.os.path.exists')
-    @patch('game.simulation.ship_theme.json.load')
-    @patch('builtins.open', new_callable=mock_open)
+    @patch('game.simulation.ship_theme.load_json')
     @patch('game.simulation.ship_theme.pygame.image.load')
-    def test_manual_scaling_and_loading(self, mock_load, mock_open_file, mock_json_load, mock_exists, mock_scandir, mock_log):
+    def test_manual_scaling_and_loading(self, mock_load, mock_load_json, mock_exists, mock_scandir, mock_log):
         """Test loading a theme with manual scaling configured."""
         
         # Setup mock file system structure
@@ -93,10 +91,10 @@ class TestShipThemeLogic(unittest.TestCase):
             if "big_ship.png" in path: return True
             return False
         mock_exists.side_effect = side_effect
-        
-        # Mock json load
-        mock_json_load.return_value = json_content
-        
+
+        # Mock load_json
+        mock_load_json.return_value = json_content
+
         # Mock image loading
         dummy_surface = pygame.Surface((50, 50))
         mock_load.return_value = dummy_surface
@@ -118,10 +116,9 @@ class TestShipThemeLogic(unittest.TestCase):
     @patch('game.simulation.ship_theme.log_error')
     @patch('game.simulation.ship_theme.os.scandir')
     @patch('game.simulation.ship_theme.os.path.exists')
-    @patch('game.simulation.ship_theme.json.load')
-    @patch('builtins.open', new_callable=mock_open)
+    @patch('game.simulation.ship_theme.load_json')
     @patch('game.simulation.ship_theme.pygame.image.load')
-    def test_get_image_metrics(self, mock_load, mock_open_file, mock_json_load, mock_exists, mock_scandir, mock_log):
+    def test_get_image_metrics(self, mock_load, mock_load_json, mock_exists, mock_scandir, mock_log):
         """Test that bounding rect is correctly calculated and cached."""
         
         theme_name = "MetricsTheme"
@@ -141,7 +138,7 @@ class TestShipThemeLogic(unittest.TestCase):
         mock_scandir.return_value = [mock_entry]
         
         mock_exists.return_value = True # Simplify exists checks
-        mock_json_load.return_value = json_content
+        mock_load_json.return_value = json_content
         
         # Use a Mock Surface since real ones are immutable and can't have convert_alpha patched
         surf = MagicMock(spec=pygame.Surface)
@@ -166,32 +163,29 @@ class TestShipThemeLogic(unittest.TestCase):
         self.assertEqual(rect.width, 10)
         self.assertEqual(rect.height, 10)
 
-    @patch('game.simulation.ship_theme.log_error')
     @patch('game.simulation.ship_theme.os.scandir')
     @patch('game.simulation.ship_theme.os.path.exists')
-    @patch('game.simulation.ship_theme.json.load')
-    @patch('builtins.open', new_callable=mock_open)
-    def test_malformed_theme_json(self, mock_open_file, mock_json_load, mock_exists, mock_scandir, mock_log):
+    @patch('game.simulation.ship_theme.load_json')
+    def test_malformed_theme_json(self, mock_load_json, mock_exists, mock_scandir):
         """Test handling of malformed JSON in theme file."""
-        
+
         theme_name = "BadTheme"
         mock_entry = MagicMock()
         mock_entry.is_dir.return_value = True
         mock_entry.path = f"/themes/{theme_name}"
         mock_scandir.return_value = [mock_entry]
-        
+
         mock_exists.return_value = True
-        
-        # Mock json load raising error
-        mock_json_load.side_effect = json.JSONDecodeError("Expecting value", "doc", 0)
+
+        # Mock load_json returning None (simulating malformed JSON)
+        mock_load_json.return_value = None
         
         # Initialize shouldn't crash
         try:
             self.manager.initialize("/fake/base/path")
         except Exception as e:
             self.fail(f"initialize raised exception on malformed JSON: {e}")
-            
-        # Verify log_error was called
-        mock_log.assert_called()
-        args, _ = mock_log.call_args
-        self.assertIn("Failed to discover theme", args[0])
+
+        # With load_json returning None, the code returns early without error
+        # Verify no theme was discovered
+        self.assertEqual(len(self.manager.theme_data), 0)

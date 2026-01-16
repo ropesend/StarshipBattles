@@ -9,17 +9,18 @@ from unittest import mock
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_data_dir
 
 
 class TestShipSerialization(unittest.TestCase):
     """Test Ship serialization round-trip behavior."""
-    
+
     def setUp(self):
         """Initialize game data for each test."""
         if not pygame.get_init():
             pygame.init()
         initialize_ship_data()
-        load_components("data/components.json")
+        load_components(str(get_data_dir() / "components.json"))
     
     def tearDown(self):
         """Clean up after each test."""

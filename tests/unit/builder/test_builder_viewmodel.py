@@ -6,11 +6,11 @@ and event emission without requiring Pygame display.
 """
 import unittest
 from unittest.mock import MagicMock, patch, call
-import os
 
 import pygame
 
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_project_root, get_data_dir
 
 
 class MockEventBus:
@@ -40,12 +40,12 @@ class TestBuilderViewModel(unittest.TestCase):
     def setUpClass(cls):
         pygame.init()
         # Load data for Ship creation
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
         from game.simulation.entities.ship import initialize_ship_data
         from game.simulation.components.component import load_components, load_modifiers
-        initialize_ship_data(base_dir)
-        load_components(os.path.join(base_dir, "data", "components.json"))
-        load_modifiers(os.path.join(base_dir, "data", "modifiers.json"))
+        initialize_ship_data(str(get_project_root()))
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
+        load_modifiers(str(data_dir / "modifiers.json"))
         
     @classmethod
     def tearDownClass(cls):

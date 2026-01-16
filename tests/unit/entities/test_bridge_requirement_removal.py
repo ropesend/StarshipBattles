@@ -1,17 +1,17 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import json
-import os
 
 from game.simulation.ship_validator import ShipDesignValidator, ValidationResult
 from game.simulation.entities.ship import Ship, LayerType
 from game.core.registry import RegistryManager
 from game.simulation.components.component import Component
+from tests.fixtures.paths import get_unit_test_data_dir
 
 class TestBridgeRequirementRemoval(unittest.TestCase):
     def setUp(self):
         # Load the test vehicle classes data
-        self.test_data_path = os.path.join("tests", "unit", "data", "test_vehicleclasses.json")
+        self.test_data_path = str(get_unit_test_data_dir() / "test_vehicleclasses.json")
         with open(self.test_data_path, "r") as f:
             self.vehicle_data = json.load(f)["classes"]
             

@@ -1,16 +1,14 @@
 import unittest
 from unittest.mock import MagicMock
 import sys
-import os
-
-
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from ui.builder.stats_config import StatDefinition, get_logistics_rows
+from tests.fixtures.paths import get_project_root
 
 class TestStatsConfig(unittest.TestCase):
     def setUp(self):
-        initialize_ship_data()
+        initialize_ship_data(str(get_project_root()))
 
     def test_dynamic_resource_rows(self):
         # Create a ship and register standard + custom resources

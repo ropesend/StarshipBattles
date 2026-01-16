@@ -56,9 +56,9 @@ def reset_game_state(monkeypatch, request):
         # Reset module-level caches to prevent pollution to next test
         reset_component_caches()
 
-        # Reset AI Strategy Manager (fully reset to None, not just clear)
-        from game.ai.controller import reset_strategy_manager
-        reset_strategy_manager()
+        # Reset AI Strategy Manager using singleton pattern
+        from game.ai.controller import StrategyManager
+        StrategyManager.instance().clear()
 
         # Reset singletons using thread-safe reset() methods
         from game.simulation.ship_theme import ShipThemeManager

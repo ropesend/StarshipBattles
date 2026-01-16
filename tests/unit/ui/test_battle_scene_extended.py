@@ -1,21 +1,20 @@
 
 import unittest
 import sys
-import os
 
 import pygame
 from game.ui.screens.battle_scene import BattleScene
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import load_components, create_component, LayerType
-import os
 from unittest import mock
-from game.ai.controller import STRATEGY_MANAGER
+from game.ai.controller import StrategyManager
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_unit_test_data_dir
 
 class TestBattleSceneExtended(unittest.TestCase):
     """Test BattleScene simulation loop, victory conditions, and headless mode."""
-    
-        
+
+
 
     def setUp(self):
         # Note: pygame, registry, and data loading handled by conftest fixtures
@@ -23,13 +22,15 @@ class TestBattleSceneExtended(unittest.TestCase):
         # because the reset_game_state fixture already loaded the data
 
         # AI Strategy Manager still needs to be loaded per-test
-        test_data_path = os.path.join(os.getcwd(), "tests", "unit", "data")
-        STRATEGY_MANAGER.load_data(
+        test_data_path = str(get_unit_test_data_dir())
+        manager = StrategyManager.instance()
+        manager.load_data(
              test_data_path,
              targeting_file="test_targeting_policies.json",
              movement_file="test_movement_policies.json",
              strategy_file="test_combat_strategies.json"
         )
+        manager._loaded = True
 
     def tearDown(self):
         """Cleanup pygame and global managers."""
@@ -38,7 +39,7 @@ class TestBattleSceneExtended(unittest.TestCase):
         # DO NOT call pygame.quit() here as it conflicts with session-level fixture
 
         # AI Strategy Manager should still be cleared
-        STRATEGY_MANAGER.clear()
+        StrategyManager.instance().clear()
 
     def test_is_battle_over_victory(self):
         """Verify is_battle_over identifies when one team is eliminated."""

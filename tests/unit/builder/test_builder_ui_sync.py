@@ -10,6 +10,7 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.core.registry import RegistryManager
 from game.simulation.components.component import load_components
+from tests.fixtures.paths import get_project_root, get_data_dir
 
 
 class TestBuilderUISync(unittest.TestCase):
@@ -19,13 +20,11 @@ class TestBuilderUISync(unittest.TestCase):
         os.environ["SDL_VIDEODRIVER"] = "dummy"
         pygame.init()
         # Initialize data needed for dropdowns
-        # Adjusted for new location: tests/unit/builder/test_builder_ui_sync.py
-        # Need 4 levels up to reach root (builder -> unit -> tests -> Starship Battles)
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-        initialize_ship_data(base_dir)
-        load_components(os.path.join(base_dir, "data", "components.json"))
+        initialize_ship_data(str(get_project_root()))
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
         from game.ai.controller import load_combat_strategies
-        load_combat_strategies(os.path.join(base_dir, "data"))
+        load_combat_strategies(str(data_dir))
         
         pygame.display.set_mode((800, 600)) # Dummy mode
         self.manager = pygame_gui.UIManager((800, 600))
@@ -50,11 +49,11 @@ class TestBuilderUISync(unittest.TestCase):
     def tearDown(self):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
-        
+
         pygame.quit()
         RegistryManager.instance().clear()
-        from game.ai.controller import STRATEGY_MANAGER
-        STRATEGY_MANAGER.clear()
+        from game.ai.controller import StrategyManager
+        StrategyManager.instance().clear()
 
     def _get_option_value(self, option):
         """Helper to handle pygame_gui returning (id, text) tuples or raw values."""
@@ -100,8 +99,8 @@ class TestBuilderUISync(unittest.TestCase):
         self.assertEqual(val, target_class)
         
         # AI Strategy Name lookup
-        from game.ai.controller import STRATEGY_MANAGER
-        strat_name = STRATEGY_MANAGER.strategies["kamikaze"]["name"]
+        from game.ai.controller import StrategyManager
+        strat_name = StrategyManager.instance().strategies["kamikaze"]["name"]
         val = self._get_option_value(self.panel.ai_dropdown.selected_option)
         self.assertEqual(val, strat_name)
 

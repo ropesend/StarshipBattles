@@ -1,6 +1,6 @@
-import json
 import logging
-import os
+
+from game.core.json_utils import load_json, save_json
 
 logger = logging.getLogger(__name__)
 
@@ -14,26 +14,17 @@ class PresetManager:
         
     def load_presets(self):
         """Load presets from file."""
-        try:
-            if os.path.exists(self.filename):
-                with open(self.filename, 'r') as f:
-                    data = json.load(f)
-                    self.presets = data.get('presets', {})
-                    logger.debug(f"Loaded {len(self.presets)} presets")
-            else:
-                self.presets = {}
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            logger.warning(f"Failed to load presets: {e}")
-            self.presets = {}
-            
+        data = load_json(self.filename, default={})
+        self.presets = data.get('presets', {})
+        if self.presets:
+            logger.debug(f"Loaded {len(self.presets)} presets")
+
     def save_presets(self):
         """Save presets to file."""
-        try:
-            with open(self.filename, 'w') as f:
-                json.dump({'presets': self.presets}, f, indent=2)
+        if save_json(self.filename, {'presets': self.presets}):
             logger.debug(f"Saved {len(self.presets)} presets")
-        except Exception as e:
-            logger.error(f"Failed to save presets: {e}")
+        else:
+            logger.error(f"Failed to save presets to {self.filename}")
             
     def get_all_presets(self):
         """Return all presets."""

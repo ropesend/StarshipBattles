@@ -1,13 +1,14 @@
 import unittest
 from unittest.mock import MagicMock
 import pygame
-import os
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.ui.screens.battle_scene import BattleScene
-from game.ai.controller import AIController, STRATEGY_MANAGER
+from game.ai.controller import AIController, StrategyManager
 from game.simulation.components.component import LayerType, load_components, load_modifiers
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
+
 
 class TestMovementAndAI(unittest.TestCase):
 
@@ -15,32 +16,34 @@ class TestMovementAndAI(unittest.TestCase):
         pygame.init()
         # Initialize vehicle class definitions FIRST (required for layer configs)
         initialize_ship_data()
-        # Load data once
-        base_path = os.getcwd() 
-        if not os.path.exists(os.path.join(base_path, "data", "components.json")):
-             base_path = os.path.dirname(os.getcwd())
-             
-        comp_path = os.path.join(base_path, "data", "components.json")
-        mod_path = os.path.join(base_path, "data", "modifiers.json")
-        
-        if os.path.exists(comp_path):
-            load_components(comp_path)
-        if os.path.exists(mod_path):
-            self.mod_path = mod_path
-            load_modifiers(mod_path)
-        test_data_path = os.path.join(os.getcwd(), "tests", "unit", "data")
-        STRATEGY_MANAGER.load_data(
-             test_data_path, 
-             targeting_file="test_targeting_policies.json", 
-             movement_file="test_movement_policies.json", 
-             strategy_file="test_combat_strategies.json"
+
+        data_dir = get_data_dir()
+        unit_test_data_dir = get_unit_test_data_dir()
+
+        # Load components and modifiers
+        comp_path = data_dir / "components.json"
+        mod_path = data_dir / "modifiers.json"
+
+        if comp_path.exists():
+            load_components(str(comp_path))
+        if mod_path.exists():
+            self.mod_path = str(mod_path)
+            load_modifiers(str(mod_path))
+
+        manager = StrategyManager.instance()
+        manager.load_data(
+            str(unit_test_data_dir),
+            targeting_file="test_targeting_policies.json",
+            movement_file="test_movement_policies.json",
+            strategy_file="test_combat_strategies.json"
         )
+        manager._loaded = True
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser")
 
     def tearDown(self):
         pygame.quit()
         RegistryManager.instance().clear()
-        STRATEGY_MANAGER.clear()
+        StrategyManager.instance().clear()
         super().tearDown()
 
     def get_component_clone(self, id):

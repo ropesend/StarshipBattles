@@ -14,14 +14,15 @@ from game.simulation.components.component import (
     load_components, load_modifiers, create_component
 )
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_data_dir
 
 
 class TestModifierStacking(unittest.TestCase):
     """Test that modifier stacking calculates HP correctly."""
-    
+
     def setUp(self):
-        load_components("data/components.json")
-        load_modifiers("data/modifiers.json")
+        load_components(str(get_data_dir() / "components.json"))
+        load_modifiers(str(get_data_dir() / "modifiers.json"))
     
     def tearDown(self):
         RegistryManager.instance().clear()
@@ -86,10 +87,10 @@ class TestModifierStacking(unittest.TestCase):
 
 class TestShipExpectedStats(unittest.TestCase):
     """Test that loaded ships match their expected_stats."""
-    
+
     def setUp(self):
-        load_components("data/components.json")
-        load_modifiers("data/modifiers.json")
+        load_components(str(get_data_dir() / "components.json"))
+        load_modifiers(str(get_data_dir() / "modifiers.json"))
         load_vehicle_classes()
 
     def tearDown(self):
@@ -100,14 +101,15 @@ class TestShipExpectedStats(unittest.TestCase):
 
 class TestAllShipDesigns(unittest.TestCase):
     """Test all ship designs in the ships/ folder."""
-    
+
     def setUp(self):
-        load_components("data/components.json")
-        load_modifiers("data/modifiers.json")
+        data_dir = get_data_dir()
+        load_components(str(data_dir / "components.json"))
+        load_modifiers(str(data_dir / "modifiers.json"))
         from game.simulation.entities.ship import load_vehicle_classes
-        load_vehicle_classes("data/vehicleclasses.json")
-        
-        # Find all ship JSON files
+        load_vehicle_classes(str(data_dir / "vehicleclasses.json"))
+
+        # Find all ship JSON files in tests/unit/ships
         ships_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ships")
         self.ship_files = glob.glob(os.path.join(ships_dir, "*.json"))
 

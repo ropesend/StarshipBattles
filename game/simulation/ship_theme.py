@@ -1,8 +1,8 @@
 import os
-import json
 import pygame
 import threading
 from game.core.logger import log_info, log_error
+from game.core.json_utils import load_json
 from game.core.profiling import profile_block
 from game.core.constants import ASSET_DIR
 
@@ -82,13 +82,11 @@ class ShipThemeManager:
     def _discover_theme(self, theme_dir):
         """Read theme.json and store paths/metadata."""
         json_path = os.path.join(theme_dir, "theme.json")
-        if not os.path.exists(json_path):
-            return 
-            
+        data = load_json(json_path)
+        if data is None:
+            return
+
         try:
-            with open(json_path, 'r') as f:
-                data = json.load(f)
-                
             theme_name = data.get('name', os.path.basename(theme_dir))
             image_map = data.get('images', {})
             

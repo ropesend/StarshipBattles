@@ -5,17 +5,18 @@ import pygame
 from game.simulation.entities.projectile import Projectile
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import load_components, create_component
+from tests.fixtures.paths import get_project_root, get_data_dir
 
 
 class TestProjectileBasics(unittest.TestCase):
     """Test basic projectile initialization and properties."""
-    
-    
-    
+
+
+
     def setUp(self):
         pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         # Create a simple owner ship
         self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0)
         self.owner.add_component(create_component('bridge'), LayerType.CORE)
@@ -65,8 +66,8 @@ class TestProjectileMovement(unittest.TestCase):
     
     def setUp(self):
         pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0)
         self.owner.add_component(create_component('bridge'), LayerType.CORE)
         self.owner.recalculate_stats()
@@ -144,8 +145,8 @@ class TestProjectileDamage(unittest.TestCase):
     
     def setUp(self):
         pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0)
         self.owner.add_component(create_component('bridge'), LayerType.CORE)
         self.owner.recalculate_stats()
@@ -203,8 +204,8 @@ class TestMissileGuidance(unittest.TestCase):
     
     def setUp(self):
         pygame.init()
-        initialize_ship_data("C:\\Dev\\Starship Battles")
-        load_components("data/components.json")
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0)
         self.owner.add_component(create_component('bridge'), LayerType.CORE)
         self.owner.recalculate_stats()

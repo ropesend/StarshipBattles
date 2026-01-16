@@ -8,6 +8,9 @@ to prevent race conditions when pytest-xdist spawns multiple workers.
 import sys
 import os
 import pytest
+from pathlib import Path
+
+from tests.fixtures.paths import get_data_dir, get_project_root, get_unit_test_data_dir, get_assets_dir
 
 def pytest_configure(config):
     """
@@ -54,6 +57,30 @@ def pytest_configure_node(node):
               file=sys.stderr)
         raise
 
+
+
+@pytest.fixture
+def data_dir() -> Path:
+    """Return the production data directory path."""
+    return get_data_dir()
+
+
+@pytest.fixture
+def project_root() -> Path:
+    """Return the project root path."""
+    return get_project_root()
+
+
+@pytest.fixture
+def unit_test_data_dir() -> Path:
+    """Return the unit test data directory path."""
+    return get_unit_test_data_dir()
+
+
+@pytest.fixture
+def assets_dir() -> Path:
+    """Return the assets directory path."""
+    return get_assets_dir()
 
 
 @pytest.fixture(autouse=True)
