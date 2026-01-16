@@ -4,6 +4,7 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 import pytest
 from game.core.registry import RegistryManager
+from game.core.config import DisplayConfig
 
 @pytest.fixture(autouse=True)
 def reset_game_state(monkeypatch, request):
@@ -82,6 +83,6 @@ def enforce_headless():
     pygame.font.init()
     # Create a persistent dummy display to satisfy tests that require one
     # Use standard resolution to prevent UI recursion issues in 1x1 windows
-    pygame.display.set_mode((1440, 900), pygame.NOFRAME)
+    pygame.display.set_mode(DisplayConfig.test_resolution(), pygame.NOFRAME)
     yield
     pygame.quit()

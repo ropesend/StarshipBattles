@@ -4,6 +4,7 @@ import pygame
 import os
 
 from game.simulation.entities.ship import Ship, LayerType
+from game.core.config import DisplayConfig, PhysicsConfig
 
 # Parse command line arguments - use parse_known_args to handle being imported as a module
 parser = argparse.ArgumentParser(description="Starship Battles")
@@ -28,7 +29,7 @@ from game.core.profiling import PROFILER, profile_action
 
 # Constants
 # WIDTH, HEIGHT are now determined at runtime, but we set defaults here
-DEFAULT_WIDTH, DEFAULT_HEIGHT = 2560, 1600
+DEFAULT_WIDTH, DEFAULT_HEIGHT = DisplayConfig.default_resolution()
 WIDTH, HEIGHT = DEFAULT_WIDTH, DEFAULT_HEIGHT
 FPS = 60
 BG_COLOR = (10, 10, 20)
@@ -70,7 +71,7 @@ class Game:
         
         # Check for forced resolution
         if args.force_resolution:
-            WIDTH, HEIGHT = 2560, 1600
+            WIDTH, HEIGHT = DisplayConfig.default_resolution()
         # Logic: Use 4K if available, else 2560x1600, else smaller?
         elif monitor_w >= 3840 and monitor_h >= 2160:
             WIDTH, HEIGHT = 3840, 2160
@@ -183,7 +184,7 @@ class Game:
         """Main game loop."""
         # Fixed time step accumulator
         accumulator = 0.0
-        dt = 0.01  # 100 ticks per second = 0.01s per tick attempt
+        dt = PhysicsConfig.TICK_RATE  # 100 ticks per second
         
         while self.running:
             # We still need real frame time for rendering smoothness or UI
@@ -484,7 +485,7 @@ class Game:
             # Update Simulation
             # ACCUMULATOR LOGIC for deterministic speed control
             if not self.battle_scene.sim_paused:
-                dt = 0.01 # 100 ticks per second standard
+                dt = PhysicsConfig.TICK_RATE  # 100 ticks per second standard
                 
                 # We scale "time passed" by the speed multiplier
                 # If multiplier is 0.5, we accumulate half as much real time -> runs half as fast

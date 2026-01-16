@@ -1,7 +1,8 @@
 
 import pygame
-import math
 from typing import Any, Dict
+
+from game.core.config import AIConfig, PhysicsConfig
 
 class AIBehavior:
     def __init__(self, controller: Any) -> None:
@@ -37,7 +38,7 @@ class FleeBehavior(AIBehavior):
         self.controller.navigate_to(flee_pos, stop_dist=0, precise=False)
 
 class KiteBehavior(AIBehavior):
-    MIN_SPACING: int = 150
+    MIN_SPACING: int = AIConfig.MIN_SPACING
     DEFAULT_AVOIDANCE: bool = True
     
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
@@ -74,7 +75,7 @@ class AttackRunBehavior(AIBehavior):
     DEFAULT_APPROACH_DIST_FACTOR: float = 0.3
     DEFAULT_RETREAT_DIST_FACTOR: float = 0.8
     DEFAULT_RETREAT_DURATION: float = 2.0
-    TICK_DURATION: float = 0.01
+    TICK_DURATION: float = PhysicsConfig.TICK_RATE
     FLEE_DISTANCE: int = 1000
     APPROACH_HYSTERESIS: float = 1.5
 
@@ -124,9 +125,9 @@ class FormationBehavior(AIBehavior):
     TURN_PREDICT_FACTOR: float = 1.5
     DEADBAND_ERROR: float = 2.0
     CORRECTION_FACTOR: float = 0.2
-    MAX_CORRECTION_FORCE: int = 500
+    MAX_CORRECTION_FORCE: int = AIConfig.MAX_CORRECTION_FORCE
     PREDICTION_TICKS: int = 10
-    TICK_DURATION: float = 0.01
+    TICK_DURATION: float = PhysicsConfig.TICK_RATE
     NAVIGATE_STOP_DIST: int = 10
 
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
@@ -305,11 +306,9 @@ class ErraticBehavior(AIBehavior):
     
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
         import random
-        
-        TICK_DURATION = 0.01
-        
+
         # Update timer
-        self.direction_timer += TICK_DURATION
+        self.direction_timer += PhysicsConfig.TICK_RATE
         
         # Check if it's time to change direction
         min_interval = strategy.get('turn_interval_min', 0.5)
@@ -331,8 +330,8 @@ class ErraticBehavior(AIBehavior):
 
 class OrbitBehavior(AIBehavior):
     """Circle target at fixed distance."""
-    
-    DEFAULT_ORBIT_DISTANCE: int = 500
+
+    DEFAULT_ORBIT_DISTANCE: int = AIConfig.DEFAULT_ORBIT_DISTANCE
     
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
         if not target:
