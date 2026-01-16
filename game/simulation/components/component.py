@@ -3,6 +3,7 @@ from enum import Enum, auto
 from game.simulation.formula_system import evaluate_math_formula
 from game.core.registry import get_component_registry, get_modifier_registry
 from game.core.json_utils import load_json_required
+from game.core.logger import log_warning, log_error
 
 class ComponentStatus(Enum):
     ACTIVE = auto()
@@ -585,14 +586,14 @@ def load_components(filepath="data/components.json"):
     # Slow Path: Load from Disk
     # Try absolute path based on this file if CWD fails
     if not os.path.exists(filepath):
-        print(f"WARN: {filepath} not found in CWD ({os.getcwd()}).")
+        log_warning(f"{filepath} not found in CWD ({os.getcwd()}).")
         base_dir = os.path.dirname(os.path.abspath(__file__))
         abs_path = os.path.join(base_dir, filepath)
 
         if os.path.exists(abs_path):
             filepath = abs_path
         else:
-            print(f"ERROR: components file not found at {abs_path}")
+            log_error(f"components file not found at {abs_path}")
             return
 
     try:
@@ -606,7 +607,7 @@ def load_components(filepath="data/components.json"):
                 obj = cls(comp_def)
                 temp_cache[comp_def['id']] = obj
             except Exception as e:
-                print(f"ERROR creating component {comp_def.get('id')}: {e}")
+                log_error(f"creating component {comp_def.get('id')}: {e}")
 
         # Populate Cache
         _COMPONENT_CACHE = temp_cache
@@ -618,7 +619,7 @@ def load_components(filepath="data/components.json"):
             comps[c_id] = comp.clone()
 
     except Exception as e:
-        print(f"ERROR loading/parsing components json: {e}")
+        log_error(f"loading/parsing components json: {e}")
 
 def load_modifiers(filepath="data/modifiers.json"):
     global _MODIFIER_CACHE, _LAST_MODIFIER_FILE
@@ -654,14 +655,14 @@ def load_modifiers(filepath="data/modifiers.json"):
             mods[m_id] = copy.deepcopy(mod)
 
     except Exception as e:
-        print(f"ERROR loading modifiers: {e}")
+        log_error(f"loading modifiers: {e}")
 
 def create_component(component_id):
     """Create a clone of a component from the registry by ID."""
     comps = get_component_registry()
     if component_id in comps:
         return comps[component_id].clone()
-    print(f"Error: Component ID {component_id} not found in registry.")
+    log_error(f"Component ID {component_id} not found in registry.")
     return None
 
 def get_all_components():

@@ -1,6 +1,6 @@
-
 import math
 from typing import Dict, Any, Optional, List, Union
+from game.core.logger import log_debug
 
 # --- Base Ability ---
 class Ability:
@@ -615,7 +615,7 @@ class WeaponAbility(Ability):
         # 1. Range Check
         dist = ship_pos.distance_to(target_pos)
         if dist > self.range:
-            print(f"DEBUG: check_firing_solution Range FAIL: dist {dist} > range {self.range}")
+            log_debug(f"check_firing_solution Range FAIL: dist {dist} > range {self.range}")
             return False
             
         # 2. Arc Check
@@ -632,8 +632,8 @@ class WeaponAbility(Ability):
         # Phase 7: Use epsilon for boundary floating point stability
         if abs(diff) <= (self.firing_arc / 2) + 0.01:
             return True
-            
-        print(f"DEBUG: check_firing_solution Arc FAIL: diff {abs(diff)} > {self.firing_arc/2}")
+
+        log_debug(f"check_firing_solution Arc FAIL: diff {abs(diff)} > {self.firing_arc/2}")
         return False
 
 class ProjectileWeaponAbility(WeaponAbility):

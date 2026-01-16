@@ -4,6 +4,7 @@ from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMen
 from pygame_gui.core import UIElement
 
 from game.core.registry import RegistryManager
+from game.core.logger import log_error
 from game.ai.controller import StrategyManager
 
 class StatRow:
@@ -352,7 +353,7 @@ class BuilderRightPanel:
             )
             
         except Exception as e:
-            print(f"Failed to load portrait {full_path}: {e}")
+            log_error(f"Failed to load portrait {full_path}: {e}")
 
     def setup_stats(self):
         # Create Scroll Container for Stats

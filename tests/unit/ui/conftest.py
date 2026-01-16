@@ -6,17 +6,17 @@ This conftest.py pre-imports game.ui submodules in a deterministic order
 to prevent race conditions when pytest-xdist spawns multiple workers.
 """
 import sys
-import os
 import pytest
 from pathlib import Path
 
 from tests.fixtures.paths import get_data_dir, get_project_root, get_unit_test_data_dir, get_assets_dir
 
+
 def pytest_configure(config):
     """
     Called before test collection.
     Ensures game.ui modules are importable in consistent order.
-    
+
     This prevents race conditions during parallel worker startup by forcing
     all game.ui submodules to be imported in a deterministic sequence before
     any tests run.
@@ -56,7 +56,6 @@ def pytest_configure_node(node):
         print(f"ERROR: Worker {node.gateway.id} failed to import game.ui modules: {e}",
               file=sys.stderr)
         raise
-
 
 
 @pytest.fixture
@@ -112,5 +111,3 @@ def pygame_display_reset():
             pygame.display.set_mode((1440, 900), pygame.NOFRAME)
     except Exception:
         pass  # Display may not be available
-
-

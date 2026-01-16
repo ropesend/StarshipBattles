@@ -4,6 +4,7 @@ import time
 from typing import List, Optional, Tuple, Dict, Any, TYPE_CHECKING
 import pygame
 
+from game.core.logger import log_warning, log_info
 from game.ai.controller import AIController
 from game.engine.spatial import SpatialGrid
 from game.core.constants import AttackType
@@ -44,7 +45,7 @@ class BattleLogger:
                 self.file = open(self.filename, 'w', encoding='utf-8')
                 self.log("=== BATTLE LOG STARTED ===")
             except IOError as e:
-                print(f"Warning: Could not open battle log: {e}")
+                log_warning(f"Could not open battle log: {e}")
                 self.enabled = False
     
     def log(self, message: str):
@@ -151,7 +152,7 @@ class BattleEngine:
             fuel = s.resources.get_value("fuel")
             status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f}"
             self.logger.log(status_msg)
-            print(status_msg)
+            log_info(status_msg)
             # Removed Derelict Warning
             if s.total_thrust <= 0:
                 self.logger.log(f"WARNING: {s.name} has NO THRUST!")

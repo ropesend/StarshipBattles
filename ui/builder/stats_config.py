@@ -1,5 +1,6 @@
 from game.simulation.entities.ship import LayerType
 import game.simulation.entities.ship_stats as ship_stats # Needed for accessing defaults/constants if any
+from game.core.logger import log_warning, log_error
 
 
 class StatDefinition:
@@ -271,14 +272,14 @@ def load_stats_config():
     
     path = os.path.join(os.getcwd(), 'data', 'stats_layout.json')
     if not os.path.exists(path):
-        print(f"Warning: {path} not found. Using empty config.")
+        log_warning(f"{path} not found. Using empty config.")
         return {}
 
     try:
         with open(path, 'r') as f:
             data = json.load(f)
     except Exception as e:
-        print(f"Error loading stats config: {e}")
+        log_error(f"loading stats config: {e}")
         return {}
         
     loaded_groups = {}

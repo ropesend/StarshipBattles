@@ -2,7 +2,7 @@ import pygame
 import math
 import random
 from game.simulation.components.component import LayerType, ComponentStatus  # Phase 7: Removed Bridge, Weapon, etc. (now use abilities)
-from game.core.logger import log_debug
+from game.core.logger import log_debug, log_info
 from game.core.constants import AttackType
 
 class ShipCombatMixin:
@@ -403,7 +403,7 @@ class ShipCombatMixin:
         return damage
 
     def die(self):
-        print(f"{self.name} EXPLODED!")
+        log_info(f"{self.name} EXPLODED!")
         self.is_alive = False
         self.velocity = pygame.math.Vector2(0,0)
         # Recalculate to ensure UI shows 0 stats

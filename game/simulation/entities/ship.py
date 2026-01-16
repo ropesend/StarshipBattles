@@ -9,7 +9,7 @@ from game.engine.physics import PhysicsBody
 from game.simulation.components.component import (
     Component, LayerType, create_component
 )
-from game.core.logger import log_debug
+from game.core.logger import log_debug, log_info, log_warning, log_error
 from game.core.json_utils import load_json, load_json_required
 from game.core.registry import RegistryManager, get_vehicle_classes, get_validator, get_component_registry, get_modifier_registry
 from game.simulation.ship_validator import ShipDesignValidator, ValidationResult
@@ -57,7 +57,7 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_file
     layer_data = load_json(layers_path, default={})
     if layer_data:
         layer_definitions = layer_data.get('definitions', {})
-        print(f"Loaded {len(layer_definitions)} layer configurations from {os.path.basename(layers_path)}.")
+        log_info(f"Loaded {len(layer_definitions)} layer configurations from {os.path.basename(layers_path)}.")
 
     # Load vehicle classes (required)
     try:
@@ -78,10 +78,10 @@ def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_file
             if config_id in layer_definitions:
                 cls_def['layers'] = layer_definitions[config_id]
             else:
-                print(f"Warning: Class {cls_name} references unknown layer config {config_id}")
+                log_warning(f"Class {cls_name} references unknown layer config {config_id}")
 
     classes.update(raw_classes)
-    print(f"Loaded {len(classes)} vehicle classes.")
+    log_info(f"Loaded {len(classes)} vehicle classes.")
         
 
 
@@ -361,7 +361,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
             if not has_command:
                 if not self.is_derelict:
-                    print(f"{self.name} has become DERELICT (Command and Control lost)")
+                    log_info(f"{self.name} has become DERELICT (Command and Control lost)")
                 self.is_derelict = True
                 self.bridge_destroyed = True
                 return
@@ -375,7 +375,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
             if crew_required > crew_capacity:
                 if not self.is_derelict:
-                    print(f"{self.name} has become DERELICT (Insufficient crew capacity)")
+                    log_info(f"{self.name} has become DERELICT (Insufficient crew capacity)")
                 self.is_derelict = True
                 return
 
@@ -422,7 +422,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                     'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0
                 }
             except KeyError:
-                print(f"Warning: Unknown LayerType {l_type_str} in class {self.ship_class}")
+                log_warning(f"Unknown LayerType {l_type_str} in class {self.ship_class}")
 
         # Recalculate layer radii based on max_mass_pct (Area proportional to mass capacity)
         # Sort layers: HULL -> CORE -> INNER -> OUTER -> ARMOR
@@ -458,7 +458,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                                 If False, clears all components.
         """
         if new_class not in get_vehicle_classes():
-            print(f"Error: Unknown class {new_class}")
+            log_error(f"Unknown class {new_class}")
             return
 
         old_components = []
@@ -512,7 +512,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                             break
                 
                 if not added:
-                    print(f"Warning: Could not fit component {comp.name} during refit to {new_class}")
+                    log_warning(f"Could not fit component {comp.name} during refit to {new_class}")
         
         # Finally recalculate stats
         self.recalculate_stats()
@@ -520,23 +520,23 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     def add_component(self, component: Component, layer_type: LayerType) -> bool:
         """Validate and add a component to the specified layer."""
         if component is None:
-             print("Error: Attempted to add None component to ship")
-             return False
+            log_error("Attempted to add None component to ship")
+            return False
 
         result = get_or_create_validator().validate_addition(self, component, layer_type)
-        
+
         if not result.is_valid:
-             for err in result.errors:
-                 print(f"Error: {err}")
-             return False
+            for err in result.errors:
+                log_error(err)
+            return False
 
         self.layers[layer_type]['components'].append(component)
         component.layer_assigned = layer_type
         component.ship = self
         component.recalculate_stats()
         # Apply mandatory modifiers (e.g., size mount) immediately upon addition
-        from ui.builder.modifier_logic import ModifierLogic
-        ModifierLogic.ensure_mandatory_modifiers(component)
+        from game.simulation.services.modifier_service import ModifierService
+        ModifierService.ensure_mandatory_modifiers(component)
         self._cached_summary = {}  # Invalidate cache
         
         # Update Stats
@@ -566,9 +566,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             if not result.is_valid:
                 # Stop adding if we hit a limit
                 if added_count == 0:
-                    # If the very first one fails, print errors
+                    # If the very first one fails, log errors
                     for err in result.errors:
-                        print(f"Error: {err}")
+                        log_error(err)
                 break
                 
             self.layers[layer_type]['components'].append(new_comp)
@@ -576,8 +576,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             new_comp.ship = self
             new_comp.recalculate_stats()
             # Apply mandatory modifiers (e.g., size mount) immediately upon addition
-            from ui.builder.modifier_logic import ModifierLogic
-            ModifierLogic.ensure_mandatory_modifiers(new_comp)
+            from game.simulation.services.modifier_service import ModifierService
+            ModifierService.ensure_mandatory_modifiers(new_comp)
             added_count += 1
             
         if added_count > 0:

@@ -9,6 +9,7 @@ import unittest
 from game.simulation.components.component import Component, load_components
 from game.core.registry import RegistryManager
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
+from tests.fixtures.paths import get_project_root, get_data_dir
 
 
 class TestAllowedLayersRemoval(unittest.TestCase):
@@ -16,10 +17,10 @@ class TestAllowedLayersRemoval(unittest.TestCase):
     Ensure the deprecated `allowed_layers` attribute has been fully removed
     from all component classes to prevent AttributeError crashes.
     """
-    
+
     def setUp(self):
-        initialize_ship_data()
-        load_components()
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
 
     def tearDown(self) -> None:
         """Clear the global registry state."""
@@ -88,11 +89,10 @@ class TestBuilderDropValidation(unittest.TestCase):
     Test that component placement validation works correctly through the
     centralized validator, not through a per-component allowed_layers check.
     """
-    
-    
+
     def setUp(self):
-        initialize_ship_data()
-        load_components()
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser")
 
     def tearDown(self) -> None:

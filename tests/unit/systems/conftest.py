@@ -1,21 +1,21 @@
 """
-Conftest for builder module tests.
+Conftest for systems module tests.
 
-Provides fixtures and setup for builder-related tests.
+Provides fixtures and setup for systems-related tests.
 """
 import pytest
 import pygame
 from pathlib import Path
 
-from tests.fixtures.paths import get_data_dir, get_project_root, get_unit_test_data_dir
-from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
-from game.simulation.components.component import load_components, load_modifiers, create_component
+from tests.fixtures.paths import get_data_dir, get_project_root
+from game.simulation.entities.ship import Ship, initialize_ship_data
+from game.simulation.components.component import load_components, load_modifiers
 from game.core.registry import RegistryManager
 
 
 @pytest.fixture(autouse=True)
-def builder_test_setup():
-    """Auto-setup for builder tests: initialize pygame and clean up after."""
+def systems_test_setup():
+    """Auto-setup for systems tests: initialize pygame and clean up after."""
     if not pygame.get_init():
         pygame.init()
     yield
@@ -32,12 +32,6 @@ def data_dir() -> Path:
 def project_root() -> Path:
     """Return the project root path."""
     return get_project_root()
-
-
-@pytest.fixture
-def unit_test_data_dir() -> Path:
-    """Return the unit test data directory path."""
-    return get_unit_test_data_dir()
 
 
 @pytest.fixture
@@ -59,16 +53,16 @@ def initialized_ship_data_with_modifiers():
 
 
 @pytest.fixture
-def basic_escort_ship(initialized_ship_data):
-    """Create a basic Escort ship for testing."""
-    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+def basic_cruiser_ship(initialized_ship_data):
+    """Create a basic Cruiser ship for testing."""
+    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
     ship.recalculate_stats()
     return ship
 
 
 @pytest.fixture
-def basic_cruiser_ship(initialized_ship_data):
-    """Create a basic Cruiser ship for testing."""
-    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
+def basic_escort_ship(initialized_ship_data):
+    """Create a basic Escort ship for testing."""
+    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
     ship.recalculate_stats()
     return ship

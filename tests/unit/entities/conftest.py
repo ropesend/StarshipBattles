@@ -19,7 +19,6 @@ def entities_test_setup():
     if not pygame.get_init():
         pygame.init()
     yield
-    # Cleanup after each test
     RegistryManager.instance().clear()
 
 

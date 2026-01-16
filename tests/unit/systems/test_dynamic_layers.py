@@ -1,16 +1,15 @@
 import unittest
-import os
 import math
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import Component, LayerType, load_components
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_project_root, get_data_dir
 
 class TestDynamicLayers(unittest.TestCase):
     def setUp(self):
-        # Initialize with the real data files (../../data)
-        initialize_ship_data(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-        load_components(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'components.json')))
+        initialize_ship_data(str(get_project_root()))
+        load_components(str(get_data_dir() / "components.json"))
 
     def tearDown(self) -> None:
         """Clear the global registry state."""

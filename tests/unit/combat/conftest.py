@@ -20,7 +20,6 @@ def combat_test_setup():
     if not pygame.get_init():
         pygame.init()
     yield
-    # Cleanup after each test
     RegistryManager.instance().clear()
     StrategyManager.instance().clear()
 
@@ -83,6 +82,7 @@ def strategy_manager_with_test_data(unit_test_data_dir):
 @pytest.fixture
 def basic_combat_ship(initialized_ship_data):
     """Create a basic ship with bridge, crew quarters, and life support."""
+    _ = initialized_ship_data  # Ensure ship data is loaded
     ship = Ship("CombatTestShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
     ship.add_component(create_component('bridge'), LayerType.CORE)
     ship.add_component(create_component('crew_quarters'), LayerType.CORE)
@@ -94,6 +94,7 @@ def basic_combat_ship(initialized_ship_data):
 @pytest.fixture
 def armed_combat_ship(initialized_ship_data):
     """Create a combat ship with weapons."""
+    _ = initialized_ship_data  # Ensure ship data is loaded
     ship = Ship("ArmedShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
     ship.add_component(create_component('bridge'), LayerType.CORE)
     ship.add_component(create_component('crew_quarters'), LayerType.CORE)

@@ -6,6 +6,7 @@ from typing import Dict, Any, TYPE_CHECKING
 
 from game.simulation.components.component import LayerType, create_component
 from game.core.registry import get_component_registry, get_modifier_registry
+from game.core.logger import log_warning
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -178,8 +179,8 @@ class ShipSerializer:
             s._loading_warnings = mismatches
             
             if mismatches:
-                print(f"WARNING: Ship '{s.name}' stats mismatch after loading!")
+                log_warning(f"Ship '{s.name}' stats mismatch after loading!")
                 for m in mismatches:
-                    print(f"  - {m}")
+                    log_warning(f"  - {m}")
         
         return s

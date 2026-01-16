@@ -4,11 +4,12 @@ from unittest.mock import MagicMock
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
 from game.simulation.components.component import Component
 from game.core.registry import RegistryManager
+from tests.fixtures.paths import get_project_root
 
 class TestLayerRefinements(unittest.TestCase):
 
     def setUp(self):
-        initialize_ship_data()
+        initialize_ship_data(str(get_project_root()))
         # Create a Fighter (2 layers: CORE, ARMOR)
         # Note: We rely on the vehicle classes loaded from JSON (which we updated)
         self.fighter = Ship("TestFighter", 0, 0, (255, 0, 0), ship_class="Fighter (Small)")

@@ -1,6 +1,7 @@
 import pygame
 import os
 import threading
+from game.core.logger import log_info, log_error
 
 class SpriteManager:
     _instance = None
@@ -42,7 +43,7 @@ class SpriteManager:
              self._load_atlas_file(atlas_path)
 
     def _load_from_directory(self, directory):
-        print(f"Loading sprites from {directory}")
+        log_info(f"Loading sprites from {directory}")
         # Reset sprites
         self.sprites = []
         
@@ -83,7 +84,7 @@ class SpriteManager:
                 # print(f"WARNING: Skipping file with invalid number format {f}")
                 continue
             except Exception as e:
-                print(f"ERROR loading {f}: {e}")
+                log_error(f"loading {f}: {e}")
                 continue
         
         # Populate self.sprites list
@@ -92,11 +93,11 @@ class SpriteManager:
             for idx, img in loaded_sprites.items():
                 self.sprites[idx] = img
                 
-        print(f"SUCCESS: Loaded {len(loaded_sprites)} sprites from directory (max index {max_index})")
+        log_info(f"Loaded {len(loaded_sprites)} sprites from directory (max index {max_index})")
 
     def _load_atlas_file(self, path):
         if not os.path.exists(path):
-            print(f"ERROR: Atlas file not found at {path}")
+            log_error(f"Atlas file not found at {path}")
             return
             
         try:
@@ -107,10 +108,10 @@ class SpriteManager:
             self.atlas.set_colorkey((0, 0, 0)) # Common for BMP sprites
             
             self._slice_sprites()
-            print(f"SUCCESS: Loaded Atlas: {path} ({self.atlas.get_width()}x{self.atlas.get_height()})")
+            log_info(f"Loaded Atlas: {path} ({self.atlas.get_width()}x{self.atlas.get_height()})")
 
         except Exception as e:
-            print(f"ERROR: Exception loading atlas: {e}")
+            log_error(f"Exception loading atlas: {e}")
             import traceback
             traceback.print_exc()
 
