@@ -108,9 +108,7 @@ class TestBug06CombatPropulsion:
         assert total_thrust > 0, f"Total thrust should be > 0, got {total_thrust}"
         
         # 7. Validate using our test validator (checks ability totals)
-        ability_totals = self.calculator.calculate_ability_totals(
-            [c for layer in ship.layers.values() for c in layer['components']]
-        )
+        ability_totals = self.calculator.calculate_ability_totals(ship.get_all_components())
         
         has_combat_propulsion = ability_totals.get('CombatPropulsion', 0) > 0
         has_command_control = ability_totals.get('CommandAndControl', 0) > 0

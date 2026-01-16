@@ -140,10 +140,8 @@ class TestMassAggregation:
         """Verify Ship.mass equals sum of all component masses + base_mass."""
         ship = ship_with_components
         
-        # Calculate expected mass
-        component_mass = sum(
-            c.mass for layer in ship.layers.values() for c in layer['components']
-        )
+        # Calculate expected mass using helper method
+        component_mass = sum(c.mass for c in ship.get_all_components())
         expected_mass = ship.base_mass + component_mass
         
         # Ship.mass should match
@@ -158,9 +156,8 @@ class TestHPAggregation:
         """Verify Ship.max_hp equals sum of component max_hp values."""
         ship = ship_with_components
         
-        expected_hp = sum(
-            c.max_hp for layer in ship.layers.values() for c in layer['components']
-        )
+        # Use helper method for iteration
+        expected_hp = sum(c.max_hp for c in ship.get_all_components())
         
         assert ship.max_hp == expected_hp, f"Ship.max_hp ({ship.max_hp}) != expected ({expected_hp})"
 
@@ -173,13 +170,9 @@ class TestDerelictStatus:
         """Verify ship is NOT derelict when CommandAndControl component is operational."""
         ship = ship_with_bridge
         
-        # Find bridge component
-        bridge = next(
-            (c for layer in ship.layers.values() 
-             for c in layer['components']
-             if hasattr(c, 'has_ability') and c.has_ability('CommandAndControl')),
-            None
-        )
+        # Find bridge component using helper method
+        cc_components = ship.get_components_by_ability('CommandAndControl', operational_only=False)
+        bridge = cc_components[0] if cc_components else None
         
         if bridge is None:
             pytest.skip("No CommandAndControl component found in test setup")

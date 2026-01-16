@@ -3,8 +3,6 @@ import sys
 import time
 import pygame
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 # Set dummy video driver for headless
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -13,20 +11,20 @@ from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.designs import create_interceptor, create_brick
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.registry import RegistryManager
+from game.core.constants import ROOT_DIR, COMPONENTS_FILE, MODIFIERS_FILE
 
 def run_battle(seed, log_filename):
     # Setup
     pygame.init()
     # Dummy display for UI components that might check it
     pygame.display.set_mode((1,1))
-    
+
     try:
         RegistryManager.instance().clear()
-        
-        base_path = ROOT_DIR
-        initialize_ship_data(base_path)
-        load_components(os.path.join(base_path, "data", "components.json"))
-        load_modifiers(os.path.join(base_path, "data", "modifiers.json"))
+
+        initialize_ship_data(ROOT_DIR)
+        load_components(COMPONENTS_FILE)
+        load_modifiers(MODIFIERS_FILE)
         
         # Create Ships
         t1 = [create_interceptor(x=float(i*100), y=100.0) for i in range(2)]

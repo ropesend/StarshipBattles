@@ -1,6 +1,7 @@
 import math
 from typing import Dict, Any, Optional, List, Union
 from game.core.logger import log_debug
+from game.core.config import PhysicsConfig
 
 # --- Base Ability ---
 class Ability:
@@ -90,14 +91,13 @@ class ResourceConsumption(Ability):
             self.trigger = 'constant' # Default for shortcut
 
     def update(self) -> bool:
-        TICK_DURATION = 0.01  # Fixed tick duration
         if self.trigger == 'constant':
             # Need access to ship's resources
             if self.component.ship and self.component.ship.resources:
                 res = self.component.ship.resources.get_resource(self.resource_name)
                 if res:
                     # Constant consumption is per second, multiply by tick duration
-                    cost = self.amount * TICK_DURATION
+                    cost = self.amount * PhysicsConfig.TICK_RATE
                     if not res.consume(cost):
                         return False # Starvation
                 else:
@@ -283,9 +283,9 @@ class VehicleLaunchAbility(Ability):
         
     def update(self) -> bool:
         if self.cooldown > 0:
-            self.cooldown -= 0.01
+            self.cooldown -= PhysicsConfig.TICK_RATE
         return True
-        
+
     def try_launch(self):
         if self.cooldown <= 0:
             self.cooldown = self.cycle_time
@@ -568,7 +568,7 @@ class WeaponAbility(Ability):
 
     def update(self) -> bool:
         if self.cooldown_timer > 0:
-            self.cooldown_timer -= 0.01
+            self.cooldown_timer -= PhysicsConfig.TICK_RATE
         return True
 
     def can_fire(self):

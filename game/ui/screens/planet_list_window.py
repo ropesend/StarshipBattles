@@ -1,6 +1,7 @@
 import pygame
 import pygame_gui
 import os
+from game.core.logger import log_info
 from game.strategy.data.planet import PLANET_RESOURCES
 from game.core.constants import DATA_DIR
 from game.core.json_utils import load_json, save_json
@@ -863,7 +864,7 @@ class PlanetListWindow(UIWindow):
                 state = self._capture_current_state()
                 self.presets[name] = state
                 self._save_presets_to_disk()
-                print(f"Saved Preset: {name}")
+                log_info(f"Saved Preset: {name}")
                 # Refresh Dropdown (Recreate)
                 # Keep rect
                 rect = self.dd_presets.relative_rect

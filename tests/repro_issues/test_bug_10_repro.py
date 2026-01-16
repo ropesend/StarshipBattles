@@ -22,19 +22,11 @@ def test_hull_missing_required_abilities():
     # Escort class auto-equips hull_escort
     ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="Escort")
     
-    # 1. Check CommandAndControl
-    has_command = any(c.has_ability('CommandAndControl') 
-                      for layer in ship.layers.values() 
-                      for c in layer['components'])
-    # Find the hull component
-    hull = None
-    for layer in ship.layers.values():
-        for c in layer['components']:
-            if c.type_str == 'Hull':
-                hull = c
-                break
-        if hull:
-            break
+    # 1. Check CommandAndControl using helper method
+    has_command = len(ship.get_components_by_ability('CommandAndControl', operational_only=False)) > 0
+
+    # Find the hull component using helper method
+    hull = next((c for c in ship.get_all_components() if c.type_str == 'Hull'), None)
     assert hull is not None, "Ship should have a hull component."
 
     # Check for requirement abilities (markers)

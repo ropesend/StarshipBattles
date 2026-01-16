@@ -1,5 +1,6 @@
 import pygame
 import math
+from game.core.logger import log_debug
 from game.ui.panels.battle_panels import ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel
 
 class BattleInterface:
@@ -69,28 +70,28 @@ class BattleInterface:
 
         # Draw "Return to Combat Lab" button if battle is over in test mode
         if self.scene.is_battle_over():
-            print(f"DEBUG: Battle is over. test_mode={self.scene.test_mode}")
+            log_debug(f"Battle is over. test_mode={self.scene.test_mode}")
             if self.scene.test_mode:
                 self._draw_return_button(screen)
             else:
-                print(f"DEBUG: Not drawing Combat Lab button because test_mode=False")
+                log_debug(f"Not drawing Combat Lab button because test_mode=False")
 
     def handle_click(self, mx, my, button):
         """Handle mouse clicks. Returns True if click was handled."""
 
-        print(f"DEBUG: BattleInterface.handle_click at ({mx}, {my})")
-        print(f"DEBUG: test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()}")
+        log_debug(f"BattleInterface.handle_click at ({mx}, {my})")
+        log_debug(f"test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()}")
 
         # Check "Return to Combat Lab" button first (highest priority)
         if self.scene.test_mode and self.scene.is_battle_over():
             button_rect = self._get_return_button_rect()
-            print(f"DEBUG: Return button rect: {button_rect}")
+            log_debug(f"Return button rect: {button_rect}")
             if button_rect.collidepoint(mx, my):
-                print(f"DEBUG: Return to Combat Lab button clicked!")
+                log_debug(f"Return to Combat Lab button clicked!")
                 self.scene.action_return_to_test_lab = True
                 return True
             else:
-                print(f"DEBUG: Click was not on return button")
+                log_debug(f"Click was not on return button")
 
         # Control Panel (Buttons usually top priority or overlay)
         # Check control panel first (e.g. End Battle button)
@@ -213,7 +214,7 @@ class BattleInterface:
 
     def _draw_return_button(self, screen):
         """Draw the Return to Combat Lab button (shown when test completes)."""
-        print(f"DEBUG: Drawing Return to Combat Lab button (test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()})")
+        log_debug(f"Drawing Return to Combat Lab button (test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()})")
         button_rect = self._get_return_button_rect()
 
         # Check hover state

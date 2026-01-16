@@ -1,11 +1,11 @@
 === BATTLE LOG STARTED ===
 Battle started: 1 vs 1 ships
-Ship 'T1' (Team 0): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30
-WARNING: T1 has LOW/NO TURN SPEED (0.0000)!
-Ship 'T2' (Team 1): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30
-WARNING: T2 has LOW/NO TURN SPEED (0.0000)!
-Ship 'T1' (Team 0): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
-WARNING: T1 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
-Ship 'T2' (Team 1): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
-WARNING: T2 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'Hero' (Team 0): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30
+WARNING: Hero has LOW/NO TURN SPEED (0.0000)!
+Ship 'Villain' (Team 1): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30
+WARNING: Villain has LOW/NO TURN SPEED (0.0000)!
+Ship 'Hero' (Team 0): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Hero has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'Villain' (Team 1): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Villain has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
 === BATTLE LOG ENDED ===

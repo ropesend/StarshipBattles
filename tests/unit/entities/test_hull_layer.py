@@ -130,9 +130,8 @@ class TestHullLayerMigration:
         # Should have armor in CORE layer
         assert any(c.id == "test_armor" for c in ship.layers[LayerType.CORE]['components'])
         
-        # Should NOT have Escort hull anywhere
-        for layer in ship.layers.values():
-            assert not any(c.id == "hull_escort" for c in layer['components'])
+        # Should NOT have Escort hull anywhere (using helper method)
+        assert not any(c.id == "hull_escort" for c in ship.get_all_components())
 
     def test_hull_layer_ordinality(self, registry_with_hull):
         """Verify HULL layer is index 0 in internal ordering for radius calculation."""

@@ -68,9 +68,8 @@ def test_marker_abilities_tallied_as_boolean(registry_setup):
     ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="TestClass")
     
     stats_calculator = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)
-    all_components = [c for layer in ship.layers.values() for c in layer['components']]
-    
-    totals = stats_calculator.calculate_ability_totals(all_components)
+    # Use helper method for iteration
+    totals = stats_calculator.calculate_ability_totals(ship.get_all_components())
     
     # Marker abilities from hull should be True
     assert totals.get("RequiresCommandAndControl") is True

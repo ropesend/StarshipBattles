@@ -1,26 +1,67 @@
 import os
 import pygame
 import logging
+import threading
 from game.core.json_utils import load_json
 
+
 class AssetManager:
+    """
+    Singleton manager for game assets (images, etc.).
+
+    Thread Safety:
+        - Instance creation is thread-safe via double-checked locking
+
+    Usage:
+        manager = AssetManager.instance()
+        image = manager.get_image("category", "key")
+
+    Testing:
+        - Use reset() to destroy instance completely
+        - Use clear() to reset caches but preserve instance
+    """
     _instance = None
-    
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(AssetManager, cls).__new__(cls)
-            cls._instance.initialized = False
-        return cls._instance
+    _lock = threading.Lock()
 
     def __init__(self):
-        if self.initialized:
-            return
-        self.initialized = True
+        if AssetManager._instance is not None:
+            raise Exception("AssetManager is a singleton. Use AssetManager.instance()")
         self.assets = {}  # Cache: {key: Surface} or {key: [Surfaces]}
         self.manifest = {}
         self.manifest_path = "assets/asset_manifest.json"
-        
-        # Mapping for fallbacks or specific logic
+        self.missing_texture = None
+
+    @classmethod
+    def instance(cls) -> 'AssetManager':
+        """
+        Get the singleton instance, creating it if necessary.
+
+        Thread-safe via double-checked locking pattern.
+
+        Returns:
+            The singleton AssetManager instance
+        """
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
+        return cls._instance
+
+    @classmethod
+    def reset(cls):
+        """
+        Completely destroy the singleton instance.
+
+        WARNING: For testing only! This destroys the singleton so a fresh
+        instance is created on the next access.
+        """
+        with cls._lock:
+            cls._instance = None
+
+    def clear(self):
+        """Reset all caches. Used for test isolation."""
+        self.assets = {}
+        self.manifest = {}
         self.missing_texture = None 
         
     def load_manifest(self, path=None):
@@ -138,12 +179,7 @@ class AssetManager:
         self.missing_texture = s
         return s
 
-# Global Accessor
-_manager = None
+# Global Accessor (uses singleton pattern now)
 def get_asset_manager():
-    global _manager
-    if not _manager:
-        _manager = AssetManager()
-        # Auto-load if default path exists? 
-        # Better to let the game init loop call load_manifest
-    return _manager
+    """Get the AssetManager singleton instance."""
+    return AssetManager.instance()

@@ -3,6 +3,7 @@ import pygame
 import pygame_gui
 import random
 import os
+from game.core.logger import log_debug, log_info, log_warning
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.empire import Empire
@@ -155,11 +156,11 @@ class StrategyScene:
         """Issue the command to the session."""
         # Use proper planet.id instead of Python id()
         cmd = IssueColonizeCommand(fleet.id, planet.id)
-        print(f"Issued IssueColonizeCommand for {planet.name}")
+        log_info(f"Issued IssueColonizeCommand for {planet.name}")
         
         result = self.session.handle_command(cmd)
         if not result.is_valid:
-            print(f"Command Failed: {result.message}")
+            log_warning(f"Command Failed: {result.message}")
         else:
              self.on_ui_selection(self.selected_fleet) # Refresh UI
 
@@ -208,25 +209,25 @@ class StrategyScene:
             if event.key == pygame.K_m:
                 if self.selected_fleet:
                     self.input_mode = 'MOVE'
-                    print("Input Mode: MOVE - Click designation for fleet.")
+                    log_debug("Input Mode: MOVE - Click designation for fleet.")
                 else:
-                    print("Select a fleet first.")
+                    log_debug("Select a fleet first.")
             elif event.key == pygame.K_j:
                 if self.selected_fleet:
                     self.input_mode = 'JOIN'
-                    print("Input Mode: JOIN - Select fleet to join.")
+                    log_debug("Input Mode: JOIN - Select fleet to join.")
                 else:
-                    print("Select a fleet first.")
+                    log_debug("Select a fleet first.")
             elif event.key == pygame.K_ESCAPE:
                 if getattr(self, 'input_mode', 'SELECT') in ('MOVE', 'COLONIZE_TARGET', 'JOIN'):
                     self.input_mode = 'SELECT'
-                    print("Input Mode: SELECT")
+                    log_debug("Input Mode: SELECT")
             elif event.key == pygame.K_c:
                 if self.selected_fleet:
                     self.input_mode = 'COLONIZE_TARGET'
-                    print("Input Mode: COLONIZE - Select target planet.")
+                    log_debug("Input Mode: COLONIZE - Select target planet.")
                 else:
-                    print("Select a fleet first.")
+                    log_debug("Select a fleet first.")
             # Quick Zoom Shortcuts
             elif event.key == pygame.K_g and (event.mod & pygame.KMOD_SHIFT):
                 self._zoom_to_galaxy()
@@ -248,7 +249,7 @@ class StrategyScene:
         else:
             # Switch to next human player's view
             next_player_id = self.human_player_ids[self.current_player_index]
-            print(f"Player {next_player_id + 1}'s turn to give orders.")
+            log_info(f"Player {next_player_id + 1}'s turn to give orders.")
             # Update UI label
             self._update_player_label()
             # Center on their home colony if they have one
@@ -270,7 +271,7 @@ class StrategyScene:
     def _process_full_turn(self):
         """Process the turn for all empires simultaneously."""
         self.turn_processing = True
-        print("Processing Turn...")
+        log_info("Processing Turn...")
         
         # Force Render "Processing" state
         screen = pygame.display.get_surface()
@@ -342,14 +343,14 @@ class StrategyScene:
                 valid_planets.append(p)
 
         if not valid_planets:
-            print("No colonizable planets at fleet location (Validation Failed).")
+            log_debug("No colonizable planets at fleet location (Validation Failed).")
             return
             
         # Execute
         if len(valid_planets) == 1:
             self._issue_colonize_order(self.selected_fleet, valid_planets[0])
         else:
-            print("Multiple planets detected. Requesting user selection...")
+            log_debug("Multiple planets detected. Requesting user selection...")
             self.ui.prompt_planet_selection(valid_planets, lambda p: self._issue_colonize_order(self.selected_fleet, p))
              
     def cycle_selection(self, obj_type, direction):
@@ -361,7 +362,7 @@ class StrategyScene:
             targets = self.current_empire.fleets
             
         if not targets:
-            print(f"No {obj_type}s to cycle.")
+            log_debug(f"No {obj_type}s to cycle.")
             return
 
         # Find current index
@@ -398,9 +399,9 @@ class StrategyScene:
             fx, fy = hex_to_pixel(target_hex, self.HEX_SIZE)
             self.camera.position.x = fx
             self.camera.position.y = fy
-            print(f"Camera centered on {obj} at {target_hex}")
+            log_debug(f"Camera centered on {obj} at {target_hex}")
         else:
-            print(f"Could not center camera on {obj}")
+            log_debug(f"Could not center camera on {obj}")
     
     def _zoom_to_galaxy(self):
         """Zoom out to show entire galaxy (Shift+G)."""
@@ -439,7 +440,7 @@ class StrategyScene:
         self.camera.target_zoom = max(self.camera.min_zoom, min(self.camera.max_zoom, fit_zoom))
         self.camera.zoom = self.camera.target_zoom  # Instant for this shortcut
         
-        print(f"Galaxy View: zoom={self.camera.zoom:.2f}")
+        log_debug(f"Galaxy View: zoom={self.camera.zoom:.2f}")
     
     def _zoom_to_system(self):
         """Zoom to 3x on the last selected system (Shift+S)."""
@@ -453,7 +454,7 @@ class StrategyScene:
                 target_sys = next((s for s in self.systems if self.selected_object in s.planets or self.selected_object in s.warp_points), None)
         
         if not target_sys:
-            print("No system selected for Shift+S zoom")
+            log_debug("No system selected for Shift+S zoom")
             return
         
         # Center on system
@@ -465,14 +466,14 @@ class StrategyScene:
         self.camera.target_zoom = 2.0
         self.camera.zoom = 2.0  # Instant for this shortcut
         
-        print(f"System View: {target_sys.name} at zoom=2.0")
+        log_debug(f"System View: {target_sys.name} at zoom=2.0")
              
     def on_build_ship_click(self):
         """Handle 'Build Ship' action."""
         if isinstance(self.selected_object, Planet):
             planet = self.selected_object
             if planet.owner_id == self.current_empire.id:
-                print(f"Queueing Ship at {planet}...")
+                log_info(f"Queueing Ship at {planet}...")
                 # Add to Queue via Command using planet.id (proper ID, not Python id())
                 from game.strategy.engine.commands import IssueBuildShipCommand
                 
@@ -480,13 +481,13 @@ class StrategyScene:
                 
                 res = self.session.handle_command(cmd)
                 if res.is_valid:
-                    print("Ship added to construction queue (via Command).")
+                    log_info("Ship added to construction queue (via Command).")
                 else:
-                    print(f"Build Failed: {res.message}")
+                    log_warning(f"Build Failed: {res.message}")
 
     def on_design_click(self):
         """Handle 'Design' button click - opens Ship Builder."""
-        print("Design button clicked - opening Ship Builder")
+        log_debug("Design button clicked - opening Ship Builder")
         self.action_open_design = True
 
     def update_input(self, dt, events):
@@ -523,25 +524,25 @@ class StrategyScene:
                 return True
             elif button == 3: # Right click cancels
                 self.input_mode = 'SELECT'
-                print("Input Mode: SELECT")
+                log_debug("Input Mode: SELECT")
                 return True
-                
+
         elif current_mode == 'JOIN':
             if button == 1: # Left Click to Join
                 self._handle_join_designation(mx, my)
                 return True
             elif button == 3: # Right click cancels
                 self.input_mode = 'SELECT'
-                print("Input Mode: SELECT")
+                log_debug("Input Mode: SELECT")
                 return True
-        
+
         elif current_mode == 'COLONIZE_TARGET':
             if button == 1: # Left Click to select planet
                 self._handle_colonize_designation(mx, my)
                 return True
             elif button == 3: # Right click cancels
                 self.input_mode = 'SELECT'
-                print("Input Mode: SELECT")
+                log_debug("Input Mode: SELECT")
                 return True
                 
         elif current_mode == 'SELECT':    
@@ -701,13 +702,13 @@ class StrategyScene:
         
         # Define Standard Move Logic as a closure/helper
         def execute_standard_move():
-            print(f"Calculating path to {target_hex}...")
+            log_debug(f"Calculating path to {target_hex}...")
             
             # Use Session to Preview Path (Visual Feedback / Validation)
             preview_path = self.session.preview_fleet_path(self.selected_fleet, target_hex)
             
             if preview_path:
-                print(f"Path confirmed: {len(preview_path)} steps.")
+                log_debug(f"Path confirmed: {len(preview_path)} steps.")
                 
                 # Issue Command via Session
                 from game.strategy.engine.commands import IssueMoveCommand
@@ -723,13 +724,13 @@ class StrategyScene:
                         
                     self.on_ui_selection(self.selected_fleet)
                 else:
-                    print(f"Move Failed: {result.message if result else 'Unknown'}")
+                    log_warning(f"Move Failed: {result.message if result else 'Unknown'}")
             else:
-                print("Cannot find path to target (Unreachable).")
+                log_warning("Cannot find path to target (Unreachable).")
 
         # Define Intercept Logic
         def execute_intercept():
-            print(f"Intercepting Fleet {target_fleet.id}...")
+            log_debug(f"Intercepting Fleet {target_fleet.id}...")
             from game.strategy.data.fleet import FleetOrder, OrderType
             # TODO: We need a Command for Intercept too!
             # For Phase 1/2, let's keep it direct or create IssueInterceptCommand?
@@ -773,19 +774,19 @@ class StrategyScene:
         target_fleet = self._get_fleet_at_hex(target_hex)
         
         if not target_fleet:
-            print("No fleet at target location.")
+            log_debug("No fleet at target location.")
             return # Keep input mode active? Or cancel?
             
         if target_fleet == self.selected_fleet:
-            print("Cannot join self.")
+            log_debug("Cannot join self.")
             return
             
         # Must be friendly? (Usually yes, but maybe mechanics allow boarding later? For now assume friendly)
         if target_fleet.owner_id != self.selected_fleet.owner_id:
-            print("Cannot join enemy fleet.")
+            log_debug("Cannot join enemy fleet.")
             return
             
-        print(f"Queueing Join Order with Fleet {target_fleet.id}...")
+        log_debug(f"Queueing Join Order with Fleet {target_fleet.id}...")
         
         # 1. Move Towards
         order_move = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
@@ -822,7 +823,7 @@ class StrategyScene:
         
         target_system = self._get_system_at_hex(target_hex)
         if not target_system:
-            print("No system at target location.")
+            log_debug("No system at target location.")
             self.input_mode = 'SELECT'
             return
         
@@ -835,7 +836,7 @@ class StrategyScene:
         candidates = [p for p in target_system.planets if p.owner_id is None and p.location == local_hex]
         
         if not candidates:
-            print(f"No colonizable planets at hex {target_hex}.")
+            log_debug(f"No colonizable planets at hex {target_hex}.")
             # Fallback? If user clicked empty space, they probably missed. 
             # Do NOT show system-wide list.
             self.input_mode = 'SELECT'
@@ -894,9 +895,9 @@ class StrategyScene:
             target_fleet.add_order(col)
             
             p_name = planet.name if planet else "Any Planet"
-            print(f"Mission Queued: Colonize {p_name} at {target_hex}")
+            log_info(f"Mission Queued: Colonize {p_name} at {target_hex}")
         else:
-            print("Cannot find path.")
+            log_warning("Cannot find path.")
 
     def request_colonize_order(self, fleet, planet):
         """Request colonization order from UI (e.g. detailed panel button)."""
@@ -920,7 +921,7 @@ class StrategyScene:
              self._queue_colonize_mission(target_hex, planet)
              self.on_ui_selection(fleet) # Refresh UI to show new orders
         else:
-             print("StrategyScene: Could not resolve system for planet.")
+             log_warning("StrategyScene: Could not resolve system for planet.")
 
     def calculate_hybrid_path(self, start_hex, end_hex):
         """

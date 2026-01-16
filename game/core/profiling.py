@@ -3,6 +3,7 @@ import json
 import uuid
 import os
 import logging
+import threading
 from functools import wraps
 from typing import Dict, List, Optional
 from datetime import datetime
@@ -10,25 +11,67 @@ from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
 
-class Profiler:
-    _instance = None
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(Profiler, cls).__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
+class Profiler:
+    """
+    Singleton profiler for performance measurement.
+
+    Thread Safety:
+        - Instance creation is thread-safe via double-checked locking
+
+    Usage:
+        profiler = Profiler.instance()
+        profiler.start()
+        with profile_block("my_operation"):
+            do_something()
+
+    Testing:
+        - Use reset() to destroy instance completely
+        - Use clear() to reset records but preserve instance
+    """
+    _instance = None
+    _lock = threading.Lock()
 
     def __init__(self):
-        if self._initialized:
-            return
-        
+        if Profiler._instance is not None:
+            raise Exception("Profiler is a singleton. Use Profiler.instance()")
         self.active = False
         self.session_id = str(uuid.uuid4())
         self.records: List[Dict] = []
         self.start_time = None
-        self._initialized = True
         logger.info(f"Profiler initialized with session ID: {self.session_id}")
+
+    @classmethod
+    def instance(cls) -> 'Profiler':
+        """
+        Get the singleton instance, creating it if necessary.
+
+        Thread-safe via double-checked locking pattern.
+
+        Returns:
+            The singleton Profiler instance
+        """
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
+        return cls._instance
+
+    @classmethod
+    def reset(cls):
+        """
+        Completely destroy the singleton instance.
+
+        WARNING: For testing only! This destroys the singleton so a fresh
+        instance is created on the next access.
+        """
+        with cls._lock:
+            cls._instance = None
+
+    def clear(self):
+        """Reset all records. Used for test isolation."""
+        self.records = []
+        self.session_id = str(uuid.uuid4())
 
     def start(self):
         """Enable profiling."""
@@ -98,8 +141,19 @@ class Profiler:
         except OSError as e:
             logger.error(f"Failed to save profiling history: {e}")
 
-# Global instance
-PROFILER = Profiler()
+# Global accessor for backwards compatibility (lazy, not module-level instantiation)
+class _ProfilerProxy:
+    """Proxy that delegates to Profiler.instance() for lazy initialization."""
+
+    def __getattr__(self, name):
+        return getattr(Profiler.instance(), name)
+
+    def __setattr__(self, name, value):
+        setattr(Profiler.instance(), name, value)
+
+
+PROFILER = _ProfilerProxy()
+
 
 def profile_action(name: str):
     """Decorator to profile a function."""

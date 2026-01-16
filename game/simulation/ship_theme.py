@@ -7,19 +7,45 @@ from game.core.profiling import profile_block
 from game.core.constants import ASSET_DIR
 
 class ShipThemeManager:
+    """
+    Singleton manager for ship visual themes.
+
+    Thread Safety:
+        - Instance creation is thread-safe via double-checked locking
+
+    Usage:
+        manager = ShipThemeManager.instance()
+        surface = manager.get_image("Federation", "Escort")
+
+    Testing:
+        - Use reset() to destroy instance completely
+        - Use clear() to reset caches but preserve instance
+    """
     _instance = None
-    _singleton_lock = threading.Lock()
-    
+    _lock = threading.Lock()
+
     @classmethod
-    def get_instance(cls):
-        with cls._singleton_lock:
-            if cls._instance is None:
-                cls._instance = ShipThemeManager()
-            return cls._instance
-            
+    def instance(cls) -> 'ShipThemeManager':
+        """
+        Get the singleton instance, creating it if necessary.
+
+        Thread-safe via double-checked locking pattern.
+
+        Returns:
+            The singleton ShipThemeManager instance
+        """
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
+        return cls._instance
+
+    # Backwards compatibility alias
+    get_instance = instance
+
     def __init__(self):
         if ShipThemeManager._instance is not None:
-            raise Exception("This class is a singleton!")
+            raise Exception("ShipThemeManager is a singleton. Use ShipThemeManager.instance()")
              
         # self.themes acts as the image cache: {theme_name: {class_name: surface}}
         self.themes = {}  
@@ -48,8 +74,13 @@ class ShipThemeManager:
 
     @classmethod
     def reset(cls):
-        """Thread-safe singleton reset for testing only."""
-        with cls._singleton_lock:
+        """
+        Completely destroy the singleton instance.
+
+        WARNING: For testing only! This destroys the singleton so a fresh
+        instance is created on the next access.
+        """
+        with cls._lock:
             if cls._instance is not None:
                 cls._instance.clear()  # Clean up state first
                 cls._instance = None

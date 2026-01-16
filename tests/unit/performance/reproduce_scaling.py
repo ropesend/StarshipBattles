@@ -1,22 +1,19 @@
-import os
 import unittest
 import pygame
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from game.simulation.components.component import load_components, create_component, load_modifiers
 from game.core.registry import RegistryManager
-import json
+from game.core.constants import COMPONENTS_FILE, MODIFIERS_FILE
 
 class TestComponentScaling(unittest.TestCase):
     def setUp(self):
         pygame.init()
         # Ensure clean state
         RegistryManager.instance().clear()
-        
-        # Load data using robust paths
-        load_components(os.path.join(ROOT_DIR, "data", "components.json"))
-        load_modifiers(os.path.join(ROOT_DIR, "data", "modifiers.json"))
+
+        # Load data using centralized paths
+        load_components(COMPONENTS_FILE)
+        load_modifiers(MODIFIERS_FILE)
 
     def tearDown(self):
         pygame.quit()

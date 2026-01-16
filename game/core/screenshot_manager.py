@@ -8,28 +8,58 @@ from game.core.constants import ROOT_DIR, DEBUG_SCREENSHOTS, SCREENSHOT_DIR
 logger = logging.getLogger(__name__)
 
 class ScreenshotManager:
-    _instance = None
-    _singleton_lock = threading.Lock()
+    """
+    Singleton manager for capturing screenshots.
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(ScreenshotManager, cls).__new__(cls)
-            cls._instance.setup()
-        return cls._instance
-    
+    Thread Safety:
+        - Instance creation is thread-safe via double-checked locking
+
+    Usage:
+        manager = ScreenshotManager.instance()
+        manager.capture(surface, label="battle_end")
+
+    Testing:
+        - Use reset() to destroy instance completely
+    """
+    _instance = None
+    _lock = threading.Lock()
+
+    def __init__(self):
+        if ScreenshotManager._instance is not None:
+            raise Exception("ScreenshotManager is a singleton. Use ScreenshotManager.instance()")
+        self._setup()
+
     @classmethod
-    def get_instance(cls):
+    def instance(cls) -> 'ScreenshotManager':
+        """
+        Get the singleton instance, creating it if necessary.
+
+        Thread-safe via double-checked locking pattern.
+
+        Returns:
+            The singleton ScreenshotManager instance
+        """
         if cls._instance is None:
-            cls._instance = cls()
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
         return cls._instance
+
+    # Backwards compatibility alias
+    get_instance = instance
 
     @classmethod
     def reset(cls):
-        """Thread-safe singleton reset for testing only."""
-        with cls._singleton_lock:
+        """
+        Completely destroy the singleton instance.
+
+        WARNING: For testing only! This destroys the singleton so a fresh
+        instance is created on the next access.
+        """
+        with cls._lock:
             cls._instance = None
 
-    def setup(self):
+    def _setup(self):
         self.enabled = DEBUG_SCREENSHOTS
         self.base_dir = SCREENSHOT_DIR
         if self.enabled and not os.path.exists(self.base_dir):

@@ -6,6 +6,7 @@ import pygame
 from game.simulation.components.component import LayerType
 from game.core.logger import log_info
 from game.core.json_utils import load_json
+from game.core.config import BattleConfig
 from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior,
                           FormationBehavior, DoNothingBehavior, StraightLineBehavior,
                           RotateOnlyBehavior, ErraticBehavior, OrbitBehavior, StationaryFireBehavior)
@@ -278,8 +279,12 @@ class TargetEvaluator:
                  val = -mass * (weight if weight > 0 else -factor)
                  
             elif r_type == 'has_weapons':
-                 has_wpns = any(c.has_ability('WeaponAbility') for layer in getattr(candidate, 'layers', {}).values() 
-                                   for c in layer.get('components', []))
+                 # Use Ship helper method if available
+                 if hasattr(candidate, 'get_components_by_ability'):
+                     has_wpns = len(candidate.get_components_by_ability('WeaponAbility', operational_only=False)) > 0
+                 else:
+                     has_wpns = any(c.has_ability('WeaponAbility') for layer in getattr(candidate, 'layers', {}).values()
+                                    for c in layer.get('components', []))
                  if has_wpns:
                      val = weight if weight > 0 else 1000
                  else:
@@ -359,22 +364,22 @@ class AIController:
 
     def find_target(self):
         """Find target based on strategy's targeting priority."""
-        candidates = self.grid.query_radius(self.ship.position, 200000)
-        enemies = [obj for obj in candidates 
-                   if obj.is_alive and hasattr(obj, 'team_id') 
+        candidates = self.grid.query_radius(self.ship.position, BattleConfig.TARGET_QUERY_RADIUS)
+        enemies = [obj for obj in candidates
+                   if obj.is_alive and hasattr(obj, 'team_id')
                    and obj.team_id == self.enemy_team_id]
-        
+
         resolved = self.get_resolved_strategy()
         targeting_policy = resolved['targeting']
         rules = targeting_policy.get('rules', [])
-        
+
         # Special case: check for missiles if policy cares about them
         check_missiles = any(r.get('type') in ['pdc_arc', 'missiles_in_pdc_arc'] for r in rules)
-        
+
         if check_missiles:
-             missiles = [obj for obj in self.grid.query_radius(self.ship.position, 1500) 
+             missiles = [obj for obj in self.grid.query_radius(self.ship.position, BattleConfig.MISSILE_QUERY_RADIUS)
                          if (getattr(obj, 'type', '') == 'missile' or getattr(obj, 'type', '') == AttackType.MISSILE)
-                         and obj.is_alive 
+                         and obj.is_alive
                          and getattr(obj, 'team_id', -1) != self.ship.team_id]
              enemies.extend(missiles)
         
@@ -401,23 +406,23 @@ class AIController:
         count_needed = max_targets - 1
         current = self.ship.current_target
         
-        candidates = self.grid.query_radius(self.ship.position, 200000)
-        enemies = [obj for obj in candidates 
-                   if obj.is_alive and hasattr(obj, 'team_id') 
+        candidates = self.grid.query_radius(self.ship.position, BattleConfig.TARGET_QUERY_RADIUS)
+        enemies = [obj for obj in candidates
+                   if obj.is_alive and hasattr(obj, 'team_id')
                    and obj.team_id == self.enemy_team_id
                    and obj != current]
-        
+
         resolved = self.get_resolved_strategy()
         targeting_policy = resolved['targeting']
         rules = targeting_policy.get('rules', [])
-        
+
         # Check for missiles if policy cares about them
         check_missiles = any(r.get('type') in ['pdc_arc', 'missiles_in_pdc_arc'] for r in rules)
-        
+
         if check_missiles:
-            missiles = [obj for obj in self.grid.query_radius(self.ship.position, 1500) 
+            missiles = [obj for obj in self.grid.query_radius(self.ship.position, BattleConfig.MISSILE_QUERY_RADIUS)
                         if (getattr(obj, 'type', '') == 'missile' or getattr(obj, 'type', '') == AttackType.MISSILE)
-                        and obj.is_alive 
+                        and obj.is_alive
                         and getattr(obj, 'team_id', -1) != self.ship.team_id
                         and obj != current]
             enemies.extend(missiles)
@@ -441,13 +446,19 @@ class AIController:
         """Static version for evaluator."""
         total_max = sum(layer.get('max_hp_pool', 0) for layer in getattr(ship, 'layers', {}).values())
         total_current = sum(layer.get('hp_pool', 0) for layer in getattr(ship, 'layers', {}).values())
-        
+
         if total_max == 0:
-            for layer in getattr(ship, 'layers', {}).values():
-                for comp in layer.get('components', []):
+            # Use Ship helper method if available
+            if hasattr(ship, 'get_all_components'):
+                for comp in ship.get_all_components():
                     total_max += getattr(comp, 'max_hp', 0)
                     total_current += getattr(comp, 'current_hp', getattr(comp, 'max_hp', 0))
-        
+            else:
+                for layer in getattr(ship, 'layers', {}).values():
+                    for comp in layer.get('components', []):
+                        total_max += getattr(comp, 'max_hp', 0)
+                        total_current += getattr(comp, 'current_hp', getattr(comp, 'max_hp', 0))
+
         return total_current / total_max if total_max > 0 else 1.0
     
     def _get_hp_percent(self, ship):
@@ -614,27 +625,27 @@ class AIController:
 
     def check_avoidance(self):
         """Check for nearby collisions."""
-        nearby = self.grid.query_radius(self.ship.position, 1000)
+        nearby = self.grid.query_radius(self.ship.position, BattleConfig.AVOIDANCE_RADIUS)
         closest = None
         min_d = float('inf')
-        
+
         for obj in nearby:
             if obj == self.ship: continue
             if not obj.is_alive: continue
             if not hasattr(obj, 'team_id'): continue
-            
+
             d = self.ship.position.distance_to(obj.position)
-            thresh = self.ship.radius + getattr(obj, 'radius', 40) + 100
-            
+            thresh = self.ship.radius + getattr(obj, 'radius', 40) + BattleConfig.COLLISION_BUFFER
+
             if d < thresh:
                 if d < min_d:
                     min_d = d
                     closest = obj
-        
+
         if closest:
             vec = self.ship.position - closest.position
             if vec.length() == 0: vec = pygame.math.Vector2(1,0)
-            return self.ship.position + vec.normalize() * 500
+            return self.ship.position + vec.normalize() * BattleConfig.AVOIDANCE_TARGET_DISTANCE
         return None
 
     def navigate_to(self, target_pos, stop_dist=0, precise=False):

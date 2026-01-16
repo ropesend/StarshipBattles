@@ -1,5 +1,6 @@
 import typing
 from typing import Dict, List, Optional, Any, Union
+from game.core.config import PhysicsConfig
 
 class ResourceState:
     """
@@ -36,10 +37,8 @@ class ResourceState:
             
     def update(self):
         """Apply regeneration for one tick."""
-        # Tick duration is fixed at 0.01 (100 ticks per second)
-        TICK_DURATION = 0.01
         if self.regen_rate > 0 and self.current_value < self.max_value:
-            self.current_value = min(self.max_value, self.current_value + (self.regen_rate * TICK_DURATION))
+            self.current_value = min(self.max_value, self.current_value + (self.regen_rate * PhysicsConfig.TICK_RATE))
 
 class ResourceRegistry:
     """

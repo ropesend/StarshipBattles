@@ -2,13 +2,11 @@
 Stress Test Performance Script for Starship Battles.
 Measures update and collision detection performance with many entities.
 """
-import os
 import pygame
 import cProfile
 import pstats
 import random
-
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+import os
 
 # Headless environment
 os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -17,18 +15,17 @@ from game.simulation.designs import create_brick, create_interceptor
 from game.simulation.components.component import load_components, load_modifiers
 from game.simulation.entities.ship import initialize_ship_data
 from game.core.registry import RegistryManager
-from game.core.constants import AttackType
+from game.core.constants import AttackType, ROOT_DIR, COMPONENTS_FILE, MODIFIERS_FILE
 
 def run_stress_test():
     try:
         pygame.init()
         # Fallback display initialization for headless
         pygame.display.set_mode((100, 100))
-        
-        base_path = ROOT_DIR
-        load_components(os.path.join(base_path, "data/components.json"))
-        load_modifiers(os.path.join(base_path, "data/modifiers.json"))
-        initialize_ship_data(base_path)
+
+        load_components(COMPONENTS_FILE)
+        load_modifiers(MODIFIERS_FILE)
+        initialize_ship_data(ROOT_DIR)
         
         all_ships = []
         print("Spawning 100 ships...")

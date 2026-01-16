@@ -39,7 +39,13 @@ ROOT_DIR = os.path.dirname(GAME_DIR)
 
 ASSET_DIR = os.path.join(ROOT_DIR, "assets")
 DATA_DIR = os.path.join(ROOT_DIR, "data")
+SHIPS_DIR = os.path.join(ROOT_DIR, "ships")
 SCREENSHOT_DIR = os.path.join(ROOT_DIR, "screenshots")
+
+# Standard data file paths
+COMPONENTS_FILE = os.path.join(DATA_DIR, "components.json")
+MODIFIERS_FILE = os.path.join(DATA_DIR, "modifiers.json")
+VEHICLE_CLASSES_FILE = os.path.join(DATA_DIR, "vehicleclasses.json")
 
 # Debug Flags
 DEBUG_SCREENSHOTS = True

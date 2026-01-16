@@ -6,12 +6,11 @@ import json
 import os
 import sys
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component, LayerType, create_component
 from game.core.registry import RegistryManager
 from game.simulation.components.component import load_components
+from game.core.constants import ROOT_DIR
 
 def load_json_data(filepath):
     with open(filepath, 'r') as f:
@@ -58,7 +57,7 @@ def run_generation():
         # Load test registry data
         RegistryManager.instance().clear()
 
-        test_data_dir = os.path.join(ROOT_DIR, "tests/unit/data")
+        test_data_dir = os.path.join(ROOT_DIR, "tests", "unit", "data")
 
         # Load components - assumes test_components.json or similar exists?
         # The original script just called load_components() which defaults to data/components.json

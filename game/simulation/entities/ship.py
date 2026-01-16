@@ -285,21 +285,20 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         """Calculate maximum range of all equipped weapons."""
         from game.simulation.components.abilities import SeekerWeaponAbility, WeaponAbility
         max_rng = 0.0
-        for layer in self.layers.values():
-            for comp in layer['components']:
-                for ab in comp.ability_instances:
-                    # Polymorphic check using isinstance (Phase 2 Task 2.5)
-                    if not isinstance(ab, WeaponAbility):
-                        continue
-                    
-                    rng = getattr(ab, 'range', 0.0)
-                    # For SeekerWeapons, calculate range from endurance if not set
-                    if isinstance(ab, SeekerWeaponAbility):
-                        if rng <= 0 and hasattr(ab, 'projectile_speed') and hasattr(ab, 'endurance'):
-                            rng = ab.projectile_speed * ab.endurance
-                             
-                    if rng > max_rng:
-                        max_rng = rng
+        for comp in self.get_all_components():
+            for ab in comp.ability_instances:
+                # Polymorphic check using isinstance (Phase 2 Task 2.5)
+                if not isinstance(ab, WeaponAbility):
+                    continue
+
+                rng = getattr(ab, 'range', 0.0)
+                # For SeekerWeapons, calculate range from endurance if not set
+                if isinstance(ab, SeekerWeaponAbility):
+                    if rng <= 0 and hasattr(ab, 'projectile_speed') and hasattr(ab, 'endurance'):
+                        rng = ab.projectile_speed * ab.endurance
+
+                if rng > max_rng:
+                    max_rng = rng
 
         return max_rng if max_rng > 0 else 0.0
 
@@ -315,10 +314,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
              self.resources.update()
 
         # 2. Update Components (Consumption, Cooldowns) - Tick-based
-        for layer in self.layers.values():
-            for comp in layer['components']:
-                if comp.is_active:
-                    comp.update()
+        for comp in self.get_all_components():
+            if comp.is_active:
+                comp.update()
         
         # 3. Physics (Thrust calc handling operational engines)
         self.update_physics_movement()
@@ -353,11 +351,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         requires_command = self.get_total_ability_value('RequiresCommandAndControl') > 0
 
         if requires_command:
-            has_command = any(
-                c.is_operational and c.has_ability('CommandAndControl')
-                for layer in self.layers.values()
-                for c in layer['components']
-            )
+            # Use get_components_by_ability with operational_only=True
+            has_command = len(self.get_components_by_ability('CommandAndControl', operational_only=True)) > 0
 
             if not has_command:
                 if not self.is_derelict:
@@ -631,8 +626,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     
     def get_ability_total(self, ability_name: str) -> Union[float, int, bool]:
         """Get total value of a specific ability across all components."""
-        all_components = [c for layer in self.layers.values() for c in layer['components']]
-        
+        all_components = self.get_all_components()
+
         if not self.stats_calculator:
              self.stats_calculator = ShipStatsCalculator(get_vehicle_classes())
              
@@ -652,12 +647,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             Sum of primary value attribute from all matching abilities
         """
         total = 0.0
-        for layer in self.layers.values():
-            for comp in layer['components']:
-                if operational_only and not comp.is_operational:
-                    continue
-                for ab in comp.get_abilities(ability_name):
-                    total += ab.get_primary_value()
+        for comp in self.get_all_components():
+            if operational_only and not comp.is_operational:
+                continue
+            for ab in comp.get_abilities(ability_name):
+                total += ab.get_primary_value()
         return total
     
     def get_total_sensor_score(self) -> float:

@@ -1,6 +1,7 @@
 import os
 import pygame
 import pygame_gui
+from game.core.logger import log_debug
 from game.strategy.data.fleet import OrderType
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
@@ -625,8 +626,8 @@ class StrategyInterface:
                      
                      # Find System
                      system = self.scene.galaxy.get_system_of_object(obj)
-                     if not system: 
-                         print("Colonize: Fleet not in system?")
+                     if not system:
+                         log_debug("Colonize: Fleet not in system?")
                          return
                          
                      # Find planets at this location (SYSTEM)
@@ -638,7 +639,7 @@ class StrategyInterface:
                                  
                      if not candidates:
                          # Feedback?
-                         print("No unowned planets at this location.")
+                         log_debug("No unowned planets at this location.")
                          return
                          
                      if len(candidates) == 1:

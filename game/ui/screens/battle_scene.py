@@ -8,6 +8,7 @@ import math
 import random
 import time
 
+from game.core.logger import log_debug, log_info, log_warning
 from game.ai.controller import AIController
 from game.ui.renderer.game_renderer import draw_ship
 from game.ui.renderer.camera import Camera
@@ -118,7 +119,7 @@ class BattleScene:
         self.headless_start_time = None
         if headless:
             self.headless_start_time = time.time()
-            print("\n=== STARTING HEADLESS BATTLE ===")
+            log_info("=== STARTING HEADLESS BATTLE ===")
 
         # Use BattleService to set up and start the battle
         self._battle_service.create_battle(seed=seed, enable_logging=True)
@@ -155,22 +156,22 @@ class BattleScene:
             fuel = s.resources.get_value("fuel")
             status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f} Derelict={s.is_derelict}"
             self.engine.logger.log(status_msg)
-            print(status_msg)
+            log_info(status_msg)
 
             if s.is_derelict:
                 warn_msg = f"CRITICAL WARNING: Ship {s.name} is DERELICT on start! (Bridge? Engines? LifeSupport? Power?)"
                 self.engine.logger.log(warn_msg)
-                print(warn_msg)
+                log_warning(warn_msg)
 
             if s.total_thrust <= 0:
                 warn_msg = f"WARNING: {s.name} has NO THRUST!"
                 self.engine.logger.log(warn_msg)
-                print(warn_msg)
+                log_warning(warn_msg)
 
             if s.turn_speed <= 0.01:
                 warn_msg = f"WARNING: {s.name} has LOW/NO TURN SPEED ({s.turn_speed:.4f})! Mass too high for thrusters?"
                 self.engine.logger.log(warn_msg)
-                print(warn_msg)
+                log_warning(warn_msg)
         
     
     def update(self, events):
@@ -187,7 +188,7 @@ class BattleScene:
             # Check if test should end (engine handles all end conditions)
             if self.engine.is_battle_over():
                 # Test complete - verify results and populate results dict
-                print(f"DEBUG: Test complete! ticks={self.test_tick_count}")
+                log_debug(f"Test complete! ticks={self.test_tick_count}")
 
                 # Populate results dict (similar to headless mode)
                 if not hasattr(self.test_scenario, 'results') or not self.test_scenario.results:
@@ -197,8 +198,8 @@ class BattleScene:
 
                 # Run verification (populates additional results)
                 self.test_scenario.passed = self.test_scenario.verify(self.engine)
-                print(f"DEBUG: Test {'PASSED' if self.test_scenario.passed else 'FAILED'}")
-                print(f"DEBUG: Results populated: {list(self.test_scenario.results.keys())}")
+                log_debug(f"Test {'PASSED' if self.test_scenario.passed else 'FAILED'}")
+                log_debug(f"Results populated: {list(self.test_scenario.results.keys())}")
 
                 # Log test execution (for UI vs headless comparison)
                 try:
@@ -206,7 +207,7 @@ class BattleScene:
                     runner = TestRunner()
                     runner._log_test_execution(self.test_scenario, headless=False)
                 except Exception as e:
-                    print(f"Warning: Failed to log UI test execution: {e}")
+                    log_warning(f"Failed to log UI test execution: {e}")
 
                 # Signal test completion (keep scenario reference for results retrieval)
                 self.test_completed = True
@@ -344,11 +345,11 @@ class BattleScene:
         """Print summary of headless battle results."""
         # Skip summary for test mode - test framework handles results
         if self.test_mode:
-            print(f"Headless test complete: {self.sim_tick_counter} ticks")
+            log_info(f"Headless test complete: {self.sim_tick_counter} ticks")
             return
 
         # For normal headless battles, print summary if UI supports it
         if hasattr(self.ui, 'print_headless_summary'):
             self.ui.print_headless_summary(self.headless_start_time, self.sim_tick_counter)
         else:
-            print(f"Headless battle complete: {self.sim_tick_counter} ticks")
+            log_info(f"Headless battle complete: {self.sim_tick_counter} ticks")

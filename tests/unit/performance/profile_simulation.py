@@ -2,13 +2,11 @@
 Performance profiling for Starship Battles simulation.
 Runs a headless battle simulation and outputs profiling data.
 """
-import os
 import cProfile
 import pstats
 import random
 import io
-
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+import os
 
 # Minimal pygame init
 os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -21,14 +19,14 @@ from game.ai.controller import AIController
 from game.engine.spatial import SpatialGrid
 from game.simulation.designs import create_brick, create_interceptor
 from game.simulation.components.component import load_components, load_modifiers
+from game.core.constants import COMPONENTS_FILE, MODIFIERS_FILE
 
 def run_battle_simulation(num_ships_per_team=10, num_ticks=300):
     """Run a headless battle simulation for profiling."""
-    
+
     # Load components
-    base_path = ROOT_DIR
-    load_components(os.path.join(base_path, "data/components.json"))
-    load_modifiers(os.path.join(base_path, "data/modifiers.json"))
+    load_components(COMPONENTS_FILE)
+    load_modifiers(MODIFIERS_FILE)
     
     # Create ships
     ships = []

@@ -7,11 +7,12 @@ import os
 import pygame
 import pygame_gui
 from pygame_gui.elements import (
-    UIPanel, UILabel, UIButton, UIDropDownMenu, 
+    UIPanel, UILabel, UIButton, UIDropDownMenu,
     UITextEntryLine, UISelectionList, UIWindow
 )
 from pygame_gui.windows import UIConfirmationDialog
 
+from game.core.logger import log_info
 from game.core.profiling import profile_action, profile_block
 
 from game.simulation.entities.ship import Ship, LayerType
@@ -757,7 +758,7 @@ class BuilderSceneGUI:
             self.layer_panel.rebuild()
             self.left_panel.update_component_list() # Update available components based on hull type
             self.rebuild_modifier_ui()
-            print(message)
+            log_info(message)
         elif message:
             self.show_error(message)
 

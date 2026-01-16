@@ -72,17 +72,18 @@ class TestStrategySystem(unittest.TestCase):
         me.position = pygame.math.Vector2(0, 0)
          
         # Target 1: Far but has weapons
-        t1 = MagicMock()
+        # Use spec to avoid MagicMock auto-generating get_components_by_ability
+        t1 = MagicMock(spec=['position', 'mass', 'layers'])
         t1.position = pygame.math.Vector2(1000, 0)
         t1.mass = 100
-        # Mock has_weapons logic: checks components damage attribute
-        # We need to mock the layer structure
+        # Mock has_weapons logic: component with WeaponAbility
         c1 = MagicMock()
         c1.damage = 10
+        c1.has_ability = lambda name: name == 'WeaponAbility'
         t1.layers = {'core': {'components': [c1]}}
-        
+
         # Target 2: Near but no weapons
-        t2 = MagicMock()
+        t2 = MagicMock(spec=['position', 'mass', 'layers'])
         t2.position = pygame.math.Vector2(100, 0)
         t2.mass = 100
         t2.layers = {'core': {'components': []}}

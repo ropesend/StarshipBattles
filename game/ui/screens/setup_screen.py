@@ -5,6 +5,7 @@ import glob
 import tkinter as tk
 from tkinter import filedialog, simpledialog
 
+from game.core.logger import log_info, log_warning, log_error
 from game.simulation.entities.ship import Ship
 from game.ai.controller import StrategyManager
 from game.core.json_utils import load_json, load_json_required, save_json
@@ -207,9 +208,9 @@ class BattleSetupScreen:
         serialize_team(self.team2, data["team2"])
             
         if save_json(filepath, data):
-            print(f"Saved battle setup to {filepath}")
+            log_info(f"Saved battle setup to {filepath}")
         else:
-            print(f"Error saving setup to {filepath}")
+            log_error(f"Error saving setup to {filepath}")
 
     def load_setup(self):
         """Open dialog to load a battle setup."""
@@ -260,7 +261,7 @@ class BattleSetupScreen:
                              entry['rotation_mode'] = item['rotation_mode']
                         out_list.append(entry)
                     else:
-                        print(f"Warning: Design {item['design_file']} not found")
+                        log_warning(f"Design {item['design_file']} not found")
 
             load_team(data.get('team1', []), new_team1)
             load_team(data.get('team2', []), new_team2)
@@ -268,10 +269,10 @@ class BattleSetupScreen:
             self.team1 = new_team1
             self.team2 = new_team2
             self.ai_dropdown_open = None
-            print(f"Loaded setup from {filepath}")
-            
+            log_info(f"Loaded setup from {filepath}")
+
         except Exception as e:
-            print(f"Error loading setup: {e}")
+            log_error(f"Error loading setup: {e}")
 
     def add_formation_to_team(self, formation, team_idx):
         """Add a formation to a specific team with a selected ship design."""
@@ -361,7 +362,7 @@ class BattleSetupScreen:
                     'rotation_mode': rot_mode
                 })
         except Exception as e:
-            print(f"Error adding formation: {e}")
+            log_error(f"Error adding formation: {e}")
 
     def get_team_display_groups(self, team_list):
         """Group team entries for display."""

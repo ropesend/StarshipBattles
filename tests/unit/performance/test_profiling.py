@@ -8,6 +8,8 @@ from game.core.profiling import Profiler, profile_action, profile_block, PROFILE
 class TestProfiling(unittest.TestCase):
     def setUp(self):
         # Reset singleton state for testing
+        Profiler.reset()
+        # Ensure fresh instance
         PROFILER.active = False
         PROFILER.records = []
         # Use unique file name to prevent parallel test conflicts
@@ -23,10 +25,12 @@ class TestProfiling(unittest.TestCase):
                 pass # Win32 file locking sometimes
 
     def test_singleton(self):
-        p1 = Profiler()
-        p2 = Profiler()
+        # Use instance() for singleton access
+        p1 = Profiler.instance()
+        p2 = Profiler.instance()
         self.assertIs(p1, p2)
-        self.assertIs(p1, PROFILER)
+        # PROFILER proxy delegates to same instance
+        self.assertIs(p1, Profiler.instance())
 
     def test_toggling(self):
         self.assertFalse(PROFILER.is_active())

@@ -155,14 +155,13 @@ def get_resource_consumption(ship, res_name):
     """
     from game.simulation.systems.resource_manager import ResourceConsumption
     total = 0
-    # Iterate all components in all layers
-    for layer in ship.layers.values():
-        for comp in layer['components']:
-            if hasattr(comp, 'ability_instances'):
-                for ability in comp.ability_instances:
-                    if isinstance(ability, ResourceConsumption):
-                        if ability.resource_name == res_name and ability.trigger == 'constant':
-                            total += ability.amount
+    # Use Ship helper method for iteration
+    for comp in ship.get_all_components():
+        if hasattr(comp, 'ability_instances'):
+            for ability in comp.ability_instances:
+                if isinstance(ability, ResourceConsumption):
+                    if ability.resource_name == res_name and ability.trigger == 'constant':
+                        total += ability.amount
     return total
 
 def get_resource_endurance(ship, res_name):

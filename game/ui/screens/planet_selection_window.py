@@ -2,6 +2,8 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UISelectionList, UIButton, UILabel, UITextBox
 
+from game.core.logger import log_debug
+
 class PlanetSelectionWindow(UIWindow):
     def __init__(self, rect, manager, planets, on_selection_callback, formatter_callback):
         # Enforce minimum size if rect is too small
@@ -82,16 +84,16 @@ class PlanetSelectionWindow(UIWindow):
         
         if self.btn_select.check_pressed():
             selected_name = self.selection_list.get_single_selection()
-            print(f"PlanetSelectionWindow: Confirm Pressed. Selection: {selected_name}")
+            log_debug(f"PlanetSelectionWindow: Confirm Pressed. Selection: {selected_name}")
             if selected_name:
                 # Find planet
                 choice = next((p for p in self.planets if p.name == selected_name), None)
                 if choice:
-                     print(f"PlanetSelectionWindow: Calling callback with {choice.name}")
+                     log_debug(f"PlanetSelectionWindow: Calling callback with {choice.name}")
                      self.callback(choice)
                      self.kill()
             else:
-                print("PlanetSelectionWindow: No selection made.")
+                log_debug("PlanetSelectionWindow: No selection made.")
 
         if self.btn_any.check_pressed():
             # "Any Planet" -> Return None to defer selection to arrival

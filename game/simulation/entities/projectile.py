@@ -2,6 +2,7 @@ import pygame
 from game.engine.physics import PhysicsBody
 from game.core.logger import log_debug, log_event
 from game.core.constants import AttackType
+from game.core.config import PhysicsConfig
 
 class Projectile(PhysicsBody):
     def __init__(self, owner, position, velocity, damage, range_val, endurance, proj_type, source_weapon=None, **kwargs):
@@ -52,8 +53,7 @@ class Projectile(PhysicsBody):
     def update(self):
         if not self.is_alive: return
 
-        # Fixed tick duration (1 tick = 0.01s)
-        dt = 0.01
+        dt = PhysicsConfig.TICK_RATE
 
         # Endurance check
         if self.endurance is not None:

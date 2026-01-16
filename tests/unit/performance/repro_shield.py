@@ -1,13 +1,11 @@
 import unittest
-import os
 import pygame
-
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import load_components, create_component, LayerType
 from game.simulation.entities.ship_stats import ShipStatsCalculator
 from game.core.registry import RegistryManager
+from game.core.constants import ROOT_DIR, COMPONENTS_FILE
 
 class TestShieldRepro(unittest.TestCase):
 
@@ -15,10 +13,9 @@ class TestShieldRepro(unittest.TestCase):
         pygame.init()
         # Ensure clean state
         RegistryManager.instance().clear()
-        
-        base_dir = ROOT_DIR
-        initialize_ship_data(base_dir)
-        load_components(os.path.join(base_dir, "data", "components.json"))
+
+        initialize_ship_data(ROOT_DIR)
+        load_components(COMPONENTS_FILE)
         self.ship = Ship("ShieldRepro", 0, 0, (255, 255, 255), ship_class="Cruiser")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.calculator = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)

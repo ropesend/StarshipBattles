@@ -3,6 +3,7 @@ import argparse
 import pygame
 import os
 
+from game.core.logger import log_debug, log_info, log_warning, log_error
 from game.simulation.entities.ship import Ship, LayerType
 from game.core.config import DisplayConfig, PhysicsConfig
 
@@ -226,7 +227,7 @@ class Game:
                     # Profiling Toggle
                     elif event.type == pygame.KEYDOWN and event.key == pygame.K_F9:
                         active = PROFILER.toggle()
-                        print(f"Profiling {'ENABLED' if active else 'DISABLED'}")
+                        log_info(f"Profiling {'ENABLED' if active else 'DISABLED'}")
 
                     elif event.type == pygame.VIDEORESIZE:
                         self._handle_resize(event.w, event.h)
@@ -240,7 +241,7 @@ class Game:
                     # Forward events to current scene ONLY if state didn't change
                     # (prevents event from being processed by both old and new scene)
                     if self.state != state_before:
-                        print(f"DEBUG: State changed from {state_before} to {self.state}, skipping scene event forwarding")
+                        log_debug(f"State changed from {state_before} to {self.state}, skipping scene event forwarding")
                         continue
 
                     if self.state == MENU:
@@ -294,28 +295,28 @@ class Game:
         
         if self.state == BATTLE:
             if self.battle_scene.handle_click(mx, my, event.button, self.screen.get_size()):
-                print(f"DEBUG: Battle scene handled click")
-                print(f"DEBUG: action_return_to_test_lab={self.battle_scene.action_return_to_test_lab}")
-                print(f"DEBUG: action_return_to_setup={self.battle_scene.action_return_to_setup}")
+                log_debug(f"Battle scene handled click")
+                log_debug(f"action_return_to_test_lab={self.battle_scene.action_return_to_test_lab}")
+                log_debug(f"action_return_to_setup={self.battle_scene.action_return_to_setup}")
 
                 # Handle return to Combat Lab (from test mode)
                 if self.battle_scene.action_return_to_test_lab:
-                    print(f"DEBUG: Returning to Combat Lab from test")
+                    log_debug(f"Returning to Combat Lab from test")
                     self.battle_scene.action_return_to_test_lab = False
                     self.battle_scene.test_mode = False  # Reset test mode
                     self.test_lab_scene.reset_selection()  # Clear selected test to prevent auto-rerun
                     self.start_test_lab()
                 # Handle return to battle setup
                 elif self.battle_scene.action_return_to_setup:
-                    print(f"DEBUG: Returning to battle setup")
-                    print(f"DEBUG: return_state={getattr(self, 'return_state', 'NOT SET')}")
+                    log_debug(f"Returning to battle setup")
+                    log_debug(f"return_state={getattr(self, 'return_state', 'NOT SET')}")
                     self.battle_scene.action_return_to_setup = False
 
                     if hasattr(self, 'return_state') and self.return_state == TEST_LAB:
-                        print(f"DEBUG: return_state is TEST_LAB, going to test lab")
+                        log_debug(f"return_state is TEST_LAB, going to test lab")
                         self.start_test_lab()
                     else:
-                        print(f"DEBUG: return_state is not TEST_LAB, going to battle setup")
+                        log_debug(f"return_state is not TEST_LAB, going to battle setup")
                         self.start_battle_setup(preserve_teams=True)
         elif self.state == STRATEGY:
             self.strategy_scene.handle_click(mx, my, event.button)
@@ -439,10 +440,10 @@ class Game:
         elif self.battle_setup.action_start_headless:
             self.battle_setup.action_start_headless = False
             team1, team2 = self.battle_setup.get_ships()
-            # Print initial info
-            print(f"Team 1: {len(team1)} ships ({sum(s.max_hp for s in team1):.0f} total HP)")
-            print(f"Team 2: {len(team2)} ships ({sum(s.max_hp for s in team2):.0f} total HP)")
-            print("Running simulation...")
+            # Log initial info
+            log_info(f"Team 1: {len(team1)} ships ({sum(s.max_hp for s in team1):.0f} total HP)")
+            log_info(f"Team 2: {len(team2)} ships ({sum(s.max_hp for s in team2):.0f} total HP)")
+            log_info("Running simulation...")
             self.start_battle(team1, team2, headless=True)
         elif self.battle_setup.action_return_to_menu:
             self.battle_setup.action_return_to_menu = False
@@ -464,7 +465,7 @@ class Game:
 
                     # Check if we're in test mode - if so, return to Combat Lab
                     if self.battle_scene.test_mode:
-                        print(f"DEBUG: Headless test complete, returning to Combat Lab")
+                        log_debug(f"Headless test complete, returning to Combat Lab")
                         self.battle_scene.action_return_to_test_lab = True
                     else:
                         # Normal headless battle - return to setup
@@ -475,7 +476,7 @@ class Game:
             if self.battle_scene.sim_tick_counter % 10000 == 0:
                 t1 = sum(1 for s in self.battle_scene.ships if s.team_id == 0 and s.is_alive)
                 t2 = sum(1 for s in self.battle_scene.ships if s.team_id == 1 and s.is_alive)
-                print(f"  Tick {self.battle_scene.sim_tick_counter}: Team1={t1}, Team2={t2}")
+                log_debug(f"  Tick {self.battle_scene.sim_tick_counter}: Team1={t1}, Team2={t2}")
         else:
             # Normal visual battle
             
@@ -506,7 +507,7 @@ class Game:
                     
                     elapsed = t1 - t0
                     if elapsed > 0.05: # Warn if taking > 50ms per frame
-                         print(f"Slow Frame: {ticks_to_run} ticks took {elapsed*1000:.1f}ms (Avg {elapsed/ticks_to_run*1000:.3f}ms/tick)")
+                         log_warning(f"Slow Frame: {ticks_to_run} ticks took {elapsed*1000:.1f}ms (Avg {elapsed/ticks_to_run*1000:.3f}ms/tick)")
 
                     
                     self.battle_scene.tick_rate_count += ticks_to_run
@@ -588,8 +589,8 @@ def main():
     except Exception as e:
         import traceback
         error_msg = traceback.format_exc()
-        print("CRITICAL CRASH CAUGHT:")
-        print(error_msg)
+        log_error("CRITICAL CRASH CAUGHT:")
+        log_error(error_msg)
         with open("crash_log.txt", "w") as f:
             f.write(error_msg)
         raise e

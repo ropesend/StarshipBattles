@@ -4,17 +4,18 @@ import pytest
 
 from game.simulation.entities.ship import Ship, LayerType, load_vehicle_classes
 from game.core.registry import RegistryManager
+from game.core.constants import COMPONENTS_FILE, VEHICLE_CLASSES_FILE
 from game.simulation.components.component import load_components, create_component
 
 class TestBug08FuelValidation(unittest.TestCase):
     def setUp(self):
         if not pygame.get_init():
             pygame.init()
-        
+
         # Load REAL components
-        load_components("data/components.json")
+        load_components(COMPONENTS_FILE)
         # Load REAL vehicle classes
-        load_vehicle_classes("data/vehicleclasses.json")
+        load_vehicle_classes(VEHICLE_CLASSES_FILE)
 
     def test_class_requirements_fuel_storage_failure(self):
         """

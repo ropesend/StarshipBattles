@@ -4,24 +4,57 @@ import threading
 from game.core.logger import log_info, log_error
 
 class SpriteManager:
+    """
+    Singleton manager for component sprite images.
+
+    Thread Safety:
+        - Instance creation is thread-safe via double-checked locking
+
+    Usage:
+        manager = SpriteManager.instance()
+        sprite = manager.get_sprite(index)
+
+    Testing:
+        - Use reset() to destroy instance completely
+    """
     _instance = None
-    _singleton_lock = threading.Lock()
+    _lock = threading.Lock()
 
     def __init__(self):
-         self.atlas = None
-         self.sprites = []
-         self.tile_size = 36
-         
-    @staticmethod
-    def get_instance():
-        if SpriteManager._instance is None:
-            SpriteManager._instance = SpriteManager()
-        return SpriteManager._instance
+        if SpriteManager._instance is not None:
+            raise Exception("SpriteManager is a singleton. Use SpriteManager.instance()")
+        self.atlas = None
+        self.sprites = []
+        self.tile_size = 36
+
+    @classmethod
+    def instance(cls) -> 'SpriteManager':
+        """
+        Get the singleton instance, creating it if necessary.
+
+        Thread-safe via double-checked locking pattern.
+
+        Returns:
+            The singleton SpriteManager instance
+        """
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
+        return cls._instance
+
+    # Backwards compatibility alias
+    get_instance = instance
 
     @classmethod
     def reset(cls):
-        """Thread-safe singleton reset for testing only."""
-        with cls._singleton_lock:
+        """
+        Completely destroy the singleton instance.
+
+        WARNING: For testing only! This destroys the singleton so a fresh
+        instance is created on the next access.
+        """
+        with cls._lock:
             cls._instance = None
 
     def load_sprites(self, base_path):

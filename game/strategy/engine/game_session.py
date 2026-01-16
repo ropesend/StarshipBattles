@@ -1,4 +1,5 @@
 import os
+from game.core.logger import log_info
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.data.empire import Empire
@@ -55,10 +56,10 @@ class GameSession:
         self._setup_initial_scenario()
 
     def _initialize_galaxy(self, count):
-        print("GameSession: Generating Galaxy...")
+        log_info("GameSession: Generating Galaxy...")
         self.systems = self.galaxy.generate_systems(count=count, min_dist=400)
         self.galaxy.generate_warp_lanes()
-        print(f"GameSession: Generated {len(self.systems)} systems.")
+        log_info(f"GameSession: Generated {len(self.systems)} systems.")
 
     def _setup_initial_scenario(self):
         """Set up starting colonies and fleets."""
@@ -84,7 +85,7 @@ class GameSession:
 
     def process_turn(self):
         """Advance the game simulation by one full turn."""
-        print(f"GameSession: Processing Turn {self.turn_number}...")
+        log_info(f"GameSession: Processing Turn {self.turn_number}...")
         self.turn_engine.process_turn(self.empires, self.galaxy)
         self.turn_number += 1
         
@@ -189,7 +190,7 @@ class GameSession:
              # Ensure we pass the OBJECT to rules
              order = FleetOrder(OrderType.COLONIZE, target=target_planet)
              fleet.add_order(order)
-             print(f"GameSession: Issued Colonize Order for Fleet {fleet.id}")
+             log_info(f"GameSession: Issued Colonize Order for Fleet {fleet.id}")
              
         return result
 

@@ -3,16 +3,14 @@ Strategy Tournament Simulation for Starship Battles.
 Runs all combat strategies vs all combat strategies with 5v5 escort ships.
 Logs results to CSV for analysis.
 """
-import os
 import json
 import csv
 import time
 import random
 import math
+import os
 from datetime import datetime
 from itertools import product
-
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 # Minimal pygame init (headless)
 os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -25,7 +23,7 @@ from game.ai.controller import AIController, StrategyManager
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.registry import RegistryManager
-from game.core.constants import AttackType
+from game.core.constants import AttackType, SHIPS_DIR, COMPONENTS_FILE, MODIFIERS_FILE
 
 # Configuration
 SHIPS_PER_TEAM = 5
@@ -223,17 +221,15 @@ def run_battle(strategy_a, strategy_b, ship_json_path, seed=None):
 def run_tournament():
     """Run full tournament of all strategies vs all strategies."""
     try:
-        base_path = ROOT_DIR
-        load_components(os.path.join(base_path, "data/components.json"))
-        load_modifiers(os.path.join(base_path, "data/modifiers.json"))
+        load_components(COMPONENTS_FILE)
+        load_modifiers(MODIFIERS_FILE)
 
-        ship_json_path = os.path.join(base_path, "ships/RailGun Frigate (FR).json")
+        ship_json_path = os.path.join(SHIPS_DIR, "RailGun Frigate (FR).json")
         if not os.path.exists(ship_json_path):
-             ships_dir = os.path.join(base_path, "ships")
-             if os.path.exists(ships_dir):
-                 for f in os.listdir(ships_dir):
+             if os.path.exists(SHIPS_DIR):
+                 for f in os.listdir(SHIPS_DIR):
                      if f.endswith(".json"):
-                         ship_json_path = os.path.join(ships_dir, f)
+                         ship_json_path = os.path.join(SHIPS_DIR, f)
                          break
 
         if not os.path.exists(ship_json_path):

@@ -69,9 +69,8 @@ class RangeTest(CombatScenario):
 
     def get_total_hp(self, ship):
         total = 0
-        for layer in ship.layers.values():
-            for c in layer['components']:
-                total += c.current_hp
+        for c in ship.get_all_components():
+            total += c.current_hp
         return total
 
     def update(self, battle_engine):

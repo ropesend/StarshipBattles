@@ -1,4 +1,5 @@
 import random
+from game.core.logger import log_debug, log_info, log_warning
 from game.strategy.data.fleet import OrderType
 from dataclasses import dataclass
 from typing import Optional
@@ -89,7 +90,7 @@ class TurnEngine:
                     # Completed!
                     item_name = item_data[0]
                     colony.construction_queue.pop(0)
-                    print(f"Production Complete: {item_name} at {colony.planet_type.name}")
+                    log_info(f"Production Complete: {item_name} at {colony.planet_type.name}")
                     
                     # Spawn Logic - Use O(1) reverse lookup
                     spawn_loc = colony.location
@@ -127,7 +128,7 @@ class TurnEngine:
                     target_fleet = order.target
                     if target_fleet and hasattr(target_fleet, 'location'):
                         if fleet.location == target_fleet.location:
-                            print(f"TurnEngine [Tick {tick}]: Fleet {fleet.id} merging into {target_fleet.id}")
+                            log_debug(f"TurnEngine [Tick {tick}]: Fleet {fleet.id} merging into {target_fleet.id}")
                             fleet.merge_with(target_fleet)
                             fleets_to_remove.append((empire, fleet))
         
@@ -182,7 +183,7 @@ class TurnEngine:
         elif order.type == OrderType.MOVE_TO_FLEET:
             target_fleet = order.target
             if not target_fleet or not hasattr(target_fleet, 'location'):
-                print(f"TurnEngine: Target fleet invalid. Order cancelled.")
+                log_warning(f"TurnEngine: Target fleet invalid. Order cancelled.")
                 fleet.pop_order()
                 return None
             
@@ -337,7 +338,7 @@ class TurnEngine:
             validation = self.validate_colonize_order(galaxy, fleet, target_planet)
             
             if not validation.is_valid:
-                 print(f"TurnEngine: Colonize failed - {validation.message}")
+                 log_warning(f"TurnEngine: Colonize failed - {validation.message}")
                  fleet.pop_order()
                  return False
 
@@ -357,11 +358,11 @@ class TurnEngine:
                 empire.add_colony(final_planet)
                 fleet.pop_order()
                 empire.remove_fleet(fleet)
-                print(f"TurnEngine: Colonization successful. {empire.name} claimed {final_planet.name}")
+                log_info(f"TurnEngine: Colonization successful. {empire.name} claimed {final_planet.name}")
                 return True
             else:
                  # Should not happen if validation passed
-                 print("TurnEngine: Colonization execution failed unexpectedly (Candidate missing?).")
+                 log_warning("TurnEngine: Colonization execution failed unexpectedly (Candidate missing?).")
                  fleet.pop_order()
 
         elif order.type == OrderType.JOIN_FLEET:
@@ -369,12 +370,12 @@ class TurnEngine:
             
             # Validation
             if not target_fleet or not hasattr(target_fleet, 'location'):
-                print("TurnEngine: Join Fleet failed - Target invalid/destroyed.")
+                log_warning("TurnEngine: Join Fleet failed - Target invalid/destroyed.")
                 fleet.pop_order()
                 return False
-                
+
             if fleet.location == target_fleet.location:
-                print(f"TurnEngine: Fleet {fleet.id} merging into {target_fleet.id}")
+                log_debug(f"TurnEngine: Fleet {fleet.id} merging into {target_fleet.id}")
                 fleet.merge_with(target_fleet)
                 # Remove self from empire
                 empire.remove_fleet(fleet)
@@ -383,7 +384,7 @@ class TurnEngine:
                 # Not at location yet? Should have arrived if move order preceded this.
                 # If we rely on Move order finishing exactly at location, handling leftovers is tricky.
                 # But typically Join follows Move. If Move finished, we are there.
-                print("TurnEngine: Join Fleet failed - Not at same location.")
+                log_warning("TurnEngine: Join Fleet failed - Not at same location.")
                 fleet.pop_order() # Cancel join if we aren't there? Or wait? 
                 # If we are not there, and have no move order, we are stuck.
                 # Better to cancel.
