@@ -1,11 +1,15 @@
 import pygame
 
+from game.core.config import PhysicsConfig
+
+
 class Vector2(pygame.math.Vector2):
     """
-    Wrapper around pygame.math.Vector2 to ensure we have it if needed, 
+    Wrapper around pygame.math.Vector2 to ensure we have it if needed,
     but mostly we will use pygame.math.Vector2 directly.
     """
     pass
+
 
 class PhysicsBody:
     def __init__(self, x, y, angle=0):
@@ -15,8 +19,8 @@ class PhysicsBody:
         self.angle = angle  # Degrees
         self.angular_velocity = 0  # Degrees per second
         self.mass = 1.0  # Default, will be overridden by ship stats
-        self.drag = 0.5  # Linear drag to prevent infinite drift stability issues
-        self.angular_drag = 0.5
+        self.drag = PhysicsConfig.DEFAULT_LINEAR_DRAG
+        self.angular_drag = PhysicsConfig.DEFAULT_ANGULAR_DRAG
 
     @property
     def x(self):

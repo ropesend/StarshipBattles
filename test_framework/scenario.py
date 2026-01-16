@@ -1,8 +1,8 @@
 import os
-import json
 from typing import List, Dict, Any, Optional
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import load_components, load_modifiers
+from game.core.json_utils import load_json
 import pygame
 
 class CombatScenario:
@@ -86,8 +86,7 @@ class CombatScenario:
         
         # Use design file if provided
         if design_path:
-            with open(design_path, 'r') as f:
-                data = json.load(f)
+            data = load_json(design_path)
             # Use static method if possible or re-instantiate
             # Since create_ship is usually custom, we might just load components differently
             # For now, let's stick to the manual component list for flexibility

@@ -254,11 +254,11 @@ class ShipBuilderService:
         old_class = ship.ship_class
 
         # Store existing components (excluding hull)
-        existing_components = []
-        for layer_type, layer_data in ship.layers.items():
-            if layer_type != LayerType.HULL:
-                for comp in layer_data['components']:
-                    existing_components.append((layer_type, comp.id))
+        existing_components = [
+            (layer_type, comp.id)
+            for layer_type, comp in ship.iter_components()
+            if layer_type != LayerType.HULL
+        ]
 
         # Change class and reinitialize layers
         ship.ship_class = new_class

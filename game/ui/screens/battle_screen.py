@@ -1,26 +1,27 @@
 import pygame
 import math
 from game.core.logger import log_debug
+from game.core.config import UIConfig
 from game.ui.panels.battle_panels import ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel
 
 class BattleInterface:
     """Handles all UI rendering and interaction for the BattleScene."""
-    
+
     def __init__(self, scene, screen_width, screen_height):
         self.scene = scene
         self.width = screen_width
         self.height = screen_height
-        
+
         # UI State
         self.show_overlay = False
-        
+
         # Instantiate Panels
-        stats_width = 450
-        seeker_width = 300
-        
+        stats_width = UIConfig.STATS_PANEL_WIDTH
+        seeker_width = UIConfig.SEEKER_PANEL_WIDTH
+
         # Right Panel
         self.stats_panel = ShipStatsPanel(scene, screen_width - stats_width, 0, stats_width, screen_height)
-        
+
         # Left Panel
         self.seeker_panel = SeekerMonitorPanel(scene, 0, 0, seeker_width, screen_height)
         

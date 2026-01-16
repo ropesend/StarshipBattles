@@ -24,8 +24,11 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 
 # Screen Dimensions
-WIDTH = 3840
-HEIGHT = 2160
+# NOTE: These are re-exported from DisplayConfig for backward compatibility.
+# New code should use DisplayConfig.DEFAULT_WIDTH/DEFAULT_HEIGHT directly.
+from game.core.config import DisplayConfig
+WIDTH = DisplayConfig.DEFAULT_WIDTH
+HEIGHT = DisplayConfig.DEFAULT_HEIGHT
 
 # Fonts
 FONT_MAIN = "Arial"

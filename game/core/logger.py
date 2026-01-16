@@ -36,7 +36,8 @@ class Logger:
             self.logger.warning(msg)
 
     def error(self, msg):
-        self.logger.error(msg)
+        if self.enabled:
+            self.logger.error(msg)
 
     def set_enabled(self, enabled):
         self.enabled = enabled

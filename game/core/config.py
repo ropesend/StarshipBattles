@@ -18,9 +18,13 @@ from typing import Tuple
 class DisplayConfig:
     """Display and resolution configuration."""
 
-    # Default game resolution
-    DEFAULT_WIDTH: int = 2560
-    DEFAULT_HEIGHT: int = 1600
+    # Primary (4K) resolution - used for game window
+    DEFAULT_WIDTH: int = 3840
+    DEFAULT_HEIGHT: int = 2160
+
+    # Secondary (windowed) resolution
+    WINDOWED_WIDTH: int = 2560
+    WINDOWED_HEIGHT: int = 1600
 
     # Test/headless resolution
     TEST_WIDTH: int = 1440
@@ -30,6 +34,11 @@ class DisplayConfig:
     def default_resolution(cls) -> Tuple[int, int]:
         """Return default resolution as tuple."""
         return (cls.DEFAULT_WIDTH, cls.DEFAULT_HEIGHT)
+
+    @classmethod
+    def windowed_resolution(cls) -> Tuple[int, int]:
+        """Return windowed resolution as tuple."""
+        return (cls.WINDOWED_WIDTH, cls.WINDOWED_HEIGHT)
 
     @classmethod
     def test_resolution(cls) -> Tuple[int, int]:
@@ -44,11 +53,38 @@ class AIConfig:
     MIN_SPACING: int = 150
     DEFAULT_ORBIT_DISTANCE: int = 500
     MAX_CORRECTION_FORCE: int = 500
+    FLEE_DISTANCE: int = 1000
 
     # Formation settings
     FORMATION_SLOWDOWN_THRESHOLD: float = 0.5
     FORMATION_ENGINE_THROTTLE: float = 0.9
     FORMATION_SLOWDOWN_THROTTLE: float = 0.75
+
+    # Formation behavior (fine-tuning)
+    FORMATION_DRIFT_THRESHOLD_FACTOR: float = 1.2
+    FORMATION_DRIFT_DIAMETER_MULT: float = 2.0
+    FORMATION_TURN_SPEED_FACTOR: float = 100.0
+    FORMATION_TURN_PREDICT_FACTOR: float = 1.5
+    FORMATION_DEADBAND_ERROR: float = 2.0
+    FORMATION_CORRECTION_FACTOR: float = 0.2
+    FORMATION_PREDICTION_TICKS: int = 10
+    FORMATION_NAVIGATE_STOP_DIST: int = 10
+
+    # Attack run behavior
+    ATTACK_RUN_APPROACH_DIST_FACTOR: float = 0.3
+    ATTACK_RUN_RETREAT_DIST_FACTOR: float = 0.8
+    ATTACK_RUN_RETREAT_DURATION: float = 2.0
+    ATTACK_RUN_APPROACH_HYSTERESIS: float = 1.5
+
+    # Erratic behavior
+    ERRATIC_TURN_INTERVAL_MIN: float = 0.5
+    ERRATIC_TURN_INTERVAL_MAX: float = 2.0
+
+    # Orbit behavior
+    ORBIT_DISTANCE_CLOSE_THRESHOLD: float = 0.9
+    ORBIT_DISTANCE_FAR_THRESHOLD: float = 1.1
+    ORBIT_RADIAL_COMPONENT: float = 0.5
+    ORBIT_TARGET_OFFSET: int = 200
 
 
 class PhysicsConfig:
@@ -63,6 +99,13 @@ class PhysicsConfig:
     # Angle thresholds for movement decisions
     THRUST_ANGLE_THRESHOLD: float = 30.0
     ROTATION_ANGLE_THRESHOLD: float = 5.0
+
+    # Drag coefficients (applied per tick to prevent infinite drift)
+    DEFAULT_LINEAR_DRAG: float = 0.5
+    DEFAULT_ANGULAR_DRAG: float = 0.5
+
+    # Spatial grid configuration
+    SPATIAL_GRID_CELL_SIZE: int = 2000
 
 
 class BattleConfig:
@@ -89,9 +132,60 @@ class UIConfig:
     PANEL_MARGIN: int = 10
     PANEL_PADDING: int = 5
 
-    # Font sizes
-    HEADER_FONT_SIZE: int = 16
-    BODY_FONT_SIZE: int = 12
+    # Panel gaps and spacing
+    PANEL_GAP: int = 5
+    ELEMENT_SPACING: int = 16
+    INDENT: int = 20
+
+    # Font sizes (pygame.font.Font None-font sizes)
+    FONT_TITLE: int = 28
+    FONT_NAME: int = 22
+    FONT_STAT: int = 18
+    FONT_BODY: int = 12
+    FONT_HEADER: int = 16
+    FONT_LARGE: int = 36
+    FONT_XLARGE: int = 48
+    FONT_XXLARGE: int = 64
+
+    # Battle screen panel dimensions
+    STATS_PANEL_WIDTH: int = 450
+    SEEKER_PANEL_WIDTH: int = 300
+
+    # Strategy screen dimensions
+    STRATEGY_SIDEBAR_WIDTH: int = 600
+    STRATEGY_BUTTON_WIDTH: int = 150
+    STRATEGY_BUTTON_HEIGHT: int = 35
+
+    # Common button dimensions
+    BUTTON_WIDTH_SMALL: int = 150
+    BUTTON_WIDTH_MEDIUM: int = 250
+    BUTTON_WIDTH_LARGE: int = 300
+    BUTTON_HEIGHT_SMALL: int = 35
+    BUTTON_HEIGHT_MEDIUM: int = 50
+    BUTTON_HEIGHT_LARGE: int = 60
+
+    # Progress/stat bar dimensions
+    BAR_WIDTH: int = 120
+    BAR_HEIGHT: int = 10
+    BANNER_HEIGHT: int = 22
+
+    # Ship entry dimensions in panels
+    SHIP_ENTRY_HEIGHT: int = 25
+
+    # Window dimensions (dialogs/popups)
+    DIALOG_WIDTH_SMALL: int = 300
+    DIALOG_WIDTH_MEDIUM: int = 500
+    DIALOG_WIDTH_LARGE: int = 800
+    DIALOG_HEIGHT_SMALL: int = 150
+    DIALOG_HEIGHT_MEDIUM: int = 300
+    DIALOG_HEIGHT_LARGE: int = 500
+
+    # Scroll settings
+    SCROLL_SPEED: int = 30
+
+    # Panel transparency (alpha values 0-255)
+    PANEL_ALPHA: int = 230
+    OVERLAY_ALPHA: int = 180
 
 
 class TestConfig:

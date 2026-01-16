@@ -5,11 +5,10 @@ Provides fixtures and setup for systems-related tests.
 """
 import pytest
 import pygame
-from pathlib import Path
 
-from tests.fixtures.paths import get_data_dir, get_project_root
-from game.simulation.entities.ship import Ship, initialize_ship_data
-from game.simulation.components.component import load_components, load_modifiers
+from tests.fixtures.paths import data_dir, project_root  # noqa: F401
+from tests.fixtures.common import initialized_ship_data, initialized_ship_data_with_modifiers  # noqa: F401
+from game.simulation.entities.ship import Ship
 from game.core.registry import RegistryManager
 
 
@@ -20,36 +19,6 @@ def systems_test_setup():
         pygame.init()
     yield
     RegistryManager.instance().clear()
-
-
-@pytest.fixture
-def data_dir() -> Path:
-    """Return the data directory path."""
-    return get_data_dir()
-
-
-@pytest.fixture
-def project_root() -> Path:
-    """Return the project root path."""
-    return get_project_root()
-
-
-@pytest.fixture
-def initialized_ship_data():
-    """Initialize ship data from the project root."""
-    initialize_ship_data(str(get_project_root()))
-    load_components(str(get_data_dir() / "components.json"))
-    return True
-
-
-@pytest.fixture
-def initialized_ship_data_with_modifiers():
-    """Initialize ship data with modifiers loaded."""
-    initialize_ship_data(str(get_project_root()))
-    data_dir = get_data_dir()
-    load_components(str(data_dir / "components.json"))
-    load_modifiers(str(data_dir / "modifiers.json"))
-    return True
 
 
 @pytest.fixture

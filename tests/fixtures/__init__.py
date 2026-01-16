@@ -15,6 +15,11 @@ from tests.fixtures.paths import (
     get_project_root,
     get_data_dir,
     get_assets_dir,
+    get_unit_test_data_dir,
+)
+from tests.fixtures.common import (
+    initialized_ship_data,
+    initialized_ship_data_with_modifiers,
 )
 from tests.fixtures.ships import (
     create_test_ship,
@@ -50,6 +55,10 @@ __all__ = [
     'get_project_root',
     'get_data_dir',
     'get_assets_dir',
+    'get_unit_test_data_dir',
+    # Ship data initialization
+    'initialized_ship_data',
+    'initialized_ship_data_with_modifiers',
     # Ship factory
     'create_test_ship',
     # Component factories

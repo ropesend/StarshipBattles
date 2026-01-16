@@ -775,7 +775,7 @@ class PlanetListWindow(UIWindow):
         if self.scroll_bar.check_has_moved_recently():
              self._update_visible_rows()
              
-        # TODO: Handle resize to update viewport/row count?
+        # Future enhancement: Handle resize to update viewport/row count.
         # self.list_view_rect might need updating if window resizes.
             
         # Sync Sliders -> Text (One way, unless focused? No, text value follows slider if slider moves)

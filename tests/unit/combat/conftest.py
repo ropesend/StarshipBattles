@@ -5,11 +5,11 @@ Provides fixtures and setup for combat-related tests.
 """
 import pytest
 import pygame
-from pathlib import Path
 
-from tests.fixtures.paths import get_data_dir, get_project_root, get_unit_test_data_dir
-from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
-from game.simulation.components.component import load_components, load_modifiers, create_component
+from tests.fixtures.paths import data_dir, project_root, unit_test_data_dir, get_unit_test_data_dir  # noqa: F401
+from tests.fixtures.common import initialized_ship_data, initialized_ship_data_with_modifiers  # noqa: F401
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.components.component import create_component
 from game.core.registry import RegistryManager
 from game.ai.controller import StrategyManager
 
@@ -22,42 +22,6 @@ def combat_test_setup():
     yield
     RegistryManager.instance().clear()
     StrategyManager.instance().clear()
-
-
-@pytest.fixture
-def data_dir() -> Path:
-    """Return the production data directory path."""
-    return get_data_dir()
-
-
-@pytest.fixture
-def project_root() -> Path:
-    """Return the project root path."""
-    return get_project_root()
-
-
-@pytest.fixture
-def unit_test_data_dir() -> Path:
-    """Return the unit test data directory path."""
-    return get_unit_test_data_dir()
-
-
-@pytest.fixture
-def initialized_ship_data():
-    """Initialize ship data from production data directory."""
-    initialize_ship_data(str(get_project_root()))
-    load_components(str(get_data_dir() / "components.json"))
-    return True
-
-
-@pytest.fixture
-def initialized_ship_data_with_modifiers():
-    """Initialize ship data and modifiers from production data directory."""
-    initialize_ship_data(str(get_project_root()))
-    data_dir = get_data_dir()
-    load_components(str(data_dir / "components.json"))
-    load_modifiers(str(data_dir / "modifiers.json"))
-    return True
 
 
 @pytest.fixture

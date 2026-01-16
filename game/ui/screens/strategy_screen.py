@@ -2,6 +2,7 @@ import os
 import pygame
 import pygame_gui
 from game.core.logger import log_debug
+from game.core.config import UIConfig
 from game.strategy.data.fleet import OrderType
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
@@ -15,30 +16,30 @@ import pygame_gui.elements as ui
 
 class StrategyInterface:
     """Handles all UI rendering and interaction for the StrategyScene."""
-    
+
     def __init__(self, scene, screen_width, screen_height):
         self.scene = scene
         self.width = screen_width
         self.height = screen_height
-        self.sidebar_width = 600
+        self.sidebar_width = UIConfig.STRATEGY_SIDEBAR_WIDTH
         self.fleet_orders_window = None # active window instance
 
-        
+
         # UI State
         theme_path = os.path.join(DATA_DIR, 'builder_theme.json')
         self.manager = pygame_gui.UIManager((screen_width, screen_height), theme_path=theme_path)
-        
+
         # --- Right Sidebar Layout (Three Panels) ---
         # 1. System Window (Top)
         # 2. Sector Window (Middle)
         # 3. Detail Window (Bottom)
-        
+
         # Vertical partitioning
         # Let's divide by ratio or fixed px?
         # Detail needs minimal 250px for portrait.
         # Let's say top two split the remaining space.
-        
-        gap = 5
+
+        gap = UIConfig.PANEL_GAP
         panel_h_approx = (screen_height - 20) / 3
         
         # 1. System Panel (Top)

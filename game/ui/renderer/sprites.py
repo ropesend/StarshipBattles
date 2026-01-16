@@ -114,7 +114,6 @@ class SpriteManager:
                     max_index = index
                     
             except ValueError:
-                # print(f"WARNING: Skipping file with invalid number format {f}")
                 continue
             except Exception as e:
                 log_error(f"loading {f}: {e}")

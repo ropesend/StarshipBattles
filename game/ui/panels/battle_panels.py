@@ -4,6 +4,7 @@ from game.simulation.components.component import ComponentStatus
 from game.simulation.entities.ship import LayerType
 from game.ai.controller import StrategyManager
 from game.core.profiling import profile_action, profile_block
+from game.core.config import UIConfig
 
 class BattlePanel:
     """Base class for battle UI panels."""
@@ -11,10 +12,10 @@ class BattlePanel:
         self.scene = scene
         self.rect = pygame.Rect(x, y, w, h)
         self.surface = None  # Cached surface
-    
+
     def draw(self, screen):
         raise NotImplementedError
-    
+
     def handle_click(self, mx, my):
         return False
 
@@ -33,21 +34,21 @@ class ShipStatsPanel(BattlePanel):
         self.expanded_ships = set()
         self.scroll_offset = 0
         self.content_height = 0
-    
+
     def draw(self, screen):
         # Validate cache size
-        if (self.surface is None or 
-            self.surface.get_width() != self.rect.width or 
+        if (self.surface is None or
+            self.surface.get_width() != self.rect.width or
             self.surface.get_height() != self.rect.height):
             self.surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
-            
+
         # Draw to surface
         self.surface.fill((0, 0, 0, 0))
-        self.surface.fill((20, 25, 35, 230))
-        
-        font_title = pygame.font.Font(None, 28)
-        font_name = pygame.font.Font(None, 22)
-        font_stat = pygame.font.Font(None, 18)
+        self.surface.fill((20, 25, 35, UIConfig.PANEL_ALPHA))
+
+        font_title = pygame.font.Font(None, UIConfig.FONT_TITLE)
+        font_name = pygame.font.Font(None, UIConfig.FONT_NAME)
+        font_stat = pygame.font.Font(None, UIConfig.FONT_STAT)
         
         y = 10 - self.scroll_offset
         panel_w = self.rect.width
@@ -97,31 +98,31 @@ class ShipStatsPanel(BattlePanel):
             color = (255, 165, 0)
         bg_color = banner_color if ship.is_alive else (40, 40, 40)
         
-        pygame.draw.rect(surface, bg_color, (5, y, panel_w - 10, 22))
+        pygame.draw.rect(surface, bg_color, (5, y, panel_w - 10, UIConfig.BANNER_HEIGHT))
         name_text = font_name.render(f"{arrow} {ship.name}{status}", True, color)
         surface.blit(name_text, (10, y + 3))
-        y += 25
-        
+        y += UIConfig.SHIP_ENTRY_HEIGHT
+
         if ship in self.expanded_ships:
             y = self.draw_ship_details(surface, ship, y, panel_w, font_stat)
-        
+
         return y
 
     def draw_ship_details(self, surface, ship, y, panel_w, font):
         """Draw expanded ship details."""
-        x_indent = 20
-        bar_w = 120
-        bar_h = 10
+        x_indent = UIConfig.INDENT
+        bar_w = UIConfig.BAR_WIDTH
+        bar_h = UIConfig.BAR_HEIGHT
         
         if hasattr(ship, 'source_file') and ship.source_file:
             text = font.render(f"File: {ship.source_file}", True, (150, 150, 200))
             surface.blit(text, (x_indent, y))
-            y += 16
+            y += UIConfig.ELEMENT_SPACING
         
         strat_name = StrategyManager.instance().strategies.get(ship.ai_strategy, {}).get('name', ship.ai_strategy)
         text = font.render(f"AI: {strat_name}", True, (150, 200, 150))
         surface.blit(text, (x_indent, y))
-        y += 16
+        y += UIConfig.ELEMENT_SPACING
         
         # Shield
         if ship.max_shields > 0:
@@ -129,7 +130,7 @@ class ShipStatsPanel(BattlePanel):
             text = font.render(f"Shield: {int(ship.current_shields)}/{int(ship.max_shields)}", True, (180, 180, 180))
             surface.blit(text, (x_indent, y))
             self.draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, shield_pct, (0, 200, 255))
-            y += 16
+            y += UIConfig.ELEMENT_SPACING
             
         # HP
         hp_pct = ship.hp / ship.max_hp if ship.max_hp > 0 else 0
@@ -137,7 +138,7 @@ class ShipStatsPanel(BattlePanel):
         text = font.render(f"HP: {int(ship.hp)}/{int(ship.max_hp)}", True, (180, 180, 180))
         surface.blit(text, (x_indent, y))
         self.draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, hp_pct, hp_color)
-        y += 16
+        y += UIConfig.ELEMENT_SPACING
         
         # Dynamic Resource Display
         # This replaces the hardcoded Fuel/Energy/Ammo blocks
@@ -178,7 +179,7 @@ class ShipStatsPanel(BattlePanel):
                     text = font.render(f"{label}: {int(res.current_value)}/{int(res.max_value)}", True, (180, 180, 180))
                     surface.blit(text, (x_indent, y))
                     self.draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, pct, color)
-                    y += 16
+                    y += UIConfig.ELEMENT_SPACING
         else:
             # Fallback for entities without resource system (should be none for Ships)
             pass
@@ -186,12 +187,12 @@ class ShipStatsPanel(BattlePanel):
         # Speed
         text = font.render(f"Speed: {ship.current_speed:.0f}/{ship.max_speed:.0f}", True, (180, 180, 180))
         surface.blit(text, (x_indent, y))
-        y += 16
+        y += UIConfig.ELEMENT_SPACING
 
         # Shots
         text = font.render(f"Shots: {ship.total_shots_fired}", True, (255, 200, 100))
         surface.blit(text, (x_indent, y))
-        y += 16
+        y += UIConfig.ELEMENT_SPACING
 
         # Crew
         crew_req = getattr(ship, 'crew_required', 0)
@@ -201,7 +202,7 @@ class ShipStatsPanel(BattlePanel):
             crew_color = (255, 100, 100)
         text = font.render(f"Crew: {crew_cur}/{crew_req}", True, crew_color)
         surface.blit(text, (x_indent, y))
-        y += 16
+        y += UIConfig.ELEMENT_SPACING
         
         # Target
         target_name = "None"
@@ -219,7 +220,7 @@ class ShipStatsPanel(BattlePanel):
                     st_name = getattr(st, 'name', getattr(st, 'type', 'Target').title())
                     text = font.render(f"  T{i+2}: {st_name}", True, (150, 150, 150))
                     surface.blit(text, (x_indent, y))
-                    y += 16
+                    y += UIConfig.ELEMENT_SPACING
         
         # Targeting Cap
         max_targets = getattr(ship, 'max_targets', 1)
@@ -286,14 +287,14 @@ class ShipStatsPanel(BattlePanel):
                     s_x = panel_w - s_text.get_width() - 10
                     surface.blit(s_text, (s_x, y))
                     
-                    y += 16
+                    y += UIConfig.ELEMENT_SPACING
         
         y += 8
         
         # Detailed Components
         text = font.render("Components:", True, (200, 200, 100))
         surface.blit(text, (x_indent, y))
-        y += 16
+        y += UIConfig.ELEMENT_SPACING
         
         for layer_type in [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]:
             layer = ship.layers.get(layer_type)
@@ -566,7 +567,7 @@ class SeekerMonitorPanel(BattlePanel):
         t_name = target.name if target and hasattr(target, 'name') else "None"
         txt = font.render(f"Target: {t_name}", True, (150, 200, 150))
         surface.blit(txt, (x_indent, y))
-        y += 16
+        y += UIConfig.ELEMENT_SPACING
         
         return y
     

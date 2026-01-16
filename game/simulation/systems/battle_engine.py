@@ -1,7 +1,7 @@
 import math
 import random
 import time
-from typing import List, Optional, Tuple, Dict, Any, TYPE_CHECKING
+from typing import List, Optional, Tuple, Dict, Any
 import pygame
 
 from game.core.logger import log_warning, log_info

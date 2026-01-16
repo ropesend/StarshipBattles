@@ -20,7 +20,5 @@ def evaluate_math_formula(formula: str, context: Dict[str, Any]) -> Union[int, f
     try:
         # Use eval with restricted globals (none) and our constructed locals
         return eval(formula, {"__builtins__": {}}, names)
-    except Exception as e:
-        # Log error in a real app, for now just return 0 as per original behavior
-        # print(f"Error evaluating formula '{formula}': {e}")
+    except Exception:
         return 0

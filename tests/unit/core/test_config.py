@@ -11,11 +11,11 @@ class TestDisplayConfig:
     """Tests for DisplayConfig."""
 
     def test_default_resolution_values(self):
-        """Default resolution values are correct."""
+        """Default resolution values are correct (4K)."""
         from game.core.config import DisplayConfig
 
-        assert DisplayConfig.DEFAULT_WIDTH == 2560
-        assert DisplayConfig.DEFAULT_HEIGHT == 1600
+        assert DisplayConfig.DEFAULT_WIDTH == 3840
+        assert DisplayConfig.DEFAULT_HEIGHT == 2160
 
     def test_test_resolution_values(self):
         """Test resolution values are correct."""
@@ -25,11 +25,11 @@ class TestDisplayConfig:
         assert DisplayConfig.TEST_HEIGHT == 900
 
     def test_default_resolution_tuple(self):
-        """default_resolution() returns tuple."""
+        """default_resolution() returns tuple (4K)."""
         from game.core.config import DisplayConfig
 
         resolution = DisplayConfig.default_resolution()
-        assert resolution == (2560, 1600)
+        assert resolution == (3840, 2160)
         assert isinstance(resolution, tuple)
 
     def test_test_resolution_tuple(self):

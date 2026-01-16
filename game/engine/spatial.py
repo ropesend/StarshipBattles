@@ -1,7 +1,10 @@
 import math
 
+from game.core.config import PhysicsConfig
+
+
 class SpatialGrid:
-    def __init__(self, cell_size=2000):
+    def __init__(self, cell_size=PhysicsConfig.SPATIAL_GRID_CELL_SIZE):
         self.cell_size = cell_size
         self.buckets = {}
         

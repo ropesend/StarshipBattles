@@ -1,56 +1,17 @@
 import math
-from enum import Enum, auto
 from game.simulation.formula_system import evaluate_math_formula
 from game.core.registry import get_component_registry, get_modifier_registry
 from game.core.json_utils import load_json_required
 from game.core.logger import log_warning, log_error
 
-class ComponentStatus(Enum):
-    ACTIVE = auto()
-    DAMAGED = auto() # >50% damage
-    NO_CREW = auto()
-    NO_POWER = auto()
-    NO_FUEL = auto()
-    NO_AMMO = auto()
+# Re-export from component_constants for backward compatibility
+from .component_constants import (
+    ComponentStatus,
+    LayerType,
+    Modifier,
+    ApplicationModifier,
+)
 
-class LayerType(Enum):
-    HULL = 0    # [NEW] Innermost Chassis Layer
-    CORE = 1
-    INNER = 2
-    OUTER = 3
-    ARMOR = 4
-
-    @staticmethod
-    def from_string(s):
-        return getattr(LayerType, s.upper())
-
-class Modifier:
-    def __init__(self, data):
-        self.id = data['id']
-        self.name = data['name']
-        self.type_str = data['type'] # 'boolean' or 'linear'
-        self.description = data.get('description', '')
-        self.effects = data.get('effects', {})
-        self.restrictions = data.get('restrictions', {})
-        self.param_name = data.get('param_name', 'value')
-        self.min_val = data.get('min_val', 0)
-        self.max_val = data.get('max_val', 100)
-        self.default_val = data.get('default_val', self.min_val)
-        self.readonly = data.get('readonly', False)
-
-    def create_modifier(self, value=None):
-        return ApplicationModifier(self, value)
-
-
-
-class ApplicationModifier:
-    """Instance of a modifier applied to a component"""
-    def __init__(self, mod_def, value=None):
-        self.definition = mod_def
-        self.value = value if value is not None else mod_def.default_val
-
-# IMPORTS MOVED TO LOCAL SCOPE TO PREVENT CIRCULAR DEPENDENCY
-# from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability
 
 class Component:
     def __init__(self, data):
@@ -317,7 +278,7 @@ class Component:
         # Defensive check for MagicMock or non-numeric types
         if not isinstance(amount, (int, float)):
             try: amount = float(amount)
-            except: amount = 0 # Fallback for pure mocks
+            except (TypeError, ValueError): amount = 0  # Fallback for pure mocks
             
         self.current_hp -= amount
         

@@ -22,8 +22,8 @@ class RamBehavior(AIBehavior):
         self.controller.navigate_to(target.position, stop_dist=0, precise=False)
 
 class FleeBehavior(AIBehavior):
-    FLEE_DISTANCE: int = 1000
-    
+    FLEE_DISTANCE: int = AIConfig.FLEE_DISTANCE
+
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
         # Run away from target
         fire_while_retreating = strategy.get('fire_while_retreating', False)
@@ -72,12 +72,12 @@ class KiteBehavior(AIBehavior):
             self.controller.navigate_to(kite_pos, stop_dist=0, precise=True)
 
 class AttackRunBehavior(AIBehavior):
-    DEFAULT_APPROACH_DIST_FACTOR: float = 0.3
-    DEFAULT_RETREAT_DIST_FACTOR: float = 0.8
-    DEFAULT_RETREAT_DURATION: float = 2.0
+    DEFAULT_APPROACH_DIST_FACTOR: float = AIConfig.ATTACK_RUN_APPROACH_DIST_FACTOR
+    DEFAULT_RETREAT_DIST_FACTOR: float = AIConfig.ATTACK_RUN_RETREAT_DIST_FACTOR
+    DEFAULT_RETREAT_DURATION: float = AIConfig.ATTACK_RUN_RETREAT_DURATION
     TICK_DURATION: float = PhysicsConfig.TICK_RATE
-    FLEE_DISTANCE: int = 1000
-    APPROACH_HYSTERESIS: float = 1.5
+    FLEE_DISTANCE: int = AIConfig.FLEE_DISTANCE
+    APPROACH_HYSTERESIS: float = AIConfig.ATTACK_RUN_APPROACH_HYSTERESIS
 
     def __init__(self, controller: Any) -> None:
         super().__init__(controller)
@@ -119,16 +119,16 @@ class AttackRunBehavior(AIBehavior):
                 self.attack_state = 'approach'
 
 class FormationBehavior(AIBehavior):
-    DRIFT_THRESHOLD_FACTOR: float = 1.2
-    DRIFT_THRESHOLD_DIAMETER_MULT: float = 2.0
-    TURN_SPEED_FACTOR: float = 100.0
-    TURN_PREDICT_FACTOR: float = 1.5
-    DEADBAND_ERROR: float = 2.0
-    CORRECTION_FACTOR: float = 0.2
+    DRIFT_THRESHOLD_FACTOR: float = AIConfig.FORMATION_DRIFT_THRESHOLD_FACTOR
+    DRIFT_THRESHOLD_DIAMETER_MULT: float = AIConfig.FORMATION_DRIFT_DIAMETER_MULT
+    TURN_SPEED_FACTOR: float = AIConfig.FORMATION_TURN_SPEED_FACTOR
+    TURN_PREDICT_FACTOR: float = AIConfig.FORMATION_TURN_PREDICT_FACTOR
+    DEADBAND_ERROR: float = AIConfig.FORMATION_DEADBAND_ERROR
+    CORRECTION_FACTOR: float = AIConfig.FORMATION_CORRECTION_FACTOR
     MAX_CORRECTION_FORCE: int = AIConfig.MAX_CORRECTION_FORCE
-    PREDICTION_TICKS: int = 10
+    PREDICTION_TICKS: int = AIConfig.FORMATION_PREDICTION_TICKS
     TICK_DURATION: float = PhysicsConfig.TICK_RATE
-    NAVIGATE_STOP_DIST: int = 10
+    NAVIGATE_STOP_DIST: int = AIConfig.FORMATION_NAVIGATE_STOP_DIST
 
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
         ship = self.controller.ship
@@ -302,17 +302,20 @@ class ErraticBehavior(AIBehavior):
         import random
         self.direction_timer = 0.0
         self.current_direction = random.choice([-1, 1])
-        self.next_change_interval = random.uniform(0.5, 2.0)
-    
+        self.next_change_interval = random.uniform(
+            AIConfig.ERRATIC_TURN_INTERVAL_MIN,
+            AIConfig.ERRATIC_TURN_INTERVAL_MAX
+        )
+
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
         import random
 
         # Update timer
         self.direction_timer += PhysicsConfig.TICK_RATE
-        
+
         # Check if it's time to change direction
-        min_interval = strategy.get('turn_interval_min', 0.5)
-        max_interval = strategy.get('turn_interval_max', 2.0)
+        min_interval = strategy.get('turn_interval_min', AIConfig.ERRATIC_TURN_INTERVAL_MIN)
+        max_interval = strategy.get('turn_interval_max', AIConfig.ERRATIC_TURN_INTERVAL_MAX)
         
         if self.direction_timer >= self.next_change_interval:
             # Change direction randomly
@@ -352,17 +355,17 @@ class OrbitBehavior(AIBehavior):
         tangent = pygame.math.Vector2(-radial.y, radial.x)
         
         # Adjust radial component to maintain orbit distance
-        if dist < orbit_distance * 0.9:
+        if dist < orbit_distance * AIConfig.ORBIT_DISTANCE_CLOSE_THRESHOLD:
             # Too close - add outward component
-            move_dir = (tangent - radial * 0.5).normalize()
-        elif dist > orbit_distance * 1.1:
+            move_dir = (tangent - radial * AIConfig.ORBIT_RADIAL_COMPONENT).normalize()
+        elif dist > orbit_distance * AIConfig.ORBIT_DISTANCE_FAR_THRESHOLD:
             # Too far - add inward component
-            move_dir = (tangent + radial * 0.5).normalize()
+            move_dir = (tangent + radial * AIConfig.ORBIT_RADIAL_COMPONENT).normalize()
         else:
             # In range - pure tangent
             move_dir = tangent
-        
+
         # Navigate to a point along the movement direction
-        target_pos = ship.position + move_dir * 200
+        target_pos = ship.position + move_dir * AIConfig.ORBIT_TARGET_OFFSET
         self.controller.navigate_to(target_pos, stop_dist=0, precise=False)
 

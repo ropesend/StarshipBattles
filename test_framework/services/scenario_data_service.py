@@ -5,11 +5,10 @@ Handles loading and parsing ship and component data from JSON files for test sce
 Provides centralized access to test data files without tight coupling to UI.
 """
 
-import json
-import os
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from simulation_tests.logging_config import get_logger
+from game.core.json_utils import load_json
 
 logger = get_logger(__name__)
 
@@ -75,32 +74,26 @@ class ScenarioDataService:
                 # Load ship JSON file
                 ship_path = self.ships_dir / filename
 
-                try:
-                    with open(ship_path, 'r') as f:
-                        ship_data = json.load(f)
+                ship_data = load_json(ship_path)
+                if ship_data is None:
+                    logger.error(f"Failed to load ship file: {ship_path}")
+                    continue
 
-                    # Extract component IDs from layers
-                    component_ids = []
-                    for layer_name in ['CORE', 'ARMOR', 'HULL', 'WEAPONS', 'EXTERNAL', 'SURFACE', 'INNER', 'OUTER']:
-                        layer = ship_data.get('layers', {}).get(layer_name, [])
-                        for component in layer:
-                            comp_id = component.get('id')
-                            if comp_id:
-                                component_ids.append(comp_id)
+                # Extract component IDs from layers
+                component_ids = []
+                for layer_name in ['CORE', 'ARMOR', 'HULL', 'WEAPONS', 'EXTERNAL', 'SURFACE', 'INNER', 'OUTER']:
+                    layer = ship_data.get('layers', {}).get(layer_name, [])
+                    for component in layer:
+                        comp_id = component.get('id')
+                        if comp_id:
+                            component_ids.append(comp_id)
 
-                    ships.append({
-                        'role': role,
-                        'filename': filename,
-                        'ship_data': ship_data,
-                        'component_ids': component_ids
-                    })
-
-                except FileNotFoundError:
-                    logger.error(f"Ship file not found: {ship_path}")
-                except json.JSONDecodeError as e:
-                    logger.error(f"Invalid JSON in ship file {filename}: {e}")
-                except Exception as e:
-                    logger.error(f"Error loading ship {filename}: {e}")
+                ships.append({
+                    'role': role,
+                    'filename': filename,
+                    'ship_data': ship_data,
+                    'component_ids': component_ids
+                })
 
         return ships
 
@@ -116,25 +109,14 @@ class ScenarioDataService:
         """
         # Load and cache components.json on first call
         if self._components_cache is None:
-            try:
-                with open(self.components_file, 'r') as f:
-                    components_data = json.load(f)
-                    # Extract the components list from the wrapper object
-                    components_list = components_data.get('components', [])
-                    # Convert list to dict for faster lookup
-                    self._components_cache = {
-                        comp['id']: comp
-                        for comp in components_list
-                    }
-            except FileNotFoundError:
-                logger.error(f"Components file not found: {self.components_file}")
-                self._components_cache = {}
-            except json.JSONDecodeError as e:
-                logger.error(f"Invalid JSON in components file: {e}")
-                self._components_cache = {}
-            except Exception as e:
-                logger.error(f"Error loading components.json: {e}")
-                self._components_cache = {}
+            components_data = load_json(self.components_file, default={})
+            # Extract the components list from the wrapper object
+            components_list = components_data.get('components', [])
+            # Convert list to dict for faster lookup
+            self._components_cache = {
+                comp['id']: comp
+                for comp in components_list
+            }
 
         return self._components_cache.get(component_id)
 

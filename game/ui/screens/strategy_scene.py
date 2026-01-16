@@ -732,7 +732,7 @@ class StrategyScene:
         def execute_intercept():
             log_debug(f"Intercepting Fleet {target_fleet.id}...")
             from game.strategy.data.fleet import FleetOrder, OrderType
-            # TODO: We need a Command for Intercept too!
+            # Future enhancement: Create IssueInterceptCommand for proper Command pattern.
             # For Phase 1/2, let's keep it direct or create IssueInterceptCommand?
             # Creating IssueMoveCommand with target as Fleet?
             # IssueMoveCommand expects target_hex in our current def, but type 'Any'.

@@ -35,9 +35,9 @@ Usage:
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
-import json
 import os
 from simulation_tests.logging_config import get_logger, setup_combat_lab_logging
+from game.core.json_utils import load_json, save_json
 
 # Setup logging
 setup_combat_lab_logging()
@@ -121,7 +121,7 @@ class TestRunRecord:
                 return dt.strftime("%I:%M %p")
             # Other days: show date and time
             return dt.strftime("%b %d %I:%M %p")
-        except:
+        except (ValueError, TypeError):
             return self.timestamp
 
     def get_p_value(self) -> Optional[float]:
@@ -164,40 +164,30 @@ class TestHistory:
 
     def _load(self):
         """Load history from JSON file."""
-        if os.path.exists(self.history_file):
-            try:
-                with open(self.history_file, 'r') as f:
-                    data = json.load(f)
-                    # Convert dicts back to TestRunRecord objects
-                    for test_id, runs in data.items():
-                        self.history[test_id] = [
-                            TestRunRecord.from_dict(run) for run in runs
-                        ]
-                logger.info(f"Loaded {len(self.history)} test histories from {self.history_file}")
-            except Exception as e:
-                logger.error(f"Error loading test history: {e}", exc_info=True)
-                self.history = {}
-        else:
+        data = load_json(self.history_file, default=None)
+        if data is None:
             logger.info("No existing history file found, starting fresh")
+            return
+
+        # Convert dicts back to TestRunRecord objects
+        for test_id, runs in data.items():
+            self.history[test_id] = [
+                TestRunRecord.from_dict(run) for run in runs
+            ]
+        logger.info(f"Loaded {len(self.history)} test histories from {self.history_file}")
 
     def _save(self):
         """Save history to JSON file."""
-        try:
-            # Ensure directory exists
-            os.makedirs(os.path.dirname(self.history_file), exist_ok=True)
+        # Convert to serializable format
+        data = {
+            test_id: [run.to_dict() for run in runs]
+            for test_id, runs in self.history.items()
+        }
 
-            # Convert to serializable format
-            data = {
-                test_id: [run.to_dict() for run in runs]
-                for test_id, runs in self.history.items()
-            }
-
-            with open(self.history_file, 'w') as f:
-                json.dump(data, f, indent=2)
-
+        if save_json(self.history_file, data):
             logger.debug(f"Saved {sum(len(runs) for runs in self.history.values())} total runs")
-        except Exception as e:
-            logger.error(f"Error saving test history: {e}", exc_info=True)
+        else:
+            logger.error(f"Failed to save test history to {self.history_file}")
 
     def add_run(self, test_id: str, results: Dict[str, Any], max_runs: int = 10):
         """

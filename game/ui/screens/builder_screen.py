@@ -15,7 +15,7 @@ from pygame_gui.windows import UIConfirmationDialog
 from game.core.logger import log_info
 from game.core.profiling import profile_action, profile_block
 
-from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.entities.ship import LayerType
 from game.core.registry import RegistryManager, get_component_registry, get_modifier_registry, get_vehicle_classes
 from game.simulation.components.component import (
     get_all_components
@@ -36,14 +36,13 @@ from game.ui.screens.builder_data_loader import BuilderDataLoader
 from game.ui.screens.builder_viewmodel import BuilderViewModel
 
 # Initialize Tkinter root and hide it (for simpledialog)
-# Initialize Tkinter root and hide it (for simpledialog)
 try:
     if os.environ.get("SDL_VIDEODRIVER") == "dummy":
         tk_root = None
     else:
         tk_root = tkinter.Tk()
         tk_root.withdraw()
-except:
+except (tkinter.TclError, RuntimeError):
     tk_root = None
 
 
@@ -685,9 +684,9 @@ class BuilderSceneGUI:
         self.available_components = get_all_components()
         self.template_modifiers = {}
         
-        # Reset Ship with new default class
-        self.ship = Ship("Custom Ship", self.width // 2, self.height // 2, (100, 100, 255), ship_class=default_class)
-        self.ship.recalculate_stats()
+        # Reset Ship with new default class (using service layer via viewmodel)
+        self.ship = self.viewmodel.create_default_ship(ship_class=default_class)
+        self.viewmodel.ship = self.ship  # Keep viewmodel in sync
         
         # Reset UI Panels
         self.left_panel.update_component_list()
@@ -742,7 +741,7 @@ class BuilderSceneGUI:
     @profile_action("Builder: Save Ship")
     def _save_ship(self):
         success, message = ShipIO.save_ship(self.ship)
-        if success: print(message)
+        if success: log_info(message)
         elif message: self.show_error(message)
 
     @profile_action("Builder: Load Ship")

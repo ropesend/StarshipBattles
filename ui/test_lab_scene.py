@@ -5,6 +5,7 @@ import json
 import time
 
 from game.core.constants import WHITE, BLACK, BLUE, WIDTH, HEIGHT, FONT_MAIN
+from game.core.json_utils import load_json
 from ui.components import Button
 from test_framework.runner import TestRunner
 from test_framework.registry import TestRegistry
@@ -1334,28 +1335,26 @@ class TestLabScene:
                     filename
                 )
 
-                try:
-                    with open(ship_path, 'r') as f:
-                        ship_data = json.load(f)
+                ship_data = load_json(ship_path)
+                if ship_data is None:
+                    logger.error(f"Failed to load ship file: {ship_path}")
+                    continue
 
-                    # Extract component IDs from layers
-                    component_ids = []
-                    for layer_name in ['CORE', 'ARMOR', 'HULL']:
-                        layer = ship_data.get('layers', {}).get(layer_name, [])
-                        for component in layer:
-                            comp_id = component.get('id')
-                            if comp_id:
-                                component_ids.append(comp_id)
+                # Extract component IDs from layers
+                component_ids = []
+                for layer_name in ['CORE', 'ARMOR', 'HULL']:
+                    layer = ship_data.get('layers', {}).get(layer_name, [])
+                    for component in layer:
+                        comp_id = component.get('id')
+                        if comp_id:
+                            component_ids.append(comp_id)
 
-                    ships.append({
-                        'role': role,
-                        'filename': filename,
-                        'ship_data': ship_data,
-                        'component_ids': component_ids
-                    })
-
-                except Exception as e:
-                    logger.error(f"Error loading ship {filename}: {e}")
+                ships.append({
+                    'role': role,
+                    'filename': filename,
+                    'ship_data': ship_data,
+                    'component_ids': component_ids
+                })
 
         return ships
 
@@ -1499,19 +1498,14 @@ class TestLabScene:
                 'components.json'
             )
 
-            try:
-                with open(components_path, 'r') as f:
-                    components_data = json.load(f)
-                    # Extract the components list from the wrapper object
-                    components_list = components_data.get('components', [])
-                    # Convert list to dict for faster lookup
-                    self._components_cache = {
-                        comp['id']: comp
-                        for comp in components_list
-                    }
-            except Exception as e:
-                logger.error(f"Error loading components.json: {e}")
-                self._components_cache = {}
+            components_data = load_json(components_path, default={})
+            # Extract the components list from the wrapper object
+            components_list = components_data.get('components', [])
+            # Convert list to dict for faster lookup
+            self._components_cache = {
+                comp['id']: comp
+                for comp in components_list
+            }
 
         return self._components_cache.get(component_id)
 
@@ -2732,13 +2726,11 @@ class TestLabScene:
 
         for ship_file in ship_files:
             ship_path = os.path.join(data_dir, ship_file)
-            if os.path.exists(ship_path):
-                try:
-                    with open(ship_path, 'r') as f:
-                        ship_data = json.load(f)
-                        ships_data[ship_file] = ship_data
-                except Exception as e:
-                    ships_data[ship_file] = f"Error loading: {e}"
+            ship_data = load_json(ship_path)
+            if ship_data is not None:
+                ships_data[ship_file] = ship_data
+            elif os.path.exists(ship_path):
+                ships_data[ship_file] = "Error loading ship file"
 
         if not ships_data:
             ships_data = {"error": "No ship files found for this test"}
@@ -2751,15 +2743,11 @@ class TestLabScene:
         data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'simulation_tests', 'data')
         components_path = os.path.join(data_dir, 'components.json')
 
-        if os.path.exists(components_path):
-            try:
-                with open(components_path, 'r') as f:
-                    components_data = json.load(f)
-                self.json_popup = JSONPopup("Components JSON", components_data, WIDTH, HEIGHT)
-            except Exception as e:
-                self.json_popup = JSONPopup("Components JSON", {"error": f"Failed to load: {e}"}, WIDTH, HEIGHT)
+        components_data = load_json(components_path)
+        if components_data is not None:
+            self.json_popup = JSONPopup("Components JSON", components_data, WIDTH, HEIGHT)
         else:
-            self.json_popup = JSONPopup("Components JSON", {"error": "components.json not found"}, WIDTH, HEIGHT)
+            self.json_popup = JSONPopup("Components JSON", {"error": "components.json not found or invalid"}, WIDTH, HEIGHT)
 
     def _draw_output_log(self, screen):
         """Draw the output log at the bottom."""
