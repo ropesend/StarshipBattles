@@ -28,7 +28,8 @@
       "Bash(find:*)",
       "Bash([ -f combat_lab.log ])",
       "Bash(git diff:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(if not exist \"c:\\\\Dev\\\\Starship Battles\\\\tests\\\\unit\\\\services\" mkdir \"c:\\\\Dev\\\\Starship Battles\\\\tests\\\\unit\\\\services\")"
     ]
   }
 }

@@ -1,4 +1,8 @@
-"""Battle scene module for combat simulation and UI."""
+"""Battle scene module for combat simulation and UI.
+
+Uses BattleService as an abstraction layer over BattleEngine for cleaner
+separation between UI and simulation logic.
+"""
 import pygame
 import math
 import random
@@ -8,38 +12,43 @@ from game.ai.controller import AIController
 from game.ui.renderer.game_renderer import draw_ship
 from game.ui.renderer.camera import Camera
 from game.ui.screens.battle_screen import BattleInterface
-from game.simulation.systems.battle_engine import BattleEngine
+from game.simulation.services import BattleService
 
 
 
 class BattleScene:
-    """Manages battle simulation, rendering, and UI."""
-    
+    """Manages battle simulation, rendering, and UI.
+
+    Uses BattleService for battle management, providing a cleaner abstraction
+    between UI concerns and simulation logic.
+    """
+
     def __init__(self, screen_width, screen_height):
-        # ... (rest of init)
         self.screen_width = screen_width
         self.screen_height = screen_height
-        
-        # Battle Engine
-        self.engine = BattleEngine()
-        
+
+        # Battle Service (abstraction layer over BattleEngine)
+        self._battle_service = BattleService()
+        # Create initial battle for backward compatibility (engine must exist)
+        self._battle_service.create_battle()
+
         # Visual State
-        self.beams = [] # distinct from engine beams, these have visual timers
-        
+        self.beams = []  # distinct from engine beams, these have visual timers
+
         # Camera
         self.camera = Camera(screen_width, screen_height)
-        
+
         # UI
         self.ui = BattleInterface(self, screen_width, screen_height)
-        
+
         # Simulation Control
-        self.sim_tick_counter = 0 # shadow copy or just delegate? engine has it.
+        self.sim_tick_counter = 0
         self.tick_rate_timer = 0.0
         self.tick_rate_count = 0
         self.current_tick_rate = 0
         self.sim_paused = False
         self.sim_speed_multiplier = 1.0
-        
+
         # Headless mode
         self.headless_mode = False
         self.headless_start_time = None
@@ -53,6 +62,11 @@ class BattleScene:
         # Actions for Game class
         self.action_return_to_setup = False
         self.action_return_to_test_lab = False
+
+    @property
+    def engine(self):
+        """Access the underlying BattleEngine (for backward compatibility)."""
+        return self._battle_service.get_engine()
 
     def handle_resize(self, width, height):
         """Handle window resize."""
@@ -106,7 +120,18 @@ class BattleScene:
             self.headless_start_time = time.time()
             print("\n=== STARTING HEADLESS BATTLE ===")
 
-        self.engine.start(team1_ships, team2_ships, seed)
+        # Use BattleService to set up and start the battle
+        self._battle_service.create_battle(seed=seed, enable_logging=True)
+
+        # Add ships to teams via service
+        for ship in team1_ships:
+            self._battle_service.add_ship(ship, team_id=0)
+        for ship in team2_ships:
+            self._battle_service.add_ship(ship, team_id=1)
+
+        # Start the battle
+        self._battle_service.start_battle()
+
         self.beams = []
         self.sim_tick_counter = 0
         self.action_return_to_setup = False
@@ -119,33 +144,29 @@ class BattleScene:
         self.ui.expanded_ships = set()
         self.ui.stats_scroll_offset = 0
 
-        self.sim_speed_multiplier = 1.0 # Reset speed on new battle
+        self.sim_speed_multiplier = 1.0  # Reset speed on new battle
         self.sim_paused = start_paused  # Set initial pause state
-        
-        if not headless:
-            self.camera.fit_objects(self.engine.ships)
-        
-        # Initial Logging is handled by Engine
 
-            
-        # DEBUG LOGGING: Check for initial derelict status
+        if not headless:
+            self.camera.fit_objects(self.ships)
+
         # DEBUG LOGGING: Check for initial derelict status
         for s in self.ships:
             fuel = s.resources.get_value("fuel")
             status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f} Derelict={s.is_derelict}"
             self.engine.logger.log(status_msg)
-            print(status_msg) # Force console output
-            
+            print(status_msg)
+
             if s.is_derelict:
                 warn_msg = f"CRITICAL WARNING: Ship {s.name} is DERELICT on start! (Bridge? Engines? LifeSupport? Power?)"
                 self.engine.logger.log(warn_msg)
                 print(warn_msg)
-            
+
             if s.total_thrust <= 0:
                 warn_msg = f"WARNING: {s.name} has NO THRUST!"
                 self.engine.logger.log(warn_msg)
                 print(warn_msg)
-                
+
             if s.turn_speed <= 0.01:
                 warn_msg = f"WARNING: {s.name} has LOW/NO TURN SPEED ({s.turn_speed:.4f})! Mass too high for thrusters?"
                 self.engine.logger.log(warn_msg)
@@ -245,11 +266,11 @@ class BattleScene:
         # In test mode, battle is over when scenario completes
         if self.test_mode and self.test_scenario is None and self.test_tick_count > 0:
             return True  # Test has completed
-        return self.engine.is_battle_over()
-    
+        return self._battle_service.is_battle_over()
+
     def get_winner(self):
         """Get the winning team. Returns 0, 1, or -1 for draw."""
-        return self.engine.get_winner()
+        return self._battle_service.get_winner()
     
     def draw(self, screen):
         """Draw the battle scene."""
@@ -299,20 +320,20 @@ class BattleScene:
     def handle_click(self, mx, my, button, screen_size):
         """Handle mouse clicks. Returns True if click was handled."""
         result = self.ui.handle_click(mx, my, button)
-        
+
         if isinstance(result, tuple) and result[0] == "focus_ship":
             self.camera.target = result[1]
             return True
-            
+
         if result == "end_battle":
-            self.engine.shutdown()
+            self._battle_service.reset()
             self.action_return_to_setup = True
             return True
-        
+
         # If UI didn't handle it and it's a left click, clear focus
         if not result and button == 1:
             self.camera.target = None
-            
+
         return result
     
     def handle_scroll(self, scroll_y, screen_height):
