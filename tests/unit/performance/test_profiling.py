@@ -3,7 +3,68 @@ import os
 import json
 import time
 import uuid
+from unittest.mock import patch
 from game.core.profiling import Profiler, profile_action, profile_block, PROFILER
+
+
+class TestProfilingJsonUtils(unittest.TestCase):
+    """Test that Profiler uses centralized json_utils for file operations."""
+
+    def setUp(self):
+        Profiler.reset()
+        PROFILER.active = False
+        PROFILER.records = []
+        self.test_file = f"test_profiling_json_utils_{uuid.uuid4().hex[:8]}.json"
+
+    def tearDown(self):
+        if os.path.exists(self.test_file):
+            try:
+                os.remove(self.test_file)
+            except PermissionError:
+                pass
+
+    def test_profiling_does_not_use_direct_json_calls(self):
+        """Profiler.save_history should use json_utils, not direct json.dump/loads."""
+        import game.core.profiling as prof_module
+        import inspect
+        source = inspect.getsource(prof_module)
+
+        # The file should use load_json/save_json from json_utils
+        assert "json.dump(" not in source, "Should use save_json from game.core.json_utils"
+        assert "json.loads(" not in source, "Should use load_json from game.core.json_utils"
+
+    @patch("game.core.profiling.save_json")
+    def test_save_history_uses_save_json(self, mock_save_json):
+        """save_history should call save_json from json_utils."""
+        mock_save_json.return_value = True
+
+        PROFILER.start()
+        PROFILER.record("test_action", 0.1)
+        PROFILER.save_history(self.test_file)
+
+        mock_save_json.assert_called_once()
+        # Verify the filename was passed
+        call_args = mock_save_json.call_args
+        self.assertEqual(call_args[0][0], self.test_file)
+
+    @patch("game.core.profiling.load_json")
+    @patch("game.core.profiling.save_json")
+    def test_save_history_loads_existing_with_load_json(self, mock_save, mock_load):
+        """save_history should use load_json to read existing history."""
+        mock_load.return_value = [{"session_id": "old", "records": []}]
+        mock_save.return_value = True
+
+        # Create a file so the code path tries to load it
+        with open(self.test_file, 'w') as f:
+            f.write('[{"session_id": "old", "records": []}]')
+
+        PROFILER.start()
+        PROFILER.record("test_action", 0.1)
+        PROFILER.save_history(self.test_file)
+
+        # Should have called load_json to load existing history
+        mock_load.assert_called_once_with(self.test_file, default=[])
+
 
 class TestProfiling(unittest.TestCase):
     def setUp(self):

@@ -11,7 +11,7 @@ from pygame_gui.windows import UIConfirmationDialog
 
 from game.core.profiling import profile_block
 from game.core.registry import get_modifier_registry, get_vehicle_classes
-from game.simulation.entities.ship import LayerType, get_or_create_validator
+from game.simulation.entities.ship import LayerType
 
 import logging
 logger = logging.getLogger(__name__)
@@ -165,13 +165,10 @@ class BuilderEventRouter:
             if not append:
                 gui.left_panel.deselect_all()
             
-            # data is group_key
-            comps = []
+            # data is group_key - collect all components matching the group
             from ui.builder.grouping_strategies import get_component_group_key
-            for layers in gui.ship.layers.values():
-                for c in layers['components']:
-                    if get_component_group_key(c) == data:
-                        comps.append(c)
+            comps = [c for c in gui.ship.get_all_components()
+                     if get_component_group_key(c) == data]
             
             gui.on_selection_changed(comps, append=append)
             
@@ -224,7 +221,7 @@ class BuilderEventRouter:
                 break
         
         if found_layer:
-            gui.ship.remove_component(found_layer, found_idx)
+            gui.viewmodel.remove_component(found_layer, found_idx)
             gui.update_stats()
     
     def _handle_remove_individual(self, data):
@@ -234,7 +231,7 @@ class BuilderEventRouter:
         for l_type, layers in gui.ship.layers.items():
             for idx, c in enumerate(layers['components']):
                 if c is data:
-                    gui.ship.remove_component(l_type, idx)
+                    gui.viewmodel.remove_component(l_type, idx)
                     removed = True
                     break
             if removed:
@@ -255,14 +252,11 @@ class BuilderEventRouter:
         if act_type == 'add_individual':
             target_comp = data
         else:
-            # Find first component of group
+            # Find first component of group using ship helper
             from ui.builder.grouping_strategies import get_component_group_key
-            for layers in gui.ship.layers.values():
-                for c in layers['components']:
-                    if get_component_group_key(c) == data:
-                        target_comp = c
-                        break
-                if target_comp:
+            for c in gui.ship.get_all_components():
+                if get_component_group_key(c) == data:
+                    target_comp = c
                     break
                     
         if target_comp:
@@ -275,20 +269,20 @@ class BuilderEventRouter:
                     nm.value = m.value
             new_comp.recalculate_stats()
             
-            # Find layer of original
+            # Find layer of original using ship helper
             target_layer = None
-            for l_type, layers in gui.ship.layers.items():
-                if target_comp in layers['components']:
+            for l_type, comp in gui.ship.iter_components():
+                if comp is target_comp:
                     target_layer = l_type
                     break
                     
             if target_layer:
-                validation = get_or_create_validator().validate_addition(gui.ship, new_comp, target_layer)
-                if validation.is_valid:
-                    gui.ship.add_component(new_comp, target_layer)
+                success = gui.viewmodel.add_component_instance(new_comp, target_layer)
+                if success:
                     gui.update_stats()
                 else:
-                    gui.show_error(f"Cannot add: {', '.join(validation.errors)}")
+                    errors = gui.viewmodel.last_errors
+                    gui.show_error(f"Cannot add: {', '.join(errors) if errors else 'Validation failed'}")
     
     def _handle_button_pressed(self, event) -> bool:
         """Handle UI button press events."""
@@ -353,10 +347,8 @@ class BuilderEventRouter:
         
         gui.pending_action = ('change_class', new_class)
         
-        # Check if ship has components
-        has_components = sum(len(l['components']) for l in gui.ship.layers.values()) > 0
-        
-        if has_components:
+        # Check if ship has components using ship helper
+        if gui.ship.has_components():
             msg = f"Change class to {new_class}?<br><br>Warning: This will attempt to refit existing components.<br>Some items may be resized or lost if they don't fit."
             gui.confirm_dialog = UIConfirmationDialog(
                 pygame.Rect((gui.width - 600) // 2, (gui.height - 400) // 2, 600, 400),
@@ -384,10 +376,8 @@ class BuilderEventRouter:
         
         gui.pending_action = ('change_type', target_class)
         
-        # Check if ship has components
-        has_components = sum(len(l['components']) for l in gui.ship.layers.values()) > 0
-        
-        if has_components:
+        # Check if ship has components using ship helper
+        if gui.ship.has_components():
             msg = f"Change type to {new_type}?<br><br><b>WARNING: This will CLEAR the current design.</b>"
             gui.confirm_dialog = UIConfirmationDialog(
                 pygame.Rect((gui.width - 400) // 2, (gui.height - 200) // 2, 400, 200),

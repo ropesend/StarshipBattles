@@ -8,7 +8,7 @@ import pygame
 
 from tests.fixtures.paths import data_dir, project_root, unit_test_data_dir  # noqa: F401
 from tests.fixtures.common import initialized_ship_data, initialized_ship_data_with_modifiers  # noqa: F401
-from game.simulation.entities.ship import Ship
+from tests.fixtures.ships import basic_cruiser_ship, basic_escort_ship  # noqa: F401
 from game.core.registry import RegistryManager
 
 
@@ -19,19 +19,3 @@ def builder_test_setup():
         pygame.init()
     yield
     RegistryManager.instance().clear()
-
-
-@pytest.fixture
-def basic_escort_ship(initialized_ship_data):
-    """Create a basic Escort ship for testing."""
-    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
-    ship.recalculate_stats()
-    return ship
-
-
-@pytest.fixture
-def basic_cruiser_ship(initialized_ship_data):
-    """Create a basic Cruiser ship for testing."""
-    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
-    ship.recalculate_stats()
-    return ship

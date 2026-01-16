@@ -388,14 +388,14 @@ class BuilderSceneGUI:
             if act == 'clear_design':
                 self._clear_design()
             elif act == 'change_class':
-                # Refit
-                self.ship.change_class(data, migrate_components=True)
+                # Refit - use viewmodel which delegates to service
+                self.viewmodel.change_ship_class(data, migrate_components=True)
                 self.update_stats()
                 self.right_panel.update_portrait_image()
                 self.left_panel.update_component_list()
             elif act == 'change_type':
-                # Clear and Change
-                self.ship.change_class(data, migrate_components=False)
+                # Clear and Change - use viewmodel which delegates to service
+                self.viewmodel.change_ship_class(data, migrate_components=False)
                 
                 # We also need to update the Class Dropdown options
                 classes = get_vehicle_classes()

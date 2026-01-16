@@ -115,7 +115,7 @@ class BattleInterface:
 
     def draw_grid(self, screen):
         """Draw the background grid."""
-        grid_spacing = 5000
+        grid_spacing = UIConfig.GRID_SPACING
         sw, sh = screen.get_size()
         camera = self.scene.camera
         

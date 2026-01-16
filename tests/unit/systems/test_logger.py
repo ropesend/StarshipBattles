@@ -1,6 +1,8 @@
 """Tests for Logger singleton and utility functions."""
 import unittest
 import tempfile
+import threading
+import time
 
 from game.core.logger import Logger, log_debug, log_info, log_error, set_logging, _logger
 
@@ -102,6 +104,69 @@ class TestLoggerInstance(unittest.TestCase):
         logger = Logger()
         self.assertTrue(hasattr(logger, 'error'))
         self.assertTrue(callable(logger.error))
+
+
+class TestLoggerThreadSafety(unittest.TestCase):
+    """Test Logger thread safety and reset functionality."""
+
+    def tearDown(self):
+        """Reset logger after each test."""
+        # Reset to ensure clean state for other tests
+        if hasattr(Logger, 'reset'):
+            Logger.reset()
+
+    def test_logger_has_reset_classmethod(self):
+        """Logger should have a reset classmethod for test isolation."""
+        self.assertTrue(hasattr(Logger, 'reset'))
+        self.assertTrue(callable(Logger.reset))
+
+    def test_reset_allows_reinitialization(self):
+        """After reset, Logger should reinitialize on next access."""
+        logger1 = Logger()
+        Logger.reset()
+        logger2 = Logger()
+
+        # After reset, we should get a fresh instance
+        # (the actual object may be the same, but it should be reinitialized)
+        self.assertTrue(hasattr(logger2, 'enabled'))
+
+    def test_logger_has_lock(self):
+        """Logger class should have a lock for thread safety."""
+        self.assertTrue(hasattr(Logger, '_lock'))
+
+    def test_concurrent_logger_access(self):
+        """Multiple threads accessing Logger should not cause race conditions."""
+        Logger.reset()
+
+        results = []
+        errors = []
+
+        def get_logger():
+            try:
+                logger = Logger()
+                results.append(logger)
+            except Exception as e:
+                errors.append(e)
+
+        # Create multiple threads that try to instantiate Logger simultaneously
+        threads = [threading.Thread(target=get_logger) for _ in range(10)]
+
+        # Start all threads nearly simultaneously
+        for t in threads:
+            t.start()
+
+        # Wait for all to complete
+        for t in threads:
+            t.join()
+
+        # All should have succeeded
+        self.assertEqual(len(errors), 0)
+        self.assertEqual(len(results), 10)
+
+        # All should be the same instance (singleton)
+        first = results[0]
+        for logger in results[1:]:
+            self.assertIs(logger, first)
 
 
 if __name__ == '__main__':

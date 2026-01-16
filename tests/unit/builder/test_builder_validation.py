@@ -338,5 +338,78 @@ class TestComplexRules(unittest.TestCase):
         found_ammo_warn = any("Needs Ammo Storage" in w for w in result.warnings)
         self.assertFalse(found_ammo_warn, "Should NOT warn when ammo storage is present")
 
+class TestValidationGuardClauses(unittest.TestCase):
+    """Test that validation rules handle edge cases without errors."""
+
+    def setUp(self):
+        if not pygame.get_init():
+            pygame.init()
+        from game.simulation.entities.ship import initialize_ship_data, Ship
+        initialize_ship_data(str(get_project_root()))
+        self.ship = Ship("Guard Clause Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
+
+        from game.simulation.ship_validator import (
+            MountDependencyRule,
+            LayerRestrictionDefinitionRule,
+        )
+        self.mount_rule = MountDependencyRule()
+        self.restriction_rule = LayerRestrictionDefinitionRule()
+
+    def create_component(self, **kwargs):
+        base_data = {
+            "id": "test_comp",
+            "name": "Test Component",
+            "type": "Component",
+            "mass": 10,
+            "hp": 100,
+            "allowed_vehicle_types": ["Ship"],
+            "abilities": {}
+        }
+        base_data.update(kwargs)
+        return Component(base_data)
+
+    def test_mount_dependency_with_nonexistent_layer(self):
+        """MountDependencyRule should not raise KeyError for nonexistent layer."""
+        # Create a component with a required_mount
+        comp = self.create_component(required_mount="Heavy")
+
+        from game.simulation.components.component import LayerType
+
+        # Remove a layer from the ship to simulate a nonexistent layer scenario
+        # Save the layer first so we can restore it
+        removed_layer = LayerType.INNER
+        saved_layer_data = self.ship.layers.pop(removed_layer)
+
+        try:
+            # This should NOT raise KeyError
+            result = self.mount_rule.validate(self.ship, comp, removed_layer)
+
+            # Should return valid (True) since layer doesn't exist - can't validate what doesn't exist
+            self.assertTrue(result.is_valid, f"Should return valid for nonexistent layer. Errors: {result.errors}")
+        finally:
+            # Restore the layer
+            self.ship.layers[removed_layer] = saved_layer_data
+
+    def test_layer_restriction_with_nonexistent_layer(self):
+        """LayerRestrictionDefinitionRule should not raise KeyError for nonexistent layer."""
+        comp = self.create_component()
+
+        from game.simulation.components.component import LayerType
+
+        # Remove a layer from the ship to simulate a nonexistent layer scenario
+        removed_layer = LayerType.OUTER
+        saved_layer_data = self.ship.layers.pop(removed_layer)
+
+        try:
+            # This should NOT raise KeyError
+            result = self.restriction_rule.validate(self.ship, comp, removed_layer)
+
+            # Should return valid (True) since layer doesn't exist
+            self.assertTrue(result.is_valid, f"Should return valid for nonexistent layer. Errors: {result.errors}")
+        finally:
+            # Restore the layer
+            self.ship.layers[removed_layer] = saved_layer_data
+
+
 if __name__ == '__main__':
     unittest.main()

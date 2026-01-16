@@ -1,13 +1,13 @@
 import time
-import json
 import uuid
-import os
 import logging
 import threading
 from functools import wraps
 from typing import Dict, List, Optional
 from datetime import datetime
 from contextlib import contextmanager
+
+from game.core.json_utils import load_json, save_json
 
 logger = logging.getLogger(__name__)
 
@@ -115,31 +115,22 @@ class Profiler:
             logger.info("No records to save.")
             return
 
-        history = []
-        if os.path.exists(filename):
-            try:
-                with open(filename, 'r') as f:
-                    content = f.read()
-                    if content.strip():
-                        history = json.loads(content)
-            except (json.JSONDecodeError, OSError) as e:
-                logger.error(f"Failed to load existing profiling history: {e}")
-                # Backup corrupt file? For now, just logging error and potentially overwriting or appending to empty list
-        
+        # Load existing history using json_utils
+        history = load_json(filename, default=[])
+
         session_data = {
             "session_id": self.session_id,
             "timestamp": datetime.now().isoformat(),
             "records": self.records
         }
-        
+
         history.append(session_data)
-        
-        try:
-            with open(filename, 'w') as f:
-                json.dump(history, f, indent=2)
+
+        # Save using json_utils
+        if save_json(filename, history):
             logger.info(f"Saved {len(self.records)} records to {filename}")
-        except OSError as e:
-            logger.error(f"Failed to save profiling history: {e}")
+        else:
+            logger.error(f"Failed to save profiling history to {filename}")
 
 # Global accessor for backwards compatibility (lazy, not module-level instantiation)
 class _ProfilerProxy:

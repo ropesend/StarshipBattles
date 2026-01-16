@@ -398,3 +398,42 @@ class TestGetComponentsByLayer:
             comps = armed_ship.get_components_by_layer(layer_type)
             for comp in comps:
                 assert comp.layer_assigned == layer_type
+
+
+# =============================================================================
+# Task 5.5: Ship.has_components() Tests
+# =============================================================================
+
+@pytest.mark.use_custom_data
+class TestHasComponents:
+    """Tests for Ship.has_components() method."""
+
+    def test_returns_bool(self, basic_ship):
+        """has_components() returns a boolean."""
+        result = basic_ship.has_components()
+        assert isinstance(result, bool)
+
+    def test_empty_ship_with_hull_returns_true(self, empty_ship):
+        """Ship with auto-equipped hull returns True (hull is a component)."""
+        # Hull is auto-equipped, so even an "empty" ship has one component
+        result = empty_ship.has_components()
+        assert result is True
+
+    def test_ship_with_components_returns_true(self, armed_ship):
+        """Ship with components returns True."""
+        result = armed_ship.has_components()
+        assert result is True
+
+    def test_basic_ship_with_bridge_engine_returns_true(self, basic_ship):
+        """Ship with bridge and engine returns True."""
+        result = basic_ship.has_components()
+        assert result is True
+
+    def test_truly_empty_ship_returns_false(self, registry_with_components):
+        """Ship with all layers emptied returns False."""
+        ship = Ship(name="EmptyShip", x=0, y=0, color=(255, 255, 255), ship_class="Escort")
+        # Clear all layers including hull
+        for layer_data in ship.layers.values():
+            layer_data['components'] = []
+        result = ship.has_components()
+        assert result is False

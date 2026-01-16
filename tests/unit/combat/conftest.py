@@ -6,8 +6,9 @@ Provides fixtures and setup for combat-related tests.
 import pytest
 import pygame
 
-from tests.fixtures.paths import data_dir, project_root, unit_test_data_dir, get_unit_test_data_dir  # noqa: F401
+from tests.fixtures.paths import data_dir, project_root, unit_test_data_dir  # noqa: F401
 from tests.fixtures.common import initialized_ship_data, initialized_ship_data_with_modifiers  # noqa: F401
+from tests.fixtures.ai import strategy_manager_with_test_data  # noqa: F401
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import create_component
 from game.core.registry import RegistryManager
@@ -22,25 +23,6 @@ def combat_test_setup():
     yield
     RegistryManager.instance().clear()
     StrategyManager.instance().clear()
-
-
-@pytest.fixture
-def strategy_manager_with_test_data(unit_test_data_dir):
-    """
-    Set up StrategyManager with test data.
-
-    Loads AI strategies from the test data directory.
-    """
-    manager = StrategyManager.instance()
-    manager.load_data(
-        str(unit_test_data_dir),
-        targeting_file="test_targeting_policies.json",
-        movement_file="test_movement_policies.json",
-        strategy_file="test_combat_strategies.json"
-    )
-    manager._loaded = True
-    yield manager
-    manager.clear()
 
 
 @pytest.fixture

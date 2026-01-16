@@ -9,6 +9,7 @@ import random
 import time
 
 from game.core.logger import log_debug, log_info, log_warning
+from game.core.config import UIConfig
 from game.ai.controller import AIController
 from game.ui.renderer.game_renderer import draw_ship
 from game.ui.renderer.camera import Camera
@@ -283,7 +284,7 @@ class BattleScene:
         # 2. Loop through entities
         # Draw projectiles
         for p in self.engine.projectiles:
-            trail_length = 100
+            trail_length = UIConfig.TRAIL_LENGTH
             start_pos = p.position - p.velocity.normalize() * trail_length
             end_pos = p.position
             

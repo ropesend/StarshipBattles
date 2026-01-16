@@ -6,7 +6,6 @@ stacking is working correctly in the simulator.
 """
 import unittest
 import os
-import json
 import glob
 
 from game.simulation.entities.ship import Ship, load_vehicle_classes
@@ -14,6 +13,7 @@ from game.simulation.components.component import (
     load_components, load_modifiers, create_component
 )
 from game.core.registry import RegistryManager
+from game.core.json_utils import load_json
 from tests.fixtures.paths import get_data_dir
 
 
@@ -122,9 +122,11 @@ class TestAllShipDesigns(unittest.TestCase):
         
         for ship_path in self.ship_files:
             try:
-                with open(ship_path, 'r') as f:
-                    data = json.load(f)
-                
+                data = load_json(ship_path)
+                if data is None:
+                    failures.append(f"{os.path.basename(ship_path)}: Failed to load JSON")
+                    continue
+
                 expected = data.get('expected_stats', {})
                 if not expected:
                     continue  # Skip ships without expected_stats

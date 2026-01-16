@@ -75,6 +75,10 @@ class MountDependencyRule(AdditionValidationRule):
     def _do_validate(self, ship, component: Optional[Component], layer_type: Optional[LayerType]) -> ValidationResult:
         result = ValidationResult(True)
 
+        # Guard clause: Skip validation if layer doesn't exist on ship
+        if layer_type not in ship.layers:
+            return result
+
         req_mount = component.data.get('required_mount')
         if req_mount:
             # Count mounts vs existing users in THIS layer
@@ -99,6 +103,10 @@ class LayerRestrictionDefinitionRule(AdditionValidationRule):
 
     def _do_validate(self, ship, component: Optional[Component], layer_type: Optional[LayerType]) -> ValidationResult:
         result = ValidationResult(True)
+
+        # Guard clause: Skip validation if layer doesn't exist on ship
+        if layer_type not in ship.layers:
+            return result
 
         restrictions = ship.layers[layer_type]['restrictions']
 

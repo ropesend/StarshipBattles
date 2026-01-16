@@ -1,4 +1,5 @@
 import math
+import threading
 from game.simulation.formula_system import evaluate_math_formula
 from game.core.registry import get_component_registry, get_modifier_registry
 from game.core.json_utils import load_json_required
@@ -514,33 +515,57 @@ class Component:
 
 
 # Caching for performance (Phase 2 Test Stabilization)
-_COMPONENT_CACHE = None
-_MODIFIER_CACHE = None
-_LAST_COMPONENT_FILE = None
-_LAST_MODIFIER_FILE = None
+# Refactored to thread-safe singleton pattern (Code Review Phase 0)
+class ComponentCacheManager:
+    """Thread-safe singleton manager for component and modifier caches."""
+    _instance = None
+    _lock = threading.Lock()
+
+    def __init__(self):
+        self.component_cache = None
+        self.modifier_cache = None
+        self.last_component_file = None
+        self.last_modifier_file = None
+
+    @classmethod
+    def instance(cls):
+        """Get the singleton instance with thread-safe initialization."""
+        if cls._instance is None:
+            with cls._lock:
+                # Double-check after acquiring lock
+                if cls._instance is None:
+                    cls._instance = cls()
+        return cls._instance
+
+    @classmethod
+    def reset(cls):
+        """Reset all caches for test isolation."""
+        with cls._lock:
+            if cls._instance is not None:
+                cls._instance.component_cache = None
+                cls._instance.modifier_cache = None
+                cls._instance.last_component_file = None
+                cls._instance.last_modifier_file = None
 
 
 def reset_component_caches():
     """
-    Reset all module-level caches for test isolation.
+    Reset all caches for test isolation.
     This ensures clean state between tests in parallel execution.
     """
-    global _COMPONENT_CACHE, _MODIFIER_CACHE, _LAST_COMPONENT_FILE, _LAST_MODIFIER_FILE
-    _COMPONENT_CACHE = None
-    _MODIFIER_CACHE = None
-    _LAST_COMPONENT_FILE = None
-    _LAST_MODIFIER_FILE = None
+    ComponentCacheManager.reset()
 
 def load_components(filepath="data/components.json"):
-    global _COMPONENT_CACHE, _LAST_COMPONENT_FILE
     import os
     import copy
     from game.core.registry import get_component_registry
 
+    cache_mgr = ComponentCacheManager.instance()
+
     # If cache exists and matches filepath, hydrate Registry from cache (Fast Path)
-    if _COMPONENT_CACHE is not None and _LAST_COMPONENT_FILE == filepath:
+    if cache_mgr.component_cache is not None and cache_mgr.last_component_file == filepath:
         comps = get_component_registry()
-        for c_id, comp in _COMPONENT_CACHE.items():
+        for c_id, comp in cache_mgr.component_cache.items():
             comps[c_id] = comp.clone()
         return
 
@@ -571,35 +596,36 @@ def load_components(filepath="data/components.json"):
                 log_error(f"creating component {comp_def.get('id')}: {e}")
 
         # Populate Cache
-        _COMPONENT_CACHE = temp_cache
-        _LAST_COMPONENT_FILE = filepath
+        cache_mgr.component_cache = temp_cache
+        cache_mgr.last_component_file = filepath
 
         # Populate Registry from Cache
         comps = get_component_registry()
-        for c_id, comp in _COMPONENT_CACHE.items():
+        for c_id, comp in cache_mgr.component_cache.items():
             comps[c_id] = comp.clone()
 
     except Exception as e:
         log_error(f"loading/parsing components json: {e}")
 
 def load_modifiers(filepath="data/modifiers.json"):
-    global _MODIFIER_CACHE, _LAST_MODIFIER_FILE
     import os
     import copy
     from game.core.registry import get_modifier_registry
-    
+
+    cache_mgr = ComponentCacheManager.instance()
+
     # Fast Path
-    if _MODIFIER_CACHE is not None and _LAST_MODIFIER_FILE == filepath:
+    if cache_mgr.modifier_cache is not None and cache_mgr.last_modifier_file == filepath:
         mods = get_modifier_registry()
-        for m_id, mod in _MODIFIER_CACHE.items():
+        for m_id, mod in cache_mgr.modifier_cache.items():
             mods[m_id] = copy.deepcopy(mod)
         return
-    
+
     # Slow Path
     if not os.path.exists(filepath):
-         base_dir = os.path.dirname(os.path.abspath(__file__))
-         filepath = os.path.join(base_dir, filepath)
-    
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        filepath = os.path.join(base_dir, filepath)
+
     try:
         data = load_json_required(filepath)
 
@@ -608,11 +634,11 @@ def load_modifiers(filepath="data/modifiers.json"):
             mod = Modifier(mod_def)
             temp_cache[mod.id] = mod
 
-        _MODIFIER_CACHE = temp_cache
-        _LAST_MODIFIER_FILE = filepath
+        cache_mgr.modifier_cache = temp_cache
+        cache_mgr.last_modifier_file = filepath
 
         mods = get_modifier_registry()
-        for m_id, mod in _MODIFIER_CACHE.items():
+        for m_id, mod in cache_mgr.modifier_cache.items():
             mods[m_id] = copy.deepcopy(mod)
 
     except Exception as e:

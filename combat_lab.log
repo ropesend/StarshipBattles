@@ -1,145 +1,752 @@
-2026-01-15 22:30:34 - CombatLab - DEBUG - Combat Lab logging initialized
-2026-01-15 22:30:34 - CombatLab - DEBUG - Log file: c:\Dev\Starship Battles\combat_lab.log
-2026-01-15 22:30:34 - CombatLab - DEBUG - Console level: INFO
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class
-22026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-008-HT - High Accuracy Beam - Max Range (750px) [100k Ticks]
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-008 - High Accuracy Beam - Max Range (750px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007-HT - High Accuracy Beam - Point Blank (50px) [100k Ticks]
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007 - High Accuracy Beam - Point Blank (50px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-003 - Low Accuracy Beam - Max Range (750px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002-HT - Low Accuracy Beam - Mid Range (400px) [100k Ticks]
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002 - Low Accuracy Beam - Mid Range (400px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001-HT - Low Accuracy Beam - Point Blank (50px) [100k Ticks]
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001 - Low Accuracy Beam - Point Blank (50px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-010 - Medium Accuracy vs Erratic Small - Max Range (750px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-009 - Medium Accuracy vs Erratic Small - Mid Range (400px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006-HT - Medium Accuracy Beam - Max Range (750px) [100k Ticks]
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006 - Medium Accuracy Beam - Max Range (750px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005-HT - Medium Accuracy Beam - Mid Range (400px) [100k Ticks]
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005 - Medium Accuracy Beam - Mid Range (400px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004-HT - Medium Accuracy Beam - Point Blank (50px) [100k Ticks]
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004 - Medium Accuracy Beam - Point Blank (50px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-011 - Beam Weapon Out of Range (900px > 800px max)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in beam_scenarios.py has no metadata
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: EXAMPLE-001 - Example beam point-blank test
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-010 - Projectile Damage - Close Range (100px / 10%)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-090 - Projectile Damage - Long Range (900px / 90%)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-003 - Seeker Expires - Beyond Range (5000px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-001 - Seeker Impact - Close Range (500px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-004 - Seeker Impact - Edge Case Range (4500px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-002 - Seeker Impact - Mid Range (2500px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-001 - Seeker vs No Point Defense (Baseline)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-002 - Seeker vs Single Point Defense
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-003 - Seeker vs Triple Point Defense
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-004 - Seeker Tracking - Erratic Small Target (1000px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-002 - Seeker Tracking - Linear Target (1000px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-003 - Seeker Tracking - Orbiting Target (1000px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-001 - Seeker Tracking - Stationary Target (1000px)
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in seeker_scenarios.py has no metadata
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
-2026-01-15 22:30:48 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios
-2026-01-15 22:30:48 - CombatLab.test_framework.test_history - INFO - Loaded 12 test histories from c:\Dev\Starship Battles\simulation_tests\test_history.json
-2026-01-15 22:30:48 - CombatLab.test_framework.services.metadata_management_service - INFO - 
+2026-01-16 15:24:03 - CombatLab - DEBUG - Combat Lab logging initialized
+2026-01-16 15:24:03 - CombatLab - DEBUG - Log file: c:\Dev\Starship Battles\combat_lab.log
+2026-01-16 15:24:03 - CombatLab - DEBUG - Console level: INFO
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_service - INFO - 
 === Static Validation: Checking test metadata against component data ===
-2026-01-15 22:30:48 - CombatLab.test_framework.services.metadata_management_service - INFO - === Static Validation Complete ===
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_se2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-008-HT - High Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-008 - High Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007-HT - High Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007 - High Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-003 - Low Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002-HT - Low Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002 - Low Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001-HT - Low Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001 - Low Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-010 - Medium Accuracy vs Erratic Small - Max Range (750px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-009 - Medium Accuracy vs Erratic Small - Mid Range (400px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006-HT - Medium Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006 - Medium Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005-HT - Medium Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005 - Medium Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004-HT - Medium Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004 - Medium Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-011 - Beam Weapon Out of Range (900px > 800px max)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in beam_scenarios.py has no metadata
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: EXAMPLE-001 - Example beam point-blank test
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-010 - Projectile Damage - Close Range (100px / 10%)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-090 - Projectile Damage - Long Range (900px / 90%)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-003 - Seeker Expires - Beyond Range (5000px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-001 - Seeker Impact - Close Range (500px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-004 - Seeker Impact - Edge Case Range (4500px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-002 - Seeker Impact - Mid Range (2500px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-001 - Seeker vs No Point Defense (Baseline)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-002 - Seeker vs Single Point Defense
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-003 - Seeker vs Triple Point Defense
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-004 - Seeker Tracking - Erratic Small Target (1000px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-002 - Seeker Tracking - Linear Target (1000px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-003 - Seeker Tracking - Orbiting Target (1000px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-001 - Seeker Tracking - Stationary Target (1000px)
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in seeker_scenarios.py has no metadata
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
+2026-01-16 15:24:15 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios
+2026-01-16 15:24:15 - CombatLab.test_framework.test_history - INFO - Loaded 12 test histories from c:\Dev\Starship Battles\simulation_tests\test_history.json
+2026-01-16 15:24:15 - CombatLab.test_framework.services.metadata_management_service - INFO - 
+=== Static Validation: Checking test metadata against component data ===
+2026-01-16 15:24:15 - CombatLab.test_framework.services.metadata_management_service - INFO - === Static Validation Complete ===
 
-5 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=10)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 10 ticks in 0.00s (0 ticks/sec)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=10)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 10 ticks in 0.00s (18683 ticks/sec)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.01s (69585 ticks/sec)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.06s (8660 ticks/sec)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.01s (95795 ticks/sec)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.01s (71037 ticks/sec)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test FAILED
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - ERROR - Error running headless test: Test error
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=100)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 100 ticks in 0.00s (31785 ticks/sec)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.01s (71882 ticks/sec)
-2026-01-15 22:30:45 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
+=== Static Validation Complete ===
+
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_service - INFO - 
+=== Static Validation: Checking test metadata against component data ===
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_service - INFO - === Static Validation Complete ===
+
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_service - INFO - 
+=== Static Validation: Checking test metadata against component data ===
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_service - INFO - === Static Validation Complete ===
+
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_service - INFO - 
+=== Static Validation: Checking test metadata against component data ===
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_service - INFO - === Static Validation Complete ===
+
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_service - INFO - 
+=== Static Validation: Checking test metadata against component data ===
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_service - INFO - === Static Validation Complete ===
+
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_service - INFO - 
+=== Static Validation: Checking test metadata against component data ===
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_service - INFO - === Static Validation Complete ===
+
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_service - INFO - 
+=== Static Validation: Checking test metadata against component data ===
+2026-01-16 15:24:12 - CombatLab.test_framework.services.metadata_management_service - INFO - === Static Validation Complete ===
+
+Instantiating scenario class for headless run
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=10)
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 10 ticks in 0.00s (0 ticks/sec)
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=250)
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 250 ticks in 0.00s (52410 ticks/sec)
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=1000)
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Battle ended naturally at tick 50
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 50 ticks in 0.00s (87200 ticks/sec)
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=10)
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 10 ticks in 0.00s (0 ticks/sec)
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=10)
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 10 ticks in 0.00s (0 ticks/sec)
+2026-01-16 15:24:12 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
+Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007 - High Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007-HT - High Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007 - High Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007-HT - High Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-003 - Low Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007 - High Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005 - Medium Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007-HT - High Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007 - High Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-003 - Low Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007 - High Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-003 - Low Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007 - High Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002-HT - Low Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-003 - Low Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004-HT - Medium Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007 - High Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-003 - Low Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002-HT - Low Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-003 - Low Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002-HT - Low Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-003 - Low Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002 - Low Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002-HT - Low Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004 - Medium Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-003 - Low Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002-HT - Low Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002 - Low Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002-HT - Low Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002 - Low Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002-HT - Low Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001-HT - Low Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002 - Low Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-011 - Beam Weapon Out of Range (900px > 800px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002-HT - Low Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002 - Low Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001-HT - Low Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002 - Low Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001-HT - Low Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002 - Low Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001 - Low Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001-HT - Low Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in beam_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002 - Low Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001-HT - Low Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001 - Low Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001-HT - Low Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001 - Low Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001-HT - Low Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-010 - Medium Accuracy vs Erratic Small - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001 - Low Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001-HT - Low Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001 - Low Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-010 - Medium Accuracy vs Erratic Small - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001 - Low Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-010 - Medium Accuracy vs Erratic Small - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001 - Low Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-009 - Medium Accuracy vs Erratic Small - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: EXAMPLE-001 - Example beam point-blank test
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-010 - Medium Accuracy vs Erratic Small - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001 - Low Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-010 - Medium Accuracy vs Erratic Small - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-009 - Medium Accuracy vs Erratic Small - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-010 - Medium Accuracy vs Erratic Small - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-009 - Medium Accuracy vs Erratic Small - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-010 - Medium Accuracy vs Erratic Small - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006-HT - Medium Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-009 - Medium Accuracy vs Erratic Small - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-010 - Medium Accuracy vs Erratic Small - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-009 - Medium Accuracy vs Erratic Small - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006-HT - Medium Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-009 - Medium Accuracy vs Erratic Small - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006-HT - Medium Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-009 - Medium Accuracy vs Erratic Small - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-010 - Projectile Damage - Close Range (100px / 10%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006 - Medium Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006-HT - Medium Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-009 - Medium Accuracy vs Erratic Small - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006-HT - Medium Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006 - Medium Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006-HT - Medium Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006 - Medium Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006-HT - Medium Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-090 - Projectile Damage - Long Range (900px / 90%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005-HT - Medium Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006 - Medium Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006-HT - Medium Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006 - Medium Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005-HT - Medium Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006 - Medium Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005-HT - Medium Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006 - Medium Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005 - Medium Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005-HT - Medium Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006 - Medium Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005-HT - Medium Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005 - Medium Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005-HT - Medium Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005 - Medium Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005-HT - Medium Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004-HT - Medium Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005 - Medium Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005-HT - Medium Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005 - Medium Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004-HT - Medium Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005 - Medium Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004-HT - Medium Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005 - Medium Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004 - Medium Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004-HT - Medium Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005 - Medium Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004-HT - Medium Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004 - Medium Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004-HT - Medium Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004 - Medium Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004-HT - Medium Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-011 - Beam Weapon Out of Range (900px > 800px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004 - Medium Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004-HT - Medium Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004 - Medium Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-011 - Beam Weapon Out of Range (900px > 800px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004 - Medium Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-011 - Beam Weapon Out of Range (900px > 800px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004 - Medium Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in beam_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-011 - Beam Weapon Out of Range (900px > 800px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004 - Medium Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-011 - Beam Weapon Out of Range (900px > 800px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in beam_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-011 - Beam Weapon Out of Range (900px > 800px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in beam_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-011 - Beam Weapon Out of Range (900px > 800px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in beam_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-011 - Beam Weapon Out of Range (900px > 800px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in beam_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in beam_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: EXAMPLE-001 - Example beam point-blank test
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in beam_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: EXAMPLE-001 - Example beam point-blank test
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in beam_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: EXAMPLE-001 - Example beam point-blank test
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: EXAMPLE-001 - Example beam point-blank test
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: EXAMPLE-001 - Example beam point-blank test
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: EXAMPLE-001 - Example beam point-blank test
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-010 - Projectile Damage - Close Range (100px / 10%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-010 - Projectile Damage - Close Range (100px / 10%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: EXAMPLE-001 - Example beam point-blank test
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: EXAMPLE-001 - Example beam point-blank test
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-010 - Projectile Damage - Close Range (100px / 10%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-010 - Projectile Damage - Close Range (100px / 10%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-090 - Projectile Damage - Long Range (900px / 90%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-090 - Projectile Damage - Long Range (900px / 90%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-010 - Projectile Damage - Close Range (100px / 10%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-010 - Projectile Damage - Close Range (100px / 10%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-090 - Projectile Damage - Long Range (900px / 90%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-090 - Projectile Damage - Long Range (900px / 90%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-010 - Projectile Damage - Close Range (100px / 10%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-010 - Projectile Damage - Close Range (100px / 10%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-090 - Projectile Damage - Long Range (900px / 90%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-090 - Projectile Damage - Long Range (900px / 90%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-003 - Seeker Expires - Beyond Range (5000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-090 - Projectile Damage - Long Range (900px / 90%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-090 - Projectile Damage - Long Range (900px / 90%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-001 - Seeker Impact - Close Range (500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-004 - Seeker Impact - Edge Case Range (4500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-002 - Seeker Impact - Mid Range (2500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-001 - Seeker vs No Point Defense (Baseline)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-002 - Seeker vs Single Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-003 - Seeker vs Triple Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-004 - Seeker Tracking - Erratic Small Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-002 - Seeker Tracking - Linear Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-003 - Seeker Tracking - Orbiting Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-003 - Seeker Expires - Beyond Range (5000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-001 - Seeker Tracking - Stationary Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-001 - Seeker Impact - Close Range (500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in seeker_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-004 - Seeker Impact - Edge Case Range (4500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-002 - Seeker Impact - Mid Range (2500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-001 - Seeker vs No Point Defense (Baseline)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-002 - Seeker vs Single Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-003 - Seeker vs Triple Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-004 - Seeker Tracking - Erratic Small Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-002 - Seeker Tracking - Linear Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-003 - Seeker Tracking - Orbiting Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-001 - Seeker Tracking - Stationary Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-003 - Seeker Expires - Beyond Range (5000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-003 - Seeker Expires - Beyond Range (5000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-003 - Seeker Expires - Beyond Range (5000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-001 - Seeker Impact - Close Range (500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in seeker_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-001 - Seeker Impact - Close Range (500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-003 - Seeker Expires - Beyond Range (5000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-003 - Seeker Expires - Beyond Range (5000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-001 - Seeker Impact - Close Range (500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-003 - Seeker Expires - Beyond Range (5000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-004 - Seeker Impact - Edge Case Range (4500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-004 - Seeker Impact - Edge Case Range (4500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-001 - Seeker Impact - Close Range (500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-001 - Seeker Impact - Close Range (500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-004 - Seeker Impact - Edge Case Range (4500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-001 - Seeker Impact - Close Range (500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-002 - Seeker Impact - Mid Range (2500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-002 - Seeker Impact - Mid Range (2500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-004 - Seeker Impact - Edge Case Range (4500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-004 - Seeker Impact - Edge Case Range (4500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-002 - Seeker Impact - Mid Range (2500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-004 - Seeker Impact - Edge Case Range (4500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-001 - Seeker vs No Point Defense (Baseline)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-001 - Seeker vs No Point Defense (Baseline)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-002 - Seeker Impact - Mid Range (2500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-002 - Seeker Impact - Mid Range (2500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - ERROR - Error loading scenario from seeker_scenarios.py: cannot import name 'StaticTargetScenario' from 'simulation_tests.scenarios.templates' (c:\Dev\Starship Battles\simulation_tests\scenarios\templates.py)
+Traceback (most recent call last):
+  File "c:\Dev\Starship Battles\test_framework\registry.py", line 170, in _discover_scenarios
+    spec.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "c:\Dev\Starship Battles\simulation_tests\scenarios\seeker_scenarios.py", line 25, in <module>
+    from simulation_tests.scenarios.templates import StaticTargetScenario
+ImportError: cannot import name 'StaticTargetScenario' from 'simulation_tests.scenarios.templates' (c:\Dev\Starship Battles\simulation_tests\scenarios\templates.py)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-001 - Seeker vs No Point Defense (Baseline)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-002 - Seeker Impact - Mid Range (2500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-002 - Seeker vs Single Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - ERROR - Error loading scenario from seeker_scenarios.py: cannot import name 'StaticTargetScenario' from 'simulation_tests.scenarios.templates' (c:\Dev\Starship Battles\simulation_tests\scenarios\templates.py)
+Traceback (most recent call last):
+  File "c:\Dev\Starship Battles\test_framework\registry.py", line 170, in _discover_scenarios
+    spec.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "c:\Dev\Starship Battles\simulation_tests\scenarios\seeker_scenarios.py", line 25, in <module>
+    from simulation_tests.scenarios.templates import StaticTargetScenario
+ImportError: cannot import name 'StaticTargetScenario' from 'simulation_tests.scenarios.templates' (c:\Dev\Starship Battles\simulation_tests\scenarios\templates.py)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-002 - Seeker vs Single Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-001 - Seeker vs No Point Defense (Baseline)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-001 - Seeker vs No Point Defense (Baseline)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-002 - Seeker vs Single Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-001 - Seeker vs No Point Defense (Baseline)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-003 - Seeker vs Triple Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-003 - Seeker vs Triple Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-002 - Seeker vs Single Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-002 - Seeker vs Single Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-003 - Seeker vs Triple Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-002 - Seeker vs Single Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-004 - Seeker Tracking - Erratic Small Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-004 - Seeker Tracking - Erratic Small Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-003 - Seeker vs Triple Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-003 - Seeker vs Triple Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-004 - Seeker Tracking - Erratic Small Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-003 - Seeker vs Triple Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-002 - Seeker Tracking - Linear Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-002 - Seeker Tracking - Linear Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-004 - Seeker Tracking - Erratic Small Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-004 - Seeker Tracking - Erratic Small Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-002 - Seeker Tracking - Linear Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-004 - Seeker Tracking - Erratic Small Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-003 - Seeker Tracking - Orbiting Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-003 - Seeker Tracking - Orbiting Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-002 - Seeker Tracking - Linear Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-002 - Seeker Tracking - Linear Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-003 - Seeker Tracking - Orbiting Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-002 - Seeker Tracking - Linear Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-001 - Seeker Tracking - Stationary Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-001 - Seeker Tracking - Stationary Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-003 - Seeker Tracking - Orbiting Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-003 - Seeker Tracking - Orbiting Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-001 - Seeker Tracking - Stationary Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-003 - Seeker Tracking - Orbiting Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in seeker_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in seeker_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-001 - Seeker Tracking - Stationary Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-001 - Seeker Tracking - Stationary Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in seeker_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-001 - Seeker Tracking - Stationary Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in seeker_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in seeker_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in seeker_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-008-HT - High Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-008 - High Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007-HT - High Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007 - High Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-003 - Low Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002-HT - Low Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002 - Low Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001-HT - Low Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001 - Low Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-010 - Medium Accuracy vs Erratic Small - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-009 - Medium Accuracy vs Erratic Small - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006-HT - Medium Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006 - Medium Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005-HT - Medium Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005 - Medium Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004-HT - Medium Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004 - Medium Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-011 - Beam Weapon Out of Range (900px > 800px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in beam_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: EXAMPLE-001 - Example beam point-blank test
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-010 - Projectile Damage - Close Range (100px / 10%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-090 - Projectile Damage - Long Range (900px / 90%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-003 - Seeker Expires - Beyond Range (5000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-001 - Seeker Impact - Close Range (500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-004 - Seeker Impact - Edge Case Range (4500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-002 - Seeker Impact - Mid Range (2500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-001 - Seeker vs No Point Defense (Baseline)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-002 - Seeker vs Single Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-003 - Seeker vs Triple Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-004 - Seeker Tracking - Erratic Small Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-002 - Seeker Tracking - Linear Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-003 - Seeker Tracking - Orbiting Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-001 - Seeker Tracking - Stationary Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in seeker_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-008-HT - High Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-008 - High Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007-HT - High Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-007 - High Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-003 - Low Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002-HT - Low Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-002 - Low Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001-HT - Low Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-001 - Low Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-010 - Medium Accuracy vs Erratic Small - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-009 - Medium Accuracy vs Erratic Small - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006-HT - Medium Accuracy Beam - Max Range (750px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-006 - Medium Accuracy Beam - Max Range (750px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005-HT - Medium Accuracy Beam - Mid Range (400px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-005 - Medium Accuracy Beam - Mid Range (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004-HT - Medium Accuracy Beam - Point Blank (50px) [100k Ticks]
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-004 - Medium Accuracy Beam - Point Blank (50px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: BEAM360-011 - Beam Weapon Out of Range (900px > 800px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in beam_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: EXAMPLE-001 - Example beam point-blank test
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-010 - Projectile Damage - Close Range (100px / 10%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-090 - Projectile Damage - Long Range (900px / 90%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-DMG-050 - Projectile Damage - Mid Range (500px / 50%)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-005 - Projectile vs Erratic Large Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-004 - Projectile vs Erratic Small Target (300px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-003 - Projectile vs Fast Linear Target (400px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-002 - Projectile vs Slow Linear Target (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-006 - Projectile Out of Range (1200px > 1000px max)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROJ360-001 - Projectile vs Stationary - Point Blank (200px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-001 - Engine provides thrust - ship accelerates
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-002 - Thrust/mass ratio affects max speed
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-004 - Turn rate allows rotation
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: PROP-003 - Thruster provides turn rate
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in propulsion_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-001 - Beam Energy Consumption with Regeneration
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-002 - Beam Energy Depletion (No Regeneration)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-003 - Projectile Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-004 - Projectile Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-005 - Seeker Ammo Consumption
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: RESOURCE-006 - Seeker Ammo Depletion
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-003 - Seeker Expires - Beyond Range (5000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-001 - Seeker Impact - Close Range (500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-004 - Seeker Impact - Edge Case Range (4500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-002 - Seeker Impact - Mid Range (2500px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-001 - Seeker vs No Point Defense (Baseline)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-002 - Seeker vs Single Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-PD-003 - Seeker vs Triple Point Defense
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-004 - Seeker Tracking - Erratic Small Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-002 - Seeker Tracking - Linear Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-003 - Seeker Tracking - Orbiting Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - DEBUG - Registered scenario: SEEK360-TRACK-001 - Seeker Tracking - Stationary Target (1000px)
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in seeker_scenarios.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - DuelScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
+2026-01-16 15:24:12 - CombatLab.test_framework.registry - INFO - Discovered 49 scenarios

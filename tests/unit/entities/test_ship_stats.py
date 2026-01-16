@@ -51,7 +51,7 @@ class TestShipStatsBaseline(unittest.TestCase):
         """Create a mock ship with the given components."""
         from game.simulation.components.component import LayerType
         from game.simulation.systems.resource_manager import ResourceRegistry
-        
+
         ship = MagicMock()
         ship.layers = {
             LayerType.CORE: {
@@ -69,12 +69,27 @@ class TestShipStatsBaseline(unittest.TestCase):
         ship._resources_initialized = False
         ship.current_shields = 0
         ship.max_shields = 0
-        
+
+        # Add ship helper methods that ship_stats now uses
+        def get_all_components():
+            result = []
+            for layer_data in ship.layers.values():
+                result.extend(layer_data['components'])
+            return result
+
+        def iter_components():
+            for layer_type, layer_data in ship.layers.items():
+                for comp in layer_data['components']:
+                    yield layer_type, comp
+
+        ship.get_all_components = get_all_components
+        ship.iter_components = iter_components
+
         # Assign ship reference to components
         for c in components:
             c.ship = ship
             c.recalculate_stats()
-        
+
         return ship
     
     def test_thrust_calculation_from_engine(self):

@@ -186,7 +186,12 @@ class ComponentDetailPanel:
         if not self.current_component:
             return
 
-        json_str = json.dumps(self.current_component.data, indent=4)
+        try:
+            json_str = json.dumps(self.current_component.data, indent=4, default=str)
+        except (TypeError, ValueError) as e:
+            log_error(f"Failed to serialize component data: {e}")
+            json_str = f"Error serializing component: {e}"
+
         # Simple HTML formatting for text box
         html_str = json_str.replace("\n", "<br>").replace("    ", "&nbsp;&nbsp;&nbsp;&nbsp;")
         

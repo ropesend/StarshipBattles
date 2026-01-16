@@ -101,6 +101,28 @@ class TestBuilderDragDropReal(unittest.TestCase):
             LayerType.OUTER: {'components': []},
             LayerType.ARMOR: {'components': []}
         }
+        # Add ship helper methods that event_router now uses
+        def get_all_components():
+            result = []
+            for layer_data in self.builder.ship.layers.values():
+                result.extend(layer_data['components'])
+            return result
+
+        def iter_components():
+            for layer_type, layer_data in self.builder.ship.layers.items():
+                for comp in layer_data['components']:
+                    yield layer_type, comp
+
+        def has_components():
+            for layer_data in self.builder.ship.layers.values():
+                if layer_data['components']:
+                    return True
+            return False
+
+        self.builder.ship.get_all_components = get_all_components
+        self.builder.ship.iter_components = iter_components
+        self.builder.ship.has_components = has_components
+
         # Set benign defaults to satisfy update loop comparisons
         self.builder.ship.mass = 1000
         self.builder.ship.max_mass_budget = 10000
@@ -157,93 +179,41 @@ class TestBuilderDragDropReal(unittest.TestCase):
         self.assertEqual(self.builder.controller.dragged_item, comp_template)
 
     def test_drop_validation_success(self):
-        """Verify dropping a valid component calls ship.add_component."""
-        # Setup Drag
-        dragged = MagicMock()
-        dragged.current_hp = 100
-        dragged.max_hp = 100
-        dragged.mass = 10
-        dragged.is_active = True
-        dragged.name = "Test Component"
-        dragged.modifiers = [] # FIXED: Added modifiers list
-        self.builder.controller.dragged_item = dragged
-        
-        # Setup Validator to return Valid
-        with patch('game.ui.screens.builder_event_router.get_or_create_validator') as mock_validator:
-            validation_result = MagicMock()
-            validation_result.is_valid = True
-            mock_validator.return_value.validate_addition.return_value = validation_result
-            
-            # Simulate 'add_individual' action which roughly corresponds to a drop completion (handled by controller usually)
-            # Actually, InteractionController calls ship.add_component directly or via builder action?
-            # Let's check builder_gui.py lines 518+ (add_group/add_individual)
-            # It seems 'add_individual' is used for CLONING existing.
-            
-            # Drag/Drop logic is likely in InteractionController.handle_event -> mouse up -> check target -> add.
-            # But we want to test 'BuilderSceneGUI' integration logic. 
-            # If the controller logic is embedded in Builder, fine. 
-            # But BuilderSceneGUI delegates update/handle_event to controller.
-            
-            # Let's test the 'add_individual' action flow in BuilderSceneGUI as it contains the validation logic.
-            # Action: ('add_individual', component)
-            
-            self.builder.left_panel.handle_event = MagicMock(return_value=None) # Reset
-            
-            # We enforce the action via handle_event logic
-            # We can manually trigger the action block (which is inside handle_event)
-            # by injecting a return from one of the panels or just calling a helper if extracted.
-            # It's inside handle_event.
-            
-            # Simulate action from a panel (e.g. key press or button)
-            # Actually, let's just create a test action and pass it if possible, 
-            # or mock a panel to return it.
-            
-            self.builder.left_panel.handle_event = MagicMock(return_value=('add_individual', dragged))
-            
-            # Ensure ship has the component or not? 
-            # Logic: target_comp = data.
-            # Clone it. 
-            # Find layer of ORIGINAL.
-            # Wait, 'add_individual' copies an EXISTING component on the ship.
-            
-            # What about adding NEW from palette?
-            # That's 'select_component_type' -> dragged_item.
-            # Then DROP is handled by InteractionController? 
-            # If InteractionController calls ship.add_component, we should test InteractionController.
-            # But the plan said "Target: builder_gui.BuilderSceneGUI".
-            
-            # Let's stick to testing 'add_individual' (Component Cloning) which validates logic in BuilderSceneGUI.
-            
-            # Setup: Original component IS on the ship
-            original = MagicMock()
-            original.modifiers = []
-            original.current_hp = 100
-            original.max_hp = 100
-            original.mass = 10
-            original.is_active = True
-            original.name = "Original Component"
-            
-            # Key Fix: clone() must return a mock with stats too!
-            cloned = MagicMock()
-            cloned.current_hp = 100
-            cloned.max_hp = 100
-            cloned.mass = 10
-            cloned.is_active = True
-            cloned.name = "Original Component"
-            cloned.modifiers = []
-            
-            original.clone.return_value = cloned
-            
-            self.builder.ship.layers[LayerType.OUTER]['components'] = [original]
-            
-            self.builder.left_panel.handle_event = MagicMock(return_value=('add_individual', original))
-            
-            self.builder.handle_event(MagicMock())
-            
-            # Verify VALIDATOR was called
-            mock_validator.return_value.validate_addition.assert_called()
-            # Verify ship.add_component called
-            self.builder.ship.add_component.assert_called()
+        """Verify dropping a valid component calls viewmodel.add_component_instance."""
+        # Setup: Original component IS on the ship
+        original = MagicMock()
+        original.modifiers = []
+        original.current_hp = 100
+        original.max_hp = 100
+        original.mass = 10
+        original.is_active = True
+        original.name = "Original Component"
+
+        # Key Fix: clone() must return a mock with stats too!
+        cloned = MagicMock()
+        cloned.current_hp = 100
+        cloned.max_hp = 100
+        cloned.mass = 10
+        cloned.is_active = True
+        cloned.name = "Original Component"
+        cloned.modifiers = []
+
+        original.clone.return_value = cloned
+
+        self.builder.ship.layers[LayerType.OUTER]['components'] = [original]
+
+        # Mock the viewmodel's add_component_instance to return success
+        self.builder.viewmodel.add_component_instance = MagicMock(return_value=True)
+
+        self.builder.left_panel.handle_event = MagicMock(return_value=('add_individual', original))
+
+        self.builder.handle_event(MagicMock())
+
+        # Verify viewmodel.add_component_instance was called with cloned component
+        self.builder.viewmodel.add_component_instance.assert_called()
+        call_args = self.builder.viewmodel.add_component_instance.call_args
+        # First arg should be the cloned component, second should be the layer
+        self.assertEqual(call_args[0][1], LayerType.OUTER)
 
     def test_drop_validation_failure(self):
         """Verify showing error on invalid add."""
@@ -254,27 +224,38 @@ class TestBuilderDragDropReal(unittest.TestCase):
         original.mass = 10
         original.is_active = True
         original.name = "Original Component"
-        
+
+        # Key Fix: clone() must return a mock with stats too!
+        cloned = MagicMock()
+        cloned.current_hp = 100
+        cloned.max_hp = 100
+        cloned.mass = 10
+        cloned.is_active = True
+        cloned.name = "Original Component"
+        cloned.modifiers = []
+
+        original.clone.return_value = cloned
+
         self.builder.ship.layers[LayerType.OUTER]['components'] = [original]
-        
-        with patch('game.ui.screens.builder_event_router.get_or_create_validator') as mock_validator:
-            # Invalid Result
-            validation_result = MagicMock()
-            validation_result.is_valid = False
-            validation_result.errors = ["Overlapping"]
-            mock_validator.return_value.validate_addition.return_value = validation_result
-            
-            self.builder.left_panel.handle_event = MagicMock(return_value=('add_individual', original))
-            
-            # Capture show_error
-            self.builder.show_error = MagicMock()
-            
-            self.builder.handle_event(MagicMock())
-            
-            # Verify error shown
-            self.builder.show_error.assert_called_with("Cannot add: Overlapping")
-            # Verify NOT added
-            self.builder.ship.add_component.assert_not_called()
+
+        # Mock the viewmodel's add_component_instance to return failure
+        self.builder.viewmodel.add_component_instance = MagicMock(return_value=False)
+        # Mock the _last_result to have errors (last_errors is a property that reads from _last_result)
+        mock_result = MagicMock()
+        mock_result.errors = ["Overlapping"]
+        self.builder.viewmodel._last_result = mock_result
+
+        self.builder.left_panel.handle_event = MagicMock(return_value=('add_individual', original))
+
+        # Capture show_error
+        self.builder.show_error = MagicMock()
+
+        self.builder.handle_event(MagicMock())
+
+        # Verify error shown
+        self.builder.show_error.assert_called_with("Cannot add: Overlapping")
+        # Verify viewmodel was called but returned False
+        self.builder.viewmodel.add_component_instance.assert_called()
 
 if __name__ == '__main__':
     unittest.main()

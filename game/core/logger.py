@@ -1,15 +1,34 @@
 import logging
 import sys
+import threading
 
 class Logger:
     _instance = None
-    
+    _lock = threading.Lock()
+
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(Logger, cls).__new__(cls)
-            cls._instance.setup()
+            with cls._lock:
+                # Double-check after acquiring lock
+                if cls._instance is None:
+                    cls._instance = super(Logger, cls).__new__(cls)
+                    cls._instance._initialized = False
         return cls._instance
-    
+
+    def __init__(self):
+        if self._initialized:
+            return
+        self._initialized = True
+        self.setup()
+
+    @classmethod
+    def reset(cls):
+        """Reset the singleton instance for testing purposes."""
+        with cls._lock:
+            if cls._instance is not None:
+                cls._instance._initialized = False
+                cls._instance = None
+
     def setup(self):
         self.enabled = True
         self.logger = logging.getLogger("StarshipBattles")

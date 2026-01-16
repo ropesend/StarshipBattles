@@ -677,6 +677,18 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             return []
         return list(layer_data['components'])
 
+    def has_components(self) -> bool:
+        """
+        Check if ship has any components.
+
+        Returns:
+            True if ship has at least one component in any layer, False otherwise.
+        """
+        for layer_data in self.layers.values():
+            if layer_data['components']:
+                return True
+        return False
+
     def check_validity(self) -> bool:
         """Check if the current ship design is valid."""
         self.recalculate_stats()

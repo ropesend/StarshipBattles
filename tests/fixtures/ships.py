@@ -279,3 +279,39 @@ def two_opposing_ships():
     )
 
     return ship1, ship2
+
+
+# =============================================================================
+# Class-Specific Ship Fixtures
+# =============================================================================
+
+@pytest.fixture
+def basic_cruiser_ship(initialized_ship_data):
+    """
+    Create a basic Cruiser ship for testing.
+
+    The Cruiser class has 4 layers (CORE, INNER, OUTER, ARMOR) which makes
+    it suitable for testing features that require the INNER layer.
+
+    Requires initialized_ship_data fixture to hydrate the registry.
+    """
+    _ = initialized_ship_data  # Ensure ship data is loaded
+    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
+    ship.recalculate_stats()
+    return ship
+
+
+@pytest.fixture
+def basic_escort_ship(initialized_ship_data):
+    """
+    Create a basic Escort ship for testing.
+
+    The Escort class has 3 layers (CORE, OUTER, ARMOR) and is a smaller
+    ship class suitable for basic testing.
+
+    Requires initialized_ship_data fixture to hydrate the registry.
+    """
+    _ = initialized_ship_data  # Ensure ship data is loaded
+    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+    ship.recalculate_stats()
+    return ship

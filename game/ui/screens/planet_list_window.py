@@ -3,6 +3,7 @@ from game.strategy.data.planet import PLANET_RESOURCES
 from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UITextEntryLine, UIHorizontalSlider, UIDropDownMenu, UIImage, UIVerticalScrollBar
 from pygame_gui import UI_TEXT_ENTRY_FINISHED
 
+from game.core.config import UIConfig
 from game.ui.screens.planet_list_filters import gather_planets, filter_planets, sort_planets, get_column_value
 from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
 
@@ -16,9 +17,9 @@ class PlanetListWindow(UIWindow):
         self.asset_resolver = asset_resolver  # Function to get image for planet
         
         # --- Layout Constants ---
-        self.sidebar_width = 300
-        self.header_height = 40
-        self.row_height = 50
+        self.sidebar_width = UIConfig.SIDEBAR_WIDTH
+        self.header_height = UIConfig.HEADER_HEIGHT
+        self.row_height = UIConfig.ROW_HEIGHT_LARGE
         
         # --- State ---
         self.all_planets = gather_planets(galaxy, empire)

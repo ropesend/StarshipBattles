@@ -400,6 +400,34 @@ class BuilderViewModel:
             return count if not result.warnings else count - 1
         return 0
 
+    def add_component_instance(self, component: Component, layer: LayerType) -> bool:
+        """
+        Add a pre-constructed component instance to the ship using the service.
+
+        Unlike add_component() which creates from ID, this accepts an existing
+        Component instance (e.g., one with modifiers already applied).
+
+        Args:
+            component: The component instance to add
+            layer: Target layer
+
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self._ship:
+            logger.error("Cannot add component: no ship")
+            return False
+
+        result = self._ship_service.add_component_instance(self._ship, component, layer)
+        self._last_result = result
+
+        if result.success:
+            self.notify_ship_changed()
+            return True
+        else:
+            logger.warning(f"Failed to add component instance: {result.errors}")
+            return False
+
     def remove_component(self, layer: LayerType, index: int) -> Optional[Component]:
         """
         Remove a component from the current ship using the service.
@@ -425,12 +453,14 @@ class BuilderViewModel:
             logger.warning(f"Failed to remove component: {result.errors}")
             return None
 
-    def change_ship_class(self, new_class: str) -> bool:
+    def change_ship_class(self, new_class: str, migrate_components: bool = True) -> bool:
         """
         Change the ship's vehicle class using the service.
 
         Args:
             new_class: Target vehicle class
+            migrate_components: If True, attempts to keep components and fit them
+                                into new layers. If False, clears all components.
 
         Returns:
             True if successful, False otherwise
@@ -439,7 +469,9 @@ class BuilderViewModel:
             logger.error("Cannot change class: no ship")
             return False
 
-        result = self._ship_service.change_class(self._ship, new_class)
+        result = self._ship_service.change_class(
+            self._ship, new_class, migrate_components=migrate_components
+        )
         self._last_result = result
 
         if result.success:

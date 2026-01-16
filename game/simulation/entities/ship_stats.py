@@ -69,36 +69,34 @@ class ShipStatsCalculator:
         
         component_pool = [] # List of (comp) for next phases
         
-        for layer_type, layer_data in ship.layers.items():
-            for comp in layer_data['components']:
-                # Reset Status Assumption
-                comp.is_active = True
-                comp.status = ComponentStatus.ACTIVE
-                
-                # Check Damage Threshold (ignore Armor - armor uses HP pool, not individual component threshold)
-                if not comp.abilities.get('Armor', False):
-                     if comp.max_hp > 0 and (comp.current_hp / comp.max_hp) <= comp.damage_threshold:
-                         comp.is_active = False
-                         comp.status = ComponentStatus.DAMAGED
-                
-                # If armor is dead (0 hp), it's inactive
-                if comp.abilities.get('Armor', False) and comp.current_hp <= 0:
+        # Use ship helper to iterate components with layer context
+        for layer_type, comp in ship.iter_components():
+            # Reset Status Assumption
+            comp.is_active = True
+            comp.status = ComponentStatus.ACTIVE
+
+            # Check Damage Threshold (ignore Armor - armor uses HP pool, not individual component threshold)
+            if not comp.abilities.get('Armor', False):
+                if comp.max_hp > 0 and (comp.current_hp / comp.max_hp) <= comp.damage_threshold:
                     comp.is_active = False
                     comp.status = ComponentStatus.DAMAGED
-                
-                # Gather Supply from FUNCTIONAL components
-                if comp.is_active:
-                    abilities = comp.abilities
-                    # Crew Provided (Positive CrewCapacity)
-                    # Crew Provided
-                    for ab in comp.get_abilities('CrewCapacity'):
-                        available_crew += ab.amount
-                        
-                    # Life Support Provided
-                    for ab in comp.get_abilities('LifeSupportCapacity'):
-                        available_life_support += ab.amount
 
-                component_pool.append(comp)
+            # If armor is dead (0 hp), it's inactive
+            if comp.abilities.get('Armor', False) and comp.current_hp <= 0:
+                comp.is_active = False
+                comp.status = ComponentStatus.DAMAGED
+
+            # Gather Supply from FUNCTIONAL components
+            if comp.is_active:
+                # Crew Provided
+                for ab in comp.get_abilities('CrewCapacity'):
+                    available_crew += ab.amount
+
+                # Life Support Provided
+                for ab in comp.get_abilities('LifeSupportCapacity'):
+                    available_life_support += ab.amount
+
+            component_pool.append(comp)
 
         # 3. Phase 2: Resource Allocation (Crew & Life Support)
         # -----------------------------------------------------

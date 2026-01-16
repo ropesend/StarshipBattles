@@ -1,8 +1,8 @@
 import os
 import pygame
-import logging
 import threading
 from game.core.json_utils import load_json
+from game.core.logger import log_error, log_info, log_warning
 
 
 class AssetManager:
@@ -70,15 +70,15 @@ class AssetManager:
             self.manifest_path = path
             
         if not os.path.exists(self.manifest_path):
-            logging.error(f"Asset Manifest not found: {self.manifest_path}")
+            log_error(f"Asset Manifest not found: {self.manifest_path}")
             return
 
         data = load_json(self.manifest_path)
         if data:
             self.manifest = data
-            logging.info(f"Loaded asset manifest from {self.manifest_path}")
+            log_info(f"Loaded asset manifest from {self.manifest_path}")
         else:
-            logging.error(f"Failed to load asset manifest from {self.manifest_path}")
+            log_error(f"Failed to load asset manifest from {self.manifest_path}")
 
     def get_image(self, category, key):
         """Get a single image. Loads if not cached."""
@@ -92,14 +92,14 @@ class AssetManager:
         file_path = cat_data.get(key)
         
         if not file_path:
-            logging.warning(f"Asset not found in manifest: {category}.{key}")
+            log_warning(f"Asset not found in manifest: {category}.{key}")
             return self.get_missing_texture()
-            
+
         # Load
         try:
             return self._load_image(cache_key, file_path)
         except Exception as e:
-            logging.error(f"Failed to load image {file_path}: {e}")
+            log_error(f"Failed to load image {file_path}: {e}")
             return self.get_missing_texture()
 
     def get_group(self, category, group_key):
@@ -112,16 +112,16 @@ class AssetManager:
         file_paths = cat_data.get(group_key)
         
         if not file_paths or not isinstance(file_paths, list):
-            logging.warning(f"Asset group not found in manifest: {category}.{group_key}")
+            log_warning(f"Asset group not found in manifest: {category}.{group_key}")
             return [self.get_missing_texture()]
-            
+
         images = []
         for i, path in enumerate(file_paths):
             sub_key = f"{cache_key}.{i}"
             try:
                 images.append(self._load_image(sub_key, path))
             except Exception as e:
-                logging.error(f"Failed to load group image {path}: {e}")
+                log_error(f"Failed to load group image {path}: {e}")
         
         self.assets[cache_key] = images
         return images
@@ -152,7 +152,7 @@ class AssetManager:
         try:
              return self._load_image(cache_key, norm_path)
         except Exception as e:
-             logging.error(f"Failed to load external image {path}: {e}")
+             log_error(f"Failed to load external image {path}: {e}")
              return self.get_missing_texture()
 
     def _load_image(self, cache_key, path):

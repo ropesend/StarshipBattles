@@ -7,12 +7,12 @@ import unittest
 import os
 import tempfile
 import shutil
-import json
 from unittest.mock import patch, MagicMock
 
 import pygame
 
 from game.core.registry import RegistryManager
+from game.core.json_utils import save_json
 
 
 class TestBuilderDataLoader(unittest.TestCase):
@@ -37,8 +37,7 @@ class TestBuilderDataLoader(unittest.TestCase):
     def _create_mock_file(cls, directory, filename, content):
         """Helper to create a JSON file with given content."""
         filepath = os.path.join(directory, filename)
-        with open(filepath, 'w') as f:
-            json.dump(content, f)
+        save_json(filepath, content)
     
     @classmethod
     def tearDownClass(cls):

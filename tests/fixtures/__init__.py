@@ -10,6 +10,7 @@ Available modules:
     - components: Component creation fixtures
     - battle: Battle engine fixtures
     - test_scenarios: Combat Lab test scenario fixtures
+    - ai: AI-related fixtures (strategy_manager_with_test_data)
 """
 from tests.fixtures.paths import (
     get_project_root,
@@ -49,6 +50,9 @@ from tests.fixtures.test_scenarios import (
     create_sample_ship_data,
     create_sample_component_data,
 )
+from tests.fixtures.ai import (
+    strategy_manager_with_test_data,
+)
 
 __all__ = [
     # Path utilities
@@ -83,4 +87,6 @@ __all__ = [
     'create_scenario_info',
     'create_sample_ship_data',
     'create_sample_component_data',
+    # AI fixtures
+    'strategy_manager_with_test_data',
 ]

@@ -5,11 +5,11 @@ Tests data loading, ship extraction, component lookup, and validation context bu
 """
 
 import pytest
-import json
 from pathlib import Path
 from unittest.mock import Mock, patch, mock_open
 from test_framework.services.scenario_data_service import ScenarioDataService
 from tests.test_framework.services.conftest import create_test_metadata
+from game.core.json_utils import save_json
 
 
 class TestScenarioDataServiceInit:
@@ -261,13 +261,10 @@ class TestBuildValidationContext:
             ]
         }
 
-        # Setup temp files
+        # Setup temp files using json_utils
         ships_dir = temp_data_dir / "ships"
-        with open(ships_dir / "Test_Projectile.json", 'w') as f:
-            json.dump(ship_data, f)
-
-        with open(temp_data_dir / "components.json", 'w') as f:
-            json.dump(components_data, f)
+        save_json(ships_dir / "Test_Projectile.json", ship_data)
+        save_json(temp_data_dir / "components.json", components_data)
 
         metadata = create_test_metadata(
             test_id="PROJ-001",
@@ -316,13 +313,10 @@ class TestBuildValidationContext:
             ]
         }
 
-        # Setup temp files
+        # Setup temp files using json_utils
         ships_dir = temp_data_dir / "ships"
-        with open(ships_dir / "Test_Seeker.json", 'w') as f:
-            json.dump(ship_data, f)
-
-        with open(temp_data_dir / "components.json", 'w') as f:
-            json.dump(components_data, f)
+        save_json(ships_dir / "Test_Seeker.json", ship_data)
+        save_json(temp_data_dir / "components.json", components_data)
 
         metadata = create_test_metadata(
             test_id="SEEK-001",

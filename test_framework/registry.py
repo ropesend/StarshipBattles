@@ -47,6 +47,7 @@ import os
 import sys
 import importlib
 import importlib.util
+import threading
 from typing import Dict, List, Type, Any, Optional
 from pathlib import Path
 from simulation_tests.logging_config import get_logger, setup_combat_lab_logging
@@ -73,12 +74,16 @@ class TestRegistry:
     """
 
     _instance = None
+    _lock = threading.Lock()
 
     def __new__(cls):
-        """Singleton pattern - only one registry instance."""
+        """Singleton pattern with thread safety - only one registry instance."""
         if cls._instance is None:
-            cls._instance = super(TestRegistry, cls).__new__(cls)
-            cls._instance._initialized = False
+            with cls._lock:
+                # Double-check after acquiring lock
+                if cls._instance is None:
+                    cls._instance = super(TestRegistry, cls).__new__(cls)
+                    cls._instance._initialized = False
         return cls._instance
 
     def __init__(self):
@@ -89,6 +94,14 @@ class TestRegistry:
         self.scenarios: Dict[str, Dict[str, Any]] = {}
         self._discover_scenarios()
         self._initialized = True
+
+    @classmethod
+    def reset(cls):
+        """Reset the singleton instance for testing purposes."""
+        with cls._lock:
+            if cls._instance is not None:
+                cls._instance._initialized = False
+                cls._instance = None
 
     def _get_scenarios_dir(self) -> str:
         """

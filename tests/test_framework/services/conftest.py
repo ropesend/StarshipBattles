@@ -6,8 +6,9 @@ any service-specific fixtures needed for testing the Combat Lab service layer.
 """
 
 import pytest
-import json
 from typing import Dict, Any
+
+from game.core.json_utils import save_json
 
 # Import shared fixtures from consolidated location
 from tests.fixtures.battle import (
@@ -185,16 +186,12 @@ def temp_data_dir(tmp_path, sample_ship_data, sample_target_data, sample_compone
     ships_dir = data_dir / "ships"
     ships_dir.mkdir(parents=True)
 
-    # Write ship files
-    with open(ships_dir / "Test_Attacker_Beam360_Low.json", 'w') as f:
-        json.dump(sample_ship_data, f)
-
-    with open(ships_dir / "Test_Target_Stationary.json", 'w') as f:
-        json.dump(sample_target_data, f)
+    # Write ship files using json_utils
+    save_json(ships_dir / "Test_Attacker_Beam360_Low.json", sample_ship_data)
+    save_json(ships_dir / "Test_Target_Stationary.json", sample_target_data)
 
     # Write components file
-    with open(data_dir / "components.json", 'w') as f:
-        json.dump(sample_components_file, f)
+    save_json(data_dir / "components.json", sample_components_file)
 
     return data_dir
 

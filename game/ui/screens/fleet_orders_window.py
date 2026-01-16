@@ -1,8 +1,8 @@
-
 import pygame
 import pygame_gui
 from pygame_gui.windows import UIConfirmationDialog
 
+from game.core.config import UIConfig
 from game.strategy.data.fleet import OrderType
 
 class FleetOrdersWindow(pygame_gui.elements.UIWindow):
@@ -70,7 +70,7 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         # Re-populate
         orders = self.fleet.orders
         gap = 5
-        row_height = 40
+        row_height = UIConfig.ROW_HEIGHT_STANDARD
         y_offset = 5
         
         # Calculate total content height for scrolling

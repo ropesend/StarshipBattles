@@ -41,10 +41,12 @@ def reset_game_state(monkeypatch, request):
         )
 
         # 4. Patch Loaders/Caches to prevent Disk I/O during test execution
-        
+
         # A. Component Cache: Inject data so load_components() returns early
-        monkeypatch.setattr("game.simulation.components.component._COMPONENT_CACHE", cache.get_components())
-        monkeypatch.setattr("game.simulation.components.component._MODIFIER_CACHE", cache.get_modifiers())
+        from game.simulation.components.component import ComponentCacheManager
+        cache_mgr = ComponentCacheManager.instance()
+        cache_mgr.component_cache = cache.get_components()
+        cache_mgr.modifier_cache = cache.get_modifiers()
 
         # B. Ship Vehicle Classes: Patch loader to be a no-op (Data already in Registry)
         monkeypatch.setattr("game.simulation.entities.ship.load_vehicle_classes", lambda *args, **kwargs: None)

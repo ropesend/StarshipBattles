@@ -5,6 +5,105 @@ import os
 import pygame
 from game.assets.asset_manager import AssetManager, get_asset_manager
 
+
+class TestAssetManagerLogging:
+    """Test that AssetManager uses centralized logging functions."""
+
+    @pytest.fixture(autouse=True)
+    def setup_teardown(self):
+        """Reset singleton for each test."""
+        AssetManager._instance = None
+        yield
+        AssetManager._instance = None
+
+    def test_asset_manager_does_not_import_logging_directly(self):
+        """AssetManager should not use direct 'import logging' for its log calls."""
+        import game.assets.asset_manager as am_module
+        import inspect
+        source = inspect.getsource(am_module)
+
+        # The file should import from game.core.logger, not use logging.error/info/warning
+        # We check that logging.error, logging.info, logging.warning are NOT called
+        assert "logging.error" not in source, "Should use log_error from game.core.logger"
+        assert "logging.info" not in source, "Should use log_info from game.core.logger"
+        assert "logging.warning" not in source, "Should use log_warning from game.core.logger"
+
+    @patch("game.assets.asset_manager.log_error")
+    def test_load_manifest_file_not_found_uses_log_error(self, mock_log_error):
+        """load_manifest should call log_error when file not found."""
+        am = AssetManager()
+        am.load_manifest("non_existent_file.json")
+
+        mock_log_error.assert_called_once()
+        call_arg = mock_log_error.call_args[0][0]
+        assert "not found" in call_arg.lower()
+
+    @patch("game.assets.asset_manager.log_info")
+    @patch("builtins.open", new_callable=mock_open, read_data='{"stars": {"blue": "path/to/blue.png"}}')
+    @patch("os.path.exists", return_value=True)
+    def test_load_manifest_success_uses_log_info(self, mock_exists, mock_file, mock_log_info):
+        """load_manifest should call log_info on successful load."""
+        am = AssetManager()
+        am.load_manifest("dummy.json")
+
+        mock_log_info.assert_called_once()
+        call_arg = mock_log_info.call_args[0][0]
+        assert "loaded" in call_arg.lower() or "manifest" in call_arg.lower()
+
+    @patch("game.assets.asset_manager.log_warning")
+    def test_get_image_missing_key_uses_log_warning(self, mock_log_warning):
+        """get_image should call log_warning when asset not in manifest."""
+        am = AssetManager()
+        am.manifest = {}  # Empty manifest
+        am.get_image("stars", "missing")
+
+        mock_log_warning.assert_called_once()
+        call_arg = mock_log_warning.call_args[0][0]
+        assert "not found" in call_arg.lower()
+
+    @patch("game.assets.asset_manager.log_error")
+    @patch("os.path.exists", return_value=True)
+    @patch("pygame.image.load", side_effect=Exception("Load failed"))
+    def test_get_image_load_error_uses_log_error(self, mock_load, mock_exists, mock_log_error):
+        """get_image should call log_error when image loading fails."""
+        am = AssetManager()
+        am.manifest = {"stars": {"blue": "path/to/blue.png"}}
+        am.get_image("stars", "blue")
+
+        mock_log_error.assert_called_once()
+        call_arg = mock_log_error.call_args[0][0]
+        assert "failed" in call_arg.lower()
+
+    @patch("game.assets.asset_manager.log_warning")
+    def test_get_group_missing_uses_log_warning(self, mock_log_warning):
+        """get_group should call log_warning when group not in manifest."""
+        am = AssetManager()
+        am.manifest = {}
+        am.get_group("planets", "missing")
+
+        mock_log_warning.assert_called_once()
+
+    @patch("game.assets.asset_manager.log_error")
+    @patch("os.path.exists", return_value=True)
+    @patch("pygame.image.load", side_effect=Exception("Load failed"))
+    def test_get_group_load_error_uses_log_error(self, mock_load, mock_exists, mock_log_error):
+        """get_group should call log_error when an image in group fails to load."""
+        am = AssetManager()
+        am.manifest = {"planets": {"gas": ["p1.png", "p2.png"]}}
+        am.get_group("planets", "gas")
+
+        # Should have been called for each failed image
+        assert mock_log_error.call_count >= 1
+
+    @patch("game.assets.asset_manager.log_error")
+    @patch("os.path.exists", return_value=False)
+    def test_load_external_image_error_uses_log_error(self, mock_exists, mock_log_error):
+        """load_external_image should call log_error when loading fails."""
+        am = AssetManager()
+        am.load_external_image("invalid/path.png")
+
+        mock_log_error.assert_called_once()
+
 class TestAssetManager:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):

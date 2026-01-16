@@ -187,6 +187,16 @@ class UIConfig:
     PANEL_ALPHA: int = 230
     OVERLAY_ALPHA: int = 180
 
+    # Battle screen
+    GRID_SPACING: int = 5000
+    TRAIL_LENGTH: int = 100
+
+    # Common dimensions
+    ROW_HEIGHT_STANDARD: int = 40
+    ROW_HEIGHT_LARGE: int = 50
+    SIDEBAR_WIDTH: int = 300
+    HEADER_HEIGHT: int = 40
+
 
 class TestConfig:
     """Configuration specific to testing."""

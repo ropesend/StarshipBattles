@@ -38,7 +38,29 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         
         # Populate ship
         self.ship.layers['core']['components'] = [self.component]
-        
+
+        # Add ship helper methods that event_router now uses
+        def get_all_components():
+            result = []
+            for layer_data in self.ship.layers.values():
+                result.extend(layer_data['components'])
+            return result
+
+        def iter_components():
+            for layer_type, layer_data in self.ship.layers.items():
+                for comp in layer_data['components']:
+                    yield layer_type, comp
+
+        def has_components():
+            for layer_data in self.ship.layers.values():
+                if layer_data['components']:
+                    return True
+            return False
+
+        self.ship.get_all_components = get_all_components
+        self.ship.iter_components = iter_components
+        self.ship.has_components = has_components
+
         # Mock Builder GUI
         with patch('game.ui.screens.builder_screen.BuilderLeftPanel'), \
              patch('game.ui.screens.builder_screen.BuilderRightPanel'), \
@@ -180,44 +202,30 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         c2.recalculate_stats.assert_called()
 
     def test_add_remove_actions(self):
-        """Test that add/remove actions call appropriate ship methods."""
-        # Setup mock ship to track calls
-        self.builder_gui.ship.remove_component = MagicMock()
-        self.builder_gui.ship.add_component = MagicMock()
-        
+        """Test that add/remove actions call appropriate viewmodel methods."""
+        # Setup mock viewmodel to track calls
+        self.builder_gui.viewmodel.remove_component = MagicMock(return_value=MagicMock())
+        self.builder_gui.viewmodel.add_component_instance = MagicMock(return_value=True)
+
         # Simulate Remove Individual
         comp = self.component
         self.builder_gui.ship.layers['core']['components'] = [comp]
-        
-        # Action tuple: ('remove_individual', comp)
-        # We need to trigger handle_event with this action, but handle_event calls panels.
-        # We can bypass and call the logic block if we extract it or simulate the loop.
-        # Ideally we refactor `handle_event` to use a dispatcher, but here we can just test the logic 
-        # by reusing the code block or simulating the event flow if possible.
-        # Since `handle_event` is complex, let's call the action handler part if possible 
-        # or just test `_handle_action` if we had extracted it.
-        # The logic is inline in `handle_event`.
-        
+
         # Let's mock layer_panel.handle_event to return the action
         event = MagicMock()
         self.builder_gui.layer_panel.handle_event.return_value = ('remove_individual', comp)
-        
+
         self.builder_gui.handle_event(event)
-        self.builder_gui.ship.remove_component.assert_called_with('core', 0)
-        
+        self.builder_gui.viewmodel.remove_component.assert_called_with('core', 0)
+
         # Simulate Add Individual
         self.builder_gui.layer_panel.handle_event.return_value = ('add_individual', comp)
-        
-        # Mock VALIDATOR
-        with patch('game.ui.screens.builder_event_router.get_or_create_validator') as mock_val:
-            mock_val.return_value.validate_addition.return_value.is_valid = True
 
-            
-            # Need to clone component
-            comp.clone = MagicMock(return_value=Component(self.comp_data))
-            
-            self.builder_gui.handle_event(event)
-            self.builder_gui.ship.add_component.assert_called()
+        # Need to clone component
+        comp.clone = MagicMock(return_value=Component(self.comp_data))
+
+        self.builder_gui.handle_event(event)
+        self.builder_gui.viewmodel.add_component_instance.assert_called()
 
 if __name__ == '__main__':
     unittest.main()

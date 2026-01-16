@@ -127,6 +127,41 @@ class ShipBuilderService:
 
         return ShipBuilderResult(success=True, ship=ship)
 
+    def add_component_instance(
+        self,
+        ship: Ship,
+        component: Component,
+        layer: LayerType
+    ) -> ShipBuilderResult:
+        """
+        Add a pre-constructed component instance to the ship.
+
+        Unlike add_component() which creates from ID, this accepts an existing
+        Component instance (e.g., one with modifiers already applied).
+
+        Args:
+            ship: The ship to modify
+            component: The component instance to add
+            layer: Target layer for the component
+
+        Returns:
+            ShipBuilderResult indicating success/failure
+        """
+        errors = []
+
+        if component is None:
+            errors.append("Cannot add None component")
+            return ShipBuilderResult(success=False, errors=errors)
+
+        # Use ship's add_component which handles validation
+        success = ship.add_component(component, layer)
+
+        if not success:
+            errors.append(f"Failed to add '{component.name}' to {layer.name}")
+            return ShipBuilderResult(success=False, errors=errors)
+
+        return ShipBuilderResult(success=True, ship=ship)
+
     def add_component_bulk(
         self,
         ship: Ship,
@@ -225,7 +260,8 @@ class ShipBuilderService:
     def change_class(
         self,
         ship: Ship,
-        new_class: str
+        new_class: str,
+        migrate_components: bool = True
     ) -> ShipBuilderResult:
         """
         Change the ship's vehicle class.
@@ -238,12 +274,13 @@ class ShipBuilderService:
         Args:
             ship: The ship to modify
             new_class: Target vehicle class
+            migrate_components: If True, attempts to keep components and fit them
+                                into new layers. If False, clears all components.
 
         Returns:
             ShipBuilderResult indicating success/failure
         """
         errors = []
-        warnings = []
 
         # Validate new class exists
         vehicle_classes = get_vehicle_classes()
@@ -253,52 +290,15 @@ class ShipBuilderService:
 
         old_class = ship.ship_class
 
-        # Store existing components (excluding hull)
-        existing_components = [
-            (layer_type, comp.id)
-            for layer_type, comp in ship.iter_components()
-            if layer_type != LayerType.HULL
-        ]
+        # Delegate to Ship.change_class which handles all the migration logic
+        ship.change_class(new_class, migrate_components=migrate_components)
 
-        # Change class and reinitialize layers
-        ship.ship_class = new_class
-        ship._initialize_layers()
-
-        # Update mass budget from new class
-        class_def = vehicle_classes.get(new_class, {})
-        ship.max_mass_budget = class_def.get('max_mass', 1000)
-
-        # Auto-equip default hull for new class
-        default_hull_id = class_def.get('default_hull_id')
-        if default_hull_id:
-            hull_component = create_component(default_hull_id)
-            if hull_component and LayerType.HULL in ship.layers:
-                ship.layers[LayerType.HULL]['components'].append(hull_component)
-                hull_component.layer_assigned = LayerType.HULL
-                hull_component.ship = ship
-
-        # Try to restore compatible components
-        restored_count = 0
-        for layer_type, comp_id in existing_components:
-            if layer_type in ship.layers:
-                component = create_component(comp_id)
-                if component:
-                    if ship.add_component(component, layer_type):
-                        restored_count += 1
-                    else:
-                        warnings.append(
-                            f"Could not restore '{comp_id}' to {layer_type.name}"
-                        )
-
-        ship.recalculate_stats()
-
-        log_info(f"Changed {ship.name} from {old_class} to {new_class}, "
-                 f"restored {restored_count}/{len(existing_components)} components")
+        log_info(f"Changed {ship.name} from {old_class} to {new_class} "
+                 f"(migrate_components={migrate_components})")
 
         return ShipBuilderResult(
             success=True,
-            ship=ship,
-            warnings=warnings
+            ship=ship
         )
 
     def validate_design(self, ship: Ship) -> 'ValidationResult':

@@ -1,10 +1,38 @@
 # Strategy Scene Split Plan
 
+## Status: COMPLETED
+
+**Completed on:** 2026-01-16
+
 ## Executive Summary
 
-This document provides a **comprehensive, test-driven plan** to split `strategy_scene.py` (1,568 lines) into 6 focused modules. The refactoring will be driven by unit tests at each step to ensure no functionality is broken.
+This document provided a **comprehensive, test-driven plan** to split `strategy_scene.py` (1,568 lines) into 6 focused modules.
 
-**Target:** Reduce `strategy_scene.py` from 1,568 lines to ~400 lines while maintaining full backward compatibility.
+**Result:** Reduced `strategy_scene.py` from 1,568 lines to 417 lines while maintaining full backward compatibility.
+
+### Files Created
+
+| File | Lines | Responsibility |
+|------|-------|----------------|
+| [strategy_scene.py](../../game/ui/screens/strategy_scene.py) | 417 | Main coordinator & state |
+| [strategy_renderer.py](../../game/ui/screens/strategy_renderer.py) | 480 | All drawing logic |
+| [strategy_input_handler.py](../../game/ui/screens/strategy_input_handler.py) | 260 | Event & click routing |
+| [strategy_camera_nav.py](../../game/ui/screens/strategy_camera_nav.py) | 120 | Camera focus & zoom |
+| [strategy_fleet_ops.py](../../game/ui/screens/strategy_fleet_ops.py) | 150 | Fleet movement commands |
+| [strategy_colonization.py](../../game/ui/screens/strategy_colonization.py) | 180 | Colonization workflow |
+
+**Total:** ~1,607 lines (slight increase due to docstrings and cleaner structure)
+
+### Previously Extracted (already existed)
+
+| File | Lines | Responsibility |
+|------|-------|----------------|
+| [strategy_screen.py](../../game/ui/screens/strategy_screen.py) | 768 | UI interface (StrategyInterface) |
+| [strategy_detail_fmt.py](../../game/ui/screens/strategy_detail_fmt.py) | 230 | HTML formatting utilities |
+
+---
+
+## Original Analysis
 
 ---
 

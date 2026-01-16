@@ -29,7 +29,11 @@
       "Bash([ -f combat_lab.log ])",
       "Bash(git diff:*)",
       "Bash(git checkout:*)",
-      "Bash(if not exist \"c:\\\\Dev\\\\Starship Battles\\\\tests\\\\unit\\\\services\" mkdir \"c:\\\\Dev\\\\Starship Battles\\\\tests\\\\unit\\\\services\")"
+      "Bash(if not exist \"c:\\\\Dev\\\\Starship Battles\\\\tests\\\\unit\\\\services\" mkdir \"c:\\\\Dev\\\\Starship Battles\\\\tests\\\\unit\\\\services\")",
+      "Bash(while read file)",
+      "Bash(do if ! grep -q \"log_\\\\|logger\\\\|logging\\\\.\" \"$file\")",
+      "Bash(then echo \"$file\")",
+      "Bash(fi)"
     ]
   }
 }
