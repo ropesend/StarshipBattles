@@ -3,10 +3,12 @@ Traceback (most recent call last):
     game.run()
   File "C:\Dev\Starship Battles\game\app.py", line 192, in run
     self._update_and_draw(frame_time, events)
-  File "C:\Dev\Starship Battles\game\app.py", line 327, in _update_and_draw
-    self.strategy_scene.update_input(frame_time, events)
-  File "C:\Dev\Starship Battles\game\ui\screens\strategy_scene.py", line 175, in update_input
-    self._input.update_input(dt, events)
-  File "C:\Dev\Starship Battles\game\ui\screens\strategy_input_handler.py", line 335, in update_input
-    over_sidebar = (mx > self.scene.screen_width - self.scene.SIDEBAR_WIDTH)
+  File "C:\Dev\Starship Battles\game\app.py", line 329, in _update_and_draw
+    self.strategy_scene.draw(self.screen)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_scene.py", line 145, in draw
+    self._renderer.draw(screen)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_renderer.py", line 70, in draw
+    viewport_w = self.screen_width - self.SIDEBAR_WIDTH
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_renderer.py", line 58, in SIDEBAR_WIDTH
+    return self.scene.SIDEBAR_WIDTH
 AttributeError: 'StrategyScene' object has no attribute 'SIDEBAR_WIDTH'

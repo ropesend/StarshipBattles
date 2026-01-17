@@ -6,6 +6,7 @@ Extracted from StrategyScene to reduce file size and improve testability.
 """
 import pygame
 import pygame_gui
+from game.core.config import UIConfig
 from game.core.logger import log_debug
 from game.strategy.data.hex_math import pixel_to_hex
 from game.strategy.data.fleet import Fleet
@@ -332,7 +333,7 @@ class InputHandler:
         # Filter events for Camera: Block MouseWheel if over sidebar
         cam_events = []
         mx, my = pygame.mouse.get_pos()
-        over_sidebar = (mx > self.scene.screen_width - self.scene.SIDEBAR_WIDTH)
+        over_sidebar = (mx > self.scene.screen_width - UIConfig.STRATEGY_SIDEBAR_WIDTH)
         over_topbar = (my < self.scene.TOP_BAR_HEIGHT)
 
         for e in events:
