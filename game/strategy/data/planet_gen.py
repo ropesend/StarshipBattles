@@ -13,7 +13,7 @@ from game.strategy.data.hex_math import HexCoord, hex_ring
 from game.strategy.data.physics import calculate_incident_radiation
 from game.strategy.data.stars import Star
 from game.strategy.data.planet_physics import (
-    MASS_CERES, MASS_MARS, MASS_EARTH, MASS_NEPTUNE, MASS_JUPITER, ATM_TO_PA,
+    MASS_CERES, MASS_MOON, MASS_MARS, MASS_EARTH, MASS_NEPTUNE, MASS_JUPITER, ATM_TO_PA, GASES,
     calculate_radius_density_from_mass, calculate_escape_velocity,
     calculate_surface_gravity, calculate_surface_area, calculate_blackbody_temperature
 )

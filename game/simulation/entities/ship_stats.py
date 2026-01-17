@@ -38,6 +38,18 @@ class ShipStatsCalculator:
         ship.max_hp = sum(c.max_hp for c in all_components)
         ship.hp = sum(c.current_hp for c in all_components)
 
+        # Resource Costs Aggregation
+        ship.construction_cost = {}
+        from game.strategy.data.planet import PLANET_RESOURCES
+        for res in PLANET_RESOURCES:
+            ship.construction_cost[res] = 0
+            
+        for comp in all_components:
+            comp_costs = comp.get_resource_cost()
+            for res, amount in comp_costs.items():
+                if res in ship.construction_cost:
+                    ship.construction_cost[res] += amount
+
         # Base Stats Reset
         ship.total_thrust = 0
         ship.turn_speed = 0

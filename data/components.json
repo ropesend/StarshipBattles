@@ -14,7 +14,14 @@
                 "CommandAndControl": true,
                 "CrewRequired": "=ceil(5 * sqrt(ship_class_mass / 1000))"
             },
-            "major_classification": "Crewsupport"
+            "major_classification": "Crewsupport",
+            "resource_cost": {
+                "Metals": 80,
+                "Organics": 20,
+                "Vapors": 10,
+                "Radioactives": 5,
+                "Exotics": 10
+            }
         },
         {
             "id": "central_complex_command",
@@ -30,7 +37,14 @@
                 "CommandAndControl": true,
                 "CrewRequired": "=ceil(10 * sqrt(ship_class_mass / 1000))"
             },
-            "major_classification": "Crewsupport"
+            "major_classification": "Crewsupport",
+            "resource_cost": {
+                "Metals": 100,
+                "Organics": 25,
+                "Vapors": 15,
+                "Radioactives": 10,
+                "Exotics": 15
+            }
         },
         {
             "id": "railgun",
@@ -61,7 +75,11 @@
                     "firing_arc": 1
                 }
             },
-            "major_classification": "Weapons"
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "Metals": 150,
+                "Radioactives": 30
+            }
         },
         {
             "id": "standard_engine",
@@ -83,7 +101,11 @@
                     }
                 ]
             },
-            "major_classification": "Engines"
+            "major_classification": "Engines",
+            "resource_cost": {
+                "Metals": 120,
+                "Radioactives": 40
+            }
         },
         {
             "id": "thruster",
@@ -98,7 +120,11 @@
             "abilities": {
                 "ManeuveringThruster": 30
             },
-            "major_classification": "Engines"
+            "major_classification": "Engines",
+            "resource_cost": {
+                "Metals": 40,
+                "Radioactives": 10
+            }
         },
         {
             "id": "armor_plate",
@@ -115,7 +141,10 @@
             "abilities": {
                 "Armor": true
             },
-            "major_classification": "Armor"
+            "major_classification": "Armor",
+            "resource_cost": {
+                "Metals": 100
+            }
         },
         {
             "id": "emissive_armor",
@@ -138,7 +167,11 @@
                 }
             },
             "modifiers": [],
-            "major_classification": "Armor"
+            "major_classification": "Armor",
+            "resource_cost": {
+                "Metals": 80,
+                "Exotics": 30
+            }
         },
         {
             "id": "crystalline_armor",
@@ -161,7 +194,11 @@
                 }
             },
             "modifiers": [],
-            "major_classification": "Armor"
+            "major_classification": "Armor",
+            "resource_cost": {
+                "Metals": 60,
+                "Exotics": 50
+            }
         },
         {
             "id": "scattering_armor",
@@ -184,7 +221,12 @@
                 }
             },
             "modifiers": [],
-            "major_classification": "Armor"
+            "major_classification": "Armor",
+            "resource_cost": {
+                "Metals": 70,
+                "Vapors": 20,
+                "Exotics": 20
+            }
         },
         {
             "id": "fuel_tank",
@@ -206,7 +248,10 @@
                     }
                 ]
             },
-            "major_classification": "Infrastructure"
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 60
+            }
         },
         {
             "id": "ordnance_tank",
@@ -228,7 +273,11 @@
                     }
                 ]
             },
-            "major_classification": "Infrastructure"
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 50,
+                "Radioactives": 10
+            }
         },
         {
             "id": "battery",
@@ -250,7 +299,13 @@
                     }
                 ]
             },
-            "major_classification": "Infrastructure"
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 40,
+                "Vapors": 10,
+                "Radioactives": 5,
+                "Exotics": 10
+            }
         },
         {
             "id": "generator",
@@ -273,7 +328,12 @@
                 ],
                 "CrewRequired": 1
             },
-            "major_classification": "Infrastructure"
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 70,
+                "Radioactives": 50,
+                "Exotics": 10
+            }
         },
         {
             "id": "laser_cannon",
@@ -305,7 +365,12 @@
                     "accuracy_falloff": 0.001
                 }
             },
-            "major_classification": "Weapons"
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "Metals": 40,
+                "Radioactives": 10,
+                "Exotics": 30
+            }
         },
         {
             "id": "crew_quarters",
@@ -321,7 +386,12 @@
             "abilities": {
                 "CrewCapacity": 10
             },
-            "major_classification": "Crewsupport"
+            "major_classification": "Crewsupport",
+            "resource_cost": {
+                "Metals": 40,
+                "Organics": 50,
+                "Vapors": 10
+            }
         },
         {
             "id": "life_support",
@@ -337,7 +407,12 @@
             "abilities": {
                 "LifeSupportCapacity": 25
             },
-            "major_classification": "Crewsupport"
+            "major_classification": "Crewsupport",
+            "resource_cost": {
+                "Metals": 30,
+                "Organics": 40,
+                "Vapors": 20
+            }
         },
         {
             "id": "combat_sensor",
@@ -357,7 +432,12 @@
                     "stack_group": "Sensor"
                 }
             },
-            "major_classification": "Sensors"
+            "major_classification": "Sensors",
+            "resource_cost": {
+                "Metals": 50,
+                "Vapors": 30,
+                "Exotics": 20
+            }
         },
         {
             "id": "ecm_suite",
@@ -377,7 +457,12 @@
                     "stack_group": "ECM"
                 }
             },
-            "major_classification": "Sensors"
+            "major_classification": "Sensors",
+            "resource_cost": {
+                "Metals": 60,
+                "Vapors": 40,
+                "Exotics": 30
+            }
         },
         {
             "id": "multiplex_tracking",
@@ -395,7 +480,12 @@
                 "MultiplexTracking": 10,
                 "CrewRequired": 2
             },
-            "major_classification": "Sensors"
+            "major_classification": "Sensors",
+            "resource_cost": {
+                "Metals": 60,
+                "Vapors": 30,
+                "Exotics": 25
+            }
         },
         {
             "id": "shield_generator",
@@ -412,7 +502,12 @@
             "abilities": {
                 "ShieldProjection": 500
             },
-            "major_classification": "Shields"
+            "major_classification": "Shields",
+            "resource_cost": {
+                "Metals": 80,
+                "Radioactives": 20,
+                "Exotics": 60
+            }
         },
         {
             "id": "shield_regen",
@@ -430,7 +525,12 @@
                 "ShieldRegeneration": 5.0,
                 "EnergyConsumption": 2.0
             },
-            "major_classification": "Shields"
+            "major_classification": "Shields",
+            "resource_cost": {
+                "Metals": 60,
+                "Radioactives": 20,
+                "Exotics": 40
+            }
         },
         {
             "id": "capital_missile",
@@ -463,7 +563,12 @@
                     "to_hit_defense": 0.0
                 }
             },
-            "major_classification": "Weapons"
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "Metals": 100,
+                "Radioactives": 40,
+                "Exotics": 20
+            }
         },
         {
             "id": "point_defence_cannon",
@@ -498,7 +603,12 @@
                     ]
                 }
             },
-            "major_classification": "Weapons"
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "Metals": 20,
+                "Radioactives": 5,
+                "Exotics": 15
+            }
         },
         {
             "id": "fighter_cockpit",
@@ -515,7 +625,13 @@
                 "LifeSupportCapacity": 1,
                 "CrewCapacity": 1
             },
-            "major_classification": "Crewsupport"
+            "major_classification": "Crewsupport",
+            "resource_cost": {
+                "Metals": 10,
+                "Organics": 5,
+                "Vapors": 2,
+                "Exotics": 2
+            }
         },
         {
             "id": "mini_engine",
@@ -537,7 +653,11 @@
                     }
                 ]
             },
-            "major_classification": "Engines"
+            "major_classification": "Engines",
+            "resource_cost": {
+                "Metals": 15,
+                "Radioactives": 5
+            }
         },
         {
             "id": "mini_thruster",
@@ -552,7 +672,11 @@
             "abilities": {
                 "ManeuveringThruster": 50
             },
-            "major_classification": "Engines"
+            "major_classification": "Engines",
+            "resource_cost": {
+                "Metals": 5,
+                "Radioactives": 2
+            }
         },
         {
             "id": "mini_battery",
@@ -572,7 +696,13 @@
                     }
                 ]
             },
-            "major_classification": "Infrastructure"
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 5,
+                "Vapors": 2,
+                "Radioactives": 1,
+                "Exotics": 2
+            }
         },
         {
             "id": "mini_generator",
@@ -592,7 +722,12 @@
                     }
                 ]
             },
-            "major_classification": "Infrastructure"
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 10,
+                "Radioactives": 8,
+                "Exotics": 2
+            }
         },
         {
             "id": "mini_ordnance",
@@ -612,7 +747,11 @@
                     }
                 ]
             },
-            "major_classification": "Infrastructure"
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 5,
+                "Radioactives": 2
+            }
         },
         {
             "id": "mini_fuel_tank",
@@ -632,7 +771,10 @@
                     }
                 ]
             },
-            "major_classification": "Infrastructure"
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 8
+            }
         },
         {
             "id": "mini_railgun",
@@ -654,7 +796,11 @@
                     "accuracy_falloff": 0.001
                 }
             },
-            "major_classification": "Weapons"
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "Metals": 15,
+                "Radioactives": 3
+            }
         },
         {
             "id": "mini_laser_cannon",
@@ -683,7 +829,12 @@
                     "accuracy_falloff": 0.001
                 }
             },
-            "major_classification": "Weapons"
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "Metals": 5,
+                "Radioactives": 2,
+                "Exotics": 5
+            }
         },
         {
             "id": "mini_capital_missile",
@@ -705,7 +856,12 @@
                     "accuracy_falloff": 0.0
                 }
             },
-            "major_classification": "Weapons"
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "Metals": 15,
+                "Radioactives": 6,
+                "Exotics": 3
+            }
         },
         {
             "id": "mini_armor",
@@ -720,7 +876,10 @@
             "abilities": {
                 "Armor": true
             },
-            "major_classification": "Armor"
+            "major_classification": "Armor",
+            "resource_cost": {
+                "Metals": 10
+            }
         },
         {
             "id": "mini_sensor",
@@ -738,7 +897,12 @@
                     "stack_group": "Sensor"
                 }
             },
-            "major_classification": "Sensors"
+            "major_classification": "Sensors",
+            "resource_cost": {
+                "Metals": 8,
+                "Vapors": 5,
+                "Exotics": 3
+            }
         },
         {
             "id": "mini_ecm",
@@ -756,7 +920,12 @@
                     "stack_group": "ECM"
                 }
             },
-            "major_classification": "Sensors"
+            "major_classification": "Sensors",
+            "resource_cost": {
+                "Metals": 10,
+                "Vapors": 6,
+                "Exotics": 5
+            }
         },
         {
             "id": "mini_shield_generator",
@@ -771,7 +940,12 @@
             "abilities": {
                 "ShieldProjection": 50
             },
-            "major_classification": "Shields"
+            "major_classification": "Shields",
+            "resource_cost": {
+                "Metals": 12,
+                "Radioactives": 3,
+                "Exotics": 10
+            }
         },
         {
             "id": "mini_emissive_armor",
@@ -790,7 +964,11 @@
                     "stack_group": "Emissive"
                 }
             },
-            "major_classification": "Armor"
+            "major_classification": "Armor",
+            "resource_cost": {
+                "Metals": 8,
+                "Exotics": 5
+            }
         },
         {
             "id": "mini_scattering_armor",
@@ -809,7 +987,12 @@
                     "stack_group": "Scattering"
                 }
             },
-            "major_classification": "Armor"
+            "major_classification": "Armor",
+            "resource_cost": {
+                "Metals": 8,
+                "Vapors": 3,
+                "Exotics": 3
+            }
         },
         {
             "id": "satellite_core",
@@ -824,7 +1007,12 @@
             "abilities": {
                 "CommandAndControl": true
             },
-            "major_classification": "Crewsupport"
+            "major_classification": "Crewsupport",
+            "resource_cost": {
+                "Metals": 30,
+                "Vapors": 5,
+                "Exotics": 10
+            }
         },
         {
             "id": "fighter_launch_bay",
@@ -845,7 +1033,13 @@
                 },
                 "CrewRequired": 5
             },
-            "major_classification": "Infrastructure"
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 400,
+                "Organics": 50,
+                "Radioactives": 20,
+                "Exotics": 30
+            }
         },
         {
             "id": "master_computer",
@@ -870,7 +1064,12 @@
                 },
                 "EnergyConsumption": 10.0
             },
-            "major_classification": "Crewsupport"
+            "major_classification": "Crewsupport",
+            "resource_cost": {
+                "Metals": 80,
+                "Vapors": 40,
+                "Exotics": 60
+            }
         },
         {
             "id": "robotic_drone_crew",
@@ -888,7 +1087,13 @@
                 "LifeSupportCapacity": 10,
                 "EnergyConsumption": 5.0
             },
-            "major_classification": "Crewsupport"
+            "major_classification": "Crewsupport",
+            "resource_cost": {
+                "Metals": 50,
+                "Vapors": 10,
+                "Radioactives": 10,
+                "Exotics": 30
+            }
         },
         {
             "id": "emergency_repair_bay",
@@ -906,7 +1111,13 @@
                 "CrewRequired": 5,
                 "EnergyConsumption": 2.0
             },
-            "major_classification": "Infrastructure"
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 100,
+                "Organics": 20,
+                "Radioactives": 10,
+                "Exotics": 20
+            }
         },
         {
             "id": "ordnance_vat",
@@ -924,7 +1135,13 @@
                 "CrewRequired": 5,
                 "EnergyConsumption": 15.0
             },
-            "major_classification": "Infrastructure"
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 120,
+                "Vapors": 30,
+                "Radioactives": 50,
+                "Exotics": 20
+            }
         },
         {
             "id": "hull_escort",
@@ -941,7 +1158,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 80
+            }
         },
         {
             "id": "hull_frigate",
@@ -958,7 +1178,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 150
+            }
         },
         {
             "id": "hull_destroyer",
@@ -975,7 +1198,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 300
+            }
         },
         {
             "id": "hull_light_cruiser",
@@ -992,7 +1218,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 450
+            }
         },
         {
             "id": "hull_cruiser",
@@ -1009,7 +1238,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 600
+            }
         },
         {
             "id": "hull_heavy_cruiser",
@@ -1026,7 +1258,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 900
+            }
         },
         {
             "id": "hull_battle_cruiser",
@@ -1043,7 +1278,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 1200
+            }
         },
         {
             "id": "hull_battleship",
@@ -1060,7 +1298,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 2400
+            }
         },
         {
             "id": "hull_dreadnought",
@@ -1077,7 +1318,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 4800
+            }
         },
         {
             "id": "hull_superdreadnaugh",
@@ -1094,7 +1338,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 9600
+            }
         },
         {
             "id": "hull_monitor",
@@ -1111,7 +1358,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 19200
+            }
         },
         {
             "id": "hull_fighter_small",
@@ -1128,7 +1378,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 8
+            }
         },
         {
             "id": "hull_fighter_medium",
@@ -1145,7 +1398,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 22
+            }
         },
         {
             "id": "hull_fighter_large",
@@ -1162,7 +1418,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 8
+            }
         },
         {
             "id": "hull_fighter_heavy",
@@ -1179,7 +1438,10 @@
                 "RequiresCommandAndControl": true,
                 "RequiresCombatMovement": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 30
+            }
         },
         {
             "id": "hull_satellite_small",
@@ -1195,7 +1457,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 75
+            }
         },
         {
             "id": "hull_satellite_medium",
@@ -1211,7 +1476,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 150
+            }
         },
         {
             "id": "hull_satellite_large",
@@ -1227,7 +1495,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 300
+            }
         },
         {
             "id": "hull_satellite_heavy",
@@ -1243,7 +1514,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 75
+            }
         },
         {
             "id": "hull_planetary_complex_t1",
@@ -1259,7 +1533,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 100
+            }
         },
         {
             "id": "hull_planetary_complex_t2",
@@ -1275,7 +1552,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 100
+            }
         },
         {
             "id": "hull_planetary_complex_t3",
@@ -1291,7 +1571,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 100
+            }
         },
         {
             "id": "hull_planetary_complex_t4",
@@ -1307,7 +1590,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 100
+            }
         },
         {
             "id": "hull_planetary_complex_t5",
@@ -1323,7 +1609,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 100
+            }
         },
         {
             "id": "hull_planetary_complex_t6",
@@ -1339,7 +1628,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 100
+            }
         },
         {
             "id": "hull_planetary_complex_t7",
@@ -1355,7 +1647,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 100
+            }
         },
         {
             "id": "hull_planetary_complex_t8",
@@ -1371,7 +1666,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 100
+            }
         },
         {
             "id": "hull_planetary_complex_t9",
@@ -1387,7 +1685,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 100
+            }
         },
         {
             "id": "hull_planetary_complex_t10",
@@ -1403,7 +1704,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 100
+            }
         },
         {
             "id": "hull_planetary_complex_t11",
@@ -1419,7 +1723,10 @@
                 "StructuralIntegrity": true,
                 "RequiresCommandAndControl": true
             },
-            "major_classification": "Structure"
+            "major_classification": "Structure",
+            "resource_cost": {
+                "Metals": 100
+            }
         }
     ]
 }

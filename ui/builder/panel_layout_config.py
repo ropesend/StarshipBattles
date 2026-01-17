@@ -24,6 +24,8 @@ class StructurePanelLayoutConfig:
     NAME_WIDTH: int = 220
     MASS_WIDTH: int = 60
     PCT_WIDTH: int = 50
+    RESOURCE_COL_WIDTH: int = 40
+    RESOURCE_COL_SPACING: int = 5
     
     # Colors
     # Colors

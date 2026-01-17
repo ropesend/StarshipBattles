@@ -298,6 +298,13 @@ class Component:
         self.is_active = True
         self.status = ComponentStatus.ACTIVE
 
+    def get_resource_cost(self):
+        """Returns the current resource costs, including modifier multipliers."""
+        base_costs = self.data.get("resource_cost", {})
+        multiplier = self.stats.get('cost_mult', 1.0)
+        
+        return {res: int(amount * multiplier) for res, amount in base_costs.items()}
+
     def add_modifier(self, mod_id, value=None):
         mods = get_modifier_registry()
         if mod_id not in mods: return False

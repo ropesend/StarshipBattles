@@ -11,7 +11,7 @@ from ui.builder.structure_list_items import (
     ACTION_REMOVE_GROUP, ACTION_REMOVE_INDIVIDUAL,
     ACTION_SELECT_GROUP, ACTION_SELECT_INDIVIDUAL,
     ACTION_TOGGLE_GROUP, ACTION_TOGGLE_LAYER,
-    ACTION_START_DRAG
+    ACTION_START_DRAG, StructureListHeader
 )
 from ui.builder.grouping_strategies import DefaultGroupingStrategy, TypeGroupingStrategy, FlatGroupingStrategy
 from ui.builder.panel_layout_config import StructurePanelLayoutConfig
@@ -68,7 +68,7 @@ class LayerPanel(DropTarget):
             container=self.panel
         )
         
-        self.list_y = 55 # Increased for headers
+        self.list_y = 65 # Increased for headers
         self.scroll_container = UIScrollingContainer(
             relative_rect=pygame.Rect(0, self.list_y, rect.width, rect.height - self.list_y),
             manager=manager,
@@ -120,6 +120,25 @@ class LayerPanel(DropTarget):
             
             new_items_list = []
             visited_keys = set()
+            
+            # 0. STRUCTURE LIST HEADER (Static Columns)
+            header_static_key = "static_header"
+            visited_keys.add(header_static_key)
+            static_header = self.ui_cache.get(header_static_key)
+            if static_header:
+                static_header.panel.set_relative_position((0, y_pos))
+            else:
+                static_header = StructureListHeader(
+                    self.manager,
+                    self.scroll_container,
+                    y_pos,
+                    content_width,
+                    self.config
+                )
+                self.ui_cache[header_static_key] = static_header
+            
+            new_items_list.append(static_header)
+            y_pos += static_header.height
             
             for l_type in layer_order:
                 if l_type not in ship.layers: continue

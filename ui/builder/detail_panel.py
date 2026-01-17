@@ -124,6 +124,18 @@ class ComponentDetailPanel:
         add_line(f"{comp.type_str}", '#C8C8C8')
         add_line(f"Mass: {comp.mass:.1f}t", '#C8C8C8')
         add_line(f"HP: {comp.max_hp:.0f}", '#C8C8C8')
+
+        # Resource Costs
+        costs = comp.get_resource_cost()
+        if costs:
+            cost_strs = []
+            from game.strategy.data.planet import PLANET_RESOURCES
+            for res in PLANET_RESOURCES: # Keep order
+                if res in costs and costs[res] > 0:
+                    cost_strs.append(f"{res[0]}:{costs[res]}") # M:10, O:5 etc
+            if cost_strs:
+                add_line("Cost: " + " ".join(cost_strs), '#FFD700')
+
         lines.append("<br>") # Spacer
         
         # --- Dynamic Ability Stats (The Refactor) ---
