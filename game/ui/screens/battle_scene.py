@@ -2,11 +2,15 @@
 
 Uses BattleService as an abstraction layer over BattleEngine for cleaner
 separation between UI and simulation logic.
+
+Can optionally use BattleController for unified battle mode support
+(manual, test, strategy, hypothetical battles).
 """
 import pygame
 import math
 import random
 import time
+from typing import Optional, List, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_info, log_warning
 from game.core.config import UIConfig
@@ -16,6 +20,10 @@ from game.ui.renderer.camera import Camera
 from game.ui.screens.battle_screen import BattleInterface
 from game.simulation.services import BattleService
 
+if TYPE_CHECKING:
+    from game.simulation.battle_controller import BattleController, BattleConfig
+    from game.simulation.entities.ship import Ship
+
 
 
 class BattleScene:
@@ -23,6 +31,9 @@ class BattleScene:
 
     Uses BattleService for battle management, providing a cleaner abstraction
     between UI concerns and simulation logic.
+
+    Can optionally use BattleController for unified battle orchestration
+    across all battle modes (manual, test, strategy, hypothetical).
     """
 
     def __init__(self, screen_width, screen_height):
@@ -33,6 +44,9 @@ class BattleScene:
         self._battle_service = BattleService()
         # Create initial battle for backward compatibility (engine must exist)
         self._battle_service.create_battle()
+
+        # Optional BattleController (for unified battle mode support)
+        self._controller: Optional['BattleController'] = None
 
         # Visual State
         self.beams = []  # distinct from engine beams, these have visual timers
@@ -64,6 +78,74 @@ class BattleScene:
         # Actions for Game class
         self.action_return_to_setup = False
         self.action_return_to_test_lab = False
+
+    # === Controller Integration ===
+
+    def set_controller(self, controller: 'BattleController') -> None:
+        """
+        Set the BattleController for unified battle orchestration.
+
+        When a controller is set, the scene delegates battle management
+        to the controller instead of using BattleService directly.
+
+        Args:
+            controller: Configured BattleController instance
+        """
+        self._controller = controller
+        # Sync battle service reference
+        if controller:
+            self._battle_service = controller.service
+
+    def get_controller(self) -> Optional['BattleController']:
+        """Get the current BattleController (if any)."""
+        return self._controller
+
+    def start_with_controller(
+        self,
+        controller: 'BattleController',
+        start_paused: bool = False
+    ) -> None:
+        """
+        Start a battle using a pre-configured BattleController.
+
+        This is the preferred way to start battles for strategy and
+        hypothetical modes.
+
+        Args:
+            controller: Configured and started BattleController
+            start_paused: Whether to start paused
+        """
+        self._controller = controller
+        self._battle_service = controller.service
+
+        # Reset visual state
+        self.beams = []
+        self.sim_tick_counter = 0
+        self.action_return_to_setup = False
+        self.action_return_to_test_lab = False
+
+        # Get mode from controller config
+        config = controller.config
+        if config:
+            self.headless_mode = config.headless
+            self.test_mode = config.mode.value == "test"
+            self.test_scenario = config.test_scenario
+
+        self.test_tick_count = 0
+        self.test_completed = False
+
+        # Reset UI
+        self.ui.expanded_ships = set()
+        self.ui.stats_scroll_offset = 0
+
+        self.sim_speed_multiplier = 1.0
+        self.sim_paused = start_paused
+
+        # Fit camera to ships
+        if not self.headless_mode and self.ships:
+            self.camera.fit_objects(self.ships)
+
+        log_info(f"Battle started via controller: {len(self.ships)} ships")
 
     @property
     def engine(self):

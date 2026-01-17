@@ -160,6 +160,55 @@ class BattleEngine:
             if s.turn_speed <= 0.01:
                 self.logger.log(f"WARNING: {s.name} has LOW/NO TURN SPEED ({s.turn_speed:.4f})!")
 
+    def add_ship_mid_battle(self, ship: 'Ship', team_id: int) -> None:
+        """
+        Add a ship to the battle mid-combat (for reinforcements).
+
+        Args:
+            ship: Ship to add
+            team_id: Team identifier (0 or 1)
+        """
+        ship.team_id = team_id
+        self.ships.append(ship)
+
+        # Create AI controller for the new ship
+        enemy_team = 1 if team_id == 0 else 0
+        ai = AIController(ship, self.grid, enemy_team)
+        self.ai_controllers.append(ai)
+
+        self.logger.log(f"Reinforcement arrived: {ship.name} (Team {team_id})")
+        log_info(f"Reinforcement arrived: {ship.name} (Team {team_id})")
+
+    def remove_ship(self, ship: 'Ship') -> bool:
+        """
+        Remove a ship from the battle (for retreat/escape).
+
+        Args:
+            ship: Ship to remove
+
+        Returns:
+            True if ship was found and removed
+        """
+        if ship in self.ships:
+            self.ships.remove(ship)
+
+            # Remove associated AI controller
+            for ai in self.ai_controllers:
+                if ai.ship == ship:
+                    self.ai_controllers.remove(ai)
+                    break
+
+            self.logger.log(f"Ship removed: {ship.name}")
+            return True
+        return False
+
+    def get_ship_by_name(self, name: str) -> Optional['Ship']:
+        """Find a ship by name."""
+        for s in self.ships:
+            if s.name == name:
+                return s
+        return None
+
     def update(self) -> None:
         """Run one simulation tick."""
         if self.is_battle_over():

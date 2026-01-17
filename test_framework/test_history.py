@@ -58,6 +58,9 @@ class TestRunRecord:
         metrics: Test-specific metrics (damage_dealt, hit_rate, etc.)
         validation_summary: Count of pass/fail/warn validations
         validation_results: Detailed validation results with p-values
+        initial_state_file: Path to JSON file with battle state at start
+        final_state_file: Path to JSON file with battle state at end
+        seed: Random seed used for this test run (for deterministic replay)
     """
     timestamp: str
     ticks_run: int
@@ -65,6 +68,9 @@ class TestRunRecord:
     metrics: Dict[str, Any] = field(default_factory=dict)
     validation_summary: Optional[Dict[str, int]] = None
     validation_results: List[Dict[str, Any]] = field(default_factory=list)
+    initial_state_file: Optional[str] = None
+    final_state_file: Optional[str] = None
+    seed: Optional[int] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize to dictionary for JSON storage."""
@@ -86,10 +92,11 @@ class TestRunRecord:
         Returns:
             TestRunRecord with extracted metrics and validation results
         """
-        # Extract metrics (exclude validation-specific keys)
+        # Extract metrics (exclude validation-specific keys and state files)
         excluded_keys = {
             'validation_results', 'validation_summary',
-            'has_validation_failures', 'has_validation_warnings'
+            'has_validation_failures', 'has_validation_warnings',
+            'initial_state_file', 'final_state_file', 'seed'
         }
         metrics = {
             k: v for k, v in results.items()
@@ -106,7 +113,10 @@ class TestRunRecord:
             passed=passed,
             metrics=metrics,
             validation_summary=results.get('validation_summary'),
-            validation_results=results.get('validation_results', [])
+            validation_results=results.get('validation_results', []),
+            initial_state_file=results.get('initial_state_file'),
+            final_state_file=results.get('final_state_file'),
+            seed=results.get('seed')
         )
 
     def get_formatted_timestamp(self) -> str:
@@ -137,6 +147,17 @@ class TestRunRecord:
             if 'p_value' in vr and vr['p_value'] is not None:
                 return vr['p_value']
         return None
+
+    def has_battle_states(self) -> bool:
+        """
+        Check if this run has saved battle state files.
+
+        Returns:
+            True if both initial and final state files exist
+        """
+        if not self.initial_state_file or not self.final_state_file:
+            return False
+        return os.path.exists(self.initial_state_file) and os.path.exists(self.final_state_file)
 
 
 class TestHistory:

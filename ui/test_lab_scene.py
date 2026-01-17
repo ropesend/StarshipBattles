@@ -775,6 +775,8 @@ class TestRunDetailsPanel:
         self.pass_color = (80, 255, 120)
         self.fail_color = (255, 80, 80)
         self.header_color = (150, 200, 255)
+        self.button_color = (60, 100, 160)
+        self.button_hover_color = (80, 120, 180)
 
         # Fonts
         self.title_font = pygame.font.SysFont(FONT_MAIN, 20)
@@ -785,6 +787,10 @@ class TestRunDetailsPanel:
         self.selected_run = None
         self.scroll_offset = 0
         self.max_scroll = 0
+
+        # View States button
+        self.view_states_button_rect = None
+        self.on_view_states = None  # Callback when button clicked
 
     def set_run(self, run_record, run_number):
         """Set the run to display details for."""
@@ -809,9 +815,17 @@ class TestRunDetailsPanel:
         self.max_scroll = max(0, content_height - visible_height)
 
     def handle_event(self, event):
-        """Handle scroll events."""
+        """Handle scroll and click events."""
         if not self.selected_run:
             return False
+
+        # Handle View States button click
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.view_states_button_rect and self.view_states_button_rect.collidepoint(event.pos):
+                run_record, run_number = self.selected_run
+                if self.on_view_states and run_record.has_battle_states():
+                    self.on_view_states(run_record, run_number)
+                return True
 
         if event.type == pygame.MOUSEWHEEL:
             mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -851,6 +865,31 @@ class TestRunDetailsPanel:
         status_color = self.pass_color if run_record.passed else self.fail_color
         status_surf = self.title_font.render(status_text, True, status_color)
         surface.blit(status_surf, (self.x + 10, y_offset))
+
+        # View States button (if battle states are available)
+        self.view_states_button_rect = None
+        if run_record.has_battle_states():
+            button_width = 110
+            button_height = 26
+            button_x = self.x + self.width - button_width - 15
+            button_y = y_offset - 5 + self.scroll_offset  # Account for scroll in positioning
+
+            # Only show button if it's in the visible area
+            if button_y >= self.y and button_y + button_height <= self.y + self.height:
+                self.view_states_button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
+
+                mouse_pos = pygame.mouse.get_pos()
+                is_hovered = self.view_states_button_rect.collidepoint(mouse_pos)
+                btn_color = self.button_hover_color if is_hovered else self.button_color
+
+                pygame.draw.rect(surface, btn_color, self.view_states_button_rect, border_radius=4)
+                pygame.draw.rect(surface, (100, 130, 180), self.view_states_button_rect, 1, border_radius=4)
+
+                btn_text = self.small_font.render("View States", True, (255, 255, 255))
+                text_x = button_x + (button_width - btn_text.get_width()) // 2
+                text_y = button_y + (button_height - btn_text.get_height()) // 2
+                surface.blit(btn_text, (text_x, text_y))
+
         y_offset += 40
 
         # Metrics
@@ -1218,9 +1257,17 @@ class TestLabScene:
         self.metadata_width = 540
         self.header_height = 80
 
-        # Scrolling state (for future enhancement)
-        self.test_scroll_offset = 0
-        self.metadata_scroll_offset = 0
+        # Scrolling state for test list panel
+        self.test_list_scroll_offset = 0
+        self.test_list_max_scroll = 0
+        self.test_list_panel_rect = None  # Set in _draw_test_list for scroll event handling
+
+        # Batch test execution state
+        self.batch_running = False
+        self.batch_tests = []  # List of test_ids to run
+        self.batch_current_index = 0
+        self.batch_total = 0
+        self.run_all_tests_btn_rect = None
 
         # UI components
         self.buttons = []
@@ -1237,6 +1284,10 @@ class TestLabScene:
 
         # Component data cache for UI panels
         self._components_cache = None
+
+        # Battle state viewer (for viewing initial/final JSON states)
+        from ui.battle_state_viewer import BattleStateViewer
+        self.battle_state_viewer = BattleStateViewer(WIDTH, HEIGHT)
 
         self._create_ui()
 
@@ -1742,6 +1793,9 @@ class TestLabScene:
         # Link panels
         self.results_panel.set_details_panel(self.test_details_panel)
 
+        # Set up View States callback
+        self.test_details_panel.on_view_states = self._on_view_battle_states
+
         self.results_panel.set_test(test_id)
 
         logger.debug(f"Created results panel at x={base_x} and details panel at x={details_x} for test {test_id}")
@@ -1754,13 +1808,9 @@ class TestLabScene:
         self.btn_back = Button(20, 20, 100, 40, "Back", self._on_back)
         self.buttons.append(self.btn_back)
 
-        # Run Button (beside Back button)
-        self.btn_run = Button(130, 20, 120, 40, "RUN TEST", self._on_run)
-        self.buttons.append(self.btn_run)
-
-        # Run Headless Button (beside Run button)
-        self.btn_run_headless = Button(260, 20, 160, 40, "RUN HEADLESS", self._on_run_headless)
-        self.buttons.append(self.btn_run_headless)
+        # Run Test and Run Headless buttons are now drawn in _draw_metadata_panel()
+        self.run_test_btn_rect = None
+        self.run_headless_btn_rect = None
 
     def _get_filtered_scenarios(self):
         """Get scenarios filtered by selected category."""
@@ -1771,12 +1821,22 @@ class TestLabScene:
         
     def reset_selection(self):
         """Clear test selection (called when returning from battle)."""
-        # Store results from completed test before clearing
+        # Store results from completed visual test before clearing
         if self.selected_test_id and hasattr(self.game.battle_scene, 'test_scenario'):
             scenario = self.game.battle_scene.test_scenario
-            # Check if scenario exists and has results dict (even if empty, verify() may populate it)
-            if scenario and hasattr(scenario, 'results') and scenario.results is not None:
-                logger.debug(f" Storing results for {self.selected_test_id}, result keys: {list(scenario.results.keys())}")
+            # Only capture results if test actually completed (not if user exited early)
+            if scenario and self.game.battle_scene.test_completed:
+                # Ensure results dict exists
+                if not hasattr(scenario, 'results') or scenario.results is None:
+                    scenario.results = {}
+
+                # Ensure essential fields are populated
+                if 'passed' not in scenario.results:
+                    scenario.results['passed'] = getattr(scenario, 'passed', False)
+                if 'ticks_run' not in scenario.results:
+                    scenario.results['ticks_run'] = self.game.battle_scene.test_tick_count
+
+                logger.debug(f"Storing visual test results for {self.selected_test_id}, keys: {list(scenario.results.keys())}")
                 self.registry.update_last_run_results(self.selected_test_id, scenario.results)
 
                 # Add to persistent test history
@@ -1786,10 +1846,16 @@ class TestLabScene:
                 if self.results_panel:
                     self.results_panel.set_test(self.selected_test_id)
             else:
-                logger.debug(f" No results to store - scenario={scenario}, has_results={hasattr(scenario, 'results') if scenario else False}")
+                logger.debug(f"No results to store - scenario={scenario}, test_completed={self.game.battle_scene.test_completed if scenario else 'N/A'}")
+
+        # Clear battle scene test state
+        if hasattr(self.game.battle_scene, 'test_completed'):
+            self.game.battle_scene.test_completed = False
+        if hasattr(self.game.battle_scene, 'test_scenario'):
+            self.game.battle_scene.test_scenario = None
 
         self.selected_test_id = None
-        logger.debug(f" Test selection cleared")
+        logger.debug(f"Test selection cleared")
 
     def _on_back(self):
         """Return to main menu."""
@@ -1797,6 +1863,41 @@ class TestLabScene:
         self.game.state = GameState.MENU
         if hasattr(self.game, 'menu_screen') and hasattr(self.game.menu_screen, 'create_particles'):
             self.game.menu_screen.create_particles()
+
+    def _on_view_battle_states(self, run_record, run_number):
+        """
+        Open the battle state viewer for a test run.
+
+        Args:
+            run_record: TestRunRecord with state file paths
+            run_number: Display number for the run
+        """
+        from test_framework.battle_state_capture import load_battle_state_json
+
+        initial_json = None
+        final_json = None
+
+        # Load initial state JSON
+        if run_record.initial_state_file:
+            initial_json = load_battle_state_json(run_record.initial_state_file)
+            if initial_json is None:
+                logger.warning(f"Could not load initial state from: {run_record.initial_state_file}")
+
+        # Load final state JSON
+        if run_record.final_state_file:
+            final_json = load_battle_state_json(run_record.final_state_file)
+            if final_json is None:
+                logger.warning(f"Could not load final state from: {run_record.final_state_file}")
+
+        if initial_json or final_json:
+            self.battle_state_viewer.show(
+                initial_json=initial_json,
+                final_json=final_json,
+                test_id=self.selected_test_id,
+                run_number=run_number
+            )
+        else:
+            self.output_log.append("ERROR: Could not load battle state files")
 
     def _on_run(self):
         """Run the selected test scenario visually in Combat Lab."""
@@ -1825,6 +1926,10 @@ class TestLabScene:
             logger.debug(f" Loading test data for scenario")
             runner.load_data_for_scenario(scenario)
             logger.debug(f" Test data loaded successfully")
+
+            # Ensure battle engine exists (may have been reset after previous test)
+            if self.game.battle_scene.engine is None:
+                self.game.battle_scene._battle_service.create_battle()
 
             # Clear battle engine
             logger.debug(f" Clearing battle engine")
@@ -1880,6 +1985,10 @@ class TestLabScene:
         self.output_log.append(f"Running {metadata.name} (headless)...")
 
         runner = TestRunner()
+
+        # Ensure battle engine exists (may have been reset after visual test)
+        if self.game.battle_scene.engine is None:
+            self.game.battle_scene._battle_service.create_battle()
         engine = self.game.battle_scene.engine
 
         try:
@@ -1933,19 +2042,25 @@ class TestLabScene:
 
             logger.debug(f" Starting headless simulation loop (max_ticks={max_ticks})")
 
-            # Run simulation as fast as possible
-            while tick_count < max_ticks:
-                # Call scenario update for dynamic logic
-                scenario.update(engine)
+            # Capture battle states for later viewing
+            from test_framework.battle_state_capture import BattleStateCapture
+            import random
+            seed = random.randint(0, 2**31 - 1)
 
-                # Update engine one tick
-                engine.update()
-                tick_count += 1
+            with BattleStateCapture(engine, self.selected_test_id, seed) as state_capture:
+                # Run simulation as fast as possible
+                while tick_count < max_ticks:
+                    # Call scenario update for dynamic logic
+                    scenario.update(engine)
 
-                # Check if battle ended naturally
-                if engine.is_battle_over():
-                    logger.debug(f" Battle ended naturally at tick {tick_count}")
-                    break
+                    # Update engine one tick
+                    engine.update()
+                    tick_count += 1
+
+                    # Check if battle ended naturally
+                    if engine.is_battle_over():
+                        logger.debug(f" Battle ended naturally at tick {tick_count}")
+                        break
 
             # Simulation complete - verify results
             elapsed_time = time.time() - start_time
@@ -1955,10 +2070,11 @@ class TestLabScene:
             scenario.passed = scenario.verify(engine)
             logger.debug(f" Test {'PASSED' if scenario.passed else 'FAILED'}")
 
-            # Store results
+            # Store results including battle state file paths
             scenario.results['ticks_run'] = tick_count
             scenario.results['duration_real'] = elapsed_time
             scenario.results['ticks'] = tick_count  # Alias for consistency with runner
+            scenario.results.update(state_capture.get_results_dict())  # Add state file paths and seed
             self.registry.update_last_run_results(self.selected_test_id, scenario.results)
 
             # Add to persistent test history
@@ -1984,9 +2100,142 @@ class TestLabScene:
             import traceback
             traceback.print_exc()
 
+    def _on_run_all_tests(self):
+        """Run all visible tests headlessly in sequence."""
+        filtered_scenarios = self._get_filtered_scenarios()
+        self.batch_tests = sorted(filtered_scenarios.keys())
+        self.batch_total = len(self.batch_tests)
+
+        if self.batch_total == 0:
+            self.output_log.append("No tests to run!")
+            return
+
+        self.batch_current_index = 0
+        self.batch_running = True
+        self.output_log.append(f"Starting batch run of {self.batch_total} tests...")
+        self._run_next_batch_test()
+
+    def _run_next_batch_test(self):
+        """Run the next test in the batch sequence."""
+        if self.batch_current_index >= self.batch_total:
+            # All tests complete
+            self.batch_running = False
+            self.output_log.append(f"Batch complete: {self.batch_total} tests run")
+            return
+
+        test_id = self.batch_tests[self.batch_current_index]
+        scenario_info = self.registry.get_by_id(test_id)
+
+        if scenario_info is None:
+            self.output_log.append(f"ERROR: Test {test_id} not found, skipping")
+            self.batch_current_index += 1
+            self._run_next_batch_test()
+            return
+
+        metadata = scenario_info['metadata']
+        runner = TestRunner()
+
+        try:
+            # Instantiate scenario
+            scenario_cls = scenario_info['class']
+            scenario = scenario_cls()
+
+            # Load test data
+            runner.load_data_for_scenario(scenario)
+
+            # Ensure battle engine exists (may have been reset)
+            if self.game.battle_scene.engine is None:
+                self.game.battle_scene._battle_service.create_battle()
+
+            # Get fresh battle engine
+            engine = self.game.battle_scene.engine
+            engine.start([], [])
+
+            # Setup scenario
+            scenario.setup(engine)
+
+            # Draw progress overlay
+            self.game.screen.fill((20, 20, 25))
+            self.draw(self.game.screen)
+
+            overlay = pygame.Surface((600, 200))
+            overlay.fill((40, 40, 45))
+            pygame.draw.rect(overlay, (100, 100, 120), overlay.get_rect(), 3)
+
+            progress_text = f"Running test {self.batch_current_index + 1}/{self.batch_total}"
+            title_text = self.header_font.render(progress_text, True, (255, 255, 255))
+            test_text = self.body_font.render(f"{metadata.name}", True, (200, 200, 200))
+            id_text = self.small_font.render(f"ID: {test_id}", True, (150, 150, 150))
+
+            overlay.blit(title_text, (300 - title_text.get_width()//2, 50))
+            overlay.blit(test_text, (300 - test_text.get_width()//2, 90))
+            overlay.blit(id_text, (300 - id_text.get_width()//2, 125))
+
+            screen_center_x = self.game.screen.get_width() // 2
+            screen_center_y = self.game.screen.get_height() // 2
+            self.game.screen.blit(overlay, (screen_center_x - 300, screen_center_y - 100))
+            pygame.display.flip()
+
+            # Run simulation headless with battle state capture
+            from test_framework.battle_state_capture import BattleStateCapture
+            import random
+            seed = random.randint(0, 2**31 - 1)
+
+            start_time = time.time()
+            tick_count = 0
+            max_ticks = scenario.max_ticks
+
+            with BattleStateCapture(engine, test_id, seed) as state_capture:
+                while tick_count < max_ticks:
+                    scenario.update(engine)
+                    engine.update()
+                    tick_count += 1
+
+                    if engine.is_battle_over():
+                        break
+
+            # Verify results
+            elapsed_time = time.time() - start_time
+            scenario.passed = scenario.verify(engine)
+
+            # Store results including battle state file paths
+            scenario.results['ticks_run'] = tick_count
+            scenario.results['duration_real'] = elapsed_time
+            scenario.results['ticks'] = tick_count
+            scenario.results.update(state_capture.get_results_dict())  # Add state file paths and seed
+            self.registry.update_last_run_results(test_id, scenario.results)
+
+            # Add to persistent test history
+            self.test_history.add_run(test_id, scenario.results)
+
+            # Log test execution
+            runner._log_test_execution(scenario, headless=True)
+
+            # Update output log
+            status = "PASSED" if scenario.passed else "FAILED"
+            self.output_log.append(f"[{self.batch_current_index + 1}/{self.batch_total}] {test_id}: {status}")
+
+        except Exception as e:
+            self.output_log.append(f"[{self.batch_current_index + 1}/{self.batch_total}] {test_id}: ERROR - {e}")
+
+        # Move to next test
+        self.batch_current_index += 1
+        # Use a small delay to allow UI updates, then continue
+        pygame.time.set_timer(pygame.USEREVENT + 1, 50, loops=1)  # Trigger next test after 50ms
+
+    def _continue_batch_test(self):
+        """Continue batch execution (called from event handler)."""
+        if self.batch_running:
+            self._run_next_batch_test()
+
     def handle_input(self, events):
         """Handle user input for category selection, test selection, and buttons."""
         for event in events:
+            # Handle batch test continuation timer
+            if event.type == pygame.USEREVENT + 1:
+                self._continue_batch_test()
+                continue
+
             # Handle confirmation dialog first (if open)
             if self.confirmation_dialog and self.confirmation_dialog.is_open:
                 self.confirmation_dialog.handle_event(event)
@@ -2000,6 +2249,11 @@ class TestLabScene:
                 if not self.json_popup.is_open:
                     self.json_popup = None
                 continue  # Don't process other events while popup is open
+
+            # Handle battle state viewer (if open)
+            if self.battle_state_viewer and self.battle_state_viewer.visible:
+                self.battle_state_viewer.handle_event(event)
+                continue  # Don't process other events while viewer is open
 
             # Handle ship panel events (scrolling)
             for panel in self.ship_panels:
@@ -2020,6 +2274,14 @@ class TestLabScene:
             if self.test_details_panel:
                 if self.test_details_panel.handle_event(event):
                     continue  # Event consumed by panel
+
+            # Handle mouse wheel for test list scrolling
+            if event.type == pygame.MOUSEWHEEL:
+                mx, my = pygame.mouse.get_pos()
+                if self.test_list_panel_rect and self.test_list_panel_rect.collidepoint(mx, my):
+                    self.test_list_scroll_offset -= event.y * 40  # 40px per scroll tick
+                    self.test_list_scroll_offset = max(0, min(self.test_list_scroll_offset, self.test_list_max_scroll))
+                    continue  # Event consumed
 
             # Handle mouse motion for hover effects
             if event.type == pygame.MOUSEMOTION:
@@ -2058,18 +2320,22 @@ class TestLabScene:
                 self.category_hover = category
                 return
 
-        # Check test hover
+        # Check test hover (accounting for scroll offset)
         test_list_x = 20 + self.category_width + 20
         test_list_y = self.header_height + 20 + 40  # +40 for header offset
 
-        filtered_scenarios = self._get_filtered_scenarios()
-        sorted_test_ids = sorted(filtered_scenarios.keys())
+        # Check if mouse is within the test list panel visible area
+        if self.test_list_panel_rect and self.test_list_panel_rect.collidepoint(mx, my):
+            filtered_scenarios = self._get_filtered_scenarios()
+            sorted_test_ids = sorted(filtered_scenarios.keys())
 
-        for i, test_id in enumerate(sorted_test_ids):
-            rect = pygame.Rect(test_list_x, test_list_y + i * 55, 400, 50)
-            if rect.collidepoint(mx, my):
-                self.test_hover = test_id
-                break
+            for i, test_id in enumerate(sorted_test_ids):
+                # Calculate item position with scroll offset
+                item_y = test_list_y + i * 55 - self.test_list_scroll_offset
+                rect = pygame.Rect(test_list_x, item_y, 400, 50)
+                if rect.collidepoint(mx, my) and item_y >= test_list_y - 50 and item_y < test_list_y + (self.test_list_panel_rect.height - 50):
+                    self.test_hover = test_id
+                    break
 
     def _handle_click(self, mx, my):
         """Handle click events for categories and tests."""
@@ -2098,22 +2364,43 @@ class TestLabScene:
                 self.selected_test_id = None  # Clear test selection
                 return
 
-        # Check test click
+        # Check "Run Tests" button click (in test list panel)
+        if self.run_all_tests_btn_rect and self.run_all_tests_btn_rect.collidepoint(mx, my):
+            if not self.batch_running:
+                self._on_run_all_tests()
+            return
+
+        # Check test click (accounting for scroll offset)
         test_list_x = 20 + self.category_width + 20
         test_list_y = self.header_height + 20 + 40  # +40 for header offset
 
-        filtered_scenarios = self._get_filtered_scenarios()
-        sorted_test_ids = sorted(filtered_scenarios.keys())
+        # Only check test clicks if within the test list panel
+        if self.test_list_panel_rect and self.test_list_panel_rect.collidepoint(mx, my):
+            filtered_scenarios = self._get_filtered_scenarios()
+            sorted_test_ids = sorted(filtered_scenarios.keys())
 
-        for i, test_id in enumerate(sorted_test_ids):
-            rect = pygame.Rect(test_list_x, test_list_y + i * 55, 400, 50)
-            if rect.collidepoint(mx, my):
-                self.selected_test_id = test_id
-                # Create ship panels for the selected test
-                self._create_ship_panels(test_id)
-                # Create results panel for the selected test
-                self._create_results_panel(test_id)
-                return
+            for i, test_id in enumerate(sorted_test_ids):
+                # Calculate item position with scroll offset
+                item_y = test_list_y + i * 55 - self.test_list_scroll_offset
+                rect = pygame.Rect(test_list_x, item_y, 400, 50)
+                # Check if item is visible and clicked
+                if rect.collidepoint(mx, my) and item_y >= test_list_y - 50 and item_y < test_list_y + (self.test_list_panel_rect.height - 50):
+                    self.selected_test_id = test_id
+                    # Create ship panels for the selected test
+                    self._create_ship_panels(test_id)
+                    # Create results panel for the selected test
+                    self._create_results_panel(test_id)
+                    return
+
+        # Check Run Test button click (in metadata panel)
+        if self.run_test_btn_rect and self.run_test_btn_rect.collidepoint(mx, my):
+            self._on_run()
+            return
+
+        # Check Run Headless button click (in metadata panel)
+        if self.run_headless_btn_rect and self.run_headless_btn_rect.collidepoint(mx, my):
+            self._on_run_headless()
+            return
 
         # Check "Update Expected Values" button click
         if self.update_expected_button_visible and self.update_expected_button_rect:
@@ -2178,6 +2465,10 @@ class TestLabScene:
         if self.confirmation_dialog and self.confirmation_dialog.is_open:
             self.confirmation_dialog.draw(screen)
 
+        # Battle state viewer (drawn on top of everything)
+        if self.battle_state_viewer and self.battle_state_viewer.visible:
+            self.battle_state_viewer.draw(screen)
+
     def _draw_header(self, screen):
         """Draw the header with title."""
         title = self.title_font.render("COMBAT LAB - TEST VIEWER", True, self.HEADER_COLOR)
@@ -2240,12 +2531,13 @@ class TestLabScene:
             screen.blit(text, (rect.x + 10, rect.y + 10))
 
     def _draw_test_list(self, screen):
-        """Draw the test list panel."""
+        """Draw the test list panel with scrolling support."""
         x = 20 + self.category_width + 20
         y = self.header_height + 20
 
         # Draw panel background
         panel_rect = pygame.Rect(x - 10, y - 10, self.test_list_width, HEIGHT - y - 100)
+        self.test_list_panel_rect = panel_rect  # Store for scroll event handling
         pygame.draw.rect(screen, self.PANEL_BG, panel_rect, border_radius=5)
         pygame.draw.rect(screen, self.BORDER_COLOR, panel_rect, 2, border_radius=5)
 
@@ -2261,17 +2553,61 @@ class TestLabScene:
         filtered_scenarios = self._get_filtered_scenarios()
         sorted_test_ids = sorted(filtered_scenarios.keys())
 
+        # Draw "Run Tests" button
+        mouse_pos = pygame.mouse.get_pos()
+        btn_width = 120
+        btn_height = 32
+        self.run_all_tests_btn_rect = pygame.Rect(x + self.test_list_width - btn_width - 30, y - 35, btn_width, btn_height)
+
+        if self.batch_running:
+            # Show progress during batch execution
+            progress_text = f"{self.batch_current_index + 1}/{self.batch_total}"
+            btn_color = (80, 80, 50)
+            btn_border = (150, 150, 80)
+            text_color = (255, 255, 150)
+        else:
+            btn_hover = self.run_all_tests_btn_rect.collidepoint(mouse_pos)
+            btn_color = (60, 80, 60) if btn_hover else (40, 60, 40)
+            btn_border = (80, 120, 80)
+            progress_text = "Run Tests"
+            text_color = (150, 200, 150)
+
+        pygame.draw.rect(screen, btn_color, self.run_all_tests_btn_rect, border_radius=4)
+        pygame.draw.rect(screen, btn_border, self.run_all_tests_btn_rect, 1, border_radius=4)
+        btn_text = self.small_font.render(progress_text, True, text_color)
+        text_rect = btn_text.get_rect(center=self.run_all_tests_btn_rect.center)
+        screen.blit(btn_text, text_rect)
+
         if not sorted_test_ids:
             no_tests_text = self.body_font.render("No tests available", True, (150, 150, 150))
             screen.blit(no_tests_text, (x + 20, y + 20))
             return
 
-        # Draw test items
+        # Calculate scrolling dimensions
+        item_height = 55
+        content_height = len(sorted_test_ids) * item_height
+        visible_height = panel_rect.height - 50  # Space for header
+        self.test_list_max_scroll = max(0, content_height - visible_height)
+
+        # Clamp scroll offset
+        self.test_list_scroll_offset = max(0, min(self.test_list_scroll_offset, self.test_list_max_scroll))
+
+        # Set clipping region for test items
+        clip_rect = pygame.Rect(panel_rect.x, y, panel_rect.width, visible_height)
+        screen.set_clip(clip_rect)
+
+        # Draw test items with scroll offset
         for i, test_id in enumerate(sorted_test_ids):
+            item_y = y + i * item_height - self.test_list_scroll_offset
+
+            # Skip items outside visible area for performance
+            if item_y + 50 < y or item_y > y + visible_height:
+                continue
+
             scenario_info = filtered_scenarios[test_id]
             metadata = scenario_info['metadata']
 
-            rect = pygame.Rect(x, y + i * 55, 400, 50)
+            rect = pygame.Rect(x, item_y, 400, 50)
 
             # Determine color
             if self.selected_test_id == test_id:
@@ -2286,7 +2622,7 @@ class TestLabScene:
 
             # Validation status flag (if available)
             flag_x = rect.x + rect.width - 30
-            flag_y = rect.y + 10
+            flag_y = rect.y + rect.height // 2  # Vertically centered
             self._draw_validation_flag(screen, flag_x, flag_y, scenario_info)
 
             # Test ID
@@ -2296,6 +2632,34 @@ class TestLabScene:
             # Test name
             name_text = self.small_font.render(metadata.name, True, self.TEXT_COLOR)
             screen.blit(name_text, (rect.x + 10, rect.y + 28))
+
+        # Reset clipping
+        screen.set_clip(None)
+
+        # Draw scrollbar if needed
+        if self.test_list_max_scroll > 0:
+            self._draw_test_list_scrollbar(screen, panel_rect, y, visible_height)
+
+    def _draw_test_list_scrollbar(self, screen, panel_rect, content_y, visible_height):
+        """Draw scrollbar for the test list panel."""
+        scrollbar_width = 8
+        scrollbar_x = panel_rect.x + panel_rect.width - scrollbar_width - 5
+        scrollbar_y = content_y
+        scrollbar_height = visible_height
+
+        # Draw track
+        track_rect = pygame.Rect(scrollbar_x, scrollbar_y, scrollbar_width, scrollbar_height)
+        pygame.draw.rect(screen, (40, 40, 50), track_rect, border_radius=4)
+
+        # Calculate thumb size and position
+        content_height = self.test_list_max_scroll + visible_height
+        thumb_height = max(30, int(visible_height * visible_height / content_height))
+        scroll_ratio = self.test_list_scroll_offset / self.test_list_max_scroll if self.test_list_max_scroll > 0 else 0
+        thumb_y = scrollbar_y + int(scroll_ratio * (scrollbar_height - thumb_height))
+
+        # Draw thumb
+        thumb_rect = pygame.Rect(scrollbar_x, thumb_y, scrollbar_width, thumb_height)
+        pygame.draw.rect(screen, (100, 100, 120), thumb_rect, border_radius=4)
 
     def _draw_metadata_panel(self, screen):
         """Draw the metadata panel showing rich test information."""
@@ -2371,6 +2735,33 @@ class TestLabScene:
         footer_text = f"Max Ticks: {metadata.max_ticks} | Seed: {metadata.seed}"
         footer_surf = self.small_font.render(footer_text, True, (120, 120, 120))
         screen.blit(footer_surf, (x, y))
+        y += 30
+
+        # Run Test and Run Headless buttons
+        btn_width = 140
+        btn_height = 40
+        btn_spacing = 20
+        mouse_pos = pygame.mouse.get_pos()
+
+        # Run Test button
+        self.run_test_btn_rect = pygame.Rect(x, y, btn_width, btn_height)
+        run_test_hover = self.run_test_btn_rect.collidepoint(mouse_pos)
+        run_test_color = (70, 100, 70) if run_test_hover else (50, 80, 50)
+        pygame.draw.rect(screen, run_test_color, self.run_test_btn_rect, border_radius=5)
+        pygame.draw.rect(screen, (100, 150, 100), self.run_test_btn_rect, 2, border_radius=5)
+        run_text = self.body_font.render("RUN TEST", True, (200, 255, 200))
+        text_rect = run_text.get_rect(center=self.run_test_btn_rect.center)
+        screen.blit(run_text, text_rect)
+
+        # Run Headless button
+        self.run_headless_btn_rect = pygame.Rect(x + btn_width + btn_spacing, y, btn_width + 20, btn_height)
+        run_headless_hover = self.run_headless_btn_rect.collidepoint(mouse_pos)
+        run_headless_color = (70, 70, 100) if run_headless_hover else (50, 50, 80)
+        pygame.draw.rect(screen, run_headless_color, self.run_headless_btn_rect, border_radius=5)
+        pygame.draw.rect(screen, (100, 100, 150), self.run_headless_btn_rect, 2, border_radius=5)
+        headless_text = self.body_font.render("RUN HEADLESS", True, (200, 200, 255))
+        text_rect = headless_text.get_rect(center=self.run_headless_btn_rect.center)
+        screen.blit(headless_text, text_rect)
 
     def _draw_section(self, screen, x, y, label, text, color):
         """Draw a single-line metadata section."""

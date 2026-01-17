@@ -1,8 +1,12 @@
 import random
 from game.core.logger import log_debug, log_info, log_warning
-from game.strategy.data.fleet import OrderType
+from game.strategy.data.fleet import Fleet, OrderType
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.simulation.battle_state import BattleResults
+
 
 @dataclass
 class ValidationResult:
@@ -10,9 +14,16 @@ class ValidationResult:
     message: str = ""
     error_code: Optional[str] = None
 
+
 class TurnEngine:
     def __init__(self):
-        pass
+        # Battle seed counter for deterministic battles
+        self._battle_seed_counter = 0
+
+    def _generate_battle_seed(self) -> int:
+        """Generate a deterministic seed for battles."""
+        self._battle_seed_counter += 1
+        return self._battle_seed_counter
 
     def process_turn(self, empires, galaxy):
         """
@@ -315,11 +326,131 @@ class TurnEngine:
             loser_empire = start_tuple[0]
             loser_empire.remove_fleet(loser)
 
-    def _resolve_combat(self, f1, f2):
-        """Return the winner of single encounter."""
+    def _resolve_combat(self, f1: Fleet, f2: Fleet) -> Fleet:
+        """
+        Return the winner of single encounter.
+
+        If both fleets have ShipInstance objects, uses the full battle
+        simulation via BattleController. Otherwise falls back to RNG.
+        """
+        # Check if both fleets have proper ship instances for simulation
+        if f1.has_ship_instances() and f2.has_ship_instances():
+            return self._resolve_combat_simulated(f1, f2)
+
+        # Fallback to simple RNG for legacy string-based ships
+        log_debug(f"Using RNG combat resolution (no ShipInstances)")
         if random.random() > 0.5:
             return f1
         return f2
+
+    def _resolve_combat_simulated(self, f1: Fleet, f2: Fleet) -> Fleet:
+        """
+        Resolve combat using the full battle simulation.
+
+        Runs a headless battle and updates fleet ship states based on results.
+
+        Args:
+            f1: First fleet (team 0)
+            f2: Second fleet (team 1)
+
+        Returns:
+            The winning fleet
+        """
+        from game.simulation.battle_controller import (
+            BattleController, BattleConfig, BattleMode
+        )
+        from game.simulation.services.battle_service import BattleService
+
+        log_info(f"Simulating battle: Fleet {f1.id} vs Fleet {f2.id}")
+
+        # Create controller for strategy battle
+        controller = BattleController(BattleService())
+
+        config = BattleConfig(
+            mode=BattleMode.STRATEGY,
+            seed=self._generate_battle_seed(),
+            headless=True,
+            allow_retreat=True,
+            source_fleets=(f1, f2),
+        )
+
+        controller.configure(config)
+
+        # Convert fleet ships to simulation ships
+        team1_ships = f1.to_battle_ships(team_id=0)
+        team2_ships = f2.to_battle_ships(team_id=1)
+
+        if not team1_ships or not team2_ships:
+            log_warning("One or both fleets have no combat-capable ships")
+            # Return the fleet with ships, or random if both empty
+            if team1_ships and not team2_ships:
+                return f1
+            elif team2_ships and not team1_ships:
+                return f2
+            else:
+                return f1 if random.random() > 0.5 else f2
+
+        controller.add_ships(team1_ships, 0)
+        controller.add_ships(team2_ships, 1)
+        controller.start()
+
+        # Run headless battle
+        results = controller.run_headless()
+
+        log_info(f"Battle complete: winner={results.winner}, ticks={results.tick_count}")
+        log_info(f"  Team 0 survivors: {len([s for s in results.surviving_ships if s.team_id == 0])}")
+        log_info(f"  Team 1 survivors: {len([s for s in results.surviving_ships if s.team_id == 1])}")
+
+        # Update fleet ship states from results
+        self._apply_battle_results(f1, f2, results)
+
+        # Determine winner
+        if results.winner == 0:
+            return f1
+        elif results.winner == 1:
+            return f2
+        else:
+            # Draw - both fleets survive but are damaged
+            # Return the one with more survivors
+            team0_count = len([s for s in results.surviving_ships if s.team_id == 0])
+            team1_count = len([s for s in results.surviving_ships if s.team_id == 1])
+            return f1 if team0_count >= team1_count else f2
+
+    def _apply_battle_results(
+        self,
+        f1: Fleet,
+        f2: Fleet,
+        results: 'BattleResults'
+    ) -> None:
+        """
+        Apply battle results back to the source fleets.
+
+        Updates ship damage/resource states and removes destroyed ships.
+        """
+        # Get surviving ships by team
+        team0_survivors = [s for s in results.surviving_ships if s.team_id == 0]
+        team1_survivors = [s for s in results.surviving_ships if s.team_id == 1]
+
+        # Convert ShipState back to Ship for update_from_battle_results
+        team0_ships = [s.to_ship() for s in team0_survivors]
+        team1_ships = [s.to_ship() for s in team1_survivors]
+
+        # Update fleets
+        f1.update_from_battle_results(team0_ships)
+        f2.update_from_battle_results(team1_ships)
+
+        # Log results
+        f1_destroyed = len(f1.get_ship_instances()) - len([
+            s for s in f1.ships
+            if hasattr(s, 'is_destroyed') and not s.is_destroyed
+        ])
+        f2_destroyed = len(f2.get_ship_instances()) - len([
+            s for s in f2.ships
+            if hasattr(s, 'is_destroyed') and not s.is_destroyed
+        ])
+
+        log_info(f"Battle results applied: Fleet {f1.id} lost {f1_destroyed} ships, "
+                f"Fleet {f2.id} lost {f2_destroyed} ships")
 
     def _process_end_turn_orders(self, fleet, empire, galaxy):
         """Process static orders like COLONIZE.
