@@ -1,6 +1,10 @@
 import pytest
 import math
-from game.strategy.data.planet_gen import PlanetGenerator, MASS_EARTH, MASS_JUPITER, MASS_MOON, GASES
+from game.strategy.data.planet_gen import (
+    PlanetGenerator, MASS_EARTH, MASS_JUPITER, MASS_MOON, GASES,
+    calculate_radius_density_from_mass, calculate_escape_velocity,
+    generate_atmosphere
+)
 from game.strategy.data.planet import Planet, PlanetType
 
 @pytest.fixture
@@ -16,7 +20,7 @@ def test_mass_generation_ranges(generator):
 def test_radius_density_consistency(generator):
     """Verify radius and density calculations are physically linked."""
     mass = MASS_EARTH
-    radius, density = generator._calculate_radius_density_from_mass(mass)
+    radius, density = calculate_radius_density_from_mass(mass)
     
     # V = m/rho
     vol = mass / density
@@ -36,7 +40,7 @@ def test_atmosphere_retention(generator):
     # H2 v_rms ~ 1900 m/s. 6*v_rms ~ 11400 m/s. Borderline? 
     # Usually Earth loses H2.
     
-    comp, press, final_temp = generator._generate_atmosphere(
+    comp, press, final_temp = generate_atmosphere(
         mass=MASS_EARTH, 
         escape_vel=11200, 
         base_temp=300, 
@@ -47,7 +51,7 @@ def test_atmosphere_retention(generator):
     assert h2 < 1.0 # Pascals
     
     # 2. Jupiter-like (Mass Jupiter, Escape ~60km/s, Temp 100K)
-    comp, press, final_temp = generator._generate_atmosphere(
+    comp, press, final_temp = generate_atmosphere(
         mass=MASS_JUPITER, 
         escape_vel=60000, 
         base_temp=100, 
@@ -60,7 +64,7 @@ def test_atmosphere_retention(generator):
 def test_greenhouse_effect(generator):
     """Verify atmosphere increases temperature."""
     # Vacuum
-    comp, press, temp_vac = generator._generate_atmosphere(
+    comp, press, temp_vac = generate_atmosphere(
         mass=MASS_MOON, 
         escape_vel=2400, 
         base_temp=300, 
@@ -73,7 +77,7 @@ def test_greenhouse_effect(generator):
     # Let's assume a Massive Super-Earth retains atmosphere
     
     # Mass 2x Earth, Temp 300
-    comp, press, temp_atm = generator._generate_atmosphere(
+    comp, press, temp_atm = generate_atmosphere(
         mass=MASS_EARTH * 2, 
         escape_vel=15000, 
         base_temp=300, 

@@ -35,6 +35,7 @@ class ModifierEffects:
         cost_mult_increase = 3.5 ** level
         stats['mass_mult'] *= cost_mult_increase
         stats['hp_mult'] *= cost_mult_increase
+        stats['cost_mult'] *= cost_mult_increase
         # Note: Cost usually scales with mass implicitly if cost is mass-based, 
         # but if cost is separate, we might want to scale it too. 
         # The original code didn't explicitly scale cost_mult here, but did scale 'mass_mult' and 'hp_mult'.
@@ -92,6 +93,7 @@ class ModifierEffects:
         # Mass increase: 1.0 + (0.5 * level)
         mass_factor = 1.0 + (level * 0.5)
         stats['mass_mult'] *= mass_factor
+        stats['cost_mult'] *= (1.5 ** level) # Precision target cost multiplier
 
     @staticmethod
     def rapid_fire(val, stats):
@@ -115,6 +117,7 @@ class ModifierEffects:
         # So mass added = rate_delta * 2.
         mass_increase = (rate_mult - 1.0) * 2.0
         stats['mass_mult'] += mass_increase
+        stats['cost_mult'] *= (rate_mult ** 0.5) # Rapid fire cost multiplier
 
     @staticmethod
     def seeker_endurance(val, stats):
@@ -132,6 +135,7 @@ class ModifierEffects:
         
         mass_factor = 1.0 + (mult - 1.0) * 0.5
         stats['mass_mult'] *= mass_factor
+        stats['cost_mult'] *= mult # Seeker endurance cost
 
     @staticmethod
     def seeker_damage(val, stats):
@@ -147,6 +151,7 @@ class ModifierEffects:
         
         mass_factor = 1.0 + (mult - 1.0) * 0.75
         stats['mass_mult'] *= mass_factor
+        stats['cost_mult'] *= (mult ** 0.5) # Seeker damage cost
 
     @staticmethod
     def seeker_armored(val, stats):
@@ -160,6 +165,7 @@ class ModifierEffects:
         
         mass_factor = 1.0 + (mult - 1.0) * 0.75
         stats['mass_mult'] *= mass_factor
+        stats['cost_mult'] *= (mult ** 0.5) # Seeker armored cost
 
     @staticmethod
     def seeker_stealth(val, stats):
@@ -177,6 +183,7 @@ class ModifierEffects:
         
         # Mass increase
         stats['mass_mult'] *= (1.0 + level * 2.0)
+        stats['cost_mult'] *= (2.0 ** level) # Seeker stealth cost
 
     @staticmethod
     def automation(val, stats):
@@ -196,6 +203,7 @@ class ModifierEffects:
 
         # Mass increase
         stats['mass_mult'] *= (1.0 + reduction)
+        stats['cost_mult'] *= (1.0 + reduction) # Automation cost
 
     @staticmethod
     def hardened_mount(val, stats):
@@ -216,6 +224,7 @@ class ModifierEffects:
 
         stats['mass_mult'] *= mass_mult
         stats['hp_mult'] *= hp_mult
+        stats['cost_mult'] *= mass_mult # Hardened cost scales with mass
 
     @staticmethod
     def efficiency_mount(val, stats):
@@ -241,6 +250,7 @@ class ModifierEffects:
 
         stats['consumption_mult'] *= resource_mult
         stats['mass_mult'] *= mass_mult
+        stats['cost_mult'] *= mass_mult # Efficiency cost scales with mass increase
 
 
 

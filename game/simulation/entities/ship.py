@@ -97,6 +97,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # New Stats
         self.mass_limits_ok: bool = True
         self.layer_status: Dict[LayerType, Dict[str, Any]] = {}
+        self.construction_cost: Dict[str, int] = {}
         self._cached_summary = {}  # Performance optimization for UI
         self._loading_warnings: List[str] = []
         

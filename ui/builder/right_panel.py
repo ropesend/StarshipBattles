@@ -107,18 +107,19 @@ class BuilderRightPanel:
         missing_keys = new_log_keys - current_keys
         if missing_keys:
              self.rebuild_stats()
-             # Fall through to update
 
-        # Also check if any EXISTING key that looks like a resource key is NO LONGER valid?
-        # E.g. removed 'Biomass'.
-        # This is harder without knowing which keys are logistics.
-        # But generally, adding components is the main builder action. Removing implies set subtraction.
-        # Using self.logistics_keys stored in setup_stats would be better.
+        # Check Construction Keys
+        from ui.builder.stats_config import get_construction_rows
+        new_cost_rows = get_construction_rows(ship)
+        new_cost_keys = set(r.key for r in new_cost_rows)
         
+        if hasattr(self, 'current_construction_keys'):
+            if new_cost_keys != self.current_construction_keys:
+                self.rebuild_stats()
+
         elif hasattr(self, 'current_logistics_keys'):
             if new_log_keys != self.current_logistics_keys:
                  self.rebuild_stats()
-                 # Fall through to update
 
         self.update_stats_display(ship)
 
@@ -467,6 +468,13 @@ class BuilderRightPanel:
         y = build_section("Crew Logistics", self.stats_config.get('crewlogistics', []), col2_x, y)
         y = build_section("Fighter Support", self.stats_config.get('fightersupport', []), col2_x, y)
         
+        col2_max_y = y
+        
+        # === Column 2: Continue (Construction Costs) ===
+        from ui.builder.stats_config import get_construction_rows
+        cost_rows = get_construction_rows(self.viewmodel.ship)
+        self.current_construction_keys = set(r.key for r in cost_rows)
+        y = build_section("Build Cost", cost_rows, col2_x, y)
         col2_max_y = y
         
         # === Requirements (Bottom, Split) ===

@@ -11,7 +11,31 @@ class TestBuilderUISync(unittest.TestCase):
 
 
     def setUp(self):
-        # All data (components, modifiers, strategies) loaded by root conftest.py
+        # Ensure registries are hydrated BEFORE accessing singletons.
+        # This is critical for parallel test execution (--dist loadscope).
+        # In parallel mode, the root conftest's reset_game_state fixture may not
+        # have completed initialization before unittest.TestCase.setUp() runs.
+        from tests.infrastructure.session_cache import SessionRegistryCache
+        from game.ai.controller import StrategyManager
+        
+        cache = SessionRegistryCache.instance()
+        cache.load_all_data()
+        
+        # Hydrate registries from cache (idempotent if already done by conftest)
+        mgr = RegistryManager.instance()
+        if not mgr.vehicle_classes:
+            mgr.hydrate(
+                cache.get_components(),
+                cache.get_modifiers(),
+                cache.get_vehicle_classes()
+            )
+        
+        # Hydrate strategy manager (also idempotent)
+        strat_mgr = StrategyManager.instance()
+        if not strat_mgr.strategies:
+            strat_mgr.strategies = cache.get_strategies()
+            strat_mgr._loaded = True
+        
         pygame.display.set_mode((800, 600))  # Dummy mode
         self.manager = pygame_gui.UIManager((800, 600))
         

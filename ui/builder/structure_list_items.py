@@ -14,6 +14,52 @@ ACTION_TOGGLE_GROUP = 'toggle_group'
 ACTION_TOGGLE_LAYER = 'toggle_layer'
 ACTION_START_DRAG = 'start_drag'
 
+class StructureListHeader:
+    """Header row for the structure list with column labels and resource icons."""
+    def __init__(self, manager, container, y_pos, width, config=StructurePanelLayoutConfig()):
+        self.config = config
+        self.height = 30
+        self.rect = pygame.Rect(0, y_pos, width, self.height)
+        
+        self.panel = UIPanel(
+            relative_rect=self.rect,
+            manager=manager,
+            container=container,
+            object_id='#structure_header_panel'
+        )
+        self.panel.background_colour = pygame.Color("#1a1e26")
+        
+        # Resource Icons
+        from game.strategy.data.planet import PLANET_RESOURCES
+        import os
+        
+        icon_x = -160 - (len(PLANET_RESOURCES) * config.RESOURCE_COL_WIDTH)
+        for res in PLANET_RESOURCES:
+            icon_path = f"Resources/images/icons/resource_{res.lower()}_icon.png"
+            if os.path.exists(icon_path):
+                try:
+                    img = pygame.image.load(icon_path).convert_alpha()
+                    img = pygame.transform.scale(img, (20, 20))
+                    UIImage(
+                        relative_rect=pygame.Rect(icon_x, (self.height-20)//2, 20, 20),
+                        image_surface=img,
+                        manager=manager,
+                        container=self.panel,
+                        anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
+                    )
+                except Exception:
+                    UILabel(pygame.Rect(icon_x, 0, config.RESOURCE_COL_WIDTH, self.height), res[0], manager, self.panel, anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'})
+            else:
+                UILabel(pygame.Rect(icon_x, 0, config.RESOURCE_COL_WIDTH, self.height), res[0], manager, self.panel, anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'})
+            icon_x += config.RESOURCE_COL_WIDTH
+
+        # Mass & Pct Labels
+        UILabel(pygame.Rect(-160, 0, config.MASS_WIDTH, self.height), "Mass", manager, self.panel, anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'})
+        UILabel(pygame.Rect(-100, 0, config.PCT_WIDTH, self.height), "%", manager, self.panel, anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'})
+
+    def kill(self):
+        self.panel.kill()
+
 class IndividualComponentItem:
     """Row for a single component inside an expanded group."""
     def __init__(self, manager, container, component, max_mass, y_pos, width, sprite_mgr, event_handler, is_selected, is_last=False, config=StructurePanelLayoutConfig(), is_readonly=False):
@@ -93,6 +139,24 @@ class IndividualComponentItem:
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}
         )
 
+        # Resource Costs
+        self.resource_labels = {}
+        from game.strategy.data.planet import PLANET_RESOURCES
+        costs = component.get_resource_cost()
+        icon_x = -160 - (len(PLANET_RESOURCES) * config.RESOURCE_COL_WIDTH)
+        for res in PLANET_RESOURCES:
+            val = costs.get(res, 0)
+            text = str(val) if val > 0 else "-"
+            self.resource_labels[res] = UILabel(
+                relative_rect=pygame.Rect(icon_x, 0, config.RESOURCE_COL_WIDTH, self.height),
+                text=text,
+                manager=manager,
+                container=self.panel,
+                anchors={'left': 'right', 'right': 'right', 'centerY': 'center'},
+                object_id='#resource_cost_label'
+            )
+            icon_x += config.RESOURCE_COL_WIDTH
+
         # Add Button
         self.add_button = UIButton(
             relative_rect=pygame.Rect(-62, 5, 28, 20),
@@ -140,6 +204,11 @@ class IndividualComponentItem:
         
         pct_val = (component.mass / max_mass * 100) if max_mass > 0 else 0
         self.pct_label.set_text(f"{pct_val:.1f}%")
+        
+        costs = component.get_resource_cost()
+        for res, label in self.resource_labels.items():
+            val = costs.get(res, 0)
+            label.set_text(str(val) if val > 0 else "-")
 
     def _create_tree_line(self, is_last, config):
         surf = pygame.Surface((20, self.height), pygame.SRCALPHA)
@@ -268,6 +337,32 @@ class LayerComponentItem:
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}
         )
 
+        # Resource Costs (Aggregated)
+        self.resource_labels = {}
+        from game.strategy.data.planet import PLANET_RESOURCES
+        total_costs = {}
+        
+        # Calculate total costs for the group
+        # This is a bit heavy, maybe should be passed in. But for now...
+        # Wait, we have the component template. Costs scale with modifiers.
+        base_costs = component.get_resource_cost()
+        for res in PLANET_RESOURCES:
+            total_costs[res] = base_costs.get(res, 0) * count
+            
+        icon_x = -160 - (len(PLANET_RESOURCES) * config.RESOURCE_COL_WIDTH)
+        for res in PLANET_RESOURCES:
+            val = total_costs.get(res, 0)
+            text = str(val) if val > 0 else "-"
+            self.resource_labels[res] = UILabel(
+                relative_rect=pygame.Rect(icon_x, 0, config.RESOURCE_COL_WIDTH, self.height),
+                text=text,
+                manager=manager,
+                container=self.panel,
+                anchors={'left': 'right', 'right': 'right', 'centerY': 'center'},
+                object_id='#resource_cost_label_group'
+            )
+            icon_x += config.RESOURCE_COL_WIDTH
+
         # Add Button
         self.add_button = UIButton(
             relative_rect=pygame.Rect(-62, 5, 28, 30),
@@ -303,6 +398,9 @@ class LayerComponentItem:
         
         self.mass_label.set_text(f"{int(total_mass)}t")
         self.pct_label.set_text(f"{total_pct:.1f}%")
+        
+        # Update costs
+        # (Placeholder for group cost update logic)
         
         # Update expand arrow
         if count <= 1:

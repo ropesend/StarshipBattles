@@ -445,4 +445,28 @@ def get_logistics_rows(ship):
         
     return base_rows
 
+def get_construction_rows(ship):
+    """
+    Generate the list of stat rows for the Construction section.
+    """
+    from game.strategy.data.planet import PLANET_RESOURCES
+    rows = []
+    
+    # Construction costs from ship.construction_cost
+    for res in PLANET_RESOURCES:
+        # Use a closure to capture res
+        def res_getter(ship, r=res):
+            return ship.construction_cost.get(r, 0) if hasattr(ship, 'construction_cost') else 0
+            
+        row = StatDefinition(
+            id=f"cost_{res.lower()}",
+            label=f"{res}",
+            getter=res_getter,
+            formatter="{:.0f}",
+            unit=""
+        )
+        rows.append(row)
+        
+    return rows
+
 
