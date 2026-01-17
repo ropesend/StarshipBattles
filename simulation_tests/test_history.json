@@ -23,7 +23,7 @@
         {
           "name": "Beam Weapon Damage",
           "status": "PASS",
-          "message": "Beam Weapon Damage: \u2713 Expected 1, got 1.0",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
           "expected": 1,
           "actual": 1.0,
           "p_value": null,
@@ -32,7 +32,7 @@
         {
           "name": "Base Accuracy",
           "status": "PASS",
-          "message": "Base Accuracy: \u2713 Expected 0.5, got 0.5",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
           "expected": 0.5,
           "actual": 0.5,
           "p_value": null,
@@ -41,7 +41,7 @@
         {
           "name": "Accuracy Falloff",
           "status": "PASS",
-          "message": "Accuracy Falloff: \u2713 Expected 0.002, got 0.002",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
           "expected": 0.002,
           "actual": 0.002,
           "p_value": null,
@@ -50,7 +50,7 @@
         {
           "name": "Weapon Range",
           "status": "PASS",
-          "message": "Weapon Range: \u2713 Expected 800, got 800.0",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
           "expected": 800,
           "actual": 800.0,
           "p_value": null,
@@ -59,7 +59,7 @@
         {
           "name": "Target Mass",
           "status": "PASS",
-          "message": "Target Mass: \u2713 Expected 400.0, got 400.0",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
           "expected": 400.0,
           "actual": 400.0,
           "p_value": null,
@@ -68,7 +68,7 @@
         {
           "name": "Hit Rate",
           "status": "PASS",
-          "message": "Hit Rate: \u2713 Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: \u00b16.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
           "expected": 0.5318,
           "actual": 0.524,
           "p_value": 0.009662782348229038,
@@ -101,7 +101,7 @@
         {
           "name": "Beam Weapon Damage",
           "status": "PASS",
-          "message": "Beam Weapon Damage: \u2713 Expected 1, got 1.0",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
           "expected": 1,
           "actual": 1.0,
           "p_value": null,
@@ -110,7 +110,7 @@
         {
           "name": "Base Accuracy",
           "status": "PASS",
-          "message": "Base Accuracy: \u2713 Expected 0.5, got 0.5",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
           "expected": 0.5,
           "actual": 0.5,
           "p_value": null,
@@ -119,7 +119,7 @@
         {
           "name": "Accuracy Falloff",
           "status": "PASS",
-          "message": "Accuracy Falloff: \u2713 Expected 0.002, got 0.002",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
           "expected": 0.002,
           "actual": 0.002,
           "p_value": null,
@@ -128,7 +128,7 @@
         {
           "name": "Weapon Range",
           "status": "PASS",
-          "message": "Weapon Range: \u2713 Expected 800, got 800.0",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
           "expected": 800,
           "actual": 800.0,
           "p_value": null,
@@ -137,7 +137,7 @@
         {
           "name": "Target Mass",
           "status": "PASS",
-          "message": "Target Mass: \u2713 Expected 400.0, got 400.0",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
           "expected": 400.0,
           "actual": 400.0,
           "p_value": null,
@@ -146,7 +146,7 @@
         {
           "name": "Hit Rate",
           "status": "PASS",
-          "message": "Hit Rate: \u2713 Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: \u00b16.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
           "expected": 0.5318,
           "actual": 0.524,
           "p_value": 0.009662782348229038,
@@ -179,7 +179,7 @@
         {
           "name": "Beam Weapon Damage",
           "status": "PASS",
-          "message": "Beam Weapon Damage: \u2713 Expected 1, got 1.0",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
           "expected": 1,
           "actual": 1.0,
           "p_value": null,
@@ -188,7 +188,7 @@
         {
           "name": "Base Accuracy",
           "status": "PASS",
-          "message": "Base Accuracy: \u2713 Expected 0.5, got 0.5",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
           "expected": 0.5,
           "actual": 0.5,
           "p_value": null,
@@ -197,7 +197,7 @@
         {
           "name": "Accuracy Falloff",
           "status": "PASS",
-          "message": "Accuracy Falloff: \u2713 Expected 0.002, got 0.002",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
           "expected": 0.002,
           "actual": 0.002,
           "p_value": null,
@@ -206,7 +206,7 @@
         {
           "name": "Weapon Range",
           "status": "PASS",
-          "message": "Weapon Range: \u2713 Expected 800, got 800.0",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
           "expected": 800,
           "actual": 800.0,
           "p_value": null,
@@ -215,7 +215,7 @@
         {
           "name": "Target Mass",
           "status": "PASS",
-          "message": "Target Mass: \u2713 Expected 400.0, got 400.0",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
           "expected": 400.0,
           "actual": 400.0,
           "p_value": null,
@@ -224,7 +224,241 @@
         {
           "name": "Hit Rate",
           "status": "PASS",
-          "message": "Hit Rate: \u2713 Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: \u00b16.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.5318,
+          "actual": 0.524,
+          "p_value": 0.009662782348229038,
+          "tolerance": 0.05
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-01-17T11:27:25.648353",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000238.0,
+        "damage_dealt": 262.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.524,
+        "expected_hit_chance": 0.5317890211570807,
+        "duration_real": 0.041408538818359375,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.5318,
+          "actual": 0.524,
+          "p_value": 0.009662782348229038,
+          "tolerance": 0.05
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-01-17T11:52:14.513580",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000238.0,
+        "damage_dealt": 262.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.524,
+        "expected_hit_chance": 0.5317890211570807,
+        "duration_real": 0.04125499725341797,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.5318,
+          "actual": 0.524,
+          "p_value": 0.009662782348229038,
+          "tolerance": 0.05
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-01-17T12:06:08.718751",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000238.0,
+        "damage_dealt": 262.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.524,
+        "expected_hit_chance": 0.5317890211570807,
+        "duration_real": 0.03921651840209961,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
           "expected": 0.5318,
           "actual": 0.524,
           "p_value": 0.009662782348229038,
@@ -290,6 +524,22 @@
         "ticks_run": 500,
         "target_alive": true,
         "duration_real": 0.017923831939697266,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": []
+    },
+    {
+      "timestamp": "2026-01-17T12:06:48.038305",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 850,
+        "final_hp": 600.0,
+        "damage_dealt": 250.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "duration_real": 0.016438961029052734,
         "ticks": 500
       },
       "validation_summary": null,
@@ -464,7 +714,7 @@
         {
           "name": "Beam Weapon Damage",
           "status": "PASS",
-          "message": "Beam Weapon Damage: \u2713 Expected 1, got 1.0",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
           "expected": 1,
           "actual": 1.0,
           "p_value": null,
@@ -473,7 +723,7 @@
         {
           "name": "Base Accuracy",
           "status": "PASS",
-          "message": "Base Accuracy: \u2713 Expected 2.0, got 2.0",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
           "expected": 2.0,
           "actual": 2.0,
           "p_value": null,
@@ -482,7 +732,7 @@
         {
           "name": "Accuracy Falloff",
           "status": "PASS",
-          "message": "Accuracy Falloff: \u2713 Expected 0.001, got 0.001",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
           "expected": 0.001,
           "actual": 0.001,
           "p_value": null,
@@ -491,7 +741,7 @@
         {
           "name": "Weapon Range",
           "status": "PASS",
-          "message": "Weapon Range: \u2713 Expected 800, got 800.0",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
           "expected": 800,
           "actual": 800.0,
           "p_value": null,
@@ -500,7 +750,76 @@
         {
           "name": "Target Mass",
           "status": "PASS",
-          "message": "Target Mass: \u2713 Expected 400.0, got 400.0",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-01-17T11:28:30.951566",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000500,
+        "damage_dealt": 0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "distance": 900,
+        "weapon_max_range": 800,
+        "duration_real": 0.02489614486694336,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 5,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
           "expected": 400.0,
           "actual": 400.0,
           "p_value": null,
@@ -535,7 +854,7 @@
         {
           "name": "Beam Weapon Damage",
           "status": "PASS",
-          "message": "Beam Weapon Damage: \u2713 Expected 1, got 1.0",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
           "expected": 1,
           "actual": 1.0,
           "p_value": null,
@@ -544,7 +863,7 @@
         {
           "name": "Base Accuracy",
           "status": "PASS",
-          "message": "Base Accuracy: \u2713 Expected 2.0, got 2.0",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
           "expected": 2.0,
           "actual": 2.0,
           "p_value": null,
@@ -553,7 +872,7 @@
         {
           "name": "Accuracy Falloff",
           "status": "PASS",
-          "message": "Accuracy Falloff: \u2713 Expected 0.001, got 0.001",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
           "expected": 0.001,
           "actual": 0.001,
           "p_value": null,
@@ -562,7 +881,7 @@
         {
           "name": "Weapon Range",
           "status": "PASS",
-          "message": "Weapon Range: \u2713 Expected 800, got 800.0",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
           "expected": 800,
           "actual": 800.0,
           "p_value": null,
@@ -571,7 +890,7 @@
         {
           "name": "Target Mass",
           "status": "PASS",
-          "message": "Target Mass: \u2713 Expected 600.0, got 600.0",
+          "message": "Target Mass: ✓ Expected 600.0, got 600.0",
           "expected": 600.0,
           "actual": 600.0,
           "p_value": null,
@@ -580,13 +899,1389 @@
         {
           "name": "Hit Rate",
           "status": "PASS",
-          "message": "Hit Rate: \u2713 Expected 85.82%, observed 85.87% (85871/100000), deviation +0.1%, p=0.0000 (proven equivalent)\n  Equivalence margin: \u00b11.0% [84.82%, 86.82%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples))",
+          "message": "Hit Rate: ✓ Expected 85.82%, observed 85.87% (85871/100000), deviation +0.1%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±1.0% [84.82%, 86.82%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples))",
           "expected": 0.8582,
           "actual": 0.85871,
           "p_value": 3.8937446912627694e-18,
           "tolerance": 0.05
         }
       ]
+    },
+    {
+      "timestamp": "2026-01-17T11:27:50.387158",
+      "ticks_run": 100000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 999914629.0,
+        "damage_dealt": 85871.0,
+        "ticks_run": 100000,
+        "target_alive": true,
+        "hit_rate": 0.85871,
+        "expected_hit_chance": 0.8580105149396363,
+        "duration_real": 9.703091144561768,
+        "ticks": 100000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 600.0, got 600.0",
+          "expected": 600.0,
+          "actual": 600.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 85.82%, observed 85.87% (85871/100000), deviation +0.1%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±1.0% [84.82%, 86.82%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples))",
+          "expected": 0.8582,
+          "actual": 0.85871,
+          "p_value": 3.8937446912627694e-18,
+          "tolerance": 0.05
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-01-17T11:52:29.829239",
+      "ticks_run": 100000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 999914629.0,
+        "damage_dealt": 85871.0,
+        "ticks_run": 100000,
+        "target_alive": true,
+        "hit_rate": 0.85871,
+        "expected_hit_chance": 0.8580105149396363,
+        "duration_real": 9.68914794921875,
+        "ticks": 100000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 600.0, got 600.0",
+          "expected": 600.0,
+          "actual": 600.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 85.82%, observed 85.87% (85871/100000), deviation +0.1%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±1.0% [84.82%, 86.82%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples))",
+          "expected": 0.8582,
+          "actual": 0.85871,
+          "p_value": 3.8937446912627694e-18,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-001-HT": [
+    {
+      "timestamp": "2026-01-17T11:27:33.492503",
+      "ticks_run": 100000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 999943446.0,
+        "damage_dealt": 57054.0,
+        "ticks_run": 100000,
+        "target_alive": true,
+        "hit_rate": 0.57054,
+        "expected_hit_chance": 0.5701836935562187,
+        "duration_real": 7.7753705978393555,
+        "ticks": 100000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 600.0, got 600.0",
+          "expected": 600.0,
+          "actual": 600.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 57.02%, observed 57.05% (57054/100000), deviation +0.1%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±1.0% [56.02%, 58.02%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples))",
+          "expected": 0.5702,
+          "actual": 0.57054,
+          "p_value": 3.4006742141800303e-10,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-002": [
+    {
+      "timestamp": "2026-01-17T11:27:33.597353",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000314.0,
+        "damage_dealt": 186.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.372,
+        "expected_hit_chance": 0.3606204645011311,
+        "duration_real": 0.033718109130859375,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 36.07%, observed 37.20% (186/500), deviation +3.1%, p=0.0117 (proven equivalent)\n  Equivalence margin: ±6.0% [30.07%, 42.07%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.3607,
+          "actual": 0.372,
+          "p_value": 0.011673280794604462,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-002-HT": [
+    {
+      "timestamp": "2026-01-17T11:27:40.363424",
+      "ticks_run": 100000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 999960758.0,
+        "damage_dealt": 39742.0,
+        "ticks_run": 100000,
+        "target_alive": true,
+        "hit_rate": 0.39742,
+        "expected_hit_chance": 0.39713923125951367,
+        "duration_real": 6.6904137134552,
+        "ticks": 100000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 600.0, got 600.0",
+          "expected": 600.0,
+          "actual": 600.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 39.71%, observed 39.74% (39742/100000), deviation +0.1%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±1.0% [38.71%, 40.71%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples))",
+          "expected": 0.3971,
+          "actual": 0.39742,
+          "p_value": 1.973784346849913e-10,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-003": [
+    {
+      "timestamp": "2026-01-17T11:27:40.491397",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000290.0,
+        "damage_dealt": 210.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.21,
+        "expected_hit_chance": 0.21880016383991713,
+        "duration_real": 0.05464649200439453,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 21.86%, observed 21.00% (210/1000), deviation -3.9%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±6.0% [15.86%, 27.86%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.2186,
+          "actual": 0.21,
+          "p_value": 4.1981876407581886e-05,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-004": [
+    {
+      "timestamp": "2026-01-17T11:27:40.612170",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000091.0,
+        "damage_dealt": 409.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.818,
+        "expected_hit_chance": 0.8386010150137585,
+        "duration_real": 0.048613786697387695,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 83.85%, observed 81.80% (409/500), deviation -2.4%, p=0.0082 (proven equivalent)\n  Equivalence margin: ±6.0% [77.85%, 89.85%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.8385,
+          "actual": 0.818,
+          "p_value": 0.008193445357010165,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-005": [
+    {
+      "timestamp": "2026-01-17T11:27:50.506925",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000113.0,
+        "damage_dealt": 387.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.774,
+        "expected_hit_chance": 0.7854738591348314,
+        "duration_real": 0.04765748977661133,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 78.55%, observed 77.40% (387/500), deviation -1.5%, p=0.0041 (proven equivalent)\n  Equivalence margin: ±6.0% [72.55%, 84.55%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.7855,
+          "actual": 0.774,
+          "p_value": 0.004120371036903547,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-005-HT": [
+    {
+      "timestamp": "2026-01-17T11:27:59.938132",
+      "ticks_run": 100000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 999919404.0,
+        "damage_dealt": 81096.0,
+        "ticks_run": 100000,
+        "target_alive": true,
+        "hit_rate": 0.81096,
+        "expected_hit_chance": 0.8098234405885218,
+        "duration_real": 9.356026887893677,
+        "ticks": 100000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 600.0, got 600.0",
+          "expected": 600.0,
+          "actual": 600.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 80.98%, observed 81.10% (81096/100000), deviation +0.1%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±1.0% [79.98%, 81.98%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples))",
+          "expected": 0.8098,
+          "actual": 0.81096,
+          "p_value": 5.283172770833269e-13,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-006": [
+    {
+      "timestamp": "2026-01-17T11:28:00.103366",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 999999768.0,
+        "damage_dealt": 732.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.732,
+        "expected_hit_chance": 0.7206837130352557,
+        "duration_real": 0.09101271629333496,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 72.07%, observed 73.20% (732/1000), deviation +1.6%, p=0.0003 (proven equivalent)\n  Equivalence margin: ±6.0% [66.07%, 78.07%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.7207,
+          "actual": 0.732,
+          "p_value": 0.00029897238404221654,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-006-HT": [
+    {
+      "timestamp": "2026-01-17T11:28:09.132512",
+      "ticks_run": 100000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 999925590.0,
+        "damage_dealt": 74910.0,
+        "ticks_run": 100000,
+        "target_alive": true,
+        "hit_rate": 0.7491,
+        "expected_hit_chance": 0.7500470707822928,
+        "duration_real": 8.955908060073853,
+        "ticks": 100000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 600.0, got 600.0",
+          "expected": 600.0,
+          "actual": 600.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 75.00%, observed 74.91% (74910/100000), deviation -0.1%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±1.0% [74.00%, 76.00%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples))",
+          "expected": 0.75,
+          "actual": 0.7491,
+          "p_value": 1.508893010537804e-11,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-007": [
+    {
+      "timestamp": "2026-01-17T11:28:09.262220",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000009.0,
+        "damage_dealt": 491.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.982,
+        "expected_hit_chance": 0.9906048251935343,
+        "duration_real": 0.0531163215637207,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 5.0, got 5.0",
+          "expected": 5.0,
+          "actual": 5.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.0005, got 0.0005",
+          "expected": 0.0005,
+          "actual": 0.0005,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 99.06%, observed 98.20% (491/500), deviation -0.9%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±6.0% [93.06%, 105.06%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.9906,
+          "actual": 0.982,
+          "p_value": 3.3610111957459514e-57,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-007-HT": [
+    {
+      "timestamp": "2026-01-17T11:28:19.843678",
+      "ticks_run": 100000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 999901343.0,
+        "damage_dealt": 99157.0,
+        "ticks_run": 100000,
+        "target_alive": true,
+        "hit_rate": 0.99157,
+        "expected_hit_chance": 0.9918938631270344,
+        "duration_real": 10.508023977279663,
+        "ticks": 100000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 5.0, got 5.0",
+          "expected": 5.0,
+          "actual": 5.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.0005, got 0.0005",
+          "expected": 0.0005,
+          "actual": 0.0005,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 600.0, got 600.0",
+          "expected": 600.0,
+          "actual": 600.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 99.19%, observed 99.16% (99157/100000), deviation -0.0%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±1.0% [98.19%, 100.19%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples))",
+          "expected": 0.9919,
+          "actual": 0.99157,
+          "p_value": 4.309714132228799e-291,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-008": [
+    {
+      "timestamp": "2026-01-17T11:28:19.970925",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 1000000009.0,
+        "damage_dealt": 491.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.982,
+        "expected_hit_chance": 0.9867198989037976,
+        "duration_real": 0.05327558517456055,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 5.0, got 5.0",
+          "expected": 5.0,
+          "actual": 5.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.0005, got 0.0005",
+          "expected": 0.0005,
+          "actual": 0.0005,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 98.66%, observed 98.20% (491/500), deviation -0.5%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±6.0% [92.66%, 104.66%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.9866,
+          "actual": 0.982,
+          "p_value": 1.6857403139973032e-36,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-008-HT": [
+    {
+      "timestamp": "2026-01-17T11:28:30.605508",
+      "ticks_run": 100000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000500,
+        "final_hp": 999901681.0,
+        "damage_dealt": 98819.0,
+        "ticks_run": 100000,
+        "target_alive": true,
+        "hit_rate": 0.98819,
+        "expected_hit_chance": 0.9885357883628153,
+        "duration_real": 10.56205415725708,
+        "ticks": 100000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 5.0, got 5.0",
+          "expected": 5.0,
+          "actual": 5.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.0005, got 0.0005",
+          "expected": 0.0005,
+          "actual": 0.0005,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 600.0, got 600.0",
+          "expected": 600.0,
+          "actual": 600.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 98.85%, observed 98.82% (98819/100000), deviation -0.0%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±1.0% [97.85%, 99.85%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples))",
+          "expected": 0.9885,
+          "actual": 0.98819,
+          "p_value": 1.1688693359994633e-205,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-009": [
+    {
+      "timestamp": "2026-01-17T11:28:30.729032",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000170,
+        "final_hp": 1000000132.0,
+        "damage_dealt": 38.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.038,
+        "expected_hit_chance": 0.041146106770644716,
+        "expected_hit_chance_base": 0.8342542055768531,
+        "duration_real": 0.047382354736328125,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 65.0, got 65.0",
+          "expected": 65.0,
+          "actual": 65.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 4.84%, observed 3.80% (38/1000), deviation -21.5%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±6.0% [-1.16%, 10.84%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.0484,
+          "actual": 0.038,
+          "p_value": 1.3500311979441904e-13,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "BEAM360-010": [
+    {
+      "timestamp": "2026-01-17T11:28:30.852320",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000170,
+        "final_hp": 1000000134.0,
+        "damage_dealt": 36.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.036,
+        "expected_hit_chance": 0.02935182349041012,
+        "expected_hit_chance_base": 0.780071468160804,
+        "duration_real": 0.04860806465148926,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 65.0, got 65.0",
+          "expected": 65.0,
+          "actual": 65.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 3.47%, observed 3.60% (36/1000), deviation +3.7%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±6.0% [-2.53%, 9.47%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.0347,
+          "actual": 0.036,
+          "p_value": 1.790315057096588e-24,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  ],
+  "PROJ360-005": [
+    {
+      "timestamp": "2026-01-17T12:06:43.541949",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 2270,
+        "final_hp": 1970.0,
+        "damage_dealt": 300.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "duration_real": 0.039859771728515625,
+        "ticks": 1000
+      },
+      "validation_summary": null,
+      "validation_results": []
     }
   ]
 }
