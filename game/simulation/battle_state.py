@@ -495,6 +495,8 @@ class BattleState:
         seed: Optional[int] = None,
         allow_retreat: bool = False,
         allow_reinforcements: bool = False,
+        battle_id: Optional[str] = None,
+        ship_id_map: Optional[Dict[int, str]] = None,
     ) -> 'BattleState':
         """
         Capture complete state from a running BattleEngine.
@@ -505,16 +507,24 @@ class BattleState:
             seed: Random seed used for this battle
             allow_retreat: Whether retreat is enabled
             allow_reinforcements: Whether reinforcements are enabled
+            battle_id: Optional battle ID (generates new UUID if not provided)
+            ship_id_map: Optional mapping of ship object id -> string id (for consistent IDs across captures)
         """
-        battle_id = str(uuid.uuid4())
+        if battle_id is None:
+            battle_id = str(uuid.uuid4())
 
         # Build ship ID mapping (object id -> string id)
-        ship_id_map: Dict[int, str] = {}
+        if ship_id_map is None:
+            ship_id_map = {}
         ships: Dict[str, ShipState] = {}
 
         for ship in engine.ships:
-            ship_id = str(uuid.uuid4())
-            ship_id_map[id(ship)] = ship_id
+            # Use existing mapping or create new ID
+            if id(ship) in ship_id_map:
+                ship_id = ship_id_map[id(ship)]
+            else:
+                ship_id = str(uuid.uuid4())
+                ship_id_map[id(ship)] = ship_id
             ships[ship_id] = ShipState.from_ship(ship, ship_id)
 
         # Capture projectiles with ship references

@@ -3,12 +3,12 @@ Traceback (most recent call last):
     game.run()
   File "C:\Dev\Starship Battles\game\app.py", line 192, in run
     self._update_and_draw(frame_time, events)
-  File "C:\Dev\Starship Battles\game\app.py", line 329, in _update_and_draw
-    self.strategy_scene.draw(self.screen)
-  File "C:\Dev\Starship Battles\game\ui\screens\strategy_scene.py", line 145, in draw
-    self._renderer.draw(screen)
-  File "C:\Dev\Starship Battles\game\ui\screens\strategy_renderer.py", line 70, in draw
-    viewport_w = self.screen_width - self.SIDEBAR_WIDTH
-  File "C:\Dev\Starship Battles\game\ui\screens\strategy_renderer.py", line 58, in SIDEBAR_WIDTH
-    return self.scene.SIDEBAR_WIDTH
-AttributeError: 'StrategyScene' object has no attribute 'SIDEBAR_WIDTH'
+  File "C:\Dev\Starship Battles\game\app.py", line 335, in _update_and_draw
+    self.test_lab_scene.draw(self.screen)
+  File "C:\Dev\Starship Battles\ui\test_lab_scene.py", line 2470, in draw
+    self.battle_state_viewer.draw(screen)
+  File "C:\Dev\Starship Battles\ui\battle_state_viewer.py", line 636, in draw
+    self.initial_panel.draw(surface)
+  File "C:\Dev\Starship Battles\ui\battle_state_viewer.py", line 402, in draw
+    indent, text, color, bg_color = line_data
+ValueError: not enough values to unpack (expected 4, got 3)
