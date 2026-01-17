@@ -1,13 +1,16 @@
 {
     "modifiers": [
         {
-            "id": "hardened",
+            "id": "hardened_mount",
             "name": "Hardened",
-            "type": "boolean",
-            "description": "+100% HP, +25% Mass",
+            "type": "linear",
+            "description": "HP increases as the square of mass multiplier. 2x mass = 4x HP.",
+            "param_name": "Mass Mult",
+            "min_val": 1.0,
+            "max_val": 10.0,
+            "default_val": 1.0,
             "effects": {
-                "hp_mult": 1.0,
-                "mass_mult": 0.25
+                "special": "hardened_mount"
             },
             "restrictions": {
                 "deny_types": [
@@ -234,6 +237,26 @@
                     "Generator",
                     "Weapon",
                     "Thruster"
+                ]
+            }
+        },
+        {
+            "id": "efficiency_mount",
+            "name": "Efficiency",
+            "type": "linear",
+            "description": "Reduces resource consumption. Mass increases exponentially as efficiency improves.",
+            "param_name": "Resource Mult",
+            "min_val": 0.1,
+            "max_val": 1.0,
+            "default_val": 1.0,
+            "effects": {
+                "special": "efficiency_mount"
+            },
+            "restrictions": {
+                "allow_abilities": [
+                    "ResourceConsumption",
+                    "EnergyConsumption",
+                    "AmmoConsumption"
                 ]
             }
         }

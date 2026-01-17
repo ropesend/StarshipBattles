@@ -1,16 +1,12 @@
 Traceback (most recent call last):
-  File "C:\Dev\Starship Battles\game\app.py", line 586, in main
+  File "C:\Dev\Starship Battles\game\app.py", line 383, in main
     game.run()
-  File "C:\Dev\Starship Battles\game\app.py", line 257, in run
-    self.test_lab_scene.handle_input([event])
-  File "C:\Dev\Starship Battles\ui\test_lab_scene.py", line 2035, in handle_input
-    self._handle_click(mx, my)
-  File "C:\Dev\Starship Battles\ui\test_lab_scene.py", line 2116, in _handle_click
-    self._create_ship_panels(test_id)
-  File "C:\Dev\Starship Battles\ui\test_lab_scene.py", line 1698, in _create_ship_panels
-    component_panel = ComponentPanel(
-  File "C:\Dev\Starship Battles\ui\test_lab_scene.py", line 579, in __init__
-    component_data = load_component_callback(selected_comp_id) if selected_comp_id else {}
-  File "C:\Dev\Starship Battles\ui\test_lab_scene.py", line 1491, in _load_component_data
-    if self._components_cache is None:
-AttributeError: 'TestLabScene' object has no attribute '_components_cache'
+  File "C:\Dev\Starship Battles\game\app.py", line 192, in run
+    self._update_and_draw(frame_time, events)
+  File "C:\Dev\Starship Battles\game\app.py", line 327, in _update_and_draw
+    self.strategy_scene.update_input(frame_time, events)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_scene.py", line 175, in update_input
+    self._input.update_input(dt, events)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_input_handler.py", line 335, in update_input
+    over_sidebar = (mx > self.scene.screen_width - self.scene.SIDEBAR_WIDTH)
+AttributeError: 'StrategyScene' object has no attribute 'SIDEBAR_WIDTH'

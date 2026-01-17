@@ -46,6 +46,14 @@ class ModifierService:
         """Returns a list of modifier IDs that are mandatory for this component."""
         mandatory = ['simple_size_mount']  # Everyone gets size
 
+        # Hardened Mount: For all components except Armor
+        if ModifierService.is_modifier_allowed('hardened_mount', component):
+            mandatory.append('hardened_mount')
+
+        # Efficiency Mount: For any component with resource consumption
+        if ModifierService.is_modifier_allowed('efficiency_mount', component):
+            mandatory.append('efficiency_mount')
+
         # Use ability-based weapon detection
         is_weapon = component.has_ability('WeaponAbility')
         is_seeker = component.has_ability('SeekerWeaponAbility')
@@ -103,6 +111,10 @@ class ModifierService:
 
         if mod_id == 'simple_size_mount':
             return 1.0
+        elif mod_id == 'hardened_mount':
+            return 1.0  # 1x mass, 1x HP (no change)
+        elif mod_id == 'efficiency_mount':
+            return 1.0  # 1x consumption, 1x mass (no change)
         elif mod_id == 'range_mount':
             return 0.0
         elif mod_id == 'facing':

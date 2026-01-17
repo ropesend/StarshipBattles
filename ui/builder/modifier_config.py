@@ -5,6 +5,28 @@ Defines layout, buttons, and ranges for specific modifiers.
 
 
 MODIFIER_UI_CONFIG = {
+    'hardened_mount': {
+        'control_type': 'linear_stepped',
+        'step_buttons': [
+            {'label': '<<', 'value': 1.0, 'mode': 'delta_sub'},
+            {'label': '<', 'value': 0.1, 'mode': 'delta_sub'},
+            # Slider
+            {'label': '>', 'value': 0.1, 'mode': 'delta_add'},
+            {'label': '>>', 'value': 1.0, 'mode': 'delta_add'}
+        ],
+        'slider_step': 0.1,
+    },
+    'efficiency_mount': {
+        'control_type': 'linear_stepped',
+        'step_buttons': [
+            {'label': '<<', 'value': 0.1, 'mode': 'delta_sub'},
+            {'label': '<', 'value': 0.05, 'mode': 'delta_sub'},
+            # Slider
+            {'label': '>', 'value': 0.05, 'mode': 'delta_add'},
+            {'label': '>>', 'value': 0.1, 'mode': 'delta_add'}
+        ],
+        'slider_step': 0.01,
+    },
     'simple_size': {
         'control_type': 'linear_stepped',
         'step_buttons': [

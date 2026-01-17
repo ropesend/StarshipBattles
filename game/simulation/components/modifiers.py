@@ -191,11 +191,56 @@ class ModifierEffects:
         reduction = val
         if reduction > 0.99: reduction = 0.99
         if reduction < 0.0: reduction = 0.0
-        
+
         stats['crew_req_mult'] *= (1.0 - reduction)
-        
+
         # Mass increase
         stats['mass_mult'] *= (1.0 + reduction)
+
+    @staticmethod
+    def hardened_mount(val, stats):
+        """
+        Increases component HP as the square of mass multiplier.
+        val: Mass multiplier (1.0 to 10.0).
+        HP = mass_mult^2
+        At val=1.0: 1x mass, 1x HP (no change)
+        At val=2.0: 2x mass, 4x HP
+        At val=3.0: 3x mass, 9x HP
+        """
+        mass_mult = val
+        if mass_mult < 1.0:
+            mass_mult = 1.0
+
+        # HP scales as square of mass multiplier
+        hp_mult = mass_mult ** 2
+
+        stats['mass_mult'] *= mass_mult
+        stats['hp_mult'] *= hp_mult
+
+    @staticmethod
+    def efficiency_mount(val, stats):
+        """
+        Reduces resource consumption at exponentially increasing mass cost.
+        val: Resource consumption multiplier (0.1 to 1.0).
+        At val=1.0: 1x consumption, 1x mass (no change)
+        At val=0.5: 0.5x consumption, ~2x mass
+        At val=0.1: 0.1x consumption, ~10x mass
+
+        Formula: mass_mult = 1 / val (inverse relationship, exponentially costly)
+        This means halving consumption doubles mass, etc.
+        """
+        resource_mult = val
+        if resource_mult < 0.1:
+            resource_mult = 0.1
+        if resource_mult > 1.0:
+            resource_mult = 1.0
+
+        # Mass increases exponentially as efficiency improves
+        # Using 1/val gives: val=1.0->1x mass, val=0.5->2x mass, val=0.25->4x mass, val=0.1->10x mass
+        mass_mult = 1.0 / resource_mult
+
+        stats['consumption_mult'] *= resource_mult
+        stats['mass_mult'] *= mass_mult
 
 
 
@@ -212,7 +257,8 @@ SPECIAL_EFFECT_HANDLERS = {
     'seeker_armored': ModifierEffects.seeker_armored,
     'seeker_stealth': ModifierEffects.seeker_stealth,
     'automation': ModifierEffects.automation,
-
+    'hardened_mount': ModifierEffects.hardened_mount,
+    'efficiency_mount': ModifierEffects.efficiency_mount,
 }
 
 def apply_modifier_effects(modifier_def, value, stats, component=None):
