@@ -1,138 +1,138 @@
-2026-01-17 12:24:14 - CombatLab - DEBUG - Combat Lab logging initialized
-2026-01-17 12:24:14 - CombatLab - DEBUG - Log file: c:\Developer\StarshipBattles\combat_lab.log
-2026-01-17 12:24:14 - CombatLab - DEBUG - Console level: INFO
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Configuring battle scene for test mode
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  BEFORE: test_mode=False
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  AFTER: test_mode=True
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Battle scene configured (paused=True, test_mode=True, scenario=TEST-001)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Switching to BATTLE state
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Configuring battle scene for test mode
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  BEFORE: test_mode=False
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  AFTER: test_mode=True
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Battle scene configured (paused=True, test_mode=True, scenario=TEST-001)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Switching to BATTLE state
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Configuring battle scene for test mode
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  BEFORE: test_mode=False
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  AFTER: test_mode=True
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Battle scene configured (paused=True, test_mode=True, scenario=TEST-001)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Switching to BATTLE state
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Configuring battle scene for test mode
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  BEFORE: test_mode=False
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  AFTER: test_mode=True
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Battle scene configured (paused=True, test_mode=True, scenario=TEST-001)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Camera fitted to ships
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Switching to BATTLE state
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Configuring battle scene for test mode
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  BEFORE: test_mode=False
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  AFTER: test_mode=True
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Battle scene configured (paused=True, test_mode=True, scenario=TEST-001)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Switching to BATTLE state
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - ERROR - Error running visual test: Test error
-3 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=10)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 10 ticks in 0.00s (0 ticks/sec)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.01s (42837 ticks/sec)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.02s (33284 ticks/sec)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.01s (43019 ticks/sec)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.01s (35484 ticks/sec)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test FAILED
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - ERROR - Error running headless test: Test error
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=100)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 100 ticks in 0.00s (27160 ticks/sec)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.09s (5845 ticks/sec)
-2026-01-17 12:24:33 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
+2026-01-17 12:47:35 - CombatLab - DEBUG - Combat Lab logging initialized
+2026-01-17 12:47:35 - CombatLab - DEBUG - Log file: C:\Developer\StarshipBattles\combat_lab.log
+2026-01-17 12:47:35 - CombatLab - DEBUG - Console level: INFO
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Configuring battle scene for test mode
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  BEFORE: test_mode=False
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  AFTER: test_mode=True
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Battle scene configured (paused=True, test_mode=True, scenario=TEST-001)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Switching to BATTLE state
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Configuring battle scene for test mode
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  BEFORE: test_mode=False
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  AFTER: test_mode=True
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Battle scene configured (paused=True, test_mode=True, scenario=TEST-001)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Switching to BATTLE state
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Configuring battle scene for test mode
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  BEFORE: test_mode=False
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  AFTER: test_mode=True
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Battle scene configured (paused=True, test_mode=True, scenario=TEST-001)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Switching to BATTLE state
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Configuring battle scene for test mode
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  BEFORE: test_mode=False
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  AFTER: test_mode=True
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Battle scene configured (paused=True, test_mode=True, scenario=TEST-001)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Camera fitted to ships
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Switching to BATTLE state
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Configuring battle scene for test mode
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  BEFORE: test_mode=False
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  AFTER: test_mode=True
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Battle scene configured (paused=True, test_mode=True, scenario=TEST-001)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Switching to BATTLE state
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - ERROR - Error running visual test: Test error
+ CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=10)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 10 ticks in 0.00s (9624 ticks/sec)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.01s (60821 ticks/sec)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.01s (33967 ticks/sec)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.01s (65485 ticks/sec)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.01s (54240 ticks/sec)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test FAILED
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - ERROR - Error running headless test: Test error
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=100)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 100 ticks in 0.00s (63598 ticks/sec)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=500)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 500 ticks in 0.08s (6467 ticks/sec)
+2026-01-17 12:47:54 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
