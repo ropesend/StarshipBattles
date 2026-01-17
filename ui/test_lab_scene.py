@@ -775,6 +775,8 @@ class TestRunDetailsPanel:
         self.pass_color = (80, 255, 120)
         self.fail_color = (255, 80, 80)
         self.header_color = (150, 200, 255)
+        self.button_color = (60, 100, 160)
+        self.button_hover_color = (80, 120, 180)
 
         # Fonts
         self.title_font = pygame.font.SysFont(FONT_MAIN, 20)
@@ -785,6 +787,10 @@ class TestRunDetailsPanel:
         self.selected_run = None
         self.scroll_offset = 0
         self.max_scroll = 0
+
+        # View States button
+        self.view_states_button_rect = None
+        self.on_view_states = None  # Callback when button clicked
 
     def set_run(self, run_record, run_number):
         """Set the run to display details for."""
@@ -809,9 +815,17 @@ class TestRunDetailsPanel:
         self.max_scroll = max(0, content_height - visible_height)
 
     def handle_event(self, event):
-        """Handle scroll events."""
+        """Handle scroll and click events."""
         if not self.selected_run:
             return False
+
+        # Handle View States button click
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.view_states_button_rect and self.view_states_button_rect.collidepoint(event.pos):
+                run_record, run_number = self.selected_run
+                if self.on_view_states and run_record.has_battle_states():
+                    self.on_view_states(run_record, run_number)
+                return True
 
         if event.type == pygame.MOUSEWHEEL:
             mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -851,6 +865,31 @@ class TestRunDetailsPanel:
         status_color = self.pass_color if run_record.passed else self.fail_color
         status_surf = self.title_font.render(status_text, True, status_color)
         surface.blit(status_surf, (self.x + 10, y_offset))
+
+        # View States button (if battle states are available)
+        self.view_states_button_rect = None
+        if run_record.has_battle_states():
+            button_width = 110
+            button_height = 26
+            button_x = self.x + self.width - button_width - 15
+            button_y = y_offset - 5 + self.scroll_offset  # Account for scroll in positioning
+
+            # Only show button if it's in the visible area
+            if button_y >= self.y and button_y + button_height <= self.y + self.height:
+                self.view_states_button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
+
+                mouse_pos = pygame.mouse.get_pos()
+                is_hovered = self.view_states_button_rect.collidepoint(mouse_pos)
+                btn_color = self.button_hover_color if is_hovered else self.button_color
+
+                pygame.draw.rect(surface, btn_color, self.view_states_button_rect, border_radius=4)
+                pygame.draw.rect(surface, (100, 130, 180), self.view_states_button_rect, 1, border_radius=4)
+
+                btn_text = self.small_font.render("View States", True, (255, 255, 255))
+                text_x = button_x + (button_width - btn_text.get_width()) // 2
+                text_y = button_y + (button_height - btn_text.get_height()) // 2
+                surface.blit(btn_text, (text_x, text_y))
+
         y_offset += 40
 
         # Metrics
@@ -1245,6 +1284,10 @@ class TestLabScene:
 
         # Component data cache for UI panels
         self._components_cache = None
+
+        # Battle state viewer (for viewing initial/final JSON states)
+        from ui.battle_state_viewer import BattleStateViewer
+        self.battle_state_viewer = BattleStateViewer(WIDTH, HEIGHT)
 
         self._create_ui()
 
@@ -1750,6 +1793,9 @@ class TestLabScene:
         # Link panels
         self.results_panel.set_details_panel(self.test_details_panel)
 
+        # Set up View States callback
+        self.test_details_panel.on_view_states = self._on_view_battle_states
+
         self.results_panel.set_test(test_id)
 
         logger.debug(f"Created results panel at x={base_x} and details panel at x={details_x} for test {test_id}")
@@ -1817,6 +1863,41 @@ class TestLabScene:
         self.game.state = GameState.MENU
         if hasattr(self.game, 'menu_screen') and hasattr(self.game.menu_screen, 'create_particles'):
             self.game.menu_screen.create_particles()
+
+    def _on_view_battle_states(self, run_record, run_number):
+        """
+        Open the battle state viewer for a test run.
+
+        Args:
+            run_record: TestRunRecord with state file paths
+            run_number: Display number for the run
+        """
+        from test_framework.battle_state_capture import load_battle_state_json
+
+        initial_json = None
+        final_json = None
+
+        # Load initial state JSON
+        if run_record.initial_state_file:
+            initial_json = load_battle_state_json(run_record.initial_state_file)
+            if initial_json is None:
+                logger.warning(f"Could not load initial state from: {run_record.initial_state_file}")
+
+        # Load final state JSON
+        if run_record.final_state_file:
+            final_json = load_battle_state_json(run_record.final_state_file)
+            if final_json is None:
+                logger.warning(f"Could not load final state from: {run_record.final_state_file}")
+
+        if initial_json or final_json:
+            self.battle_state_viewer.show(
+                initial_json=initial_json,
+                final_json=final_json,
+                test_id=self.selected_test_id,
+                run_number=run_number
+            )
+        else:
+            self.output_log.append("ERROR: Could not load battle state files")
 
     def _on_run(self):
         """Run the selected test scenario visually in Combat Lab."""
@@ -1961,19 +2042,25 @@ class TestLabScene:
 
             logger.debug(f" Starting headless simulation loop (max_ticks={max_ticks})")
 
-            # Run simulation as fast as possible
-            while tick_count < max_ticks:
-                # Call scenario update for dynamic logic
-                scenario.update(engine)
+            # Capture battle states for later viewing
+            from test_framework.battle_state_capture import BattleStateCapture
+            import random
+            seed = random.randint(0, 2**31 - 1)
 
-                # Update engine one tick
-                engine.update()
-                tick_count += 1
+            with BattleStateCapture(engine, self.selected_test_id, seed) as state_capture:
+                # Run simulation as fast as possible
+                while tick_count < max_ticks:
+                    # Call scenario update for dynamic logic
+                    scenario.update(engine)
 
-                # Check if battle ended naturally
-                if engine.is_battle_over():
-                    logger.debug(f" Battle ended naturally at tick {tick_count}")
-                    break
+                    # Update engine one tick
+                    engine.update()
+                    tick_count += 1
+
+                    # Check if battle ended naturally
+                    if engine.is_battle_over():
+                        logger.debug(f" Battle ended naturally at tick {tick_count}")
+                        break
 
             # Simulation complete - verify results
             elapsed_time = time.time() - start_time
@@ -1983,10 +2070,11 @@ class TestLabScene:
             scenario.passed = scenario.verify(engine)
             logger.debug(f" Test {'PASSED' if scenario.passed else 'FAILED'}")
 
-            # Store results
+            # Store results including battle state file paths
             scenario.results['ticks_run'] = tick_count
             scenario.results['duration_real'] = elapsed_time
             scenario.results['ticks'] = tick_count  # Alias for consistency with runner
+            scenario.results.update(state_capture.get_results_dict())  # Add state file paths and seed
             self.registry.update_last_run_results(self.selected_test_id, scenario.results)
 
             # Add to persistent test history
@@ -2088,27 +2176,33 @@ class TestLabScene:
             self.game.screen.blit(overlay, (screen_center_x - 300, screen_center_y - 100))
             pygame.display.flip()
 
-            # Run simulation headless
+            # Run simulation headless with battle state capture
+            from test_framework.battle_state_capture import BattleStateCapture
+            import random
+            seed = random.randint(0, 2**31 - 1)
+
             start_time = time.time()
             tick_count = 0
             max_ticks = scenario.max_ticks
 
-            while tick_count < max_ticks:
-                scenario.update(engine)
-                engine.update()
-                tick_count += 1
+            with BattleStateCapture(engine, test_id, seed) as state_capture:
+                while tick_count < max_ticks:
+                    scenario.update(engine)
+                    engine.update()
+                    tick_count += 1
 
-                if engine.is_battle_over():
-                    break
+                    if engine.is_battle_over():
+                        break
 
             # Verify results
             elapsed_time = time.time() - start_time
             scenario.passed = scenario.verify(engine)
 
-            # Store results
+            # Store results including battle state file paths
             scenario.results['ticks_run'] = tick_count
             scenario.results['duration_real'] = elapsed_time
             scenario.results['ticks'] = tick_count
+            scenario.results.update(state_capture.get_results_dict())  # Add state file paths and seed
             self.registry.update_last_run_results(test_id, scenario.results)
 
             # Add to persistent test history
@@ -2155,6 +2249,11 @@ class TestLabScene:
                 if not self.json_popup.is_open:
                     self.json_popup = None
                 continue  # Don't process other events while popup is open
+
+            # Handle battle state viewer (if open)
+            if self.battle_state_viewer and self.battle_state_viewer.visible:
+                self.battle_state_viewer.handle_event(event)
+                continue  # Don't process other events while viewer is open
 
             # Handle ship panel events (scrolling)
             for panel in self.ship_panels:
@@ -2365,6 +2464,10 @@ class TestLabScene:
         # Confirmation dialog (drawn last, on top of everything including popups)
         if self.confirmation_dialog and self.confirmation_dialog.is_open:
             self.confirmation_dialog.draw(screen)
+
+        # Battle state viewer (drawn on top of everything)
+        if self.battle_state_viewer and self.battle_state_viewer.visible:
+            self.battle_state_viewer.draw(screen)
 
     def _draw_header(self, screen):
         """Draw the header with title."""

@@ -7,11 +7,18 @@ from game.core.registry import RegistryManager
 
 @pytest.fixture
 def registry_with_hull():
-    """Populate RegistryManager with test data."""
+    """Populate RegistryManager with test data, restoring original state after test."""
+    from tests.infrastructure.session_cache import SessionRegistryCache
+
     mgr = RegistryManager.instance()
+
+    # Save original state to restore after test
+    original_vehicle_classes = dict(mgr.vehicle_classes)
+    original_components = dict(mgr.components)
+
     mgr.vehicle_classes.clear()
     mgr.components.clear()
-    
+
     mgr.vehicle_classes.update({
         "Escort": {
             "type": "Ship",
@@ -30,7 +37,7 @@ def registry_with_hull():
             ]
         }
     })
-    
+
     mgr.components.update({
         "hull_escort": Component({
             "id": "hull_escort",
@@ -57,8 +64,15 @@ def registry_with_hull():
             "abilities": {}
         })
     })
-    
+
     yield mgr
+
+    # Restore original state after test completes
+    # This prevents other tests from seeing partial registry data
+    mgr.vehicle_classes.clear()
+    mgr.components.clear()
+    mgr.vehicle_classes.update(original_vehicle_classes)
+    mgr.components.update(original_components)
 
 @pytest.mark.use_custom_data
 class TestHullLayerMigration:
