@@ -1,17 +1,9 @@
 import unittest
 
-from game.simulation.components.component import (
-    load_components, load_modifiers, get_all_components, create_component
-)
+from game.simulation.components.component import get_all_components, create_component
 from game.core.registry import RegistryManager
-from tests.fixtures.paths import get_data_dir
 
 class TestComponents(unittest.TestCase):
-    def setUp(self):
-        data_dir = get_data_dir()
-        load_components(str(data_dir / "components.json"))
-        load_modifiers(str(data_dir / "modifiers.json"))
-
     def test_load_components(self):
         """Verify components.json is loaded correctly."""
         comps = get_all_components()
@@ -48,11 +40,6 @@ class TestComponents(unittest.TestCase):
 class TestModifierStacking(unittest.TestCase):
     """Test that modifiers stack multiplicatively, not override each other."""
 
-    def setUp(self):
-        data_dir = get_data_dir()
-        load_components(str(data_dir / "components.json"))
-        load_modifiers(str(data_dir / "modifiers.json"))
-    
     def test_single_size_modifier(self):
         """Size mount 2x should double mass."""
         railgun = create_component('railgun')
@@ -84,39 +71,39 @@ class TestModifierStacking(unittest.TestCase):
             msg=f"Expected {expected_mass}, got {railgun.mass}. Modifiers should stack multiplicatively!")
     
     def test_multiplicative_stacking_size_and_hardened(self):
-        """Size 2x + Hardened (+25% mass) should give 2.5x total mass."""
+        """Size 2x + Hardened_mount 1.25x = 2.5x total mass."""
         railgun = create_component('railgun')
         base_mass = railgun.base_mass  # 100
-        
+
         railgun.add_modifier('simple_size_mount', 2.0)
-        railgun.add_modifier('hardened')  # +25% mass = 1.25x
-        
+        railgun.add_modifier('hardened_mount', 1.25)  # 1.25x mass
+
         expected_mass = base_mass * 2.0 * 1.25  # 2.5x = 250
         self.assertAlmostEqual(railgun.mass, expected_mass, places=2,
             msg=f"Expected {expected_mass}, got {railgun.mass}. Modifiers should stack multiplicatively!")
     
     def test_triple_modifier_stacking(self):
-        """Size 2x + Range level 1 (3.5x) + Hardened (1.25x) = 8.75x mass."""
+        """Size 2x + Range level 1 (3.5x) + Hardened_mount (1.25x) = 8.75x mass."""
         railgun = create_component('railgun')
         base_mass = railgun.base_mass  # 100
-        
+
         railgun.add_modifier('simple_size_mount', 2.0)
         railgun.add_modifier('range_mount', 1.0)  # 3.5x
-        railgun.add_modifier('hardened')  # 1.25x
-        
+        railgun.add_modifier('hardened_mount', 1.25)  # 1.25x mass
+
         expected_mass = base_mass * 2.0 * 3.5 * 1.25  # 8.75x = 875
         self.assertAlmostEqual(railgun.mass, expected_mass, places=2,
             msg=f"Expected {expected_mass}, got {railgun.mass}. Triple stacking failed!")
     
     def test_hp_stacking(self):
-        """Size 2x + Hardened (2x HP) should give 4x HP."""
+        """Size 2x HP + Hardened_mount (4x HP) = 8x HP."""
         railgun = create_component('railgun')
         base_hp = railgun.base_max_hp  # 150
-        
-        railgun.add_modifier('simple_size_mount', 2.0)
-        railgun.add_modifier('hardened')  # +100% HP = 2x
-        
-        expected_hp = base_hp * 2.0 * 2.0  # 4x = 600
+
+        railgun.add_modifier('simple_size_mount', 2.0)  # 2x HP
+        railgun.add_modifier('hardened_mount', 2.0)  # 4x HP (value squared)
+
+        expected_hp = base_hp * 2.0 * 4.0  # 8x = 1200
         self.assertAlmostEqual(railgun.max_hp, expected_hp, places=0,
             msg=f"Expected HP {expected_hp}, got {railgun.max_hp}")
     
@@ -138,11 +125,6 @@ class TestModifierStacking(unittest.TestCase):
 class TestModifierOrder(unittest.TestCase):
     """Ensure modifier application order doesn't affect final result."""
 
-    def setUp(self):
-        data_dir = get_data_dir()
-        load_components(str(data_dir / "components.json"))
-        load_modifiers(str(data_dir / "modifiers.json"))
-    
     def test_order_independence(self):
         """Adding modifiers in different order should give same result."""
         # Order A: size first, then range
@@ -164,11 +146,6 @@ class TestModifierOrder(unittest.TestCase):
 class TestTurretMount(unittest.TestCase):
     """Test turret mount logarithmic diminishing returns."""
 
-    def setUp(self):
-        data_dir = get_data_dir()
-        load_components(str(data_dir / "components.json"))
-        load_modifiers(str(data_dir / "modifiers.json"))
-    
     def test_turret_0_degrees_no_change(self):
         """0 degree turret should not increase mass."""
         railgun = create_component('railgun')

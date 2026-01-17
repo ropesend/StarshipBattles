@@ -19,6 +19,7 @@ class SessionRegistryCache:
         self.components_data: Dict[str, Any] = {}
         self.modifiers_data: Dict[str, Any] = {}
         self.vehicle_classes_data: Dict[str, Any] = {}
+        self.strategies_data: Dict[str, Any] = {}
         self._is_loaded = False
 
     @classmethod
@@ -55,17 +56,22 @@ class SessionRegistryCache:
                 comp_path = os.path.join(DATA_DIR, "components.json")
                 mod_path = os.path.join(DATA_DIR, "modifiers.json")
                 
-                load_modifiers(mod_path) 
+                load_modifiers(mod_path)
                 load_components(comp_path)
                 load_vehicle_classes()
 
-                # 4. Capture State (Deep Copy)
+                # 4. Load combat strategies
+                from game.ai.controller import load_combat_strategies, StrategyManager
+                load_combat_strategies(str(DATA_DIR))
+
+                # 5. Capture State (Deep Copy for initial load, shallow copies on retrieval)
                 self.modifiers_data = copy.deepcopy(mgr.modifiers)
                 self.components_data = copy.deepcopy(mgr.components)
                 self.vehicle_classes_data = copy.deepcopy(mgr.vehicle_classes)
+                self.strategies_data = copy.deepcopy(StrategyManager.instance().strategies)
 
                 self._is_loaded = True
-                print(f"[SessionRegistryCache] Loaded {len(self.components_data)} components, {len(self.vehicle_classes_data)} classes.")
+                print(f"[SessionRegistryCache] Loaded {len(self.components_data)} components, {len(self.vehicle_classes_data)} classes, {len(self.strategies_data)} strategies.")
 
             except Exception as e:
                 print(f"[SessionRegistryCache] CRITICAL ERROR loading data: {e}")
@@ -77,18 +83,30 @@ class SessionRegistryCache:
         pass
 
     def get_components(self) -> Dict[str, Any]:
-        """Returns deep, safe copy of components data."""
+        """Returns shallow copy of components data.
+
+        Performance optimization: Uses shallow dict copy instead of deepcopy.
+        The underlying component definitions are treated as read-only during tests.
+        The RegistryManager.hydrate() method receives this data and the registry
+        is cleared/reset between tests, so mutations don't persist.
+        """
         with self._lock:
-             # Return deepcopy to ensure no one modifies the cache
-             return copy.deepcopy(self.components_data)
+            return dict(self.components_data)
 
     def get_modifiers(self) -> Dict[str, Any]:
+        """Returns shallow copy of modifiers data."""
         with self._lock:
-            return copy.deepcopy(self.modifiers_data)
+            return dict(self.modifiers_data)
 
     def get_vehicle_classes(self) -> Dict[str, Any]:
+        """Returns shallow copy of vehicle classes data."""
         with self._lock:
-            return copy.deepcopy(self.vehicle_classes_data)
+            return dict(self.vehicle_classes_data)
+
+    def get_strategies(self) -> Dict[str, Any]:
+        """Returns shallow copy of combat strategies data."""
+        with self._lock:
+            return dict(self.strategies_data)
 
     @classmethod
     def reset(cls):

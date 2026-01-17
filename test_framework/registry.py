@@ -58,6 +58,8 @@ logger = get_logger(__name__)
 
 
 class TestRegistry:
+    __test__ = False  # Not a pytest test class
+
     """
     Singleton registry for discovering and managing test scenarios.
 
