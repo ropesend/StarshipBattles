@@ -2,7 +2,20 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIScrollingContainer, UIDropDownMenu
 from ui.builder.components import ComponentListItem
-from game.ui.screens.builder_utils import BuilderEvents
+
+
+# Local reference to BuilderEvents to avoid circular import.
+# The full import chain was: ui.builder -> game.ui.__init__ -> builder_screen -> ui.builder
+# We lazily import on first use instead.
+_BuilderEvents = None
+
+def _get_builder_events():
+    """Lazy import of BuilderEvents to break circular import."""
+    global _BuilderEvents
+    if _BuilderEvents is None:
+        from game.ui.screens.builder_utils import BuilderEvents
+        _BuilderEvents = BuilderEvents
+    return _BuilderEvents
 
 class BuilderLeftPanel:
     def __init__(self, builder, manager, rect, event_bus=None, viewmodel=None):
@@ -15,7 +28,7 @@ class BuilderLeftPanel:
         self.event_bus = event_bus
         
         if event_bus:
-            event_bus.subscribe(BuilderEvents.REGISTRY_RELOADED, self.on_registry_reloaded)
+            event_bus.subscribe(_get_builder_events().REGISTRY_RELOADED, self.on_registry_reloaded)
         
         # Store original order of components for sorting
         self.component_order_map = {c.id: i for i, c in enumerate(self.viewmodel.available_components)}

@@ -1,32 +1,18 @@
 import unittest
 import pygame
 import pygame_gui
-import os
 from unittest.mock import MagicMock, patch
 
-# Environment setup for headless
-os.environ["SDL_VIDEODRIVER"] = "dummy"
-
-from game.simulation.entities.ship import Ship, initialize_ship_data
+from game.simulation.entities.ship import Ship
 from game.core.registry import RegistryManager
-from game.simulation.components.component import load_components
-from tests.fixtures.paths import get_project_root, get_data_dir
 
 
 class TestBuilderUISync(unittest.TestCase):
 
 
     def setUp(self):
-        os.environ["SDL_VIDEODRIVER"] = "dummy"
-        pygame.init()
-        # Initialize data needed for dropdowns
-        initialize_ship_data(str(get_project_root()))
-        data_dir = get_data_dir()
-        load_components(str(data_dir / "components.json"))
-        from game.ai.controller import load_combat_strategies
-        load_combat_strategies(str(data_dir))
-        
-        pygame.display.set_mode((800, 600)) # Dummy mode
+        # All data (components, modifiers, strategies) loaded by root conftest.py
+        pygame.display.set_mode((800, 600))  # Dummy mode
         self.manager = pygame_gui.UIManager((800, 600))
         
         # Mock Builder
@@ -50,10 +36,9 @@ class TestBuilderUISync(unittest.TestCase):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
 
-        pygame.quit()
-        RegistryManager.instance().clear()
-        from game.ai.controller import StrategyManager
-        StrategyManager.instance().clear()
+        # NOTE: Do NOT call pygame.quit() here - it destroys the session-scoped
+        # pygame initialization from root conftest's enforce_headless fixture.
+        # The root conftest handles pygame lifecycle and registry cleanup.
 
     def _get_option_value(self, option):
         """Helper to handle pygame_gui returning (id, text) tuples or raw values."""

@@ -14,6 +14,8 @@ logger = get_logger(__name__)
 
 
 class TestExecutionService:
+    __test__ = False  # Not a pytest test class
+
     """Service for executing test scenarios."""
 
     def __init__(self):

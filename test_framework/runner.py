@@ -21,6 +21,8 @@ setup_combat_lab_logging()
 logger = get_logger(__name__)
 
 class TestRunner:
+    __test__ = False  # Not a pytest test class
+
     def __init__(self):
         self.engine = BattleEngine()
         self.current_scenario = None

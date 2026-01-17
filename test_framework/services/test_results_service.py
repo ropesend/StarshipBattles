@@ -14,6 +14,8 @@ logger = get_logger(__name__)
 
 
 class TestResultsService:
+    __test__ = False  # Not a pytest test class
+
     """Service for managing test results and history."""
 
     def __init__(self, test_history: TestHistory, registry: TestRegistry):

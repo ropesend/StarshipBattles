@@ -4,7 +4,17 @@ import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
 from game.simulation.components.component import LayerType
 from game.core.logger import log_error
-from game.ui.screens.builder_utils import BuilderEvents
+# Lazy import to avoid circular import through game.ui.__init__
+# Chain: ui.builder -> game.ui.__init__ -> builder_screen -> ui.builder
+_BuilderEvents = None
+
+def _get_builder_events():
+    """Lazy import of BuilderEvents to break circular import."""
+    global _BuilderEvents
+    if _BuilderEvents is None:
+        from game.ui.screens.builder_utils import BuilderEvents
+        _BuilderEvents = BuilderEvents
+    return _BuilderEvents
 import json
 from ui.builder.modifier_logic import ModifierLogic
 
@@ -21,7 +31,7 @@ class ComponentDetailPanel:
         )
         
         if event_bus:
-            event_bus.subscribe(BuilderEvents.SELECTION_CHANGED, self.on_selection_changed)
+            event_bus.subscribe(_get_builder_events().SELECTION_CHANGED, self.on_selection_changed)
         
         self.current_component = None
         self.last_html = ""

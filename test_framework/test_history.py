@@ -46,6 +46,8 @@ logger = get_logger(__name__)
 
 @dataclass
 class TestRunRecord:
+    __test__ = False  # Not a pytest test class
+
     """
     Record of a single test run with metrics and validation results.
 
@@ -138,6 +140,8 @@ class TestRunRecord:
 
 
 class TestHistory:
+    __test__ = False  # Not a pytest test class
+
     """
     Manages persistent test run history with JSON storage.
 

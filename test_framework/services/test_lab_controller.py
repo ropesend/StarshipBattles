@@ -22,6 +22,8 @@ logger = get_logger(__name__)
 
 
 class TestLabUIController:
+    __test__ = False  # Not a pytest test class
+
     """Controller for Combat Lab UI, coordinating services and handling user actions."""
 
     def __init__(self, game, registry: TestRegistry, test_history: TestHistory):
