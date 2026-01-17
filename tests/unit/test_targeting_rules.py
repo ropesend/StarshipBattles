@@ -46,40 +46,33 @@ class TestTargetingRules(unittest.TestCase):
         # Using a rule with weight > 0
         rule = {'type': 'most_damaged', 'weight': 1}
         rules = [rule]
-        
-        # Mock HP% on targets via AIController._stat_get_hp_percent
-        # Since _stat_get_hp_percent is static and complex, let's mock the targets to look like ships 
-        # or mock the static method if possible.
-        # However, TargetEvaluator calls AIController._stat_get_hp_percent directly.
-        # Easier to mock the return value if we could, but it's hardwired.
-        # Let's mock the component structures on the targets.
-        
+
+        # Mock components with current_hp and max_hp attributes
+        # TargetEvaluator._default_get_hp_percent calls get_all_components()
+        # and sums current_hp / max_hp across all components
+
         # Target 1: 10/100 HP (10%)
         t1 = MagicMock()
-        t1.layers = {
-            'core': {
-                'max_hp_pool': 100,
-                'hp_pool': 10
-            }
-        }
-        
+        comp1 = MagicMock()
+        comp1.max_hp = 100
+        comp1.current_hp = 10
+        t1.get_all_components.return_value = [comp1]
+
         # Target 2: 90/100 HP (90%)
         t2 = MagicMock()
-        t2.layers = {
-            'core': {
-                'max_hp_pool': 100,
-                'hp_pool': 90
-            }
-        }
-        
+        comp2 = MagicMock()
+        comp2.max_hp = 100
+        comp2.current_hp = 90
+        t2.get_all_components.return_value = [comp2]
+
         # Rule: val = -hp_pct * weight * 100
-        # T1 Score = -0.1 * 100 = -10
-        # T2 Score = -0.9 * 100 = -90
-        # T1 (Most damaged) should have higher score
-        
+        # T1 Score = -0.1 * 1 * 100 = -10
+        # T2 Score = -0.9 * 1 * 100 = -90
+        # T1 (Most damaged) should have higher score (-10 > -90)
+
         score_1 = TargetEvaluator.evaluate(self.ship, t1, rules)
         score_2 = TargetEvaluator.evaluate(self.ship, t2, rules)
-        
+
         self.assertGreater(score_1, score_2)
         
     def test_rule_pdc_arc(self):

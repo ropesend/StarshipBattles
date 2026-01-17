@@ -8,6 +8,7 @@ from game.core.logger import log_warning, log_info
 from game.ai.controller import AIController
 from game.engine.spatial import SpatialGrid
 from game.core.constants import AttackType
+from game.core.config import PhysicsConfig, BattleConfig
 from game.simulation.projectile_manager import ProjectileManager
 from game.engine.collision import CollisionSystem
 from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
@@ -79,7 +80,7 @@ class BattleEngine:
         self.collision_system = CollisionSystem()
 
         self.recent_beams: List[Dict[str, Any]] = []
-        self.grid = SpatialGrid(cell_size=2000)
+        self.grid = SpatialGrid(cell_size=PhysicsConfig.SPATIAL_GRID_CELL_SIZE)
         self.tick_counter: int = 0
         self.winner: Optional[int] = None
 
@@ -247,7 +248,8 @@ class BattleEngine:
                 new_ship.velocity = pygame.math.Vector2(source_ship.velocity)
                 # Maybe boost it forward?
                 launch_dir = pygame.math.Vector2(1, 0).rotate(source_ship.angle)
-                new_ship.velocity += launch_dir * 100 # Initial push
+                # TODO: Replace magic number with BattleConfig.FIGHTER_LAUNCH_SPEED once added to config
+                new_ship.velocity += launch_dir * 100  # Initial push
                 new_ship.angle = source_ship.angle
                 
                 # Add to battle

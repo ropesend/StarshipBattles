@@ -1,6 +1,5 @@
 import time
 import uuid
-import logging
 import threading
 from functools import wraps
 from typing import Dict, List, Optional
@@ -8,8 +7,7 @@ from datetime import datetime
 from contextlib import contextmanager
 
 from game.core.json_utils import load_json, save_json
-
-logger = logging.getLogger(__name__)
+from game.core.logger import log_error, log_info
 
 
 class Profiler:
@@ -39,7 +37,7 @@ class Profiler:
         self.session_id = str(uuid.uuid4())
         self.records: List[Dict] = []
         self.start_time = None
-        logger.info(f"Profiler initialized with session ID: {self.session_id}")
+        log_info(f"Profiler initialized with session ID: {self.session_id}")
 
     @classmethod
     def instance(cls) -> 'Profiler':
@@ -77,12 +75,12 @@ class Profiler:
         """Enable profiling."""
         self.active = True
         self.start_time = time.time()
-        logger.info("Profiling started")
+        log_info("Profiling started")
 
     def stop(self):
         """Disable profiling."""
         self.active = False
-        logger.info("Profiling stopped")
+        log_info("Profiling stopped")
 
     def toggle(self):
         """Toggle profiling state."""
@@ -112,7 +110,7 @@ class Profiler:
     def save_history(self, filename: str = "profiling_history.json"):
         """Save current session to history file."""
         if not self.records:
-            logger.info("No records to save.")
+            log_info("No records to save.")
             return
 
         # Load existing history using json_utils
@@ -128,9 +126,9 @@ class Profiler:
 
         # Save using json_utils
         if save_json(filename, history):
-            logger.info(f"Saved {len(self.records)} records to {filename}")
+            log_info(f"Saved {len(self.records)} records to {filename}")
         else:
-            logger.error(f"Failed to save profiling history to {filename}")
+            log_error(f"Failed to save profiling history to {filename}")
 
 # Global accessor for backwards compatibility (lazy, not module-level instantiation)
 class _ProfilerProxy:

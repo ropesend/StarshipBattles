@@ -3,6 +3,8 @@ import random
 from typing import List, Dict, Any, TYPE_CHECKING
 import pygame
 
+from game.core.config import BattleConfig
+
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
 
@@ -105,16 +107,16 @@ class CollisionSystem:
                 
                 msg = ""
                 if hp_rammer < hp_target:
-                    s.take_damage(hp_rammer + 9999)
-                    target.take_damage(hp_rammer * 0.5)
+                    s.take_damage(hp_rammer + BattleConfig.GUARANTEED_KILL_DAMAGE)
+                    target.take_damage(hp_rammer * BattleConfig.RAMMING_DAMAGE_FACTOR)
                     msg = f"Ramming: {s.name} destroyed by {target.name}!"
                 elif hp_target < hp_rammer:
-                    target.take_damage(hp_target + 9999)
-                    s.take_damage(hp_target * 0.5)
+                    target.take_damage(hp_target + BattleConfig.GUARANTEED_KILL_DAMAGE)
+                    s.take_damage(hp_target * BattleConfig.RAMMING_DAMAGE_FACTOR)
                     msg = f"Ramming: {target.name} destroyed by {s.name}!"
                 else:
-                    s.take_damage(hp_rammer + 9999)
-                    target.take_damage(hp_target + 9999)
+                    s.take_damage(hp_rammer + BattleConfig.GUARANTEED_KILL_DAMAGE)
+                    target.take_damage(hp_target + BattleConfig.GUARANTEED_KILL_DAMAGE)
                     msg = f"Ramming: Mutual destruction!"
                 
                 if logger:

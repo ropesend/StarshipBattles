@@ -11,7 +11,8 @@ from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.designs import create_interceptor, create_brick
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.registry import RegistryManager
-from game.core.constants import ROOT_DIR, COMPONENTS_FILE, MODIFIERS_FILE
+from game.core.constants import COMPONENTS_FILE, MODIFIERS_FILE
+from tests.fixtures.paths import get_project_root
 
 def run_battle(seed, log_filename):
     # Setup
@@ -22,7 +23,7 @@ def run_battle(seed, log_filename):
     try:
         RegistryManager.instance().clear()
 
-        initialize_ship_data(ROOT_DIR)
+        initialize_ship_data(str(get_project_root()))
         load_components(COMPONENTS_FILE)
         load_modifiers(MODIFIERS_FILE)
         
@@ -92,7 +93,7 @@ if __name__ == "__main__":
             try:
                 if os.path.exists(log1): os.remove(log1)
                 if os.path.exists(log2): os.remove(log2)
-            except:
+            except OSError:
                 pass
             sys.exit(0)
         else:

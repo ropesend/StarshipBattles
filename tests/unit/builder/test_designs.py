@@ -43,9 +43,7 @@ class TestDesignFactories(unittest.TestCase):
         """create_brick ship should have engine components."""
         ship = create_brick(0, 0)
         
-        all_components = []
-        for layer_data in ship.layers.values():
-            all_components.extend(layer_data['components'])
+        all_components = ship.get_all_components()
         
         has_engine = any(c.has_ability('CombatPropulsion') for c in all_components)
         self.assertTrue(has_engine, "Brick should have engines")

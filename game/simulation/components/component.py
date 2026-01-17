@@ -275,26 +275,22 @@ class Component:
 
 
 
-    def take_damage(self, amount):
-        # Defensive check for MagicMock or non-numeric types
+    def take_damage(self, amount: float) -> None:
         if not isinstance(amount, (int, float)):
-            try: amount = float(amount)
-            except (TypeError, ValueError): amount = 0  # Fallback for pure mocks
-            
+            raise TypeError(f"amount must be numeric, got {type(amount).__name__}")
+
         self.current_hp -= amount
-        
+
         # Update Status
-        if isinstance(self.current_hp, (int, float)) and self.current_hp <= 0:
+        if self.current_hp <= 0:
             self.current_hp = 0
             self.is_active = False
             return True # Destroyed
         
-        # Logic Repair: Update status to DAMAGED if below 50%
-        # Defensive check for max_hp and current_hp types
-        if isinstance(self.current_hp, (int, float)) and isinstance(self.max_hp, (int, float)):
-             if self.current_hp < (self.max_hp * 0.5):
-                 self.status = ComponentStatus.DAMAGED
-            
+        # Update status to DAMAGED if below damage threshold (default 50%)
+        if self.current_hp < (self.max_hp * self.damage_threshold):
+            self.status = ComponentStatus.DAMAGED
+
         return False
 
     def reset_hp(self):

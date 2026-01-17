@@ -13,6 +13,7 @@ Refactored from 1,568 lines to ~350 lines by extracting:
 """
 import os
 import pygame
+from game.core.config import UIConfig
 from game.core.logger import log_debug, log_info, log_warning
 from game.strategy.data.galaxy import StarSystem
 from game.strategy.data.fleet import Fleet
@@ -31,7 +32,6 @@ from game.ui.screens.strategy_input_handler import InputHandler
 class StrategyScene:
     """Manages strategy layer simulation, rendering, and UI."""
 
-    SIDEBAR_WIDTH = 600
     TOP_BAR_HEIGHT = 50
 
     def __init__(self, screen_width, screen_height, session=None):
@@ -47,7 +47,7 @@ class StrategyScene:
 
         # Camera
         self.camera = Camera(
-            screen_width - self.SIDEBAR_WIDTH,
+            screen_width - UIConfig.STRATEGY_SIDEBAR_WIDTH,
             screen_height - self.TOP_BAR_HEIGHT,
             offset_x=0,
             offset_y=self.TOP_BAR_HEIGHT
@@ -153,7 +153,7 @@ class StrategyScene:
         """Handle window resize."""
         self.screen_width = width
         self.screen_height = height
-        self.camera.width = width - self.SIDEBAR_WIDTH
+        self.camera.width = width - UIConfig.STRATEGY_SIDEBAR_WIDTH
         self.camera.height = height - self.TOP_BAR_HEIGHT
         self.camera.offset_y = self.TOP_BAR_HEIGHT
         self.ui.handle_resize(width, height)

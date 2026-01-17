@@ -199,7 +199,7 @@ class App:
             try:
                 with open(TAGS_FILE, 'r') as f:
                     file_tags = json.load(f)
-            except:
+            except json.JSONDecodeError:
                 print("Error loading tags file.")
 
         extensions = ['*.jpg', '*.jpeg', '*.png']

@@ -1,10 +1,10 @@
 import unittest
 import os
-import json
 import time
 import uuid
 from unittest.mock import patch
 from game.core.profiling import Profiler, profile_action, profile_block, PROFILER
+from game.core.json_utils import load_json
 
 
 class TestProfilingJsonUtils(unittest.TestCase):
@@ -141,11 +141,10 @@ class TestProfiling(unittest.TestCase):
         PROFILER.save_history(self.test_file)
         
         self.assertTrue(os.path.exists(self.test_file))
-        with open(self.test_file, 'r') as f:
-            data = json.load(f)
-            self.assertEqual(len(data), 1)
-            self.assertEqual(data[0]['session_id'], PROFILER.session_id)
-            self.assertEqual(len(data[0]['records']), 1)
+        data = load_json(self.test_file)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['session_id'], PROFILER.session_id)
+        self.assertEqual(len(data[0]['records']), 1)
             
         # Test append
         PROFILER.records = [] # Clear memory
@@ -153,11 +152,10 @@ class TestProfiling(unittest.TestCase):
         PROFILER.session_id = "session_2" 
         PROFILER.record("action2", 0.2)
         PROFILER.save_history(self.test_file)
-        
-        with open(self.test_file, 'r') as f:
-            data = json.load(f)
-            self.assertEqual(len(data), 2)
-            self.assertEqual(data[1]['session_id'], "session_2")
+
+        data = load_json(self.test_file)
+        self.assertEqual(len(data), 2)
+        self.assertEqual(data[1]['session_id'], "session_2")
 
 if __name__ == '__main__':
     unittest.main()

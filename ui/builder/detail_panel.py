@@ -4,6 +4,7 @@ import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
 from game.simulation.components.component import LayerType
 from game.core.logger import log_error
+from game.ui.screens.builder_utils import BuilderEvents
 import json
 from ui.builder.modifier_logic import ModifierLogic
 
@@ -20,7 +21,7 @@ class ComponentDetailPanel:
         )
         
         if event_bus:
-            event_bus.subscribe("SELECTION_CHANGED", self.on_selection_changed)
+            event_bus.subscribe(BuilderEvents.SELECTION_CHANGED, self.on_selection_changed)
         
         self.current_component = None
         self.last_html = ""

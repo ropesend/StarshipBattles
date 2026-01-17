@@ -11,7 +11,7 @@ from tkinter import filedialog, simpledialog
 try:
     tk_root = tkinter.Tk()
     tk_root.withdraw()
-except:
+except (tkinter.TclError, RuntimeError):
     tk_root = None
 
 class FormationCore:
@@ -522,7 +522,7 @@ class FormationEditorScene:
                     self.shape_count = val
                     self.core.shape_count = val
                     self.count_slider.set_current_value(val)
-                except:
+                except (ValueError, TypeError):
                     self.count_entry.set_text(str(self.shape_count))
             elif event.ui_element == self.renumber_entry:
                 try:
@@ -530,7 +530,7 @@ class FormationEditorScene:
                     val = max(1, min(len(self.arrows), val))
                     self.renumber_target = val
                     self.renumber_slider.set_current_value(val)
-                except:
+                except (ValueError, TypeError):
                     self.renumber_entry.set_text(str(self.renumber_target))
 
         elif event.type == pygame.MOUSEWHEEL:

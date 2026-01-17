@@ -240,15 +240,16 @@ class WeaponsReportPanel:
     def _get_all_weapons(self, ship):
         """Get list of all weapon components from ship, filtered."""
         weapons = []
-        for layer_data in ship.layers.values():
-            for comp in layer_data['components']:
-                if comp.has_ability('WeaponAbility'):
-                    # Filter by weapon ability type
-                    if comp.has_ability('ProjectileWeaponAbility') and not self.filter_states['projectile']: continue
-                    if comp.has_ability('BeamWeaponAbility') and not self.filter_states['beam']: continue
-                    if comp.has_ability('SeekerWeaponAbility') and not self.filter_states['seeker']: continue
-                    
-                    weapons.append(comp)
+        for comp in ship.get_components_by_ability('WeaponAbility'):
+            # Filter by weapon ability type
+            if comp.has_ability('ProjectileWeaponAbility') and not self.filter_states['projectile']:
+                continue
+            if comp.has_ability('BeamWeaponAbility') and not self.filter_states['beam']:
+                continue
+            if comp.has_ability('SeekerWeaponAbility') and not self.filter_states['seeker']:
+                continue
+
+            weapons.append(comp)
         return weapons
     
     def _calculate_accuracy_for_range(self, weapon, ship, range_val):

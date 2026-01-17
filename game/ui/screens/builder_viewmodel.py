@@ -13,9 +13,9 @@ from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component, get_all_components
 from game.simulation.services import ShipBuilderService, ShipBuilderResult
 from game.core.registry import get_modifier_registry
+from game.ui.screens.builder_utils import BuilderEvents
 
-import logging
-logger = logging.getLogger(__name__)
+from game.core.logger import log_error, log_info, log_warning, log_debug
 
 
 class BuilderViewModel:
@@ -75,7 +75,7 @@ class BuilderViewModel:
         
     def _emit_ship_updated(self):
         """Emit SHIP_UPDATED event."""
-        self.event_bus.emit('SHIP_UPDATED', self._ship)
+        self.event_bus.emit(BuilderEvents.SHIP_UPDATED, self._ship)
         
     def notify_ship_changed(self):
         """Call when ship's internal state has changed (e.g., components added)."""
@@ -183,7 +183,7 @@ class BuilderViewModel:
                 
     def _emit_selection_changed(self):
         """Emit SELECTION_CHANGED event."""
-        self.event_bus.emit('SELECTION_CHANGED', self.primary_selection)
+        self.event_bus.emit(BuilderEvents.SELECTION_CHANGED, self.primary_selection)
         
     def clear_selection(self):
         """Clear all selected components."""
@@ -202,23 +202,23 @@ class BuilderViewModel:
     @template_modifiers.setter
     def template_modifiers(self, value: Dict[str, Any]):
         self._template_modifiers = value
-        self.event_bus.emit('TEMPLATE_MODIFIERS_CHANGED', value)
+        self.event_bus.emit(BuilderEvents.TEMPLATE_MODIFIERS_CHANGED, value)
         
     def set_template_modifier(self, mod_id: str, value: Any):
         """Set a single template modifier value."""
         self._template_modifiers[mod_id] = value
-        self.event_bus.emit('TEMPLATE_MODIFIERS_CHANGED', self._template_modifiers)
+        self.event_bus.emit(BuilderEvents.TEMPLATE_MODIFIERS_CHANGED, self._template_modifiers)
         
     def remove_template_modifier(self, mod_id: str):
         """Remove a template modifier."""
         if mod_id in self._template_modifiers:
             del self._template_modifiers[mod_id]
-            self.event_bus.emit('TEMPLATE_MODIFIERS_CHANGED', self._template_modifiers)
+            self.event_bus.emit(BuilderEvents.TEMPLATE_MODIFIERS_CHANGED, self._template_modifiers)
             
     def clear_template_modifiers(self):
         """Clear all template modifiers."""
         self._template_modifiers = {}
-        self.event_bus.emit('TEMPLATE_MODIFIERS_CHANGED', self._template_modifiers)
+        self.event_bus.emit(BuilderEvents.TEMPLATE_MODIFIERS_CHANGED, self._template_modifiers)
         
     # ─────────────────────────────────────────────────────────────────
     # Drag State Property
@@ -232,7 +232,7 @@ class BuilderViewModel:
     @dragged_item.setter
     def dragged_item(self, value: Optional[Component]):
         self._dragged_item = value
-        self.event_bus.emit('DRAG_STATE_CHANGED', value)
+        self.event_bus.emit(BuilderEvents.DRAG_STATE_CHANGED, value)
         
     # ─────────────────────────────────────────────────────────────────
     # Available Components Property
@@ -260,7 +260,7 @@ class BuilderViewModel:
     def show_hull_layer(self, value: bool):
         if self._show_hull_layer != value:
             self._show_hull_layer = value
-            self.event_bus.emit('HULL_LAYER_VISIBILITY_CHANGED', value)
+            self.event_bus.emit(BuilderEvents.HULL_LAYER_VISIBILITY_CHANGED, value)
     
     def toggle_hull_layer(self) -> bool:
         """Toggle hull layer visibility and return the new state."""
@@ -336,7 +336,7 @@ class BuilderViewModel:
             return result.ship
         else:
             # Fallback to direct creation if service fails
-            logger.warning(f"Service failed to create ship: {result.errors}")
+            log_warning(f"Service failed to create ship: {result.errors}")
             ship = Ship(
                 "Custom Ship",
                 self.screen_width // 2,
@@ -360,7 +360,7 @@ class BuilderViewModel:
             True if successful, False otherwise
         """
         if not self._ship:
-            logger.error("Cannot add component: no ship")
+            log_error("Cannot add component: no ship")
             return False
 
         result = self._ship_service.add_component(self._ship, component_id, layer)
@@ -370,7 +370,7 @@ class BuilderViewModel:
             self.notify_ship_changed()
             return True
         else:
-            logger.warning(f"Failed to add component: {result.errors}")
+            log_warning(f"Failed to add component: {result.errors}")
             return False
 
     def add_component_bulk(self, component_id: str, layer: LayerType, count: int) -> int:
@@ -386,7 +386,7 @@ class BuilderViewModel:
             Number of components successfully added
         """
         if not self._ship:
-            logger.error("Cannot add components: no ship")
+            log_error("Cannot add components: no ship")
             return 0
 
         result = self._ship_service.add_component_bulk(
@@ -415,7 +415,7 @@ class BuilderViewModel:
             True if successful, False otherwise
         """
         if not self._ship:
-            logger.error("Cannot add component: no ship")
+            log_error("Cannot add component: no ship")
             return False
 
         result = self._ship_service.add_component_instance(self._ship, component, layer)
@@ -425,7 +425,7 @@ class BuilderViewModel:
             self.notify_ship_changed()
             return True
         else:
-            logger.warning(f"Failed to add component instance: {result.errors}")
+            log_warning(f"Failed to add component instance: {result.errors}")
             return False
 
     def remove_component(self, layer: LayerType, index: int) -> Optional[Component]:
@@ -440,7 +440,7 @@ class BuilderViewModel:
             The removed component, or None if removal failed
         """
         if not self._ship:
-            logger.error("Cannot remove component: no ship")
+            log_error("Cannot remove component: no ship")
             return None
 
         result = self._ship_service.remove_component(self._ship, layer, index)
@@ -450,7 +450,7 @@ class BuilderViewModel:
             self.notify_ship_changed()
             return result.removed_component
         else:
-            logger.warning(f"Failed to remove component: {result.errors}")
+            log_warning(f"Failed to remove component: {result.errors}")
             return None
 
     def change_ship_class(self, new_class: str, migrate_components: bool = True) -> bool:
@@ -466,7 +466,7 @@ class BuilderViewModel:
             True if successful, False otherwise
         """
         if not self._ship:
-            logger.error("Cannot change class: no ship")
+            log_error("Cannot change class: no ship")
             return False
 
         result = self._ship_service.change_class(
@@ -479,7 +479,7 @@ class BuilderViewModel:
             self.notify_ship_changed()
             return True
         else:
-            logger.warning(f"Failed to change class: {result.errors}")
+            log_warning(f"Failed to change class: {result.errors}")
             return False
 
     def validate_design(self):
@@ -523,21 +523,12 @@ class BuilderViewModel:
         if not self._ship:
             return
 
-        logger.info("Clearing ship design")
-
-        for layer_type, layer_data in self._ship.layers.items():
-            if layer_type == LayerType.HULL:
-                continue
-            layer_data['components'] = []
-            layer_data['hp_pool'] = 0
-            layer_data['max_hp_pool'] = 0
-            layer_data['mass'] = 0
-            layer_data['hp'] = 0
+        log_info("Clearing ship design")
+        self._ship.clear_non_hull_components()
 
         self._template_modifiers = {}
         self._ship.ai_strategy = "standard_ranged"
         self._ship.name = "Custom Ship"
-        self._ship.recalculate_stats()
 
         self.clear_selection()
         self.notify_ship_changed()

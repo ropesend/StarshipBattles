@@ -2,6 +2,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIScrollingContainer, UIDropDownMenu
 from ui.builder.components import ComponentListItem
+from game.ui.screens.builder_utils import BuilderEvents
 
 class BuilderLeftPanel:
     def __init__(self, builder, manager, rect, event_bus=None, viewmodel=None):
@@ -14,7 +15,7 @@ class BuilderLeftPanel:
         self.event_bus = event_bus
         
         if event_bus:
-            event_bus.subscribe("REGISTRY_RELOADED", self.on_registry_reloaded)
+            event_bus.subscribe(BuilderEvents.REGISTRY_RELOADED, self.on_registry_reloaded)
         
         # Store original order of components for sorting
         self.component_order_map = {c.id: i for i, c in enumerate(self.viewmodel.available_components)}

@@ -4,13 +4,11 @@ BuilderDataLoader - Handles loading and reloading game data from a directory.
 Extracted from BuilderSceneGUI._reload_data() for better testability and reusability.
 """
 import os
-import logging
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Union
 
+from game.core.logger import log_error, log_info, log_warning, log_debug
 from game.core.registry import RegistryManager, get_vehicle_classes
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -115,19 +113,19 @@ class BuilderDataLoader:
             mod_path, _ = self.find_file("modifiers.json")
             if mod_path:
                 load_modifiers(mod_path)
-                logger.info(f"Loaded modifiers from {mod_path}")
+                log_info(f"Loaded modifiers from {mod_path}")
             else:
                 result.warnings.append("No modifiers.json found")
-                logger.warning("No modifiers.json found")
+                log_warning("No modifiers.json found")
             
             # 3. Load Components
             comp_path, _ = self.find_file("components.json")
             if comp_path:
                 load_components(comp_path)
-                logger.info(f"Loaded components from {comp_path}")
+                log_info(f"Loaded components from {comp_path}")
             else:
                 result.warnings.append("No components.json found")
-                logger.warning("No components.json found")
+                log_warning("No components.json found")
             
             # 4. Load Combat Strategies
             self._load_strategies(result)
@@ -139,7 +137,7 @@ class BuilderDataLoader:
             result.default_class = self._get_default_class()
             
         except Exception as e:
-            logger.error(f"Failed to load data: {e}")
+            log_error(f"Failed to load data: {e}")
             result.success = False
             result.errors.append(str(e))
         
@@ -162,13 +160,13 @@ class BuilderDataLoader:
                 strategy_file="test_combat_strategies.json"
             )
             manager._loaded = True
-            logger.info(f"Loaded strategies from test data in {self.directory}")
+            log_info(f"Loaded strategies from test data in {self.directory}")
         else:
             # Production mode - try standard names
             strat_path, _ = self.find_file(["combatstrategies.json", "combat_strategies.json"])
             if strat_path:
                 load_combat_strategies(strat_path)
-                logger.info(f"Loaded strategies from {strat_path}")
+                log_info(f"Loaded strategies from {strat_path}")
     
     def _load_vehicle_classes(self, result: LoadResult) -> None:
         """Load vehicle classes and layer definitions."""
@@ -180,13 +178,13 @@ class BuilderDataLoader:
         if vclass_path:
             if vlayer_path:
                 load_vehicle_classes(vclass_path, layers_filepath=vlayer_path)
-                logger.info(f"Loaded classes from {vclass_path} with layers from {vlayer_path}")
+                log_info(f"Loaded classes from {vclass_path} with layers from {vlayer_path}")
             else:
                 load_vehicle_classes(vclass_path)
-                logger.info(f"Loaded classes from {vclass_path}")
+                log_info(f"Loaded classes from {vclass_path}")
         else:
             result.warnings.append("No vehicleclasses.json found")
-            logger.warning("No vehicleclasses.json found")
+            log_warning("No vehicleclasses.json found")
     
     def _get_default_class(self) -> str:
         """Determine the default ship class after loading."""

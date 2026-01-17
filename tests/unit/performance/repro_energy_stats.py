@@ -5,7 +5,8 @@ from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import load_components, create_component, Component, LayerType
 from game.core.registry import RegistryManager
 from game.simulation.entities.ship_stats import ShipStatsCalculator
-from game.core.constants import ROOT_DIR, COMPONENTS_FILE
+from game.core.constants import COMPONENTS_FILE
+from tests.fixtures.paths import get_project_root
 
 class TestEnergyRepro(unittest.TestCase):
     def setUp(self):
@@ -13,7 +14,7 @@ class TestEnergyRepro(unittest.TestCase):
         # Ensure clean state
         RegistryManager.instance().clear()
 
-        initialize_ship_data(ROOT_DIR)
+        initialize_ship_data(str(get_project_root()))
         # Use standard components.json path
         load_components(COMPONENTS_FILE)
 

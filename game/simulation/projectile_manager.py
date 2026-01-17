@@ -1,6 +1,7 @@
 import pygame
 from typing import List, Set, Any, TYPE_CHECKING
 from game.core.constants import AttackType
+from game.core.config import BattleConfig
 from game.core.logger import log_debug
 
 if TYPE_CHECKING:
@@ -44,7 +45,7 @@ class ProjectileManager:
                 
             p_pos = p.position 
             
-            query_radius = p.velocity.length() + 100
+            query_radius = p.velocity.length() + BattleConfig.PROJECTILE_QUERY_BUFFER
             nearby_ships = grid.query_radius(p_pos, query_radius)
             
             hit_occurred = False
@@ -64,7 +65,7 @@ class ProjectileManager:
                 DV = p.velocity - s_vel
                 
                 dv_sq = DV.dot(DV)
-                collision_radius = s.radius + 5
+                collision_radius = s.radius + BattleConfig.PROJECTILE_HIT_TOLERANCE
                 
                 hit = False
                 
@@ -115,7 +116,7 @@ class ProjectileManager:
                  t_missile = p.target
                  if t_missile.is_alive:
                      dist = p.position.distance_to(t_missile.position)
-                     if dist < (p.radius + t_missile.radius + 10):
+                     if dist < (p.radius + t_missile.radius + BattleConfig.MISSILE_INTERCEPT_BUFFER):
                          t_missile.take_damage(p.damage)
                          hit_occurred = True
                          if not t_missile.is_alive:

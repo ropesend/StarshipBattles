@@ -15,7 +15,8 @@ from game.simulation.designs import create_brick, create_interceptor
 from game.simulation.components.component import load_components, load_modifiers
 from game.simulation.entities.ship import initialize_ship_data
 from game.core.registry import RegistryManager
-from game.core.constants import AttackType, ROOT_DIR, COMPONENTS_FILE, MODIFIERS_FILE
+from game.core.constants import AttackType, COMPONENTS_FILE, MODIFIERS_FILE
+from tests.fixtures.paths import get_project_root
 
 def run_stress_test():
     try:
@@ -25,7 +26,7 @@ def run_stress_test():
 
         load_components(COMPONENTS_FILE)
         load_modifiers(MODIFIERS_FILE)
-        initialize_ship_data(ROOT_DIR)
+        initialize_ship_data(str(get_project_root()))
         
         all_ships = []
         print("Spawning 100 ships...")

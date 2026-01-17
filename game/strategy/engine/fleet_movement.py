@@ -2,14 +2,12 @@
 Fleet movement simulation for the strategy layer.
 Provides a single source of truth for fleet movement logic.
 """
-import logging
 from dataclasses import dataclass, field
 from typing import Optional
 
 from game.strategy.data.hex_math import HexCoord, hex_distance
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
-
-logger = logging.getLogger('strategy.fleet_movement')
+from game.core.logger import log_warning
 
 
 @dataclass
@@ -231,7 +229,7 @@ class FleetMovementSimulator:
         while (state.path or state.orders) and current_turn < max_turns:
             iterations += 1
             if iterations > max_steps:
-                logger.warning("project_path exceeded max iterations")
+                log_warning("project_path exceeded max iterations")
                 break
             
             # If no path but have orders, generate path for current order

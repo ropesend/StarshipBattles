@@ -29,7 +29,7 @@ def main():
     if os.path.exists(atlas_path):
         try:
              mgr.atlas = pygame.image.load(atlas_path).convert()
-        except:
+        except (FileNotFoundError, pygame.error):
              pass 
     
     # mgr.load_atlas(atlas_path) # Deprecated

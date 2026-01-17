@@ -2,7 +2,7 @@ import pygame
 import random
 import math
 import typing
-from typing import List, Dict, Tuple, Optional, Any, Union, Set, Iterator
+from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Iterator
 
 from game.engine.physics import PhysicsBody
 from game.simulation.components.component import (
@@ -518,6 +518,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             comp = self.layers[layer_type]['components'].pop(index)
             self.recalculate_stats()
             return comp
+        log_warning(f"remove_component failed: index {index} out of range for layer {layer_type.name}")
         return None
 
     def recalculate_stats(self) -> None:
@@ -688,6 +689,34 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             if layer_data['components']:
                 return True
         return False
+
+    def find_component_with_index(
+        self,
+        predicate: Callable[[Component], bool]
+    ) -> Optional[Tuple[LayerType, int, Component]]:
+        """Find first component matching predicate, with its location.
+
+        Args:
+            predicate: Function that returns True for matching component
+
+        Returns:
+            Tuple of (layer_type, index, component) or None if not found
+        """
+        for layer_type, layer_data in self.layers.items():
+            for idx, comp in enumerate(layer_data['components']):
+                if predicate(comp):
+                    return (layer_type, idx, comp)
+        return None
+
+    def clear_non_hull_components(self) -> None:
+        """Remove all components except hull.
+
+        Useful for ship class changes where only the hull is preserved.
+        """
+        for layer_type, layer_data in self.layers.items():
+            if layer_type != LayerType.HULL:
+                layer_data['components'].clear()
+        self.recalculate_stats()
 
     def check_validity(self) -> bool:
         """Check if the current ship design is valid."""

@@ -1,11 +1,9 @@
 import os
 import datetime
 import pygame
-import logging
 import threading
 from game.core.constants import ROOT_DIR, DEBUG_SCREENSHOTS, SCREENSHOT_DIR
-
-logger = logging.getLogger(__name__)
+from game.core.logger import log_error, log_info, log_warning
 
 class ScreenshotManager:
     """
@@ -65,9 +63,9 @@ class ScreenshotManager:
         if self.enabled and not os.path.exists(self.base_dir):
             try:
                 os.makedirs(self.base_dir)
-                logger.info(f"Created screenshot directory: {self.base_dir}")
+                log_info(f"Created screenshot directory: {self.base_dir}")
             except OSError as e:
-                logger.error(f"Failed to create screenshot directory: {e}")
+                log_error(f"Failed to create screenshot directory: {e}")
                 self.enabled = False
 
     def capture(self, surface=None, region=None, label=None):
@@ -84,7 +82,7 @@ class ScreenshotManager:
             surface = pygame.display.get_surface()
 
         if surface is None:
-            logger.warning("Screenshot failed: No display surface found.")
+            log_warning("Screenshot failed: No display surface found.")
             return
 
         try:
@@ -106,17 +104,17 @@ class ScreenshotManager:
                     sub_surface = surface.subsurface(clip_rect)
                     pygame.image.save(sub_surface, filepath)
                 else:
-                    logger.warning(f"Screenshot region {region} is outside surface bounds {surf_rect}.")
+                    log_warning(f"Screenshot region {region} is outside surface bounds {surf_rect}.")
                     return
             else:
                 pygame.image.save(surface, filepath)
 
             abs_path = os.path.abspath(filepath)
-            logger.info(f"Screenshot saved: {abs_path}")
+            log_info(f"Screenshot saved: {abs_path}")
             self._copy_to_clipboard(abs_path)
 
         except Exception as e:
-            logger.error(f"Error saving screenshot: {e}")
+            log_error(f"Error saving screenshot: {e}")
 
     def _copy_to_clipboard(self, text):
         """Copy text to clipboard using Tkinter or Windows clip."""

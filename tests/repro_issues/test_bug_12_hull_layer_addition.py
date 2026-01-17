@@ -3,7 +3,8 @@ import pygame
 from game.simulation.entities.ship import Ship, initialize_ship_data, LayerType
 from game.simulation.components.component import load_components, create_component
 from game.core.registry import RegistryManager
-from game.core.constants import ROOT_DIR, COMPONENTS_FILE
+from game.core.constants import COMPONENTS_FILE
+from tests.fixtures.paths import get_project_root
 
 class TestBug12HullAddition(unittest.TestCase):
     """Reproduction test for BUG-12: Component Addition to Hull Layer."""
@@ -11,7 +12,7 @@ class TestBug12HullAddition(unittest.TestCase):
     def setUp(self):
         pygame.init()
         # Set up registry and data
-        initialize_ship_data(ROOT_DIR)
+        initialize_ship_data(str(get_project_root()))
         load_components(COMPONENTS_FILE)
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
 

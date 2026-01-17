@@ -72,21 +72,21 @@ class TestStrategySystem(unittest.TestCase):
         me.position = pygame.math.Vector2(0, 0)
          
         # Target 1: Far but has weapons
-        # Use spec to avoid MagicMock auto-generating get_components_by_ability
-        t1 = MagicMock(spec=['position', 'mass', 'layers'])
+        # Mock Ship helper methods used by TargetEvaluator
+        t1 = MagicMock(spec=['position', 'mass', 'get_components_by_ability'])
         t1.position = pygame.math.Vector2(1000, 0)
         t1.mass = 100
-        # Mock has_weapons logic: component with WeaponAbility
+        # Mock has_weapons logic: get_components_by_ability returns a component
         c1 = MagicMock()
         c1.damage = 10
         c1.has_ability = lambda name: name == 'WeaponAbility'
-        t1.layers = {'core': {'components': [c1]}}
+        t1.get_components_by_ability.return_value = [c1]
 
         # Target 2: Near but no weapons
-        t2 = MagicMock(spec=['position', 'mass', 'layers'])
+        t2 = MagicMock(spec=['position', 'mass', 'get_components_by_ability'])
         t2.position = pygame.math.Vector2(100, 0)
         t2.mass = 100
-        t2.layers = {'core': {'components': []}}
+        t2.get_components_by_ability.return_value = []
         
         # Rules: has_weapons (1000) > distance (factor -1)
         # T1 score ~= 1000 - 1000 = 0

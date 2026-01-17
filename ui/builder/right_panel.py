@@ -6,6 +6,7 @@ from pygame_gui.core import UIElement
 from game.core.registry import RegistryManager
 from game.core.logger import log_error
 from game.ai.controller import StrategyManager
+from game.ui.screens.builder_utils import BuilderEvents
 
 class StatRow:
     """Helper class to manage a single statistic row (Label | Value | Unit) with caching."""
@@ -59,8 +60,8 @@ class BuilderRightPanel:
         self.event_bus = event_bus
         
         if event_bus:
-            event_bus.subscribe("SHIP_UPDATED", self.on_ship_updated)
-            event_bus.subscribe("REGISTRY_RELOADED", self.on_registry_reloaded)
+            event_bus.subscribe(BuilderEvents.SHIP_UPDATED, self.on_ship_updated)
+            event_bus.subscribe(BuilderEvents.REGISTRY_RELOADED, self.on_registry_reloaded)
         
         self.panel = UIPanel(
             relative_rect=rect,

@@ -3,18 +3,19 @@ from unittest.mock import patch, MagicMock
 import os
 import pygame
 
-from game.ui.screens.setup_screen import load_ships_from_entries, scan_ship_designs, BattleSetupScreen
+from game.ui.screens.setup_screen import BattleSetupScreen
+from game.ui.screens.setup_data_io import load_ships_from_entries, scan_ship_designs
 
 class TestFleetComposition(unittest.TestCase):
-    
+
     def setUp(self):
         # Initialize pygame for Vector2 operations if needed, though Mocks might handle it.
         # However, the code uses pygame.math.Vector2 explicitly.
         # Ideally we shouldn't need a display mode.
         pass
 
-    @patch('game.ui.screens.setup_screen.Ship')
-    @patch('game.ui.screens.setup_screen.load_json_required')
+    @patch('game.ui.screens.setup_data_io.Ship')
+    @patch('game.ui.screens.setup_data_io.load_json_required')
     def test_load_ships_from_entries_basic(self, mock_load_json_required, MockShip):
         """Test loading simple ships without formation."""
         # Setup
@@ -57,8 +58,8 @@ class TestFleetComposition(unittest.TestCase):
         self.assertEqual(mock_ship_2.ai_strategy, 'defensive')
         
 
-    @patch('game.ui.screens.setup_screen.Ship')
-    @patch('game.ui.screens.setup_screen.load_json_required')
+    @patch('game.ui.screens.setup_data_io.Ship')
+    @patch('game.ui.screens.setup_data_io.load_json_required')
     def test_load_ships_from_entries_formation(self, mock_load_json_required, MockShip):
         """Test formation linking and positioning."""
         
@@ -125,8 +126,8 @@ class TestFleetComposition(unittest.TestCase):
         self.assertEqual(follower_ship.formation_offset, pygame.math.Vector2(10, 10))
         self.assertEqual(follower_ship.formation_rotation_mode, 'fixed')
 
-    @patch('game.ui.screens.setup_screen.glob.glob')
-    @patch('game.ui.screens.setup_screen.load_json')
+    @patch('game.ui.screens.setup_data_io.glob.glob')
+    @patch('game.ui.screens.setup_data_io.load_json')
     def test_scan_ship_designs(self, mock_load_json, mock_glob):
         """Test scanning ship designs with valid and invalid files."""
         # Setup
@@ -160,7 +161,7 @@ class TestFleetComposition(unittest.TestCase):
     @patch('game.ui.screens.setup_screen.Ship')
     @patch('game.ui.screens.setup_screen.filedialog.askopenfilename')
     @patch('game.ui.screens.setup_screen.tk.Tk')
-    @patch('uuid.uuid4')
+    @patch('game.ui.screens.setup_screen.uuid.uuid4')
     @patch('game.ui.screens.setup_screen.load_json_required')
     def test_add_formation_to_team(self, mock_load_json_required, mock_uuid, mock_tk, mock_dialog, MockShip):
         """Test adding a formation to a team."""

@@ -16,6 +16,34 @@ from game.simulation.validation.base import (
 )
 
 
+class RestrictionPrefixes:
+    """Constants for layer restriction rule prefixes."""
+    BLOCK_CLASSIFICATION = "block_classification"
+    BLOCK_ID = "block_id"
+    DENY_ABILITY = "deny_ability"
+    ALLOW_CLASSIFICATION = "allow_classification"
+    ALLOW_ID = "allow_id"
+    ALLOW_ABILITY = "allow_ability"
+    ALLOW = "allow_"
+    HULL_ONLY = "HullOnly"
+
+
+def _parse_restriction(rule_str: str, prefix: str) -> Optional[str]:
+    """Extract value from restriction string with given prefix.
+
+    Args:
+        rule_str: The restriction rule string (e.g., "block_classification:Weapon")
+        prefix: The prefix to check for (e.g., "block_classification")
+
+    Returns:
+        The value after the colon if prefix matches, None otherwise.
+    """
+    if rule_str.startswith(prefix + ":"):
+        parts = rule_str.split(":", 1)
+        return parts[1] if len(parts) > 1 else None
+    return None
+
+
 class LayerConstraintRule(AdditionValidationRule):
     """Validates that a component can be placed in the target layer."""
 
@@ -111,23 +139,27 @@ class LayerRestrictionDefinitionRule(AdditionValidationRule):
         restrictions = ship.layers[layer_type]['restrictions']
 
         # [FIX for BUG-12] Handle HullOnly restriction
-        if "HullOnly" in restrictions:
+        if RestrictionPrefixes.HULL_ONLY in restrictions:
             if not component.id.startswith("hull_"):
                 result.add_error(f"Layer {layer_type.name} only allows Hull components.")
                 return result
 
         # 1. Process "Block" Rules (Blacklist)
         for r in restrictions:
-            if r.startswith("block_classification:"):
-                blocked_class = r.split(":")[1]
+            blocked_class = _parse_restriction(r, RestrictionPrefixes.BLOCK_CLASSIFICATION)
+            if blocked_class:
                 if component.data.get('major_classification') == blocked_class:
                     result.add_error(f"Classification '{blocked_class}' blocked in this layer")
-            elif r.startswith("block_id:"):
-                blocked_id = r.split(":")[1]
+                continue
+
+            blocked_id = _parse_restriction(r, RestrictionPrefixes.BLOCK_ID)
+            if blocked_id:
                 if component.id == blocked_id:
                     result.add_error(f"Component '{blocked_id}' blocked in this layer")
-            elif r.startswith("deny_ability:"):
-                denied_ability = r.split(":")[1]
+                continue
+
+            denied_ability = _parse_restriction(r, RestrictionPrefixes.DENY_ABILITY)
+            if denied_ability:
                 if component.has_ability(denied_ability):
                     result.add_error(f"Ability '{denied_ability}' blocked in this layer")
 
@@ -135,23 +167,27 @@ class LayerRestrictionDefinitionRule(AdditionValidationRule):
         # Logic: If ANY allow rule exists, the component MUST match at least one of them.
         # If NO allow rules exist, everything is allowed (unless blocked above).
 
-        allow_rules = [r for r in restrictions if r.startswith("allow_")]
+        allow_rules = [r for r in restrictions if r.startswith(RestrictionPrefixes.ALLOW)]
 
         if allow_rules:
             allowed = False
             for r in allow_rules:
-                if r.startswith("allow_classification:"):
-                    target = r.split(":")[1]
+                target = _parse_restriction(r, RestrictionPrefixes.ALLOW_CLASSIFICATION)
+                if target:
                     if component.data.get('major_classification') == target:
                         allowed = True
                         break
-                elif r.startswith("allow_id:"):
-                    target = r.split(":")[1]
+                    continue
+
+                target = _parse_restriction(r, RestrictionPrefixes.ALLOW_ID)
+                if target:
                     if component.id == target:
                         allowed = True
                         break
-                elif r.startswith("allow_ability:"):
-                    target_ability = r.split(":")[1]
+                    continue
+
+                target_ability = _parse_restriction(r, RestrictionPrefixes.ALLOW_ABILITY)
+                if target_ability:
                     if component.has_ability(target_ability):
                         allowed = True
                         break

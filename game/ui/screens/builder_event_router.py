@@ -13,8 +13,7 @@ from game.core.profiling import profile_block
 from game.core.registry import get_modifier_registry, get_vehicle_classes
 from game.simulation.entities.ship import LayerType
 
-import logging
-logger = logging.getLogger(__name__)
+from game.core.logger import log_error, log_info, log_warning, log_debug
 
 
 class BuilderEventRouter:
@@ -115,7 +114,7 @@ class BuilderEventRouter:
                 gui.template_modifiers = {}
                 gui.on_selection_changed(None)
                 gui.rebuild_modifier_ui()
-                logger.debug("Cleared settings or deselected component")
+                log_debug("Cleared settings or deselected component")
                 
         elif act_type == 'toggle_layer':
             # Layer header toggle - already handled by callback
@@ -331,7 +330,7 @@ class BuilderEventRouter:
         elif hasattr(gui.right_panel, 'theme_dropdown') and event.ui_element == gui.right_panel.theme_dropdown:
             gui.ship.theme_id = event.text
             gui.right_panel.update_portrait_image()
-            logger.info(f"Changed theme to {event.text}")
+            log_info(f"Changed theme to {event.text}")
             return True
         elif event.ui_element == gui.right_panel.ai_dropdown:
             return self._handle_ai_dropdown(event)
@@ -419,7 +418,7 @@ class BuilderEventRouter:
             if btn.rect.collidepoint(event.pos):
                 gui.preset_manager.delete_preset(preset_name)
                 gui.left_panel.rebuild_modifier_ui()
-                logger.info(f"Deleted preset: {preset_name}")
+                log_info(f"Deleted preset: {preset_name}")
                 return True
         return False
     

@@ -117,12 +117,8 @@ class TargetEvaluator:
                 val = -mass * (weight if weight > 0 else -factor)
 
             elif r_type == 'has_weapons':
-                # Use Ship helper method if available
-                if hasattr(candidate, 'get_components_by_ability'):
-                    has_wpns = len(candidate.get_components_by_ability('WeaponAbility', operational_only=False)) > 0
-                else:
-                    has_wpns = any(c.has_ability('WeaponAbility') for layer in getattr(candidate, 'layers', {}).values()
-                                   for c in layer.get('components', []))
+                # Use Ship helper method to check for weapon components
+                has_wpns = any(candidate.get_components_by_ability('WeaponAbility', operational_only=False))
                 if has_wpns:
                     val = weight if weight > 0 else 1000
                 else:
@@ -130,7 +126,9 @@ class TargetEvaluator:
                         match = False
 
             elif r_type == 'least_armor':
-                armor_hp = getattr(candidate, 'layers', {}).get(LayerType.ARMOR, {}).get('hp_pool', 0)
+                # Use Ship helper method to get armor layer components and sum HP
+                armor_comps = candidate.get_components_by_layer(LayerType.ARMOR)
+                armor_hp = sum(getattr(c, 'hp', 0) for c in armor_comps)
                 params = -armor_hp * (weight if weight > 0 else -factor)
                 val = params
 
@@ -164,20 +162,13 @@ class TargetEvaluator:
     @staticmethod
     def _default_get_hp_percent(ship):
         """Default HP percent calculation."""
-        total_max = sum(layer.get('max_hp_pool', 0) for layer in getattr(ship, 'layers', {}).values())
-        total_current = sum(layer.get('hp_pool', 0) for layer in getattr(ship, 'layers', {}).values())
+        # Use Ship helper method to get all components
+        components = ship.get_all_components()
+        if not components:
+            return 1.0
 
-        if total_max == 0:
-            # Use Ship helper method if available
-            if hasattr(ship, 'get_all_components'):
-                for comp in ship.get_all_components():
-                    total_max += getattr(comp, 'max_hp', 0)
-                    total_current += getattr(comp, 'current_hp', getattr(comp, 'max_hp', 0))
-            else:
-                for layer in getattr(ship, 'layers', {}).values():
-                    for comp in layer.get('components', []):
-                        total_max += getattr(comp, 'max_hp', 0)
-                        total_current += getattr(comp, 'current_hp', getattr(comp, 'max_hp', 0))
+        total_max = sum(getattr(c, 'max_hp', 0) for c in components)
+        total_current = sum(getattr(c, 'current_hp', getattr(c, 'max_hp', 0)) for c in components)
 
         return total_current / total_max if total_max > 0 else 1.0
 

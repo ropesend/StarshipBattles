@@ -437,3 +437,181 @@ class TestHasComponents:
             layer_data['components'] = []
         result = ship.has_components()
         assert result is False
+
+
+# =============================================================================
+# find_component_with_index() Tests
+# =============================================================================
+
+@pytest.mark.use_custom_data
+class TestFindComponentWithIndex:
+    """Tests for Ship.find_component_with_index() method."""
+
+    def test_finds_component_by_id(self, armed_ship):
+        """Finds a component by its id and returns correct tuple."""
+        result = armed_ship.find_component_with_index(lambda c: c.id == "test_bridge")
+        assert result is not None
+        layer_type, index, component = result
+        assert layer_type == LayerType.CORE
+        assert isinstance(index, int)
+        assert index >= 0
+        assert component.id == "test_bridge"
+
+    def test_finds_component_by_name(self, armed_ship):
+        """Finds a component by its name attribute."""
+        result = armed_ship.find_component_with_index(
+            lambda c: c.name == "Test Shield"
+        )
+        assert result is not None
+        layer_type, index, component = result
+        assert layer_type == LayerType.INNER
+        assert component.id == "test_shield"
+
+    def test_returns_none_when_no_match(self, armed_ship):
+        """Returns None when no component matches predicate."""
+        result = armed_ship.find_component_with_index(lambda c: c.id == "nonexistent")
+        assert result is None
+
+    def test_returns_none_on_empty_ship(self, registry_with_components):
+        """Returns None when ship has no components at all."""
+        ship = Ship(name="EmptyShip", x=0, y=0, color=(255, 255, 255), ship_class="Escort")
+        # Clear all layers including hull
+        for layer_data in ship.layers.values():
+            layer_data['components'] = []
+        result = ship.find_component_with_index(lambda c: True)
+        assert result is None
+
+    def test_finds_first_matching_component(self, armed_ship):
+        """Returns the first component that matches (not subsequent ones)."""
+        # armed_ship has 2 lasers with id "test_laser"
+        result = armed_ship.find_component_with_index(lambda c: c.id == "test_laser")
+        assert result is not None
+        layer_type, index, component = result
+        assert layer_type == LayerType.OUTER
+        assert index == 0  # First laser in OUTER layer
+
+    def test_finds_hull_component(self, empty_ship):
+        """Can find the hull component in HULL layer."""
+        result = empty_ship.find_component_with_index(lambda c: c.id == "hull_escort")
+        assert result is not None
+        layer_type, index, component = result
+        assert layer_type == LayerType.HULL
+        assert index == 0
+        assert component.id == "hull_escort"
+
+    def test_index_is_valid_for_removal(self, armed_ship):
+        """Returned index can be used with remove_component."""
+        # Find a weapon
+        result = armed_ship.find_component_with_index(lambda c: c.id == "test_laser")
+        assert result is not None
+        layer_type, index, component = result
+
+        # Verify index is valid
+        layer_components = armed_ship.layers[layer_type]['components']
+        assert 0 <= index < len(layer_components)
+        assert layer_components[index] is component
+
+    def test_finds_component_with_ability(self, armed_ship):
+        """Can find component using has_ability in predicate."""
+        result = armed_ship.find_component_with_index(
+            lambda c: c.has_ability('CommandAndControl')
+        )
+        assert result is not None
+        layer_type, index, component = result
+        assert component.id == "test_bridge"
+
+    def test_finds_component_in_specific_layer(self, armed_ship):
+        """Predicate can check layer_assigned to find in specific layer."""
+        result = armed_ship.find_component_with_index(
+            lambda c: c.layer_assigned == LayerType.INNER
+        )
+        assert result is not None
+        layer_type, index, component = result
+        assert layer_type == LayerType.INNER
+        assert component.id == "test_shield"
+
+    def test_predicate_receives_component_objects(self, armed_ship):
+        """Predicate receives actual Component instances."""
+        received_types = []
+
+        def capture_predicate(c):
+            received_types.append(type(c).__name__)
+            return False  # Never match, just capture
+
+        armed_ship.find_component_with_index(capture_predicate)
+
+        # Should have received Component instances
+        assert len(received_types) > 0
+        assert all(t == 'Component' for t in received_types)
+
+
+# =============================================================================
+# clear_non_hull_components() Tests
+# =============================================================================
+
+@pytest.mark.use_custom_data
+class TestClearNonHullComponents:
+    """Tests for Ship.clear_non_hull_components() method."""
+
+    def test_clears_non_hull_layers(self, armed_ship):
+        """Clears components from all layers except HULL."""
+        # Verify armed_ship has components in multiple layers
+        assert len(armed_ship.get_components_by_layer(LayerType.CORE)) > 0
+        assert len(armed_ship.get_components_by_layer(LayerType.INNER)) > 0
+        assert len(armed_ship.get_components_by_layer(LayerType.OUTER)) > 0
+
+        armed_ship.clear_non_hull_components()
+
+        # Non-hull layers should be empty
+        assert len(armed_ship.get_components_by_layer(LayerType.CORE)) == 0
+        assert len(armed_ship.get_components_by_layer(LayerType.INNER)) == 0
+        assert len(armed_ship.get_components_by_layer(LayerType.OUTER)) == 0
+
+    def test_preserves_hull_components(self, armed_ship):
+        """Preserves components in the HULL layer."""
+        hull_before = armed_ship.get_components_by_layer(LayerType.HULL)
+        assert len(hull_before) == 1
+
+        armed_ship.clear_non_hull_components()
+
+        hull_after = armed_ship.get_components_by_layer(LayerType.HULL)
+        assert len(hull_after) == 1
+        assert hull_after[0].id == "hull_escort"
+
+    def test_recalculates_stats(self, armed_ship):
+        """Calls recalculate_stats after clearing."""
+        # Get mass before clearing (should include all components)
+        mass_before = armed_ship.mass
+        assert mass_before > 0
+
+        armed_ship.clear_non_hull_components()
+
+        # Mass should be reduced to hull only
+        mass_after = armed_ship.mass
+        assert mass_after < mass_before
+
+    def test_on_empty_ship(self, empty_ship):
+        """Works correctly on a ship with only hull."""
+        hull_before = empty_ship.get_components_by_layer(LayerType.HULL)
+        assert len(hull_before) == 1
+
+        # Should not raise any errors
+        empty_ship.clear_non_hull_components()
+
+        hull_after = empty_ship.get_components_by_layer(LayerType.HULL)
+        assert len(hull_after) == 1
+
+    def test_returns_none(self, armed_ship):
+        """Method returns None (no return value)."""
+        result = armed_ship.clear_non_hull_components()
+        assert result is None
+
+    def test_only_hull_remains_in_get_all_components(self, armed_ship):
+        """After clearing, get_all_components returns only hull."""
+        assert len(armed_ship.get_all_components()) == 7  # Hull + 6 other components
+
+        armed_ship.clear_non_hull_components()
+
+        all_comps = armed_ship.get_all_components()
+        assert len(all_comps) == 1
+        assert all_comps[0].id == "hull_escort"

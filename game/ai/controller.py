@@ -1,6 +1,6 @@
 import math
 import pygame
-from game.core.config import BattleConfig
+from game.core.config import AIConfig, BattleConfig
 from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior,
                           FormationBehavior, DoNothingBehavior, StraightLineBehavior,
                           RotateOnlyBehavior, ErraticBehavior, OrbitBehavior, StationaryFireBehavior)
@@ -160,7 +160,7 @@ class AIController:
 
         # Throttle Reset
         self.ship.turn_throttle = 1.0
-        self.ship.engine_throttle = 0.9 if self.ship.formation_members else 1.0
+        self.ship.engine_throttle = AIConfig.FORMATION_ENGINE_THROTTLE if self.ship.formation_members else 1.0
 
         # Formation Logic (Inline for now, could be moved to Behavior)
         if self.ship.formation_members:
@@ -263,8 +263,8 @@ class AIController:
                 break
 
         if slow_down:
-            self.ship.engine_throttle = 0.75
-            self.ship.turn_throttle = min(self.ship.turn_throttle, 0.75)
+            self.ship.engine_throttle = AIConfig.FORMATION_SLOWDOWN_THROTTLE
+            self.ship.turn_throttle = min(self.ship.turn_throttle, AIConfig.FORMATION_SLOWDOWN_THROTTLE)
 
     def _check_formation_integrity(self):
         # Check if propulsion components are damaged

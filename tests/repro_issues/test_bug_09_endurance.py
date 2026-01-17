@@ -4,7 +4,8 @@ import pygame
 from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.simulation.components.component import load_components, create_component, LayerType
 from game.simulation.entities.ship_stats import ShipStatsCalculator
-from game.core.constants import ROOT_DIR, COMPONENTS_FILE
+from game.core.constants import COMPONENTS_FILE
+from tests.fixtures.paths import get_project_root
 
 class TestBug09Endurance(unittest.TestCase):
 
@@ -12,7 +13,7 @@ class TestBug09Endurance(unittest.TestCase):
     def setUp(self):
         pygame.init()
         # Initialize shared data
-        initialize_ship_data(ROOT_DIR)
+        initialize_ship_data(str(get_project_root()))
         load_components(COMPONENTS_FILE)
         self.ship = Ship("EnduranceRepro", 0, 0, (255, 255, 255), ship_class="Cruiser")
         self.calculator = ShipStatsCalculator(self.ship.vehicle_classes if hasattr(self.ship, 'vehicle_classes') else {})

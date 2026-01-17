@@ -1,4 +1,3 @@
-import json
 import math
 import tkinter
 from tkinter import simpledialog, filedialog
@@ -12,7 +11,6 @@ from pygame_gui.elements import (
 )
 from pygame_gui.windows import UIConfirmationDialog
 
-from game.core.logger import log_info
 from game.core.profiling import profile_action, profile_block
 
 from game.simulation.entities.ship import LayerType
@@ -52,9 +50,7 @@ from ui.colors import COLORS
 BG_COLOR = COLORS['bg_deep']
 PANEL_BG = '#14181f'
 
-import logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+from game.core.logger import log_error, log_info, log_warning, log_debug
 
 from ui.builder.detail_panel import ComponentDetailPanel
 
@@ -254,7 +250,7 @@ class BuilderSceneGUI:
     def update_stats(self):
         # self.right_panel.update_stats_display(self.ship) # Now handled by event
         self.layer_panel.rebuild()
-        self.event_bus.emit('SHIP_UPDATED', self.ship)
+        self.event_bus.emit(BuilderEvents.SHIP_UPDATED, self.ship)
         
     def on_selection_changed(self, new_selection, append=False, toggle=False):
         """Handle selection changes.
@@ -275,7 +271,7 @@ class BuilderSceneGUI:
         self.selected_component = get_primary_selection(self.selected_components)
 
         self.rebuild_modifier_ui()
-        self.event_bus.emit('SELECTION_CHANGED', self.selected_component)
+        self.event_bus.emit(BuilderEvents.SELECTION_CHANGED, self.selected_component)
 
     def _on_modifier_change(self):
         # Propagate to ALL selected components
@@ -300,7 +296,7 @@ class BuilderSceneGUI:
             
         self.ship.recalculate_stats()
         # self.right_panel.update_stats_display(self.ship) # Now handled by event
-        self.event_bus.emit('SHIP_UPDATED', self.ship)
+        self.event_bus.emit(BuilderEvents.SHIP_UPDATED, self.ship)
 
     def rebuild_modifier_ui(self):
         editing_component = self.selected_component[2] if self.selected_component else None
@@ -421,7 +417,7 @@ class BuilderSceneGUI:
 
     def _debug_sequence_capture(self):
         """test sequence capture for draw order debugging."""
-        logger.info("Starting debug sequence capture...")
+        log_info("Starting debug sequence capture...")
         # Note: In a real scenario, this would likely be hooked into the draw loop 
         # or a specific event. For this test, we will simulate a multi-step capture 
         # by manually capturing the current state with different labels, 
@@ -439,7 +435,7 @@ class BuilderSceneGUI:
         # 4. Simulate "Draw UI"
         self.screenshot_manager.capture_step("4_draw_ui")
         
-        logger.info("Debug sequence capture complete.")
+        log_info("Debug sequence capture complete.")
 
 
     def update(self, dt):
@@ -587,7 +583,7 @@ class BuilderSceneGUI:
             
             if not result.success:
                 for error in result.errors:
-                    logger.error(error)
+                    log_error(error)
                 self.show_error(f"Data loading failed: {result.errors[0] if result.errors else 'Unknown error'}")
                 return
             
@@ -598,7 +594,7 @@ class BuilderSceneGUI:
             self.show_error(f"Reloaded data from {os.path.basename(directory)}")
             
         except Exception as e:
-            logger.error(f"Failed to reload data: {e}")
+            log_error(f"Failed to reload data: {e}")
             import traceback
             traceback.print_exc()
             self.show_error(f"Error reloading data: {e}")
@@ -707,23 +703,14 @@ class BuilderSceneGUI:
         )
 
     def _clear_design(self):
-        logger.info("Clearing ship design")
-        for layer_type, layer_data in self.ship.layers.items():
-            if layer_type == LayerType.HULL:
-                continue
-            layer_data['components'] = []
-            layer_data['hp_pool'] = 0
-            layer_data['max_hp_pool'] = 0
-            layer_data['mass'] = 0
-            layer_data['hp'] = 0
-            
+        log_info("Clearing ship design")
+        self.ship.clear_non_hull_components()
+
         self.template_modifiers = {}
         self.ship.ai_strategy = "standard_ranged"
-        
+
         # Reset Name
         self.ship.name = "Custom Ship"
-        
-        self.ship.recalculate_stats()
         
         # Refresh UI
         self.right_panel.refresh_controls()
@@ -739,7 +726,7 @@ class BuilderSceneGUI:
         target_ship, message = ShipIO.load_ship(self.width, self.height)
         if target_ship:
             self.weapons_report_panel.set_target(target_ship)
-            logger.info(f"Selected target: {target_ship.name}")
+            log_info(f"Selected target: {target_ship.name}")
         elif message and "Cancelled" not in message:
             self.show_error(message)
 

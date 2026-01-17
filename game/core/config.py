@@ -22,6 +22,10 @@ class DisplayConfig:
     DEFAULT_WIDTH: int = 3840
     DEFAULT_HEIGHT: int = 2160
 
+    # Explicit 4K resolution constants
+    RESOLUTION_4K_WIDTH: int = 3840
+    RESOLUTION_4K_HEIGHT: int = 2160
+
     # Secondary (windowed) resolution
     WINDOWED_WIDTH: int = 2560
     WINDOWED_HEIGHT: int = 1600
@@ -107,6 +111,10 @@ class PhysicsConfig:
     # Spatial grid configuration
     SPATIAL_GRID_CELL_SIZE: int = 2000
 
+    # Ship physics defaults
+    DEFAULT_BASE_RADIUS: int = 40
+    REFERENCE_MASS: int = 1000
+
 
 class BattleConfig:
     """Battle simulation configuration."""
@@ -119,6 +127,18 @@ class BattleConfig:
     COLLISION_BUFFER: int = 100
     AVOIDANCE_RADIUS: int = 1000
     AVOIDANCE_TARGET_DISTANCE: int = 500
+
+    # Damage constants
+    GUARANTEED_KILL_DAMAGE: int = 9999
+    RAMMING_DAMAGE_FACTOR: float = 0.5
+
+    # Projectile collision
+    PROJECTILE_QUERY_BUFFER: int = 100
+    PROJECTILE_HIT_TOLERANCE: int = 5
+
+    # Missile and fighter constants
+    MISSILE_INTERCEPT_BUFFER: int = 10
+    FIGHTER_LAUNCH_SPEED: int = 100
 
 
 class UIConfig:

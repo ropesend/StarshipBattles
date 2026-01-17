@@ -2483,7 +2483,7 @@ class TestLabScene:
                         calculated_penalty = distance_stated * falloff_actual
                         if abs(calculated_penalty - penalty_stated) < 0.0001:  # Float comparison with tolerance
                             return True
-            except:
+            except (ValueError, TypeError):
                 pass  # If parsing fails, don't show V
 
         return False

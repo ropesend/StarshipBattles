@@ -14,7 +14,12 @@ class EventBus:
         Args:
             event_type: String identifier for the event
             callback: Function to call when event is emitted (receives data arg)
+
+        Raises:
+            TypeError: If callback is not callable
         """
+        if not callable(callback):
+            raise TypeError(f"Callback must be callable, got {type(callback).__name__}")
         if event_type not in self._subscribers:
             self._subscribers[event_type] = []
         self._subscribers[event_type].append(callback)

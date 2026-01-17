@@ -36,8 +36,11 @@ class InteractionController:
                         elif self.selected_component == found:
                             # Pick up
                             layer, index, comp = found
-                            self.builder.ship.remove_component(layer, index)
-                            self.dragged_item = comp
+                            removed = self.builder.viewmodel.remove_component(layer, index)
+                            if removed:
+                                self.dragged_item = removed
+                            else:
+                                self.builder.show_error("Cannot pick up this component")
                             self.selected_component = None
                             self.builder.on_selection_changed(None)
                             self.builder.update_stats()

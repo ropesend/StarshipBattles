@@ -3,17 +3,32 @@ Pytest fixtures for simulation tests.
 
 Provides isolated data loading to prevent registry pollution between tests.
 """
-import os
+import importlib.util
 import sys
+from pathlib import Path
 
 import pytest
 
-# Add project root to path
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, PROJECT_ROOT)
+# Compute project root first
+_THIS_DIR = Path(__file__).resolve().parent
+_PROJECT_ROOT = _THIS_DIR.parent
 
-# Path to simulation test data
-DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
+# Add project root to path
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+# Load path utilities module dynamically to avoid import-time path issues
+_paths_module_path = _PROJECT_ROOT / "tests" / "fixtures" / "paths.py"
+_spec = importlib.util.spec_from_file_location("paths", _paths_module_path)
+_paths = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_paths)
+
+# Use path utilities for consistent path resolution
+get_project_root = _paths.get_project_root
+get_simulation_test_data_dir = _paths.get_simulation_test_data_dir
+
+PROJECT_ROOT = get_project_root()
+DATA_DIR = get_simulation_test_data_dir()
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -70,12 +85,12 @@ def isolated_registry():
     
     # Clear registries
     RegistryManager.instance().clear()
-    
+
     # Load test data
-    load_vehicle_classes(os.path.join(DATA_DIR, 'vehicleclasses.json'))
-    load_components(os.path.join(DATA_DIR, 'components.json'))
-    load_modifiers(os.path.join(DATA_DIR, 'modifiers.json'))
-    
+    load_vehicle_classes(DATA_DIR / 'vehicleclasses.json')
+    load_components(DATA_DIR / 'components.json')
+    load_modifiers(DATA_DIR / 'modifiers.json')
+
     # Load combat strategies for AI
     load_combat_strategies(DATA_DIR)
     
@@ -94,4 +109,4 @@ def data_dir():
 @pytest.fixture
 def ships_dir(data_dir):
     """Return path to pre-built ship JSON files."""
-    return os.path.join(data_dir, 'ships')
+    return data_dir / 'ships'

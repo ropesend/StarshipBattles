@@ -1,8 +1,5 @@
-import logging
-
 from game.core.json_utils import load_json, save_json
-
-logger = logging.getLogger(__name__)
+from game.core.logger import log_error, log_debug
 
 class PresetManager:
     """Manages saving and loading of component configuration presets."""
@@ -17,14 +14,14 @@ class PresetManager:
         data = load_json(self.filename, default={})
         self.presets = data.get('presets', {})
         if self.presets:
-            logger.debug(f"Loaded {len(self.presets)} presets")
+            log_debug(f"Loaded {len(self.presets)} presets")
 
     def save_presets(self):
         """Save presets to file."""
         if save_json(self.filename, {'presets': self.presets}):
-            logger.debug(f"Saved {len(self.presets)} presets")
+            log_debug(f"Saved {len(self.presets)} presets")
         else:
-            logger.error(f"Failed to save presets to {self.filename}")
+            log_error(f"Failed to save presets to {self.filename}")
             
     def get_all_presets(self):
         """Return all presets."""

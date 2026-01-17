@@ -33,10 +33,29 @@ class Margins:
     section: int = 20              # Space between logical sections
 
 
+@dataclass(frozen=True)
+class BuilderSpacing:
+    """Standard spacing values for builder UI."""
+    EDGE: int = 10
+    SMALL: int = 5
+    MEDIUM: int = 10
+    LARGE: int = 20
+
+
+@dataclass(frozen=True)
+class BuilderButtons:
+    """Standard button sizes for builder UI."""
+    HEIGHT_SMALL: int = 25
+    HEIGHT_MEDIUM: int = 30
+    HEIGHT_LARGE: int = 40
+
+
 # Singleton instances for easy import
 PANEL_WIDTHS = PanelWidths()
 PANEL_HEIGHTS = PanelHeights()
 MARGINS = Margins()
+BUILDER_SPACING = BuilderSpacing()
+BUILDER_BUTTONS = BuilderButtons()
 
 
 def calculate_center_width(screen_width: int) -> int:
@@ -99,3 +118,6 @@ class BuilderEvents:
     SHIP_UPDATED = 'SHIP_UPDATED'
     SELECTION_CHANGED = 'SELECTION_CHANGED'
     REGISTRY_RELOADED = 'REGISTRY_RELOADED'
+    TEMPLATE_MODIFIERS_CHANGED = 'TEMPLATE_MODIFIERS_CHANGED'
+    DRAG_STATE_CHANGED = 'DRAG_STATE_CHANGED'
+    HULL_LAYER_VISIBILITY_CHANGED = 'HULL_LAYER_VISIBILITY_CHANGED'

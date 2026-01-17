@@ -2,6 +2,7 @@ from game.simulation.components.component import ComponentStatus, LayerType
 from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
 from game.simulation.entities.ability_aggregator import calculate_ability_totals, get_ability_total
 from game.simulation.entities.combat_endurance import calculate_combat_endurance
+from game.core.config import PhysicsConfig
 import math
 
 class ShipStatsCalculator:
@@ -23,7 +24,7 @@ class ShipStatsCalculator:
         ship.current_mass = 0
         ship.layer_status = {}
         ship.mass_limits_ok = True
-        ship.drag = 0.5 
+        ship.drag = PhysicsConfig.DEFAULT_LINEAR_DRAG
         
         # Calculate Mass (Mass never changes due to damage/status in this model, dead weight remains)
         for layer_type, layer_data in ship.layers.items():
@@ -257,8 +258,8 @@ class ShipStatsCalculator:
         self._check_mass_limits(ship)
     
         # Radius Calculation
-        base_radius = 40
-        ref_mass = 1000
+        base_radius = PhysicsConfig.DEFAULT_BASE_RADIUS
+        ref_mass = PhysicsConfig.REFERENCE_MASS
         actual_mass = max(ship.mass, 100)
         ratio = actual_mass / ref_mass
         ship.radius = base_radius * (ratio ** (1/3.0))

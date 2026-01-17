@@ -37,6 +37,68 @@ class TestEventBus(unittest.TestCase):
         self.assertEqual(self.counter, 1)  # Should not increment
 
 
+class TestEventBusValidation(unittest.TestCase):
+    """Tests for callback validation."""
+
+    def test_subscribe_non_callable_raises_type_error(self):
+        """Subscribing with non-callable raises TypeError."""
+        bus = EventBus()
+        with self.assertRaises(TypeError) as ctx:
+            bus.subscribe("TEST", "not a callback")
+        self.assertIn("callable", str(ctx.exception))
+        self.assertIn("str", str(ctx.exception))
+
+    def test_subscribe_none_raises_type_error(self):
+        """Subscribing with None raises TypeError."""
+        bus = EventBus()
+        with self.assertRaises(TypeError):
+            bus.subscribe("TEST", None)
+
+    def test_subscribe_integer_raises_type_error(self):
+        """Subscribing with integer raises TypeError."""
+        bus = EventBus()
+        with self.assertRaises(TypeError):
+            bus.subscribe("TEST", 42)
+
+    def test_subscribe_callable_class_instance_works(self):
+        """Subscribing with callable class instance works."""
+        bus = EventBus()
+
+        class Handler:
+            def __init__(self):
+                self.called = False
+            def __call__(self, data):
+                self.called = True
+
+        handler = Handler()
+        bus.subscribe("TEST", handler)
+        bus.emit("TEST", "data")
+        self.assertTrue(handler.called)
+
+    def test_subscribe_lambda_works(self):
+        """Subscribing with lambda works."""
+        bus = EventBus()
+        results = []
+        bus.subscribe("TEST", lambda d: results.append(d))
+        bus.emit("TEST", "value")
+        self.assertEqual(results, ["value"])
+
+    def test_subscribe_method_works(self):
+        """Subscribing with bound method works."""
+        bus = EventBus()
+
+        class Receiver:
+            def __init__(self):
+                self.received = None
+            def handle(self, data):
+                self.received = data
+
+        receiver = Receiver()
+        bus.subscribe("TEST", receiver.handle)
+        bus.emit("TEST", "method_data")
+        self.assertEqual(receiver.received, "method_data")
+
+
 class TestEventBusMultipleSubscribers(unittest.TestCase):
     """Tests for multiple subscriber handling."""
 

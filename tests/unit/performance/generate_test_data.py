@@ -10,7 +10,7 @@ from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component, LayerType, create_component
 from game.core.registry import RegistryManager
 from game.simulation.components.component import load_components
-from game.core.constants import ROOT_DIR
+from tests.fixtures.paths import get_project_root
 
 def load_json_data(filepath):
     with open(filepath, 'r') as f:
@@ -18,7 +18,7 @@ def load_json_data(filepath):
 
 def generate_test_ships():
     # Ensure output dir exists
-    output_dir = os.path.join(ROOT_DIR, "tests", "unit", "data", "ships")
+    output_dir = os.path.join(str(get_project_root()), "tests", "unit", "data", "ships")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -57,7 +57,7 @@ def run_generation():
         # Load test registry data
         RegistryManager.instance().clear()
 
-        test_data_dir = os.path.join(ROOT_DIR, "tests", "unit", "data")
+        test_data_dir = os.path.join(str(get_project_root()), "tests", "unit", "data")
 
         # Load components - assumes test_components.json or similar exists?
         # The original script just called load_components() which defaults to data/components.json
