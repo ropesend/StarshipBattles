@@ -314,12 +314,16 @@ class StrategyScene:
                 # Hide main UI
                 self.ui.hide_ui()
 
+                # Get planet portrait from asset system
+                portrait_surface = self._get_object_asset(planet)
+
                 # Create screen
                 self.build_queue_screen = BuildQueueScreen(
                     self.ui.manager,
                     planet,
                     self.session,
-                    on_close_callback=self._on_build_queue_close
+                    on_close_callback=self._on_build_queue_close,
+                    portrait_surface=portrait_surface
                 )
                 log_info(f"Opened build queue for {planet.name}")
 

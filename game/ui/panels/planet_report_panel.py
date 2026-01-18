@@ -76,19 +76,21 @@ class PlanetReportPanel:
             container=self.panel
         )
 
-        # Create atmosphere graph renderer
-        self.graph = AtmosphereGraph(width=150, height=graph_h)
+        # Create atmosphere graph renderer with SWAPPED dimensions for rotation
+        # Strategy screen uses AtmosphereGraph(height, width) then rotates -90 degrees
+        self.graph = AtmosphereGraph(int(graph_h), 150)
 
         # Initial render
         self._update_portrait()
         self._update_graph()
 
-    def update_planet(self, planet):
+    def update_planet(self, planet, portrait_surface=None):
         """
         Update display for a new planet.
 
         Args:
             planet: Planet object to display
+            portrait_surface: Optional pygame Surface for planet portrait
         """
         self.planet = planet
 
@@ -97,57 +99,63 @@ class PlanetReportPanel:
         self.detail_text.rebuild()
 
         # Update portrait and graph
-        self._update_portrait()
+        self._update_portrait(portrait_surface)
         self._update_graph()
 
-    def _update_portrait(self):
+    def _update_portrait(self, portrait_surface=None):
         """Update planet portrait image."""
-        # Create placeholder portrait (gradient based on planet type)
-        portrait_surface = pygame.Surface((150, 150))
-
-        # Color based on planet type
-        if hasattr(self.planet, 'planet_type'):
-            type_colors = {
-                'TERRESTRIAL': (100, 150, 200),
-                'GAS_GIANT': (200, 150, 100),
-                'ICE_GIANT': (150, 200, 255),
-                'ROCKY': (150, 100, 80),
-                'OCEANIC': (50, 100, 200)
-            }
-            base_color = type_colors.get(
-                self.planet.planet_type.name,
-                (100, 100, 100)
-            )
+        if portrait_surface:
+            # Use provided portrait surface (from strategy scene asset system)
+            scaled = pygame.transform.smoothscale(portrait_surface, (150, 150))
+            self.portrait_image.set_image(scaled)
         else:
-            base_color = (100, 100, 100)
+            # Create placeholder portrait (gradient based on planet type)
+            portrait_surf = pygame.Surface((150, 150))
 
-        # Simple gradient fill
-        for y in range(150):
-            fade = 1.0 - (y / 150.0) * 0.3
-            color = tuple(int(c * fade) for c in base_color)
-            pygame.draw.line(portrait_surface, color, (0, y), (150, y))
+            # Color based on planet type
+            if hasattr(self.planet, 'planet_type'):
+                type_colors = {
+                    'TERRESTRIAL': (100, 150, 200),
+                    'GAS_GIANT': (200, 150, 100),
+                    'ICE_GIANT': (150, 200, 255),
+                    'ROCKY': (150, 100, 80),
+                    'OCEANIC': (50, 100, 200)
+                }
+                base_color = type_colors.get(
+                    self.planet.planet_type.name,
+                    (100, 100, 100)
+                )
+            else:
+                base_color = (100, 100, 100)
 
-        # Add planet name text
-        font = pygame.font.SysFont("arial", 16, bold=True)
-        text = font.render(self.planet.name[:20], True, (255, 255, 255))
-        text_rect = text.get_rect(center=(75, 75))
+            # Simple gradient fill
+            for y in range(150):
+                fade = 1.0 - (y / 150.0) * 0.3
+                color = tuple(int(c * fade) for c in base_color)
+                pygame.draw.line(portrait_surf, color, (0, y), (150, y))
 
-        # Add shadow for readability
-        shadow = font.render(self.planet.name[:20], True, (0, 0, 0))
-        shadow_rect = shadow.get_rect(center=(76, 76))
-        portrait_surface.blit(shadow, shadow_rect)
-        portrait_surface.blit(text, text_rect)
+            # Add planet name text
+            font = pygame.font.SysFont("arial", 16, bold=True)
+            text = font.render(self.planet.name[:20], True, (255, 255, 255))
+            text_rect = text.get_rect(center=(75, 75))
 
-        # Add border
-        pygame.draw.rect(portrait_surface, (200, 200, 200), (0, 0, 150, 150), 2)
+            # Add shadow for readability
+            shadow = font.render(self.planet.name[:20], True, (0, 0, 0))
+            shadow_rect = shadow.get_rect(center=(76, 76))
+            portrait_surf.blit(shadow, shadow_rect)
+            portrait_surf.blit(text, text_rect)
 
-        # Update UIImage
-        self.portrait_image.set_image(portrait_surface)
+            # Add border
+            pygame.draw.rect(portrait_surf, (200, 200, 200), (0, 0, 150, 150), 2)
+
+            # Update UIImage
+            self.portrait_image.set_image(portrait_surf)
 
     def _update_graph(self):
         """Update atmosphere graph visualization."""
-        # Render atmosphere graph
-        graph_surface = self.graph.render(self.planet, vertical=False)
+        # Render atmosphere graph vertically then rotate -90 degrees (matches strategy screen)
+        graph_surface = self.graph.render(self.planet, vertical=True)
+        graph_surface = pygame.transform.rotate(graph_surface, -90)
 
         # Update UIImage
         self.graph_image.set_image(graph_surface)

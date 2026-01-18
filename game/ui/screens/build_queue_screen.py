@@ -16,7 +16,7 @@ from game.ui.panels.design_report_panel import DesignReportPanel
 class BuildQueueScreen:
     """Full-screen modal interface for managing build queues on planets."""
 
-    def __init__(self, manager: pygame_gui.UIManager, planet: Planet, session, on_close_callback: Callable):
+    def __init__(self, manager: pygame_gui.UIManager, planet: Planet, session, on_close_callback: Callable, portrait_surface: Optional[pygame.Surface] = None):
         """
         Initialize the build queue screen.
 
@@ -25,11 +25,13 @@ class BuildQueueScreen:
             planet: Planet object to manage build queue for
             session: Game session with current_empire and savegame_path
             on_close_callback: Function to call when screen closes
+            portrait_surface: Optional pygame Surface for planet portrait
         """
         self.manager = manager
         self.planet = planet
         self.session = session
         self.on_close = on_close_callback
+        self.portrait_surface = portrait_surface
         self.selected_design = None
         self.selected_category = "complex"
         self.queue_items = []  # List of UI elements for queue display
@@ -77,9 +79,14 @@ class BuildQueueScreen:
 
     def _create_planet_report_panel(self):
         """Create top-left panel showing comprehensive planet information."""
-        # Use enhanced planet report panel widget
-        planet_report_width = 500
-        planet_report_height = 350
+        # Match strategy screen dimensions: sidebar_width (600) - 20px margins = 580px
+        # Height: Use full (screen_height - 20) / 3 calculation like strategy screen
+        planet_report_width = 580  # Matches strategy screen width
+        planet_report_height = int((self.screen_height - 20) / 3)  # Match strategy screen height
+
+        # Ensure minimum height for portrait + graph
+        if planet_report_height < 350:
+            planet_report_height = 350
 
         self.planet_report = PlanetReportPanel(
             manager=self.manager,
@@ -88,12 +95,19 @@ class BuildQueueScreen:
             container=self.background
         )
 
+        # Update with portrait surface if provided
+        if self.portrait_surface:
+            self.planet_report.update_planet(self.planet, self.portrait_surface)
+
     def _create_design_report_panel(self):
         """Create top-right panel showing selected design information."""
         # Position right of planet report
-        planet_report_width = 500
+        planet_report_width = 580  # Match planet report width
         design_report_width = 750
-        design_report_height = 350
+        # Match planet report height
+        design_report_height = int((self.screen_height - 20) / 3)
+        if design_report_height < 350:
+            design_report_height = 350
         design_report_x = 10 + planet_report_width + 10  # Gap of 10px
 
         self.design_report = DesignReportPanel(
@@ -105,7 +119,11 @@ class BuildQueueScreen:
     def _create_items_list_panel(self):
         """Create left panel showing available designs."""
         panel_width = 300
-        panel_top = 370  # Below planet/design reports (350px + 10px margin + 10px gap)
+        # Calculate panel_top based on actual planet report height
+        top_panel_height = int((self.screen_height - 20) / 3)
+        if top_panel_height < 350:
+            top_panel_height = 350
+        panel_top = 10 + top_panel_height + 10  # 10px top margin + panel height + 10px gap
         panel_height = self.screen_height - panel_top - 80  # Bottom bar is 70px + margin
 
         self.items_list_panel = ui.UIPanel(
@@ -133,7 +151,11 @@ class BuildQueueScreen:
         """Create center panel showing current build queue."""
         panel_left = 320
         panel_width = self.screen_width - 320 - 270
-        panel_top = 370  # Below planet/design reports (350px + 10px margin + 10px gap)
+        # Calculate panel_top based on actual planet report height
+        top_panel_height = int((self.screen_height - 20) / 3)
+        if top_panel_height < 350:
+            top_panel_height = 350
+        panel_top = 10 + top_panel_height + 10  # 10px top margin + panel height + 10px gap
         panel_height = self.screen_height - panel_top - 80  # Bottom bar is 70px + margin
 
         self.build_queue_panel = ui.UIPanel(
@@ -160,7 +182,11 @@ class BuildQueueScreen:
     def _create_filter_panel(self):
         """Create right panel with category filters and action buttons."""
         panel_width = 250
-        panel_top = 370  # Below planet/design reports (350px + 10px margin + 10px gap)
+        # Calculate panel_top based on actual planet report height
+        top_panel_height = int((self.screen_height - 20) / 3)
+        if top_panel_height < 350:
+            top_panel_height = 350
+        panel_top = 10 + top_panel_height + 10  # 10px top margin + panel height + 10px gap
         panel_height = self.screen_height - panel_top - 80  # Bottom bar is 70px + margin
         panel_left = self.screen_width - panel_width - 10
 
