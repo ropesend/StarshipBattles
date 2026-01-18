@@ -1,0 +1,300 @@
+{
+  "version": "1.0",
+  "battle_id": "aa300229-60f7-4d24-a203-ce20b1c8fce9",
+  "seed": 478163327,
+  "tick_count": 200,
+  "max_ticks": 200,
+  "ships": {
+    "1e19866c-2b62-49d0-a401-52a156c3a862": {
+      "ship_id": "1e19866c-2b62-49d0-a401-52a156c3a862",
+      "name": "Test Engine 1x LowMass",
+      "ship_class": "TestS_2L",
+      "theme_id": "Federation",
+      "team_id": 0,
+      "color": [
+        0,
+        255,
+        0
+      ],
+      "ai_strategy": "do_nothing",
+      "position": [
+        9304.6875,
+        0.0
+      ],
+      "velocity": [
+        15.625,
+        0.0
+      ],
+      "angle": 0.0,
+      "current_hp": 150,
+      "max_hp": 150,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_s",
+            "current_hp": 100,
+            "max_hp": 100,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_engine_no_fuel",
+            "current_hp": 50,
+            "max_hp": 50,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": null
+    },
+    "0660588b-f87b-4139-a658-a507f7b6d001": {
+      "ship_id": "0660588b-f87b-4139-a658-a507f7b6d001",
+      "name": "Test Engine 1x MedMass",
+      "ship_class": "TestM_2L",
+      "theme_id": "Federation",
+      "team_id": 0,
+      "color": [
+        0,
+        255,
+        0
+      ],
+      "ai_strategy": "do_nothing",
+      "position": [
+        1159.375,
+        200.0
+      ],
+      "velocity": [
+        2.0833333333333335,
+        0.0
+      ],
+      "angle": 0.0,
+      "current_hp": 552,
+      "max_hp": 552,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_m",
+            "current_hp": 500,
+            "max_hp": 500,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_engine_no_fuel",
+            "current_hp": 50,
+            "max_hp": 50,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_mass_sim_1k",
+            "current_hp": 1,
+            "max_hp": 1,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_mass_sim_1k",
+            "current_hp": 1,
+            "max_hp": 1,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": null
+    },
+    "7aae0c93-4e27-4351-9ca2-ae82dd5b9f5a": {
+      "ship_id": "7aae0c93-4e27-4351-9ca2-ae82dd5b9f5a",
+      "name": "Test Engine 1x HighMass",
+      "ship_class": "TestM_2L",
+      "theme_id": "Federation",
+      "team_id": 0,
+      "color": [
+        0,
+        255,
+        0
+      ],
+      "ai_strategy": "do_nothing",
+      "position": [
+        248.0113636363626,
+        400.0
+      ],
+      "velocity": [
+        0.5681818181818182,
+        0.0
+      ],
+      "angle": 0.0,
+      "current_hp": 560,
+      "max_hp": 560,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_m",
+            "current_hp": 500,
+            "max_hp": 500,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_engine_no_fuel",
+            "current_hp": 50,
+            "max_hp": 50,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_mass_sim_1k",
+            "current_hp": 1,
+            "max_hp": 1,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_mass_sim_1k",
+            "current_hp": 1,
+            "max_hp": 1,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_mass_sim_1k",
+            "current_hp": 1,
+            "max_hp": 1,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_mass_sim_1k",
+            "current_hp": 1,
+            "max_hp": 1,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_mass_sim_1k",
+            "current_hp": 1,
+            "max_hp": 1,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_mass_sim_1k",
+            "current_hp": 1,
+            "max_hp": 1,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_mass_sim_1k",
+            "current_hp": 1,
+            "max_hp": 1,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_mass_sim_1k",
+            "current_hp": 1,
+            "max_hp": 1,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_mass_sim_1k",
+            "current_hp": 1,
+            "max_hp": 1,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_mass_sim_1k",
+            "current_hp": 1,
+            "max_hp": 1,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": null
+    }
+  },
+  "projectiles": [],
+  "end_mode": "TIME_BASED",
+  "allow_retreat": false,
+  "allow_reinforcements": false,
+  "created_at": "2026-01-17T21:56:53.483046",
+  "mode": "test"
+}

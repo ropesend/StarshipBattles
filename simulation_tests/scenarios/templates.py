@@ -132,9 +132,16 @@ class StaticTargetScenario(TestScenario):
         # Create end condition (TIME_BASED: runs for full duration)
         end_condition = self._create_end_condition()
 
+        # Determine which seed to use:
+        # - _override_seed is set by the UI when running tests (allows Random/Fixed/Custom modes)
+        # - Falls back to metadata.seed for headless/CLI test runs
+        seed_to_use = getattr(self, '_override_seed', None)
+        if seed_to_use is None:
+            seed_to_use = self.metadata.seed
+
         # Start battle with time-based end condition
         battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
+                          seed=seed_to_use,
                           end_condition=end_condition)
 
         # Set target
