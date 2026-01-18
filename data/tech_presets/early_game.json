@@ -1,0 +1,19 @@
+{
+    "name": "Early Game Tech",
+    "description": "Basic components available at game start",
+    "unlocked_components": [
+        "hull_escort",
+        "hull_frigate",
+        "laser_cannon",
+        "railgun",
+        "basic_engine",
+        "bridge",
+        "crew_quarters",
+        "basic_armor",
+        "shield_generator_1"
+    ],
+    "unlocked_modifiers": [
+        "simple_size_mount",
+        "basic_armor_mod"
+    ]
+}

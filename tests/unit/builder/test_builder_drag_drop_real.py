@@ -23,76 +23,56 @@ class TestBuilderDragDropReal(unittest.TestCase):
             pygame.init()
             pygame.display.set_mode((1,1)) # Mock display for UIManager
             
-        # Mock dependencies that BuilderSceneGUI init calls
+        # Mock dependencies that DesignWorkshopGUI init calls
+        # IMPORTANT: Patch at workshop_screen level since that's the real implementation
         self.patchers = []
-        
+
+        # Patch _create_ui to avoid complex UI initialization
+        p_create_ui = patch('game.ui.screens.workshop_screen.DesignWorkshopGUI._create_ui')
+        self.mock_create_ui = p_create_ui.start()
+        self.patchers.append(p_create_ui)
+
         # Patch UIManager to avoid theme loading real files or needing display
-        p_manager = patch('game.ui.screens.builder_screen.pygame_gui.UIManager')
+        p_manager = patch('game.ui.screens.workshop_screen.pygame_gui.UIManager')
         self.MockUIManager = p_manager.start()
         self.patchers.append(p_manager)
-        
+
         # Patch SpriteManager
-        p_sprite = patch('game.ui.screens.builder_screen.SpriteManager')
+        p_sprite = patch('game.ui.screens.workshop_screen.SpriteManager')
         self.MockSpriteManager = p_sprite.start()
         self.patchers.append(p_sprite)
-        
+
         # Patch PresetManager
-        p_preset = patch('game.ui.screens.builder_screen.PresetManager')
+        p_preset = patch('game.ui.screens.workshop_screen.PresetManager')
         self.MockPresetManager = p_preset.start()
         self.patchers.append(p_preset)
-        
+
         # Patch ThemeManager
-        p_theme = patch('game.ui.screens.builder_screen.ShipThemeManager')
+        p_theme = patch('game.ui.screens.workshop_screen.ShipThemeManager')
         self.MockThemeManager = p_theme.start()
         self.patchers.append(p_theme)
-        
-        # Patch Panels to isolate BuilderSceneGUI
-        p_left = patch('game.ui.screens.builder_screen.BuilderLeftPanel')
-        self.MockLeftPanel = p_left.start()
-        self.patchers.append(p_left)
-        
-        p_layer = patch('game.ui.screens.builder_screen.LayerPanel')
-        self.MockLayerPanel = p_layer.start()
-        self.patchers.append(p_layer)
-        
-        p_right = patch('game.ui.screens.builder_screen.BuilderRightPanel')
-        self.MockRightPanel = p_right.start()
-        self.patchers.append(p_right)
-        
-        p_detail = patch('game.ui.screens.builder_screen.ComponentDetailPanel')
-        self.MockDetailPanel = p_detail.start()
-        self.patchers.append(p_detail)
-        
-        p_mod = patch('game.ui.screens.builder_screen.ModifierEditorPanel')
-        self.MockModifierPanel = p_mod.start()
-        self.patchers.append(p_mod)
-        
-        # Patch direct UI elements used in BuilderSceneGUI
-        p_btn = patch('game.ui.screens.builder_screen.UIButton')
-        self.MockUIButton = p_btn.start()
-        self.patchers.append(p_btn)
-        
-        p_panel = patch('game.ui.screens.builder_screen.UIPanel')
-        self.MockUIPanel = p_panel.start()
-        self.patchers.append(p_panel)
-        
-        p_weapons = patch('game.ui.screens.builder_screen.WeaponsReportPanel')
-        self.MockWeaponsPanel = p_weapons.start()
-        self.patchers.append(p_weapons)
-        
-        p_view = patch('game.ui.screens.builder_screen.SchematicView')
-        self.MockSchematicView = p_view.start()
-        self.patchers.append(p_view)
-        
-        p_ctrl = patch('game.ui.screens.builder_screen.InteractionController')
-        self.MockInteractionController = p_ctrl.start()
-        self.patchers.append(p_ctrl)
 
         # Initialize Builder
         # We need a valid screen size
         self.builder = BuilderSceneGUI(1280, 720, lambda x: None)
+
+        # Manually setup the mocks that _create_ui would have created
+        self.builder.ui_manager = MagicMock()
         self.builder.event_bus = MagicMock()
-        
+        self.builder.left_panel = MagicMock()
+        self.builder.right_panel = MagicMock()
+        self.builder.layer_panel = MagicMock()
+        self.builder.modifier_panel = MagicMock()
+        self.builder.weapons_report_panel = MagicMock()
+        self.builder.detail_panel = MagicMock()
+        self.builder.controller = MagicMock()
+        self.builder.schematic_view = MagicMock()
+
+        self.builder.left_panel.handle_event.return_value = None
+        self.builder.layer_panel.handle_event.return_value = None
+        self.builder.modifier_panel.handle_event.return_value = None
+        self.builder.weapons_report_panel.handle_event.return_value = None
+
         # Setup test ship
         self.builder.ship = MagicMock()
         self.builder.ship.layers = {

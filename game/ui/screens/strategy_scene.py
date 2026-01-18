@@ -319,8 +319,14 @@ class StrategyScene:
                     log_warning(f"Build Failed: {res.message}")
 
     def on_design_click(self):
-        """Handle 'Design' button click - opens Ship Builder."""
-        log_debug("Design button clicked - opening Ship Builder")
+        """Handle 'Design' button click - opens Design Workshop."""
+        log_debug("Design button clicked - opening Design Workshop")
+
+        # Gather context data for integrated mode
+        self.workshop_context_data = {
+            'empire': self.session.player_empire if hasattr(self, 'session') else None,
+            'game_session': self.session if hasattr(self, 'session') else None
+        }
         self.action_open_design = True
 
     # =========================================================================

@@ -1,0 +1,6 @@
+{
+    "name": "Default (All Tech)",
+    "description": "All components available - for testing and development",
+    "unlocked_components": ["*"],
+    "unlocked_modifiers": ["*"]
+}
