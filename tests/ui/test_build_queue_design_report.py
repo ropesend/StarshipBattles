@@ -125,22 +125,25 @@ def test_design_portrait_exists(design_report_panel):
 
 
 def test_design_portrait_dimensions(design_report_panel):
-    """Test that design portrait has correct dimensions (200x200)."""
+    """Test that design portrait matches panel width (380x380 for 400px wide panel)."""
     portrait = design_report_panel.portrait_image
     rect = portrait.relative_rect
 
-    assert rect.width == 200, f"Portrait width should be 200px, got {rect.width}"
-    assert rect.height == 200, f"Portrait height should be 200px, got {rect.height}"
+    # Portrait width should be panel width - 20px margins = 750 - 20 = 730
+    expected_width = 730
+    expected_height = 730
+    assert rect.width == expected_width, f"Portrait width should be {expected_width}px, got {rect.width}"
+    assert rect.height == expected_height, f"Portrait height should be {expected_height}px, got {rect.height}"
 
 
-def test_design_portrait_position_top_right(design_report_panel):
-    """Test that portrait is positioned at top-right."""
+def test_design_portrait_position_top_left(design_report_panel):
+    """Test that portrait is positioned at top-left with margins."""
     portrait = design_report_panel.portrait_image
     rect = portrait.relative_rect
 
-    # Should be near right edge (750 - 200 - margin)
-    expected_x = 750 - 210  # 200px portrait + 10px margin
-    assert rect.x == expected_x, f"Portrait x should be {expected_x} (top-right), got {rect.x}"
+    # Should be at left with 10px margin
+    expected_x = 10
+    assert rect.x == expected_x, f"Portrait x should be {expected_x} (left margin), got {rect.x}"
     assert rect.y == 10, f"Portrait y should be 10, got {rect.y}"
 
 
@@ -152,13 +155,19 @@ def test_stats_container_exists(design_report_panel):
 
 
 def test_stats_container_position(design_report_panel):
-    """Test that stats container is positioned below portrait area."""
+    """Test that stats container is positioned below portrait (single column, full width)."""
     stats_container = design_report_panel.stats_container
     rect = stats_container.relative_rect
 
-    # Should start below portrait (200 + margin)
-    expected_y = 220  # Portrait 200px + 20px margin
-    assert rect.y >= expected_y - 10, f"Stats container y should be around {expected_y}, got {rect.y}"
+    # Stats container should be below portrait
+    # Portrait is 730px tall (panel width - margins) + 20px gap = 750
+    expected_y = 750
+    assert rect.y == expected_y, f"Stats container y should be {expected_y} (below portrait), got {rect.y}"
+    assert rect.x == 10, f"Stats container x should be 10 (left margin), got {rect.x}"
+
+    # Stats width should be full width (750 - 20 margins = 730)
+    expected_width = 730  # Panel width (750) - margins (20)
+    assert rect.width == expected_width, f"Stats container width should be {expected_width}, got {rect.width}"
 
 
 def test_update_design_displays_ship_name(design_report_panel, mock_ship):
@@ -188,18 +197,26 @@ def test_update_design_displays_stats(design_report_panel, mock_ship):
 
 
 def test_stat_sections_exist_after_update(design_report_panel, mock_ship):
-    """Test that all major stat sections are present after update."""
+    """Test that all 10 major stat sections are present after update (matching design workshop)."""
     design_report_panel.update_design(mock_ship)
 
     rows_map = design_report_panel.rows_map
 
-    # Check for key stats from different sections
-    # Main Systems
+    # Check for key stats from all 10 sections
+    # 1. Main Systems
     assert any('mass' in key.lower() or 'hp' in key.lower() for key in rows_map.keys()), \
         "Should have Main Systems stats (mass, HP)"
 
-    # Construction cost should be present
-    assert any('cost' in key.lower() or 'construction' in key.lower() for key in rows_map.keys()), \
+    # 2-4. Separate Logistics sections (Fuel, Ammo/Ordinance, Energy)
+    assert any('fuel' in key.lower() for key in rows_map.keys()), \
+        "Should have Fuel Logistics stats"
+    assert any('ammo' in key.lower() for key in rows_map.keys()), \
+        "Should have Ordinance (Ammo) stats"
+    assert any('energy' in key.lower() for key in rows_map.keys()), \
+        "Should have Energy stats"
+
+    # 10. Construction cost should be present
+    assert any('cost' in key.lower() for key in rows_map.keys()), \
         "Should have construction cost stats"
 
 

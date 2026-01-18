@@ -198,8 +198,8 @@ def test_close_callback_fires(build_queue_screen):
 
 def test_planet_report_panel_exists(build_queue_screen):
     """Test that planet report panel is created."""
-    assert hasattr(build_queue_screen, 'planet_report_panel')
-    assert build_queue_screen.planet_report_panel is not None
+    assert hasattr(build_queue_screen, 'planet_report')
+    assert build_queue_screen.planet_report is not None
 
 
 def test_items_list_panel_exists(build_queue_screen):

@@ -12,7 +12,7 @@ from pygame_gui.elements import UIImage, UIPanel, UIScrollingContainer, UITextBo
 from typing import Optional
 from game.simulation.entities.ship import Ship
 from ui.builder.right_panel import StatRow
-from ui.builder.stats_config import STATS_CONFIG, get_logistics_rows, get_construction_rows
+from ui.builder.stats_config import STATS_CONFIG, get_construction_rows
 
 
 class DesignReportPanel:
@@ -47,20 +47,23 @@ class DesignReportPanel:
             container=container
         )
 
-        # Portrait (positioned top-right)
-        img_x = rect.width - 210  # 200px portrait + 10px margin
+        # Portrait (positioned at top, full panel width)
+        # Portrait width matches panel width minus margins
+        portrait_width = rect.width - 20
+        portrait_height = portrait_width  # Keep it square
         self.portrait_image = UIImage(
-            relative_rect=pygame.Rect(img_x, 10, 200, 200),
-            image_surface=pygame.Surface((200, 200)),
+            relative_rect=pygame.Rect(10, 10, portrait_width, portrait_height),
+            image_surface=pygame.Surface((portrait_width, portrait_height)),
             manager=manager,
             container=self.panel
         )
 
-        # Stats scrolling container (starts below portrait area)
-        stats_y = 220  # Portrait height + margin
-        stats_h = rect.height - stats_y - 10
+        # Stats scrolling container (below portrait, full width, single column)
+        stats_y = portrait_height + 20  # Below portrait with gap
+        stats_w = rect.width - 20  # Full width minus margins
+        stats_h = rect.height - stats_y - 10  # Remaining height
         self.stats_container = UIScrollingContainer(
-            relative_rect=pygame.Rect(10, stats_y, rect.width - 20, stats_h),
+            relative_rect=pygame.Rect(10, stats_y, stats_w, stats_h),
             manager=manager,
             container=self.panel
         )
@@ -85,10 +88,15 @@ class DesignReportPanel:
         if self.placeholder_text:
             self.placeholder_text.kill()
 
+        # Placeholder text positioned below where portrait would be
+        placeholder_w = self.rect.width - 20  # Full width
+        portrait_width = self.rect.width - 20
+        portrait_height = portrait_width
+        placeholder_y = portrait_height + 20  # Below portrait with gap
         self.placeholder_text = UITextBox(
             html_text="<b>Select a design from Available Designs</b><br><br>"
                      "Click on a design in the left panel to view its specifications.",
-            relative_rect=pygame.Rect(10, 10, self.rect.width - 230, 100),
+            relative_rect=pygame.Rect(10, placeholder_y, placeholder_w, 100),
             manager=self.manager,
             container=self.panel
         )
@@ -114,57 +122,107 @@ class DesignReportPanel:
         self._rebuild_stats(ship)
 
     def _update_portrait(self, ship: Ship):
-        """Update ship portrait image."""
-        # Create placeholder portrait with ship class name
-        portrait_surface = pygame.Surface((200, 200))
+        """Update ship portrait image by loading from file system."""
+        import os
+        import re
 
-        # Simple gradient based on ship class
-        class_colors = {
-            'Fighter': (255, 150, 50),
-            'Corvette': (100, 200, 100),
-            'Frigate': (100, 150, 255),
-            'Destroyer': (255, 100, 100),
-            'Cruiser': (200, 100, 255),
-            'Battleship': (255, 200, 50),
-            'Carrier': (150, 255, 200)
-        }
+        # Get portrait dimensions from the UIImage widget
+        portrait_rect = self.portrait_image.relative_rect
+        portrait_width = portrait_rect.width
+        portrait_height = portrait_rect.height
 
-        base_color = class_colors.get(ship.ship_class, (150, 150, 150))
-
-        # Gradient fill
-        for y in range(200):
-            fade = 1.0 - (y / 200.0) * 0.4
-            color = tuple(int(c * fade) for c in base_color)
-            pygame.draw.line(portrait_surface, color, (0, y), (200, y))
-
-        # Add ship name and class
-        font_large = pygame.font.SysFont("arial", 18, bold=True)
-        font_small = pygame.font.SysFont("arial", 14)
-
-        # Ship name
-        name_text = font_large.render(ship.name[:25], True, (255, 255, 255))
-        name_rect = name_text.get_rect(center=(100, 90))
-        # Shadow
-        shadow = font_large.render(ship.name[:25], True, (0, 0, 0))
-        shadow_rect = shadow.get_rect(center=(101, 91))
-        portrait_surface.blit(shadow, shadow_rect)
-        portrait_surface.blit(name_text, name_rect)
-
-        # Ship class
+        # Determine portrait file path
+        theme = getattr(ship, 'theme_id', 'Federation')
         ship_class = getattr(ship, 'ship_class', 'Unknown')
-        if ship_class:
-            class_text = font_small.render(str(ship_class), True, (200, 200, 200))
-            class_rect = class_text.get_rect(center=(100, 110))
-            portrait_surface.blit(class_text, class_rect)
 
-        # Border
-        pygame.draw.rect(portrait_surface, (200, 200, 200), (0, 0, 200, 200), 2)
+        # Ensure ship_class is a string
+        if not isinstance(ship_class, str):
+            ship_class = str(ship_class) if ship_class else 'Unknown'
+
+        # Parse ship class name (handle formats like "Large Escort (Scout)")
+        match = re.match(r"(.*)\s+\((.*)\)", ship_class)
+        if match:
+            base = match.group(1).strip().replace(" ", "")
+            sub = match.group(2).strip().replace(" ", "")
+            class_clean = f"{sub}{base}"
+        else:
+            class_clean = ship_class.replace(" ", "")
+
+        filename = f"{class_clean}_Portrait.jpg"
+
+        # Try multiple locations for portrait image
+        portrait_paths = [
+            os.path.join("assets", "ShipThemes", theme, "Portraits", filename),
+            os.path.join("resources", "Portraits", theme, filename),
+            os.path.join("resources", "Portraits", theme, f"{ship_class}_Portrait.jpg"),
+            os.path.join("assets", "Images", "Default_Ship_Portrait.png")
+        ]
+
+        portrait_surface = None
+        for path in portrait_paths:
+            if os.path.exists(path):
+                try:
+                    loaded_img = pygame.image.load(path)
+                    portrait_surface = pygame.transform.smoothscale(loaded_img, (portrait_width, portrait_height))
+                    break
+                except Exception as e:
+                    from game.core.logger import log_warning
+                    log_warning(f"Failed to load portrait from {path}: {e}")
+                    continue
+
+        # Fallback: Create placeholder portrait if no image found
+        if portrait_surface is None:
+            portrait_surface = pygame.Surface((portrait_width, portrait_height))
+
+            # Simple gradient based on ship class
+            class_colors = {
+                'Fighter': (255, 150, 50),
+                'Corvette': (100, 200, 100),
+                'Escort': (100, 150, 255),
+                'Frigate': (100, 150, 255),
+                'Destroyer': (255, 100, 100),
+                'Cruiser': (200, 100, 255),
+                'Battleship': (255, 200, 50),
+                'Carrier': (150, 255, 200)
+            }
+
+            base_color = class_colors.get(ship_class, (150, 150, 150))
+
+            # Gradient fill
+            for y in range(portrait_height):
+                fade = 1.0 - (y / portrait_height) * 0.4
+                color = tuple(int(c * fade) for c in base_color)
+                pygame.draw.line(portrait_surface, color, (0, y), (portrait_width, y))
+
+            # Add ship name and class
+            # Scale font sizes based on portrait size
+            font_scale = portrait_width / 200.0  # 200 was original portrait size
+            font_large = pygame.font.SysFont("arial", int(18 * font_scale), bold=True)
+            font_small = pygame.font.SysFont("arial", int(14 * font_scale))
+
+            # Ship name
+            name_text = font_large.render(ship.name[:25], True, (255, 255, 255))
+            name_rect = name_text.get_rect(center=(portrait_width // 2, int(portrait_height * 0.45)))
+            # Shadow
+            shadow = font_large.render(ship.name[:25], True, (0, 0, 0))
+            shadow_rect = shadow.get_rect(center=(portrait_width // 2 + 1, int(portrait_height * 0.45) + 1))
+            portrait_surface.blit(shadow, shadow_rect)
+            portrait_surface.blit(name_text, name_rect)
+
+            # Ship class
+            if ship_class:
+                class_text = font_small.render(str(ship_class), True, (200, 200, 200))
+                class_rect = class_text.get_rect(center=(portrait_width // 2, int(portrait_height * 0.55)))
+                portrait_surface.blit(class_text, class_rect)
+
+            # Border
+            pygame.draw.rect(portrait_surface, (200, 200, 200), (0, 0, portrait_width, portrait_height), 2)
 
         # Update UIImage
         self.portrait_image.set_image(portrait_surface)
 
     def _rebuild_stats(self, ship: Ship):
-        """Rebuild all stat displays in two-column layout."""
+        """Rebuild all stat displays in single-column layout."""
         # Clear existing rows
         for row in self.rows_map.values():
             row.label.kill()
@@ -172,37 +230,34 @@ class DesignReportPanel:
             row.unit.kill()
         self.rows_map = {}
 
-        # Calculate column layout
+        # Calculate single column layout
         container_width = self.stats_container.get_container().get_size()[0]
 
         # Account for scrollbar
         scrollbar_width = 20
-        available_width = container_width - scrollbar_width - 10
+        col_width = container_width - scrollbar_width - 20  # Full width single column
+        col_x = 10
 
-        # Two columns with gap
-        col_gap = 10
-        col_width = (available_width - col_gap) // 2
-        col1_x = 10
-        col2_x = col1_x + col_width + col_gap
-
-        # Track y positions for each column
-        y1 = 10
-        y2 = 10
+        # Track y position
+        y = 10
 
         # Get stat rows from config
         try:
             # Get static stat groups from STATS_CONFIG
-            main_systems = STATS_CONFIG.get('main_systems', [])
+            main_systems = STATS_CONFIG.get('main', [])
             maneuvering = STATS_CONFIG.get('maneuvering', [])
             shields = STATS_CONFIG.get('shields', [])
             armor = STATS_CONFIG.get('armor', [])
-            layers = STATS_CONFIG.get('layers', [])  # Usually empty/dynamic, skip for now
             targeting = STATS_CONFIG.get('targeting', [])
-            crew = STATS_CONFIG.get('crew', [])
-            fighter = STATS_CONFIG.get('fighter', [])
+            crew = STATS_CONFIG.get('crewlogistics', [])
+            fighter = STATS_CONFIG.get('fightersupport', [])
 
-            # Get dynamic rows (logistics and construction)
-            logistics = get_logistics_rows(ship)
+            # Get separate logistics sections (matching design workshop)
+            fuel_logistics = STATS_CONFIG.get('fuel_logistics', [])
+            ammo_logistics = STATS_CONFIG.get('ammo_logistics', [])
+            energy_logistics = STATS_CONFIG.get('energy_logistics', [])
+
+            # Get dynamic construction rows
             construction = get_construction_rows(ship)
         except Exception as e:
             # Fallback if stat config fails
@@ -213,45 +268,89 @@ class DesignReportPanel:
             shields = []
             armor = []
             targeting = []
-            logistics = []
+            fuel_logistics = []
+            ammo_logistics = []
+            energy_logistics = []
             crew = []
             fighter = []
             construction = []
 
-        # Column 1: Main Systems, Maneuvering, Shields, Armor, Targeting
-        sections_col1 = [
+        # Single column: All sections in order (matching design workshop)
+        all_sections = [
             ("Main Systems", main_systems),
+            ("Fuel Logistics", fuel_logistics),
+            ("Ordinance (Ammo)", ammo_logistics),
+            ("Energy", energy_logistics),
+            ("Armor", armor),
+            # Layers will be added dynamically after Armor
             ("Maneuvering", maneuvering),
             ("Shields", shields),
-            ("Armor", armor),
-            ("Targeting", targeting)
-        ]
-
-        for section_name, rows in sections_col1:
-            if rows:
-                # Section header
-                y1 = self._create_section_header(section_name, col1_x, y1, col_width)
-                # Stat rows
-                for stat_def in rows:
-                    y1 = self._create_stat_row(stat_def, ship, col1_x, y1, col_width)
-                y1 += 10  # Gap after section
-
-        # Column 2: Logistics, Crew, Fighter Support, Build Cost
-        sections_col2 = [
-            ("Logistics", logistics),
+            ("Targeting", targeting),
             ("Crew Logistics", crew),
             ("Fighter Support", fighter),
             ("Build Cost", construction)
         ]
 
-        for section_name, rows in sections_col2:
+        for section_name, rows in all_sections:
             if rows:
                 # Section header
-                y2 = self._create_section_header(section_name, col2_x, y2, col_width)
+                y = self._create_section_header(section_name, col_x, y, col_width)
                 # Stat rows
                 for stat_def in rows:
-                    y2 = self._create_stat_row(stat_def, ship, col2_x, y2, col_width)
-                y2 += 10  # Gap after section
+                    y = self._create_stat_row(stat_def, ship, col_x, y, col_width)
+                y += 10  # Gap after section
+
+            # Add Layers section after Armor
+            if section_name == "Armor":
+                y = self._create_layers_section(ship, col_x, y, col_width)
+
+    def _create_layers_section(self, ship: Ship, x: int, y: int, width: int) -> int:
+        """Create the Layers section showing layer distribution."""
+        from game.simulation.entities.ship import LayerType
+
+        # Only show if ship has layers
+        if not hasattr(ship, 'layers') or not ship.layers:
+            return y
+
+        # Section header
+        y = self._create_section_header("Layers", x, y, width)
+
+        # Get sorted layers
+        sorted_layers = sorted(ship.layers.items(), key=lambda item: item[0].value)
+
+        # Create row for each layer
+        for layer_type, layer_data in sorted_layers:
+            # Get layer status
+            status = ship.layer_status.get(layer_type, {}) if hasattr(ship, 'layer_status') else {}
+            ratio = status.get('ratio', 0) * 100
+            limit = status.get('limit', 1.0) * 100
+            is_ok = status.get('ok', True)
+            mass = status.get('mass', 0)
+
+            status_icon = "✓" if is_ok else "✗"
+
+            # Create stat row for this layer
+            key = f"layer_{layer_type.name}"
+            row = StatRow(
+                key=key,
+                label_text=layer_type.name,
+                manager=self.manager,
+                container=self.stats_container,
+                x=x,
+                y=y,
+                width=width
+            )
+
+            # Update with layer info
+            row.update(f"{ratio:.0f}% / {limit:.0f}%", f"({mass:.0f}t) {status_icon}")
+
+            # Store in map
+            self.rows_map[key] = row
+
+            y += 22  # Row height
+
+        y += 10  # Gap after section
+        return y
 
     def _create_section_header(self, title: str, x: int, y: int, width: int) -> int:
         """Create a section header label."""
