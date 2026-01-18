@@ -284,7 +284,7 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
     Run occasionally for deep validation before releases.
 
     Surface distance: 20.53px (center 50px - radius 29.47px for mass=400)
-    Expected hit rate: 57.02%
+    Expected hit rate: 53.18%
     """
 
     # Template configuration
@@ -296,7 +296,7 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         test_id="BEAMWEAPON-001-HT",
         category="BeamWeaponAbility",
         subcategory="Accuracy - Low (High-Tick)",
-        name="Low Accuracy Beam - Point Blank (16.3px surface) [100k Ticks]",
+        name="Low Accuracy Beam - Point Blank (20.5px surface) [100k Ticks]",
         summary="High-precision validation of low accuracy beam with 100k ticks for ±1% statistical margin",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Low.json",
@@ -306,9 +306,9 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
             "Center Distance: 50 pixels",
             "Target Radius: 29.47 pixels (from mass=400)",
             "Surface Distance: 50 - 29.47 = 20.53 pixels (actual firing distance)",
-            "Range Penalty: 16.26 * 0.002 = 0.0325",
+            "Range Penalty: 20.53 * 0.002 = 0.0411",
             "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
-            "Net Score: 0.5 - 0.0325 - 0.1849 = 0.2826",
+            "Net Score: 0.5 - 0.0411 - 0.3316 = 0.1273",
             "Beam Damage: 1 per hit",
             "Test Duration: 100,000 ticks (HIGH-TICK)"
         ],
@@ -316,9 +316,9 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
             "Ultra-high sample size (100k ticks)",
             "Standard Error: ~0.16% (very precise)",
             "Can detect deviations as small as ±1%",
-            "Sigmoid formula: P = 1/(1+e^-0.2826) = 0.5702 (57.02% hit rate)"
+            "Sigmoid formula: P = 1/(1+e^-0.1273) = 0.5318 (53.18% hit rate)"
         ],
-        expected_outcome="Hit rate within ±1% of expected (57.02%) with 99% confidence",
+        expected_outcome="Hit rate within ±1% of expected (53.18%) with 99% confidence",
         pass_criteria="Statistical validation passes with p < 0.05",
         max_ticks=HIGH_TICK_TEST_TICKS,
         seed=STANDARD_SEED,
@@ -577,7 +577,7 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
     Run occasionally for deep validation before releases.
 
     Surface distance: 370.53px (center 400px - radius 29.47px for mass=400)
-    Expected hit rate: 39.71%
+    Expected hit rate: 36.07%
     """
 
     # Template configuration
@@ -589,7 +589,7 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
         test_id="BEAMWEAPON-002-HT",
         category="BeamWeaponAbility",
         subcategory="Accuracy - Low (High-Tick)",
-        name="Low Accuracy Beam - Mid Range (366.3px surface) [100k Ticks]",
+        name="Low Accuracy Beam - Mid Range (370.5px surface) [100k Ticks]",
         summary="High-precision validation with 100k ticks for ±1% statistical margin",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Low.json",
@@ -599,10 +599,10 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
             "Center Distance: 400 pixels",
             "Target Radius: 29.47 pixels (from mass=400)",
             "Surface Distance: 400 - 29.47 = 370.53 pixels (actual firing distance)",
-            "Range Penalty: 366.26 * 0.002 = 0.7325",
+            "Range Penalty: 370.53 * 0.002 = 0.7411",
             "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
-            "Net Score: 0.5 - 0.7325 - 0.1849 = -0.4174",
-            "Sigmoid formula: P = 1/(1+e^0.4174) ≈ 0.3971 (39.71% hit rate)",
+            "Net Score: 0.5 - 0.7411 - 0.3316 = -0.5727",
+            "Sigmoid formula: P = 1/(1+e^0.5727) ≈ 0.3607 (36.07% hit rate)",
             "Beam Damage: 1 per hit",
             "Test Duration: 100,000 ticks (HIGH-TICK)"
         ],
@@ -612,7 +612,7 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
             "Can detect deviations as small as ±1%",
             "Moderate range penalty reduces accuracy significantly"
         ],
-        expected_outcome="Hit rate within ±1% of expected (39.71%) with 99% confidence",
+        expected_outcome="Hit rate within ±1% of expected (36.07%) with 99% confidence",
         pass_criteria="Statistical validation passes with p < 0.05",
         max_ticks=HIGH_TICK_TEST_TICKS,
         seed=STANDARD_SEED,
@@ -1004,7 +1004,7 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
     Run occasionally for deep validation before releases.
 
     Surface distance: 20.53px (center 50px - radius 29.47px for mass=400)
-    Expected hit rate: 85.82%
+    Expected hit rate: 83.85%
     """
 
     # Template configuration
@@ -1016,7 +1016,7 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         test_id="BEAMWEAPON-004-HT",
         category="BeamWeaponAbility",
         subcategory="Accuracy - Medium (High-Tick)",
-        name="Medium Accuracy Beam - Point Blank (16.3px surface) [100k Ticks]",
+        name="Medium Accuracy Beam - Point Blank (20.5px surface) [100k Ticks]",
         summary="High-precision validation with 100k ticks for ±1% statistical margin",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Med.json",
@@ -1026,10 +1026,10 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
             "Center Distance: 50 pixels",
             "Target Radius: 29.47 pixels (from mass=400)",
             "Surface Distance: 50 - 29.47 = 20.53 pixels (actual firing distance)",
-            "Range Penalty: 16.26 * 0.001 = 0.0163",
+            "Range Penalty: 20.53 * 0.001 = 0.0205",
             "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
-            "Net Score: 2.0 - 0.0163 - 0.1849 = 1.7988",
-            "Sigmoid formula: P = 1/(1+e^-1.7988) ≈ 0.8582 (85.82% hit rate)",
+            "Net Score: 2.0 - 0.0205 - 0.3316 = 1.6479",
+            "Sigmoid formula: P = 1/(1+e^-1.6479) ≈ 0.8385 (83.85% hit rate)",
             "Beam Damage: 1 per hit",
             "Test Duration: 100,000 ticks (HIGH-TICK)"
         ],
@@ -1039,7 +1039,7 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
             "Can detect deviations as small as ±1%",
             "Very high net score results in near-perfect accuracy"
         ],
-        expected_outcome="Hit rate within ±1% of expected (85.82%) with 99% confidence",
+        expected_outcome="Hit rate within ±1% of expected (83.85%) with 99% confidence",
         pass_criteria="Statistical validation passes with p < 0.05",
         max_ticks=HIGH_TICK_TEST_TICKS,
         seed=STANDARD_SEED,
@@ -1307,7 +1307,7 @@ class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
         test_id="BEAMWEAPON-005-HT",
         category="BeamWeaponAbility",
         subcategory="Accuracy - Medium (High-Tick)",
-        name="Medium Accuracy Beam - Mid Range (366.3px surface) [100k Ticks]",
+        name="Medium Accuracy Beam - Mid Range (370.5px surface) [100k Ticks]",
         summary="High-precision validation with 100k ticks for ±1% statistical margin",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Med.json",
@@ -1881,7 +1881,7 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
     Run occasionally for deep validation before releases.
 
     Surface distance: 20.53px (center 50px - radius 29.47px for mass=400)
-    Expected hit rate: 99.19%
+    Expected hit rate: 99.06%
     """
 
     # Template configuration
@@ -1893,7 +1893,7 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         test_id="BEAMWEAPON-007-HT",
         category="BeamWeaponAbility",
         subcategory="Accuracy - High (High-Tick)",
-        name="High Accuracy Beam - Point Blank (16.3px surface) [100k Ticks]",
+        name="High Accuracy Beam - Point Blank (20.5px surface) [100k Ticks]",
         summary="High-precision validation with 100k ticks for ±1% statistical margin",
         conditions=[
             "Attacker: Test_Attacker_Beam360_High.json",
@@ -1903,10 +1903,10 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
             "Center Distance: 50 pixels",
             "Target Radius: 29.47 pixels (from mass=400)",
             "Surface Distance: 50 - 29.47 = 20.53 pixels (actual firing distance)",
-            "Range Penalty: 16.26 * 0.0005 = 0.0081",
+            "Range Penalty: 20.53 * 0.0005 = 0.0103",
             "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
-            "Net Score: 5.0 - 0.0081 - 0.1849 = 4.8070",
-            "Sigmoid formula: P = 1/(1+e^-4.8070) ≈ 0.9919 (99.19% hit rate)",
+            "Net Score: 5.0 - 0.0103 - 0.3316 = 4.6581",
+            "Sigmoid formula: P = 1/(1+e^-4.6581) ≈ 0.9906 (99.06% hit rate)",
             "Beam Damage: 1 per hit",
             "Test Duration: 100,000 ticks (HIGH-TICK)"
         ],
@@ -1916,7 +1916,7 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
             "Can detect deviations as small as ±1%",
             "Extremely high net score results in near-100% accuracy"
         ],
-        expected_outcome="Hit rate within ±1% of expected (99.19%) with 99% confidence",
+        expected_outcome="Hit rate within ±1% of expected (99.06%) with 99% confidence",
         pass_criteria="Statistical validation passes with p < 0.05",
         max_ticks=HIGH_TICK_TEST_TICKS,
         seed=STANDARD_SEED,
@@ -2172,7 +2172,7 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
     Run occasionally for deep validation before releases.
 
     Surface distance: 720.53px (center 750px - radius 29.47px for mass=400)
-    Expected hit rate: 98.85%
+    Expected hit rate: 98.66%
     """
 
     # Template configuration
@@ -2194,10 +2194,10 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
             "Center Distance: 750 pixels (near max range of 800)",
             "Target Radius: 29.47 pixels (from mass=400)",
             "Surface Distance: 750 - 29.47 = 720.53 pixels (actual firing distance)",
-            "Range Penalty: 720.53 * 0.0005 = 0.3581",
+            "Range Penalty: 720.53 * 0.0005 = 0.3603",
             "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
-            "Net Score: 5.0 - 0.3581 - 0.1849 = 4.4570",
-            "Sigmoid formula: P = 1/(1+e^-4.4570) ≈ 0.9885 (98.85% hit rate)",
+            "Net Score: 5.0 - 0.3603 - 0.3316 = 4.3081",
+            "Sigmoid formula: P = 1/(1+e^-4.3081) ≈ 0.9866 (98.66% hit rate)",
             "Beam Damage: 1 per hit",
             "Test Duration: 100,000 ticks (HIGH-TICK)"
         ],
@@ -2207,7 +2207,7 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
             "Can detect deviations as small as ±1%",
             "Low accuracy falloff means high accuracy is barely affected by range"
         ],
-        expected_outcome="Hit rate within ±1% of expected (98.85%) with 99% confidence",
+        expected_outcome="Hit rate within ±1% of expected (98.66%) with 99% confidence",
         pass_criteria="Statistical validation passes with p < 0.05",
         max_ticks=HIGH_TICK_TEST_TICKS,
         seed=STANDARD_SEED,

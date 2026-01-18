@@ -2618,11 +2618,16 @@ class TestLabScene:
             runner.load_data_for_scenario(scenario)
             logger.debug(f" Test data loaded successfully")
 
-            # Clear battle engine
-            logger.debug(f" Clearing battle engine")
-            engine.start([], [])
+            # Get seed based on current seed mode setting BEFORE starting engine
+            seed = self.controller.ui_state.get_effective_seed(metadata.seed)
+            logger.debug(f" Using seed: {seed} (mode: {self.controller.ui_state.get_seed_mode()})")
 
-            # Setup scenario
+            # Pass seed to scenario for use in engine.start()
+            # Don't call engine.start() here - let scenario do it with the seed
+            scenario._override_seed = seed
+            logger.debug(f" Set scenario._override_seed={seed}")
+
+            # Setup scenario (this will call engine.start with the seed)
             logger.debug(f" Calling scenario.setup()")
             scenario.setup(engine)
             logger.debug(f" Scenario setup complete")
@@ -2657,10 +2662,8 @@ class TestLabScene:
 
             logger.debug(f" Starting headless simulation loop (max_ticks={max_ticks})")
 
-            # Capture battle states for later viewing
+            # Capture battle states for later viewing (seed already retrieved above)
             from test_framework.battle_state_capture import BattleStateCapture
-            # Get seed based on current seed mode setting
-            seed = self.controller.ui_state.get_effective_seed(metadata.seed)
 
             with BattleStateCapture(engine, self.selected_test_id, seed) as state_capture:
                 # Run simulation as fast as possible
@@ -2758,15 +2761,20 @@ class TestLabScene:
             # Load test data
             runner.load_data_for_scenario(scenario)
 
+            # Get seed based on current seed mode setting BEFORE starting engine
+            seed = self.controller.ui_state.get_effective_seed(metadata.seed)
+
             # Ensure battle engine exists (may have been reset)
             if self.game.battle_scene.engine is None:
                 self.game.battle_scene._battle_service.create_battle()
 
             # Get fresh battle engine
             engine = self.game.battle_scene.engine
-            engine.start([], [])
 
-            # Setup scenario
+            # Pass seed to scenario for use in engine.start()
+            scenario._override_seed = seed
+
+            # Setup scenario (this will call engine.start with the seed)
             scenario.setup(engine)
 
             # Draw progress overlay
@@ -2791,10 +2799,8 @@ class TestLabScene:
             self.game.screen.blit(overlay, (screen_center_x - 300, screen_center_y - 100))
             pygame.display.flip()
 
-            # Run simulation headless with battle state capture
+            # Run simulation headless with battle state capture (seed already retrieved above)
             from test_framework.battle_state_capture import BattleStateCapture
-            # Get seed based on current seed mode setting
-            seed = self.controller.ui_state.get_effective_seed(metadata.seed)
 
             start_time = time.time()
             tick_count = 0
@@ -3045,6 +3051,43 @@ class TestLabScene:
                 self.controller.ui_state.set_seed_mode(mode_id)
                 return
 
+        # Check seed input click (for custom mode)
+        if self.seed_input_rect and self.seed_input_rect.collidepoint(mx, my):
+            self._prompt_for_custom_seed()
+            return
+
+    def _prompt_for_custom_seed(self):
+        """Prompt user to enter a custom seed value."""
+        import tkinter as tk
+        from tkinter import simpledialog
+
+        # Create a hidden root window
+        root = tk.Tk()
+        root.withdraw()
+
+        # Get current custom seed for default value
+        current_seed = self.controller.ui_state.get_custom_seed()
+        default_val = str(current_seed) if current_seed is not None else ""
+
+        # Show input dialog
+        result = simpledialog.askstring(
+            "Custom Seed",
+            "Enter seed value (integer):",
+            initialvalue=default_val,
+            parent=root
+        )
+
+        root.destroy()
+
+        # Process result
+        if result is not None:
+            try:
+                seed_value = int(result.strip())
+                self.controller.ui_state.set_custom_seed(seed_value)
+                self.output_log.append(f"Custom seed set to: {seed_value}")
+            except ValueError:
+                self.output_log.append(f"Invalid seed value: {result}")
+
     def update(self):
         """Update UI state."""
         # Update tabbed ship panel (hover states)
@@ -3113,9 +3156,109 @@ class TestLabScene:
             self.battle_state_viewer.draw(screen)
 
     def _draw_header(self, screen):
-        """Draw the header with title."""
+        """Draw the header with title and global seed controls."""
         title = self.title_font.render("COMBAT LAB - TEST VIEWER", True, self.HEADER_COLOR)
         screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 20))
+
+        # Draw seed controls on the right side of header
+        self._draw_header_seed_controls(screen)
+
+    def _draw_header_seed_controls(self, screen):
+        """Draw global seed controls in the header area (upper right)."""
+        mx, my = pygame.mouse.get_pos()
+
+        # Position in upper right
+        x = WIDTH - 450
+        y = 15
+
+        # Seed label
+        seed_label = self.body_font.render("Seed Mode:", True, (180, 180, 180))
+        screen.blit(seed_label, (x, y))
+
+        # Seed mode buttons
+        mode_x = x + 100
+        btn_height = 24
+        btn_spacing = 8
+
+        current_mode = self.controller.ui_state.get_seed_mode()
+        self.seed_mode_rects = {}
+
+        modes = [
+            ("random", "Random", 65),
+            ("metadata", "Fixed", 55),
+            ("custom", "Custom", 60)
+        ]
+
+        for mode_id, mode_label, btn_width in modes:
+            rect = pygame.Rect(mode_x, y - 2, btn_width, btn_height)
+            self.seed_mode_rects[mode_id] = rect
+
+            is_active = current_mode == mode_id
+            is_hovered = rect.collidepoint(mx, my)
+
+            if is_active:
+                bg_color = (40, 80, 120)
+                border_color = (80, 140, 200)
+                text_color = (200, 220, 255)
+            elif is_hovered:
+                bg_color = (50, 50, 60)
+                border_color = (100, 100, 110)
+                text_color = self.TEXT_COLOR
+            else:
+                bg_color = self.CATEGORY_BG
+                border_color = self.BORDER_COLOR
+                text_color = (150, 150, 150)
+
+            pygame.draw.rect(screen, bg_color, rect, border_radius=3)
+            pygame.draw.rect(screen, border_color, rect, 1, border_radius=3)
+
+            mode_text = self.small_font.render(mode_label, True, text_color)
+            text_x = rect.x + (btn_width - mode_text.get_width()) // 2
+            screen.blit(mode_text, (text_x, rect.y + 4))
+
+            mode_x += btn_width + btn_spacing
+
+        # Show current seed value / input area
+        seed_x = mode_x + 10
+        custom_seed = self.controller.ui_state.get_custom_seed()
+
+        if current_mode == "random":
+            seed_text = "(new each run)"
+            seed_color = (100, 100, 100)
+        elif current_mode == "metadata":
+            # Show the metadata seed if we have a selected test
+            if self.selected_test_id:
+                scenario_info = self.registry.get_by_id(self.selected_test_id)
+                if scenario_info:
+                    seed_text = f"= {scenario_info['metadata'].seed}"
+                else:
+                    seed_text = "(select test)"
+            else:
+                seed_text = "(select test)"
+            seed_color = (100, 140, 100)
+        else:  # custom
+            if custom_seed is not None:
+                seed_text = f"= {custom_seed}"
+                seed_color = (100, 180, 255)
+            else:
+                seed_text = "[click to enter]"
+                seed_color = (180, 140, 100)
+
+        # Draw seed value/input area as clickable region for custom mode
+        seed_surf = self.small_font.render(seed_text, True, seed_color)
+        seed_rect = pygame.Rect(seed_x, y, max(seed_surf.get_width() + 10, 120), btn_height)
+
+        if current_mode == "custom":
+            # Make it look clickable
+            is_hovered = seed_rect.collidepoint(mx, my)
+            if is_hovered:
+                pygame.draw.rect(screen, (40, 50, 60), seed_rect, border_radius=3)
+            pygame.draw.rect(screen, (80, 100, 120), seed_rect, 1, border_radius=3)
+            self.seed_input_rect = seed_rect
+        else:
+            self.seed_input_rect = None
+
+        screen.blit(seed_surf, (seed_x + 5, y + 4))
 
     def _draw_category_sidebar(self, screen):
         """Draw the category selection sidebar."""
@@ -3506,11 +3649,13 @@ class TestLabScene:
 
         y += 20
 
-        # Metadata footer with seed controls
-        self._draw_seed_controls(screen, x, y, metadata)
+        # Metadata footer - just show max ticks (seed controls are now in header)
+        ticks_text = f"Max Ticks: {metadata.max_ticks}    |    Test Seed: {metadata.seed}"
+        ticks_surf = self.small_font.render(ticks_text, True, (120, 120, 120))
+        screen.blit(ticks_surf, (x, y))
 
-    def _draw_seed_controls(self, screen, x, y, metadata):
-        """Draw seed control UI with mode selection."""
+    def _draw_seed_controls_OLD(self, screen, x, y, metadata):
+        """DEPRECATED - Seed controls moved to header. This is kept for reference."""
         mx, my = pygame.mouse.get_pos()
 
         # Max ticks display
