@@ -16,6 +16,23 @@ class WarpPoint:
         self.destination_id = destination_id
         self.location = location # HexCoord (Local to system)
 
+    def to_dict(self) -> dict:
+        """Serialize WarpPoint to dict."""
+        from game.strategy.data.hex_math import hex_to_dict
+        return {
+            'destination_id': self.destination_id,
+            'location': hex_to_dict(self.location)
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'WarpPoint':
+        """Deserialize WarpPoint from dict."""
+        from game.strategy.data.hex_math import hex_from_dict
+        return cls(
+            destination_id=data['destination_id'],
+            location=hex_from_dict(data['location'])
+        )
+
 class StarSystem:
     def __init__(self, name, global_location, stars=None):
         self.name = name
@@ -23,18 +40,49 @@ class StarSystem:
         self.stars = stars if stars else []
         self.warp_points = []
         self.planets = [] # List[Planet]
-    
+
     @property
     def primary_star(self):
         return self.stars[0] if self.stars else None
-        
+
     def add_warp_point(self, destination_id, location):
         self.warp_points.append(WarpPoint(destination_id, location))
-        
+
     def __repr__(self):
         star_count = len(self.stars)
         p_name = self.primary_star.name if self.primary_star else "Empty"
         return f"System('{self.name}', Loc:{self.global_location}, Stars:{star_count}, Primary:{p_name})"
+
+    def to_dict(self) -> dict:
+        """Serialize StarSystem to dict."""
+        from game.strategy.data.hex_math import hex_to_dict
+        return {
+            'name': self.name,
+            'global_location': hex_to_dict(self.global_location),
+            'stars': [star.to_dict() for star in self.stars],
+            'warp_points': [wp.to_dict() for wp in self.warp_points],
+            'planets': [planet.to_dict() for planet in self.planets]
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'StarSystem':
+        """Deserialize StarSystem from dict."""
+        from game.strategy.data.hex_math import hex_from_dict
+        from game.strategy.data.stars import Star
+
+        system = cls(
+            name=data['name'],
+            global_location=hex_from_dict(data['global_location']),
+            stars=[Star.from_dict(s) for s in data.get('stars', [])]
+        )
+
+        # Deserialize warp points
+        system.warp_points = [WarpPoint.from_dict(wp) for wp in data.get('warp_points', [])]
+
+        # Deserialize planets
+        system.planets = [Planet.from_dict(p) for p in data.get('planets', [])]
+
+        return system
 
 class Galaxy:
     def __init__(self, radius=100):
@@ -281,17 +329,17 @@ class Galaxy:
             for j in range(i + 1, len(systems)):
                 dist = hex_distance(systems[i].global_location, systems[j].global_location)
                 edges.append((dist, i, j))
-        
+
         # Sort by distance (asc)
         edges.sort(key=lambda x: x[0])
-        
+
         # 2. Kruskal's Algorithm for MST
         parent = list(range(len(systems)))
         def find(i):
             if parent[i] == i: return i
             parent[i] = find(parent[i])
             return parent[i]
-        
+
         def union(i, j):
             root_i = find(i)
             root_j = find(j)
@@ -299,36 +347,36 @@ class Galaxy:
                 parent[root_i] = root_j
                 return True
             return False
-            
+
         mst_edges = []
         for dist, i, j in edges:
             if union(i, j):
                 mst_edges.append((i, j))
                 self.create_vars_link(systems[i], systems[j])
-                
+
         # 3. Add additional random edges to meet density
         for dist, i, j in edges:
             # Skip if already linked (MST covered it)
             s_i, s_j = systems[i], systems[j]
             already_linked = any(wp.destination_id == s_j.name for wp in s_i.warp_points)
-            
+
             if already_linked:
                 continue
-                
+
             # Cap degree logic? "3 to 10 warp points"
             deg_i = len(s_i.warp_points)
             deg_j = len(s_j.warp_points)
-            
+
             if deg_i >= 10 or deg_j >= 10:
                 continue
-            
+
             # Check Angle Preference
             # Calculate intended angle for both
             ax, ay = hex_to_pixel(s_i.global_location, 1.0)
             bx, by = hex_to_pixel(s_j.global_location, 1.0)
             angle_i_to_j = math.atan2(by - ay, bx - ax)
             angle_j_to_i = math.atan2(ay - by, ax - bx)
-            
+
             # If angles are bad, reduce chance drastically or skip
             # Preference: "prefer to have at least 30 degrees... if necessary... ok"
             valid_angles = True
@@ -336,13 +384,13 @@ class Galaxy:
                 valid_angles = False
             if not self._is_angle_clear(s_j, angle_j_to_i, threshold_deg=30):
                 valid_angles = False
-                
+
             # If degree is low, boost chance
             base_chance = 40.0 / (dist + 1) # Arbitrary tuning
-            
+
             if deg_i < 3 or deg_j < 3:
                 base_chance *= 3.0 # Boost to help them get up to min
-            
+
             # Penalize bad angles
             if not valid_angles:
                 # If degrees are decent (>3), strictly reject (or very low chance)
@@ -351,6 +399,69 @@ class Galaxy:
                     continue
                 else:
                     base_chance *= 0.1 # Severe penalty
-            
+
             if random.random() < base_chance:
                 self.create_vars_link(s_i, s_j)
+
+    def to_dict(self) -> dict:
+        """Serialize Galaxy to dict."""
+        from game.strategy.data.hex_math import hex_to_dict
+
+        # Convert systems dict (HexCoord keys -> dict keys)
+        systems_list = []
+        for coord, system in self.systems.items():
+            systems_list.append({
+                'coord': hex_to_dict(coord),
+                'system': system.to_dict()
+            })
+
+        return {
+            'radius': self.radius,
+            'systems': systems_list,
+            '_next_planet_id': self._next_planet_id
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict, naming_data_path: str = None) -> 'Galaxy':
+        """
+        Deserialize Galaxy from dict.
+
+        Args:
+            data: Saved galaxy data
+            naming_data_path: Path to StarSystemNames.YAML (optional)
+
+        Returns:
+            Reconstructed Galaxy with all indexes rebuilt
+        """
+        from game.strategy.data.hex_math import hex_from_dict
+
+        # Create empty galaxy
+        galaxy = cls(radius=data['radius'])
+
+        # Restore planet ID counter
+        galaxy._next_planet_id = data.get('_next_planet_id', 1)
+
+        # Deserialize systems
+        for sys_entry in data.get('systems', []):
+            coord = hex_from_dict(sys_entry['coord'])
+            system = StarSystem.from_dict(sys_entry['system'])
+
+            # Add to galaxy maps
+            galaxy.systems[coord] = system
+            galaxy.name_map[system.name] = system
+
+            # Rebuild indexes for all planets in this system
+            for planet in system.planets:
+                # Add to ID registry
+                galaxy.planets_by_id[planet.id] = planet
+
+                # Add to reverse lookup
+                galaxy._planet_to_system[planet] = system
+
+                # Add to spatial index (global hex)
+                global_hex = system.global_location + planet.location
+                if global_hex not in galaxy._global_hex_planets:
+                    galaxy._global_hex_planets[global_hex] = []
+                galaxy._global_hex_planets[global_hex].append(planet)
+
+        return galaxy

@@ -57,7 +57,7 @@ def test_build_button_visibility_owned_planet(strategy_ui):
     strategy_ui.show_detailed_report(planet)
     
     # Assert
-    assert strategy_ui.btn_build_ship.visible == 1, "Build button should be visible for owned planet"
+    assert strategy_ui.btn_build_yard.visible == 1, "Build button should be visible for owned planet"
 
 def test_build_button_visibility_unowned_planet(strategy_ui):
     """Test that build button is hidden for unowned planets."""
@@ -68,7 +68,7 @@ def test_build_button_visibility_unowned_planet(strategy_ui):
     strategy_ui.show_detailed_report(planet)
     
     # Assert
-    assert strategy_ui.btn_build_ship.visible == 0, "Build button should be hidden for unowned planet"
+    assert strategy_ui.btn_build_yard.visible == 0, "Build button should be hidden for unowned planet"
 
 def test_fleet_buttons_visibility_owned_fleet(strategy_ui):
     """Test that fleet buttons are visible for owned fleets."""

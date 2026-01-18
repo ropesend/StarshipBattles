@@ -1523,8 +1523,8 @@
             "id": "hull_planetary_complex_t1",
             "name": "Planetary Complex T1 Hull",
             "type": "Hull",
-            "mass": 1000,
-            "hp": 5000,
+            "mass": 0,
+            "hp": 0,
             "allowed_vehicle_types": [
                 "Planetary Complex"
             ],
@@ -1542,8 +1542,8 @@
             "id": "hull_planetary_complex_t2",
             "name": "Planetary Complex T2 Hull",
             "type": "Hull",
-            "mass": 2000,
-            "hp": 10000,
+            "mass": 0,
+            "hp": 0,
             "allowed_vehicle_types": [
                 "Planetary Complex"
             ],
@@ -1561,8 +1561,8 @@
             "id": "hull_planetary_complex_t3",
             "name": "Planetary Complex T3 Hull",
             "type": "Hull",
-            "mass": 4000,
-            "hp": 20000,
+            "mass": 0,
+            "hp": 0,
             "allowed_vehicle_types": [
                 "Planetary Complex"
             ],
@@ -1580,8 +1580,8 @@
             "id": "hull_planetary_complex_t4",
             "name": "Planetary Complex T4 Hull",
             "type": "Hull",
-            "mass": 8000,
-            "hp": 40000,
+            "mass": 0,
+            "hp": 0,
             "allowed_vehicle_types": [
                 "Planetary Complex"
             ],
@@ -1599,8 +1599,8 @@
             "id": "hull_planetary_complex_t5",
             "name": "Planetary Complex T5 Hull",
             "type": "Hull",
-            "mass": 16000,
-            "hp": 80000,
+            "mass": 0,
+            "hp": 0,
             "allowed_vehicle_types": [
                 "Planetary Complex"
             ],
@@ -1618,8 +1618,8 @@
             "id": "hull_planetary_complex_t6",
             "name": "Planetary Complex T6 Hull",
             "type": "Hull",
-            "mass": 32000,
-            "hp": 160000,
+            "mass": 0,
+            "hp": 0,
             "allowed_vehicle_types": [
                 "Planetary Complex"
             ],
@@ -1637,8 +1637,8 @@
             "id": "hull_planetary_complex_t7",
             "name": "Planetary Complex T7 Hull",
             "type": "Hull",
-            "mass": 64000,
-            "hp": 320000,
+            "mass": 0,
+            "hp": 0,
             "allowed_vehicle_types": [
                 "Planetary Complex"
             ],
@@ -1656,8 +1656,8 @@
             "id": "hull_planetary_complex_t8",
             "name": "Planetary Complex T8 Hull",
             "type": "Hull",
-            "mass": 128000,
-            "hp": 640000,
+            "mass": 0,
+            "hp": 0,
             "allowed_vehicle_types": [
                 "Planetary Complex"
             ],
@@ -1675,8 +1675,8 @@
             "id": "hull_planetary_complex_t9",
             "name": "Planetary Complex T9 Hull",
             "type": "Hull",
-            "mass": 256000,
-            "hp": 1280000,
+            "mass": 0,
+            "hp": 0,
             "allowed_vehicle_types": [
                 "Planetary Complex"
             ],
@@ -1694,8 +1694,8 @@
             "id": "hull_planetary_complex_t10",
             "name": "Planetary Complex T10 Hull",
             "type": "Hull",
-            "mass": 512000,
-            "hp": 2560000,
+            "mass": 0,
+            "hp": 0,
             "allowed_vehicle_types": [
                 "Planetary Complex"
             ],
@@ -1713,8 +1713,8 @@
             "id": "hull_planetary_complex_t11",
             "name": "Planetary Complex T11 Hull",
             "type": "Hull",
-            "mass": 1024000,
-            "hp": 5120000,
+            "mass": 0,
+            "hp": 0,
             "allowed_vehicle_types": [
                 "Planetary Complex"
             ],
@@ -1726,6 +1726,163 @@
             "major_classification": "Structure",
             "resource_cost": {
                 "Metals": 100
+            }
+        },
+        {
+            "id": "metal_harvester",
+            "name": "Metal Harvester",
+            "type": "ResourceHarvester",
+            "mass": 200,
+            "hp": 300,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 200,
+            "abilities": {
+                "ResourceHarvester": {
+                    "resource_type": "Metals",
+                    "base_harvest_rate": 10.0
+                },
+                "CrewRequired": 20
+            },
+            "major_classification": "Resource",
+            "resource_cost": {
+                "Metals": 100,
+                "Organics": 30,
+                "Vapors": 20,
+                "Radioactives": 40
+            }
+        },
+        {
+            "id": "organic_harvester",
+            "name": "Organic Harvester",
+            "type": "ResourceHarvester",
+            "mass": 200,
+            "hp": 300,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 201,
+            "abilities": {
+                "ResourceHarvester": {
+                    "resource_type": "Organics",
+                    "base_harvest_rate": 10.0
+                },
+                "CrewRequired": 20
+            },
+            "major_classification": "Resource",
+            "resource_cost": {
+                "Metals": 80,
+                "Organics": 50,
+                "Vapors": 30,
+                "Radioactives": 20
+            }
+        },
+        {
+            "id": "vapor_harvester",
+            "name": "Vapor Harvester",
+            "type": "ResourceHarvester",
+            "mass": 200,
+            "hp": 300,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 202,
+            "abilities": {
+                "ResourceHarvester": {
+                    "resource_type": "Vapors",
+                    "base_harvest_rate": 10.0
+                },
+                "CrewRequired": 20
+            },
+            "major_classification": "Resource",
+            "resource_cost": {
+                "Metals": 120,
+                "Organics": 20,
+                "Vapors": 60,
+                "Radioactives": 30
+            }
+        },
+        {
+            "id": "radioactive_harvester",
+            "name": "Radioactive Harvester",
+            "type": "ResourceHarvester",
+            "mass": 200,
+            "hp": 300,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 203,
+            "abilities": {
+                "ResourceHarvester": {
+                    "resource_type": "Radioactives",
+                    "base_harvest_rate": 10.0
+                },
+                "CrewRequired": 25
+            },
+            "major_classification": "Resource",
+            "resource_cost": {
+                "Metals": 150,
+                "Organics": 10,
+                "Vapors": 40,
+                "Radioactives": 80,
+                "Exotics": 20
+            }
+        },
+        {
+            "id": "exotic_harvester",
+            "name": "Exotic Harvester",
+            "type": "ResourceHarvester",
+            "mass": 250,
+            "hp": 350,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 204,
+            "abilities": {
+                "ResourceHarvester": {
+                    "resource_type": "Exotics",
+                    "base_harvest_rate": 5.0
+                },
+                "CrewRequired": 30
+            },
+            "major_classification": "Resource",
+            "resource_cost": {
+                "Metals": 200,
+                "Organics": 50,
+                "Vapors": 80,
+                "Radioactives": 100,
+                "Exotics": 50
+            }
+        },
+        {
+            "id": "space_shipyard",
+            "name": "Space Shipyard",
+            "type": "SpaceShipyard",
+            "mass": 500,
+            "hp": 1000,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 205,
+            "abilities": {
+                "SpaceShipyard": {
+                    "construction_speed_bonus": 1.0,
+                    "max_ship_mass": 100000
+                },
+                "CrewRequired": 100,
+                "ResourceStorage": {
+                    "Metals": 1000,
+                    "Organics": 500
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {
+                "Metals": 500,
+                "Organics": 100,
+                "Vapors": 50,
+                "Radioactives": 200,
+                "Exotics": 100
             }
         }
     ]

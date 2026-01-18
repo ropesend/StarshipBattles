@@ -32,6 +32,11 @@ class InputHandler:
         Args:
             event: Pygame event to process
         """
+        # If build queue screen is open, route events to it first
+        if hasattr(self.scene, 'build_queue_screen') and self.scene.build_queue_screen is not None:
+            self.scene.build_queue_screen.handle_event(event)
+            return
+
         self.scene.ui.handle_event(event)
 
         # Button Events
@@ -50,8 +55,8 @@ class InputHandler:
             self.scene.advance_turn()
         elif event.ui_element == ui.btn_colonize:
             self.scene.on_colonize_click()
-        elif event.ui_element == ui.btn_build_ship:
-            self.scene.on_build_ship_click()
+        elif event.ui_element == ui.btn_build_yard:
+            self.scene.on_build_yard_click()
         # Navigation
         elif event.ui_element == ui.btn_prev_colony:
             self.scene.cycle_selection('colony', -1)

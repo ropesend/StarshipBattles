@@ -157,7 +157,16 @@ class DesignMetadata:
         # Add component contributions
         layers = data.get("layers", {})
         for layer_data in layers.values():
-            components = layer_data.get("components", [])
+            # Handle both old format (dict with "components" key) and new format (direct list)
+            if isinstance(layer_data, list):
+                # New format: layers[layer_name] = [comp1, comp2, ...]
+                components = layer_data
+            elif isinstance(layer_data, dict):
+                # Old format: layers[layer_name] = {"components": [comp1, comp2, ...]}
+                components = layer_data.get("components", [])
+            else:
+                components = []
+
             for comp_data in components:
                 # Weapon components contribute heavily
                 if comp_data.get("category") == "weapon":
@@ -195,7 +204,14 @@ class DesignMetadata:
         # Sum component costs
         layers = data.get("layers", {})
         for layer_data in layers.values():
-            components = layer_data.get("components", [])
+            # Handle both old format (dict with "components" key) and new format (direct list)
+            if isinstance(layer_data, list):
+                components = layer_data
+            elif isinstance(layer_data, dict):
+                components = layer_data.get("components", [])
+            else:
+                components = []
+
             for comp_data in components:
                 comp_cost = comp_data.get("cost", {})
                 for resource, amount in comp_cost.items():
@@ -212,8 +228,15 @@ class DesignMetadata:
             for comp in layer_data.get('components', []):
                 if hasattr(comp, 'cost'):
                     comp_cost = comp.cost
-                    for resource, amount in comp_cost.items():
-                        costs[resource] = costs.get(resource, 0) + amount
+
+                    # Handle both integer costs and dictionary costs
+                    if isinstance(comp_cost, dict):
+                        # Dictionary of resource: amount
+                        for resource, amount in comp_cost.items():
+                            costs[resource] = costs.get(resource, 0) + amount
+                    elif isinstance(comp_cost, (int, float)):
+                        # Single integer cost (assume it's "minerals" or generic cost)
+                        costs['minerals'] = costs.get('minerals', 0) + int(comp_cost)
 
         return costs
 

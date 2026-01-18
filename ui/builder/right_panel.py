@@ -139,8 +139,13 @@ class BuilderRightPanel:
         theme_options = self.builder.theme_manager.get_available_themes()
         curr_theme = getattr(self.viewmodel.ship, 'theme_id', 'Federation')
         if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
-        
+
         self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
+
+        # In integrated mode, disable theme selection (empire theme is fixed)
+        if hasattr(self.builder, 'context') and self.builder.context.is_integrated():
+            self.theme_dropdown.disable()
+
         y += 40
         
         # Vehicle Type

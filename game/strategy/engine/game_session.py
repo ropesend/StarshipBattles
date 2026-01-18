@@ -274,3 +274,66 @@ class GameSession:
     def _get_planet_by_id(self, planet_id):
         """Helper to find planet using Galaxy's O(1) registry."""
         return self.galaxy.get_planet_by_id(planet_id)
+
+    def to_dict(self) -> dict:
+        """
+        Serialize GameSession to dict for save system.
+
+        Returns complete game state including config, galaxy, empires, and turn data.
+        """
+        return {
+            'turn_number': self.turn_number,
+            'save_path': self.save_path,
+            'config': self.config.to_dict(),
+            'galaxy': self.galaxy.to_dict(),
+            'empires': [e.to_dict() for e in self.empires],
+            'human_player_ids': self.human_player_ids.copy()
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'GameSession':
+        """
+        Deserialize GameSession from dict.
+
+        Uses two-phase loading:
+        1. Load galaxy (creates all planets with IDs)
+        2. Load empires (resolves planet references via galaxy)
+
+        Args:
+            data: Saved game session data
+
+        Returns:
+            Reconstructed GameSession with all state restored
+        """
+        from game.strategy.data.galaxy import Galaxy
+        from game.strategy.data.empire import Empire
+
+        # Create empty session (bypass __init__ to avoid generating new galaxy)
+        session = cls.__new__(cls)
+
+        # Restore config
+        session.config = GameConfig.from_dict(data['config'])
+        session.turn_number = data.get('turn_number', 1)
+        session.save_path = data.get('save_path')
+
+        # Initialize turn engine
+        session.turn_engine = TurnEngine()
+
+        # Phase 1: Load Galaxy (creates all planets with IDs)
+        session.galaxy = Galaxy.from_dict(data['galaxy'])
+        session.systems = list(session.galaxy.systems.values())
+
+        # Phase 2: Load Empires (resolves planet references via galaxy)
+        session.empires = [
+            Empire.from_dict(emp_data, galaxy=session.galaxy)
+            for emp_data in data.get('empires', [])
+        ]
+
+        # Restore human player IDs
+        session.human_player_ids = data.get('human_player_ids', [0, 1])
+
+        # Set convenience references
+        session.player_empire = session.empires[0] if len(session.empires) > 0 else None
+        session.enemy_empire = session.empires[1] if len(session.empires) > 1 else None
+
+        return session

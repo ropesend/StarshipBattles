@@ -19,58 +19,87 @@ class ShipSerializer:
     def to_dict(ship: 'Ship') -> Dict[str, Any]:
         """
         Serialize ship to dictionary.
-        
+
         Args:
             ship: The Ship instance to serialize
-            
+
         Returns:
             Dictionary representation of the ship
         """
-        data = {
-            "name": ship.name,
-            "ship_class": ship.ship_class,
-            "theme_id": ship.theme_id,
-            "team_id": ship.team_id,
-            "color": ship.color,
-            "ai_strategy": ship.ai_strategy,
-            "layers": {},
-            "resources": {
-                "fuel": ship.resources.get_value("fuel"),
-                "energy": ship.resources.get_value("energy"),
-                "ammo": ship.resources.get_value("ammo"),
-            },
-            "expected_stats": {
-                "max_hp": ship.max_hp,
-                "max_fuel": ship.resources.get_max_value("fuel"),
-                "max_energy": ship.resources.get_max_value("energy"),
-                "max_ammo": ship.resources.get_max_value("ammo"),
-                "max_speed": ship.max_speed,
-                "acceleration_rate": ship.acceleration_rate,
-                "turn_speed": ship.turn_speed,
-                "total_thrust": ship.total_thrust,
-                "mass": ship.mass,
-                "armor_hp_pool": ship.layers[LayerType.ARMOR]['max_hp_pool'] if LayerType.ARMOR in ship.layers else 0
+        from game.core.logger import log_debug, log_error
+
+        try:
+            log_debug(f"ShipSerializer.to_dict starting for ship: {ship.name}")
+
+            data = {
+                "name": ship.name,
+                "ship_class": ship.ship_class,
+                "vehicle_type": getattr(ship, 'vehicle_type', 'Ship'),  # ADDED: Save vehicle_type for design filtering
+                "theme_id": ship.theme_id,
+                "team_id": ship.team_id,
+                "color": ship.color,
+                "ai_strategy": ship.ai_strategy,
+                "layers": {},
+                "resources": {
+                    "fuel": ship.resources.get_value("fuel"),
+                    "energy": ship.resources.get_value("energy"),
+                    "ammo": ship.resources.get_value("ammo"),
+                },
+                "expected_stats": {
+                    "max_hp": ship.max_hp,
+                    "max_fuel": ship.resources.get_max_value("fuel"),
+                    "max_energy": ship.resources.get_max_value("energy"),
+                    "max_ammo": ship.resources.get_max_value("ammo"),
+                    "max_speed": ship.max_speed,
+                    "acceleration_rate": ship.acceleration_rate,
+                    "turn_speed": ship.turn_speed,
+                    "total_thrust": ship.total_thrust,
+                    "mass": ship.mass,
+                    "armor_hp_pool": ship.layers[LayerType.ARMOR]['max_hp_pool'] if LayerType.ARMOR in ship.layers else 0
+                }
             }
-        }
-        
-        for ltype, layer_data in ship.layers.items():
-            # Skip HULL layer from explicit serialization
-            if ltype == LayerType.HULL:
-                continue
-                
-            filter_comps = []
-            for comp in layer_data['components']:
-                # Skip Hull components as safety (HULL layer already skipped)
-                if comp.id.startswith('hull_'):
+
+            log_debug(f"  vehicle_type: {data['vehicle_type']}")
+
+            log_debug(f"Basic ship data created. Processing {len(ship.layers)} layers...")
+
+            for ltype, layer_data in ship.layers.items():
+                log_debug(f"  Processing layer: {ltype.name}, type: {type(layer_data)}")
+
+                # Skip HULL layer from explicit serialization
+                if ltype == LayerType.HULL:
+                    log_debug(f"    Skipping HULL layer")
                     continue
-                # Save as dict with modifiers
-                c_obj = {"id": comp.id}
-                if comp.modifiers:
-                    c_obj["modifiers"] = [{"id": m.definition.id, "value": m.value} for m in comp.modifiers]
-                filter_comps.append(c_obj)
-                
-            data["layers"][ltype.name] = filter_comps
-        return data
+
+                if not isinstance(layer_data, dict):
+                    log_error(f"    ERROR: layer_data is not a dict! Type: {type(layer_data)}, Value: {layer_data}")
+                    continue
+
+                components = layer_data.get('components', [])
+                log_debug(f"    Layer has {len(components)} components")
+
+                filter_comps = []
+                for comp in components:
+                    # Skip Hull components as safety (HULL layer already skipped)
+                    if comp.id.startswith('hull_'):
+                        continue
+                    # Save as dict with modifiers
+                    c_obj = {"id": comp.id}
+                    if comp.modifiers:
+                        c_obj["modifiers"] = [{"id": m.definition.id, "value": m.value} for m in comp.modifiers]
+                    filter_comps.append(c_obj)
+
+                data["layers"][ltype.name] = filter_comps
+                log_debug(f"    Serialized {len(filter_comps)} components for layer {ltype.name}")
+
+            log_debug(f"ShipSerializer.to_dict completed successfully")
+            return data
+
+        except Exception as e:
+            log_error(f"ShipSerializer.to_dict FAILED: {e}")
+            import traceback
+            log_error(traceback.format_exc())
+            raise
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> 'Ship':

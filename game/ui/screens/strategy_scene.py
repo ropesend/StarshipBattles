@@ -140,6 +140,10 @@ class StrategyScene:
         self.camera.update(dt)
         self.ui.update(dt)
 
+        # Update build queue screen if open
+        if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
+            self.build_queue_screen.update(dt)
+
     def draw(self, screen):
         """Render the scene."""
         self._renderer.draw(screen)
@@ -148,6 +152,10 @@ class StrategyScene:
             self._renderer.draw_processing_overlay(screen)
 
         self.ui.draw(screen)
+
+        # Draw build queue screen if open (overlay on top)
+        if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
+            self.build_queue_screen.draw(screen)
 
     def handle_resize(self, width, height):
         """Handle window resize."""
@@ -303,20 +311,30 @@ class StrategyScene:
     # Actions
     # =========================================================================
 
-    def on_build_ship_click(self):
-        """Handle 'Build Ship' action."""
-        from game.strategy.data.galaxy import Planet
+    def on_build_yard_click(self):
+        """Open build queue screen for selected planet."""
+        from game.strategy.data.planet import Planet
         if isinstance(self.selected_object, Planet):
             planet = self.selected_object
             if planet.owner_id == self.current_empire.id:
-                log_info(f"Queueing Ship at {planet}...")
-                from game.strategy.engine.commands import IssueBuildShipCommand
-                cmd = IssueBuildShipCommand(planet.id, "Colony Ship")
-                res = self.session.handle_command(cmd)
-                if res.is_valid:
-                    log_info("Ship added to construction queue (via Command).")
-                else:
-                    log_warning(f"Build Failed: {res.message}")
+                from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+                # Create screen
+                self.build_queue_screen = BuildQueueScreen(
+                    self.ui.manager,
+                    planet,
+                    self.session,
+                    on_close_callback=self._on_build_queue_close
+                )
+                log_info(f"Opened build queue for {planet.name}")
+
+    def _on_build_queue_close(self):
+        """Handle build queue screen closing."""
+        self.build_queue_screen = None
+        # Refresh planet details to show updated queue/facilities
+        if self.selected_object:
+            img = self._get_object_asset(self.selected_object)
+            self.ui.show_detailed_report(self.selected_object, img)
 
     def on_design_click(self):
         """Handle 'Design' button click - opens Design Workshop."""
@@ -328,6 +346,38 @@ class StrategyScene:
             'game_session': self.session if hasattr(self, 'session') else None
         }
         self.action_open_design = True
+
+    def on_save_game_click(self):
+        """Handle 'Save Game' button click."""
+        from game.strategy.systems.save_game_service import SaveGameService
+        import pygame_gui.windows
+
+        log_info("Saving game...")
+
+        # Save the game
+        success, message, save_path = SaveGameService.save_game(self.session)
+
+        # Show confirmation dialog
+        if success:
+            dialog_rect = pygame.Rect(0, 0, 400, 200)
+            dialog_rect.center = (self.screen_width // 2, self.screen_height // 2)
+            pygame_gui.windows.UIMessageWindow(
+                rect=dialog_rect,
+                html_message=f"<b>Game Saved Successfully!</b><br><br>{message}",
+                manager=self.ui.manager,
+                window_title="Save Game"
+            )
+            log_info(f"Game saved: {message}")
+        else:
+            dialog_rect = pygame.Rect(0, 0, 400, 200)
+            dialog_rect.center = (self.screen_width // 2, self.screen_height // 2)
+            pygame_gui.windows.UIMessageWindow(
+                rect=dialog_rect,
+                html_message=f"<b>Save Failed</b><br><br>{message}",
+                manager=self.ui.manager,
+                window_title="Save Game Error"
+            )
+            log_warning(f"Save failed: {message}")
 
     # =========================================================================
     # Pathfinding (for external access)

@@ -17,20 +17,37 @@ from game.simulation.entities.ship import Ship
 class DesignLibrary:
     """Manages ship designs for a specific empire/savegame"""
 
-    def __init__(self, savegame_path: str, empire_id: int):
+    def __init__(self, savegame_path: Optional[str], empire_id: int):
         """
         Initialize design library.
 
         Args:
-            savegame_path: Path to the savegame directory
+            savegame_path: Path to the savegame directory (None if no savegame)
             empire_id: ID of the empire this library belongs to
         """
         self.savegame_path = savegame_path
         self.empire_id = empire_id
-        self.designs_folder = os.path.join(savegame_path, "designs")
+
+        # Determine designs folder location
+        if savegame_path is not None and savegame_path != "":
+            self.designs_folder = os.path.join(savegame_path, "designs")
+        else:
+            # Use temp folder for designs when no savegame exists
+            import tempfile
+            temp_base = os.path.join(tempfile.gettempdir(), "starship_battles_temp_designs")
+            self.designs_folder = os.path.join(temp_base, f"empire_{empire_id}")
 
         # Ensure designs folder exists
-        os.makedirs(self.designs_folder, exist_ok=True)
+        try:
+            os.makedirs(self.designs_folder, exist_ok=True)
+        except Exception as e:
+            from game.core.logger import log_error
+            log_error(f"Failed to create designs folder: {e}")
+            # Fallback to temp directory
+            import tempfile
+            temp_base = os.path.join(tempfile.gettempdir(), "starship_battles_temp_designs")
+            self.designs_folder = os.path.join(temp_base, f"empire_{empire_id}")
+            os.makedirs(self.designs_folder, exist_ok=True)
 
     def scan_designs(self) -> List[DesignMetadata]:
         """
@@ -38,20 +55,37 @@ class DesignLibrary:
 
         Returns:
             List of DesignMetadata objects for all designs in the library
+            (empty list if no savegame path)
         """
+        from game.core.logger import log_debug, log_error, log_warning
+
+        # Return empty list if no designs folder
+        if self.designs_folder is None:
+            log_warning("scan_designs: designs_folder is None, returning empty list")
+            return []
+
         designs = []
         pattern = os.path.join(self.designs_folder, "*.json")
+        log_debug(f"scan_designs: Scanning pattern: {pattern}")
 
-        for filepath in glob.glob(pattern):
+        matching_files = list(glob.glob(pattern))
+        log_debug(f"scan_designs: Found {len(matching_files)} JSON files")
+
+        for filepath in matching_files:
             try:
+                log_debug(f"scan_designs: Loading {filepath}")
                 design_id = os.path.splitext(os.path.basename(filepath))[0]
                 metadata = DesignMetadata.from_design_file(filepath, design_id)
+                log_debug(f"scan_designs: Loaded design '{metadata.name}' (vehicle_type={metadata.vehicle_type}, design_id={design_id})")
                 designs.append(metadata)
             except Exception as e:
                 # Log error but continue scanning
-                print(f"Warning: Failed to load design metadata from {filepath}: {e}")
+                log_error(f"scan_designs: Failed to load design metadata from {filepath}: {e}")
+                import traceback
+                log_error(traceback.format_exc())
                 continue
 
+        log_debug(f"scan_designs: Successfully loaded {len(designs)} designs")
         return designs
 
     def save_design(self, ship, design_name: str, built_designs: Set[str]) -> Tuple[bool, str]:
@@ -66,37 +100,67 @@ class DesignLibrary:
         Returns:
             Tuple of (success: bool, message: str)
         """
+        from game.core.logger import log_info, log_error, log_debug
+
+        log_info(f"DesignLibrary.save_design called for '{design_name}'")
+        log_debug(f"  designs_folder: {self.designs_folder}")
+        log_debug(f"  empire_id: {self.empire_id}")
+        log_debug(f"  savegame_path: {self.savegame_path}")
+
+        # Safety check
+        if self.designs_folder is None:
+            log_error("Design library not properly initialized - designs_folder is None")
+            return False, "Design library not properly initialized"
+
         design_id = self._sanitize_design_id(design_name)
         filepath = os.path.join(self.designs_folder, f"{design_id}.json")
+        log_debug(f"  design_id: {design_id}")
+        log_debug(f"  filepath: {filepath}")
 
         # Check if design exists and was ever built
         if os.path.exists(filepath) and design_id in built_designs:
+            log_debug(f"Cannot overwrite '{design_name}' - already built")
             return False, f"Cannot overwrite '{design_name}' - this design has been built in-game"
 
         try:
+            log_debug("Creating metadata from ship...")
             # Create metadata
             metadata = DesignMetadata.from_ship(ship, design_id)
+            log_debug("Metadata created successfully")
 
             # If updating existing design, preserve created_date and times_built
             if os.path.exists(filepath):
+                log_debug("Design exists, loading old metadata...")
                 old_data = load_json_required(filepath)
                 old_metadata = old_data.get("_metadata", {})
                 metadata.created_date = old_metadata.get("created_date", metadata.created_date)
                 metadata.times_built = old_metadata.get("times_built", 0)
                 metadata.is_obsolete = old_metadata.get("is_obsolete", False)
+                log_debug("Old metadata loaded successfully")
 
             metadata.last_modified = datetime.now().isoformat()
 
+            log_debug("Calling ship.to_dict()...")
             # Get ship data and embed metadata
             ship_data = ship.to_dict()
-            ship_data = metadata.embed_in_ship_data(ship_data)
+            log_debug(f"ship.to_dict() completed. Data type: {type(ship_data)}")
+            log_debug(f"ship_data keys: {ship_data.keys() if isinstance(ship_data, dict) else 'NOT A DICT!'}")
 
+            log_debug("Embedding metadata in ship data...")
+            ship_data = metadata.embed_in_ship_data(ship_data)
+            log_debug("Metadata embedded successfully")
+
+            log_debug(f"Saving to file: {filepath}")
             # Save to file
             save_json(filepath, ship_data, indent=4)
+            log_info(f"Design saved successfully: {design_name}")
 
             return True, f"Saved design: {design_name}"
 
         except Exception as e:
+            log_error(f"Failed to save design '{design_name}': {e}")
+            import traceback
+            log_error(traceback.format_exc())
             return False, f"Failed to save design: {str(e)}"
 
     def load_design(self, design_id: str, width: int = 1920, height: int = 1080) -> Tuple[Optional[Ship], str]:
@@ -144,6 +208,10 @@ class DesignLibrary:
         Returns:
             Design data dict or None if not found
         """
+        # Return None if no designs folder
+        if self.designs_folder is None:
+            return None
+
         filepath = os.path.join(self.designs_folder, f"{design_id}.json")
 
         if not os.path.exists(filepath):

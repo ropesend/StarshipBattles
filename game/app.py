@@ -88,6 +88,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.show_exit_dialog = False
+        self.showing_load_menu = False
         self.state = MENU
 
         # Load game data
@@ -116,9 +117,10 @@ class Game:
 
     def update_menu_buttons(self):
         self.menu_buttons = [
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 80, 200, 50, "Design Workshop", self.start_builder),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 10, 200, 50, "Battle Setup", self.start_battle_setup),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 60, 200, 50, "Strategy Layer", self.start_strategy_layer),
+            Button(WIDTH // 2 - 100, HEIGHT // 2 - 150, 200, 50, "New Game", self.start_strategy_layer),
+            Button(WIDTH // 2 - 100, HEIGHT // 2 - 80, 200, 50, "Load Game", self.show_load_menu),
+            Button(WIDTH // 2 - 100, HEIGHT // 2 - 10, 200, 50, "Design Workshop", self.start_builder),
+            Button(WIDTH // 2 - 100, HEIGHT // 2 + 60, 200, 50, "Battle Setup", self.start_battle_setup),
             Button(WIDTH // 2 - 100, HEIGHT // 2 + 130, 200, 50, "Formation Editor", self.start_formation_editor),
             Button(WIDTH // 2 - 100, HEIGHT // 2 + 200, 200, 50, "Combat Lab", self.start_test_lab)
         ]
@@ -158,6 +160,70 @@ class Game:
         self.state = STRATEGY
         if hasattr(self.strategy_scene, 'handle_resize'):
             self.strategy_scene.handle_resize(WIDTH, HEIGHT)
+
+    def show_load_menu(self):
+        """Show load game menu."""
+        from game.ui.screens.save_selection_window import SaveSelectionWindow
+        import pygame_gui
+
+        log_info("Opening load game menu")
+
+        # Create UI manager if needed
+        if not hasattr(self, 'menu_ui_manager'):
+            self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+
+        # Create save selection window
+        window_width = 600
+        window_height = 500
+        window_rect = pygame.Rect(
+            (WIDTH - window_width) // 2,
+            (HEIGHT - window_height) // 2,
+            window_width,
+            window_height
+        )
+
+        self.save_selection_window = SaveSelectionWindow(
+            window_rect,
+            self.menu_ui_manager,
+            on_load_callback=self._on_load_game,
+            on_cancel_callback=self._on_load_cancel
+        )
+
+        # Set flag to render window
+        self.showing_load_menu = True
+
+    def _on_load_game(self, save_path):
+        """Load the selected save game."""
+        from game.strategy.systems.save_game_service import SaveGameService
+
+        log_info(f"Loading game from: {save_path}")
+
+        # Load game session
+        game_session, message = SaveGameService.load_game(save_path)
+
+        if game_session:
+            # Create new strategy scene with loaded session
+            self.strategy_scene = StrategyScene(WIDTH, HEIGHT, session=game_session)
+            self.state = STRATEGY
+            self.showing_load_menu = False
+            log_info(f"Game loaded successfully: {message}")
+        else:
+            log_error(f"Failed to load game: {message}")
+            # Show error dialog
+            import pygame_gui.windows
+            error_rect = pygame.Rect(0, 0, 400, 200)
+            error_rect.center = (WIDTH // 2, HEIGHT // 2)
+            pygame_gui.windows.UIMessageWindow(
+                rect=error_rect,
+                html_message=f"<b>Load Failed</b><br><br>{message}",
+                manager=self.menu_ui_manager,
+                window_title="Error"
+            )
+
+    def _on_load_cancel(self):
+        """Cancel load game."""
+        self.showing_load_menu = False
+        log_debug("Load game cancelled")
 
     @profile_action("App: Start Formation Editor")
     def start_formation_editor(self):
@@ -241,6 +307,11 @@ class Game:
 
     def _forward_event_to_scene(self, event):
         """Forward event to the current active scene."""
+        # Handle load menu if showing
+        if self.showing_load_menu and hasattr(self, 'menu_ui_manager'):
+            self.menu_ui_manager.process_events(event)
+            return
+
         if self.state == MENU:
             for btn in self.menu_buttons:
                 btn.handle_event(event)
@@ -350,16 +421,21 @@ class Game:
                         # Get empire tech (placeholder for now - will be implemented when tech tree exists)
                         available_tech_ids = []  # TODO: Replace with empire.available_tech or similar
 
-                        # Get savegame path
+                        # Get savegame path (may be None for new games - that's OK!)
                         savegame_path = game_session.save_path if hasattr(game_session, 'save_path') else None
 
-                        if savegame_path:
-                            context = WorkshopContext.integrated(
-                                empire_id=empire.id,
-                                savegame_path=savegame_path,
-                                available_tech_ids=available_tech_ids,
-                                built_designs=empire.built_ship_designs if hasattr(empire, 'built_ship_designs') else set()
-                            )
+                        # Get empire theme
+                        empire_theme_id = empire.empire_theme_id if hasattr(empire, 'empire_theme_id') else None
+
+                        # Create integrated context regardless of save_path
+                        # If save_path is None, designs will use temp storage or in-memory
+                        context = WorkshopContext.integrated(
+                            empire_id=empire.id,
+                            savegame_path=savegame_path,  # Can be None
+                            available_tech_ids=available_tech_ids,
+                            built_designs=empire.built_ship_designs if hasattr(empire, 'built_ship_designs') else set(),
+                            empire_theme_id=empire_theme_id
+                        )
 
                     # Clean up context data
                     self.strategy_scene.workshop_context_data = None
@@ -377,6 +453,11 @@ class Game:
         self.screen.fill((20, 20, 30))
         for btn in self.menu_buttons:
             btn.draw(self.screen)
+
+        # Draw load menu UI if showing
+        if self.showing_load_menu and hasattr(self, 'menu_ui_manager'):
+            self.menu_ui_manager.update(self.clock.get_time() / 1000.0)
+            self.menu_ui_manager.draw_ui(self.screen)
 
     def _update_battle_setup(self):
         """Update and draw battle setup, handle actions."""
