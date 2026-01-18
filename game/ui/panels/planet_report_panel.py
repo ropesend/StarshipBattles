@@ -7,9 +7,10 @@ showing planet portrait, comprehensive stats, and atmosphere composition graph.
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIImage, UITextBox, UIPanel
+from pygame_gui.elements import UIImage, UITextBox, UIPanel, UIScrollingContainer, UILabel
 from game.ui.screens.strategy_detail_fmt import format_planet_info
 from game.ui.panels.strategy_widgets import AtmosphereGraph
+from collections import Counter
 
 
 class PlanetReportPanel:
@@ -18,8 +19,9 @@ class PlanetReportPanel:
 
     Components:
     - Portrait (150x150 at 10, 10)
-    - Info text (UITextBox with HTML at 170, 10)
+    - Info text (UITextBox with HTML in middle)
     - Atmosphere graph (150px wide at 10, 170)
+    - Complexes list (scrollable, right side)
     """
 
     def __init__(self, manager, rect, planet, container=None):
@@ -52,8 +54,12 @@ class PlanetReportPanel:
             container=self.panel
         )
 
-        # Info text (170, 10, text_w, text_h)
-        text_w = rect.width - 180
+        # Reserve space for complexes list on the right (200px wide)
+        complexes_width = 200
+        complexes_gap = 10
+
+        # Info text (170, 10, text_w, text_h) - adjusted to make room for complexes list
+        text_w = rect.width - 180 - complexes_width - complexes_gap
         text_h = rect.height - 20
         self.detail_text = UITextBox(
             html_text=format_planet_info(planet),
@@ -61,6 +67,25 @@ class PlanetReportPanel:
             manager=manager,
             container=self.panel
         )
+
+        # Complexes list (scrollable, right side)
+        complexes_x = rect.width - complexes_width - 10  # 10px margin from right edge
+        self.complexes_container = UIScrollingContainer(
+            relative_rect=pygame.Rect(complexes_x, 10, complexes_width, rect.height - 20),
+            manager=manager,
+            container=self.panel
+        )
+
+        # Complexes header
+        UILabel(
+            relative_rect=pygame.Rect(5, 5, complexes_width - 10, 25),
+            text="Built Complexes",
+            manager=manager,
+            container=self.complexes_container
+        )
+
+        # Track complex list items for updates
+        self.complex_items = []
 
         # Atmosphere graph (10, 170, 150, graph_h)
         graph_y = 170
@@ -83,6 +108,7 @@ class PlanetReportPanel:
         # Initial render
         self._update_portrait()
         self._update_graph()
+        self._update_complexes_list()
 
     def update_planet(self, planet, portrait_surface=None):
         """
@@ -98,9 +124,10 @@ class PlanetReportPanel:
         self.detail_text.html_text = format_planet_info(planet)
         self.detail_text.rebuild()
 
-        # Update portrait and graph
+        # Update portrait, graph, and complexes list
         self._update_portrait(portrait_surface)
         self._update_graph()
+        self._update_complexes_list()
 
     def _update_portrait(self, portrait_surface=None):
         """Update planet portrait image."""
@@ -159,6 +186,54 @@ class PlanetReportPanel:
 
         # Update UIImage
         self.graph_image.set_image(graph_surface)
+
+    def _update_complexes_list(self):
+        """Update the list of built complexes on the planet."""
+        # Clear existing items
+        for item in self.complex_items:
+            item.kill()
+        self.complex_items = []
+
+        # Check if planet has facilities
+        if not hasattr(self.planet, 'facilities') or not self.planet.facilities:
+            # Show "None" message
+            no_complexes_label = UILabel(
+                relative_rect=pygame.Rect(5, 35, 190, 25),
+                text="None",
+                manager=self.manager,
+                container=self.complexes_container
+            )
+            self.complex_items.append(no_complexes_label)
+            return
+
+        # Count complexes by design_id
+        complex_counts = Counter(facility.design_id for facility in self.planet.facilities)
+
+        # Create list items
+        y_offset = 35  # Start below header
+        for design_id, count in sorted(complex_counts.items()):
+            # Get name from first facility with this design_id
+            facility_name = next(
+                (f.name for f in self.planet.facilities if f.design_id == design_id),
+                design_id  # Fallback to design_id if name not found
+            )
+
+            # Format display text
+            if count > 1:
+                display_text = f"{facility_name} x{count}"
+            else:
+                display_text = facility_name
+
+            # Create label
+            complex_label = UILabel(
+                relative_rect=pygame.Rect(5, y_offset, 190, 25),
+                text=display_text,
+                manager=self.manager,
+                container=self.complexes_container
+            )
+            self.complex_items.append(complex_label)
+
+            y_offset += 30  # Gap between items
 
     def get_height_required(self):
         """
