@@ -1,0 +1,157 @@
+{
+  "version": "1.0",
+  "battle_id": "c2caaa52-3d2c-41cb-88de-d5aaf1f5caed",
+  "seed": 478163327,
+  "tick_count": 1000,
+  "max_ticks": 1000,
+  "ships": {
+    "9753adb6-55d6-486e-ab03-a2de9d9f06d2": {
+      "ship_id": "9753adb6-55d6-486e-ab03-a2de9d9f06d2",
+      "name": "Test Attacker Beam360 Med",
+      "ship_class": "TestS_2L",
+      "theme_id": "Federation",
+      "team_id": 0,
+      "color": [
+        255,
+        0,
+        0
+      ],
+      "ai_strategy": "test_do_nothing",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "angle": 0.0,
+      "current_hp": 120,
+      "max_hp": 120,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_s",
+            "current_hp": 100,
+            "max_hp": 100,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_beam_med_acc_1dmg",
+            "current_hp": 20,
+            "max_hp": 20,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": "Test Target Erratic Small"
+    },
+    "efec93cc-2eb1-4754-87b0-94684a0a9660": {
+      "ship_id": "efec93cc-2eb1-4754-87b0-94684a0a9660",
+      "name": "Test Target Erratic Small",
+      "ship_class": "TestS_2L",
+      "theme_id": "Federation",
+      "team_id": 1,
+      "color": [
+        0,
+        0,
+        255
+      ],
+      "ai_strategy": "test_erratic_maneuver",
+      "position": [
+        36.078818880646594,
+        -198.59067414817548
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "angle": 146.8208462828527,
+      "current_hp": 1000000133.0,
+      "max_hp": 1000000170,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_s",
+            "current_hp": 100,
+            "max_hp": 100,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_armor_small_extreme_hp",
+            "current_hp": 999999963.0,
+            "max_hp": 1000000000,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_engine_no_fuel",
+            "current_hp": 50,
+            "max_hp": 50,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_thruster_std",
+            "current_hp": 20,
+            "max_hp": 20,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": "Test Attacker Beam360 Med"
+    }
+  },
+  "projectiles": [],
+  "end_mode": "TIME_BASED",
+  "allow_retreat": false,
+  "allow_reinforcements": false,
+  "created_at": "2026-01-17T19:46:55.526739",
+  "mode": "test"
+}

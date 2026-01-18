@@ -12,20 +12,20 @@
     255
   ],
   "team_id": 2,
-  "ship_class": "TestM_2L",
+  "ship_class": "TestS_2L",
   "theme_id": "Federation",
   "ai_strategy": "test_do_nothing",
   "layers": {
     "CORE": [
       {
-        "id": "test_armor_extreme_hp_heavy"
+        "id": "test_armor_extreme_hp"
       }
     ],
     "ARMOR": []
   },
-  "_test_notes": "Stationary target with extreme HP armor (1 billion) for high-tick accuracy testing (100k+ ticks)",
+  "_test_notes": "Stationary target with extreme HP armor (1 billion) for high-tick accuracy testing (100k+ ticks). Mass=400 from hull_test_s only (armor has 0 mass). NOW IDENTICAL TO STANDARD TARGET.",
   "expected_stats": {
-    "max_hp": 1000000500,
+    "max_hp": 1000000100,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,
@@ -33,7 +33,7 @@
     "acceleration_rate": 0.0,
     "turn_speed": 0.0,
     "total_thrust": 0,
-    "mass": 600.0,
+    "mass": 400.0,
     "armor_hp_pool": 1000000000
   },
   "resources": {

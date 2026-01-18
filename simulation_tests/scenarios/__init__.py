@@ -37,6 +37,7 @@ from simulation_tests.scenarios.base import TestScenario, TestMetadata
 from simulation_tests.scenarios.validation import (
     ValidationRule,
     ExactMatchRule,
+    DeterministicMatchRule,
     StatisticalTestRule,
     Validator,
     ValidationResult,
@@ -48,6 +49,7 @@ __all__ = [
     'TestMetadata',
     'ValidationRule',
     'ExactMatchRule',
+    'DeterministicMatchRule',
     'StatisticalTestRule',
     'Validator',
     'ValidationResult',

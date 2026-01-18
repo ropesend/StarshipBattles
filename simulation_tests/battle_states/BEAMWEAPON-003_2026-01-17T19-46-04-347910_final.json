@@ -1,0 +1,141 @@
+{
+  "version": "1.0",
+  "battle_id": "d1355d01-0f32-4341-94b9-8d0e76be971f",
+  "seed": 478163327,
+  "tick_count": 1000,
+  "max_ticks": 1000,
+  "ships": {
+    "7f6c2205-3211-4fdf-83d2-6b69cdd009d9": {
+      "ship_id": "7f6c2205-3211-4fdf-83d2-6b69cdd009d9",
+      "name": "Test Attacker Beam360 Low",
+      "ship_class": "TestS_2L",
+      "theme_id": "Federation",
+      "team_id": 0,
+      "color": [
+        255,
+        0,
+        0
+      ],
+      "ai_strategy": "test_do_nothing",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "angle": 0.0,
+      "current_hp": 120,
+      "max_hp": 120,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_s",
+            "current_hp": 100,
+            "max_hp": 100,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_beam_low_acc_1dmg",
+            "current_hp": 20,
+            "max_hp": 20,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": "Test Target Stationary"
+    },
+    "30aed286-49ad-496a-9416-5de2138d4a54": {
+      "ship_id": "30aed286-49ad-496a-9416-5de2138d4a54",
+      "name": "Test Target Stationary",
+      "ship_class": "TestM_2L",
+      "theme_id": "Federation",
+      "team_id": 1,
+      "color": [
+        0,
+        0,
+        255
+      ],
+      "ai_strategy": "test_do_nothing",
+      "position": [
+        750.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "angle": 0.0,
+      "current_hp": 1000000289.0,
+      "max_hp": 1000000500,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_m",
+            "current_hp": 500,
+            "max_hp": 500,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_armor_extreme_hp",
+            "current_hp": 999999789.0,
+            "max_hp": 1000000000,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": "Test Attacker Beam360 Low"
+    }
+  },
+  "projectiles": [],
+  "end_mode": "TIME_BASED",
+  "allow_retreat": false,
+  "allow_reinforcements": false,
+  "created_at": "2026-01-17T19:46:04.405171",
+  "mode": "test"
+}

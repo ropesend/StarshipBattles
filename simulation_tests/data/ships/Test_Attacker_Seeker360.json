@@ -23,7 +23,7 @@
     ],
     "ARMOR": []
   },
-  "_test_notes": "Attacker with 360 degree seeker weapon - No Resource Required",
+  "_test_notes": "Attacker with 360 degree seeker weapon - No Resource Required. Mass = hull_test_s(400) + weapon(0) = 400. Zero-mass component architecture.",
   "expected_stats": {
     "max_hp": 120,
     "max_fuel": 0.0,
@@ -33,7 +33,7 @@
     "acceleration_rate": 0.0,
     "turn_speed": 0.0,
     "total_thrust": 0,
-    "mass": 40.0,
+    "mass": 400.0,
     "armor_hp_pool": 0
   },
   "weapon_stats": {

@@ -29,18 +29,28 @@
     ],
     "ARMOR": []
   },
-  "_test_notes": "Small erratic target with extreme HP armor (1 billion)",
+  "_test_notes": "Small erratic target with extreme HP armor (1 billion). Mass = hull_test_s(400) + armor(0) + engine(0) + thruster(0) = 400. Zero-mass component architecture.",
   "expected_stats": {
     "max_hp": 1000000170,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,
-    "max_speed": 192.30769230769232,
-    "acceleration_rate": 295.85798816568047,
-    "turn_speed": 238.5283357484778,
+    "max_speed": 31.25,
+    "acceleration_rate": 7.8125,
+    "turn_speed": 15.625,
     "total_thrust": 500.0,
-    "mass": 65.0,
+    "mass": 400.0,
     "armor_hp_pool": 1000000000
+  },
+  "propulsion_details": {
+    "engine_thrust": 500,
+    "raw_turn_rate": 5.0,
+    "total_mass": 400,
+    "formulas": {
+      "max_speed": "max_speed = (thrust * K_SPEED) / mass = (500 * 25) / 400 = 31.25",
+      "acceleration": "acceleration = (thrust * K_THRUST) / mass² = (500 * 2500) / 400² = 7.8125",
+      "turn_speed": "turn_speed = (raw_turn * K_TURN) / mass^1.5 = (5.0 * 25000) / 400^1.5 = 15.625"
+    }
   },
   "resources": {
     "fuel": 0.0,

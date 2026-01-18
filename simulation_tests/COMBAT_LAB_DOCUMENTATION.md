@@ -315,9 +315,10 @@ Defines all components (weapons, armor, engines, etc.) used in tests.
 | `test_beam_low_acc_1dmg` | Low accuracy beam | 50% base, 0.2%/px falloff, range 800 |
 | `test_beam_med_acc_1dmg` | Medium accuracy beam | 80% base, 0.1%/px falloff, range 800 |
 | `test_beam_high_acc_1dmg` | High accuracy beam | 99% base, 0.01%/px falloff, range 800 |
-| `test_armor_extreme_hp` | Indestructible armor | 1 billion HP, mass 200 |
-| `test_armor_extreme_hp_heavy` | Heavy indestructible | 1 billion HP, mass 400 |
-| `test_armor_small_extreme_hp` | Small indestructible | 1 billion HP, mass 20 |
+| `test_armor_extreme_hp` | Indestructible armor | 1 billion HP, mass 0 |
+| `test_armor_small_extreme_hp` | Small indestructible | 1 billion HP, mass 0 |
+
+**Zero-Mass Architecture**: All non-hull components have mass = 0. Ship mass comes only from hull components (e.g., `hull_test_s` = 400 mass).
 
 ### Ship JSON Files (simulation_tests/data/ships/)
 
@@ -329,19 +330,19 @@ Define ship configurations for test scenarios.
     "name": "Test Target Stationary",
     "color": [0, 0, 255],
     "team_id": 2,
-    "ship_class": "TestM_2L",
+    "ship_class": "TestS_2L",  // hull_test_s = mass 400
     "theme_id": "Federation",
     "ai_strategy": "test_do_nothing",
     "layers": {
         "CORE": [
-            {"id": "test_armor_extreme_hp"}
+            {"id": "test_armor_extreme_hp"}  // mass 0
         ],
         "ARMOR": []
     },
     "_test_notes": "Stationary target with extreme HP (1B) for beam testing",
     "expected_stats": {
-        "max_hp": 1000000500,
-        "mass": 400.0,
+        "max_hp": 1000000100,  // hull HP (100) + armor HP (1B)
+        "mass": 400.0,         // hull_test_s only
         "armor_hp_pool": 1000000000
     }
 }
@@ -352,11 +353,11 @@ Define ship configurations for test scenarios.
 | Ship File | Mass | HP | Purpose |
 |-----------|------|-----|---------|
 | `Test_Target_Stationary.json` | 400 | 1B | Standard beam tests |
-| `Test_Target_Stationary_HighTick.json` | 600 | 1B | High-tick precision tests |
-| `Test_Target_Erratic_Small.json` | 65 | 1B | Moving target tests |
-| `Test_Attacker_Beam360_Low.json` | 25 | 120 | Low accuracy attacker |
-| `Test_Attacker_Beam360_Med.json` | 25 | 120 | Medium accuracy attacker |
-| `Test_Attacker_Beam360_High.json` | 25 | 120 | High accuracy attacker |
+| `Test_Target_Stationary_HighTick.json` | 400 | 1B | High-tick tests (same mass as standard) |
+| `Test_Target_Erratic_Small.json` | 400 | 1B | Moving target tests |
+| `Test_Attacker_Beam360_Low.json` | 400 | 120 | Low accuracy attacker |
+| `Test_Attacker_Beam360_Med.json` | 400 | 120 | Medium accuracy attacker |
+| `Test_Attacker_Beam360_High.json` | 400 | 120 | High accuracy attacker |
 
 **Why 1 Billion HP?**
 - Ensures targets NEVER die during tests (even 100k tick high-accuracy tests)

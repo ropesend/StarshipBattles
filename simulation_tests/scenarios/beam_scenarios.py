@@ -1,10 +1,15 @@
 """
-Beam Weapon Test Scenarios (BEAM360-001 to BEAM360-011)
+BeamWeaponAbility Test Scenarios (BEAMWEAPON-001 to BEAMWEAPON-011)
+
+Suite Document: simulation_tests/suites/BeamWeaponAbility.md
 
 These tests validate beam weapon accuracy mechanics using the sigmoid formula:
     P = 1 / (1 + e^-x)
     where x = (base_accuracy + attack_bonus) - (range_penalty + defense_penalty)
-    range_penalty = accuracy_falloff * distance
+    range_penalty = accuracy_falloff * surface_distance
+
+Note: Distance is measured to target SURFACE, not center.
+      surface_distance = center_distance - target_radius
 
 Test Coverage:
 - Low Accuracy (0.5 base, 0.002 falloff): 3 distance variants
@@ -18,6 +23,7 @@ import math
 from simulation_tests.scenarios import (
     TestMetadata,
     ExactMatchRule,
+    DeterministicMatchRule,
     StatisticalTestRule
 )
 from simulation_tests.scenarios.templates import StaticTargetScenario
@@ -102,10 +108,13 @@ def calculate_expected_hit_chance(
 
 class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
     """
-    BEAM360-001: Low Accuracy Beam at Point-Blank Range
+    BEAMWEAPON-001: Low Accuracy Beam at Point-Blank Range
 
     Tests that a low accuracy beam weapon (0.5 base) hits consistently
-    at point-blank range (50px) where range penalty is minimal.
+    at point-blank range where range penalty is minimal.
+
+    Surface distance: 20.53px (center 50px - radius 29.47px)
+    Expected hit rate: 53.18%
     """
 
     # Template configuration
@@ -114,10 +123,10 @@ class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
     distance = 50
 
     metadata = TestMetadata(
-        test_id="BEAM360-001",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-001",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - Low",
-        name="Low Accuracy Beam - Point Blank (50px)",
+        name="Low Accuracy Beam - Point Blank (20.5px surface)",
         summary="Validates low accuracy beam (0.5 base) hits consistently at point-blank range with minimal range penalty",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Low.json",
@@ -135,10 +144,10 @@ class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
         ],
         edge_cases=[
             "Minimal range penalty at close range",
-            "Target size bonus may apply",
-            "Sigmoid formula: P = 1/(1+e^-0.4) ≈ 0.60 (60% hit rate)"
+            "Target size affects defense score",
+            "Sigmoid formula: P = 1/(1+e^-0.1273) = 0.5318 (53.18% hit rate)"
         ],
-        expected_outcome="High hit rate (~50-55%) with damage > 0 after 500 ticks",
+        expected_outcome="Hit rate ~53% with damage > 0 after 500 ticks",
         pass_criteria="damage_dealt > 0",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
@@ -172,7 +181,16 @@ class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
                 path='target.mass',
                 expected=STATIONARY_TARGET_MASS
             ),
-            # Statistical validation - validates actual test outcomes using TOST equivalence testing
+            # Layer 1: Formula validation - verify expected hit chance calculation is correct
+            # Uses 1e-4 tolerance to account for display rounding (0.5318 vs 0.5317890...)
+            DeterministicMatchRule(
+                name='Expected Hit Chance',
+                path='results.expected_hit_chance',
+                expected=0.5318,
+                tolerance=1e-4,
+                description='P = 1/(1+e^-0.1273) from sigmoid formula with net_score = 0.5 - 0.0411 - 0.3316'
+            ),
+            # Layer 2: Statistical validation - validates actual test outcomes using TOST equivalence testing
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
@@ -259,11 +277,14 @@ class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
 
 class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
     """
-    BEAM360-001-HT: Low Accuracy Beam at Point-Blank Range (High-Tick Version)
+    BEAMWEAPON-001-HT: Low Accuracy Beam at Point-Blank Range (High-Tick Version)
 
     High-precision validation test with 100,000 ticks for precise statistical validation.
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
+
+    Surface distance: 20.53px (center 50px - radius 29.47px for mass=400)
+    Expected hit rate: 57.02%
     """
 
     # Template configuration
@@ -272,21 +293,21 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
     distance = 50
 
     metadata = TestMetadata(
-        test_id="BEAM360-001-HT",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-001-HT",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - Low (High-Tick)",
-        name="Low Accuracy Beam - Point Blank (50px) [100k Ticks]",
+        name="Low Accuracy Beam - Point Blank (16.3px surface) [100k Ticks]",
         summary="High-precision validation of low accuracy beam with 100k ticks for ±1% statistical margin",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Low.json",
-            "Target: Test_Target_Stationary_HighTick.json (60k HP, mass=600)",
+            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
             "Base Accuracy: 0.5",
             "Accuracy Falloff: 0.002 per pixel",
             "Center Distance: 50 pixels",
-            "Target Radius: 33.74 pixels (from mass=600)",
-            "Surface Distance: 50 - 33.74 = 16.26 pixels (actual firing distance)",
+            "Target Radius: 29.47 pixels (from mass=400)",
+            "Surface Distance: 50 - 29.47 = 20.53 pixels (actual firing distance)",
             "Range Penalty: 16.26 * 0.002 = 0.0325",
-            "Defense Penalty: 0.1849 (from mass=600 size score)",
+            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
             "Net Score: 0.5 - 0.0325 - 0.1849 = 0.2826",
             "Beam Damage: 1 per hit",
             "Test Duration: 100,000 ticks (HIGH-TICK)"
@@ -295,9 +316,9 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
             "Ultra-high sample size (100k ticks)",
             "Standard Error: ~0.16% (very precise)",
             "Can detect deviations as small as ±1%",
-            "Sigmoid formula: P = 1/(1+e^-0.4) ≈ 0.60 (60% hit rate)"
+            "Sigmoid formula: P = 1/(1+e^-0.2826) = 0.5702 (57.02% hit rate)"
         ],
-        expected_outcome="Hit rate within ±1% of expected (51.71%) with 99% confidence",
+        expected_outcome="Hit rate within ±1% of expected (57.02%) with 99% confidence",
         pass_criteria="Statistical validation passes with p < 0.05",
         max_ticks=HIGH_TICK_TEST_TICKS,
         seed=STANDARD_SEED,
@@ -329,13 +350,13 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=600.0  # Extreme HP armor is heavier
+                expected=400.0  # Standard target mass (zero-mass component architecture)
             ),
             # Statistical validation with tight ±1% margin
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
-                expected_probability=0.5702,  # At surface distance 16.26px (not 50px center distance)
+                expected_probability=0.5318,  # At surface distance 20.53px (now identical to standard test with mass=400)
                 equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
@@ -357,13 +378,13 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
                     'formula': 'damage_dealt / ticks_run',
                     'description': 'Actual hit rate (shots that connected)',
                     'unit': 'percentage',
-                    'expected': 0.5702,  # At surface distance (16.26px) not center distance (50px)
+                    'expected': 0.5318,  # At surface distance (20.53px) - now identical to standard test
                     'tolerance': 0.05  # p-value threshold
                 },
                 'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (16.26px from mass=600 radius)',
+                    'description': 'Expected hit rate at surface distance (20.53px from mass=400 radius)',
                     'unit': 'percentage',
-                    'value': 0.5702
+                    'value': 0.5318
                 }
             }
         }
@@ -371,9 +392,9 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=600, stationary)
+        # Calculate target defense score (mass=400, stationary - now identical to standard)
         target_defense = calculate_defense_score(
-            mass=600.0,
+            mass=400.0,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
@@ -382,10 +403,10 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         # Calculate target radius (for surface distance calculation)
         # Beam weapons hit the target SURFACE, not center
         # Distance to surface = center_distance - target_radius
-        target_mass = 600.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 33.74px
+        target_mass = 400.0
+        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
         center_distance = POINT_BLANK_DISTANCE  # Ships positioned 50px apart
-        surface_distance = center_distance - target_radius  # ≈ 16.26px
+        surface_distance = center_distance - target_radius  # ≈ 20.53px
 
         # Calculate expected hit chance using SURFACE distance (what combat system uses)
         self.expected_hit_chance = calculate_expected_hit_chance(BEAM_LOW_ACCURACY, BEAM_LOW_FALLOFF, surface_distance, 0.0, target_defense)
@@ -418,10 +439,13 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
 
 class BeamLowAccuracyMidRangeScenario(StaticTargetScenario):
     """
-    BEAM360-002: Low Accuracy Beam at Mid-Range
+    BEAMWEAPON-002: Low Accuracy Beam at Mid-Range
 
     Tests that a low accuracy beam weapon (0.5 base) maintains reasonable
     accuracy at mid-range (400px) with moderate range penalty.
+
+    Surface distance: 370.53px (center 400px - radius 29.47px)
+    Expected hit rate: 36.07%
     """
 
     # Template configuration
@@ -430,10 +454,10 @@ class BeamLowAccuracyMidRangeScenario(StaticTargetScenario):
     distance = 400
 
     metadata = TestMetadata(
-        test_id="BEAM360-002",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-002",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - Low",
-        name="Low Accuracy Beam - Mid Range (400px)",
+        name="Low Accuracy Beam - Mid Range (370.5px surface)",
         summary="Validates low accuracy beam performance at mid-range with moderate accuracy degradation",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Low.json",
@@ -546,11 +570,14 @@ class BeamLowAccuracyMidRangeScenario(StaticTargetScenario):
 
 class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
     """
-    BEAM360-002-HT: Low Accuracy Beam at Mid-Range (High-Tick Version)
+    BEAMWEAPON-002-HT: Low Accuracy Beam at Mid-Range (High-Tick Version)
 
     High-precision validation test with 100,000 ticks for precise statistical validation.
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
+
+    Surface distance: 370.53px (center 400px - radius 29.47px for mass=400)
+    Expected hit rate: 39.71%
     """
 
     # Template configuration
@@ -559,21 +586,21 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
     distance = 400
 
     metadata = TestMetadata(
-        test_id="BEAM360-002-HT",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-002-HT",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - Low (High-Tick)",
-        name="Low Accuracy Beam - Mid Range (400px) [100k Ticks]",
+        name="Low Accuracy Beam - Mid Range (366.3px surface) [100k Ticks]",
         summary="High-precision validation with 100k ticks for ±1% statistical margin",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Low.json",
-            "Target: Test_Target_Stationary_HighTick.json (60k HP, mass=600)",
+            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
             "Base Accuracy: 0.5",
             "Accuracy Falloff: 0.002 per pixel",
             "Center Distance: 400 pixels",
-            "Target Radius: 33.74 pixels (from mass=600)",
-            "Surface Distance: 400 - 33.74 = 366.26 pixels (actual firing distance)",
+            "Target Radius: 29.47 pixels (from mass=400)",
+            "Surface Distance: 400 - 29.47 = 370.53 pixels (actual firing distance)",
             "Range Penalty: 366.26 * 0.002 = 0.7325",
-            "Defense Penalty: 0.1849 (from mass=600 size score)",
+            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
             "Net Score: 0.5 - 0.7325 - 0.1849 = -0.4174",
             "Sigmoid formula: P = 1/(1+e^0.4174) ≈ 0.3971 (39.71% hit rate)",
             "Beam Damage: 1 per hit",
@@ -616,13 +643,13 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=600.0  # Extreme HP armor is heavier
+                expected=400.0  # Standard target mass (zero-mass component architecture)
             ),
             # Statistical validation with tight ±1% margin
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
-                expected_probability=0.3971,  # At surface distance 366.26px
+                expected_probability=0.3607,  # At surface distance 370.53px (now identical to standard test with mass=400)
                 equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
@@ -644,13 +671,13 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
                     'formula': 'damage_dealt / ticks_run',
                     'description': 'Actual hit rate (shots that connected)',
                     'unit': 'percentage',
-                    'expected': 0.3971,  # At surface distance (366.26px) not center distance (400px)
+                    'expected': 0.3607,  # At surface distance (370.53px) - now identical to standard test
                     'tolerance': 0.05  # p-value threshold
                 },
                 'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (366.26px from mass=600 radius)',
+                    'description': 'Expected hit rate at surface distance (370.53px from mass=400 radius)',
                     'unit': 'percentage',
-                    'value': 0.3971
+                    'value': 0.3607
                 }
             }
         }
@@ -658,19 +685,19 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=600, stationary)
+        # Calculate target defense score (mass=400, stationary - now identical to standard)
         target_defense = calculate_defense_score(
-            mass=600.0,
+            mass=400.0,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
         )
 
         # Calculate target radius (for surface distance calculation)
-        target_mass = 600.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 33.74px
+        target_mass = 400.0
+        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
         center_distance = MID_RANGE_DISTANCE
-        surface_distance = center_distance - target_radius  # ≈ 366.26px
+        surface_distance = center_distance - target_radius  # ≈ 370.53px
 
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(BEAM_LOW_ACCURACY, BEAM_LOW_FALLOFF, surface_distance, 0.0, target_defense)
@@ -703,10 +730,13 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
 
 class BeamLowAccuracyMaxRangeScenario(StaticTargetScenario):
     """
-    BEAM360-003: Low Accuracy Beam at Max Range
+    BEAMWEAPON-003: Low Accuracy Beam at Max Range
 
     Tests that a low accuracy beam weapon (0.5 base) has heavily degraded
     accuracy at max range (750px) with high range penalty.
+
+    Surface distance: 720.53px (center 750px - radius 29.47px)
+    Expected hit rate: 21.86%
     """
 
     # Template configuration
@@ -715,10 +745,10 @@ class BeamLowAccuracyMaxRangeScenario(StaticTargetScenario):
     distance = 750
 
     metadata = TestMetadata(
-        test_id="BEAM360-003",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-003",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - Low",
-        name="Low Accuracy Beam - Max Range (750px)",
+        name="Low Accuracy Beam - Max Range (720.5px surface)",
         summary="Validates low accuracy beam has heavily degraded accuracy at max range with high range penalty",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Low.json",
@@ -836,10 +866,13 @@ class BeamLowAccuracyMaxRangeScenario(StaticTargetScenario):
 
 class BeamMediumAccuracyPointBlankScenario(StaticTargetScenario):
     """
-    BEAM360-004: Medium Accuracy Beam at Point-Blank Range
+    BEAMWEAPON-004: Medium Accuracy Beam at Point-Blank Range
 
     Tests that a medium accuracy beam weapon (2.0 base) hits very consistently
     at point-blank range (50px).
+
+    Surface distance: 20.53px (center 50px - radius 29.47px)
+    Expected hit rate: 83.85%
     """
 
     # Template configuration
@@ -848,10 +881,10 @@ class BeamMediumAccuracyPointBlankScenario(StaticTargetScenario):
     distance = 50
 
     metadata = TestMetadata(
-        test_id="BEAM360-004",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-004",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - Medium",
-        name="Medium Accuracy Beam - Point Blank (50px)",
+        name="Medium Accuracy Beam - Point Blank (20.5px surface)",
         summary="Validates medium accuracy beam (2.0 base) hits very consistently at point-blank range",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Med.json",
@@ -964,11 +997,14 @@ class BeamMediumAccuracyPointBlankScenario(StaticTargetScenario):
 
 class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
     """
-    BEAM360-004-HT: Medium Accuracy Beam at Point-Blank Range (High-Tick Version)
+    BEAMWEAPON-004-HT: Medium Accuracy Beam at Point-Blank Range (High-Tick Version)
 
     High-precision validation test with 100,000 ticks for precise statistical validation.
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
+
+    Surface distance: 20.53px (center 50px - radius 29.47px for mass=400)
+    Expected hit rate: 85.82%
     """
 
     # Template configuration
@@ -977,21 +1013,21 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
     distance = 50
 
     metadata = TestMetadata(
-        test_id="BEAM360-004-HT",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-004-HT",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - Medium (High-Tick)",
-        name="Medium Accuracy Beam - Point Blank (50px) [100k Ticks]",
+        name="Medium Accuracy Beam - Point Blank (16.3px surface) [100k Ticks]",
         summary="High-precision validation with 100k ticks for ±1% statistical margin",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Med.json",
-            "Target: Test_Target_Stationary_HighTick.json (60k HP, mass=600)",
+            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
             "Base Accuracy: 2.0",
             "Accuracy Falloff: 0.001 per pixel",
             "Center Distance: 50 pixels",
-            "Target Radius: 33.74 pixels (from mass=600)",
-            "Surface Distance: 50 - 33.74 = 16.26 pixels (actual firing distance)",
+            "Target Radius: 29.47 pixels (from mass=400)",
+            "Surface Distance: 50 - 29.47 = 20.53 pixels (actual firing distance)",
             "Range Penalty: 16.26 * 0.001 = 0.0163",
-            "Defense Penalty: 0.1849 (from mass=600 size score)",
+            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
             "Net Score: 2.0 - 0.0163 - 0.1849 = 1.7988",
             "Sigmoid formula: P = 1/(1+e^-1.7988) ≈ 0.8582 (85.82% hit rate)",
             "Beam Damage: 1 per hit",
@@ -1034,13 +1070,13 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=600.0  # Extreme HP armor is heavier
+                expected=400.0  # Standard target mass (zero-mass component architecture)
             ),
             # Statistical validation with tight ±1% margin
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
-                expected_probability=0.8582,  # At surface distance 16.26px
+                expected_probability=0.8385,  # At surface distance 20.53px (now identical to standard test with mass=400)
                 equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
@@ -1062,13 +1098,13 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
                     'formula': 'damage_dealt / ticks_run',
                     'description': 'Actual hit rate (shots that connected)',
                     'unit': 'percentage',
-                    'expected': 0.8582,  # At surface distance (16.26px) not center distance (50px)
+                    'expected': 0.8385,  # At surface distance (20.53px) - now identical to standard test
                     'tolerance': 0.05  # p-value threshold
                 },
                 'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (16.26px from mass=600 radius)',
+                    'description': 'Expected hit rate at surface distance (20.53px from mass=400 radius)',
                     'unit': 'percentage',
-                    'value': 0.8582
+                    'value': 0.8385
                 }
             }
         }
@@ -1076,19 +1112,19 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=600, stationary)
+        # Calculate target defense score (mass=400, stationary - now identical to standard)
         target_defense = calculate_defense_score(
-            mass=600.0,
+            mass=400.0,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
         )
 
         # Calculate target radius (for surface distance calculation)
-        target_mass = 600.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 33.74px
+        target_mass = 400.0
+        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
         center_distance = POINT_BLANK_DISTANCE
-        surface_distance = center_distance - target_radius  # ≈ 16.26px
+        surface_distance = center_distance - target_radius  # ≈ 20.53px
 
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
@@ -1121,10 +1157,13 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
 
 class BeamMediumAccuracyMidRangeScenario(StaticTargetScenario):
     """
-    BEAM360-005: Medium Accuracy Beam at Mid-Range
+    BEAMWEAPON-005: Medium Accuracy Beam at Mid-Range
 
     Tests that a medium accuracy beam weapon (2.0 base) maintains high
     accuracy at mid-range (400px).
+
+    Surface distance: 370.53px (center 400px - radius 29.47px)
+    Expected hit rate: 78.55%
     """
 
     # Template configuration
@@ -1133,10 +1172,10 @@ class BeamMediumAccuracyMidRangeScenario(StaticTargetScenario):
     distance = 400
 
     metadata = TestMetadata(
-        test_id="BEAM360-005",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-005",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - Medium",
-        name="Medium Accuracy Beam - Mid Range (400px)",
+        name="Medium Accuracy Beam - Mid Range (370.5px surface)",
         summary="Validates medium accuracy beam maintains high accuracy at mid-range",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Med.json",
@@ -1249,11 +1288,14 @@ class BeamMediumAccuracyMidRangeScenario(StaticTargetScenario):
 
 class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
     """
-    BEAM360-005-HT: Medium Accuracy Beam at Mid-Range (High-Tick Version)
+    BEAMWEAPON-005-HT: Medium Accuracy Beam at Mid-Range (High-Tick Version)
 
     High-precision validation test with 100,000 ticks for precise statistical validation.
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
+
+    Surface distance: 370.53px (center 400px - radius 29.47px for mass=400)
+    Expected hit rate: 80.98%
     """
 
     # Template configuration
@@ -1262,21 +1304,21 @@ class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
     distance = 400
 
     metadata = TestMetadata(
-        test_id="BEAM360-005-HT",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-005-HT",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - Medium (High-Tick)",
-        name="Medium Accuracy Beam - Mid Range (400px) [100k Ticks]",
+        name="Medium Accuracy Beam - Mid Range (366.3px surface) [100k Ticks]",
         summary="High-precision validation with 100k ticks for ±1% statistical margin",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Med.json",
-            "Target: Test_Target_Stationary_HighTick.json (60k HP, mass=600)",
+            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
             "Base Accuracy: 2.0",
             "Accuracy Falloff: 0.001 per pixel",
             "Center Distance: 400 pixels",
-            "Target Radius: 33.74 pixels (from mass=600)",
-            "Surface Distance: 400 - 33.74 = 366.26 pixels (actual firing distance)",
+            "Target Radius: 29.47 pixels (from mass=400)",
+            "Surface Distance: 400 - 29.47 = 370.53 pixels (actual firing distance)",
             "Range Penalty: 366.26 * 0.001 = 0.3663",
-            "Defense Penalty: 0.1849 (from mass=600 size score)",
+            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
             "Net Score: 2.0 - 0.3663 - 0.1849 = 1.4488",
             "Sigmoid formula: P = 1/(1+e^-1.4488) ≈ 0.8098 (80.98% hit rate)",
             "Beam Damage: 1 per hit",
@@ -1319,13 +1361,13 @@ class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=600.0  # Extreme HP armor is heavier
+                expected=400.0  # Standard target mass (zero-mass component architecture)
             ),
             # Statistical validation with tight ±1% margin
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
-                expected_probability=0.8098,  # At surface distance 366.26px
+                expected_probability=0.7855,  # At surface distance 370.53px (now identical to standard test with mass=400)
                 equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
@@ -1347,13 +1389,13 @@ class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
                     'formula': 'damage_dealt / ticks_run',
                     'description': 'Actual hit rate (shots that connected)',
                     'unit': 'percentage',
-                    'expected': 0.8098,  # At surface distance (366.26px) not center distance (400px)
+                    'expected': 0.7855,  # At surface distance (370.53px) - now identical to standard test
                     'tolerance': 0.05  # p-value threshold
                 },
                 'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (366.26px from mass=600 radius)',
+                    'description': 'Expected hit rate at surface distance (370.53px from mass=400 radius)',
                     'unit': 'percentage',
-                    'value': 0.8098
+                    'value': 0.7855
                 }
             }
         }
@@ -1361,19 +1403,19 @@ class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=600, stationary)
+        # Calculate target defense score (mass=400, stationary - now identical to standard)
         target_defense = calculate_defense_score(
-            mass=600.0,
+            mass=400.0,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
         )
 
         # Calculate target radius (for surface distance calculation)
-        target_mass = 600.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 33.74px
+        target_mass = 400.0
+        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
         center_distance = MID_RANGE_DISTANCE
-        surface_distance = center_distance - target_radius  # ≈ 366.26px
+        surface_distance = center_distance - target_radius  # ≈ 370.53px
 
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
@@ -1406,10 +1448,13 @@ class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
 
 class BeamMediumAccuracyMaxRangeScenario(StaticTargetScenario):
     """
-    BEAM360-006: Medium Accuracy Beam at Max Range
+    BEAMWEAPON-006: Medium Accuracy Beam at Max Range
 
     Tests that a medium accuracy beam weapon (2.0 base) maintains reasonable
     accuracy even at max range (750px).
+
+    Surface distance: 720.53px (center 750px - radius 29.47px)
+    Expected hit rate: 72.07%
     """
 
     # Template configuration
@@ -1418,10 +1463,10 @@ class BeamMediumAccuracyMaxRangeScenario(StaticTargetScenario):
     distance = 750
 
     metadata = TestMetadata(
-        test_id="BEAM360-006",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-006",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - Medium",
-        name="Medium Accuracy Beam - Max Range (750px)",
+        name="Medium Accuracy Beam - Max Range (720.5px surface)",
         summary="Validates medium accuracy beam maintains reasonable accuracy at max range",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Med.json",
@@ -1534,11 +1579,14 @@ class BeamMediumAccuracyMaxRangeScenario(StaticTargetScenario):
 
 class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
     """
-    BEAM360-006-HT: Medium Accuracy Beam at Max Range (High-Tick Version)
+    BEAMWEAPON-006-HT: Medium Accuracy Beam at Max Range (High-Tick Version)
 
     High-precision validation test with 100,000 ticks for precise statistical validation.
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
+
+    Surface distance: 720.53px (center 750px - radius 29.47px for mass=400)
+    Expected hit rate: 75.00%
     """
 
     # Template configuration
@@ -1547,21 +1595,21 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
     distance = 750
 
     metadata = TestMetadata(
-        test_id="BEAM360-006-HT",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-006-HT",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - Medium (High-Tick)",
-        name="Medium Accuracy Beam - Max Range (750px) [100k Ticks]",
+        name="Medium Accuracy Beam - Max Range (720.5px surface) [100k Ticks]",
         summary="High-precision validation with 100k ticks for ±1% statistical margin",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Med.json",
-            "Target: Test_Target_Stationary_HighTick.json (60k HP, mass=600)",
+            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
             "Base Accuracy: 2.0",
             "Accuracy Falloff: 0.001 per pixel",
             "Center Distance: 750 pixels (near max range of 800)",
-            "Target Radius: 33.74 pixels (from mass=600)",
-            "Surface Distance: 750 - 33.74 = 716.26 pixels (actual firing distance)",
-            "Range Penalty: 716.26 * 0.001 = 0.7163",
-            "Defense Penalty: 0.1849 (from mass=600 size score)",
+            "Target Radius: 29.47 pixels (from mass=400)",
+            "Surface Distance: 750 - 29.47 = 720.53 pixels (actual firing distance)",
+            "Range Penalty: 720.53 * 0.001 = 0.7163",
+            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
             "Net Score: 2.0 - 0.7163 - 0.1849 = 1.0988",
             "Sigmoid formula: P = 1/(1+e^-1.0988) ≈ 0.7500 (75.00% hit rate)",
             "Beam Damage: 1 per hit",
@@ -1604,13 +1652,13 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=600.0  # Extreme HP armor is heavier
+                expected=400.0  # Standard target mass (zero-mass component architecture)
             ),
             # Statistical validation with tight ±1% margin
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
-                expected_probability=0.7500,  # At surface distance 716.26px
+                expected_probability=0.7207,  # At surface distance 720.53px (now identical to standard test with mass=400)
                 equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
@@ -1632,13 +1680,13 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
                     'formula': 'damage_dealt / ticks_run',
                     'description': 'Actual hit rate (shots that connected)',
                     'unit': 'percentage',
-                    'expected': 0.7500,  # At surface distance (716.26px) not center distance (750px)
+                    'expected': 0.7207,  # At surface distance (720.53px) - now identical to standard test
                     'tolerance': 0.05  # p-value threshold
                 },
                 'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (716.26px from mass=600 radius)',
+                    'description': 'Expected hit rate at surface distance (720.53px from mass=400 radius)',
                     'unit': 'percentage',
-                    'value': 0.7500
+                    'value': 0.7207
                 }
             }
         }
@@ -1646,19 +1694,19 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=600, stationary)
+        # Calculate target defense score (mass=400, stationary - now identical to standard)
         target_defense = calculate_defense_score(
-            mass=600.0,
+            mass=400.0,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
         )
 
         # Calculate target radius (for surface distance calculation)
-        target_mass = 600.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 33.74px
+        target_mass = 400.0
+        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
         center_distance = 750.0
-        surface_distance = center_distance - target_radius  # ≈ 716.26px
+        surface_distance = center_distance - target_radius  # ≈ 720.53px
 
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
@@ -1695,10 +1743,13 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
 
 class BeamHighAccuracyPointBlankScenario(StaticTargetScenario):
     """
-    BEAM360-007: High Accuracy Beam at Point-Blank Range
+    BEAMWEAPON-007: High Accuracy Beam at Point-Blank Range
 
     Tests that a high accuracy beam weapon (5.0 base) has near-perfect
     accuracy at point-blank range (50px).
+
+    Surface distance: 20.53px (center 50px - radius 29.47px)
+    Expected hit rate: 99.06%
     """
 
     # Template configuration
@@ -1707,10 +1758,10 @@ class BeamHighAccuracyPointBlankScenario(StaticTargetScenario):
     distance = 50
 
     metadata = TestMetadata(
-        test_id="BEAM360-007",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-007",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - High",
-        name="High Accuracy Beam - Point Blank (50px)",
+        name="High Accuracy Beam - Point Blank (20.5px surface)",
         summary="Validates high accuracy beam (5.0 base) has near-perfect accuracy at point-blank range",
         conditions=[
             "Attacker: Test_Attacker_Beam360_High.json",
@@ -1823,11 +1874,14 @@ class BeamHighAccuracyPointBlankScenario(StaticTargetScenario):
 
 class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
     """
-    BEAM360-007-HT: High Accuracy Beam at Point-Blank Range (High-Tick Version)
+    BEAMWEAPON-007-HT: High Accuracy Beam at Point-Blank Range (High-Tick Version)
 
     High-precision validation test with 100,000 ticks for precise statistical validation.
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
+
+    Surface distance: 20.53px (center 50px - radius 29.47px for mass=400)
+    Expected hit rate: 99.19%
     """
 
     # Template configuration
@@ -1836,21 +1890,21 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
     distance = 50
 
     metadata = TestMetadata(
-        test_id="BEAM360-007-HT",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-007-HT",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - High (High-Tick)",
-        name="High Accuracy Beam - Point Blank (50px) [100k Ticks]",
+        name="High Accuracy Beam - Point Blank (16.3px surface) [100k Ticks]",
         summary="High-precision validation with 100k ticks for ±1% statistical margin",
         conditions=[
             "Attacker: Test_Attacker_Beam360_High.json",
-            "Target: Test_Target_Stationary_HighTick.json (60k HP, mass=600)",
+            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
             "Base Accuracy: 5.0",
             "Accuracy Falloff: 0.0005 per pixel",
             "Center Distance: 50 pixels",
-            "Target Radius: 33.74 pixels (from mass=600)",
-            "Surface Distance: 50 - 33.74 = 16.26 pixels (actual firing distance)",
+            "Target Radius: 29.47 pixels (from mass=400)",
+            "Surface Distance: 50 - 29.47 = 20.53 pixels (actual firing distance)",
             "Range Penalty: 16.26 * 0.0005 = 0.0081",
-            "Defense Penalty: 0.1849 (from mass=600 size score)",
+            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
             "Net Score: 5.0 - 0.0081 - 0.1849 = 4.8070",
             "Sigmoid formula: P = 1/(1+e^-4.8070) ≈ 0.9919 (99.19% hit rate)",
             "Beam Damage: 1 per hit",
@@ -1893,13 +1947,13 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=600.0  # Extreme HP armor is heavier
+                expected=400.0  # Standard target mass (zero-mass component architecture)
             ),
             # Statistical validation with tight ±1% margin
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
-                expected_probability=0.9919,  # At surface distance 16.26px
+                expected_probability=0.9906,  # At surface distance 20.53px (now identical to standard test with mass=400)
                 equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
@@ -1921,13 +1975,13 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
                     'formula': 'damage_dealt / ticks_run',
                     'description': 'Actual hit rate (shots that connected)',
                     'unit': 'percentage',
-                    'expected': 0.9919,  # At surface distance (16.26px) not center distance (50px)
+                    'expected': 0.9906,  # At surface distance (20.53px) - now identical to standard test
                     'tolerance': 0.05  # p-value threshold
                 },
                 'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (16.26px from mass=600 radius)',
+                    'description': 'Expected hit rate at surface distance (20.53px from mass=400 radius)',
                     'unit': 'percentage',
-                    'value': 0.9919
+                    'value': 0.9906
                 }
             }
         }
@@ -1935,19 +1989,19 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=600, stationary)
+        # Calculate target defense score (mass=400, stationary - now identical to standard)
         target_defense = calculate_defense_score(
-            mass=600.0,
+            mass=400.0,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
         )
 
         # Calculate target radius (for surface distance calculation)
-        target_mass = 600.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 33.74px
+        target_mass = 400.0
+        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
         center_distance = POINT_BLANK_DISTANCE
-        surface_distance = center_distance - target_radius  # ≈ 16.26px
+        surface_distance = center_distance - target_radius  # ≈ 20.53px
 
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(BEAM_HIGH_ACCURACY, BEAM_HIGH_FALLOFF, surface_distance, 0.0, target_defense)
@@ -1980,10 +2034,13 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
 
 class BeamHighAccuracyMaxRangeScenario(StaticTargetScenario):
     """
-    BEAM360-008: High Accuracy Beam at Max Range
+    BEAMWEAPON-008: High Accuracy Beam at Max Range
 
     Tests that a high accuracy beam weapon (5.0 base) maintains excellent
     accuracy even at max range (750px).
+
+    Surface distance: 720.53px (center 750px - radius 29.47px)
+    Expected hit rate: 98.66%
     """
 
     # Template configuration
@@ -1992,10 +2049,10 @@ class BeamHighAccuracyMaxRangeScenario(StaticTargetScenario):
     distance = 750
 
     metadata = TestMetadata(
-        test_id="BEAM360-008",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-008",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - High",
-        name="High Accuracy Beam - Max Range (750px)",
+        name="High Accuracy Beam - Max Range (720.5px surface)",
         summary="Validates high accuracy beam maintains excellent accuracy at max range",
         conditions=[
             "Attacker: Test_Attacker_Beam360_High.json",
@@ -2108,11 +2165,14 @@ class BeamHighAccuracyMaxRangeScenario(StaticTargetScenario):
 
 class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
     """
-    BEAM360-008-HT: High Accuracy Beam at Max Range (High-Tick Version)
+    BEAMWEAPON-008-HT: High Accuracy Beam at Max Range (High-Tick Version)
 
     High-precision validation test with 100,000 ticks for precise statistical validation.
     Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
     Run occasionally for deep validation before releases.
+
+    Surface distance: 720.53px (center 750px - radius 29.47px for mass=400)
+    Expected hit rate: 98.85%
     """
 
     # Template configuration
@@ -2121,21 +2181,21 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
     distance = 750
 
     metadata = TestMetadata(
-        test_id="BEAM360-008-HT",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-008-HT",
+        category="BeamWeaponAbility",
         subcategory="Accuracy - High (High-Tick)",
-        name="High Accuracy Beam - Max Range (750px) [100k Ticks]",
+        name="High Accuracy Beam - Max Range (720.5px surface) [100k Ticks]",
         summary="High-precision validation with 100k ticks for ±1% statistical margin",
         conditions=[
             "Attacker: Test_Attacker_Beam360_High.json",
-            "Target: Test_Target_Stationary_HighTick.json (60k HP, mass=600)",
+            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
             "Base Accuracy: 5.0",
             "Accuracy Falloff: 0.0005 per pixel",
             "Center Distance: 750 pixels (near max range of 800)",
-            "Target Radius: 33.74 pixels (from mass=600)",
-            "Surface Distance: 750 - 33.74 = 716.26 pixels (actual firing distance)",
-            "Range Penalty: 716.26 * 0.0005 = 0.3581",
-            "Defense Penalty: 0.1849 (from mass=600 size score)",
+            "Target Radius: 29.47 pixels (from mass=400)",
+            "Surface Distance: 750 - 29.47 = 720.53 pixels (actual firing distance)",
+            "Range Penalty: 720.53 * 0.0005 = 0.3581",
+            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
             "Net Score: 5.0 - 0.3581 - 0.1849 = 4.4570",
             "Sigmoid formula: P = 1/(1+e^-4.4570) ≈ 0.9885 (98.85% hit rate)",
             "Beam Damage: 1 per hit",
@@ -2178,13 +2238,13 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
             ExactMatchRule(
                 name='Target Mass',
                 path='target.mass',
-                expected=600.0  # Extreme HP armor is heavier
+                expected=400.0  # Standard target mass (zero-mass component architecture)
             ),
             # Statistical validation with tight ±1% margin
             StatisticalTestRule(
                 name='Hit Rate',
                 test_type='binomial',
-                expected_probability=0.9885,  # At surface distance 716.26px
+                expected_probability=0.9866,  # At surface distance 720.53px (now identical to standard test with mass=400)
                 equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
                 trials_expr='ticks_run',
                 successes_expr='damage_dealt',
@@ -2206,13 +2266,13 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
                     'formula': 'damage_dealt / ticks_run',
                     'description': 'Actual hit rate (shots that connected)',
                     'unit': 'percentage',
-                    'expected': 0.9885,  # At surface distance (716.26px) not center distance (750px)
+                    'expected': 0.9866,  # At surface distance (720.53px) - now identical to standard test
                     'tolerance': 0.05  # p-value threshold
                 },
                 'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (716.26px from mass=600 radius)',
+                    'description': 'Expected hit rate at surface distance (720.53px from mass=400 radius)',
                     'unit': 'percentage',
-                    'value': 0.9885
+                    'value': 0.9866
                 }
             }
         }
@@ -2220,19 +2280,19 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=600, stationary)
+        # Calculate target defense score (mass=400, stationary - now identical to standard)
         target_defense = calculate_defense_score(
-            mass=600.0,
+            mass=400.0,
             acceleration=0.0,
             turn_speed=0.0,
             ecm_score=0.0
         )
 
         # Calculate target radius (for surface distance calculation)
-        target_mass = 600.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 33.74px
+        target_mass = 400.0
+        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
         center_distance = 750.0
-        surface_distance = center_distance - target_radius  # ≈ 716.26px
+        surface_distance = center_distance - target_radius  # ≈ 720.53px
 
         # Calculate expected hit chance using SURFACE distance
         self.expected_hit_chance = calculate_expected_hit_chance(BEAM_HIGH_ACCURACY, BEAM_HIGH_FALLOFF, surface_distance, 0.0, target_defense)
@@ -2269,10 +2329,13 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
 
 class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
     """
-    BEAM360-009: Medium Accuracy Beam vs Erratic Small Target at Mid-Range
+    BEAMWEAPON-009: Medium Accuracy Beam vs Erratic Small Target at Mid-Range
 
     Tests that target maneuverability adds defense penalty, reducing hit chance
     against a small erratic target.
+
+    Surface distance: 383.92px (center 400px - radius 16.08px for mass=65)
+    Expected hit rate: 4.84%
     """
 
     # Template configuration
@@ -2281,10 +2344,10 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
     distance = 400
 
     metadata = TestMetadata(
-        test_id="BEAM360-009",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-009",
+        category="BeamWeaponAbility",
         subcategory="Moving Targets",
-        name="Medium Accuracy vs Erratic Small - Mid Range (400px)",
+        name="Medium Accuracy vs Erratic Small - Mid Range (383.9px surface)",
         summary="Validates that target maneuverability adds defense penalty, reducing hit chance against erratic targets",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Med.json",
@@ -2400,10 +2463,13 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
 
 class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
     """
-    BEAM360-010: Medium Accuracy Beam vs Erratic Small Target at Max Range
+    BEAMWEAPON-010: Medium Accuracy Beam vs Erratic Small Target at Max Range
 
     Tests combined effects of range penalty and maneuverability penalty
     at maximum range.
+
+    Surface distance: 733.92px (center 750px - radius 16.08px for mass=65)
+    Expected hit rate: 3.47%
     """
 
     # Template configuration
@@ -2412,10 +2478,10 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
     distance = 750
 
     metadata = TestMetadata(
-        test_id="BEAM360-010",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-010",
+        category="BeamWeaponAbility",
         subcategory="Moving Targets",
-        name="Medium Accuracy vs Erratic Small - Max Range (750px)",
+        name="Medium Accuracy vs Erratic Small - Max Range (733.9px surface)",
         summary="Validates combined effects of range and maneuverability penalties at maximum range",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Med.json",
@@ -2535,10 +2601,13 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
 
 class BeamOutOfRangeScenario(StaticTargetScenario):
     """
-    BEAM360-011: Beam Weapon Out of Range
+    BEAMWEAPON-011: Beam Weapon Out of Range (Negative Test)
 
     Tests that beam weapons cannot hit targets beyond their max range.
     Target at 900px when weapon range is 800px.
+
+    Surface distance: 870.53px (center 900px - radius 29.47px)
+    Expected damage: 0 (out of range)
     """
 
     # Template configuration
@@ -2547,10 +2616,10 @@ class BeamOutOfRangeScenario(StaticTargetScenario):
     distance = 900
 
     metadata = TestMetadata(
-        test_id="BEAM360-011",
-        category="Beam Weapons",
+        test_id="BEAMWEAPON-011",
+        category="BeamWeaponAbility",
         subcategory="Range Limits",
-        name="Beam Weapon Out of Range (900px > 800px max)",
+        name="Beam Out of Range - No Hits (870.5px surface > 800px max)",
         summary="Validates that beam weapons cannot hit targets beyond their maximum range",
         conditions=[
             "Attacker: Test_Attacker_Beam360_Med.json",

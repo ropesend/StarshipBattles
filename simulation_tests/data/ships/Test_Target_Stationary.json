@@ -12,7 +12,7 @@
     255
   ],
   "team_id": 2,
-  "ship_class": "TestM_2L",
+  "ship_class": "TestS_2L",
   "theme_id": "Federation",
   "ai_strategy": "test_do_nothing",
   "layers": {
@@ -23,9 +23,9 @@
     ],
     "ARMOR": []
   },
-  "_test_notes": "Stationary target with extreme HP armor (1 billion) for beam weapon testing",
+  "_test_notes": "Stationary target with extreme HP armor (1 billion) for beam weapon testing. Mass=400 from hull_test_s only (armor has 0 mass).",
   "expected_stats": {
-    "max_hp": 1000000500,
+    "max_hp": 1000000100,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,

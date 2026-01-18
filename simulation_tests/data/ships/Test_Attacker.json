@@ -6,7 +6,7 @@
     "_description": "Combat Lab test ship: Test_Attacker"
   },
   "name": "Test Attacker",
-  "ship_class": "TestShip_S_2L",
+  "ship_class": "TestS_4L",
   "theme_id": "Federation",
   "team_id": 0,
   "color": [
@@ -44,6 +44,7 @@
       }
     ]
   },
+  "_test_notes": "Standard test attacker. Mass = hull_test_s(400) + bridge(0) + weapon(0) + 5*armor(0) = 400. Zero-mass component architecture.",
   "resources": {
     "fuel": 0.0,
     "energy": 0.0,
@@ -58,7 +59,7 @@
     "acceleration_rate": 0.0,
     "turn_speed": 0.0,
     "total_thrust": 0,
-    "mass": 120.0,
+    "mass": 400.0,
     "armor_hp_pool": 1000
   }
 }

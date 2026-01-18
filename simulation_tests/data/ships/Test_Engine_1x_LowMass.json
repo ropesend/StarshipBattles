@@ -23,26 +23,26 @@
     ],
     "ARMOR": []
   },
-  "_test_notes": "Minimal ship: 1 engine only. Mass = hull(20) + engine(20) = 40",
+  "_test_notes": "Minimal ship: 1 engine only. Mass = hull_test_s(400) + engine(0) = 400. Zero-mass component architecture.",
   "expected_stats": {
     "max_hp": 150,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,
-    "max_speed": 312.5,
-    "acceleration_rate": 781.25,
+    "max_speed": 31.25,
+    "acceleration_rate": 7.8125,
     "turn_speed": 0.0,
     "total_thrust": 500.0,
-    "mass": 40.0,
+    "mass": 400.0,
     "armor_hp_pool": 0
   },
   "propulsion_details": {
     "engine_component": "test_engine_no_fuel",
     "engine_thrust": 500,
-    "total_mass": 40,
+    "total_mass": 400,
     "formulas": {
-      "max_speed": "max_speed = (thrust * K_SPEED) / mass = (500 * 25) / 40 = 312.5",
-      "acceleration": "acceleration = (thrust * K_THRUST) / mass\u00b2 = (500 * 2500) / 40\u00b2 = 781.25"
+      "max_speed": "max_speed = (thrust * K_SPEED) / mass = (500 * 25) / 400 = 31.25",
+      "acceleration": "acceleration = (thrust * K_THRUST) / mass² = (500 * 2500) / 400² = 7.8125"
     }
   },
   "resources": {

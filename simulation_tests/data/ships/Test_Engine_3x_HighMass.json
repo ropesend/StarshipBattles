@@ -36,18 +36,28 @@
     "OUTER": [],
     "ARMOR": []
   },
-  "_test_notes": "3 engines + 2x 10k mass sims. Mass = hull(2000) + 3*20 + 2*10000 = 22060. Thrust = 1500",
+  "_test_notes": "3 engines + 2x 10k mass sims. Mass = hull_test_l(4000) + 3*engine(0) + 2*10000 = 24000. Thrust = 1500. Zero-mass component architecture.",
   "expected_stats": {
     "max_hp": 2152,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,
-    "max_speed": 1.699909338168631,
-    "acceleration_rate": 0.007705844687981102,
+    "max_speed": 1.5625,
+    "acceleration_rate": 0.006510416666666667,
     "turn_speed": 0.0,
     "total_thrust": 1500.0,
-    "mass": 22060.0,
+    "mass": 24000.0,
     "armor_hp_pool": 0
+  },
+  "propulsion_details": {
+    "engine_count": 3,
+    "engine_thrust_each": 500,
+    "total_thrust": 1500,
+    "total_mass": 24000,
+    "formulas": {
+      "max_speed": "max_speed = (thrust * K_SPEED) / mass = (1500 * 25) / 24000 = 1.5625",
+      "acceleration": "acceleration = (thrust * K_THRUST) / mass² = (1500 * 2500) / 24000² = 0.006510"
+    }
   },
   "resources": {
     "fuel": 0.0,

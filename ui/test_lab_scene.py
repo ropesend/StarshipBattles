@@ -989,6 +989,14 @@ class TestRunDetailsPanel:
         self.view_states_button_rect = None
         self.on_view_states = None  # Callback when button clicked
 
+        # Use Seed button (copies seed from this run to seed control)
+        self.use_seed_button_rect = None
+        self.on_use_seed = None  # Callback with seed value
+
+        # Copy Results button
+        self.copy_results_button_rect = None
+        self.on_copy_results = None  # Callback for copying results to clipboard
+
     def set_run(self, run_record, run_number):
         """Set the run to display details for."""
         self.selected_run = (run_record, run_number)
@@ -1016,12 +1024,27 @@ class TestRunDetailsPanel:
         if not self.selected_run:
             return False
 
-        # Handle View States button click
+        # Handle button clicks
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            # View States button
             if self.view_states_button_rect and self.view_states_button_rect.collidepoint(event.pos):
                 run_record, run_number = self.selected_run
                 if self.on_view_states and run_record.has_battle_states():
                     self.on_view_states(run_record, run_number)
+                return True
+
+            # Use Seed button
+            if self.use_seed_button_rect and self.use_seed_button_rect.collidepoint(event.pos):
+                run_record, _ = self.selected_run
+                if self.on_use_seed and run_record.seed is not None:
+                    self.on_use_seed(run_record.seed)
+                return True
+
+            # Copy Results button
+            if self.copy_results_button_rect and self.copy_results_button_rect.collidepoint(event.pos):
+                run_record, run_number = self.selected_run
+                if self.on_copy_results:
+                    self.on_copy_results(run_record, run_number)
                 return True
 
         if event.type == pygame.MOUSEWHEEL:
@@ -1066,6 +1089,23 @@ class TestRunDetailsPanel:
         status_color = self.pass_color if run_record.passed else self.fail_color
         status_surf = self.title_font.render(status_text, True, status_color)
         surface.blit(status_surf, (self.x + 10, y_offset))
+        y_offset += 25
+
+        # Seed and Ticks info
+        if run_record.seed is not None:
+            seed_text = f"Seed: {run_record.seed}"
+            seed_surf = self.small_font.render(seed_text, True, (150, 150, 160))
+            surface.blit(seed_surf, (self.x + 15, y_offset))
+
+        ticks_run = run_record.metrics.get('ticks_run')
+        if ticks_run is not None:
+            ticks_text = f"Ticks: {ticks_run}"
+            ticks_surf = self.small_font.render(ticks_text, True, (150, 150, 160))
+            # Position ticks to the right of seed (or at start if no seed)
+            ticks_x = self.x + 180 if run_record.seed is not None else self.x + 15
+            surface.blit(ticks_surf, (ticks_x, y_offset))
+
+        y_offset -= 25  # Reset for button positioning
 
         # View States button (if battle states are available)
         self.view_states_button_rect = None
@@ -1090,6 +1130,63 @@ class TestRunDetailsPanel:
                 text_x = button_x + (button_width - btn_text.get_width()) // 2
                 text_y = button_y + (button_height - btn_text.get_height()) // 2
                 surface.blit(btn_text, (text_x, text_y))
+
+        # Use Seed button (always show if seed is available)
+        self.use_seed_button_rect = None
+        if run_record.seed is not None:
+            button_width = 80
+            button_height = 26
+            # Position to the left of View States button (or at the right if no View States)
+            if self.view_states_button_rect:
+                button_x = self.view_states_button_rect.x - button_width - 10
+            else:
+                button_x = self.x + self.width - button_width - 15
+            button_y = y_offset - 5 + self.scroll_offset
+
+            # Only show button if it's in the visible area
+            if button_y >= self.y and button_y + button_height <= self.y + self.height:
+                self.use_seed_button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
+
+                mouse_pos = pygame.mouse.get_pos()
+                is_hovered = self.use_seed_button_rect.collidepoint(mouse_pos)
+                btn_color = self.button_hover_color if is_hovered else self.button_color
+
+                pygame.draw.rect(surface, btn_color, self.use_seed_button_rect, border_radius=4)
+                pygame.draw.rect(surface, (100, 150, 100), self.use_seed_button_rect, 1, border_radius=4)
+
+                btn_text = self.small_font.render("Use Seed", True, (255, 255, 255))
+                text_x = button_x + (button_width - btn_text.get_width()) // 2
+                text_y = button_y + (button_height - btn_text.get_height()) // 2
+                surface.blit(btn_text, (text_x, text_y))
+
+        # Copy Results button (always show)
+        self.copy_results_button_rect = None
+        button_width = 90
+        button_height = 26
+        # Position to the left of Use Seed button (or at the right if no Use Seed)
+        if self.use_seed_button_rect:
+            button_x = self.use_seed_button_rect.x - button_width - 10
+        elif self.view_states_button_rect:
+            button_x = self.view_states_button_rect.x - button_width - 10
+        else:
+            button_x = self.x + self.width - button_width - 15
+        button_y = y_offset - 5 + self.scroll_offset
+
+        # Only show button if it's in the visible area
+        if button_y >= self.y and button_y + button_height <= self.y + self.height:
+            self.copy_results_button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
+
+            mouse_pos = pygame.mouse.get_pos()
+            is_hovered = self.copy_results_button_rect.collidepoint(mouse_pos)
+            btn_color = self.button_hover_color if is_hovered else self.button_color
+
+            pygame.draw.rect(surface, btn_color, self.copy_results_button_rect, border_radius=4)
+            pygame.draw.rect(surface, (150, 130, 100), self.copy_results_button_rect, 1, border_radius=4)
+
+            btn_text = self.small_font.render("Copy Results", True, (255, 255, 255))
+            text_x = button_x + (button_width - btn_text.get_width()) // 2
+            text_y = button_y + (button_height - btn_text.get_height()) // 2
+            surface.blit(btn_text, (text_x, text_y))
 
         y_offset += 40
 
@@ -2206,6 +2303,12 @@ class TestLabScene:
         # Set up View States callback
         self.test_details_panel.on_view_states = self._on_view_battle_states
 
+        # Set up Use Seed callback
+        self.test_details_panel.on_use_seed = self._on_use_seed_from_run
+
+        # Set up Copy Results callback
+        self.test_details_panel.on_copy_results = self._on_copy_results
+
         self.results_panel.set_test(test_id)
 
         logger.debug(f"Created results panel at x={base_x} and details panel at x={details_x} for test {test_id}")
@@ -2222,12 +2325,46 @@ class TestLabScene:
         self.run_test_btn_rect = None
         self.run_headless_btn_rect = None
 
+        # Tag filter button rects (populated in _draw_tag_filters)
+        self.tag_filter_rects = {}  # tag -> pygame.Rect
+        self.tag_exclude_rects = {}  # tag -> pygame.Rect for exclude buttons
+
+        # Seed control rects (populated in _draw_seed_controls)
+        self.seed_mode_rects = {}  # mode -> pygame.Rect
+        self.seed_input_rect = None
+        self.copy_seed_rect = None
+
     def _get_filtered_scenarios(self):
-        """Get scenarios filtered by selected category."""
+        """Get scenarios filtered by selected category and tags."""
+        # Start with category filter
         if self.selected_category is None:
-            return self.all_scenarios
+            scenarios = self.all_scenarios
         else:
-            return self.registry.get_by_category(self.selected_category)
+            scenarios = self.registry.get_by_category(self.selected_category)
+
+        # Apply tag filters
+        active_tags = self.controller.ui_state.get_active_tag_filters()
+        excluded_tags = self.controller.ui_state.get_excluded_tags()
+
+        if not active_tags and not excluded_tags:
+            return scenarios
+
+        filtered = {}
+        for test_id, info in scenarios.items():
+            metadata = info['metadata']
+            test_tags = set(metadata.tags)
+
+            # Check excluded tags first (any excluded tag means skip)
+            if excluded_tags and any(tag in test_tags for tag in excluded_tags):
+                continue
+
+            # Check active tags (all must be present if any are set)
+            if active_tags and not all(tag in test_tags for tag in active_tags):
+                continue
+
+            filtered[test_id] = info
+
+        return filtered
         
     def reset_selection(self):
         """Clear test selection (called when returning from battle)."""
@@ -2308,6 +2445,74 @@ class TestLabScene:
             )
         else:
             self.output_log.append("ERROR: Could not load battle state files")
+
+    def _on_use_seed_from_run(self, seed):
+        """
+        Copy the seed from a test run to the custom seed control.
+
+        Args:
+            seed: The seed value to use
+        """
+        self.controller.ui_state.set_custom_seed(seed)
+        self.output_log.append(f"Seed set to: {seed}")
+
+    def _on_copy_results(self, run_record, run_number):
+        """
+        Copy test results to clipboard.
+
+        Args:
+            run_record: TestRunRecord with test results
+            run_number: Display number for the run
+        """
+        # Build a text representation of the test results
+        lines = []
+        lines.append(f"Test: {self.selected_test_id}")
+        lines.append(f"Run #{run_number} - {run_record.get_formatted_timestamp()}")
+        lines.append(f"Status: {'PASSED' if run_record.passed else 'FAILED'}")
+        if run_record.seed is not None:
+            lines.append(f"Seed: {run_record.seed}")
+        lines.append("")
+
+        # Metrics
+        lines.append("=== Test Metrics ===")
+        for key, value in run_record.metrics.items():
+            if key not in ['validation_results', 'validation_summary']:
+                if isinstance(value, float):
+                    value_str = f"{value:.4f}"
+                else:
+                    value_str = str(value)
+                display_key = key.replace('_', ' ').title()
+                lines.append(f"  {display_key}: {value_str}")
+        lines.append("")
+
+        # Validation Results
+        if run_record.validation_results:
+            lines.append("=== Validation Results ===")
+            for vr in run_record.validation_results:
+                status = vr['status']
+                name = vr['name']
+                expected = vr.get('expected')
+                actual = vr.get('actual')
+                p_value = vr.get('p_value')
+
+                symbol = "✓" if status == 'PASS' else "✗"
+                lines.append(f"{symbol} {name}: {status}")
+                if expected is not None:
+                    lines.append(f"    Expected: {expected}")
+                if actual is not None:
+                    lines.append(f"    Actual: {actual}")
+                if p_value is not None:
+                    lines.append(f"    p-value: {p_value:.6f}")
+                lines.append("")
+
+        # Copy to clipboard using pygame's scrap module
+        try:
+            result_text = "\n".join(lines)
+            pygame.scrap.init()
+            pygame.scrap.put(pygame.SCRAP_TEXT, result_text.encode('utf-8'))
+            self.output_log.append("Test results copied to clipboard")
+        except Exception as e:
+            self.output_log.append(f"Failed to copy to clipboard: {e}")
 
     def _on_run(self):
         """Run the selected test scenario visually in Combat Lab."""
@@ -2454,8 +2659,8 @@ class TestLabScene:
 
             # Capture battle states for later viewing
             from test_framework.battle_state_capture import BattleStateCapture
-            import random
-            seed = random.randint(0, 2**31 - 1)
+            # Get seed based on current seed mode setting
+            seed = self.controller.ui_state.get_effective_seed(metadata.seed)
 
             with BattleStateCapture(engine, self.selected_test_id, seed) as state_capture:
                 # Run simulation as fast as possible
@@ -2588,8 +2793,8 @@ class TestLabScene:
 
             # Run simulation headless with battle state capture
             from test_framework.battle_state_capture import BattleStateCapture
-            import random
-            seed = random.randint(0, 2**31 - 1)
+            # Get seed based on current seed mode setting
+            seed = self.controller.ui_state.get_effective_seed(metadata.seed)
 
             start_time = time.time()
             tick_count = 0
@@ -2777,6 +2982,19 @@ class TestLabScene:
                 self.selected_test_id = None  # Clear test selection
                 return
 
+        # Check tag filter clicks
+        # Left-click: cycle through states (neutral -> include -> exclude -> neutral)
+        for tag, rect in self.tag_filter_rects.items():
+            if rect.collidepoint(mx, my):
+                self.controller.ui_state.cycle_tag_state(tag)
+                return
+
+        # Check tag filter clear button
+        if hasattr(self, 'tag_clear_rect') and self.tag_clear_rect:
+            if self.tag_clear_rect.collidepoint(mx, my):
+                self.controller.ui_state.clear_tag_filters()
+                return
+
         # Check "Run Tests" button click (in test list panel)
         if self.run_all_tests_btn_rect and self.run_all_tests_btn_rect.collidepoint(mx, my):
             if not self.batch_running:
@@ -2819,6 +3037,12 @@ class TestLabScene:
         if self.update_expected_button_visible and self.update_expected_button_rect:
             if self.update_expected_button_rect.collidepoint(mx, my):
                 self._handle_update_expected_values()
+                return
+
+        # Check seed mode button clicks
+        for mode_id, rect in self.seed_mode_rects.items():
+            if rect.collidepoint(mx, my):
+                self.controller.ui_state.set_seed_mode(mode_id)
                 return
 
     def update(self):
@@ -2948,6 +3172,109 @@ class TestLabScene:
             count = len(self.registry.get_by_category(category))
             text = self.body_font.render(f"{category} ({count})", True, self.TEXT_COLOR)
             screen.blit(text, (rect.x + 10, rect.y + 10))
+
+        # Draw tag filter section below categories
+        tag_section_y = y + len(self.categories) * 50 + 20
+        self._draw_tag_filters(screen, x, tag_section_y)
+
+    def _draw_tag_filters(self, screen, x, y):
+        """Draw tag filter buttons for quick filtering."""
+        # Header
+        header_text = self.small_font.render("TAG FILTERS", True, self.HEADER_COLOR)
+        screen.blit(header_text, (x, y))
+        y += 25
+
+        # Get all unique tags from registry
+        all_tags = self.registry.get_all_tags()
+
+        # Prioritize common filter tags at the top
+        priority_tags = ['high-tick', 'precision', 'quick']
+        sorted_tags = [t for t in priority_tags if t in all_tags]
+        sorted_tags += [t for t in sorted(all_tags) if t not in priority_tags]
+
+        # Limit display to avoid overcrowding
+        display_tags = sorted_tags[:8]  # Show top 8 tags
+
+        self.tag_filter_rects = {}
+        mx, my = pygame.mouse.get_pos()
+
+        for i, tag in enumerate(display_tags):
+            # Create tag button
+            btn_width = 95
+            btn_height = 24
+            col = i % 2
+            row = i // 2
+            btn_x = x + col * (btn_width + 5)
+            btn_y = y + row * (btn_height + 4)
+
+            rect = pygame.Rect(btn_x, btn_y, btn_width, btn_height)
+            self.tag_filter_rects[tag] = rect
+
+            # Determine state and color
+            is_active = self.controller.ui_state.is_tag_active(tag)
+            is_excluded = self.controller.ui_state.is_tag_excluded(tag)
+            is_hovered = rect.collidepoint(mx, my)
+
+            if is_excluded:
+                bg_color = (100, 40, 40)  # Red for excluded
+                border_color = (180, 80, 80)
+                text_color = (255, 150, 150)
+                prefix = "✗ "
+            elif is_active:
+                bg_color = (40, 80, 40)  # Green for active
+                border_color = (80, 150, 80)
+                text_color = (150, 255, 150)
+                prefix = "✓ "
+            elif is_hovered:
+                bg_color = (50, 50, 60)
+                border_color = (100, 100, 110)
+                text_color = self.TEXT_COLOR
+                prefix = ""
+            else:
+                bg_color = self.CATEGORY_BG
+                border_color = self.BORDER_COLOR
+                text_color = (180, 180, 180)
+                prefix = ""
+
+            pygame.draw.rect(screen, bg_color, rect, border_radius=3)
+            pygame.draw.rect(screen, border_color, rect, 1, border_radius=3)
+
+            # Truncate tag text if needed
+            display_tag = prefix + tag
+            if len(display_tag) > 12:
+                display_tag = display_tag[:11] + "…"
+            tag_text = self.small_font.render(display_tag, True, text_color)
+            screen.blit(tag_text, (rect.x + 4, rect.y + 4))
+
+        # Show filter count if active
+        active_count = len(self.controller.ui_state.get_active_tag_filters())
+        excluded_count = len(self.controller.ui_state.get_excluded_tags())
+        if active_count > 0 or excluded_count > 0:
+            filter_y = y + ((len(display_tags) + 1) // 2) * 28 + 5
+            if active_count > 0 and excluded_count > 0:
+                filter_text = f"+{active_count} / -{excluded_count}"
+            elif active_count > 0:
+                filter_text = f"+{active_count} tags"
+            else:
+                filter_text = f"-{excluded_count} tags"
+
+            # Clear filters button
+            clear_rect = pygame.Rect(x, filter_y, 80, 20)
+            is_clear_hovered = clear_rect.collidepoint(mx, my)
+            clear_bg = (80, 60, 60) if is_clear_hovered else (60, 50, 50)
+            pygame.draw.rect(screen, clear_bg, clear_rect, border_radius=3)
+            pygame.draw.rect(screen, (120, 80, 80), clear_rect, 1, border_radius=3)
+            clear_text = self.small_font.render("Clear", True, (255, 180, 180))
+            screen.blit(clear_text, (clear_rect.x + 22, clear_rect.y + 3))
+
+            # Store for click handling
+            self.tag_clear_rect = clear_rect
+
+            # Filter count display
+            count_text = self.small_font.render(filter_text, True, (150, 150, 150))
+            screen.blit(count_text, (x + 90, filter_y + 3))
+        else:
+            self.tag_clear_rect = None
 
     def _draw_test_list(self, screen):
         """Draw the test list panel with scrolling support."""
@@ -3179,10 +3506,94 @@ class TestLabScene:
 
         y += 20
 
-        # Metadata footer
-        footer_text = f"Max Ticks: {metadata.max_ticks} | Seed: {metadata.seed}"
-        footer_surf = self.small_font.render(footer_text, True, (120, 120, 120))
-        screen.blit(footer_surf, (x, y))
+        # Metadata footer with seed controls
+        self._draw_seed_controls(screen, x, y, metadata)
+
+    def _draw_seed_controls(self, screen, x, y, metadata):
+        """Draw seed control UI with mode selection."""
+        mx, my = pygame.mouse.get_pos()
+
+        # Max ticks display
+        ticks_text = f"Max Ticks: {metadata.max_ticks}"
+        ticks_surf = self.small_font.render(ticks_text, True, (120, 120, 120))
+        screen.blit(ticks_surf, (x, y))
+
+        # Seed control section
+        y += 20
+        seed_label = self.small_font.render("Seed:", True, (120, 120, 120))
+        screen.blit(seed_label, (x, y))
+
+        # Seed mode buttons
+        mode_x = x + 45
+        btn_height = 20
+        btn_spacing = 5
+
+        current_mode = self.controller.ui_state.get_seed_mode()
+        self.seed_mode_rects = {}
+
+        modes = [
+            ("random", "Random", 60),
+            ("metadata", f"Fixed ({metadata.seed})", 100),
+            ("custom", "Custom", 55)
+        ]
+
+        for mode_id, mode_label, btn_width in modes:
+            rect = pygame.Rect(mode_x, y - 2, btn_width, btn_height)
+            self.seed_mode_rects[mode_id] = rect
+
+            is_active = current_mode == mode_id
+            is_hovered = rect.collidepoint(mx, my)
+
+            if is_active:
+                bg_color = (40, 80, 120)
+                border_color = (80, 140, 200)
+                text_color = (200, 220, 255)
+            elif is_hovered:
+                bg_color = (50, 50, 60)
+                border_color = (100, 100, 110)
+                text_color = self.TEXT_COLOR
+            else:
+                bg_color = self.CATEGORY_BG
+                border_color = self.BORDER_COLOR
+                text_color = (150, 150, 150)
+
+            pygame.draw.rect(screen, bg_color, rect, border_radius=3)
+            pygame.draw.rect(screen, border_color, rect, 1, border_radius=3)
+
+            mode_text = self.small_font.render(mode_label, True, text_color)
+            screen.blit(mode_text, (rect.x + 4, rect.y + 3))
+
+            mode_x += btn_width + btn_spacing
+
+        # If custom mode, show the custom seed value or input hint
+        if current_mode == "custom":
+            custom_seed = self.controller.ui_state.get_custom_seed()
+            if custom_seed is not None:
+                seed_display = f"= {custom_seed}"
+            else:
+                seed_display = "(click to set)"
+            custom_surf = self.small_font.render(seed_display, True, (100, 180, 255))
+            screen.blit(custom_surf, (mode_x + 10, y))
+
+        # Show effective seed that will be used
+        y += 22
+        if current_mode == "random":
+            effective_text = "Next run: random seed"
+            effective_color = (100, 100, 100)
+        elif current_mode == "metadata":
+            effective_text = f"Next run: seed {metadata.seed}"
+            effective_color = (100, 140, 100)
+        else:
+            custom_seed = self.controller.ui_state.get_custom_seed()
+            if custom_seed is not None:
+                effective_text = f"Next run: seed {custom_seed}"
+                effective_color = (100, 140, 180)
+            else:
+                effective_text = "Set custom seed first"
+                effective_color = (180, 100, 100)
+
+        effective_surf = self.small_font.render(effective_text, True, effective_color)
+        screen.blit(effective_surf, (x, y))
 
     def _draw_section(self, screen, x, y, label, text, color):
         """Draw a single-line metadata section."""

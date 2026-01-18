@@ -20,6 +20,14 @@ class UIStateService:
         self._selected_category: Optional[str] = None
         self._selected_test_id: Optional[str] = None
 
+        # Tag filter state
+        self._active_tag_filters: List[str] = []  # Tags to filter by (AND logic)
+        self._excluded_tags: List[str] = []  # Tags to exclude
+
+        # Seed control state
+        self._seed_mode: str = "random"  # "random", "metadata", "custom"
+        self._custom_seed: Optional[int] = None
+
         # Hover state
         self._category_hover: Optional[str] = None
         self._test_hover: Optional[str] = None
@@ -152,3 +160,116 @@ class UIStateService:
                 callback()
             except Exception as e:
                 logger.error(f"Error notifying observer: {e}")
+
+    # === Tag Filter Methods ===
+
+    def cycle_tag_state(self, tag: str):
+        """
+        Cycle a tag through three states: neutral -> include -> exclude -> neutral.
+
+        Args:
+            tag: Tag to cycle
+        """
+        if tag in self._active_tag_filters:
+            # Currently included -> move to excluded
+            self._active_tag_filters.remove(tag)
+            self._excluded_tags.append(tag)
+        elif tag in self._excluded_tags:
+            # Currently excluded -> move to neutral
+            self._excluded_tags.remove(tag)
+        else:
+            # Currently neutral -> move to included
+            self._active_tag_filters.append(tag)
+        self._notify_observers()
+
+    def get_tag_state(self, tag: str) -> str:
+        """
+        Get the current state of a tag filter.
+
+        Args:
+            tag: Tag to check
+
+        Returns:
+            "include", "exclude", or "neutral"
+        """
+        if tag in self._active_tag_filters:
+            return "include"
+        elif tag in self._excluded_tags:
+            return "exclude"
+        else:
+            return "neutral"
+
+    def clear_tag_filters(self):
+        """Clear all tag filters."""
+        self._active_tag_filters = []
+        self._excluded_tags = []
+        self._notify_observers()
+
+    def get_active_tag_filters(self) -> List[str]:
+        """Get list of active tag filters (included tags)."""
+        return self._active_tag_filters.copy()
+
+    def get_excluded_tags(self) -> List[str]:
+        """Get list of excluded tags."""
+        return self._excluded_tags.copy()
+
+    def is_tag_active(self, tag: str) -> bool:
+        """Check if a tag is in the active filter list (included)."""
+        return tag in self._active_tag_filters
+
+    def is_tag_excluded(self, tag: str) -> bool:
+        """Check if a tag is excluded."""
+        return tag in self._excluded_tags
+
+    # === Seed Control Methods ===
+
+    def set_seed_mode(self, mode: str):
+        """
+        Set the seed mode.
+
+        Args:
+            mode: "random", "metadata", or "custom"
+        """
+        if mode not in ("random", "metadata", "custom"):
+            raise ValueError(f"Invalid seed mode: {mode}")
+        if self._seed_mode != mode:
+            self._seed_mode = mode
+            self._notify_observers()
+
+    def set_custom_seed(self, seed: Optional[int]):
+        """
+        Set a custom seed value.
+
+        Args:
+            seed: Integer seed value or None
+        """
+        self._custom_seed = seed
+        if seed is not None:
+            self._seed_mode = "custom"
+        self._notify_observers()
+
+    def get_seed_mode(self) -> str:
+        """Get current seed mode."""
+        return self._seed_mode
+
+    def get_custom_seed(self) -> Optional[int]:
+        """Get custom seed value."""
+        return self._custom_seed
+
+    def get_effective_seed(self, metadata_seed: int) -> int:
+        """
+        Get the effective seed to use for a test run.
+
+        Args:
+            metadata_seed: The seed from test metadata
+
+        Returns:
+            Seed to use based on current mode
+        """
+        import random
+        if self._seed_mode == "metadata":
+            return metadata_seed
+        elif self._seed_mode == "custom" and self._custom_seed is not None:
+            return self._custom_seed
+        else:  # random
+            return random.randint(0, 2**31 - 1)
