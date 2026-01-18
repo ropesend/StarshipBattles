@@ -140,10 +140,6 @@ class StrategyScene:
         self.camera.update(dt)
         self.ui.update(dt)
 
-        # Update build queue screen if open
-        if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
-            self.build_queue_screen.update(dt)
-
     def draw(self, screen):
         """Render the scene."""
         self._renderer.draw(screen)
@@ -152,10 +148,6 @@ class StrategyScene:
             self._renderer.draw_processing_overlay(screen)
 
         self.ui.draw(screen)
-
-        # Draw build queue screen if open (overlay on top)
-        if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
-            self.build_queue_screen.draw(screen)
 
     def handle_resize(self, width, height):
         """Handle window resize."""
@@ -318,6 +310,9 @@ class StrategyScene:
             planet = self.selected_object
             if planet.owner_id == self.current_empire.id:
                 from game.ui.screens.build_queue_screen import BuildQueueScreen
+                
+                # Hide main UI
+                self.ui.hide_ui()
 
                 # Create screen
                 self.build_queue_screen = BuildQueueScreen(
@@ -331,6 +326,10 @@ class StrategyScene:
     def _on_build_queue_close(self):
         """Handle build queue screen closing."""
         self.build_queue_screen = None
+        
+        # Show main UI again
+        self.ui.show_ui()
+        
         # Refresh planet details to show updated queue/facilities
         if self.selected_object:
             img = self._get_object_asset(self.selected_object)

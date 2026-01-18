@@ -272,6 +272,23 @@ class StrategyInterface:
             container=self.detail_panel,
             visible=0 # Hidden by default
         )
+        
+        self.panels = [
+            self.top_bar,
+            self.system_panel,
+            self.sector_panel,
+            self.detail_panel
+        ]
+
+    def hide_ui(self):
+        """Hide all main strategy UI panels."""
+        for panel in self.panels:
+            panel.hide()
+
+    def show_ui(self):
+        """Show all main strategy UI panels."""
+        for panel in self.panels:
+            panel.show()
 
 
         
