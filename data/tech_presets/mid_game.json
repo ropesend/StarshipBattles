@@ -1,0 +1,29 @@
+{
+    "name": "Mid Game Tech",
+    "description": "Advanced components for mid-game designs",
+    "unlocked_components": [
+        "hull_escort",
+        "hull_frigate",
+        "hull_destroyer",
+        "hull_cruiser",
+        "laser_cannon",
+        "railgun",
+        "plasma_cannon",
+        "missile_launcher",
+        "basic_engine",
+        "advanced_engine",
+        "bridge",
+        "crew_quarters",
+        "basic_armor",
+        "advanced_armor",
+        "shield_generator_1",
+        "shield_generator_2",
+        "point_defense"
+    ],
+    "unlocked_modifiers": [
+        "simple_size_mount",
+        "basic_armor_mod",
+        "advanced_armor_mod",
+        "targeting_computer"
+    ]
+}
