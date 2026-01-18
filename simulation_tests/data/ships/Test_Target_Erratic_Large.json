@@ -29,18 +29,28 @@
     ],
     "ARMOR": []
   },
-  "_test_notes": "Large erratic target",
+  "_test_notes": "Large erratic target. Mass = hull_test_l(4000) + armor(0) + engine(0) + thruster(0) = 4000. Zero-mass component architecture.",
   "expected_stats": {
     "max_hp": 2270,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,
-    "max_speed": 6.112469437652812,
-    "acceleration_rate": 0.29889826100991745,
-    "turn_speed": 1.3516680381627337,
+    "max_speed": 3.125,
+    "acceleration_rate": 0.078125,
+    "turn_speed": 0.4940322399471092,
     "total_thrust": 500.0,
-    "mass": 2045.0,
+    "mass": 4000.0,
     "armor_hp_pool": 200
+  },
+  "propulsion_details": {
+    "engine_thrust": 500,
+    "raw_turn_rate": 5.0,
+    "total_mass": 4000,
+    "formulas": {
+      "max_speed": "max_speed = (thrust * K_SPEED) / mass = (500 * 25) / 4000 = 3.125",
+      "acceleration": "acceleration = (thrust * K_THRUST) / mass² = (500 * 2500) / 4000² = 0.078125",
+      "turn_speed": "turn_speed = (raw_turn * K_TURN) / mass^1.5 = (5.0 * 25000) / 4000^1.5 = 0.494"
+    }
   },
   "resources": {
     "fuel": 0.0,

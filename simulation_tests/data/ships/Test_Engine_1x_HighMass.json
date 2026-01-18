@@ -53,17 +53,27 @@
     ],
     "ARMOR": []
   },
+  "_test_notes": "1 engine + 10x mass simulators. Mass = hull_test_m(1000) + engine(0) + 10*1000 = 11000. Zero-mass component architecture.",
   "expected_stats": {
-    "max_hp": 560,
+    "max_hp": 510,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,
-    "max_speed": 1.2230919765166341,
-    "acceleration_rate": 0.011967631864154933,
+    "max_speed": 1.1363636363636365,
+    "acceleration_rate": 0.010330578512396695,
     "turn_speed": 0.0,
     "total_thrust": 500.0,
-    "mass": 10220.0,
+    "mass": 11000.0,
     "armor_hp_pool": 0
+  },
+  "propulsion_details": {
+    "engine_component": "test_engine_no_fuel",
+    "engine_thrust": 500,
+    "total_mass": 11000,
+    "formulas": {
+      "max_speed": "max_speed = (thrust * K_SPEED) / mass = (500 * 25) / 11000 = 1.1364",
+      "acceleration": "acceleration = (thrust * K_THRUST) / mass² = (500 * 2500) / 11000² = 0.01033"
+    }
   },
   "resources": {
     "fuel": 0.0,

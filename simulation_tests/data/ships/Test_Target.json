@@ -6,7 +6,7 @@
     "_description": "Combat Lab test ship: Test_Target"
   },
   "name": "Test Target",
-  "ship_class": "TestShip_L_4L",
+  "ship_class": "TestL_4L",
   "theme_id": "Federation",
   "team_id": 0,
   "color": [
@@ -41,13 +41,14 @@
       }
     ]
   },
+  "_test_notes": "Standard test target. Mass = hull_test_l(4000) + bridge(0) + 5*armor(0) = 4000. Zero-mass component architecture.",
   "resources": {
     "fuel": 0.0,
     "energy": 0.0,
     "ammo": 0.0
   },
   "expected_stats": {
-    "max_hp": 1050,
+    "max_hp": 3050,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,
@@ -55,7 +56,7 @@
     "acceleration_rate": 0.0,
     "turn_speed": 0.0,
     "total_thrust": 0,
-    "mass": 110.0,
+    "mass": 4000.0,
     "armor_hp_pool": 1000
   }
 }

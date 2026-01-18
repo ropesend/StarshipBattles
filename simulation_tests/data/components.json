@@ -10,7 +10,7 @@
       "id": "test_bridge_basic",
       "name": "Test Bridge (Basic)",
       "type": "Bridge",
-      "mass": 10,
+      "mass": 0,
       "hp": 50,
       "allowed_vehicle_types": [
         "Ship"
@@ -24,7 +24,7 @@
       "id": "test_engine_no_fuel",
       "name": "Test Engine (No Fuel)",
       "type": "Engine",
-      "mass": 20,
+      "mass": 0,
       "hp": 50,
       "thrust_force": 500,
       "sprite_index": 10,
@@ -36,7 +36,7 @@
       "id": "test_engine_slow",
       "name": "Test Engine (Slow)",
       "type": "Engine",
-      "mass": 20,
+      "mass": 0,
       "hp": 50,
       "thrust_force": 50,
       "sprite_index": 10,
@@ -48,7 +48,7 @@
       "id": "test_engine_std",
       "name": "Test Engine (Std)",
       "type": "Engine",
-      "mass": 20,
+      "mass": 0,
       "hp": 50,
       "thrust_force": 500,
       "sprite_index": 10,
@@ -67,7 +67,7 @@
       "id": "test_thruster_std",
       "name": "Test Thruster (Std)",
       "type": "Thruster",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "turn_speed": 5.0,
       "sprite_index": 78,
@@ -79,7 +79,7 @@
       "id": "test_gen_fusion",
       "name": "Test Generator (Fusion)",
       "type": "Generator",
-      "mass": 20,
+      "mass": 0,
       "hp": 100,
       "sprite_index": 81,
       "abilities": {
@@ -90,7 +90,7 @@
       "id": "test_storage_fuel",
       "name": "Test Fuel Tank",
       "type": "Tank",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 20,
       "abilities": {
@@ -101,7 +101,7 @@
       "id": "test_storage_ammo",
       "name": "Test Ammo Mag",
       "type": "Tank",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 19,
       "abilities": {
@@ -112,7 +112,7 @@
       "id": "test_storage_energy",
       "name": "Test Battery",
       "type": "Tank",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 19,
       "abilities": {
@@ -123,7 +123,7 @@
       "id": "test_armor_std",
       "name": "Test Armor (Std)",
       "type": "Armor",
-      "mass": 20,
+      "mass": 0,
       "hp": 200,
       "sprite_index": 14,
       "abilities": {
@@ -134,7 +134,7 @@
       "id": "test_weapon_proj_omni",
       "name": "Test Weapon (Proj, Omni)",
       "type": "ProjectileWeaponAbility",
-      "mass": 10,
+      "mass": 0,
       "hp": 50,
       "sprite_index": 85,
       "abilities": {
@@ -151,7 +151,7 @@
       "id": "test_weapon_proj_fixed",
       "name": "Test Weapon (Proj, Fixed)",
       "type": "ProjectileWeaponAbility",
-      "mass": 10,
+      "mass": 0,
       "hp": 50,
       "sprite_index": 85,
       "allowed_vehicle_types": [
@@ -179,7 +179,7 @@
       "id": "test_weapon_beam_std",
       "name": "Test Weapon (Beam, Std)",
       "type": "BeamWeaponAbility",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 87,
       "allowed_vehicle_types": [
@@ -208,7 +208,7 @@
       "id": "test_weapon_beam_fixed",
       "name": "Test Weapon (Beam, Fixed)",
       "type": "BeamWeaponAbility",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 87,
       "allowed_vehicle_types": [
@@ -237,7 +237,7 @@
       "id": "test_weapon_missile_omni",
       "name": "Test Weapon (Missile, Std)",
       "type": "SeekerWeaponAbility",
-      "mass": 20,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 86,
       "abilities": {
@@ -263,7 +263,7 @@
       "id": "test_weapon_pd_omni",
       "name": "Test Weapon (PD, Std)",
       "type": "BeamWeaponAbility",
-      "mass": 5,
+      "mass": 0,
       "hp": 10,
       "sprite_index": 151,
       "abilities": {
@@ -291,7 +291,7 @@
       "id": "test_shield_std",
       "name": "Test Shield (Std)",
       "type": "Shield",
-      "mass": 20,
+      "mass": 0,
       "hp": 50,
       "sprite_index": 16,
       "abilities": {
@@ -302,7 +302,7 @@
       "id": "test_shield_regen",
       "name": "Test Shield (Regen)",
       "type": "ShieldRegenerator",
-      "mass": 20,
+      "mass": 0,
       "hp": 50,
       "sprite_index": 18,
       "abilities": {
@@ -314,7 +314,7 @@
       "id": "test_sensor_std",
       "name": "Test Sensor (Std)",
       "type": "Sensor",
-      "mass": 10,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 25,
       "abilities": {
@@ -328,7 +328,7 @@
       "id": "test_ecm_std",
       "name": "Test ECM (Std)",
       "type": "Electronics",
-      "mass": 10,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 26,
       "abilities": {
@@ -342,7 +342,7 @@
       "id": "test_cockpit_fighter",
       "name": "Test Fighter Cockpit",
       "type": "Bridge",
-      "mass": 2,
+      "mass": 0,
       "hp": 2,
       "allowed_vehicle_types": [
         "Fighter"
@@ -358,7 +358,7 @@
       "id": "test_core_satellite",
       "name": "Test Satellite Core",
       "type": "Bridge",
-      "mass": 10,
+      "mass": 0,
       "hp": 50,
       "allowed_vehicle_types": [
         "Satellite"
@@ -372,7 +372,7 @@
       "id": "test_crew_quarters",
       "name": "Test Crew Quarters",
       "type": "CrewQuarters",
-      "mass": 30,
+      "mass": 0,
       "hp": 60,
       "sprite_index": 5,
       "abilities": {
@@ -383,7 +383,7 @@
       "id": "test_life_support",
       "name": "Test Life Support",
       "type": "LifeSupport",
-      "mass": 20,
+      "mass": 0,
       "hp": 40,
       "sprite_index": 4,
       "abilities": {
@@ -423,7 +423,7 @@
       "id": "test_beam_low_acc",
       "name": "Test Beam (Low Accuracy)",
       "type": "BeamWeaponAbility",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 87,
       "abilities": {
@@ -448,7 +448,7 @@
       "id": "test_beam_med_acc",
       "name": "Test Beam (Medium Accuracy)",
       "type": "BeamWeaponAbility",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 87,
       "abilities": {
@@ -473,7 +473,7 @@
       "id": "test_beam_high_acc",
       "name": "Test Beam (High Accuracy)",
       "type": "BeamWeaponAbility",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 87,
       "abilities": {
@@ -495,47 +495,59 @@
       }
     },
     {
-      "_comment": "=== TEST HULLS (Phase 6 Migration) ===",
+      "_comment": "=== TEST HULLS - Standardized masses (only source of ship mass) ===",
+      "id": "hull_test_xs",
+      "name": "Test Hull (Extra Small)",
+      "type": "Hull",
+      "mass": 100,
+      "hp": 50,
+      "major_classification": "Hull",
+      "sprite_index": 0,
+      "abilities": {
+        "HullMass": 100
+      }
+    },
+    {
       "id": "hull_test_s",
       "name": "Test Hull (Small)",
       "type": "Hull",
-      "mass": 20,
+      "mass": 400,
       "hp": 100,
       "major_classification": "Hull",
       "sprite_index": 0,
       "abilities": {
-        "HullMass": 20
+        "HullMass": 400
       }
     },
     {
       "id": "hull_test_m",
       "name": "Test Hull (Medium)",
       "type": "Hull",
-      "mass": 200,
+      "mass": 1000,
       "hp": 500,
       "major_classification": "Hull",
       "sprite_index": 0,
       "abilities": {
-        "HullMass": 200
+        "HullMass": 1000
       }
     },
     {
       "id": "hull_test_l",
       "name": "Test Hull (Large)",
       "type": "Hull",
-      "mass": 2000,
+      "mass": 4000,
       "hp": 2000,
       "major_classification": "Hull",
       "sprite_index": 0,
       "abilities": {
-        "HullMass": 2000
+        "HullMass": 4000
       }
     },
     {
       "id": "hull_test_fighter",
       "name": "Test Hull (Fighter)",
       "type": "Hull",
-      "mass": 5,
+      "mass": 25,
       "hp": 25,
       "major_classification": "Hull",
       "allowed_vehicle_types": [
@@ -543,14 +555,14 @@
       ],
       "sprite_index": 0,
       "abilities": {
-        "HullMass": 5
+        "HullMass": 25
       }
     },
     {
       "id": "hull_test_satellite",
       "name": "Test Hull (Satellite)",
       "type": "Hull",
-      "mass": 50,
+      "mass": 100,
       "hp": 100,
       "major_classification": "Hull",
       "allowed_vehicle_types": [
@@ -558,7 +570,7 @@
       ],
       "sprite_index": 0,
       "abilities": {
-        "HullMass": 50
+        "HullMass": 100
       }
     },
     {
@@ -566,7 +578,7 @@
       "id": "test_beam_low_acc_no_resource",
       "name": "Test Beam (Low Accuracy, No Resource)",
       "type": "BeamWeaponAbility",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 87,
       "abilities": {
@@ -584,7 +596,7 @@
       "id": "test_beam_med_acc_no_resource",
       "name": "Test Beam (Medium Accuracy, No Resource)",
       "type": "BeamWeaponAbility",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 87,
       "abilities": {
@@ -602,7 +614,7 @@
       "id": "test_beam_high_acc_no_resource",
       "name": "Test Beam (High Accuracy, No Resource)",
       "type": "BeamWeaponAbility",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 87,
       "abilities": {
@@ -620,7 +632,7 @@
       "id": "test_seeker_no_resource",
       "name": "Test Seeker (No Resource)",
       "type": "SeekerWeaponAbility",
-      "mass": 20,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 86,
       "abilities": {
@@ -640,7 +652,7 @@
       "id": "test_storage_energy_small",
       "name": "Test Battery (Small)",
       "type": "Tank",
-      "mass": 1,
+      "mass": 0,
       "hp": 5,
       "sprite_index": 19,
       "abilities": {
@@ -651,7 +663,7 @@
       "id": "test_storage_ammo_small",
       "name": "Test Ammo Mag (Small)",
       "type": "Tank",
-      "mass": 1,
+      "mass": 0,
       "hp": 5,
       "sprite_index": 19,
       "abilities": {
@@ -663,7 +675,7 @@
       "id": "test_armor_ultra_high_hp",
       "name": "Test Armor (Ultra High HP)",
       "type": "Armor",
-      "mass": 200,
+      "mass": 0,
       "hp": 10000,
       "sprite_index": 14,
       "abilities": {
@@ -674,18 +686,7 @@
       "id": "test_armor_extreme_hp",
       "name": "Test Armor (Extreme HP - 1 Billion)",
       "type": "Armor",
-      "mass": 200,
-      "hp": 1000000000,
-      "sprite_index": 14,
-      "abilities": {
-        "Armor": true
-      }
-    },
-    {
-      "id": "test_armor_extreme_hp_heavy",
-      "name": "Test Armor (Extreme HP Heavy - 1 Billion, Mass 400)",
-      "type": "Armor",
-      "mass": 400,
+      "mass": 0,
       "hp": 1000000000,
       "sprite_index": 14,
       "abilities": {
@@ -696,7 +697,7 @@
       "id": "test_armor_small_extreme_hp",
       "name": "Test Armor (Small, Extreme HP - 1 Billion)",
       "type": "Armor",
-      "mass": 20,
+      "mass": 0,
       "hp": 1000000000,
       "sprite_index": 14,
       "abilities": {
@@ -707,7 +708,7 @@
       "id": "test_beam_low_acc_1dmg",
       "name": "Test Beam (Low Accuracy, 1 Damage)",
       "type": "BeamWeaponAbility",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 87,
       "abilities": {
@@ -725,7 +726,7 @@
       "id": "test_beam_med_acc_1dmg",
       "name": "Test Beam (Medium Accuracy, 1 Damage)",
       "type": "BeamWeaponAbility",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 87,
       "abilities": {
@@ -743,7 +744,7 @@
       "id": "test_beam_high_acc_1dmg",
       "name": "Test Beam (High Accuracy, 1 Damage)",
       "type": "BeamWeaponAbility",
-      "mass": 5,
+      "mass": 0,
       "hp": 20,
       "sprite_index": 87,
       "abilities": {

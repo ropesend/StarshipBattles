@@ -32,18 +32,28 @@
     ],
     "ARMOR": []
   },
-  "_test_notes": "Linearly moving target, fast speed",
+  "_test_notes": "Linearly moving target, fast speed. Mass = hull_test_m(1000) + armor(0) + 3*engine(0) = 1000. Thrust = 1500. Zero-mass component architecture.",
   "expected_stats": {
     "max_hp": 850,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,
-    "max_speed": 133.92857142857142,
-    "acceleration_rate": 47.83163265306123,
+    "max_speed": 37.5,
+    "acceleration_rate": 3.75,
     "turn_speed": 0.0,
     "total_thrust": 1500.0,
-    "mass": 280.0,
+    "mass": 1000.0,
     "armor_hp_pool": 200
+  },
+  "propulsion_details": {
+    "engine_count": 3,
+    "engine_thrust_each": 500,
+    "total_thrust": 1500,
+    "total_mass": 1000,
+    "formulas": {
+      "max_speed": "max_speed = (thrust * K_SPEED) / mass = (1500 * 25) / 1000 = 37.5",
+      "acceleration": "acceleration = (thrust * K_THRUST) / mass² = (1500 * 2500) / 1000² = 3.75"
+    }
   },
   "resources": {
     "fuel": 0.0,

@@ -69,32 +69,28 @@ Defines all components that can be installed on ships.
 
 | Component ID | HP | Mass | Purpose |
 |--------------|-----|------|---------|
-| `test_armor_std` | 200 | 20 | Standard armor |
-| `test_armor_ultra_high_hp` | 10,000 | 200 | Old high-HP armor |
-| `test_armor_extreme_hp` | 1,000,000,000 | 200 | Indestructible (mass 400 ships) |
-| `test_armor_extreme_hp_heavy` | 1,000,000,000 | 400 | Indestructible (mass 600 ships) |
-| `test_armor_small_extreme_hp` | 1,000,000,000 | 20 | Indestructible (mass 65 ships) |
+| `test_armor_std` | 200 | 0 | Standard armor |
+| `test_armor_extreme_hp` | 1,000,000,000 | 0 | Indestructible for long tests |
+| `test_armor_small_extreme_hp` | 1,000,000,000 | 0 | Indestructible (same as extreme_hp) |
 
 **Why 1 Billion HP?**
 - Prevents target death during tests
 - Even high-accuracy beams at 100k ticks: 99% × 100k = 99k damage (0.01% of 1B)
 - Ensures tests run to completion
 
-**Mass Variants**:
-- Different masses maintain target ship total mass
-- Example: Target needs mass=400
-  - Core: 200 mass (fixed)
-  - Armor: 200 mass (test_armor_extreme_hp)
-  - Total: 400 mass ✓
+**Zero-Mass Architecture**:
+- All non-hull components have mass = 0
+- Ship mass comes ONLY from hull components
+- This ensures regular and high-tick tests have identical expected hit rates
 
 #### Engines & Thrusters
 
 | Component ID | Thrust | Mass | Purpose |
 |--------------|--------|------|---------|
-| `test_engine_no_fuel` | 0 | 10 | Stationary ships |
-| `test_thruster_std` | 500 | 25 | Moving targets |
+| `test_engine_no_fuel` | 500 | 0 | Basic engine (no fuel consumption) |
+| `test_thruster_std` | - | 0 | Standard maneuvering thruster |
 
-Used for erratic target tests (mass 65 ships).
+All propulsion components have mass = 0. Ship mass comes from hull only.
 
 ### Adding New Test Components
 
@@ -271,58 +267,59 @@ If actual stats don't match after loading, warning is printed.
 | Ship File | Mass | HP | Behavior | Purpose |
 |-----------|------|-----|----------|---------|
 | `Test_Target_Stationary.json` | 400 | 1B | Stationary | Standard tests |
-| `Test_Target_Stationary_HighTick.json` | 600 | 1B | Stationary | High-tick tests |
-| `Test_Target_Erratic_Small.json` | 65 | 1B | Erratic maneuvers | Moving target tests |
+| `Test_Target_Stationary_HighTick.json` | 400 | 1B | Stationary | High-tick tests (same mass as standard) |
+| `Test_Target_Erratic_Small.json` | 400 | 1B | Erratic maneuvers | Moving target tests |
 
 **Standard Target** (mass 400):
 ```json
 {
     "name": "Test Target Stationary",
     "team_id": 2,
-    "ship_class": "TestM_2L",
+    "ship_class": "TestS_2L",  // hull_test_s = mass 400
     "ai_strategy": "test_do_nothing",
     "layers": {
         "CORE": [
-            {"id": "test_armor_extreme_hp"}  # 1B HP, mass 200
+            {"id": "test_armor_extreme_hp"}  // 1B HP, mass 0
         ]
     },
     "expected_stats": {
-        "max_hp": 1000000500,
-        "mass": 400.0  # 200 (armor) + 200 (core hull)
+        "max_hp": 1000000100,
+        "mass": 400.0  // hull_test_s only (armor has 0 mass)
     }
 }
 ```
 
-**High-Tick Target** (mass 600):
+**High-Tick Target** (mass 400 - now identical to standard):
 ```json
 {
     "name": "Test Target Stationary (High-Tick)",
+    "ship_class": "TestS_2L",  // hull_test_s = mass 400
     "layers": {
         "CORE": [
-            {"id": "test_armor_extreme_hp_heavy"}  # 1B HP, mass 400
+            {"id": "test_armor_extreme_hp"}  // 1B HP, mass 0
         ]
     },
     "expected_stats": {
-        "mass": 600.0  # 400 (armor) + 200 (core hull)
+        "mass": 400.0  // hull_test_s only (identical to standard)
     }
 }
 ```
 
-**Erratic Small Target** (mass 65):
+**Erratic Small Target** (mass 400):
 ```json
 {
     "name": "Test Target Erratic Small",
-    "ship_class": "TestS_2L",
+    "ship_class": "TestS_2L",  // hull_test_s = mass 400
     "ai_strategy": "test_erratic_maneuver",
     "layers": {
         "CORE": [
-            {"id": "test_armor_small_extreme_hp"},  # 1B HP, mass 20
-            {"id": "test_engine_no_fuel"},
-            {"id": "test_thruster_std"}
+            {"id": "test_armor_small_extreme_hp"},  // 1B HP, mass 0
+            {"id": "test_engine_no_fuel"},          // mass 0
+            {"id": "test_thruster_std"}             // mass 0
         ]
     },
     "expected_stats": {
-        "mass": 65.0,  # 20 + 10 + 25 + 10 (hull)
+        "mass": 400.0,  // hull_test_s only
         "total_thrust": 500.0
     }
 }
@@ -423,14 +420,16 @@ Base mass is added to component masses to get total ship mass.
 radius = 40 × (mass / 1000) ^ (1/3)
 ```
 
-### Common Target Radii
+### Standard Hull Masses
 
-| Mass | Radius | Use Case |
-|------|--------|----------|
-| 65 | 16.08px | Small erratic target |
-| 400 | 29.47px | Standard tests |
-| 600 | 33.74px | High-tick tests |
-| 1000 | 40.00px | Heavy targets |
+| Hull ID | Mass | Radius | Use Case |
+|---------|------|--------|----------|
+| `hull_test_xs` | 100 | 18.57px | Minimum mass (matches physics safeguard) |
+| `hull_test_s` | 400 | 29.47px | Standard small target |
+| `hull_test_m` | 1000 | 40.00px | Reference mass target |
+| `hull_test_l` | 4000 | 63.50px | Large target |
+
+**Note**: All non-hull components have mass = 0, so ship mass equals hull mass.
 
 ### Surface Distance Calculation
 
@@ -556,22 +555,21 @@ When a test runs:
 }
 ```
 
-### 2. Match Armor Mass to Target Mass
+### 2. Ship Mass = Hull Mass Only
 
 ```json
 // Target should be mass 400
-// Use test_armor_extreme_hp (mass 200)
-"ship_class": "TestM_2L",  // base mass 200
+// Use hull_test_s (mass 400) via ship class TestS_2L
+"ship_class": "TestS_2L",  // hull_test_s = mass 400
 "layers": {
     "CORE": [
-        {"id": "test_armor_extreme_hp"}  // mass 200
+        {"id": "test_armor_extreme_hp"}  // mass 0 (all components are 0 mass)
     ]
 }
-// Total: 200 + 200 = 400 ✓
-
-// For mass 600, use test_armor_extreme_hp_heavy (mass 400)
-// Total: 200 + 400 = 600 ✓
+// Total: 400 (hull only) ✓
 ```
+
+**Zero-Mass Architecture**: All non-hull components have mass = 0. Choose the hull that gives you the desired ship mass.
 
 ### 3. Document Expected Stats
 

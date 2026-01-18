@@ -23,7 +23,7 @@
     ],
     "ARMOR": []
   },
-  "_test_notes": "Thruster only: No engine, 1 thruster. Mass = hull(20) + thruster(5) = 25. Can rotate but cannot translate.",
+  "_test_notes": "Thruster only: No engine, 1 thruster. Mass = hull_test_s(400) + thruster(0) = 400. Can rotate but cannot translate. Zero-mass component architecture.",
   "expected_stats": {
     "max_hp": 120,
     "max_fuel": 0.0,
@@ -31,9 +31,9 @@
     "max_ammo": 0.0,
     "max_speed": 0.0,
     "acceleration_rate": 0.0,
-    "turn_speed": 1000.0,
+    "turn_speed": 15.625,
     "total_thrust": 0.0,
-    "mass": 25.0,
+    "mass": 400.0,
     "armor_hp_pool": 0
   },
   "propulsion_details": {
@@ -41,11 +41,11 @@
     "engine_thrust": 0,
     "thruster_component": "test_thruster_std",
     "raw_turn_speed": 5.0,
-    "total_mass": 25,
+    "total_mass": 400,
     "formulas": {
       "max_speed": "No engine - max_speed = 0",
       "acceleration": "No engine - acceleration = 0",
-      "turn_speed": "turn_speed = (raw_turn * K_TURN) / mass^1.5 = (5.0 * 25000) / 25^1.5 = 1000.0"
+      "turn_speed": "turn_speed = (raw_turn * K_TURN) / mass^1.5 = (5.0 * 25000) / 400^1.5 = 15.625"
     }
   },
   "resources": {

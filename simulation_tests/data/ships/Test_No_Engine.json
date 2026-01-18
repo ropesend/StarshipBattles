@@ -19,7 +19,7 @@
     "CORE": [],
     "ARMOR": []
   },
-  "_test_notes": "Minimal ship: Hull only, no engine, no thruster. Mass = hull(20). Should not move.",
+  "_test_notes": "Minimal ship: Hull only, no engine, no thruster. Mass = hull_test_s(400). Should not move. Zero-mass component architecture.",
   "expected_stats": {
     "max_hp": 100,
     "max_fuel": 0.0,
@@ -29,13 +29,13 @@
     "acceleration_rate": 0.0,
     "turn_speed": 0.0,
     "total_thrust": 0.0,
-    "mass": 20.0,
+    "mass": 400.0,
     "armor_hp_pool": 0
   },
   "propulsion_details": {
     "engine_component": null,
     "engine_thrust": 0,
-    "total_mass": 20,
+    "total_mass": 400,
     "formulas": {
       "max_speed": "No engine - max_speed = 0",
       "acceleration": "No engine - acceleration = 0",

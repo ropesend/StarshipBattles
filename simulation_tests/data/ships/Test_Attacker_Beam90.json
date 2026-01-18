@@ -29,7 +29,7 @@
     ],
     "ARMOR": []
   },
-  "_test_notes": "Attacker with 45 degree fixed beam weapon",
+  "_test_notes": "Attacker with 45 degree fixed beam weapon. Mass = hull_test_s(400) + weapon(0) + gen(0) + storage(0) = 400. Zero-mass component architecture.",
   "expected_stats": {
     "max_hp": 240,
     "max_fuel": 0.0,
@@ -39,7 +39,7 @@
     "acceleration_rate": 0.0,
     "turn_speed": 0.0,
     "total_thrust": 0,
-    "mass": 50.0,
+    "mass": 400.0,
     "armor_hp_pool": 0
   },
   "resources": {

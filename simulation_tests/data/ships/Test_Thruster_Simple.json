@@ -26,17 +26,17 @@
     ],
     "ARMOR": []
   },
-  "_test_notes": "Minimal ship: 1 engine + 1 thruster. Mass = hull(20) + engine(20) + thruster(5) = 45",
+  "_test_notes": "Minimal ship: 1 engine + 1 thruster. Mass = hull_test_s(400) + engine(0) + thruster(0) = 400. Zero-mass component architecture.",
   "expected_stats": {
     "max_hp": 170,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,
-    "max_speed": 277.77777777777777,
-    "acceleration_rate": 617.28,
-    "turn_speed": 414.08666249996105,
+    "max_speed": 31.25,
+    "acceleration_rate": 7.8125,
+    "turn_speed": 15.625,
     "total_thrust": 500.0,
-    "mass": 45.0,
+    "mass": 400.0,
     "armor_hp_pool": 0
   },
   "propulsion_details": {
@@ -44,11 +44,11 @@
     "engine_thrust": 500,
     "thruster_component": "test_thruster_std",
     "raw_turn_speed": 5.0,
-    "total_mass": 45,
+    "total_mass": 400,
     "formulas": {
-      "max_speed": "max_speed = (thrust * K_SPEED) / mass = (500 * 25) / 45 = 277.78",
-      "acceleration": "acceleration = (thrust * K_THRUST) / mass² = (500 * 2500) / 45² = 617.28",
-      "turn_speed": "turn_speed = (raw_turn * K_TURN) / mass^1.5 = (5.0 * 25000) / 45^1.5 = 414.09"
+      "max_speed": "max_speed = (thrust * K_SPEED) / mass = (500 * 25) / 400 = 31.25",
+      "acceleration": "acceleration = (thrust * K_THRUST) / mass² = (500 * 2500) / 400² = 7.8125",
+      "turn_speed": "turn_speed = (raw_turn * K_TURN) / mass^1.5 = (5.0 * 25000) / 400^1.5 = 15.625"
     }
   },
   "resources": {
