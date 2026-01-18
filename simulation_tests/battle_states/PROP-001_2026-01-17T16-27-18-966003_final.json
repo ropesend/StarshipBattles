@@ -1,0 +1,78 @@
+{
+  "version": "1.0",
+  "battle_id": "2c9f24f9-6800-4203-aa40-6e4a57187240",
+  "seed": 478163327,
+  "tick_count": 100,
+  "max_ticks": 100,
+  "ships": {
+    "09cda883-8b2e-4d43-aca0-c1c4e0ac8945": {
+      "ship_id": "09cda883-8b2e-4d43-aca0-c1c4e0ac8945",
+      "name": "Test Engine 1x LowMass",
+      "ship_class": "TestS_2L",
+      "theme_id": "Federation",
+      "team_id": 0,
+      "color": [
+        0,
+        255,
+        0
+      ],
+      "ai_strategy": "do_nothing",
+      "position": [
+        46875.0,
+        0.0
+      ],
+      "velocity": [
+        156.25,
+        0.0
+      ],
+      "angle": 0.0,
+      "current_hp": 150,
+      "max_hp": 150,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_s",
+            "current_hp": 100,
+            "max_hp": 100,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_engine_no_fuel",
+            "current_hp": 50,
+            "max_hp": 50,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": null
+    }
+  },
+  "projectiles": [],
+  "end_mode": "TIME_BASED",
+  "allow_retreat": false,
+  "allow_reinforcements": false,
+  "created_at": "2026-01-17T16:27:19.100337",
+  "mode": "test"
+}

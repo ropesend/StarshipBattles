@@ -32,9 +32,9 @@
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,
-    "max_speed": 277.78,
+    "max_speed": 277.77777777777777,
     "acceleration_rate": 617.28,
-    "turn_speed": 826.45,
+    "turn_speed": 414.08666249996105,
     "total_thrust": 500.0,
     "mass": 45.0,
     "armor_hp_pool": 0
@@ -47,8 +47,8 @@
     "total_mass": 45,
     "formulas": {
       "max_speed": "max_speed = (thrust * K_SPEED) / mass = (500 * 25) / 45 = 277.78",
-      "acceleration": "acceleration = (thrust * K_THRUST) / mass\u00b2 = (500 * 2500) / 45\u00b2 = 617.28",
-      "turn_speed": "turn_speed = (raw_turn * K_TURN) / mass^1.5 = (5.0 * 25000) / 45^1.5 = 826.45"
+      "acceleration": "acceleration = (thrust * K_THRUST) / mass² = (500 * 2500) / 45² = 617.28",
+      "turn_speed": "turn_speed = (raw_turn * K_TURN) / mass^1.5 = (5.0 * 25000) / 45^1.5 = 414.09"
     }
   },
   "resources": {

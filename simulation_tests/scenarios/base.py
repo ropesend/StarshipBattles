@@ -301,10 +301,76 @@ class TestScenario(CombatScenario):
         ship.recalculate_stats()
         logger.debug("Ship stats recalculated")
 
+        # Validate expected_stats if present in ship JSON
+        expected_stats = data.get('expected_stats', {})
+        if expected_stats:
+            validation_errors = self._validate_expected_stats(ship, expected_stats, filename)
+            if validation_errors:
+                # Log warnings but don't fail - this is for debugging test data
+                for error in validation_errors:
+                    logger.warning(f"[LOAD VALIDATION] {error}")
+                # Store validation results for UI display
+                if not hasattr(self, '_load_validation_errors'):
+                    self._load_validation_errors = []
+                self._load_validation_errors.extend(validation_errors)
+
         # Note: Resources are initialized automatically by the ship system
         # No manual resource initialization needed
 
         return ship
+
+    def _validate_expected_stats(self, ship: Ship, expected_stats: dict, filename: str) -> List[str]:
+        """
+        Validate ship's expected_stats against actual calculated physics values.
+
+        This is a load-time validation that ensures the test data (expected_stats)
+        in the ship JSON matches the actual physics calculations. If they don't
+        match, the test data is wrong and should be updated.
+
+        Args:
+            ship: The loaded Ship instance with calculated stats
+            expected_stats: The expected_stats dict from ship JSON
+            filename: Ship filename for error messages
+
+        Returns:
+            List of validation error messages (empty if all pass)
+        """
+        errors = []
+        tolerance = 1e-6  # Tiny tolerance for floating point comparison
+
+        # Map expected_stats keys to ship attributes
+        stat_mapping = {
+            'max_speed': 'max_speed',
+            'total_thrust': 'total_thrust',
+            'turn_speed': 'turn_speed',
+            'mass': 'mass',
+            'hull_hp': 'hull_hp',
+            'max_hp': 'max_hp',
+        }
+
+        for stat_name, expected_val in expected_stats.items():
+            if stat_name not in stat_mapping:
+                # Unknown stat - skip for now (could be custom validation)
+                continue
+
+            ship_attr = stat_mapping[stat_name]
+            actual_val = getattr(ship, ship_attr, None)
+
+            if actual_val is None:
+                errors.append(
+                    f"{filename}: Cannot validate '{stat_name}' - ship has no '{ship_attr}' attribute"
+                )
+                continue
+
+            # Compare values with tiny tolerance
+            if abs(actual_val - expected_val) > tolerance:
+                errors.append(
+                    f"{filename}: expected_stats.{stat_name} mismatch - "
+                    f"JSON says {expected_val}, ship has {actual_val} "
+                    f"(diff: {actual_val - expected_val:.6f})"
+                )
+
+        return errors
 
     def _create_ship_with_components(self, component_ids: List[str], name: str = "Test Ship") -> Ship:
         """
@@ -494,6 +560,9 @@ class TestScenario(CombatScenario):
             context['attacker'] = self._extract_ship_validation_data(self.attacker)
         if hasattr(self, 'target') and self.target:
             context['target'] = self._extract_ship_validation_data(self.target)
+        # For propulsion tests that use self.ship instead of attacker/target
+        if hasattr(self, 'ship') and self.ship:
+            context['ship'] = self._extract_ship_validation_data(self.ship)
 
         # Run validator
         validator = Validator(self.metadata.validation_rules)
@@ -505,6 +574,10 @@ class TestScenario(CombatScenario):
             self.results['validation_summary'] = validator.get_summary(validation_results)
             self.results['has_validation_failures'] = validator.has_failures(validation_results)
             self.results['has_validation_warnings'] = validator.has_warnings(validation_results)
+
+            # Include load-time validation errors if any
+            if hasattr(self, '_load_validation_errors') and self._load_validation_errors:
+                self.results['load_validation_errors'] = self._load_validation_errors
 
         return validation_results
 
@@ -525,7 +598,12 @@ class TestScenario(CombatScenario):
             'ship': ship,  # Keep reference to ship object
             'mass': ship.mass,
             'hp': ship.hp,
-            'max_hp': ship.max_hp
+            'max_hp': ship.max_hp,
+            # Propulsion attributes
+            'total_thrust': getattr(ship, 'total_thrust', 0.0),
+            'max_speed': getattr(ship, 'max_speed', 0.0),
+            'acceleration_rate': getattr(ship, 'acceleration_rate', 0.0),
+            'turn_speed': getattr(ship, 'turn_speed', 0.0),
         }
 
         # Extract weapon data from first weapon component

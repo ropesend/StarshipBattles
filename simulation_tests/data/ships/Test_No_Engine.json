@@ -1,0 +1,50 @@
+{
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_last_modified": "2026-01-17T12:00:00.000000",
+    "_description": "Combat Lab test ship: Hull only, no propulsion. Should not move."
+  },
+  "name": "Test No Engine",
+  "color": [
+    128,
+    128,
+    128
+  ],
+  "team_id": 0,
+  "ship_class": "TestS_2L",
+  "theme_id": "Federation",
+  "ai_strategy": "do_nothing",
+  "layers": {
+    "CORE": [],
+    "ARMOR": []
+  },
+  "_test_notes": "Minimal ship: Hull only, no engine, no thruster. Mass = hull(20). Should not move.",
+  "expected_stats": {
+    "max_hp": 100,
+    "max_fuel": 0.0,
+    "max_energy": 0.0,
+    "max_ammo": 0.0,
+    "max_speed": 0.0,
+    "acceleration_rate": 0.0,
+    "turn_speed": 0.0,
+    "total_thrust": 0.0,
+    "mass": 20.0,
+    "armor_hp_pool": 0
+  },
+  "propulsion_details": {
+    "engine_component": null,
+    "engine_thrust": 0,
+    "total_mass": 20,
+    "formulas": {
+      "max_speed": "No engine - max_speed = 0",
+      "acceleration": "No engine - acceleration = 0",
+      "turn_speed": "No thruster - turn_speed = 0"
+    }
+  },
+  "resources": {
+    "fuel": 0.0,
+    "energy": 0.0,
+    "ammo": 0.0
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "version": "1.0",
+  "battle_id": "ea6ae0e8-d036-4fa0-92cb-7bad3c3c95e0",
+  "seed": 478163327,
+  "tick_count": 100,
+  "max_ticks": 100,
+  "ships": {
+    "9dc24d1a-7e14-461d-9333-0eb166a0c8c0": {
+      "ship_id": "9dc24d1a-7e14-461d-9333-0eb166a0c8c0",
+      "name": "Test Thruster Simple",
+      "ship_class": "TestS_2L",
+      "theme_id": "Federation",
+      "team_id": 0,
+      "color": [
+        0,
+        255,
+        255
+      ],
+      "ai_strategy": "do_nothing",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "angle": 54.08666249996052,
+      "current_hp": 170,
+      "max_hp": 170,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_s",
+            "current_hp": 100,
+            "max_hp": 100,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_engine_no_fuel",
+            "current_hp": 50,
+            "max_hp": 50,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_thruster_std",
+            "current_hp": 20,
+            "max_hp": 20,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": null
+    }
+  },
+  "projectiles": [],
+  "end_mode": "TIME_BASED",
+  "allow_retreat": false,
+  "allow_reinforcements": false,
+  "created_at": "2026-01-17T15:51:40.004416",
+  "mode": "test"
+}

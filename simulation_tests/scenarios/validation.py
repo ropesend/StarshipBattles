@@ -226,6 +226,155 @@ class ExactMatchRule(ValidationRule):
         return current
 
 
+class DeterministicMatchRule(ValidationRule):
+    """
+    Validates that a floating-point value matches expected within tiny tolerance.
+
+    Used for deterministic physics calculations where the result should be exact
+    (within floating-point precision). Unlike ExactMatchRule which requires
+    bitwise equality, this allows for tiny floating-point rounding errors.
+
+    For deterministic physics:
+    - tolerance=1e-9 (default) - essentially exact
+    - Shows percentage difference for debugging
+
+    Example:
+        rule = DeterministicMatchRule(
+            name='Max Speed',
+            path='results.max_speed',
+            expected=312.5,
+            description='max_speed = (thrust * K_SPEED) / mass'
+        )
+    """
+
+    def __init__(
+        self,
+        name: str,
+        path: str,
+        expected: float,
+        tolerance: float = 1e-9,
+        description: Optional[str] = None
+    ):
+        """
+        Initialize deterministic match rule.
+
+        Args:
+            name: Human-readable name
+            path: Dot-notation path to value (e.g., 'results.max_speed')
+            expected: Expected value
+            tolerance: Acceptable relative error (default 1e-9 for essentially exact)
+            description: Optional description of the physics formula
+        """
+        super().__init__(name)
+        self.path = path
+        self.expected = expected
+        self.tolerance = tolerance
+        self.description = description
+
+    def validate(self, context: Dict[str, Any]) -> ValidationResult:
+        """
+        Validate deterministic match with tiny tolerance.
+
+        Args:
+            context: Contains test data
+
+        Returns:
+            ValidationResult
+        """
+        # Resolve path to get actual value
+        try:
+            actual = self._resolve_path(context, self.path)
+        except ValueError as e:
+            return ValidationResult(
+                name=self.name,
+                status=ValidationStatus.FAIL,
+                message=f"{self.name}: Path resolution failed - {e}",
+                expected=self.expected,
+                actual=None,
+                tolerance=self.tolerance
+            )
+
+        if actual is None:
+            return ValidationResult(
+                name=self.name,
+                status=ValidationStatus.FAIL,
+                message=f"{self.name}: Value is None at path '{self.path}'",
+                expected=self.expected,
+                actual=None,
+                tolerance=self.tolerance
+            )
+
+        # Calculate relative error
+        if self.expected != 0:
+            relative_error = abs(actual - self.expected) / abs(self.expected)
+        else:
+            # For expected=0, check absolute difference
+            relative_error = abs(actual)
+
+        # Calculate percentage difference for display
+        if self.expected != 0:
+            pct_diff = ((actual - self.expected) / self.expected) * 100
+        else:
+            pct_diff = actual * 100 if actual != 0 else 0
+
+        # Check if within tolerance
+        if relative_error <= self.tolerance:
+            status = ValidationStatus.PASS
+            symbol = "✓"
+            match_desc = "EXACT MATCH" if relative_error < 1e-12 else f"within tolerance"
+        else:
+            status = ValidationStatus.FAIL
+            symbol = "✗"
+            match_desc = f"MISMATCH ({pct_diff:+.6f}%)"
+
+        # Build message
+        message = (
+            f"{self.name}: {symbol} Expected {self.expected}, "
+            f"got {actual} - {match_desc}"
+        )
+
+        if self.description:
+            message += f"\n  Formula: {self.description}"
+
+        return ValidationResult(
+            name=self.name,
+            status=status,
+            message=message,
+            expected=self.expected,
+            actual=actual,
+            tolerance=self.tolerance
+        )
+
+    def _resolve_path(self, context: Dict[str, Any], path: str) -> Any:
+        """
+        Resolve dot-notation path to value.
+
+        Args:
+            context: Context dictionary
+            path: Dot-notation path
+
+        Returns:
+            Value at path
+
+        Raises:
+            ValueError: If path resolution fails
+        """
+        parts = path.split('.')
+        current = context
+
+        for part in parts:
+            if isinstance(current, dict):
+                if part not in current:
+                    raise ValueError(f"Key '{part}' not found")
+                current = current[part]
+            else:
+                if not hasattr(current, part):
+                    raise ValueError(f"Attribute '{part}' not found on {type(current).__name__}")
+                current = getattr(current, part)
+
+        return current
+
+
 class StatisticalTestRule(ValidationRule):
     """
     Validates that measured outcome matches expected using TOST equivalence testing.

@@ -543,6 +543,137 @@ class ShipPanel:
         self.ship_viewer.draw(surface)
 
 
+class TabbedShipPanel:
+    """Panel showing multiple ships with tabs (for tests with 3+ ships)."""
+
+    def __init__(self, x, y, width, height, ships_info):
+        """
+        Initialize tabbed ship panel.
+
+        Args:
+            x, y: Top-left position
+            width, height: Panel dimensions
+            ships_info: List of dicts with 'role', 'ship_data'
+        """
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.ships_info = ships_info
+        self.selected_tab = 0
+
+        # Fonts
+        self.tab_font = pygame.font.SysFont(FONT_MAIN, 12)
+        self.header_font = pygame.font.SysFont(FONT_MAIN, 16)
+
+        # Colors
+        self.bg_color = (30, 30, 35)
+        self.border_color = (80, 80, 90)
+        self.header_color = (150, 200, 255)
+        self.tab_color = (40, 40, 50)
+        self.tab_selected_color = (60, 80, 120)
+        self.tab_hover_color = (50, 50, 60)
+        self.text_color = (220, 220, 220)
+
+        # Tab dimensions
+        self.header_height = 30
+        self.tab_height = 28
+        self.tab_margin = 5
+
+        # Create JSON viewers for each ship
+        viewer_y = y + self.header_height + self.tab_height + 5
+        viewer_height = height - self.header_height - self.tab_height - 10
+        self.viewers = []
+        for ship_info in ships_info:
+            viewer = ScrollableJSONViewer(
+                x=x,
+                y=viewer_y,
+                width=width,
+                height=viewer_height,
+                title=f"Ship: {ship_info['role']}",
+                json_data=ship_info['ship_data']
+            )
+            self.viewers.append(viewer)
+
+        # Calculate tab widths
+        self._calculate_tab_rects()
+
+    def _calculate_tab_rects(self):
+        """Calculate tab button rectangles."""
+        self.tab_rects = []
+        num_tabs = len(self.ships_info)
+        tab_width = min(120, (self.width - 20) // num_tabs - self.tab_margin)
+
+        for i, ship_info in enumerate(self.ships_info):
+            tab_x = self.x + 10 + i * (tab_width + self.tab_margin)
+            tab_y = self.y + self.header_height
+            self.tab_rects.append(pygame.Rect(tab_x, tab_y, tab_width, self.tab_height))
+
+    def handle_event(self, event):
+        """Handle input events (tab clicks, scrolling)."""
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            mx, my = event.pos
+            for i, rect in enumerate(self.tab_rects):
+                if rect.collidepoint(mx, my):
+                    self.selected_tab = i
+                    return True
+
+        # Forward scroll events to the selected viewer
+        if self.selected_tab < len(self.viewers):
+            return self.viewers[self.selected_tab].handle_scroll(event)
+        return False
+
+    def update(self):
+        """Update hover states."""
+        pass
+
+    def draw(self, surface):
+        """Draw the tabbed ship panel."""
+        # Draw background
+        pygame.draw.rect(surface, self.bg_color,
+                        (self.x, self.y, self.width, self.height), border_radius=5)
+        pygame.draw.rect(surface, self.border_color,
+                        (self.x, self.y, self.width, self.height), 2, border_radius=5)
+
+        # Draw header
+        header_text = self.header_font.render("SHIPS", True, self.header_color)
+        surface.blit(header_text, (self.x + 10, self.y + 5))
+
+        # Draw tabs
+        mouse_pos = pygame.mouse.get_pos()
+        for i, (rect, ship_info) in enumerate(zip(self.tab_rects, self.ships_info)):
+            # Determine tab color
+            if i == self.selected_tab:
+                color = self.tab_selected_color
+            elif rect.collidepoint(mouse_pos):
+                color = self.tab_hover_color
+            else:
+                color = self.tab_color
+
+            # Draw tab background
+            pygame.draw.rect(surface, color, rect, border_radius=3)
+            if i == self.selected_tab:
+                pygame.draw.rect(surface, self.header_color, rect, 1, border_radius=3)
+
+            # Draw tab text (truncated if needed)
+            role = ship_info.get('role', f'Ship {i+1}')
+            tab_text = role if len(role) <= 12 else role[:11] + "..."
+            text_surf = self.tab_font.render(tab_text, True, self.text_color)
+            text_x = rect.x + (rect.width - text_surf.get_width()) // 2
+            text_y = rect.y + (rect.height - text_surf.get_height()) // 2
+            surface.blit(text_surf, (text_x, text_y))
+
+        # Draw selected ship's JSON viewer
+        if self.selected_tab < len(self.viewers):
+            self.viewers[self.selected_tab].draw(surface)
+
+    def get_selected_ship_info(self):
+        """Get the currently selected ship's info."""
+        if self.selected_tab < len(self.ships_info):
+            return self.ships_info[self.selected_tab]
+        return None
+
+
 class ComponentPanel:
     """Panel showing component dropdown + component JSON (full height)."""
 
@@ -720,34 +851,74 @@ class TestRunCard:
         status_x = self.x + self.width - status_surf.get_width() - 10
         surface.blit(status_surf, (status_x, self.y + 10))
 
-        # Key metric: hit rate if available
-        metrics = self.run_record.metrics
-        if 'hit_rate' in metrics and 'expected_hit_chance' in metrics:
-            hit_rate = metrics['hit_rate']
-            expected = metrics['expected_hit_chance']
-            damage = metrics.get('damage_dealt', 0)
-            ticks = self.run_record.ticks_run
+        # Show first key validation result (expected vs actual)
+        key_validation_shown = False
+        if self.run_record.validation_results:
+            # Find first validation with expected/actual (prioritize failures)
+            key_val = None
+            for vr in self.run_record.validation_results:
+                if vr.get('expected') is not None and vr.get('actual') is not None:
+                    if vr['status'] == 'FAIL':
+                        key_val = vr
+                        break
+                    elif key_val is None:
+                        key_val = vr
 
-            # Hit rate line
-            hit_text = f"Hit Rate: {hit_rate:.1%} ({damage}/{ticks})"
-            exp_text = f"Expected: {expected:.1%}"
-            hit_surf = self.body_font.render(hit_text, True, self.text_color)
-            surface.blit(hit_surf, (self.x + 10, self.y + 35))
+            if key_val:
+                name = key_val['name']
+                expected = key_val['expected']
+                actual = key_val['actual']
+                val_status = key_val['status']
 
-            exp_surf = self.body_font.render(exp_text, True, (180, 180, 180))
-            surface.blit(exp_surf, (self.x + 260, self.y + 35))
+                # Truncate name if too long
+                if len(name) > 25:
+                    name = name[:22] + "..."
 
-        # P-value and validation summary
-        p_value = self.run_record.get_p_value()
+                # Format values
+                exp_str = self._format_value_short(expected)
+                act_str = self._format_value_short(actual)
+
+                # Color-code actual based on status
+                actual_color = self.pass_color if val_status == 'PASS' else self.fail_color
+
+                # Display: "Name: Expected=X Actual=Y"
+                name_surf = self.body_font.render(f"{name}:", True, self.text_color)
+                surface.blit(name_surf, (self.x + 10, self.y + 35))
+
+                exp_label = self.small_font.render("Exp:", True, (140, 140, 160))
+                exp_value = self.small_font.render(exp_str, True, (180, 200, 255))
+                act_label = self.small_font.render("Act:", True, (140, 140, 160))
+                act_value = self.small_font.render(act_str, True, actual_color)
+
+                # Position: Name: | Exp: X | Act: Y
+                x_pos = self.x + 10
+                surface.blit(exp_label, (x_pos, self.y + 55))
+                surface.blit(exp_value, (x_pos + 30, self.y + 55))
+                surface.blit(act_label, (x_pos + 100, self.y + 55))
+                surface.blit(act_value, (x_pos + 130, self.y + 55))
+
+                key_validation_shown = True
+
+        # Fallback: show hit rate for beam tests if no validation results
+        if not key_validation_shown:
+            metrics = self.run_record.metrics
+            if 'hit_rate' in metrics and 'expected_hit_chance' in metrics:
+                hit_rate = metrics['hit_rate']
+                expected = metrics['expected_hit_chance']
+                damage = metrics.get('damage_dealt', 0)
+                ticks = self.run_record.ticks_run
+
+                # Hit rate line
+                hit_text = f"Hit Rate: {hit_rate:.1%} ({damage}/{ticks})"
+                exp_text = f"Expected: {expected:.1%}"
+                hit_surf = self.body_font.render(hit_text, True, self.text_color)
+                surface.blit(hit_surf, (self.x + 10, self.y + 35))
+
+                exp_surf = self.body_font.render(exp_text, True, (180, 180, 180))
+                surface.blit(exp_surf, (self.x + 260, self.y + 35))
+
+        # Validation summary on bottom right
         val_summary = self.run_record.validation_summary
-
-        if p_value is not None:
-            # Color code p-value (TOST: p < 0.05 is green/PASS, p >= 0.05 is red/FAIL)
-            p_color = self.pass_color if p_value < 0.05 else self.fail_color
-            p_text = f"P-value: {p_value:.4f}"
-            p_surf = self.body_font.render(p_text, True, p_color)
-            surface.blit(p_surf, (self.x + 10, self.y + 57))
-
         if val_summary:
             pass_count = val_summary.get('pass', 0)
             fail_count = val_summary.get('fail', 0)
@@ -756,6 +927,32 @@ class TestRunCard:
             summary_surf = self.body_font.render(summary_text, True, (180, 180, 180))
             summary_x = self.x + self.width - summary_surf.get_width() - 10
             surface.blit(summary_surf, (summary_x, self.y + 57))
+
+        # P-value if present (statistical tests)
+        p_value = self.run_record.get_p_value()
+        if p_value is not None and not key_validation_shown:
+            # Color code p-value (TOST: p < 0.05 is green/PASS, p >= 0.05 is red/FAIL)
+            p_color = self.pass_color if p_value < 0.05 else self.fail_color
+            p_text = f"p={p_value:.4f}"
+            p_surf = self.small_font.render(p_text, True, p_color)
+            surface.blit(p_surf, (self.x + 10, self.y + 57))
+
+    def _format_value_short(self, value):
+        """Format value for compact display."""
+        if value is None:
+            return "None"
+        if isinstance(value, float):
+            if 0 < value < 1:
+                return f"{value:.1%}"
+            elif abs(value) < 0.001 and value != 0:
+                return f"{value:.2e}"
+            elif abs(value - round(value)) < 1e-9:
+                return f"{int(round(value))}"
+            elif abs(value) >= 100:
+                return f"{value:.1f}"
+            else:
+                return f"{value:.3f}"
+        return str(value)
 
 
 class TestRunDetailsPanel:
@@ -840,6 +1037,10 @@ class TestRunDetailsPanel:
         pygame.draw.rect(surface, self.bg_color, (self.x, self.y, self.width, self.height))
         pygame.draw.rect(surface, self.border_color, (self.x, self.y, self.width, self.height), 2)
 
+        # Panel title (fixed, not scrollable)
+        panel_title = self.title_font.render("DETAILED TEST RESULTS", True, self.header_color)
+        surface.blit(panel_title, (self.x + 10, self.y + 10))
+
         if not self.selected_run:
             msg = self.body_font.render("Select a test run to view details", True, (150, 150, 150))
             msg_x = self.x + (self.width - msg.get_width()) // 2
@@ -848,17 +1049,17 @@ class TestRunDetailsPanel:
             return
 
         run_record, run_number = self.selected_run
-        clip_rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        clip_rect = pygame.Rect(self.x, self.y + 35, self.width, self.height - 35)
         surface.set_clip(clip_rect)
 
-        y_offset = self.y + 10 - self.scroll_offset
+        y_offset = self.y + 40 - self.scroll_offset
 
-        # Header
+        # Run info header
         timestamp_str = run_record.get_formatted_timestamp()
         header_text = f"Run #{run_number} - {timestamp_str}"
-        header_surf = self.title_font.render(header_text, True, self.text_color)
+        header_surf = self.header_font.render(header_text, True, self.text_color)
         surface.blit(header_surf, (self.x + 10, y_offset))
-        y_offset += 35
+        y_offset += 30
 
         # Status
         status_text = "✓ PASSED" if run_record.passed else "✗ FAILED"
@@ -911,11 +1112,16 @@ class TestRunDetailsPanel:
 
         y_offset += 10
 
-        # Validation Results
+        # Validation Results - display expected/actual/status with color coding
         if run_record.validation_results:
-            val_title = self.header_font.render("Validation Results", True, self.header_color)
+            val_title = self.header_font.render("VALIDATION RESULTS", True, self.header_color)
             surface.blit(val_title, (self.x + 10, y_offset))
             y_offset += 25
+
+            # Draw separator line
+            pygame.draw.line(surface, (60, 60, 70),
+                           (self.x + 10, y_offset), (self.x + self.width - 20, y_offset))
+            y_offset += 8
 
             for vr in run_record.validation_results:
                 status = vr['status']
@@ -923,35 +1129,129 @@ class TestRunDetailsPanel:
                 expected = vr.get('expected')
                 actual = vr.get('actual')
                 p_value = vr.get('p_value')
+                tolerance = vr.get('tolerance')
 
+                # Determine colors based on status
                 if status == 'PASS':
-                    color, symbol = self.pass_color, "✓"
+                    status_color = self.pass_color
+                    symbol = "✓"
+                    actual_color = self.pass_color  # Green for passing actual values
                 elif status == 'FAIL':
-                    color, symbol = self.fail_color, "✗"
+                    status_color = self.fail_color
+                    symbol = "✗"
+                    actual_color = self.fail_color  # Red for failing actual values
                 else:
-                    color, symbol = (255, 200, 100), "⚠"
+                    status_color = (255, 200, 100)
+                    symbol = "⚠"
+                    actual_color = (255, 200, 100)
 
-                val_line = f"  {symbol} {name}"
-                val_surf = self.small_font.render(val_line, True, color)
+                # Validation name with symbol (color-coded)
+                val_line = f"{symbol} {name}"
+                val_surf = self.small_font.render(val_line, True, status_color)
                 surface.blit(val_surf, (self.x + 15, y_offset))
                 y_offset += 18
 
-                if expected is not None or actual is not None or p_value is not None:
-                    details = []
-                    if expected is not None:
-                        details.append(f"Exp: {expected:.1%}" if isinstance(expected, float) and 0 < expected < 1 else f"Exp: {expected}")
-                    if actual is not None:
-                        details.append(f"Act: {actual:.1%}" if isinstance(actual, float) and 0 < actual < 1 else f"Act: {actual}")
-                    if p_value is not None:
-                        details.append(f"p={p_value:.4f}")
-                    detail_line = "     " + ", ".join(details)
-                    detail_surf = self.small_font.render(detail_line, True, (160, 160, 160))
-                    surface.blit(detail_surf, (self.x + 15, y_offset))
-                    y_offset += 20
+                # Define layout constants
+                label_color = (140, 140, 160)
+                expected_color = (180, 200, 255)  # Light blue for expected values
+                indent = 30
+                label_width = 75
+
+                # Show expected value (if present)
+                if expected is not None:
+                    exp_str = self._format_value(expected)
+                    exp_label = self.small_font.render("Expected:", True, label_color)
+                    exp_value = self.small_font.render(exp_str, True, expected_color)
+                    surface.blit(exp_label, (self.x + indent, y_offset))
+                    surface.blit(exp_value, (self.x + indent + label_width, y_offset))
+                    y_offset += 16
+
+                # Show actual value (color-coded green/red based on status)
+                if actual is not None:
+                    act_str = self._format_value(actual)
+                    act_label = self.small_font.render("Actual:", True, label_color)
+                    act_value = self.small_font.render(act_str, True, actual_color)
+                    surface.blit(act_label, (self.x + indent, y_offset))
+                    surface.blit(act_value, (self.x + indent + label_width, y_offset))
+                    y_offset += 16
+
+                # Show difference/percentage (if both values are numeric)
+                if expected is not None and actual is not None:
+                    if isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
+                        diff = actual - expected
+                        abs_diff = abs(diff)
+
+                        if expected != 0:
+                            pct_diff = (diff / expected) * 100
+                            abs_pct_diff = abs(pct_diff)
+
+                            if abs_pct_diff < 1e-9:
+                                diff_str = "EXACT MATCH"
+                                diff_color = self.pass_color
+                            elif abs_pct_diff < 0.01:
+                                diff_str = f"{pct_diff:+.6f}% (essentially exact)"
+                                diff_color = self.pass_color
+                            else:
+                                diff_str = f"{pct_diff:+.4f}%"
+                                diff_color = self.pass_color if status == 'PASS' else self.fail_color
+                        else:
+                            if abs_diff < 1e-9:
+                                diff_str = "EXACT MATCH"
+                                diff_color = self.pass_color
+                            else:
+                                diff_str = f"Diff: {diff:+.6f}"
+                                diff_color = self.pass_color if status == 'PASS' else self.fail_color
+
+                        diff_label = self.small_font.render("Difference:", True, label_color)
+                        diff_value = self.small_font.render(diff_str, True, diff_color)
+                        surface.blit(diff_label, (self.x + indent, y_offset))
+                        surface.blit(diff_value, (self.x + indent + label_width, y_offset))
+                        y_offset += 16
+
+                # P-value (for statistical tests)
+                if p_value is not None:
+                    p_color = self.pass_color if p_value < 0.05 else self.fail_color
+                    p_str = f"{p_value:.6f}"
+                    if p_value < 0.05:
+                        p_str += " (proven equivalent)"
+                    else:
+                        p_str += " (not proven equivalent)"
+                    p_label = self.small_font.render("p-value:", True, label_color)
+                    p_value_surf = self.small_font.render(p_str, True, p_color)
+                    surface.blit(p_label, (self.x + indent, y_offset))
+                    surface.blit(p_value_surf, (self.x + indent + label_width, y_offset))
+                    y_offset += 16
+
+                y_offset += 10  # Space between validation items
+
+                # Draw subtle separator between validation items
+                pygame.draw.line(surface, (45, 45, 55),
+                               (self.x + 20, y_offset - 5), (self.x + self.width - 30, y_offset - 5))
 
         surface.set_clip(None)
         if self.max_scroll > 0:
             self._draw_scrollbar(surface)
+
+    def _format_value(self, value):
+        """Format a value for display."""
+        if value is None:
+            return "None"
+        if isinstance(value, float):
+            # Check if it's a probability/percentage (between 0 and 1)
+            if 0 < value < 1:
+                return f"{value:.2%}"
+            # Check if it's a very small number
+            elif abs(value) < 0.0001 and value != 0:
+                return f"{value:.6e}"
+            # Check if it's essentially an integer
+            elif abs(value - round(value)) < 1e-9:
+                return f"{int(round(value))}"
+            else:
+                return f"{value:.4f}"
+        elif isinstance(value, int):
+            return str(value)
+        else:
+            return str(value)
 
     def _draw_scrollbar(self, surface):
         """Draw scrollbar indicator."""
@@ -1139,7 +1439,7 @@ class ResultsPanel:
     def _draw_header(self, surface):
         """Draw panel header."""
         # Title
-        title_text = "Test Run History"
+        title_text = "TEST RUN HISTORY"
         title_surf = self.title_font.render(title_text, True, self.title_color)
         surface.blit(title_surf, (self.x + 10, self.y + 10))
 
@@ -1274,6 +1574,7 @@ class TestLabScene:
         self.json_popup = None  # For displaying JSON data
         self.confirmation_dialog = None  # For confirming metadata updates
         self.ship_panels = []  # Ship JSON panels
+        self.tabbed_ship_panel = None  # Tabbed ship panel (for 3+ ships)
         self.component_panels = []  # Component JSON panels
         self.results_panel = None  # Test run history panel
         self.test_details_panel = None  # Test run details panel
@@ -1350,7 +1651,7 @@ class TestLabScene:
         Returns:
             List[Dict]: [
                 {
-                    'role': 'Attacker',  # or 'Target', 'Ship1', etc.
+                    'role': 'Attacker',  # or 'Target', 'Ship', 'Low Mass', etc.
                     'filename': 'Test_Attacker_Beam360_Low.json',
                     'ship_data': {...},  # Full ship JSON
                     'component_ids': ['test_beam_low_acc_1dmg', ...]  # All component IDs
@@ -1366,7 +1667,11 @@ class TestLabScene:
         ships = []
 
         # Parse conditions for ship filenames
-        # Format: "Attacker: Test_Attacker_Beam360_Low.json" or "Target: Test_Target_Stationary.json (mass=400)"
+        # Supported formats:
+        # - "Attacker: Test_Attacker_Beam360_Low.json"
+        # - "Target: Test_Target_Stationary.json (mass=400)"
+        # - "Ship: Test_Engine_1x_LowMass.json"
+        # - "Test 3 ships: LowMass (40), MedMass (2220), HighMass (10220)"
         for condition in metadata.conditions:
             if '.json' in condition and ':' in condition:
                 parts = condition.split(':', 1)
@@ -1406,6 +1711,70 @@ class TestLabScene:
                     'ship_data': ship_data,
                     'component_ids': component_ids
                 })
+
+        # Also check for scenario class attributes that specify ship files
+        # PropulsionScenario uses 'ship_file' attribute
+        scenario_cls = scenario_info.get('class')
+        if scenario_cls and not ships:
+            # Check for single ship_file attribute
+            if hasattr(scenario_cls, 'ship_file') and scenario_cls.ship_file:
+                filename = scenario_cls.ship_file
+                ship_path = os.path.join(
+                    os.path.dirname(os.path.dirname(__file__)),
+                    'simulation_tests',
+                    'data',
+                    'ships',
+                    filename
+                )
+                ship_data = load_json(ship_path)
+                if ship_data:
+                    component_ids = []
+                    for layer_name in ['CORE', 'ARMOR', 'HULL']:
+                        layer = ship_data.get('layers', {}).get(layer_name, [])
+                        for component in layer:
+                            comp_id = component.get('id')
+                            if comp_id:
+                                component_ids.append(comp_id)
+
+                    ships.append({
+                        'role': 'Ship',
+                        'filename': filename,
+                        'ship_data': ship_data,
+                        'component_ids': component_ids
+                    })
+
+        # Handle PROP-002 multi-ship test by checking condition format
+        if not ships and 'Test 3 ships' in str(metadata.conditions):
+            # PROP-002 uses multiple ships: LowMass, MedMass, HighMass
+            multi_ship_files = [
+                ('Low Mass', 'Test_Engine_1x_LowMass.json'),
+                ('Med Mass', 'Test_Engine_1x_MedMass.json'),
+                ('High Mass', 'Test_Engine_1x_HighMass.json'),
+            ]
+            for role, filename in multi_ship_files:
+                ship_path = os.path.join(
+                    os.path.dirname(os.path.dirname(__file__)),
+                    'simulation_tests',
+                    'data',
+                    'ships',
+                    filename
+                )
+                ship_data = load_json(ship_path)
+                if ship_data:
+                    component_ids = []
+                    for layer_name in ['CORE', 'ARMOR', 'HULL']:
+                        layer = ship_data.get('layers', {}).get(layer_name, [])
+                        for component in layer:
+                            comp_id = component.get('id')
+                            if comp_id:
+                                component_ids.append(comp_id)
+
+                    ships.append({
+                        'role': role,
+                        'filename': filename,
+                        'ship_data': ship_data,
+                        'component_ids': component_ids
+                    })
 
         return ships
 
@@ -1705,11 +2074,14 @@ class TestLabScene:
         """
         Create ship panels and component panels for the selected test.
 
+        Uses TabbedShipPanel when there are 3+ ships, individual ShipPanels otherwise.
+
         Args:
             test_id: Test ID (e.g., "BEAM360-001")
         """
         self.ship_panels = []
         self.component_panels = []
+        self.tabbed_ship_panel = None  # For 3+ ships
 
         # Extract ships from scenario
         ships = self._extract_ships_from_scenario(test_id)
@@ -1729,29 +2101,65 @@ class TestLabScene:
         component_panel_y_start = HEIGHT // 2 + 20  # 1080px (middle + 20px gap)
         component_panel_height = HEIGHT - component_panel_y_start - 100  # ~980px tall
 
-        for i, ship_info in enumerate(ships):
-            panel_x = base_x + (i * (panel_width + 20))
-
-            # Create ship panel (top)
-            ship_panel = ShipPanel(
-                x=panel_x,
+        # Use TabbedShipPanel for 3+ ships
+        if len(ships) >= 3:
+            # Create single tabbed panel for all ships
+            tabbed_width = panel_width * 2 + 20  # Use width of 2 normal panels
+            self.tabbed_ship_panel = TabbedShipPanel(
+                x=base_x,
                 y=ship_panel_y_start,
-                width=panel_width,
+                width=tabbed_width,
                 height=ship_panel_height,
-                ship_info=ship_info
+                ships_info=ships
             )
-            self.ship_panels.append(ship_panel)
 
-            # Create component panel (bottom)
+            # Create single component panel that updates based on selected tab
+            # Collect all component IDs from all ships for combined panel
+            all_component_ids = []
+            for ship_info in ships:
+                all_component_ids.extend(ship_info.get('component_ids', []))
+            # Remove duplicates while preserving order
+            seen = set()
+            unique_component_ids = []
+            for cid in all_component_ids:
+                if cid not in seen:
+                    seen.add(cid)
+                    unique_component_ids.append(cid)
+
             component_panel = ComponentPanel(
-                x=panel_x,
+                x=base_x,
                 y=component_panel_y_start,
-                width=panel_width,
+                width=tabbed_width,
                 height=component_panel_height,
-                component_ids=ship_info['component_ids'],
+                component_ids=unique_component_ids,
                 load_component_callback=self._load_component_data
             )
             self.component_panels.append(component_panel)
+        else:
+            # Use individual panels for 1-2 ships
+            for i, ship_info in enumerate(ships):
+                panel_x = base_x + (i * (panel_width + 20))
+
+                # Create ship panel (top)
+                ship_panel = ShipPanel(
+                    x=panel_x,
+                    y=ship_panel_y_start,
+                    width=panel_width,
+                    height=ship_panel_height,
+                    ship_info=ship_info
+                )
+                self.ship_panels.append(ship_panel)
+
+                # Create component panel (bottom)
+                component_panel = ComponentPanel(
+                    x=panel_x,
+                    y=component_panel_y_start,
+                    width=panel_width,
+                    height=component_panel_height,
+                    component_ids=ship_info['component_ids'],
+                    load_component_callback=self._load_component_data
+                )
+                self.component_panels.append(component_panel)
 
     def _create_results_panel(self, test_id):
         """
@@ -1762,15 +2170,17 @@ class TestLabScene:
         Args:
             test_id: Test ID (e.g., "BEAM360-001")
         """
-        # Calculate position: after last ship panel or after Test Details
-        num_ships = len(self.ship_panels)
-        if num_ships == 0:
-            # No ships, place after Test Details panel
-            base_x = 20 + self.category_width + 20 + self.test_list_width + 20 + self.metadata_width + 20
-        else:
+        # Calculate position: after tabbed ship panel, last ship panel, or after Test Details
+        if self.tabbed_ship_panel:
+            # Place after tabbed ship panel
+            base_x = self.tabbed_ship_panel.x + self.tabbed_ship_panel.width + 20
+        elif len(self.ship_panels) > 0:
             # Place after last ship panel
             last_ship_panel = self.ship_panels[-1]
             base_x = last_ship_panel.x + last_ship_panel.width + 20
+        else:
+            # No ships, place after Test Details panel
+            base_x = 20 + self.category_width + 20 + self.test_list_width + 20 + self.metadata_width + 20
 
         # Create results panel (600px width)
         self.results_panel = ResultsPanel(
@@ -2256,6 +2666,9 @@ class TestLabScene:
                 continue  # Don't process other events while viewer is open
 
             # Handle ship panel events (scrolling)
+            if self.tabbed_ship_panel:
+                if self.tabbed_ship_panel.handle_event(event):
+                    continue  # Event consumed by tabbed panel
             for panel in self.ship_panels:
                 if panel.handle_event(event):
                     continue  # Event consumed by panel
@@ -2410,6 +2823,10 @@ class TestLabScene:
 
     def update(self):
         """Update UI state."""
+        # Update tabbed ship panel (hover states)
+        if self.tabbed_ship_panel:
+            self.tabbed_ship_panel.update()
+
         # Update ship panels (hover states)
         for panel in self.ship_panels:
             panel.update()
@@ -2435,6 +2852,8 @@ class TestLabScene:
         self._draw_metadata_panel(screen)
 
         # Ship panels (drawn after metadata panel)
+        if self.tabbed_ship_panel:
+            self.tabbed_ship_panel.draw(screen)
         for panel in self.ship_panels:
             panel.draw(screen)
 
@@ -2541,11 +2960,8 @@ class TestLabScene:
         pygame.draw.rect(screen, self.PANEL_BG, panel_rect, border_radius=5)
         pygame.draw.rect(screen, self.BORDER_COLOR, panel_rect, 2, border_radius=5)
 
-        # Header
-        if self.selected_category:
-            header_text = self.header_font.render(f"{self.selected_category.upper()} TESTS", True, self.HEADER_COLOR)
-        else:
-            header_text = self.header_font.render("ALL TESTS", True, self.HEADER_COLOR)
+        # Header - always say "TESTS" for consistency
+        header_text = self.header_font.render("TESTS", True, self.HEADER_COLOR)
         screen.blit(header_text, (x, y - 5))
         y += 40
 
@@ -2836,13 +3252,33 @@ class TestLabScene:
         """
         # Map condition text patterns to validation rule names
         mappings = {
+            # Beam weapon mappings
             'Beam Damage': 'Beam Weapon Damage',
             'Base Accuracy': 'Base Accuracy',
             'Accuracy Falloff': 'Accuracy Falloff',
             'Weapon Max Range': 'Weapon Range',
             'Distance': None,  # Distance is test setup, not component property
             'Net Score': None,  # Calculated value, complex validation
-            'Test Duration': None  # Test parameter, not validated
+            'Test Duration': None,  # Test parameter, not validated
+            'Test duration': None,  # Test parameter, not validated
+
+            # Propulsion test mappings
+            'Engine thrust': 'Engine Thrust',
+            'Ship mass': 'Ship Mass',
+            'Expected max_speed': 'Max Speed (Formula)',
+            'Expected acceleration_rate': 'Acceleration Rate (Formula)',
+            'Initial velocity': 'Initial Velocity',
+            'Initial angle': 'Initial Angle',
+            'Total thrust': 'Total Thrust',
+            'turn_speed': 'Turn Speed',
+            'Turn speed': 'Turn Speed (Formula)',
+            'raw_turn_rate': 'Raw Turn Rate',
+            'Expected turn_speed': 'Turn Speed (Formula)',
+            'No engine component': 'Total Thrust (Should be 0)',
+            'No thruster component': None,  # Not directly validated
+            'thrust = 0': 'Total Thrust (Should be 0)',
+            'Expected: No movement': 'Distance Traveled',
+            'Expected: Rotation but no translation': 'Final Velocity',
         }
 
         # Check direct validations

@@ -545,6 +545,11 @@ class PropulsionScenario(TestScenario):
         self.results['expected_max_speed'] = self.expected_max_speed
         self.results['expected_acceleration_rate'] = self.expected_acceleration_rate
 
+        # Run validation rules if defined in metadata
+        # Note: run_validation() stores results internally as dictionaries
+        if hasattr(self.metadata, 'validation_rules') and self.metadata.validation_rules:
+            self.run_validation(battle_engine)
+
         # Subclasses must implement verification
         raise NotImplementedError(
             f"{self.__class__.__name__} must implement verify() method"
