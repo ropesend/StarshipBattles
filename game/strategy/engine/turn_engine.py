@@ -97,16 +97,26 @@ class TurnEngine:
                 # Support both old format (list) and new format (dict)
                 if isinstance(item, list):
                     # Old format: ["Colony Ship", 5] - modify in place
-                    item[1] -= 1
-                    turns_remaining = item[1]
                     vehicle_type = "ship"
                     design_id = item[0]
                 else:
                     # New format: dict
-                    item["turns_remaining"] -= 1
-                    turns_remaining = item["turns_remaining"]
                     vehicle_type = item.get("type", "ship")
                     design_id = item["design_id"]
+
+                # Check if item requires shipyard
+                if vehicle_type in ["ship", "fighter", "satellite"]:
+                    if not colony.has_space_shipyard:
+                        log_info(f"Build paused at {colony.name}: no shipyard for {design_id}")
+                        continue  # Skip this colony, don't decrement turns
+
+                # Decrement turns now that validation passed
+                if isinstance(item, list):
+                    item[1] -= 1
+                    turns_remaining = item[1]
+                else:
+                    item["turns_remaining"] -= 1
+                    turns_remaining = item["turns_remaining"]
 
                 if turns_remaining <= 0:
                     colony.construction_queue.pop(0)
@@ -151,7 +161,10 @@ class TurnEngine:
         log_info(f"Built {facility.name} on {planet.name}")
 
     def _spawn_ship(self, planet, design_id, empire, galaxy):
-        """Spawn ship/satellite/fighter as fleet (existing logic)."""
+        """Spawn ship/satellite/fighter as fleet with ShipInstance."""
+        from game.strategy.data.ship_instance import ShipInstance
+        from game.strategy.systems.design_library import DesignLibrary
+
         # Calculate spawn location
         spawn_loc = planet.location
         if galaxy:
@@ -159,11 +172,37 @@ class TurnEngine:
             if parent_sys:
                 spawn_loc = parent_sys.global_location + planet.location
 
-        # Create and spawn fleet
-        new_fleet = Fleet(random.randint(10000, 99999), empire.id, spawn_loc)
-        new_fleet.ships.append(design_id)  # Use design_id instead of name
+        # Load design data
+        savegame_path = getattr(empire, 'savegame_path', None)
+        if not savegame_path:
+            log_warning(f"Cannot spawn {design_id}: no savegame_path on empire")
+            return
+
+        design_library = DesignLibrary(savegame_path, empire.id)
+        design_data = design_library.load_design_data(design_id)
+
+        if not design_data:
+            log_warning(f"Cannot spawn {design_id}: design data not found")
+            return
+
+        # Create ShipInstance
+        ship_instance = ShipInstance.create(
+            design_id=design_id,
+            design_data=design_data,
+            owner_id=empire.id,
+            name=design_data.get("name", design_id)
+        )
+
+        # Create fleet with unique ID
+        fleet_id = empire.get_next_fleet_id()
+        new_fleet = Fleet(fleet_id, empire.id, spawn_loc)
+        new_fleet.add_ship_instance(ship_instance)
         empire.add_fleet(new_fleet)
-        log_info(f"Spawned {design_id} at {spawn_loc}")
+
+        # Increment design's times_built counter
+        design_library.increment_built_count(design_id)
+
+        log_info(f"Spawned {design_data.get('name', design_id)} at {spawn_loc} (Fleet {new_fleet.id})")
 
     def _process_tick(self, tick, empires, galaxy):
         """Process 1 sub-tick of movement and combat.

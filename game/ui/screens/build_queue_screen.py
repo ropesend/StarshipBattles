@@ -420,7 +420,7 @@ class BuildQueueScreen:
         self._refresh_items_list()
         log_info(f"Build queue category changed to: {category}")
 
-    def _add_to_queue(self, design_id: str, turns: int = 5, category: str = None, index: int = None):
+    def _add_to_queue(self, design_id: str, turns: int = 1, category: str = None, index: int = None):
         """
         Add a design to the planet's construction queue.
 
@@ -517,7 +517,7 @@ class BuildQueueScreen:
             # Add to queue button
             elif event.ui_element == self.btn_add_to_queue:
                 if self.selected_design:
-                    self._add_to_queue(self.selected_design, turns=5)
+                    self._add_to_queue(self.selected_design, turns=1)
 # Design selection and drag handled in MOUSEBUTTONDOWN/UP below
 
         # Handle Drag Start (on mouse down for immediate dragging)
@@ -577,7 +577,7 @@ class BuildQueueScreen:
                     estimated_idx = rel_y // 65
                     insert_idx = max(0, min(int(estimated_idx), len(self.planet.construction_queue)))
 
-                    turns = self.dragged_item.get('turns', 5)
+                    turns = self.dragged_item.get('turns', 1)
                     self._add_to_queue(
                         self.dragged_item['design_id'], 
                         turns=turns, 
