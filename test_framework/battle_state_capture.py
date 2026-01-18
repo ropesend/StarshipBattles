@@ -236,10 +236,16 @@ class BattleStateCapture:
         self.initial_state_file: Optional[str] = None
         self.final_state_file: Optional[str] = None
         self._timestamp: Optional[str] = None
+        # Store consistent IDs between initial and final captures
+        self._battle_id: Optional[str] = None
+        self._ship_id_map: dict = {}
 
     def __enter__(self) -> 'BattleStateCapture':
         """Capture initial state on entry."""
+        import uuid
         self._timestamp = datetime.now().isoformat()
+        self._battle_id = str(uuid.uuid4())
+        self._ship_id_map = {}  # Will be populated during first capture
         self.initial_state_file = self._capture_state("initial")
         return self
 
@@ -249,7 +255,7 @@ class BattleStateCapture:
         return False  # Don't suppress exceptions
 
     def _capture_state(self, state_type: str) -> Optional[str]:
-        """Capture state with consistent timestamp."""
+        """Capture state with consistent timestamp, battle_id, and ship IDs."""
         try:
             ensure_states_dir()
 
@@ -260,6 +266,8 @@ class BattleStateCapture:
                 self.engine,
                 mode="test",
                 seed=self.seed,
+                battle_id=self._battle_id,
+                ship_id_map=self._ship_id_map,
             )
 
             with open(filepath, 'w', encoding='utf-8') as f:

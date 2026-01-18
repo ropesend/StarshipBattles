@@ -2671,9 +2671,41 @@ class TestLabScene:
         pygame.draw.rect(screen, self.PANEL_BG, panel_rect, border_radius=5)
         pygame.draw.rect(screen, self.BORDER_COLOR, panel_rect, 2, border_radius=5)
 
-        # Header
+        # Header with run buttons
         header_text = self.header_font.render("TEST DETAILS", True, self.HEADER_COLOR)
         screen.blit(header_text, (x, y - 5))
+
+        # Run buttons to the right of header (only if a test is selected)
+        if self.selected_test_id is not None:
+            mouse_pos = pygame.mouse.get_pos()
+            btn_height = 26
+            btn_spacing = 10
+            header_btn_y = y - 8
+
+            # Visual Run button (green)
+            visual_btn_width = 90
+            visual_btn_x = x + self.metadata_width - 220
+            self.run_test_btn_rect = pygame.Rect(visual_btn_x, header_btn_y, visual_btn_width, btn_height)
+            run_test_hover = self.run_test_btn_rect.collidepoint(mouse_pos)
+            run_test_color = (70, 100, 70) if run_test_hover else (50, 80, 50)
+            pygame.draw.rect(screen, run_test_color, self.run_test_btn_rect, border_radius=4)
+            pygame.draw.rect(screen, (100, 150, 100), self.run_test_btn_rect, 1, border_radius=4)
+            run_text = self.small_font.render("Visual Run", True, (200, 255, 200))
+            text_rect = run_text.get_rect(center=self.run_test_btn_rect.center)
+            screen.blit(run_text, text_rect)
+
+            # Headless Run button (blue)
+            headless_btn_width = 100
+            headless_btn_x = visual_btn_x + visual_btn_width + btn_spacing
+            self.run_headless_btn_rect = pygame.Rect(headless_btn_x, header_btn_y, headless_btn_width, btn_height)
+            run_headless_hover = self.run_headless_btn_rect.collidepoint(mouse_pos)
+            run_headless_color = (70, 70, 100) if run_headless_hover else (50, 50, 80)
+            pygame.draw.rect(screen, run_headless_color, self.run_headless_btn_rect, border_radius=4)
+            pygame.draw.rect(screen, (100, 100, 150), self.run_headless_btn_rect, 1, border_radius=4)
+            headless_text = self.small_font.render("Headless Run", True, (200, 200, 255))
+            text_rect = headless_text.get_rect(center=self.run_headless_btn_rect.center)
+            screen.blit(headless_text, text_rect)
+
         y += 40
 
         if self.selected_test_id is None:
@@ -2735,33 +2767,6 @@ class TestLabScene:
         footer_text = f"Max Ticks: {metadata.max_ticks} | Seed: {metadata.seed}"
         footer_surf = self.small_font.render(footer_text, True, (120, 120, 120))
         screen.blit(footer_surf, (x, y))
-        y += 30
-
-        # Run Test and Run Headless buttons
-        btn_width = 140
-        btn_height = 40
-        btn_spacing = 20
-        mouse_pos = pygame.mouse.get_pos()
-
-        # Run Test button
-        self.run_test_btn_rect = pygame.Rect(x, y, btn_width, btn_height)
-        run_test_hover = self.run_test_btn_rect.collidepoint(mouse_pos)
-        run_test_color = (70, 100, 70) if run_test_hover else (50, 80, 50)
-        pygame.draw.rect(screen, run_test_color, self.run_test_btn_rect, border_radius=5)
-        pygame.draw.rect(screen, (100, 150, 100), self.run_test_btn_rect, 2, border_radius=5)
-        run_text = self.body_font.render("RUN TEST", True, (200, 255, 200))
-        text_rect = run_text.get_rect(center=self.run_test_btn_rect.center)
-        screen.blit(run_text, text_rect)
-
-        # Run Headless button
-        self.run_headless_btn_rect = pygame.Rect(x + btn_width + btn_spacing, y, btn_width + 20, btn_height)
-        run_headless_hover = self.run_headless_btn_rect.collidepoint(mouse_pos)
-        run_headless_color = (70, 70, 100) if run_headless_hover else (50, 50, 80)
-        pygame.draw.rect(screen, run_headless_color, self.run_headless_btn_rect, border_radius=5)
-        pygame.draw.rect(screen, (100, 100, 150), self.run_headless_btn_rect, 2, border_radius=5)
-        headless_text = self.body_font.render("RUN HEADLESS", True, (200, 200, 255))
-        text_rect = headless_text.get_rect(center=self.run_headless_btn_rect.center)
-        screen.blit(headless_text, text_rect)
 
     def _draw_section(self, screen, x, y, label, text, color):
         """Draw a single-line metadata section."""
