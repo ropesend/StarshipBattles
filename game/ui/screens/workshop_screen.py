@@ -100,6 +100,10 @@ class DesignWorkshopGUI:
         
         # Ship - now managed by ViewModel
         self.viewmodel.create_default_ship()
+
+        # In integrated mode, set ship theme from empire
+        if self.context.is_integrated() and self.context.empire_theme_id:
+            self.ship.theme_id = self.context.empire_theme_id
         
         # Managers
         self.viewmodel.refresh_available_components()

@@ -44,6 +44,9 @@ from .weapons import (
     SeekerWeaponAbility,
 )
 
+# Harvester abilities
+from .harvester import ResourceHarvesterAbility, SpaceShipyardAbility
+
 # --- Registry ---
 
 ABILITY_REGISTRY = {
@@ -70,6 +73,8 @@ ABILITY_REGISTRY = {
     "RequiresCommandAndControl": RequiresCommandAndControl,
     "RequiresCombatMovement": RequiresCombatMovement,
     "StructuralIntegrity": StructuralIntegrity,
+    "ResourceHarvester": ResourceHarvesterAbility,
+    "SpaceShipyard": SpaceShipyardAbility,
     # Primitive/Shortcut Factories
     "FuelStorage": lambda c, d: ResourceStorage(c, {"resource": "fuel", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "fuel"}),
     "EnergyStorage": lambda c, d: ResourceStorage(c, {"resource": "energy", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "energy"}),
@@ -134,6 +139,9 @@ __all__ = [
     'ProjectileWeaponAbility',
     'BeamWeaponAbility',
     'SeekerWeaponAbility',
+    # Harvester
+    'ResourceHarvesterAbility',
+    'SpaceShipyardAbility',
     # Registry
     'ABILITY_REGISTRY',
     'ABILITY_CLASS_MAP',

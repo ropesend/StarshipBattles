@@ -38,9 +38,38 @@ class Spectrum:
     radio: float                # > 1 m
 
     def get_total_output(self):
-        return (self.gamma_ray + self.xray + self.ultraviolet + 
-                self.blue + self.green + self.red + 
+        return (self.gamma_ray + self.xray + self.ultraviolet +
+                self.blue + self.green + self.red +
                 self.infrared + self.microwave + self.radio)
+
+    def to_dict(self) -> dict:
+        """Serialize Spectrum to dict."""
+        return {
+            'gamma_ray': self.gamma_ray,
+            'xray': self.xray,
+            'ultraviolet': self.ultraviolet,
+            'blue': self.blue,
+            'green': self.green,
+            'red': self.red,
+            'infrared': self.infrared,
+            'microwave': self.microwave,
+            'radio': self.radio
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Spectrum':
+        """Deserialize Spectrum from dict."""
+        return cls(
+            gamma_ray=data['gamma_ray'],
+            xray=data['xray'],
+            ultraviolet=data['ultraviolet'],
+            blue=data['blue'],
+            green=data['green'],
+            red=data['red'],
+            infrared=data['infrared'],
+            microwave=data['microwave'],
+            radio=data['radio']
+        )
 
 @dataclass
 class Star:
@@ -53,9 +82,42 @@ class Star:
     star_type: StarType
     color: tuple # (R, G, B)
     age: float # Years
-    
+
     # Location relative to system center (0,0,0)
     location: HexCoord = field(default_factory=lambda: HexCoord(0, 0))
+
+    def to_dict(self) -> dict:
+        """Serialize Star to dict."""
+        from game.strategy.data.hex_math import hex_to_dict
+        return {
+            'name': self.name,
+            'mass': self.mass,
+            'diameter_hexes': self.diameter_hexes,
+            'temperature': self.temperature,
+            'luminosity': self.luminosity,
+            'spectrum': self.spectrum.to_dict(),
+            'star_type': self.star_type.name,  # Enum to string
+            'color': list(self.color),  # Tuple to list for JSON
+            'age': self.age,
+            'location': hex_to_dict(self.location)
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Star':
+        """Deserialize Star from dict."""
+        from game.strategy.data.hex_math import hex_from_dict
+        return cls(
+            name=data['name'],
+            mass=data['mass'],
+            diameter_hexes=data['diameter_hexes'],
+            temperature=data['temperature'],
+            luminosity=data['luminosity'],
+            spectrum=Spectrum.from_dict(data['spectrum']),
+            star_type=StarType[data['star_type']],  # String to enum
+            color=tuple(data['color']),  # List to tuple
+            age=data['age'],
+            location=hex_from_dict(data['location'])
+        )
 
 class StarGenerator:
     def __init__(self):

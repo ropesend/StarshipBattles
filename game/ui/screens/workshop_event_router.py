@@ -298,19 +298,19 @@ class WorkshopEventRouter:
         elif event.ui_element == gui.arc_toggle_btn:
             gui.show_firing_arcs = not gui.show_firing_arcs
             gui.arc_toggle_btn.set_text("Hide Firing Arcs" if gui.show_firing_arcs else "Show Firing Arcs")
-        elif event.ui_element == gui.hull_toggle_btn:
+        elif hasattr(gui, 'hull_toggle_btn') and event.ui_element == gui.hull_toggle_btn:
             showing = gui.viewmodel.toggle_hull_layer()
             gui.hull_toggle_btn.set_text("Hide Hull" if showing else "Show Hull")
             gui.layer_panel.rebuild()
         elif event.ui_element == gui.target_btn:
             gui._on_select_target_pressed()
-        elif event.ui_element == gui.std_data_btn:
+        elif hasattr(gui, 'std_data_btn') and event.ui_element == gui.std_data_btn:
             gui._load_standard_data()
-        elif event.ui_element == gui.test_data_btn:
+        elif hasattr(gui, 'test_data_btn') and event.ui_element == gui.test_data_btn:
             gui._load_test_data()
-        elif event.ui_element == gui.select_data_btn:
+        elif hasattr(gui, 'select_data_btn') and event.ui_element == gui.select_data_btn:
             gui._on_select_data_pressed()
-        elif event.ui_element == gui.verbose_btn:
+        elif hasattr(gui, 'verbose_btn') and event.ui_element == gui.verbose_btn:
             gui.weapons_report_panel.verbose_tooltip = not gui.weapons_report_panel.verbose_tooltip
         elif event.ui_element == gui.detail_panel.details_btn:
             gui.detail_panel.show_details_popup()
@@ -328,9 +328,11 @@ class WorkshopEventRouter:
         elif hasattr(gui, 'right_panel') and hasattr(gui.right_panel, 'vehicle_type_dropdown') and event.ui_element == gui.right_panel.vehicle_type_dropdown:
             return self._handle_vehicle_type_dropdown(event)
         elif hasattr(gui.right_panel, 'theme_dropdown') and event.ui_element == gui.right_panel.theme_dropdown:
-            gui.ship.theme_id = event.text
-            gui.right_panel.update_portrait_image()
-            log_info(f"Changed theme to {event.text}")
+            # Only allow theme change in standalone mode (integrated mode locks to empire theme)
+            if gui.context.is_standalone():
+                gui.ship.theme_id = event.text
+                gui.right_panel.update_portrait_image()
+                log_info(f"Changed theme to {event.text}")
             return True
         elif event.ui_element == gui.right_panel.ai_dropdown:
             return self._handle_ai_dropdown(event)

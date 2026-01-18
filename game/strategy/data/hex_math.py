@@ -163,9 +163,36 @@ def hex_linedraw(a, b):
     results = []
     if N == 0:
         return [a]
-        
+
     # We explicitly calculate t steps
     step = 1.0 / max(N, 1)
     for i in range(N + 1):
         results.append(hex_lerp(a, b, step * i))
     return results
+
+
+# Serialization helpers for save/load system
+def hex_to_dict(coord: HexCoord) -> dict:
+    """
+    Serialize HexCoord to dict.
+
+    Args:
+        coord: HexCoord to serialize
+
+    Returns:
+        Dict with 'q' and 'r' keys
+    """
+    return {'q': coord.q, 'r': coord.r}
+
+
+def hex_from_dict(data: dict) -> HexCoord:
+    """
+    Deserialize HexCoord from dict.
+
+    Args:
+        data: Dict with 'q' and 'r' keys
+
+    Returns:
+        Reconstructed HexCoord
+    """
+    return HexCoord(data['q'], data['r'])

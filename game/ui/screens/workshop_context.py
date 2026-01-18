@@ -34,6 +34,8 @@ class WorkshopContext:
         available_tech_ids: List of unlocked tech IDs (integrated mode only)
         empire_id: Current empire ID (integrated mode only)
         savegame_path: Path to save designs (integrated mode only)
+        empire_theme_id: Ship theme for the empire (integrated mode only)
+        built_designs: Set of design IDs that have been built (prevents overwriting)
         on_return: Callback function to call when exiting workshop
         return_state: App state to return to (for app.py state machine)
     """
@@ -46,6 +48,8 @@ class WorkshopContext:
     # Strategy integration
     empire_id: Optional[int] = None  # Current empire in integrated mode
     savegame_path: Optional[str] = None  # Path to save designs in integrated mode
+    empire_theme_id: Optional[str] = None  # Ship theme for the empire in integrated mode
+    built_designs: set = field(default_factory=set)  # Design IDs that have been built
 
     # Return callback
     on_return: Optional[Callable] = None
@@ -81,7 +85,9 @@ class WorkshopContext:
     def integrated(cls,
                    empire_id: int,
                    savegame_path: str,
-                   available_tech_ids: Optional[List[str]] = None) -> 'WorkshopContext':
+                   available_tech_ids: Optional[List[str]] = None,
+                   built_designs: Optional[set] = None,
+                   empire_theme_id: Optional[str] = None) -> 'WorkshopContext':
         """
         Create integrated workshop context for strategy layer.
 
@@ -89,12 +95,15 @@ class WorkshopContext:
         - Debug buttons are hidden
         - Tech is filtered by empire's unlocked tech
         - Designs save/load from savegame's designs/ folder
+        - Ship theme is locked to empire's theme
         - Returns to strategy scene
 
         Args:
             empire_id: ID of the empire designing ships
             savegame_path: Path to current savegame folder
             available_tech_ids: List of tech IDs available to this empire (default: empty list)
+            built_designs: Set of design IDs that have been built (default: empty set)
+            empire_theme_id: Ship theme for the empire (default: None)
 
         Returns:
             WorkshopContext configured for integrated mode
@@ -103,7 +112,9 @@ class WorkshopContext:
             >>> context = WorkshopContext.integrated(
             ...     empire_id=1,
             ...     savegame_path="saves/game1",
-            ...     available_tech_ids=["laser_cannon", "railgun"]
+            ...     available_tech_ids=["laser_cannon", "railgun"],
+            ...     built_designs={"cruiser_mk1"},
+            ...     empire_theme_id="Federation"
             ... )
             >>> workshop = DesignWorkshopGUI(800, 600, context)
         """
@@ -111,7 +122,9 @@ class WorkshopContext:
             mode=WorkshopMode.INTEGRATED,
             empire_id=empire_id,
             savegame_path=savegame_path,
-            available_tech_ids=available_tech_ids if available_tech_ids is not None else []
+            available_tech_ids=available_tech_ids if available_tech_ids is not None else [],
+            built_designs=built_designs if built_designs is not None else set(),
+            empire_theme_id=empire_theme_id
         )
 
     def is_standalone(self) -> bool:

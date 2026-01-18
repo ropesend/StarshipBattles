@@ -1,14 +1,16 @@
 Traceback (most recent call last):
-  File "C:\Dev\Starship Battles\game\app.py", line 383, in main
+  File "C:\Developer\StarshipBattles\game\app.py", line 499, in main
     game.run()
-  File "C:\Dev\Starship Battles\game\app.py", line 192, in run
-    self._update_and_draw(frame_time, events)
-  File "C:\Dev\Starship Battles\game\app.py", line 335, in _update_and_draw
-    self.test_lab_scene.draw(self.screen)
-  File "C:\Dev\Starship Battles\ui\test_lab_scene.py", line 2470, in draw
-    self.battle_state_viewer.draw(screen)
-  File "C:\Dev\Starship Battles\ui\battle_state_viewer.py", line 636, in draw
-    self.initial_panel.draw(surface)
-  File "C:\Dev\Starship Battles\ui\battle_state_viewer.py", line 402, in draw
-    indent, text, color, bg_color = line_data
-ValueError: not enough values to unpack (expected 4, got 3)
+  File "C:\Developer\StarshipBattles\game\app.py", line 262, in run
+    self._handle_normal_events(events)
+  File "C:\Developer\StarshipBattles\game\app.py", line 306, in _handle_normal_events
+    self._forward_event_to_scene(event)
+  File "C:\Developer\StarshipBattles\game\app.py", line 312, in _forward_event_to_scene
+    self.menu_ui_manager.process_events(event)
+  File "C:\Users\rossr\AppData\Roaming\Python\Python311\site-packages\pygame_gui\ui_manager.py", line 320, in process_events
+    consumed_event = ui_element.process_event(event)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Developer\StarshipBattles\game\ui\screens\save_selection_window.py", line 126, in process_event
+    if selected_index is not None and selected_index < len(self.saves_list):
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: '<' not supported between instances of 'str' and 'int'

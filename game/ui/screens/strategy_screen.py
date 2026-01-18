@@ -223,9 +223,17 @@ class StrategyInterface:
             relative_rect=pygame.Rect(main_start_x + 3*(btn_w+gap), 5, btn_w, 40), text="Design", manager=self.manager, container=self.top_bar
         )
         
+        # Save Game Button
+        self.btn_save_game = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(main_start_x + 4*(btn_w+gap), 5, btn_w, 40),
+            text="Save Game",
+            manager=self.manager,
+            container=self.top_bar
+        )
+
         # End Turn (Larger)
         self.btn_next_turn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 4*(btn_w+gap), 5, 150, 40), 
+            relative_rect=pygame.Rect(main_start_x + 5*(btn_w+gap), 5, 150, 40),
             text="End Turn",
             manager=self.manager,
             container=self.top_bar
@@ -249,9 +257,9 @@ class StrategyInterface:
             visible=0 # Hidden by default
         )
         
-        self.btn_build_ship = pygame_gui.elements.UIButton(
+        self.btn_build_yard = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(350, rect_detail.height - 50, 120, 40),
-            text="Build Ship",
+            text="Build Yard",
             manager=self.manager,
             container=self.detail_panel,
             visible=0 # Hidden by default
@@ -374,7 +382,7 @@ class StrategyInterface:
         
         # Default hidden, shown based on context below
         self.btn_colonize.hide()
-        self.btn_build_ship.hide()
+        self.btn_build_yard.hide()
         self.btn_orders.hide()
         self.current_raw_data = ""
         
@@ -545,7 +553,7 @@ class StrategyInterface:
             current_empire_id = self.scene.current_empire.id
             
         if hasattr(obj, 'owner_id') and obj.owner_id == current_empire_id:
-             self.btn_build_ship.show()
+             self.btn_build_yard.show()
              
         return text
 
@@ -592,6 +600,9 @@ class StrategyInterface:
             elif event.ui_element == self.btn_design:
                 if hasattr(self.scene, 'on_design_click'):
                     self.scene.on_design_click()
+            elif event.ui_element == self.btn_save_game:
+                if hasattr(self.scene, 'on_save_game_click'):
+                    self.scene.on_save_game_click()
             elif event.ui_element == self.btn_raw_data:
                 self.show_raw_data_popup()
             elif event.ui_element == self.btn_colonize:

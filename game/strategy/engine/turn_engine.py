@@ -91,32 +91,79 @@ class TurnEngine:
             for colony in emp.colonies:
                 if not colony.construction_queue:
                     continue
-                    
-                # Process first item
-                item_data = colony.construction_queue[0]
-                # Item is [name, turns]. We modify list in place.
-                item_data[1] -= 1
-                
-                if item_data[1] <= 0:
-                    # Completed!
-                    item_name = item_data[0]
+
+                item = colony.construction_queue[0]
+
+                # Support both old format (list) and new format (dict)
+                if isinstance(item, list):
+                    # Old format: ["Colony Ship", 5] - modify in place
+                    item[1] -= 1
+                    turns_remaining = item[1]
+                    vehicle_type = "ship"
+                    design_id = item[0]
+                else:
+                    # New format: dict
+                    item["turns_remaining"] -= 1
+                    turns_remaining = item["turns_remaining"]
+                    vehicle_type = item.get("type", "ship")
+                    design_id = item["design_id"]
+
+                if turns_remaining <= 0:
                     colony.construction_queue.pop(0)
-                    log_info(f"Production Complete: {item_name} at {colony.planet_type.name}")
-                    
-                    # Spawn Logic - Use O(1) reverse lookup
-                    spawn_loc = colony.location
-                    if galaxy:
-                         parent_sys = galaxy.get_system_of_planet(colony)
-                         if parent_sys:
-                             spawn_loc = parent_sys.global_location + colony.location
-                    
-                    # Create New Fleet
-                    import random
-                    from game.strategy.data.fleet import Fleet
-                    
-                    new_fleet = Fleet(random.randint(10000, 99999), emp.id, spawn_loc)
-                    new_fleet.ships.append(item_name)
-                    emp.add_fleet(new_fleet)
+                    log_info(f"Production Complete: {design_id} ({vehicle_type})")
+
+                    # Route to appropriate spawner
+                    if vehicle_type == "complex":
+                        self._spawn_complex(colony, design_id, emp)
+                    else:
+                        self._spawn_ship(colony, design_id, emp, galaxy)
+
+    def _spawn_complex(self, planet, design_id, empire):
+        """Add completed complex to planet's facilities."""
+        import uuid
+        from game.strategy.data.planet import PlanetaryFacility
+
+        # Load design data if possible
+        design_data = {}
+        savegame_path = getattr(empire, 'savegame_path', None)
+
+        if savegame_path:
+            from game.strategy.systems.design_library import DesignLibrary
+            library = DesignLibrary(savegame_path, empire.id)
+            loaded_data = library.load_design_data(design_id)
+            if loaded_data:
+                design_data = loaded_data
+            else:
+                log_warning(f"Could not load design: {design_id}")
+        else:
+            log_warning(f"No savegame path - creating empty facility for {design_id}")
+
+        # Create facility instance
+        facility = PlanetaryFacility(
+            instance_id=str(uuid.uuid4()),
+            design_id=design_id,
+            name=design_data.get("name", design_id),
+            design_data=design_data,
+            is_operational=True
+        )
+
+        planet.facilities.append(facility)
+        log_info(f"Built {facility.name} on {planet.name}")
+
+    def _spawn_ship(self, planet, design_id, empire, galaxy):
+        """Spawn ship/satellite/fighter as fleet (existing logic)."""
+        # Calculate spawn location
+        spawn_loc = planet.location
+        if galaxy:
+            parent_sys = galaxy.get_system_of_planet(planet)
+            if parent_sys:
+                spawn_loc = parent_sys.global_location + planet.location
+
+        # Create and spawn fleet
+        new_fleet = Fleet(random.randint(10000, 99999), empire.id, spawn_loc)
+        new_fleet.ships.append(design_id)  # Use design_id instead of name
+        empire.add_fleet(new_fleet)
+        log_info(f"Spawned {design_id} at {spawn_loc}")
 
     def _process_tick(self, tick, empires, galaxy):
         """Process 1 sub-tick of movement and combat.
