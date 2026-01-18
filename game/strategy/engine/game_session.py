@@ -24,7 +24,8 @@ class GameSession:
             
         self.config = config
         self.turn_number = 1
-        
+        self.save_path = None  # Set when save game is created/loaded (Phase 3)
+
         # Engine
         self.turn_engine = TurnEngine()
         

@@ -116,7 +116,7 @@ class Game:
 
     def update_menu_buttons(self):
         self.menu_buttons = [
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 80, 200, 50, "Ship Builder", self.start_builder),
+            Button(WIDTH // 2 - 100, HEIGHT // 2 - 80, 200, 50, "Design Workshop", self.start_builder),
             Button(WIDTH // 2 - 100, HEIGHT // 2 - 10, 200, 50, "Battle Setup", self.start_battle_setup),
             Button(WIDTH // 2 - 100, HEIGHT // 2 + 60, 200, 50, "Strategy Layer", self.start_strategy_layer),
             Button(WIDTH // 2 - 100, HEIGHT // 2 + 130, 200, 50, "Formation Editor", self.start_formation_editor),
@@ -124,14 +124,20 @@ class Game:
         ]
 
     @profile_action("App: Start Builder")
-    def start_builder(self, return_to=None):
-        """Enter ship builder."""
+    def start_builder(self, return_to=None, context=None):
+        """
+        Enter design workshop.
+
+        Args:
+            return_to: State to return to (MENU or STRATEGY)
+            context: Optional WorkshopContext for integrated mode
+        """
         self.state = BUILDER
         self.builder_return_state = return_to
-        self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return)
+        self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return, context)
 
     def on_builder_return(self, custom_ship=None):
-        """Return from builder to caller or main menu."""
+        """Return from design workshop to caller or main menu."""
         if self.builder_return_state == STRATEGY:
             self.state = STRATEGY
             if hasattr(self.strategy_scene, 'handle_resize'):
@@ -329,7 +335,36 @@ class Game:
             self.strategy_scene.draw(self.screen)
             if self.strategy_scene.action_open_design:
                 self.strategy_scene.action_open_design = False
-                self.start_builder(return_to=STRATEGY)
+
+                # Create integrated context if launching from strategy
+                context = None
+                if hasattr(self.strategy_scene, 'workshop_context_data') and self.strategy_scene.workshop_context_data:
+                    data = self.strategy_scene.workshop_context_data
+                    empire = data.get('empire')
+                    game_session = data.get('game_session')
+
+                    if empire and game_session:
+                        # Import here to avoid circular imports
+                        from game.ui.screens.workshop_context import WorkshopContext
+
+                        # Get empire tech (placeholder for now - will be implemented when tech tree exists)
+                        available_tech_ids = []  # TODO: Replace with empire.available_tech or similar
+
+                        # Get savegame path
+                        savegame_path = game_session.save_path if hasattr(game_session, 'save_path') else None
+
+                        if savegame_path:
+                            context = WorkshopContext.integrated(
+                                empire_id=empire.id,
+                                savegame_path=savegame_path,
+                                available_tech_ids=available_tech_ids,
+                                built_designs=empire.built_ship_designs if hasattr(empire, 'built_ship_designs') else set()
+                            )
+
+                    # Clean up context data
+                    self.strategy_scene.workshop_context_data = None
+
+                self.start_builder(return_to=STRATEGY, context=context)
         elif self.state == TEST_LAB:
             self.test_lab_scene.update()
             self.test_lab_scene.draw(self.screen)

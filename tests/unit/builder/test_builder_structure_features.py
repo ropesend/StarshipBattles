@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 import pygame
 import pygame_gui
-from ui.builder.layer_panel import LayerComponentItem, IndividualComponentItem, LayerPanel
+from ui.builder.layer_panel import LayerComponentItem, IndividualComponentItem
 from game.ui.screens.builder_screen import BuilderSceneGUI
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component, ApplicationModifier
@@ -13,7 +13,17 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         pygame.init()
         pygame.display.set_mode((800, 600))
         self.manager = pygame_gui.UIManager((800, 600))
-        
+
+        # Patch _create_ui to avoid complex UI initialization
+        self.patcher_create_ui = patch('game.ui.screens.workshop_screen.DesignWorkshopGUI._create_ui')
+        self.mock_create_ui = self.patcher_create_ui.start()
+
+        # Patch internal managers
+        self.p1 = patch('game.ui.screens.workshop_screen.SpriteManager')
+        self.p2 = patch('game.ui.screens.workshop_screen.PresetManager')
+        self.p3 = patch('game.ui.screens.workshop_screen.ShipThemeManager')
+        self.p1.start(); self.p2.start(); self.p3.start()
+
         # Mock Ship and Components
         self.ship = MagicMock(spec=Ship)
         self.ship.layers = {
@@ -22,7 +32,7 @@ class TestBuilderStructureFeatures(unittest.TestCase):
                 'max_mass': 100
             }
         }
-        
+
         self.comp_data = {
             "id": "test_id",
             "name": "Test Component",
@@ -35,7 +45,7 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         self.component = Component(self.comp_data)
         self.component.mass = 10
         self.component.name = "Test Component"
-        
+
         # Populate ship
         self.ship.layers['core']['components'] = [self.component]
 
@@ -61,26 +71,35 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         self.ship.iter_components = iter_components
         self.ship.has_components = has_components
 
-        # Mock Builder GUI
-        with patch('game.ui.screens.builder_screen.BuilderLeftPanel'), \
-             patch('game.ui.screens.builder_screen.BuilderRightPanel'), \
-             patch('game.ui.screens.builder_screen.LayerPanel'), \
-             patch('game.ui.screens.builder_screen.ModifierEditorPanel'), \
-             patch('game.ui.screens.builder_screen.WeaponsReportPanel'):
-            self.builder_gui = BuilderSceneGUI(800, 600, None)
-            self.builder_gui.ship = self.ship
-            # Ensure panel mocks return False by default for handle_event so logic flows through
-            self.builder_gui.left_panel.handle_event.return_value = False
-            self.builder_gui.modifier_panel.handle_event.return_value = False
-            self.builder_gui.layer_panel.handle_event.return_value = False
-            
+        # Create Builder GUI (_create_ui is mocked so panels won't be created)
+        self.builder_gui = BuilderSceneGUI(800, 600, None)
+
+        # Manually setup the mocks that _create_ui would have created
+        self.builder_gui.ui_manager = MagicMock()
+        self.builder_gui.left_panel = MagicMock()
+        self.builder_gui.right_panel = MagicMock()
+        self.builder_gui.layer_panel = MagicMock()
+        self.builder_gui.modifier_panel = MagicMock()
+        self.builder_gui.weapons_report_panel = MagicMock()
+        self.builder_gui.detail_panel = MagicMock()
+
+        self.builder_gui.ship = self.ship
+
+        # Ensure panel mocks return False by default for handle_event so logic flows through
+        self.builder_gui.left_panel.handle_event.return_value = False
+        self.builder_gui.modifier_panel.handle_event.return_value = False
+        self.builder_gui.layer_panel.handle_event.return_value = False
+
         # Re-initialize real LayerPanel for testing its items if needed
         # But mostly we test BuilderSceneGUI logic and Item classes separately
 
     def tearDown(self):
-        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
-        patch.stopall()
-        
+        # Stop patches
+        self.patcher_create_ui.stop()
+        self.p1.stop()
+        self.p2.stop()
+        self.p3.stop()
+
         pygame.quit()
         RegistryManager.instance().clear()
 
@@ -89,28 +108,28 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         container = self.manager.get_root_container()
         sprite_mgr = MagicMock()
         sprite_mgr.get_sprite.return_value = pygame.Surface((32, 32))
-        
+
         # Mock Event Handler
         event_handler = MagicMock()
-        
+
         item = IndividualComponentItem(
             self.manager, container, self.component, 100, 0, 200, sprite_mgr,
             event_handler, False
         )
-        
+
         # Check Label Alignment Style
         # Access elements via panel_container if available, or try get_container()
         # In pygame_gui UIPanel has a panel_container attribute which is the UIContainer
-        container_obj = item.panel.panel_container 
+        container_obj = item.panel.panel_container
         label = [c for c in container_obj.elements if isinstance(c, pygame_gui.elements.UILabel) and c.text == "Test Component"][0]
         self.assertIn('#left_aligned_label', label.object_ids)
-        
+
         # Check Buttons
         buttons = [c for c in container_obj.elements if isinstance(c, pygame_gui.elements.UIButton)]
         button_texts = [b.text for b in buttons]
         self.assertIn('+', button_texts)
         self.assertIn('-', button_texts)
-        
+
     def test_layer_item_ui_elements(self):
         """Test that LayerComponentItem has correct buttons and label style."""
         container = self.manager.get_root_container()
@@ -118,17 +137,17 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         sprite_mgr.get_sprite.return_value = pygame.Surface((32, 32))
 
         event_handler = MagicMock()
-        
+
         item = LayerComponentItem(
             self.manager, container, self.component, 1, 10, 10.0, False,
             "key", False, 0, 200, sprite_mgr, event_handler
         )
-        
+
         # Check Label
         container_obj = item.panel.panel_container
         label = [c for c in container_obj.elements if isinstance(c, pygame_gui.elements.UILabel) and c.text == "Test Component"][0]
         self.assertIn('#left_aligned_label', label.object_ids)
-        
+
         # Check Buttons
         buttons = [c for c in container_obj.elements if isinstance(c, pygame_gui.elements.UIButton)]
         button_texts = [b.text for b in buttons]
@@ -143,20 +162,20 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         c1.id = "test_id" # Ensure they are same type
         c2.id = "test_id"
         c3.id = "test_id"
-        
+
         # Select c1
         self.builder_gui.on_selection_changed(c1, append=False)
         self.assertEqual(len(self.builder_gui.selected_components), 1)
         self.assertEqual(self.builder_gui.selected_components[0][2], c1)
-        
+
         # Add c2
         self.builder_gui.on_selection_changed(c2, append=True)
         self.assertEqual(len(self.builder_gui.selected_components), 2)
-        
+
         # Add c3
         self.builder_gui.on_selection_changed(c3, append=True)
         self.assertEqual(len(self.builder_gui.selected_components), 3)
-        
+
         # Select c1 again (should replace if append=False)
         self.builder_gui.on_selection_changed(c1, append=False)
         self.assertEqual(len(self.builder_gui.selected_components), 1)
@@ -168,34 +187,34 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         c2 = Component(self.comp_data)
         c1.id = "test_id"
         c2.id = "test_id"
-        
+
         # Setup modifiers
         mod_def = MagicMock()
         mod_def.id = "test_mod"
         mod_def.id = "test_mod"
         c1.modifiers = [ApplicationModifier(mod_def, 10)]
         c2.modifiers = [ApplicationModifier(mod_def, 5)]
-        
+
         # Mock recalculate_stats
         c1.recalculate_stats = MagicMock()
         c2.recalculate_stats = MagicMock()
-        
+
         # Select both (c1 last so it is primary editing target)
         self.builder_gui.on_selection_changed([c2, c1], append=False)
-        
+
         # Simulate modifier change trigger
         # We need to manually simulate what happens when UI updates modifier
         # Usually it updates self.selected_component object directly, then calls _on_modifier_change
-        
+
         # Verify initial
         self.assertEqual(c2.modifiers[0].value, 5)
-        
+
         # Change c1 mod (the primary selected)
         c1.modifiers[0].value = 20
-        
+
         # Call propagation
         self.builder_gui._on_modifier_change()
-        
+
         # Check c2 updated
         self.assertEqual(len(c2.modifiers), 1)
         self.assertEqual(c2.modifiers[0].value, 20)
