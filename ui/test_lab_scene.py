@@ -1089,6 +1089,23 @@ class TestRunDetailsPanel:
         status_color = self.pass_color if run_record.passed else self.fail_color
         status_surf = self.title_font.render(status_text, True, status_color)
         surface.blit(status_surf, (self.x + 10, y_offset))
+        y_offset += 25
+
+        # Seed and Ticks info
+        if run_record.seed is not None:
+            seed_text = f"Seed: {run_record.seed}"
+            seed_surf = self.small_font.render(seed_text, True, (150, 150, 160))
+            surface.blit(seed_surf, (self.x + 15, y_offset))
+
+        ticks_run = run_record.metrics.get('ticks_run')
+        if ticks_run is not None:
+            ticks_text = f"Ticks: {ticks_run}"
+            ticks_surf = self.small_font.render(ticks_text, True, (150, 150, 160))
+            # Position ticks to the right of seed (or at start if no seed)
+            ticks_x = self.x + 180 if run_record.seed is not None else self.x + 15
+            surface.blit(ticks_surf, (ticks_x, y_offset))
+
+        y_offset -= 25  # Reset for button positioning
 
         # View States button (if battle states are available)
         self.view_states_button_rect = None

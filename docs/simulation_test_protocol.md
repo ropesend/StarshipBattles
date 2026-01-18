@@ -298,18 +298,27 @@ validation_rules=[
 ### Step 7: Define Test Results Display
 
 #### 7a: Detailed Test Results Panel
-Focus ONLY on validation-relevant values. For each measured value, show on the same line:
-- Expected value (from calculations)
-- Actual value (from test run)
-- Status (PASS/FAIL)
+Focus ONLY on validation-relevant values. Always include:
+- **Seed**: The random seed used for this test run (critical for reproducibility)
+- **Ticks**: Number of simulation ticks run
+- For each measured value:
+  - Expected value (from calculations)
+  - Actual value (from test run)
+  - Status (PASS/FAIL)
 
 ```
+Run Info:
+  Seed: 12345678
+  Ticks: 500
+
 | Metric              | Expected | Actual   | Status      |
 |---------------------|----------|----------|-------------|
 | final_velocity      | 312.50   | 312.50   | ✓ EXACT     |
 | distance_traveled   | 46406.25 | 46406.25 | ✓ EXACT     |
 | mass                | 40       | 40       | ✓ EXACT     |
 ```
+
+**Why show the seed?** The seed enables exact reproduction of any test run. If a test fails, the seed allows debugging with identical RNG sequences.
 
 #### 7b: Test Run History (Summary)
 Display the PRIMARY outcome value - the most relevant measurement for the test's purpose:

@@ -1790,198 +1790,18 @@
   ],
   "BEAMWEAPON-001": [
     {
-      "timestamp": "2026-01-17T19:45:49.437245",
-      "ticks_run": 500,
-      "passed": false,
-      "metrics": {
-        "initial_hp": 1000000500,
-        "final_hp": 1000000238.0,
-        "damage_dealt": 262.0,
-        "ticks_run": 500,
-        "target_alive": true,
-        "hit_rate": 0.524,
-        "expected_hit_chance": 0.5317890211570807,
-        "duration_real": 0.0453338623046875,
-        "ticks": 500
-      },
-      "validation_summary": {
-        "pass": 6,
-        "fail": 1,
-        "warn": 0,
-        "info": 0
-      },
-      "validation_results": [
-        {
-          "name": "Beam Weapon Damage",
-          "status": "PASS",
-          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
-          "expected": 1,
-          "actual": 1.0,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Base Accuracy",
-          "status": "PASS",
-          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
-          "expected": 0.5,
-          "actual": 0.5,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Accuracy Falloff",
-          "status": "PASS",
-          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
-          "expected": 0.002,
-          "actual": 0.002,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Weapon Range",
-          "status": "PASS",
-          "message": "Weapon Range: ✓ Expected 800, got 800.0",
-          "expected": 800,
-          "actual": 800.0,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Target Mass",
-          "status": "PASS",
-          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
-          "expected": 400.0,
-          "actual": 400.0,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Expected Hit Chance",
-          "status": "FAIL",
-          "message": "Expected Hit Chance: ✗ Expected 0.5318, got 0.5317890211570807 - MISMATCH (-0.002064%)\n  Formula: P = 1/(1+e^-0.1273) from sigmoid formula with net_score = 0.5 - 0.0411 - 0.3316",
-          "expected": 0.5318,
-          "actual": 0.5317890211570807,
-          "p_value": null,
-          "tolerance": 1e-09
-        },
-        {
-          "name": "Hit Rate",
-          "status": "PASS",
-          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
-          "expected": 0.5318,
-          "actual": 0.524,
-          "p_value": 0.009662782348229038,
-          "tolerance": 0.05
-        }
-      ],
-      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T19-45-46-591930_initial.json",
-      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T19-45-46-591930_final.json",
-      "seed": 478163327
-    },
-    {
-      "timestamp": "2026-01-17T19:50:51.619214",
-      "ticks_run": 500,
-      "passed": false,
-      "metrics": {
-        "initial_hp": 1000000500,
-        "final_hp": 1000000238.0,
-        "damage_dealt": 262.0,
-        "ticks_run": 500,
-        "target_alive": true,
-        "hit_rate": 0.524,
-        "expected_hit_chance": 0.5317890211570807,
-        "duration_real": 0.04199862480163574,
-        "ticks": 500
-      },
-      "validation_summary": {
-        "pass": 6,
-        "fail": 1,
-        "warn": 0,
-        "info": 0
-      },
-      "validation_results": [
-        {
-          "name": "Beam Weapon Damage",
-          "status": "PASS",
-          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
-          "expected": 1,
-          "actual": 1.0,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Base Accuracy",
-          "status": "PASS",
-          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
-          "expected": 0.5,
-          "actual": 0.5,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Accuracy Falloff",
-          "status": "PASS",
-          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
-          "expected": 0.002,
-          "actual": 0.002,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Weapon Range",
-          "status": "PASS",
-          "message": "Weapon Range: ✓ Expected 800, got 800.0",
-          "expected": 800,
-          "actual": 800.0,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Target Mass",
-          "status": "PASS",
-          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
-          "expected": 400.0,
-          "actual": 400.0,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Expected Hit Chance",
-          "status": "FAIL",
-          "message": "Expected Hit Chance: ✗ Expected 0.5318, got 0.5317890211570807 - MISMATCH (-0.002064%)\n  Formula: P = 1/(1+e^-0.1273) from sigmoid formula with net_score = 0.5 - 0.0411 - 0.3316",
-          "expected": 0.5318,
-          "actual": 0.5317890211570807,
-          "p_value": null,
-          "tolerance": 1e-09
-        },
-        {
-          "name": "Hit Rate",
-          "status": "PASS",
-          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
-          "expected": 0.5318,
-          "actual": 0.524,
-          "p_value": 0.009662782348229038,
-          "tolerance": 0.05
-        }
-      ],
-      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T19-50-51-577215_initial.json",
-      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T19-50-51-577215_final.json",
-      "seed": 478163327
-    },
-    {
-      "timestamp": "2026-01-17T20:07:21.728406",
+      "timestamp": "2026-01-17T21:18:54.250928",
       "ticks_run": 500,
       "passed": true,
       "metrics": {
-        "initial_hp": 1000000500,
-        "final_hp": 1000000238.0,
+        "initial_hp": 1000000100,
+        "final_hp": 999999838.0,
         "damage_dealt": 262.0,
         "ticks_run": 500,
         "target_alive": true,
         "hit_rate": 0.524,
         "expected_hit_chance": 0.5317890211570807,
-        "duration_real": 0.042851924896240234,
+        "duration_real": 0.04328036308288574,
         "ticks": 500
       },
       "validation_summary": {
@@ -2055,23 +1875,23 @@
           "tolerance": 0.05
         }
       ],
-      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T20-07-21-319051_initial.json",
-      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T20-07-21-319051_final.json",
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-18-53-839241_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-18-53-839241_final.json",
       "seed": 478163327
     },
     {
-      "timestamp": "2026-01-17T20:34:06.098308",
+      "timestamp": "2026-01-17T21:19:12.859731",
       "ticks_run": 500,
       "passed": true,
       "metrics": {
-        "initial_hp": 1000000500,
-        "final_hp": 1000000238.0,
+        "initial_hp": 1000000100,
+        "final_hp": 999999838.0,
         "damage_dealt": 262.0,
         "ticks_run": 500,
         "target_alive": true,
         "hit_rate": 0.524,
         "expected_hit_chance": 0.5317890211570807,
-        "duration_real": 0.048351287841796875,
+        "duration_real": 0.04052114486694336,
         "ticks": 500
       },
       "validation_summary": {
@@ -2145,23 +1965,23 @@
           "tolerance": 0.05
         }
       ],
-      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T20-34-05-606713_initial.json",
-      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T20-34-05-606713_final.json",
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-12-818206_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-12-818206_final.json",
       "seed": 478163327
     },
     {
-      "timestamp": "2026-01-17T20:34:34.536064",
+      "timestamp": "2026-01-17T21:19:19.651289",
       "ticks_run": 500,
       "passed": true,
       "metrics": {
-        "initial_hp": 1000000500,
-        "final_hp": 1000000238.0,
+        "initial_hp": 1000000100,
+        "final_hp": 999999838.0,
         "damage_dealt": 262.0,
         "ticks_run": 500,
         "target_alive": true,
         "hit_rate": 0.524,
         "expected_hit_chance": 0.5317890211570807,
-        "duration_real": 0.04272270202636719,
+        "duration_real": 0.04132556915283203,
         "ticks": 500
       },
       "validation_summary": {
@@ -2235,8 +2055,638 @@
           "tolerance": 0.05
         }
       ],
-      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T20-34-34-493341_initial.json",
-      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T20-34-34-493341_final.json",
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-19-609963_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-19-609963_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:21.145345",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999838.0,
+        "damage_dealt": 262.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.524,
+        "expected_hit_chance": 0.5317890211570807,
+        "duration_real": 0.04205179214477539,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 7,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Expected Hit Chance",
+          "status": "PASS",
+          "message": "Expected Hit Chance: ✓ Expected 0.5318, got 0.5317890211570807 - within tolerance\n  Formula: P = 1/(1+e^-0.1273) from sigmoid formula with net_score = 0.5 - 0.0411 - 0.3316",
+          "expected": 0.5318,
+          "actual": 0.5317890211570807,
+          "p_value": null,
+          "tolerance": 0.0001
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.5318,
+          "actual": 0.524,
+          "p_value": 0.009662782348229038,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-21-103293_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-21-103293_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:25.910818",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999838.0,
+        "damage_dealt": 262.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.524,
+        "expected_hit_chance": 0.5317890211570807,
+        "duration_real": 0.040895700454711914,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 7,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Expected Hit Chance",
+          "status": "PASS",
+          "message": "Expected Hit Chance: ✓ Expected 0.5318, got 0.5317890211570807 - within tolerance\n  Formula: P = 1/(1+e^-0.1273) from sigmoid formula with net_score = 0.5 - 0.0411 - 0.3316",
+          "expected": 0.5318,
+          "actual": 0.5317890211570807,
+          "p_value": null,
+          "tolerance": 0.0001
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.5318,
+          "actual": 0.524,
+          "p_value": 0.009662782348229038,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-25-868735_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-25-868735_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:26.322613",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999838.0,
+        "damage_dealt": 262.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.524,
+        "expected_hit_chance": 0.5317890211570807,
+        "duration_real": 0.041703224182128906,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 7,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Expected Hit Chance",
+          "status": "PASS",
+          "message": "Expected Hit Chance: ✓ Expected 0.5318, got 0.5317890211570807 - within tolerance\n  Formula: P = 1/(1+e^-0.1273) from sigmoid formula with net_score = 0.5 - 0.0411 - 0.3316",
+          "expected": 0.5318,
+          "actual": 0.5317890211570807,
+          "p_value": null,
+          "tolerance": 0.0001
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.5318,
+          "actual": 0.524,
+          "p_value": 0.009662782348229038,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-26-280910_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-26-280910_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:26.746504",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999838.0,
+        "damage_dealt": 262.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.524,
+        "expected_hit_chance": 0.5317890211570807,
+        "duration_real": 0.04106330871582031,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 7,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Expected Hit Chance",
+          "status": "PASS",
+          "message": "Expected Hit Chance: ✓ Expected 0.5318, got 0.5317890211570807 - within tolerance\n  Formula: P = 1/(1+e^-0.1273) from sigmoid formula with net_score = 0.5 - 0.0411 - 0.3316",
+          "expected": 0.5318,
+          "actual": 0.5317890211570807,
+          "p_value": null,
+          "tolerance": 0.0001
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.5318,
+          "actual": 0.524,
+          "p_value": 0.009662782348229038,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-26-704901_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-26-704901_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:27.093924",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999838.0,
+        "damage_dealt": 262.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.524,
+        "expected_hit_chance": 0.5317890211570807,
+        "duration_real": 0.041719675064086914,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 7,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Expected Hit Chance",
+          "status": "PASS",
+          "message": "Expected Hit Chance: ✓ Expected 0.5318, got 0.5317890211570807 - within tolerance\n  Formula: P = 1/(1+e^-0.1273) from sigmoid formula with net_score = 0.5 - 0.0411 - 0.3316",
+          "expected": 0.5318,
+          "actual": 0.5317890211570807,
+          "p_value": null,
+          "tolerance": 0.0001
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.5318,
+          "actual": 0.524,
+          "p_value": 0.009662782348229038,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-27-052204_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-27-052204_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:27.457718",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999838.0,
+        "damage_dealt": 262.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.524,
+        "expected_hit_chance": 0.5317890211570807,
+        "duration_real": 0.04027056694030762,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 7,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Expected Hit Chance",
+          "status": "PASS",
+          "message": "Expected Hit Chance: ✓ Expected 0.5318, got 0.5317890211570807 - within tolerance\n  Formula: P = 1/(1+e^-0.1273) from sigmoid formula with net_score = 0.5 - 0.0411 - 0.3316",
+          "expected": 0.5318,
+          "actual": 0.5317890211570807,
+          "p_value": null,
+          "tolerance": 0.0001
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.5318,
+          "actual": 0.524,
+          "p_value": 0.009662782348229038,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-27-416925_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-27-416925_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:28.337173",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999838.0,
+        "damage_dealt": 262.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.524,
+        "expected_hit_chance": 0.5317890211570807,
+        "duration_real": 0.04121541976928711,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 7,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Expected Hit Chance",
+          "status": "PASS",
+          "message": "Expected Hit Chance: ✓ Expected 0.5318, got 0.5317890211570807 - within tolerance\n  Formula: P = 1/(1+e^-0.1273) from sigmoid formula with net_score = 0.5 - 0.0411 - 0.3316",
+          "expected": 0.5318,
+          "actual": 0.5317890211570807,
+          "p_value": null,
+          "tolerance": 0.0001
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.5318,
+          "actual": 0.524,
+          "p_value": 0.009662782348229038,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-28-295314_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-28-295314_final.json",
       "seed": 478163327
     }
   ],
@@ -2402,6 +2852,87 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001-HT_2026-01-17T20-07-21-799550_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001-HT_2026-01-17T20-07-21-799550_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:20:13.184399",
+      "ticks_run": 100000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999946791.0,
+        "damage_dealt": 53309.0,
+        "ticks_run": 100000,
+        "target_alive": true,
+        "hit_rate": 0.53309,
+        "expected_hit_chance": 0.5317890211570807,
+        "duration_real": 7.636262655258179,
+        "ticks": 100000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 53.31% (53309/100000), deviation +0.2%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±1.0% [52.18%, 54.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples))",
+          "expected": 0.5318,
+          "actual": 0.53309,
+          "p_value": 1.696322164244827e-08,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001-HT_2026-01-17T21-20-05-546580_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001-HT_2026-01-17T21-20-05-546580_final.json",
+      "seed": 478163327
     }
   ],
   "BEAMWEAPON-002": [
@@ -2565,6 +3096,168 @@
       ],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-002_2026-01-17T20-07-29-725327_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-002_2026-01-17T20-07-29-725327_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:18:54.358596",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999914.0,
+        "damage_dealt": 186.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.372,
+        "expected_hit_chance": 0.3606204645011311,
+        "duration_real": 0.036778926849365234,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 36.07%, observed 37.20% (186/500), deviation +3.1%, p=0.0117 (proven equivalent)\n  Equivalence margin: ±6.0% [30.07%, 42.07%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.3607,
+          "actual": 0.372,
+          "p_value": 0.011673280794604462,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-002_2026-01-17T21-18-54-321817_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-002_2026-01-17T21-18-54-321817_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:12.970666",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999914.0,
+        "damage_dealt": 186.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.372,
+        "expected_hit_chance": 0.3606204645011311,
+        "duration_real": 0.03709053993225098,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 36.07%, observed 37.20% (186/500), deviation +3.1%, p=0.0117 (proven equivalent)\n  Equivalence margin: ±6.0% [30.07%, 42.07%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.3607,
+          "actual": 0.372,
+          "p_value": 0.011673280794604462,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-002_2026-01-17T21-19-12-933065_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-002_2026-01-17T21-19-12-933065_final.json",
       "seed": 478163327
     }
   ],
@@ -2894,6 +3587,168 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-003_2026-01-17T20-07-36-594286_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-003_2026-01-17T20-07-36-594286_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:18:54.498091",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999889.0,
+        "damage_dealt": 211.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.211,
+        "expected_hit_chance": 0.21880016383991713,
+        "duration_real": 0.06742596626281738,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 21.86%, observed 21.10% (211/1000), deviation -3.5%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±6.0% [15.86%, 27.86%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.2186,
+          "actual": 0.211,
+          "p_value": 3.0448372064229012e-05,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-003_2026-01-17T21-18-54-430665_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-003_2026-01-17T21-18-54-430665_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:13.101216",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999889.0,
+        "damage_dealt": 211.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.211,
+        "expected_hit_chance": 0.21880016383991713,
+        "duration_real": 0.05771446228027344,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 21.86%, observed 21.10% (211/1000), deviation -3.5%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±6.0% [15.86%, 27.86%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.2186,
+          "actual": 0.211,
+          "p_value": 3.0448372064229012e-05,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-003_2026-01-17T21-19-13-043502_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-003_2026-01-17T21-19-13-043502_final.json",
+      "seed": 478163327
     }
   ],
   "BEAMWEAPON-004": [
@@ -3057,6 +3912,168 @@
       ],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-004_2026-01-17T20-07-36-721864_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-004_2026-01-17T20-07-36-721864_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:18:54.622631",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999690.0,
+        "damage_dealt": 410.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.82,
+        "expected_hit_chance": 0.8386010150137585,
+        "duration_real": 0.05060720443725586,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 83.85%, observed 82.00% (410/500), deviation -2.2%, p=0.0058 (proven equivalent)\n  Equivalence margin: ±6.0% [77.85%, 89.85%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.8385,
+          "actual": 0.82,
+          "p_value": 0.005839281631130455,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-004_2026-01-17T21-18-54-572023_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-004_2026-01-17T21-18-54-572023_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:13.225942",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999690.0,
+        "damage_dealt": 410.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.82,
+        "expected_hit_chance": 0.8386010150137585,
+        "duration_real": 0.05067276954650879,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 83.85%, observed 82.00% (410/500), deviation -2.2%, p=0.0058 (proven equivalent)\n  Equivalence margin: ±6.0% [77.85%, 89.85%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.8385,
+          "actual": 0.82,
+          "p_value": 0.005839281631130455,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-004_2026-01-17T21-19-13-175269_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-004_2026-01-17T21-19-13-175269_final.json",
       "seed": 478163327
     }
   ],
@@ -3386,6 +4403,168 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-005_2026-01-17T20-07-46-654656_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-005_2026-01-17T20-07-46-654656_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:18:54.747554",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999712.0,
+        "damage_dealt": 388.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.776,
+        "expected_hit_chance": 0.7854738591348314,
+        "duration_real": 0.04886174201965332,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 78.55%, observed 77.60% (388/500), deviation -1.2%, p=0.0030 (proven equivalent)\n  Equivalence margin: ±6.0% [72.55%, 84.55%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.7855,
+          "actual": 0.776,
+          "p_value": 0.002970736913881167,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-005_2026-01-17T21-18-54-697686_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-005_2026-01-17T21-18-54-697686_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:13.350885",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999712.0,
+        "damage_dealt": 388.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.776,
+        "expected_hit_chance": 0.7854738591348314,
+        "duration_real": 0.049614667892456055,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 78.55%, observed 77.60% (388/500), deviation -1.2%, p=0.0030 (proven equivalent)\n  Equivalence margin: ±6.0% [72.55%, 84.55%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.7855,
+          "actual": 0.776,
+          "p_value": 0.002970736913881167,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-005_2026-01-17T21-19-13-301270_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-005_2026-01-17T21-19-13-301270_final.json",
+      "seed": 478163327
     }
   ],
   "BEAMWEAPON-005-HT": [
@@ -3713,6 +4892,168 @@
       ],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-006_2026-01-17T20-07-56-336119_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-006_2026-01-17T20-07-56-336119_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:18:54.914910",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999368.0,
+        "damage_dealt": 732.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.732,
+        "expected_hit_chance": 0.7206837130352557,
+        "duration_real": 0.09408140182495117,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 72.07%, observed 73.20% (732/1000), deviation +1.6%, p=0.0003 (proven equivalent)\n  Equivalence margin: ±6.0% [66.07%, 78.07%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.7207,
+          "actual": 0.732,
+          "p_value": 0.00029897238404221654,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-006_2026-01-17T21-18-54-820828_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-006_2026-01-17T21-18-54-820828_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:13.520066",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999368.0,
+        "damage_dealt": 732.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.732,
+        "expected_hit_chance": 0.7206837130352557,
+        "duration_real": 0.09235501289367676,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 72.07%, observed 73.20% (732/1000), deviation +1.6%, p=0.0003 (proven equivalent)\n  Equivalence margin: ±6.0% [66.07%, 78.07%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.7207,
+          "actual": 0.732,
+          "p_value": 0.00029897238404221654,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-006_2026-01-17T21-19-13-426708_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-006_2026-01-17T21-19-13-426708_final.json",
       "seed": 478163327
     }
   ],
@@ -4042,6 +5383,168 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-007_2026-01-17T20-08-05-668855_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-007_2026-01-17T20-08-05-668855_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:18:55.044268",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999608.0,
+        "damage_dealt": 492.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.984,
+        "expected_hit_chance": 0.9906048251935343,
+        "duration_real": 0.05671381950378418,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 5.0, got 5.0",
+          "expected": 5.0,
+          "actual": 5.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.0005, got 0.0005",
+          "expected": 0.0005,
+          "actual": 0.0005,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 99.06%, observed 98.40% (492/500), deviation -0.7%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±6.0% [93.06%, 105.06%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.9906,
+          "actual": 0.984,
+          "p_value": 4.9212812648762246e-54,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-007_2026-01-17T21-18-54-987038_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-007_2026-01-17T21-18-54-987038_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:13.652180",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999608.0,
+        "damage_dealt": 492.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.984,
+        "expected_hit_chance": 0.9906048251935343,
+        "duration_real": 0.056028127670288086,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 5.0, got 5.0",
+          "expected": 5.0,
+          "actual": 5.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.0005, got 0.0005",
+          "expected": 0.0005,
+          "actual": 0.0005,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 99.06%, observed 98.40% (492/500), deviation -0.7%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±6.0% [93.06%, 105.06%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.9906,
+          "actual": 0.984,
+          "p_value": 4.9212812648762246e-54,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-007_2026-01-17T21-19-13-595148_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-007_2026-01-17T21-19-13-595148_final.json",
+      "seed": 478163327
     }
   ],
   "BEAMWEAPON-007-HT": [
@@ -4369,6 +5872,168 @@
       ],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-008_2026-01-17T20-08-16-535409_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-008_2026-01-17T20-08-16-535409_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:18:55.170634",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999608.0,
+        "damage_dealt": 492.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.984,
+        "expected_hit_chance": 0.9867198989037976,
+        "duration_real": 0.05673646926879883,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 5.0, got 5.0",
+          "expected": 5.0,
+          "actual": 5.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.0005, got 0.0005",
+          "expected": 0.0005,
+          "actual": 0.0005,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 98.66%, observed 98.40% (492/500), deviation -0.3%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±6.0% [92.66%, 104.66%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.9866,
+          "actual": 0.984,
+          "p_value": 2.135749762072301e-34,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-008_2026-01-17T21-18-55-113391_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-008_2026-01-17T21-18-55-113391_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:13.784427",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999608.0,
+        "damage_dealt": 492.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.984,
+        "expected_hit_chance": 0.9867198989037976,
+        "duration_real": 0.056966543197631836,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 6,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 5.0, got 5.0",
+          "expected": 5.0,
+          "actual": 5.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.0005, got 0.0005",
+          "expected": 0.0005,
+          "actual": 0.0005,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 98.66%, observed 98.40% (492/500), deviation -0.3%, p=0.0000 (proven equivalent)\n  Equivalence margin: ±6.0% [92.66%, 104.66%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.9866,
+          "actual": 0.984,
+          "p_value": 2.135749762072301e-34,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-008_2026-01-17T21-19-13-727461_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-008_2026-01-17T21-19-13-727461_final.json",
       "seed": 478163327
     }
   ],
@@ -4700,6 +6365,170 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-009_2026-01-17T20-08-29-168950_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-009_2026-01-17T20-08-29-168950_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:18:55.362670",
+      "ticks_run": 1000,
+      "passed": false,
+      "metrics": {
+        "initial_hp": 1000000170,
+        "final_hp": 999999510.0,
+        "damage_dealt": 660.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.66,
+        "expected_hit_chance": 0.041146106770644716,
+        "expected_hit_chance_base": 0.8342542055768531,
+        "duration_real": 0.1185755729675293,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 4,
+        "fail": 2,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "FAIL",
+          "message": "Target Mass: ✗ Expected 65.0, got 400.0",
+          "expected": 65.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "FAIL",
+          "message": "Hit Rate: ✗ Expected 4.84%, observed 66.00% (660/1000), deviation +1263.6%, p=1.0000 (not proven equivalent)\n  Equivalence margin: ±6.0% [-1.16%, 10.84%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.0484,
+          "actual": 0.66,
+          "p_value": 1.0,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-009_2026-01-17T21-18-55-244094_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-009_2026-01-17T21-18-55-244094_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:13.979755",
+      "ticks_run": 1000,
+      "passed": false,
+      "metrics": {
+        "initial_hp": 1000000170,
+        "final_hp": 999999510.0,
+        "damage_dealt": 660.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.66,
+        "expected_hit_chance": 0.041146106770644716,
+        "expected_hit_chance_base": 0.8342542055768531,
+        "duration_real": 0.11891412734985352,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 4,
+        "fail": 2,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "FAIL",
+          "message": "Target Mass: ✗ Expected 65.0, got 400.0",
+          "expected": 65.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "FAIL",
+          "message": "Hit Rate: ✗ Expected 4.84%, observed 66.00% (660/1000), deviation +1263.6%, p=1.0000 (not proven equivalent)\n  Equivalence margin: ±6.0% [-1.16%, 10.84%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.0484,
+          "actual": 0.66,
+          "p_value": 1.0,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-009_2026-01-17T21-19-13-860841_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-009_2026-01-17T21-19-13-860841_final.json",
+      "seed": 478163327
     }
   ],
   "BEAMWEAPON-010": [
@@ -4866,6 +6695,170 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-010_2026-01-17T20-08-29-290643_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-010_2026-01-17T20-08-29-290643_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:18:55.543165",
+      "ticks_run": 1000,
+      "passed": false,
+      "metrics": {
+        "initial_hp": 1000000170,
+        "final_hp": 999999600.0,
+        "damage_dealt": 570.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.57,
+        "expected_hit_chance": 0.02935182349041012,
+        "expected_hit_chance_base": 0.780071468160804,
+        "duration_real": 0.10860252380371094,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 4,
+        "fail": 2,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "FAIL",
+          "message": "Target Mass: ✗ Expected 65.0, got 400.0",
+          "expected": 65.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "FAIL",
+          "message": "Hit Rate: ✗ Expected 3.47%, observed 57.00% (570/1000), deviation +1542.7%, p=1.0000 (not proven equivalent)\n  Equivalence margin: ±6.0% [-2.53%, 9.47%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.0347,
+          "actual": 0.57,
+          "p_value": 1.0,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-010_2026-01-17T21-18-55-434563_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-010_2026-01-17T21-18-55-434563_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:14.164747",
+      "ticks_run": 1000,
+      "passed": false,
+      "metrics": {
+        "initial_hp": 1000000170,
+        "final_hp": 999999600.0,
+        "damage_dealt": 570.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.57,
+        "expected_hit_chance": 0.02935182349041012,
+        "expected_hit_chance_base": 0.780071468160804,
+        "duration_real": 0.10984945297241211,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 4,
+        "fail": 2,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "FAIL",
+          "message": "Target Mass: ✗ Expected 65.0, got 400.0",
+          "expected": 65.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Hit Rate",
+          "status": "FAIL",
+          "message": "Hit Rate: ✗ Expected 3.47%, observed 57.00% (570/1000), deviation +1542.7%, p=1.0000 (not proven equivalent)\n  Equivalence margin: ±6.0% [-2.53%, 9.47%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.0347,
+          "actual": 0.57,
+          "p_value": 1.0,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-010_2026-01-17T21-19-14-054897_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-010_2026-01-17T21-19-14-054897_final.json",
+      "seed": 478163327
     }
   ],
   "BEAMWEAPON-011": [
@@ -5011,6 +7004,150 @@
       ],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-011_2026-01-17T20-08-29-412734_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-011_2026-01-17T20-08-29-412734_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:18:55.641212",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 1000000100,
+        "damage_dealt": 0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "distance": 900,
+        "weapon_max_range": 800,
+        "duration_real": 0.02620983123779297,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 5,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-011_2026-01-17T21-18-55-615002_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-011_2026-01-17T21-18-55-615002_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-01-17T21:19:14.276023",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 1000000100,
+        "damage_dealt": 0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "distance": 900,
+        "weapon_max_range": 800,
+        "duration_real": 0.03605175018310547,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 5,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 2.0, got 2.0",
+          "expected": 2.0,
+          "actual": 2.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.001, got 0.001",
+          "expected": 0.001,
+          "actual": 0.001,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-011_2026-01-17T21-19-14-239971_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-011_2026-01-17T21-19-14-239971_final.json",
       "seed": 478163327
     }
   ]
