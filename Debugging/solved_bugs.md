@@ -163,3 +163,12 @@
 * **Solution Implemented:** Modified `_clear_design` in `game/ui/screens/builder_screen.py` to skip the `LayerType.HULL` layer when clearing components. This ensures the structural hull is preserved while user-added components are removed.
 * **Test Case:** `tests/repro_issues/test_bug_13_clear_removes_hull.py`
 
+---
+
+## [BUG-13b] - Colony Flags Replaced by Colored Circles
+* **Date Solved:** 2026-01-18
+* **Original Issue:** Colony flags in the strategy layer were replaced by colored circles when loading saved games. The saved `theme_path` was an absolute path that became invalid when the project location changed or when loading from a different machine.
+* **Solution Implemented:** Modified `_load_assets()` in `game/ui/screens/strategy_scene.py` to recalculate the theme path using `GameConfig.asset_base_path` and the empire's `empire_theme_id` field, instead of trusting the saved absolute `theme_path`.
+* **Test Case:** `tests/repro_issues/test_bug_13_colony_flags.py`
+* **Notes:** Always derive asset paths relative to current project location rather than storing absolute paths in saves.
+

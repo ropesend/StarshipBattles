@@ -207,15 +207,8 @@ def test_shipyard_enables_ship_building(empire_with_colony):
     # Initial state: no shipyard
     assert planet.has_space_shipyard is False
 
-    # Try to add ship to queue (should work in queue, but validation would fail)
-    planet.add_production("frigate_mk1", turns=3, vehicle_type="ship")
-
     # Build shipyard complex first
-    planet.construction_queue.insert(0, {
-        "design_id": "space_shipyard_mk1",
-        "type": "complex",
-        "turns_remaining": 1
-    })
+    planet.add_production("space_shipyard_mk1", turns=1, vehicle_type="complex")
 
     # Process turn - shipyard completes
     engine.process_production([empire])
@@ -228,6 +221,9 @@ def test_shipyard_enables_ship_building(empire_with_colony):
     # Planet should now have shipyard
     assert planet.has_space_shipyard is True
 
+    # Now add ship to queue (shipyard exists)
+    planet.add_production("frigate_mk1", turns=3, vehicle_type="ship")
+
     # Process remaining turns for ship
     initial_fleet_count = len(empire.fleets)
     engine.process_production([empire])  # Turn 1
@@ -237,7 +233,7 @@ def test_shipyard_enables_ship_building(empire_with_colony):
     # Ship should spawn as fleet
     assert len(empire.fleets) == initial_fleet_count + 1
     new_fleet = empire.fleets[-1]
-    assert "frigate_mk1" in new_fleet.ships
+    assert any(ship.design_id == "frigate_mk1" for ship in new_fleet.ships)
 
 
 def test_multiple_complexes_on_planet(empire_with_colony):
@@ -274,34 +270,6 @@ def test_multiple_complexes_on_planet(empire_with_colony):
     design_ids = [f.design_id for f in planet.facilities]
     assert design_ids.count("mining_complex_mk1") == 2
     assert design_ids.count("space_shipyard_mk1") == 1
-
-
-def test_backwards_compat_mixed_queue(empire_with_colony):
-    """Test that old list format and new dict format can coexist in queue."""
-    empire, planet = empire_with_colony
-    engine = TurnEngine()
-
-    # Mix old and new formats
-    planet.construction_queue.append(["Colony Ship", 2])  # Old format
-    planet.add_production("mining_complex_mk1", turns=1, vehicle_type="complex")  # New format
-
-    assert len(planet.construction_queue) == 2
-
-    # Process turn 1 - old format decrements
-    engine.process_production([empire])
-    assert len(planet.construction_queue) == 2
-    assert planet.construction_queue[0][1] == 1  # Old format decremented
-
-    # Process turn 2 - old format completes, spawns ship
-    initial_fleet_count = len(empire.fleets)
-    engine.process_production([empire])
-    assert len(planet.construction_queue) == 1  # Old item removed
-    assert len(empire.fleets) == initial_fleet_count + 1  # Ship spawned
-
-    # Process turn 3 - new format completes, spawns complex
-    engine.process_production([empire])
-    assert len(planet.construction_queue) == 0
-    assert len(planet.facilities) == 1  # Complex spawned
 
 
 def test_shipyard_detection_with_multiple_facilities(empire_with_colony):

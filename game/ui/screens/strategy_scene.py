@@ -418,20 +418,30 @@ class StrategyScene:
     def _load_assets(self):
         """Load visual assets using AssetManager."""
         from game.assets.asset_manager import get_asset_manager
+        from game.strategy.engine.game_config import GameConfig
 
         am = get_asset_manager()
         am.load_manifest()
 
+        # Get current asset base path (works regardless of saved paths)
+        config = GameConfig()
+        asset_base = config.asset_base_path
+
         for emp in self.empires:
             self.empire_assets[emp.id] = {}
-            if emp.theme_path and os.path.exists(emp.theme_path):
+
+            # Recalculate theme_path using empire_theme_id and current asset location
+            # This fixes BUG-13: saved absolute paths may not exist on current machine
+            theme_path = os.path.join(asset_base, emp.empire_theme_id)
+
+            if os.path.exists(theme_path):
                 # Colony Flag
-                colony_path = os.path.join(emp.theme_path, "Flags", "Colony_Flag.jpg")
+                colony_path = os.path.join(theme_path, "Flags", "Colony_Flag.jpg")
                 if os.path.exists(colony_path):
                     self.empire_assets[emp.id]['colony'] = am.load_external_image(colony_path)
 
                 # Fleet Icon
-                fleet_path = os.path.join(emp.theme_path, "Skins", "Battlecruiser.png")
+                fleet_path = os.path.join(theme_path, "Skins", "Battlecruiser.png")
                 if os.path.exists(fleet_path):
                     self.empire_assets[emp.id]['fleet'] = am.load_external_image(fleet_path)
 
