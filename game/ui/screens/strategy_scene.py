@@ -149,6 +149,10 @@ class StrategyScene:
 
         self.ui.draw(screen)
 
+        # Draw build queue screen overlay (including drag preview)
+        if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
+            self.build_queue_screen.draw(screen)
+
     def handle_resize(self, width, height):
         """Handle window resize."""
         self.screen_width = width

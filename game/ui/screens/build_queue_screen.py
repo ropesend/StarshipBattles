@@ -452,8 +452,9 @@ class BuildQueueScreen:
 
     def _refresh_queue_display(self):
         """Refresh the build queue display."""
-        # Clear existing queue items - kill all children
-        for element in self.queue_scrollable.get_container().elements:
+        # Clear existing queue items - copy list to avoid mutation during iteration (BUG-26)
+        elements_to_kill = list(self.queue_scrollable.get_container().elements)
+        for element in elements_to_kill:
             element.kill()
         self.queue_items = []
 
@@ -755,6 +756,18 @@ class BuildQueueScreen:
         sm = ScreenshotManager.instance()
         sm.capture(label="build_queue")
         log_info("Screenshot: Build Queue screen captured (F12)")
+        self._show_screenshot_toast()
+
+    def _show_screenshot_toast(self):
+        """Show a brief toast notification for screenshot feedback."""
+        toast_rect = pygame.Rect(0, 0, 300, 60)
+        toast_rect.center = (self.screen_width // 2, 80)
+        pygame_gui.elements.UILabel(
+            rect=toast_rect,
+            text="Screenshot saved - path copied!",
+            manager=self.manager,
+            object_id=pygame_gui.core.ObjectID(class_id="@toast_label")
+        )
 
     def update(self, time_delta: float):
         """

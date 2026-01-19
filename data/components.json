@@ -93,6 +93,7 @@
             "sprite_index": 10,
             "abilities": {
                 "CombatPropulsion": 150,
+                "StrategicMovement": 100,
                 "ResourceConsumption": [
                     {
                         "resource": "fuel",
@@ -1883,6 +1884,86 @@
                 "Vapors": 50,
                 "Radioactives": 200,
                 "Exotics": 100
+            }
+        },
+        {
+            "id": "warp_drive_light",
+            "name": "Light Warp Drive",
+            "type": "WarpDrive",
+            "mass": 30,
+            "hp": 60,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 82,
+            "abilities": {
+                "WarpJump": 2000
+            },
+            "major_classification": "Engines",
+            "resource_cost": {
+                "Metals": 50,
+                "Radioactives": 30,
+                "Exotics": 40
+            }
+        },
+        {
+            "id": "warp_drive_standard",
+            "name": "Standard Warp Drive",
+            "type": "WarpDrive",
+            "mass": 50,
+            "hp": 100,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 82,
+            "abilities": {
+                "WarpJump": 5000
+            },
+            "major_classification": "Engines",
+            "resource_cost": {
+                "Metals": 80,
+                "Radioactives": 50,
+                "Exotics": 60
+            }
+        },
+        {
+            "id": "warp_drive_heavy",
+            "name": "Heavy Warp Drive",
+            "type": "WarpDrive",
+            "mass": 100,
+            "hp": 200,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 82,
+            "abilities": {
+                "WarpJump": 15000
+            },
+            "major_classification": "Engines",
+            "resource_cost": {
+                "Metals": 150,
+                "Radioactives": 100,
+                "Exotics": 120
+            }
+        },
+        {
+            "id": "warp_drive_capital",
+            "name": "Capital Warp Drive",
+            "type": "WarpDrive",
+            "mass": 200,
+            "hp": 400,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 82,
+            "abilities": {
+                "WarpJump": 50000
+            },
+            "major_classification": "Engines",
+            "resource_cost": {
+                "Metals": 300,
+                "Radioactives": 200,
+                "Exotics": 250
             }
         }
     ]

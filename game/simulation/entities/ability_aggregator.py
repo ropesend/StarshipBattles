@@ -4,6 +4,10 @@ This module provides functions for calculating total ability values
 across ship components, supporting stacking groups and redundancy.
 """
 
+from typing import Dict, Any, List, Optional
+
+from game.simulation.components.abilities.base import AbilityLayer, AbilityScope
+
 
 # Abilities that should multiply instead of sum
 MULTIPLICATIVE_ABILITIES = {'ToHitAttackModifier', 'ToHitDefenseModifier'}
@@ -148,3 +152,110 @@ def get_ability_total(components, ability_name):
     """
     totals = calculate_ability_totals(components)
     return totals.get(ability_name, 0)
+
+
+def calculate_ability_totals_for_layer(
+    components: List[Any],
+    layer: AbilityLayer,
+    scope_filter: Optional[AbilityScope] = None
+) -> Dict[str, Any]:
+    """Calculate total ability values filtered by game layer and optionally scope.
+
+    This function filters abilities by their layer classification before aggregating.
+    Use this for layer-specific calculations (e.g., only strategic abilities for
+    fleet movement, only combat abilities for battle simulation).
+
+    Supports 'stack_group' in ability definition for redundancy (MAX) vs stacking (SUM/MULT).
+
+    Args:
+        components: List of components to aggregate abilities from
+        layer: Which layer to filter for (COMBAT, STRATEGIC, or BOTH)
+        scope_filter: Optional scope to filter by (e.g., only ALLIED_SYSTEM abilities)
+
+    Returns:
+        Dict mapping ability names to their total values
+    """
+    totals = {}
+
+    # Intermediate structure: ability -> { group_key -> [values] }
+    ability_groups = {}
+
+    for comp in components:
+        # Process Ability Instances only (layer/scope require instance)
+        if not hasattr(comp, 'ability_instances'):
+            continue
+
+        if not isinstance(comp.ability_instances, list):
+            continue
+
+        for ab in comp.ability_instances:
+            # Check if ability applies to requested layer
+            if not ab.applies_to_layer(layer):
+                continue
+
+            # Check scope filter if provided
+            if scope_filter is not None and ab.scope != scope_filter:
+                continue
+
+            ability_name = ab.__class__.__name__
+
+            # Extract value using polymorphic interface
+            value = ab.get_primary_value()
+
+            # Marker abilities (no numeric value) return 0.0 from get_primary_value()
+            # For class requirements, these need boolean True semantics
+            if ability_name in MARKER_ABILITIES:
+                value = True
+
+            stack_group = getattr(ab, 'stack_group', None)
+            group_key = stack_group if stack_group else comp
+
+            if ability_name not in ability_groups:
+                ability_groups[ability_name] = {}
+            if group_key not in ability_groups[ability_name]:
+                ability_groups[ability_name][group_key] = []
+
+            ability_groups[ability_name][group_key].append(value)
+
+            # Alias ResourceStorage(fuel) to FuelStorage for ClassRequirementsRule
+            if ability_name == 'ResourceStorage' and getattr(ab, 'resource_type', '') == 'fuel':
+                alias = 'FuelStorage'
+                if alias not in ability_groups:
+                    ability_groups[alias] = {}
+                if group_key not in ability_groups[alias]:
+                    ability_groups[alias][group_key] = []
+                ability_groups[alias][group_key].append(value)
+
+    # Aggregate using same logic as calculate_ability_totals
+    for ability_name, groups in ability_groups.items():
+        # 1. Intra-Group Aggregation (MAX / Redundancy)
+        group_contributions = []
+
+        for key, values in groups.items():
+            # Filter for numeric
+            nums = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
+            if nums:
+                group_contributions.append(max(nums))
+            elif any(v is True for v in values):
+                group_contributions.append(True)
+
+        if not group_contributions:
+            continue
+
+        # 2. Inter-Group Aggregation (Sum or Multiply)
+        first = group_contributions[0]
+
+        if isinstance(first, bool):
+            totals[ability_name] = True
+        else:
+            if ability_name in MULTIPLICATIVE_ABILITIES:
+                val = 1.0
+                for v in group_contributions:
+                    if isinstance(v, (int, float)):
+                        val *= v
+                totals[ability_name] = val
+            else:
+                val = sum(v for v in group_contributions if isinstance(v, (int, float)))
+                totals[ability_name] = val
+
+    return totals

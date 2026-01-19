@@ -17,6 +17,7 @@ class ModifierEffects:
         stats['cost_mult'] *= scale
         stats['thrust_mult'] *= scale
         stats['turn_mult'] *= scale
+        stats['strategic_mult'] *= scale  # Strategic movement scales same as thrust
         stats['energy_gen_mult'] *= scale
         stats['capacity_mult'] *= scale
         stats['crew_capacity_mult'] *= scale

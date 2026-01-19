@@ -4,7 +4,7 @@
 In the strategy layer, Planets that exist in a sector with multiple planets should be moved towards the right, by about 1/4 of the diameter of the largest planet.
 
 ## Status
-Awaiting Confirmation
+Awaiting Confirmation (Rev 4)
 
 ## Work Log
 
@@ -145,6 +145,53 @@ dist = hex_px_radius * 0.65
 **Regression Tests:**
 ```
 ====================== 154 passed (strategy tests) ======================
+```
+
+All tests pass with no regressions.
+
+---
+### ❌ Fix Rejected [2026-01-18 21:22]
+**Reason:** Move the largest planet another 10% of it's diameter to the left. The smaller planets should be arranged as follows: they should be located based on polar coordinates where the center of the coordinate is the center of the largest planet. If there is just 1 smaller planet, it should be immediately to the right of the larger planet, if there are two then one should be 30 degrees above horizontal and the other 30 degrees below it, if there are 3 smaller planets then they should be 15 degrees up, horizontal and 45 degrees down and greater numbers should follow this pattern... The distance from the largest and the smaller planets should be measured center to center, and should be approx 1.5x the radius of the larger planet.
+**New Constraints:** Largest planet offset increased by additional 10% of diameter to the left (total ~20%); smaller planets positioned using polar coordinates centered on largest planet; single smaller planet at 0° (right); two smaller planets at +30° and -30°; three smaller planets at +15°, 0°, -45°; center-to-center distance = 1.5x radius of largest planet. Reference screenshot: `screenshots/screenshot_20260118_210212_673628_strategy_viewport.png`
+
+---
+### 2026-01-18 - Phase 2 (Rev 4): The Fix (Green)
+
+**File Modified:** `game/ui/screens/strategy_renderer.py`
+
+**Changes Made (lines 344-387):**
+```python
+# Rev 4: Largest planet offset 20% of diameter to the left (was 10%)
+group_offset_x = -largest_diameter * 0.20
+
+# Polar coordinate angles for smaller planets based on count:
+# 1 smaller: [0°] (right)
+# 2 smaller: [30°, -30°]
+# 3 smaller: [15°, 0°, -45°]
+# 4+ smaller: spread from 45° to -60°
+
+# Distance from largest center = 1.5x largest planet radius
+dist = largest_draw_r * 1.5
+
+# Smaller planets offset from largest planet center (not hex center)
+final_offset = pygame.math.Vector2(group_offset_x + dist, 0).rotate(-angle)
+```
+
+**Technical Approach:**
+1. Increased largest planet offset from 10% to 20% of diameter (leftward)
+2. Implemented polar coordinate positioning for smaller planets
+3. Defined specific angle patterns: 1→[0°], 2→[30°,-30°], 3→[15°,0°,-45°]
+4. Changed distance calculation to 1.5x largest planet radius (center-to-center)
+5. Smaller planets now orbit around the largest planet's center
+
+**Test Results:**
+```
+========================= 9 passed in 1.56s =========================
+```
+
+**Regression Tests:**
+```
+158 passed (strategy tests)
 ```
 
 All tests pass with no regressions.

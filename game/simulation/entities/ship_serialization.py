@@ -54,6 +54,7 @@ class ShipSerializer:
                     "acceleration_rate": ship.acceleration_rate,
                     "turn_speed": ship.turn_speed,
                     "total_thrust": ship.total_thrust,
+                    "strategic_movement": getattr(ship, 'total_strategic_movement', 0),
                     "mass": ship.mass,
                     "armor_hp_pool": ship.layers[LayerType.ARMOR]['max_hp_pool'] if LayerType.ARMOR in ship.layers else 0
                 }

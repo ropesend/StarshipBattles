@@ -25,6 +25,7 @@ class TestModifierEffectsFunctions(unittest.TestCase):
             'cost_mult': 1.0,
             'thrust_mult': 1.0,
             'turn_mult': 1.0,
+            'strategic_mult': 1.0,
             'energy_gen_mult': 1.0,
             'capacity_mult': 1.0,
             'crew_capacity_mult': 1.0,
@@ -36,19 +37,20 @@ class TestModifierEffectsFunctions(unittest.TestCase):
             'arc_set': None,
             'properties': {}
         }
-    
+
     def test_simple_size_scales_all_stats(self):
         """Simple size modifier should scale mass, hp, damage, etc."""
         stats = self._create_default_stats()
-        
+
         ModifierEffects.simple_size(2.0, stats)
-        
+
         self.assertEqual(stats['mass_mult'], 2.0)
         self.assertEqual(stats['hp_mult'], 2.0)
         self.assertEqual(stats['damage_mult'], 2.0)
         self.assertEqual(stats['cost_mult'], 2.0)
         self.assertEqual(stats['thrust_mult'], 2.0)
         self.assertEqual(stats['turn_mult'], 2.0)
+        self.assertEqual(stats['strategic_mult'], 2.0)
         self.assertEqual(stats['consumption_mult'], 2.0)
     
     def test_range_mount_increases_range(self):
@@ -130,6 +132,7 @@ class TestApplyModifierEffects(unittest.TestCase):
             'cost_mult': 1.0,
             'thrust_mult': 1.0,
             'turn_mult': 1.0,
+            'strategic_mult': 1.0,
             'energy_gen_mult': 1.0,
             'capacity_mult': 1.0,
             'consumption_mult': 1.0,
@@ -139,7 +142,7 @@ class TestApplyModifierEffects(unittest.TestCase):
             'arc_set': None,
             'properties': {}
         }
-    
+
     def test_special_effect_handlers_exist(self):
         """Verify all expected special handlers are registered."""
         self.assertIn('simple_size', SPECIAL_EFFECT_HANDLERS)

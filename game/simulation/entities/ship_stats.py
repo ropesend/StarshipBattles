@@ -52,9 +52,10 @@ class ShipStatsCalculator:
 
         # Base Stats Reset
         ship.total_thrust = 0
+        ship.total_strategic_movement = 0  # Strategic layer movement points
         ship.turn_speed = 0
         ship.resources.reset_stats()
-            
+
         ship.max_shields = 0
         ship.shield_regen_rate = 0
         ship.shield_regen_cost = 0
@@ -154,6 +155,7 @@ class ShipStatsCalculator:
         total_energy_gen = 0
         total_ammo_gen = 0
         total_thrust = 0
+        total_strategic_movement = 0  # Strategic layer movement points
         total_turn_speed = 0
         total_max_shields = 0
         total_shield_regen = 0
@@ -191,7 +193,11 @@ class ShipStatsCalculator:
             # Thrust from CombatPropulsion abilities
             for ab in comp.get_abilities('CombatPropulsion'):
                 total_thrust += ab.thrust_force
-            
+
+            # Strategic movement from StrategicMovement abilities
+            for ab in comp.get_abilities('StrategicMovement'):
+                total_strategic_movement += ab.movement_points
+
             # Turn speed from ManeuveringThruster abilities
             for ab in comp.get_abilities('ManeuveringThruster'):
                 total_turn_speed += ab.turn_rate
@@ -244,6 +250,7 @@ class ShipStatsCalculator:
         ship.resources.register_generation('energy', total_energy_gen)
         ship.resources.register_generation('ammo', total_ammo_gen)
         ship.total_thrust = total_thrust
+        ship.total_strategic_movement = total_strategic_movement
         ship.turn_speed = total_turn_speed
         ship.max_shields = total_max_shields
         ship.shield_regen_rate = total_shield_regen

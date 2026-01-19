@@ -189,8 +189,9 @@ class PlanetReportPanel:
 
     def _update_complexes_list(self):
         """Update the list of built complexes on the planet."""
-        # Clear existing items
-        for item in self.complex_items:
+        # Clear existing items - copy list to avoid mutation during iteration (BUG-26)
+        items_to_kill = list(self.complex_items)
+        for item in items_to_kill:
             item.kill()
         self.complex_items = []
 

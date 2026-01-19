@@ -411,6 +411,7 @@ class Component:
             'cost_mult': 1.0,
             'thrust_mult': 1.0,
             'turn_mult': 1.0,
+            'strategic_mult': 1.0,  # Strategic movement multiplier (scales same as thrust)
             'energy_gen_mult': 1.0,
             'capacity_mult': 1.0,
             'crew_capacity_mult': 1.0,

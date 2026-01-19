@@ -217,3 +217,39 @@
 * **Test Case:** `tests/ui/test_planet_list_window.py`
 * **Notes:** Flag icons deferred for future enhancement; star (★) indicator provides visual distinction for player colonies.
 
+---
+
+## [BUG-19] - Planet Window Missing Colony Complexes List
+* **Date Solved:** 2026-01-18
+* **Original Issue:** The planet window in the main Strategy Layer had no list indicating what complexes exist on a colony.
+* **Solution Implemented:** Updated `format_planet_info()` in `game/ui/screens/strategy_screen.py` (the main sidebar method) to add colony status and facilities list. Shows "Colony Status: Owned" and lists all complexes by name for colonized planets; uncolonized planets show no change.
+* **Test Case:** 195 passed (strategy + planet tests)
+* **Notes:** There are TWO `format_planet_info` methods - one in `strategy_detail_fmt.py` (PlanetReportPanel) and one in `strategy_screen.py` (main sidebar). Both were updated.
+
+---
+
+## [BUG-22] - Zoom Level Indicator Visible When Sub-Panels Open
+* **Date Solved:** 2026-01-18
+* **Original Issue:** The Strategy Layer Zoom level indicator on the bottom left was visible when sub-panels (Build Queue, Design Workshop, Planet List) were open, and mouse wheel zoom still worked.
+* **Solution Implemented:** Added `planet_list_window` tracking to `strategy_screen.py`, updated `_has_modal_open()` to check for Planet List Window, and modified `strategy_input_handler.py` to block mouse wheel zoom when any modal is open.
+* **Test Case:** 4 passed (strategy button tests)
+* **Notes:** Modal check now covers: Build Queue Screen, Fleet Orders Window, Design Workshop, and Planet List Window.
+
+---
+
+## [BUG-25] - Build Queue Category Selection Does Not Clear Stale Options
+* **Date Solved:** 2026-01-18
+* **Original Issue:** Selecting a category with fewer designs than the previous category left stale option elements visible.
+* **Solution Implemented:** Fixed list mutation during iteration in `game/ui/screens/build_queue_screen.py` by copying the elements list before iterating and killing elements.
+* **Test Case:** 18 passed (build queue tests)
+* **Notes:** When iterating over UI element lists to kill them, always copy the list first to avoid skipping elements.
+
+---
+
+## [BUG-27] - Planet List Missing Owner Filter
+* **Date Solved:** 2026-01-18
+* **Original Issue:** The Planet List window had no UI filter for Owner (None/Player/Opponents).
+* **Solution Implemented:** Added "Owner:" section with All/None buttons and toggle buttons (Player, Enemy, Unowned) to `planet_list_window.py`. Updated `filter_planets()` in `planet_list_filters.py` to accept `filter_owner` and `empire` parameters and filter by owner category.
+* **Test Case:** 28 passed (planet-related tests)
+* **Notes:** Filter logic: Unowned = `owner_id is None`, Player = `owner_id == empire.id`, Enemy = `owner_id != None and != empire.id`.
+

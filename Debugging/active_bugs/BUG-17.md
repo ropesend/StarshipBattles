@@ -4,7 +4,7 @@
 In the build queue dragging and dropping should be visually obvious, right now whatever you are dragging seems to disappear
 
 ## Status
-Awaiting Confirmation (Rev 2)
+Awaiting Confirmation (Rev 3)
 
 ## Work Log
 - 2026-01-18: Ticket created
@@ -93,6 +93,42 @@ All tests pass with no regressions.
 **Regression Tests:**
 ```
 ======================== 5 passed (build queue drag/drop tests) ========================
+```
+
+All tests pass with no regressions.
+
+---
+### ❌ Fix Rejected [2026-01-18 21:25]
+**Reason:** When I click and hold on an available design, then the icon that represents the design should be dragged to the build queue with the mouse cursor.  If I am re-ordering the build queue, then when I click and hold on one of them, then similarly the icon should be dragged around with the mouse cursor.
+**New Constraints:** Icon must visibly follow the mouse cursor during drag operations for both adding new designs and reordering queue items.
+---
+### 2026-01-18 - Phase 2 (Rev 3): The Fix (Green)
+
+**Root Cause Analysis:** The `build_queue_screen.draw()` method was never being called from the main render loop! The pygame_gui UIManager was drawing its elements, but the custom drag preview code (which draws the icon following the cursor) was being skipped because `draw()` was never invoked.
+
+**Files Modified:**
+1. `game/ui/screens/strategy_scene.py`
+
+**Changes Made (lines 152-154):**
+```python
+# Draw build queue screen overlay (including drag preview)
+if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
+    self.build_queue_screen.draw(screen)
+```
+
+**Technical Approach:**
+1. Added call to `build_queue_screen.draw(screen)` in `strategy_scene.draw()`
+2. This ensures the drag preview (icon following cursor) is rendered
+3. Draw is called AFTER ui.draw() to render the drag icon on top of everything
+
+**Test Results:**
+```
+========================= 3 passed in 1.47s =========================
+```
+
+**Regression Tests:**
+```
+158 passed (strategy tests)
 ```
 
 All tests pass with no regressions.
