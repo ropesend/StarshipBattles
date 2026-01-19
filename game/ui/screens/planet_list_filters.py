@@ -47,7 +47,7 @@ def gather_planets(galaxy, empire):
     return planets
 
 
-def filter_planets(planets, search_lower, filter_types, min_g, max_g, min_t, max_t, min_m, max_m):
+def filter_planets(planets, search_lower, filter_types, min_g, max_g, min_t, max_t, min_m, max_m, filter_owner=None, empire=None):
     """Filter planets based on search criteria.
 
     Args:
@@ -57,10 +57,14 @@ def filter_planets(planets, search_lower, filter_types, min_g, max_g, min_t, max
         min_g, max_g: Gravity range in g
         min_t, max_t: Temperature range in K
         min_m, max_m: Mass range in Earth masses
+        filter_owner: Dict of owner category -> bool for owner filtering (BUG-27)
+        empire: Current player's empire for determining ownership
 
     Returns:
         List of filtered planets
     """
+    empire_id = empire.id if empire else -1
+
     def matches_filter(p):
         # Name (use cached lowercase)
         if search_lower and search_lower not in p._cached_name_lower:
@@ -69,6 +73,20 @@ def filter_planets(planets, search_lower, filter_types, min_g, max_g, min_t, max
         # Type (use cached category)
         if not filter_types.get(p._cached_type_category, True):
             return False
+
+        # Owner filtering (BUG-27)
+        if filter_owner is not None:
+            owner_id = getattr(p, 'owner_id', None)
+
+            if owner_id is None:
+                owner_cat = 'Unowned'
+            elif owner_id == empire_id:
+                owner_cat = 'Player'
+            else:
+                owner_cat = 'Enemy'
+
+            if not filter_owner.get(owner_cat, True):
+                return False
 
         # Ranges (use cached gravity_g and mass_earth)
         if p._cached_gravity_g < min_g or p._cached_gravity_g > max_g:

@@ -142,7 +142,9 @@ class SystemTreePanel:
         flat_view: If True, do not use top-level "Planetary System" grouping (for Sector View).
         """
         # Clear old
-        for item in self.items:
+        # BUG-26: Copy list to avoid mutation during iteration
+        items_to_kill = list(self.items)
+        for item in items_to_kill:
             item.kill()
         self.items = []
         self.root_items = []

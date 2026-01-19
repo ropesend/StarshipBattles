@@ -78,6 +78,21 @@ def format_planet_info(planet) -> str:
     text += f"<b>Water:</b> {planet.surface_water*100:.0f}%<br>"
     text += f"<b>Pressure:</b> {planet.total_pressure_atm:.2f} atm<br>"
 
+    # Colony status and facilities (BUG-19 fix)
+    if hasattr(planet, 'owner_id') and planet.owner_id is not None:
+        text += f"<br><b>Colony Status:</b> Owned<br>"
+
+        # Show facilities/complexes list
+        facilities = getattr(planet, 'facilities', [])
+        if facilities:
+            text += "<br><b>Complexes:</b><br>"
+            for facility in facilities:
+                f_name = getattr(facility, 'name', getattr(facility, 'design_id', 'Unknown'))
+                f_status = getattr(facility, 'status', 'Active')
+                text += f" - {f_name} ({f_status})<br>"
+        else:
+            text += "<br><b>Complexes:</b> None<br>"
+
     if hasattr(planet, 'resources') and planet.resources:
         text += "<br><b>Resources:</b><br>"
         for r_name, r_data in planet.resources.items():

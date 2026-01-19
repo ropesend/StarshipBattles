@@ -67,13 +67,22 @@ def build_queue_screen(mock_design_library):
 
 def test_drag_start(build_queue_screen):
     """Test that clicking a design button starts a drag."""
-    # Find a design button
+    # Find a design button (now nested inside row panels)
     design_button = None
     for element in build_queue_screen.items_scrollable.get_container().elements:
-        if isinstance(element, pygame_gui.elements.UIButton) and hasattr(element, 'design_id'):
+        # Check if this element is a row panel containing the button
+        if isinstance(element, pygame_gui.elements.UIPanel) and hasattr(element, 'design_id'):
+            # Search inside the panel for the button
+            for child in element.get_container().elements:
+                if isinstance(child, pygame_gui.elements.UIButton) and hasattr(child, 'design_id'):
+                    design_button = child
+                    break
+        # Also check direct buttons (backwards compatibility)
+        elif isinstance(element, pygame_gui.elements.UIButton) and hasattr(element, 'design_id'):
             design_button = element
+        if design_button:
             break
-    
+
     assert design_button is not None
     
     # Simulate mouse down on button using absolute coordinates

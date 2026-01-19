@@ -108,11 +108,28 @@ class Planet:
         for facility in self.facilities:
             if not facility.is_operational:
                 continue
-            # Check design_data for SpaceShipyard component
+            # Check design_data for space_shipyard component
+            # Design JSON stores components as lists with 'id' field (not full component defs)
             for layer_data in facility.design_data.get("layers", {}).values():
-                for comp in layer_data.get("components", []):
-                    if "SpaceShipyard" in comp.get("abilities", {}):
-                        return True
+                # Handle both list format (saved designs) and dict format (tests)
+                if isinstance(layer_data, list):
+                    for comp in layer_data:
+                        if isinstance(comp, dict):
+                            # Check component id (real saved designs)
+                            if comp.get("id") == "space_shipyard":
+                                return True
+                            # Check abilities dict (test fixtures)
+                            if "SpaceShipyard" in comp.get("abilities", {}):
+                                return True
+                elif isinstance(layer_data, dict):
+                    for comp in layer_data.get("components", []):
+                        if isinstance(comp, dict):
+                            # Check component id (real saved designs)
+                            if comp.get("id") == "space_shipyard":
+                                return True
+                            # Check abilities dict (test fixtures)
+                            if "SpaceShipyard" in comp.get("abilities", {}):
+                                return True
         return False
 
     def add_production(self, item_name, turns=None, vehicle_type=None):

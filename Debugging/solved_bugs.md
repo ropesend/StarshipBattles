@@ -172,3 +172,48 @@
 * **Test Case:** `tests/repro_issues/test_bug_13_colony_flags.py`
 * **Notes:** Always derive asset paths relative to current project location rather than storing absolute paths in saves.
 
+---
+
+## [BUG-16] - Atmosphere Raw Data Button Mispositioned
+* **Date Solved:** 2026-01-18
+* **Original Issue:** The Raw Data button for atmosphere data was positioned at the top-left of the entire planet detail panel instead of the top-right of the graph box.
+* **Solution Implemented:** Modified `game/ui/screens/strategy_screen.py` to calculate button position based on `graph_rect` during initialization instead of using `(0, 0)` placeholder.
+* **Test Case:** `tests/repro_issues/test_bug_16_raw_data_button.py`
+* **Notes:** Button position now correctly calculated as `(graph_rect.right - 22, graph_rect.top + 2)` at construction time.
+
+---
+
+## [BUG-18] - Available Designs Need Miniature Portrait Icons
+* **Date Solved:** 2026-01-18
+* **Original Issue:** Available Designs list in Build Queue lacked visual icons for each design.
+* **Solution Implemented:** Modified `game/ui/screens/build_queue_screen.py` to wrap each design in a UIPanel row with a 36x36 portrait icon. Added `_load_design_portrait()` method that loads portraits from theme assets or falls back to colored placeholders.
+* **Test Case:** `tests/ui/test_build_queue_drag_drop.py`
+* **Notes:** Portraits loaded from `assets/ShipThemes/{theme}/Portraits/{ShipClass}_Portrait.jpg` with fallback placeholders by type.
+
+---
+
+## [BUG-20] - Build Queue Items Need Miniature Portrait Icons
+* **Date Solved:** 2026-01-18
+* **Original Issue:** Build Queue items lacked visual portrait icons.
+* **Solution Implemented:** Modified `_refresh_queue_display()` in `game/ui/screens/build_queue_screen.py` to add 50x50 portrait icons to each queue item. Added `_load_queue_item_portrait()` method for design lookup and portrait loading.
+* **Test Case:** `tests/ui/test_build_queue_drag_drop.py`
+* **Notes:** Provides visual consistency with Available Designs list (BUG-18).
+
+---
+
+## [BUG-21] - Build Queue Drag/Drop Leaves Stale Graphics
+* **Date Solved:** 2026-01-18
+* **Original Issue:** Dragging items from the build queue and dropping outside the panel left visual artifacts.
+* **Solution Implemented:** Added `came_from_queue` flag in `game/ui/screens/build_queue_screen.py` to track item origin. On drop outside queue panel, calls `_refresh_queue_display()` if item originated from queue.
+* **Test Case:** `tests/ui/test_build_queue_drag_drop.py`
+* **Notes:** Ensures queue visual is always in sync with `planet.construction_queue` after any drag operation.
+
+---
+
+## [BUG-23] - Galactic Planet Registry Missing Owner Column
+* **Date Solved:** 2026-01-18
+* **Original Issue:** Owner column only showed generic labels ("Unowned", "Player", "Enemy") instead of actual empire names.
+* **Solution Implemented:** Enhanced `_get_owner_name()` in `game/ui/screens/planet_list_window.py` to look up actual empire names from `galaxy.empires`. Added star prefix for player colonies, widened column to 140px, and set default sort to owner.
+* **Test Case:** `tests/ui/test_planet_list_window.py`
+* **Notes:** Flag icons deferred for future enhancement; star (★) indicator provides visual distinction for player colonies.
+

@@ -7,7 +7,8 @@ Extracted from StrategyScene to reduce file size and improve testability.
 import pygame
 import pygame_gui
 from game.core.config import UIConfig
-from game.core.logger import log_debug
+from game.core.logger import log_debug, log_info
+from game.core.screenshot_manager import ScreenshotManager
 from game.strategy.data.hex_math import pixel_to_hex
 from game.strategy.data.fleet import Fleet
 
@@ -100,6 +101,12 @@ class InputHandler:
             self.scene._camera_nav.zoom_to_galaxy()
         elif event.key == pygame.K_s and (event.mod & pygame.KMOD_SHIFT):
             self.scene._camera_nav.zoom_to_system()
+
+        # Screenshot Shortcuts
+        elif event.key == pygame.K_F12:
+            self._take_screenshot_full()
+        elif event.key == pygame.K_F11:
+            self._take_screenshot_viewport()
 
     def handle_click(self, mx, my, button):
         """
@@ -335,15 +342,20 @@ class InputHandler:
             dt: Delta time
             events: List of pygame events
         """
-        # Filter events for Camera: Block MouseWheel if over sidebar
+        # Filter events for Camera: Block MouseWheel if over sidebar or modal is open (BUG-22)
         cam_events = []
         mx, my = pygame.mouse.get_pos()
         over_sidebar = (mx > self.scene.screen_width - UIConfig.STRATEGY_SIDEBAR_WIDTH)
         over_topbar = (my < self.scene.TOP_BAR_HEIGHT)
 
+        # Check if modal sub-panel is open (blocks all camera input)
+        modal_open = False
+        if hasattr(self.scene, 'ui') and hasattr(self.scene.ui, '_has_modal_open'):
+            modal_open = self.scene.ui._has_modal_open()
+
         for e in events:
             if e.type == pygame.MOUSEWHEEL:
-                if over_sidebar or over_topbar:
+                if over_sidebar or over_topbar or modal_open:
                     continue
             cam_events.append(e)
 
@@ -352,3 +364,36 @@ class InputHandler:
         # Hover Logic
         world_pos = self.scene.camera.screen_to_world((mx, my))
         self.scene.hover_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.HEX_SIZE)
+
+    # =========================================================================
+    # Screenshot Methods
+    # =========================================================================
+
+    def _take_screenshot_full(self):
+        """Take a full screenshot of the strategy layer including UI."""
+        sm = ScreenshotManager.instance()
+        sm.capture_strategy_layer(self.scene, include_ui=True, label="strategy_full")
+        log_info("Screenshot: Full strategy layer captured (F12)")
+        self._show_screenshot_toast("Screenshot saved (full view)")
+
+    def _take_screenshot_viewport(self):
+        """Take a screenshot of only the galaxy viewport (no UI)."""
+        sm = ScreenshotManager.instance()
+        sm.capture_strategy_layer(self.scene, include_ui=False, label="strategy_viewport")
+        log_info("Screenshot: Galaxy viewport captured (F11)")
+        self._show_screenshot_toast("Screenshot saved (viewport only)")
+
+    def _show_screenshot_toast(self, message):
+        """Show a brief toast notification for screenshot feedback."""
+        try:
+            import pygame_gui.windows
+            toast_rect = pygame.Rect(0, 0, 300, 60)
+            toast_rect.center = (self.scene.screen_width // 2, 80)
+            pygame_gui.windows.UIMessageWindow(
+                rect=toast_rect,
+                html_message=f"<b>{message}</b><br>Path copied to clipboard",
+                manager=self.scene.ui.manager,
+                window_title="Screenshot"
+            )
+        except Exception:
+            pass

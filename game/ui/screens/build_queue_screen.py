@@ -9,6 +9,7 @@ from typing import Optional, Callable
 from game.strategy.data.planet import Planet
 from game.strategy.systems.design_library import DesignLibrary
 from game.core.logger import log_info, log_warning, log_error, log_debug
+from game.core.screenshot_manager import ScreenshotManager
 from game.ui.panels.planet_report_panel import PlanetReportPanel
 from game.ui.panels.design_report_panel import DesignReportPanel
 
@@ -332,23 +333,48 @@ class BuildQueueScreen:
     def _refresh_items_list(self):
         """Refresh the items list based on selected category."""
         # Clear existing items - kill all children
-        for element in self.items_scrollable.get_container().elements:
+        # BUG-25: Copy list to avoid mutation during iteration
+        elements_to_kill = list(self.items_scrollable.get_container().elements)
+        for element in elements_to_kill:
             element.kill()
 
         # Load designs for current category
         designs = self._load_designs_by_category(self.selected_category)
 
-        # Create UI elements for each design
+        # Create UI elements for each design with portrait icons
         y_offset = 0
+        icon_size = 36  # Small icon size
+        btn_height = 40
         for design in designs:
+            # Create horizontal container panel for icon + button
+            row_panel = ui.UIPanel(
+                relative_rect=pygame.Rect(0, y_offset, 260, btn_height),
+                manager=self.manager,
+                container=self.items_scrollable,
+                object_id="#design_row_panel"
+            )
+
+            # Load miniature portrait icon
+            portrait_surface = self._load_design_portrait(design, icon_size)
+            if portrait_surface:
+                icon_img = ui.UIImage(
+                    relative_rect=pygame.Rect(2, 2, icon_size, icon_size),
+                    image_surface=portrait_surface,
+                    manager=self.manager,
+                    container=row_panel
+                )
+
+            # Button positioned to the right of the icon
             btn = ui.UIButton(
-                relative_rect=pygame.Rect(0, y_offset, 260, 40),
+                relative_rect=pygame.Rect(icon_size + 4, 0, 260 - icon_size - 8, btn_height),
                 text=design.name,
                 manager=self.manager,
-                container=self.items_scrollable
+                container=row_panel
             )
             btn.design_id = design.design_id  # Store design_id on button
-            y_offset += 45
+            row_panel.design_id = design.design_id  # Also store on panel for hit testing
+
+            y_offset += btn_height + 5
 
         if not designs:
             ui.UILabel(
@@ -357,6 +383,72 @@ class BuildQueueScreen:
                 manager=self.manager,
                 container=self.items_scrollable
             )
+
+    def _load_design_portrait(self, design, size: int) -> Optional[pygame.Surface]:
+        """
+        Load a miniature portrait for a design.
+
+        Args:
+            design: DesignMetadata object
+            size: Size of the square icon in pixels
+
+        Returns:
+            Scaled pygame.Surface or None if not found
+        """
+        import os
+        import re
+
+        # Get theme from session's player empire
+        theme = "Federation"  # Default
+        if hasattr(self.session, 'player_empire') and hasattr(self.session.player_empire, 'empire_theme_id'):
+            theme = self.session.player_empire.empire_theme_id
+
+        ship_class = getattr(design, 'ship_class', 'Unknown')
+        if not isinstance(ship_class, str):
+            ship_class = str(ship_class) if ship_class else 'Unknown'
+
+        # Parse ship class name (handle formats like "Large Escort (Scout)")
+        match = re.match(r"(.*)\s+\((.*)\)", ship_class)
+        if match:
+            base = match.group(1).strip().replace(" ", "")
+            sub = match.group(2).strip().replace(" ", "")
+            class_clean = f"{sub}{base}"
+        else:
+            class_clean = ship_class.replace(" ", "")
+
+        filename = f"{class_clean}_Portrait.jpg"
+
+        # Try multiple locations for portrait image
+        portrait_paths = [
+            os.path.join("assets", "ShipThemes", theme, "Portraits", filename),
+            os.path.join("resources", "Portraits", theme, filename),
+            os.path.join("assets", "Images", "Default_Ship_Portrait.png")
+        ]
+
+        for path in portrait_paths:
+            if os.path.exists(path):
+                try:
+                    loaded_img = pygame.image.load(path)
+                    return pygame.transform.smoothscale(loaded_img, (size, size))
+                except Exception:
+                    continue
+
+        # Fallback: Create a colored placeholder based on vehicle type
+        placeholder = pygame.Surface((size, size))
+        vehicle_type = getattr(design, 'vehicle_type', 'Ship')
+        color_map = {
+            'Ship': (80, 100, 180),      # Blue for ships
+            'Complex': (80, 180, 100),   # Green for complexes/facilities
+            'Station': (180, 100, 80),   # Red for stations
+            'Fighter': (180, 180, 80),   # Yellow for fighters
+        }
+        color = color_map.get(vehicle_type, (100, 100, 100))
+        placeholder.fill(color)
+
+        # Draw simple icon shape
+        pygame.draw.rect(placeholder, (255, 255, 255), placeholder.get_rect(), 1)
+
+        return placeholder
 
     def _refresh_queue_display(self):
         """Refresh the build queue display."""
@@ -367,6 +459,7 @@ class BuildQueueScreen:
 
         # Display each item in the queue
         y_offset = 0
+        icon_size = 50  # Portrait icon size for queue items
         for idx, item in enumerate(self.planet.construction_queue):
             # Handle both dict and legacy list format
             if isinstance(item, dict):
@@ -388,16 +481,27 @@ class BuildQueueScreen:
             item_panel.queue_index = idx  # Tag for reordering
             item_panel.item_data = item   # Store original data
 
-            # Design name and turns
+            # Load and display portrait icon
+            portrait_surface = self._load_queue_item_portrait(design_id, item_type, icon_size)
+            if portrait_surface:
+                ui.UIImage(
+                    relative_rect=pygame.Rect(5, 5, icon_size, icon_size),
+                    image_surface=portrait_surface,
+                    manager=self.manager,
+                    container=item_panel
+                )
+
+            # Design name and turns (offset to right of icon)
+            label_x = icon_size + 15
             ui.UILabel(
-                relative_rect=pygame.Rect(10, 10, 300, 25),
+                relative_rect=pygame.Rect(label_x, 10, 250, 25),
                 text=f"{design_id}",
                 manager=self.manager,
                 container=item_panel
             )
 
             ui.UILabel(
-                relative_rect=pygame.Rect(10, 35, 200, 20),
+                relative_rect=pygame.Rect(label_x, 35, 200, 20),
                 text=f"{turns} turns remaining | Type: {item_type}",
                 manager=self.manager,
                 container=item_panel
@@ -413,6 +517,41 @@ class BuildQueueScreen:
                 manager=self.manager,
                 container=self.queue_scrollable
             )
+
+    def _load_queue_item_portrait(self, design_id: str, item_type: str, size: int) -> Optional[pygame.Surface]:
+        """
+        Load a miniature portrait for a queue item.
+
+        Args:
+            design_id: ID of the design
+            item_type: Type of item (ship, complex, etc.)
+            size: Size of the square icon in pixels
+
+        Returns:
+            Scaled pygame.Surface or None if not found
+        """
+        # Try to find design metadata for this design_id
+        designs = self.design_library.scan_designs()
+        design = next((d for d in designs if d.design_id == design_id), None)
+
+        if design:
+            return self._load_design_portrait(design, size)
+
+        # Fallback: Create a colored placeholder based on item type
+        placeholder = pygame.Surface((size, size))
+        type_lower = item_type.lower() if item_type else 'unknown'
+        color_map = {
+            'ship': (80, 100, 180),      # Blue for ships
+            'complex': (80, 180, 100),   # Green for complexes/facilities
+            'station': (180, 100, 80),   # Red for stations
+            'fighter': (180, 180, 80),   # Yellow for fighters
+            'planetary complex': (80, 180, 100),  # Green
+        }
+        color = color_map.get(type_lower, (100, 100, 100))
+        placeholder.fill(color)
+        pygame.draw.rect(placeholder, (255, 255, 255), placeholder.get_rect(), 1)
+
+        return placeholder
 
     def _set_category(self, category: str):
         """Set the active category filter."""
@@ -538,10 +677,13 @@ class BuildQueueScreen:
                         designs = self.design_library.scan_designs()
                         design = next((d for d in designs if d.design_id == design_id), None)
                         if design:
+                            # Load portrait icon for drag preview (48px for cursor visibility)
+                            portrait = self._load_design_portrait(design, 48)
                             self.dragged_item = {
                                 'design_id': design.design_id,
                                 'name': design.name,
-                                'category': self.selected_category
+                                'category': self.selected_category,
+                                'portrait': portrait
                             }
                         log_info(f"Started drag from mouse down: {self.selected_design}")
                         break
@@ -553,13 +695,19 @@ class BuildQueueScreen:
                     idx = getattr(element, 'queue_index', -1)
                     if idx != -1:
                         item = self.planet.construction_queue.pop(idx)
-                        
+                        design_id = item.get('design_id') if isinstance(item, dict) else item[0]
+                        item_type = item.get('type') if isinstance(item, dict) else 'ship'
+
+                        # Load portrait icon for drag preview
+                        portrait = self._load_queue_item_portrait(design_id, item_type, 48)
+
                         self.dragged_item = {
-                            'design_id': item.get('design_id') if isinstance(item, dict) else item[0],
-                            'name': item.get('design_id') if isinstance(item, dict) else item[0],
-                            'category': item.get('type') if isinstance(item, dict) else 'ship',
+                            'design_id': design_id,
+                            'name': design_id,
+                            'category': item_type,
                             'turns': item.get('turns_remaining') if isinstance(item, dict) else item[1],
-                            'source': 'queue'
+                            'source': 'queue',
+                            'portrait': portrait
                         }
                         log_info(f"Picked up {self.dragged_item['design_id']} from queue at pos {idx}")
                         self._refresh_queue_display()
@@ -568,28 +716,45 @@ class BuildQueueScreen:
         # Handle Drag End
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             if self.dragged_item:
+                # Track if we need to refresh (item came from queue)
+                came_from_queue = self.dragged_item.get('source') == 'queue'
+
                 # Check if dropped over build queue panel
                 if self.build_queue_panel.rect.collidepoint(event.pos):
                     # Calculate insertion index based on vertical mouse position
                     rel_y = event.pos[1] - self.queue_scrollable.get_abs_rect().top
-                    
+
                     # Estimate index: each item is ~65 pixels high
                     estimated_idx = rel_y // 65
                     insert_idx = max(0, min(int(estimated_idx), len(self.planet.construction_queue)))
 
                     turns = self.dragged_item.get('turns', 1)
                     self._add_to_queue(
-                        self.dragged_item['design_id'], 
-                        turns=turns, 
+                        self.dragged_item['design_id'],
+                        turns=turns,
                         category=self.dragged_item['category'],
                         index=insert_idx
                     )
                     log_info(f"Dropped {self.dragged_item['design_id']} into queue at index {insert_idx}")
                 else:
                     log_info(f"Dropped {self.dragged_item['design_id']} outside - removed from queue or cancelled drag")
-                
+                    # If item came from queue and dropped outside, refresh to show removal
+                    if came_from_queue:
+                        self._refresh_queue_display()
+
                 # Clear drag state
                 self.dragged_item = None
+
+        # Handle keyboard events for screenshots
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F12:
+                self._take_screenshot()
+
+    def _take_screenshot(self):
+        """Take a screenshot of the current screen including the build queue."""
+        sm = ScreenshotManager.instance()
+        sm.capture(label="build_queue")
+        log_info("Screenshot: Build Queue screen captured (F12)")
 
     def update(self, time_delta: float):
         """
@@ -609,20 +774,47 @@ class BuildQueueScreen:
         """
         self.manager.draw_ui(screen)
 
-        # Draw drag preview
+        # Draw drag preview - using portrait icon attached to cursor
         if self.dragged_item:
             mouse_pos = pygame.mouse.get_pos()
-            
-            # Draw semi-transparent background for preview
-            preview_rect = pygame.Rect(mouse_pos[0] + 10, mouse_pos[1] + 10, 150, 30)
-            overlay = pygame.Surface((preview_rect.width, preview_rect.height), pygame.SRCALPHA)
-            overlay.fill((100, 100, 255, 128))  # Semi-transparent blue
-            screen.blit(overlay, preview_rect.topleft)
-            
-            # Draw text
-            font = pygame.font.SysFont(None, 24)
-            text_surf = font.render(self.dragged_item['name'], True, (255, 255, 255))
-            screen.blit(text_surf, (preview_rect.x + 5, preview_rect.y + 5))
-            
-            # Draw border
-            pygame.draw.rect(screen, (255, 255, 255), preview_rect, 1)
+            portrait = self.dragged_item.get('portrait')
+
+            if portrait:
+                # Icon follows cursor - offset slightly so icon is visible
+                icon_x = mouse_pos[0] + 8
+                icon_y = mouse_pos[1] + 8
+                icon_size = portrait.get_width()
+
+                # Draw drop shadow for depth
+                shadow_surf = pygame.Surface((icon_size, icon_size), pygame.SRCALPHA)
+                shadow_surf.fill((0, 0, 0, 100))
+                screen.blit(shadow_surf, (icon_x + 3, icon_y + 3))
+
+                # Draw the portrait icon
+                screen.blit(portrait, (icon_x, icon_y))
+
+                # Draw bright border around icon
+                icon_rect = pygame.Rect(icon_x, icon_y, icon_size, icon_size)
+                pygame.draw.rect(screen, (150, 220, 255), icon_rect, 2)
+            else:
+                # Fallback: simple colored square with name if no portrait
+                icon_size = 48
+                icon_x = mouse_pos[0] + 8
+                icon_y = mouse_pos[1] + 8
+
+                # Draw colored placeholder
+                color_map = {
+                    'ship': (80, 100, 180),
+                    'complex': (80, 180, 100),
+                    'satellite': (180, 100, 80),
+                    'fighter': (180, 180, 80),
+                }
+                color = color_map.get(self.dragged_item.get('category', 'ship'), (100, 100, 100))
+
+                placeholder = pygame.Surface((icon_size, icon_size), pygame.SRCALPHA)
+                placeholder.fill(color)
+                screen.blit(placeholder, (icon_x, icon_y))
+
+                # Draw border
+                icon_rect = pygame.Rect(icon_x, icon_y, icon_size, icon_size)
+                pygame.draw.rect(screen, (150, 220, 255), icon_rect, 2)

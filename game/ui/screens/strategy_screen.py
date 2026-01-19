@@ -23,7 +23,8 @@ class StrategyInterface:
         self.width = screen_width
         self.height = screen_height
         self.sidebar_width = UIConfig.STRATEGY_SIDEBAR_WIDTH
-        self.fleet_orders_window = None # active window instance
+        self.fleet_orders_window = None  # active window instance
+        self.planet_list_window = None   # planet list window instance (BUG-22)
 
 
         # UI State
@@ -130,14 +131,13 @@ class StrategyInterface:
             container=self.detail_panel
         )
         
-        # Raw Data Button (Top Right of Detail Panel Container)
-        # Position relative to container, taking anchors into account.
-        # If anchored top-right:
-        # relative_rect x=-30 implies 30px from right edge.
-        # y=10 implies 10px from top.
-        
+        # Raw Data Button (Top Right of Graph Box)
+        # Position at top-right corner of the graph_rect
+        btn_x = self.graph_rect.right - 22  # Inside right edge of graph
+        btn_y = self.graph_rect.top + 2     # Inside top edge of graph
+
         self.btn_raw_data = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(0, 0, 20, 20),
+            relative_rect=pygame.Rect(btn_x, btn_y, 20, 20),
             text="",
             manager=self.manager,
             container=self.detail_panel,
@@ -553,6 +553,20 @@ class StrategyInterface:
         text += f"<b>Water:</b> {obj.surface_water*100:.0f}%<br>"
         text += f"<b>Pressure:</b> {obj.total_pressure_atm:.2f} atm<br>"
 
+        # Colony status and facilities (BUG-19 fix)
+        if hasattr(obj, 'owner_id') and obj.owner_id is not None:
+            text += f"<br><b>Colony Status:</b> Owned<br>"
+
+            # Show facilities/complexes list
+            facilities = getattr(obj, 'facilities', [])
+            if facilities:
+                text += "<b>Complexes:</b><br>"
+                for facility in facilities:
+                    f_name = getattr(facility, 'name', getattr(facility, 'design_id', 'Unknown'))
+                    text += f" - {f_name}<br>"
+            else:
+                text += "<b>Complexes:</b> None<br>"
+
         if hasattr(obj, 'resources') and obj.resources:
             text += "<br><b>Resources:</b><br>"
             for r_name, r_data in obj.resources.items():
@@ -560,10 +574,10 @@ class StrategyInterface:
                 if qty >= 1000000: q_str = f"{qty/1000000:.1f}M"
                 elif qty >= 1000: q_str = f"{qty/1000:.0f}k"
                 else: q_str = str(qty)
-                
+
                 qual = r_data['quality']
                 text += f" {r_name}: {q_str} (Q:{qual:.0f})<br>"
-        
+
         # Show Build Button if owned by current player
         current_empire_id = -1
         if hasattr(self.scene, 'current_empire'):
@@ -585,11 +599,32 @@ class StrategyInterface:
     def draw(self, screen):
         """Draw the strategy scene UI elements."""
         self.manager.draw_ui(screen)
-        
-        # Draw Debug/Placeholder Text (bottom left)
-        font = pygame.font.SysFont("arial", 20)
-        mode_text = font.render(f"Strategy Layer | Zoom: {self.scene.camera.zoom:.2f}", True, (255, 255, 255))
-        screen.blit(mode_text, (20, self.height - 30))
+
+        # Only draw zoom indicator if strategy layer has focus (no sub-panels open)
+        if not self._has_modal_open():
+            font = pygame.font.SysFont("arial", 20)
+            mode_text = font.render(f"Strategy Layer | Zoom: {self.scene.camera.zoom:.2f}", True, (255, 255, 255))
+            screen.blit(mode_text, (20, self.height - 30))
+
+    def _has_modal_open(self) -> bool:
+        """Check if any modal sub-panel is currently open."""
+        # Check for build queue screen
+        if hasattr(self.scene, 'build_queue_screen') and self.scene.build_queue_screen is not None:
+            return True
+
+        # Check for fleet orders window
+        if self.fleet_orders_window is not None:
+            return True
+
+        # Check for planet list window (BUG-22)
+        if self.planet_list_window is not None:
+            return True
+
+        # Check if workshop is being opened
+        if hasattr(self.scene, 'action_open_design') and self.scene.action_open_design:
+            return True
+
+        return False
 
     def on_ui_selection(self, obj):
         """Handle selection of an object from any UI panel."""
@@ -776,12 +811,21 @@ class StrategyInterface:
         """Open the Planet List Window."""
         w, h = self.width * 0.9, self.height * 0.9
         rect = pygame.Rect((self.width - w)/2, (self.height - h)/2, w, h)
-        
+
         # Get Empire (current player)
         empire = self.scene.current_empire
         galaxy = self.scene.galaxy
-        
-        PlanetListWindow(rect, self.manager, galaxy, empire, asset_resolver=self._get_object_asset)
+
+        # Store reference to track window state (BUG-22)
+        self.planet_list_window = PlanetListWindow(
+            rect, self.manager, galaxy, empire,
+            on_close_callback=self._on_planet_list_closed,
+            asset_resolver=self._get_object_asset
+        )
+
+    def _on_planet_list_closed(self):
+        """Callback when planet list window is closed."""
+        self.planet_list_window = None
 
     def open_orders_window(self, fleet):
         """Open the Fleet Orders Window."""

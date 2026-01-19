@@ -345,9 +345,11 @@ class StrategyRenderer:
                 planets.sort(key=lambda x: x.mass, reverse=True)
                 largest = planets[0]
 
-                base_r = hex_px_radius * 0.25
-                largest_diameter = base_r * 2
-                group_offset_x = largest_diameter * 0.25  # Offset right by 1/4 of largest diameter
+                # Rev 3: Largest planet draw radius is 50% of hex_px_radius
+                largest_draw_r = hex_px_radius * 0.5
+                largest_diameter = largest_draw_r * 2
+                # Offset left by 10% of the largest planet's diameter
+                group_offset_x = -largest_diameter * 0.10
 
                 draw_order = planets[1:] + [planets[0]]
 
@@ -356,16 +358,18 @@ class StrategyRenderer:
                     if rel_scale < 0.4:
                         rel_scale = 0.4
 
+                    base_r = hex_px_radius * 0.25
                     draw_r = max(2, int(base_r * rel_scale))
 
                     if p == largest:
                         final_offset = pygame.math.Vector2(group_offset_x, 0)
-                        primary_draw_r = max(2, int((hex_px_radius * 0.5) * rel_scale))
+                        primary_draw_r = max(2, int(largest_draw_r * rel_scale))
                         draw_r = primary_draw_r
                     else:
                         idx = planets.index(p) - 1
                         angle = idx * (180 / max(1, len(planets) - 1)) - 90
-                        dist = hex_px_radius * 0.5
+                        # Rev 3: Space smaller planets further (65% of hex radius) to avoid clipping
+                        dist = hex_px_radius * 0.65
                         final_offset = pygame.math.Vector2(dist + group_offset_x, 0).rotate(angle)
 
                     current_offset = final_offset * expansion_t
