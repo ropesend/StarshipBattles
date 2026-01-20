@@ -36,7 +36,8 @@ class DesignLibrary:
 
         # Determine designs folder location
         if savegame_path is not None and savegame_path != "":
-            self.designs_folder = os.path.join(savegame_path, "designs")
+            # Use per-empire subfolder: designs/empire_N/
+            self.designs_folder = os.path.join(savegame_path, "designs", f"empire_{empire_id}")
             log_info(f"DesignLibrary: Using savegame designs folder: {self.designs_folder}")
         else:
             # Use temp folder for designs when no savegame exists

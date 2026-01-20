@@ -104,19 +104,20 @@ class TestColonyFlagLoading:
     def test_empire_theme_path_from_game_config(self):
         """
         GIVEN a GameConfig with valid theme settings
-        WHEN creating an empire with player_theme_path
+        WHEN creating an empire with get_player_theme_path()
         THEN the path should point to an existing directory with Colony_Flag.jpg
         """
         from game.strategy.engine.game_config import GameConfig
 
         config = GameConfig()
 
-        # Check player theme path exists
-        assert os.path.exists(config.player_theme_path), \
-            f"Player theme path does not exist: {config.player_theme_path}"
+        # Check player theme path exists (using new API)
+        player_theme_path = config.get_player_theme_path(0)
+        assert os.path.exists(player_theme_path), \
+            f"Player theme path does not exist: {player_theme_path}"
 
         # Check colony flag exists in theme
-        colony_flag_path = os.path.join(config.player_theme_path, "Flags", "Colony_Flag.jpg")
+        colony_flag_path = os.path.join(player_theme_path, "Flags", "Colony_Flag.jpg")
         assert os.path.exists(colony_flag_path), \
             f"Colony flag does not exist: {colony_flag_path}"
 

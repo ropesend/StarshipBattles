@@ -27,6 +27,7 @@ from game.ui.screens.strategy_camera_nav import CameraNavigator
 from game.ui.screens.strategy_fleet_ops import FleetOperations
 from game.ui.screens.strategy_colonization import ColonizationSystem
 from game.ui.screens.strategy_input_handler import InputHandler
+from game.strategy.systems.save_game_service import SaveGameService
 
 
 class StrategyScene:
@@ -257,6 +258,14 @@ class StrategyScene:
 
         # Process turn for all empires
         self.session.process_turn()
+
+        # Auto-save after turn processing
+        if self.session.save_path:
+            success, message, _ = SaveGameService.save_game(self.session)
+            if success:
+                log_info(f"Auto-saved: {message}")
+            else:
+                log_warning(f"Auto-save failed: {message}")
 
         # Re-center Camera on current player's home
         current_player_id = self.human_player_ids[self.current_player_index]

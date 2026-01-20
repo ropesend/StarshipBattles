@@ -11,8 +11,10 @@ from game.strategy.data.empire import Empire
 class TestProduction(unittest.TestCase):
     def setUp(self):
         # Create temporary directory for test designs
+        # DesignLibrary expects designs in empire-specific subfolder: designs/empire_N/
+        # Empire ID 0 is used (Empire(0, "Terran", ...))
         self.temp_dir = tempfile.mkdtemp()
-        self.designs_dir = os.path.join(self.temp_dir, "designs")
+        self.designs_dir = os.path.join(self.temp_dir, "designs", "empire_0")
         os.makedirs(self.designs_dir, exist_ok=True)
 
         # Create a test ship design

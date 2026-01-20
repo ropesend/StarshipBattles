@@ -19,8 +19,10 @@ from game.strategy.systems.design_library import DesignLibrary
 def test_savegame_dir():
     """Create temporary savegame directory with test designs."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        # Create designs directory structure (DesignLibrary scans savegame/designs/*.json)
-        designs_dir = os.path.join(tmpdir, "designs")
+        # Create designs directory structure
+        # DesignLibrary expects designs in empire-specific subfolder: designs/empire_N/
+        # Empire ID 1 is used by empire_with_colony fixture
+        designs_dir = os.path.join(tmpdir, "designs", "empire_1")
         os.makedirs(designs_dir, exist_ok=True)
 
         # Create test complex design with harvester

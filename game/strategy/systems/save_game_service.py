@@ -3,6 +3,11 @@ Save Game Service - Handles game state persistence
 
 This service provides centralized save/load functionality for the strategy layer.
 Manages save folder structure, metadata, and version compatibility.
+
+Save Format Version 2.0.0:
+- Turn-based saves: turns/turn_N.json
+- Per-empire design folders: designs/empire_N/
+- Strict version checking (no backward compatibility)
 """
 import os
 import shutil
@@ -16,7 +21,7 @@ from game.core.logger import log_info, log_error, log_debug
 class SaveGameService:
     """Manages saving and loading complete game state"""
 
-    SAVE_VERSION = "1.0.0"
+    SAVE_VERSION = "2.0.0"
     DEFAULT_SAVES_FOLDER = "saves"
 
     @staticmethod
@@ -26,28 +31,40 @@ class SaveGameService:
 
         Args:
             game_session: GameSession instance to save
-            save_name: Optional custom save name (uses timestamp if None)
+            save_name: Optional custom save name (uses existing path or generates new)
 
         Returns:
             Tuple of (success: bool, message: str, save_path: str or None)
         """
         try:
-            # Generate save folder name
-            if save_name is None:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                player_name = game_session.config.player_name.replace(" ", "_")
-                save_name = f"{player_name}_{timestamp}"
+            # Determine save path
+            if game_session.save_path:
+                # Use existing save path
+                save_path = game_session.save_path
+            else:
+                # Create new save folder
+                if save_name is None:
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    first_player_name = game_session.config.players[0].name if game_session.config.players else "Game"
+                    player_name = first_player_name.replace(" ", "_")
+                    save_name = f"{player_name}_{timestamp}"
+
+                saves_folder = os.path.join(os.getcwd(), SaveGameService.DEFAULT_SAVES_FOLDER)
+                save_path = os.path.join(saves_folder, save_name)
 
             # Create save folder structure
-            saves_folder = os.path.join(os.getcwd(), SaveGameService.DEFAULT_SAVES_FOLDER)
-            save_path = os.path.join(saves_folder, save_name)
+            os.makedirs(save_path, exist_ok=True)
 
-            if not os.path.exists(save_path):
-                os.makedirs(save_path, exist_ok=True)
+            # Create turns subfolder
+            turns_folder = os.path.join(save_path, "turns")
+            os.makedirs(turns_folder, exist_ok=True)
 
-            # Create designs subfolder
+            # Create per-empire design folders
             designs_folder = os.path.join(save_path, "designs")
             os.makedirs(designs_folder, exist_ok=True)
+            for empire in game_session.empires:
+                empire_designs_folder = os.path.join(designs_folder, f"empire_{empire.id}")
+                os.makedirs(empire_designs_folder, exist_ok=True)
 
             # Migrate designs from temp folder if this is the first save
             SaveGameService._migrate_temp_designs(game_session, designs_folder)
@@ -55,32 +72,37 @@ class SaveGameService:
             # Update game session's save_path
             game_session.save_path = save_path
 
-            # Create save metadata
+            # Serialize and save game state to turn file
+            game_state = game_session.to_dict()
+            turn_file = os.path.join(turns_folder, f"turn_{game_session.turn_number}.json")
+            if not save_json(turn_file, game_state, indent=4):
+                return False, "Failed to save turn state", None
+
+            # Create/update save metadata
+            first_player_name = game_session.config.players[0].name if game_session.config.players else "Unknown"
             metadata = {
                 'version': SaveGameService.SAVE_VERSION,
                 'timestamp': datetime.now().isoformat(),
-                'player_name': game_session.config.player_name,
-                'turn_number': game_session.turn_number,
+                'player_name': first_player_name,
+                'empire_count': len(game_session.empires),
+                'empire_names': [e.name for e in game_session.empires],
+                'latest_turn_number': game_session.turn_number,
+                'turn_number': game_session.turn_number,  # For compatibility
                 'galaxy_radius': game_session.config.galaxy_radius,
                 'system_count': len(game_session.systems)
             }
 
-            # Save metadata
             metadata_path = os.path.join(save_path, "save_metadata.json")
             if not save_json(metadata_path, metadata, indent=4):
                 return False, "Failed to save metadata", None
 
-            # Serialize and save game state
-            game_state = game_session.to_dict()
-            state_path = os.path.join(save_path, "game_state.json")
-            if not save_json(state_path, game_state, indent=4):
-                return False, "Failed to save game state", None
-
-            log_info(f"SaveGameService: Saved game to {save_name}")
-            return True, f"Game saved successfully: {save_name}", save_path
+            log_info(f"SaveGameService: Saved turn {game_session.turn_number} to {os.path.basename(save_path)}")
+            return True, f"Game saved: Turn {game_session.turn_number}", save_path
 
         except Exception as e:
             log_error(f"SaveGameService: Save failed - {e}")
+            import traceback
+            traceback.print_exc()
             return False, f"Save failed: {str(e)}", None
 
     @staticmethod
@@ -88,70 +110,44 @@ class SaveGameService:
         """
         Migrate ship designs from temp folder to save folder.
 
-        This is called during the first save to move designs that were created
-        before the game was saved from the temporary storage to the permanent save folder.
-
-        Args:
-            game_session: GameSession with empire information
-            target_designs_folder: Path to the save's designs folder
+        Migrates to per-empire subfolders (designs/empire_N/).
         """
         try:
-            # Get temp folder path for each empire
             temp_base = os.path.join(tempfile.gettempdir(), "starship_battles_temp_designs")
 
-            # Migrate player empire designs
-            if hasattr(game_session, 'player_empire'):
-                empire_id = game_session.player_empire.id
+            # Migrate all empire designs
+            for empire in game_session.empires:
+                empire_id = empire.id
                 temp_empire_folder = os.path.join(temp_base, f"empire_{empire_id}")
+                target_empire_folder = os.path.join(target_designs_folder, f"empire_{empire_id}")
+
+                os.makedirs(target_empire_folder, exist_ok=True)
 
                 if os.path.exists(temp_empire_folder):
-                    # Copy all design files from temp to save folder
                     design_files = [f for f in os.listdir(temp_empire_folder) if f.endswith('.json')]
 
                     if design_files:
-                        log_info(f"Migrating {len(design_files)} designs from temp folder to save folder")
+                        log_info(f"Migrating {len(design_files)} designs for empire {empire_id}")
 
                         for filename in design_files:
                             src_path = os.path.join(temp_empire_folder, filename)
-                            dst_path = os.path.join(target_designs_folder, filename)
+                            dst_path = os.path.join(target_empire_folder, filename)
 
                             # Copy design file (don't move, in case save fails)
                             shutil.copy2(src_path, dst_path)
                             log_debug(f"  Migrated design: {filename}")
 
-                        log_info("Design migration complete")
-
-            # Migrate enemy empire designs (if needed for multiplayer)
-            if hasattr(game_session, 'enemy_empire'):
-                empire_id = game_session.enemy_empire.id
-                temp_empire_folder = os.path.join(temp_base, f"empire_{empire_id}")
-
-                if os.path.exists(temp_empire_folder):
-                    design_files = [f for f in os.listdir(temp_empire_folder) if f.endswith('.json')]
-
-                    if design_files:
-                        log_info(f"Migrating {len(design_files)} enemy designs from temp folder")
-
-                        for filename in design_files:
-                            src_path = os.path.join(temp_empire_folder, filename)
-                            dst_path = os.path.join(target_designs_folder, filename)
-
-                            # Only copy if not already exists (avoid conflicts)
-                            if not os.path.exists(dst_path):
-                                shutil.copy2(src_path, dst_path)
-                                log_debug(f"  Migrated enemy design: {filename}")
-
         except Exception as e:
-            # Don't fail the save if migration fails - designs are still in temp folder
             log_error(f"Failed to migrate temp designs: {e}")
 
     @staticmethod
-    def load_game(save_path: str) -> Tuple[Optional[object], str]:
+    def load_game(save_path: str, turn_number: Optional[int] = None) -> Tuple[Optional[object], str]:
         """
         Load game state from save folder.
 
         Args:
             save_path: Path to save folder (absolute or relative)
+            turn_number: Optional specific turn to load (defaults to latest)
 
         Returns:
             Tuple of (GameSession or None, message: str)
@@ -167,7 +163,7 @@ class SaveGameService:
             if not is_valid:
                 return None, f"Invalid save: {error_msg}"
 
-            # Load metadata with error handling
+            # Load metadata
             metadata_path = os.path.join(save_path, "save_metadata.json")
             try:
                 metadata = load_json_required(metadata_path)
@@ -175,26 +171,35 @@ class SaveGameService:
                 log_error(f"SaveGameService: Failed to load metadata - {e}")
                 return None, f"Save file corrupted: Cannot read metadata file"
 
-            # Validate metadata structure
-            required_metadata_keys = ['version', 'timestamp', 'player_name', 'turn_number']
+            # Validate metadata
+            required_metadata_keys = ['version', 'timestamp', 'player_name']
             missing_keys = [k for k in required_metadata_keys if k not in metadata]
             if missing_keys:
                 return None, f"Save file corrupted: Missing metadata fields: {', '.join(missing_keys)}"
 
-            # Check version compatibility
+            # Check version compatibility (strict - version 2.0.0 only)
             save_version = metadata.get('version')
             if not SaveGameService._is_compatible_version(save_version):
-                return None, f"Incompatible save version: {save_version} (current version: {SaveGameService.SAVE_VERSION})"
+                return None, f"Incompatible save version: {save_version} (requires {SaveGameService.SAVE_VERSION})"
 
-            # Load game state with error handling
-            state_path = os.path.join(save_path, "game_state.json")
+            # Determine which turn to load
+            if turn_number is None:
+                turn_number = metadata.get('latest_turn_number', metadata.get('turn_number', 1))
+
+            # Load turn file
+            turns_folder = os.path.join(save_path, "turns")
+            turn_file = os.path.join(turns_folder, f"turn_{turn_number}.json")
+
+            if not os.path.exists(turn_file):
+                return None, f"Turn {turn_number} not found in save"
+
             try:
-                game_state = load_json_required(state_path)
+                game_state = load_json_required(turn_file)
             except Exception as e:
-                log_error(f"SaveGameService: Failed to load game state - {e}")
-                return None, f"Save file corrupted: Cannot read game state file"
+                log_error(f"SaveGameService: Failed to load turn {turn_number} - {e}")
+                return None, f"Save file corrupted: Cannot read turn {turn_number}"
 
-            # Validate game state structure
+            # Validate game state
             required_state_keys = ['turn_number', 'config', 'galaxy', 'empires']
             missing_keys = [k for k in required_state_keys if k not in game_state]
             if missing_keys:
@@ -205,7 +210,7 @@ class SaveGameService:
                 from game.strategy.engine.game_session import GameSession
                 game_session = GameSession.from_dict(game_state)
             except KeyError as e:
-                log_error(f"SaveGameService: Missing required data during reconstruction - {e}")
+                log_error(f"SaveGameService: Missing required data - {e}")
                 return None, f"Save file corrupted: Missing required data field: {str(e)}"
             except Exception as e:
                 log_error(f"SaveGameService: Failed to reconstruct game session - {e}")
@@ -214,15 +219,63 @@ class SaveGameService:
             # Restore save_path reference
             game_session.save_path = save_path
 
-            log_info(f"SaveGameService: Loaded game from {os.path.basename(save_path)}")
-            turn = metadata.get('turn_number', 1)
-            return game_session, f"Game loaded: Turn {turn}"
+            log_info(f"SaveGameService: Loaded turn {turn_number} from {os.path.basename(save_path)}")
+            return game_session, f"Game loaded: Turn {turn_number}"
 
         except Exception as e:
             log_error(f"SaveGameService: Unexpected load error - {e}")
             import traceback
             traceback.print_exc()
             return None, f"Unexpected error while loading save: {str(e)}"
+
+    @staticmethod
+    def list_turns(save_path: str) -> List[dict]:
+        """
+        List all available turns in a save.
+
+        Args:
+            save_path: Path to save folder
+
+        Returns:
+            List of dicts with turn metadata, sorted by turn number
+        """
+        turns = []
+
+        # Resolve path
+        if not os.path.isabs(save_path):
+            saves_folder = os.path.join(os.getcwd(), SaveGameService.DEFAULT_SAVES_FOLDER)
+            save_path = os.path.join(saves_folder, save_path)
+
+        turns_folder = os.path.join(save_path, "turns")
+
+        if not os.path.exists(turns_folder):
+            return turns
+
+        try:
+            for filename in os.listdir(turns_folder):
+                if filename.startswith("turn_") and filename.endswith(".json"):
+                    turn_num_str = filename[5:-5]  # Extract number from "turn_N.json"
+                    try:
+                        turn_number = int(turn_num_str)
+                        turn_file = os.path.join(turns_folder, filename)
+                        stat = os.stat(turn_file)
+
+                        turns.append({
+                            'turn_number': turn_number,
+                            'filename': filename,
+                            'path': turn_file,
+                            'timestamp': datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                            'size': stat.st_size
+                        })
+                    except ValueError:
+                        continue
+
+        except Exception as e:
+            log_error(f"SaveGameService: Error listing turns - {e}")
+
+        # Sort by turn number
+        turns.sort(key=lambda x: x['turn_number'])
+        return turns
 
     @staticmethod
     def list_saves() -> List[dict]:
@@ -281,8 +334,6 @@ class SaveGameService:
             if not os.path.exists(save_path):
                 return False, "Save not found"
 
-            # Delete folder and all contents
-            import shutil
             shutil.rmtree(save_path)
 
             log_info(f"SaveGameService: Deleted save {os.path.basename(save_path)}")
@@ -297,11 +348,7 @@ class SaveGameService:
         """
         Validate save folder structure.
 
-        Args:
-            save_path: Path to save folder
-
-        Returns:
-            Tuple of (is_valid: bool, error_message: str or None)
+        For v2.0.0: Requires turns/ folder and save_metadata.json.
         """
         if not os.path.exists(save_path):
             return False, "Save folder not found"
@@ -314,28 +361,23 @@ class SaveGameService:
         if not os.path.exists(metadata_path):
             return False, "Missing save_metadata.json"
 
-        state_path = os.path.join(save_path, "game_state.json")
-        if not os.path.exists(state_path):
-            return False, "Missing game_state.json"
+        # Check for turns folder (v2.0.0 format)
+        turns_folder = os.path.join(save_path, "turns")
+        if not os.path.exists(turns_folder):
+            return False, "Missing turns folder (old save format not supported)"
 
         return True, None
 
     @staticmethod
     def _is_compatible_version(save_version: Optional[str]) -> bool:
         """
-        Check if save version is compatible with current version.
+        Check if save version is compatible.
 
-        Args:
-            save_version: Version string from save file
-
-        Returns:
-            True if compatible, False otherwise
+        Only accepts version 2.0.0 (strict, no backward compatibility).
         """
         if save_version is None:
             return False
 
-        # For now, only accept exact version match
-        # Future: implement semantic versioning compatibility
         return save_version == SaveGameService.SAVE_VERSION
 
     @staticmethod
