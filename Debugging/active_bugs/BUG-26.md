@@ -8,7 +8,7 @@ Sometimes there is an overlapping planet drawn in the System ans Sector Report p
 - C:\Dev\Starship Battles\screenshots\screenshot_20260118_201443_488200_strategy_viewport.png
 
 ## Status
-Awaiting Confirmation (Rev 2)
+Awaiting Confirmation
 
 ## Work Log
 
@@ -81,6 +81,43 @@ for element in elements_to_kill:
 **Test Results:**
 ```
 223 passed (strategy and build queue tests)
+```
+
+All tests pass with no regressions.
+
+---
+### ❌ Fix Rejected [2026-01-19 16:05]
+**Reason:** There are still overlaping graphical elements in the system View At times, it seems to happen when I exit the Build Queue.
+**New Constraints:** Issue triggered when exiting the Build Queue screen.
+---
+### 2026-01-19 - Phase 2 (Rev 3): The Fix (Green)
+
+**Root Cause Analysis:** When the Build Queue screen opens, `hide_ui()` is called which hides all main strategy panels. When the Build Queue closes, `show_ui()` is called to show them again. However, the tree panel items (SystemTreePanel) were not being re-laid out after the panels were shown, which could cause visual inconsistencies.
+
+**File Modified:** `game/ui/screens/strategy_screen.py`
+
+**Changes Made (in `show_ui()` method):**
+```python
+def show_ui(self):
+    """Show all main strategy UI panels."""
+    for panel in self.panels:
+        panel.show()
+
+    # BUG-26: Re-layout tree panels to ensure proper positioning after hide/show
+    if hasattr(self, 'system_tree'):
+        self.system_tree.layout()
+    if hasattr(self, 'sector_tree'):
+        self.sector_tree.layout()
+```
+
+**Technical Approach:**
+- After showing the panels, explicitly re-layout the system_tree and sector_tree panels
+- This ensures all tree items (including planet icons) are properly positioned after hide/show cycle
+- The `layout()` method recalculates positions for all visible items and updates the scrollable area
+
+**Test Results:**
+```
+1568 passed, 1 skipped, 340 warnings in 11.73s
 ```
 
 All tests pass with no regressions.

@@ -290,6 +290,12 @@ class StrategyInterface:
         for panel in self.panels:
             panel.show()
 
+        # BUG-26: Re-layout tree panels to ensure proper positioning after hide/show
+        if hasattr(self, 'system_tree'):
+            self.system_tree.layout()
+        if hasattr(self, 'sector_tree'):
+            self.sector_tree.layout()
+
 
         
     def handle_resize(self, width, height):

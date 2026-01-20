@@ -125,7 +125,7 @@ class TestProduction(unittest.TestCase):
         initial_fleet_count = len(self.empire.fleets)
 
         # Simulate processing logic (since we haven't written it yet, we are defining expectation)
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
 
         # Expectation: Queue empty, Fleet count +1
         self.assertEqual(len(self.planet.construction_queue), 0)
@@ -174,7 +174,7 @@ class TestProduction(unittest.TestCase):
         self.planet.construction_queue.append(["test_ship", 2])
 
         # Process one turn
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
 
         # Should decrement turns
         self.assertEqual(len(self.planet.construction_queue), 1)
@@ -195,7 +195,7 @@ class TestProduction(unittest.TestCase):
 
         # Process turn - should complete
         initial_facility_count = len(self.planet.facilities)
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
 
         # Queue should be empty, facilities should have +1
         self.assertEqual(len(self.planet.construction_queue), 0)
@@ -216,7 +216,7 @@ class TestProduction(unittest.TestCase):
         self.planet.construction_queue.append(queue_item)
 
         # Process turn
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
 
         # Complex should have been built
         if len(self.planet.facilities) > 0:
@@ -235,7 +235,7 @@ class TestProduction(unittest.TestCase):
         self.planet.construction_queue.append(queue_item)
 
         # Process turn
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
 
         # Should have facility with unique ID
         if len(self.planet.facilities) > 0:
@@ -277,7 +277,7 @@ class TestProduction(unittest.TestCase):
         initial_fleet_count = len(self.empire.fleets)
 
         # Process turn
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
 
         # Should spawn fleet
         self.assertEqual(len(self.planet.construction_queue), 0)
@@ -293,7 +293,7 @@ class TestProduction(unittest.TestCase):
         self.planet.construction_queue.append(queue_item)
 
         # Process one turn
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
 
         # Should complete and remove from queue
         self.assertEqual(len(self.planet.construction_queue), 0)
@@ -332,7 +332,7 @@ class TestProduction(unittest.TestCase):
         initial_fleet_count = len(self.empire.fleets)
 
         # Process one turn
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
 
         # Should complete and remove from queue
         self.assertEqual(len(self.planet.construction_queue), 0)
@@ -370,14 +370,14 @@ class TestProduction(unittest.TestCase):
         self.planet.facilities.append(shipyard)
 
         # Process turn - should work with shipyard
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
         self.assertEqual(self.planet.construction_queue[0]["turns_remaining"], 1)
 
         # Remove shipyard facility
         self.planet.facilities.clear()
 
         # Process turn - should NOT progress
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
         self.assertEqual(self.planet.construction_queue[0]["turns_remaining"], 1)  # Still 1
 
     def test_ship_build_resumes_with_shipyard(self):
@@ -393,7 +393,7 @@ class TestProduction(unittest.TestCase):
         self.planet.construction_queue.append(queue_item)
 
         # Process turn - should NOT progress without shipyard
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
         self.assertEqual(self.planet.construction_queue[0]["turns_remaining"], 2)  # No change
 
         # Add shipyard facility
@@ -415,7 +415,7 @@ class TestProduction(unittest.TestCase):
         self.planet.facilities.append(shipyard)
 
         # Process turn - should now progress
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
         self.assertEqual(self.planet.construction_queue[0]["turns_remaining"], 1)  # Decremented
 
     def test_complex_builds_without_shipyard(self):
@@ -432,7 +432,7 @@ class TestProduction(unittest.TestCase):
 
         # Process turn - complex should complete
         initial_facility_count = len(self.planet.facilities)
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
 
         # Should complete and add facility
         self.assertEqual(len(self.planet.construction_queue), 0)
@@ -470,7 +470,7 @@ class TestProduction(unittest.TestCase):
         self.planet.construction_queue.append(queue_item)
 
         # Process turn
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
 
         # Should create fleet with ShipInstance
         self.assertEqual(len(self.empire.fleets), 1)
@@ -512,7 +512,7 @@ class TestProduction(unittest.TestCase):
         self.planet.construction_queue.append(queue_item)
 
         # Process turn
-        self.engine.process_production(self.empires)
+        self.engine.process_production(self.empires, save_path=self.temp_dir)
 
         # Check fleet has no orders
         fleet = self.empire.fleets[0]
@@ -551,7 +551,7 @@ class TestProduction(unittest.TestCase):
 
         # Process 3 turns
         for _ in range(3):
-            self.engine.process_production(self.empires)
+            self.engine.process_production(self.empires, save_path=self.temp_dir)
 
         # Should have 3 fleets with unique IDs
         self.assertEqual(len(self.empire.fleets), 3)

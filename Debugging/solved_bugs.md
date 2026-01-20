@@ -253,3 +253,21 @@
 * **Test Case:** 28 passed (planet-related tests)
 * **Notes:** Filter logic: Unowned = `owner_id is None`, Player = `owner_id == empire.id`, Enemy = `owner_id != None and != empire.id`.
 
+---
+
+## [BUG-14] - Multi-Planet Sectors Need Planet Position Offset
+* **Date Solved:** 2026-01-19
+* **Original Issue:** In the strategy layer, planets in multi-planet sectors were not positioned correctly. The largest planet needed to be offset left by 20% of its diameter, and smaller planets needed to be arranged using polar coordinates centered on the largest planet.
+* **Solution Implemented:** Modified `game/ui/screens/strategy_renderer.py` (lines 344-387) to: (1) Offset largest planet left by 20% of diameter; (2) Position smaller planets using polar coordinates centered on largest planet with angles [0°] for 1, [30°,-30°] for 2, [15°,0°,-45°] for 3; (3) Set center-to-center distance to 1.5x largest planet radius.
+* **Test Case:** `tests/repro_issues/test_bug_14_multi_planet_offset.py` (9 passed)
+* **Notes:** Smaller planets orbit around the largest planet's center, not the hex center.
+
+---
+
+## [BUG-17] - Build Queue Drag and Drop Not Visually Obvious
+* **Date Solved:** 2026-01-19
+* **Original Issue:** In the build queue, dragging and dropping was not visually obvious - the dragged item seemed to disappear.
+* **Solution Implemented:** Modified `game/ui/screens/strategy_scene.py` (lines 152-154) to call `build_queue_screen.draw(screen)` in the render loop. The drag preview code in `build_queue_screen.py` was working but never being rendered because `draw()` wasn't called from the main scene.
+* **Test Case:** `tests/ui/test_build_queue_drag_drop.py` (3 passed)
+* **Notes:** The root cause was the missing `draw()` call in strategy_scene, not the preview rendering logic itself.
+

@@ -4,7 +4,7 @@
 Modify the integrated Screenshot system so that it works with the strategy_layer, and all sub windows.
 
 ## Status
-Awaiting Confirmation (Rev 4)
+Awaiting Confirmation
 
 ## Work Log
 
@@ -202,5 +202,46 @@ def _show_screenshot_toast(self):
 ```
 
 All tests pass with no regressions.
+
+---
+### ❌ Fix Rejected [2026-01-19 16:00]
+**Reason:** The screenshot system does not work in the Build Queue. It should work in this window: "C:\Dev\Starship Battles\screenshots\2026-01-19 15-59-08.png". Please put logging statements in and look at them the next time that the fix fails.
+**New Constraints:** Add logging statements to debug screenshot capture in Build Queue window.
+---
+### 2026-01-19 - Phase 2 (Rev 5): Diagnostic Logging
+
+**Objective:** Add extensive logging to trace why F12 screenshots aren't working in Build Queue.
+
+**File Modified:** `game/ui/screens/build_queue_screen.py`
+
+**Logging Added:**
+1. At entry to `handle_event()` - logs all KEYDOWN events with key code
+2. Before `manager.process_events()` - logs if F12 was detected
+3. After keyboard handler section - logs when handler section is reached
+4. In `_take_screenshot()` - logs entry, ScreenshotManager state, and exit
+
+**Test Added:** `test_build_queue_f12_event_calls_take_screenshot`
+- Verifies that passing an F12 KEYDOWN event to `handle_event()` triggers `ScreenshotManager.capture()`
+
+**Test Results:**
+```
+========================= 11 passed in 1.57s =========================
+```
+
+**Next Steps:**
+User needs to:
+1. Run the game with Build Queue open
+2. Press F12
+3. Check game logs for these messages:
+   - `BuildQueueScreen.handle_event: KEYDOWN received, key=X, K_F12=Y`
+   - `BuildQueueScreen: F12 detected BEFORE manager.process_events()`
+   - `BuildQueueScreen: Reached keyboard handler section`
+   - `BuildQueueScreen: F12 matched, calling _take_screenshot()`
+   - `BuildQueueScreen._take_screenshot() ENTERED`
+   - `BuildQueueScreen: ScreenshotManager.enabled = X`
+   - `BuildQueueScreen: sm.capture() completed`
+
+If no logs appear, events are not reaching `handle_event()`.
+If logs stop at a certain point, that identifies where the issue is.
 
 ---

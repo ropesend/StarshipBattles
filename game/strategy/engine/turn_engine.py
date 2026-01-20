@@ -25,23 +25,28 @@ class TurnEngine:
         self._battle_seed_counter += 1
         return self._battle_seed_counter
 
-    def process_turn(self, empires, galaxy):
+    def process_turn(self, empires, galaxy, save_path=None):
         """
         Execute one full turn (100 sub-ticks).
+
+        Args:
+            empires: List of Empire objects to process
+            galaxy: Galaxy object for spatial calculations
+            save_path: Path to savegame folder for loading designs during production
         """
         # 1. Subturn Loop (Movement & Combat)
         for tick in range(1, 101):
             self._process_tick(tick, empires, galaxy)
-            
+
         # 2. End-of-Turn Orders (Static actions like Colonize)
         for empire in empires:
-            # Iterate copy since fleets might execute orders that change state? 
+            # Iterate copy since fleets might execute orders that change state?
             # Actually colonization doesn't remove fleet usually, but we should be safe.
             for fleet in empire.fleets:
                 self._process_end_turn_orders(fleet, empire, galaxy)
-                
+
         # 3. Production Phase
-        self.process_production(empires, galaxy)
+        self.process_production(empires, galaxy, save_path)
         
     def validate_colonize_order(self, galaxy, fleet, target_planet) -> ValidationResult:
         """
@@ -85,8 +90,14 @@ class TurnEngine:
                  
             return ValidationResult(True, "Planet is valid for colonization.")
 
-    def process_production(self, empires, galaxy=None):
-        """Process construction queues for all colonies."""
+    def process_production(self, empires, galaxy=None, save_path=None):
+        """Process construction queues for all colonies.
+
+        Args:
+            empires: List of Empire objects to process
+            galaxy: Galaxy object for fleet spawning
+            save_path: Path to savegame folder for loading designs
+        """
         for emp in empires:
             for colony in emp.colonies:
                 if not colony.construction_queue:
@@ -124,22 +135,28 @@ class TurnEngine:
 
                     # Route to appropriate spawner
                     if vehicle_type == "complex":
-                        self._spawn_complex(colony, design_id, emp)
+                        self._spawn_complex(colony, design_id, emp, save_path)
                     else:
-                        self._spawn_ship(colony, design_id, emp, galaxy)
+                        self._spawn_ship(colony, design_id, emp, galaxy, save_path)
 
-    def _spawn_complex(self, planet, design_id, empire):
-        """Add completed complex to planet's facilities."""
+    def _spawn_complex(self, planet, design_id, empire, save_path=None):
+        """Add completed complex to planet's facilities.
+
+        Args:
+            planet: Planet to add facility to
+            design_id: ID of the complex design
+            empire: Empire that owns the planet
+            save_path: Path to savegame folder for loading design data
+        """
         import uuid
         from game.strategy.data.planet import PlanetaryFacility
 
         # Load design data if possible
         design_data = {}
-        savegame_path = getattr(empire, 'savegame_path', None)
 
-        if savegame_path:
+        if save_path:
             from game.strategy.systems.design_library import DesignLibrary
-            library = DesignLibrary(savegame_path, empire.id)
+            library = DesignLibrary(save_path, empire.id)
             loaded_data = library.load_design_data(design_id)
             if loaded_data:
                 design_data = loaded_data
@@ -160,8 +177,16 @@ class TurnEngine:
         planet.facilities.append(facility)
         log_info(f"Built {facility.name} on {planet.name}")
 
-    def _spawn_ship(self, planet, design_id, empire, galaxy):
-        """Spawn ship/satellite/fighter as fleet with ShipInstance."""
+    def _spawn_ship(self, planet, design_id, empire, galaxy, save_path=None):
+        """Spawn ship/satellite/fighter as fleet with ShipInstance.
+
+        Args:
+            planet: Planet where ship spawns
+            design_id: ID of the ship design
+            empire: Empire that owns the ship
+            galaxy: Galaxy for location calculation
+            save_path: Path to savegame folder for loading design data
+        """
         from game.strategy.data.ship_instance import ShipInstance
         from game.strategy.systems.design_library import DesignLibrary
 
@@ -173,12 +198,11 @@ class TurnEngine:
                 spawn_loc = parent_sys.global_location + planet.location
 
         # Load design data
-        savegame_path = getattr(empire, 'savegame_path', None)
-        if not savegame_path:
-            log_warning(f"Cannot spawn {design_id}: no savegame_path on empire")
+        if not save_path:
+            log_warning(f"Cannot spawn {design_id}: no save_path provided")
             return
 
-        design_library = DesignLibrary(savegame_path, empire.id)
+        design_library = DesignLibrary(save_path, empire.id)
         design_data = design_library.load_design_data(design_id)
 
         if not design_data:

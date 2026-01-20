@@ -571,6 +571,20 @@ class BuildQueueScreen:
             index: Optional insertion index
         """
         cat = category if category is not None else self.selected_category
+
+        # DIAGNOSTIC LOGGING for BUG-24 investigation
+        log_info(f"_add_to_queue called: design_id={design_id}, category={cat}")
+        log_info(f"  planet.has_space_shipyard = {self.planet.has_space_shipyard}")
+        log_info(f"  planet.facilities count = {len(self.planet.facilities)}")
+        for i, f in enumerate(self.planet.facilities):
+            log_info(f"    [{i}] {f.name} (operational={f.is_operational})")
+            log_info(f"        design_data layers: {list(f.design_data.get('layers', {}).keys())}")
+            # Show component IDs in each layer
+            for layer_name, layer_data in f.design_data.get('layers', {}).items():
+                if isinstance(layer_data, list):
+                    comp_ids = [c.get('id', 'unknown') for c in layer_data if isinstance(c, dict)]
+                    log_info(f"        {layer_name} components: {comp_ids}")
+
         # Validate shipyard requirement for ships
         if cat == "ship" and not self.planet.has_space_shipyard:
             log_warning("Cannot build ships without a space shipyard")
@@ -636,6 +650,12 @@ class BuildQueueScreen:
         Args:
             event: pygame event
         """
+        # BUG-15 DEBUG: Log all keyboard events to trace screenshot issue
+        if event.type == pygame.KEYDOWN:
+            log_debug(f"BuildQueueScreen.handle_event: KEYDOWN received, key={event.key}, K_F12={pygame.K_F12}")
+            if event.key == pygame.K_F12:
+                log_info("BuildQueueScreen: F12 detected BEFORE manager.process_events()")
+
         # Pass event to UIManager first so it can process it
         self.manager.process_events(event)
 
@@ -748,15 +768,21 @@ class BuildQueueScreen:
 
         # Handle keyboard events for screenshots
         if event.type == pygame.KEYDOWN:
+            log_debug(f"BuildQueueScreen: Reached keyboard handler section, key={event.key}")
             if event.key == pygame.K_F12:
+                log_info("BuildQueueScreen: F12 matched, calling _take_screenshot()")
                 self._take_screenshot()
 
     def _take_screenshot(self):
         """Take a screenshot of the current screen including the build queue."""
+        log_info("BuildQueueScreen._take_screenshot() ENTERED")
         sm = ScreenshotManager.instance()
+        log_info(f"BuildQueueScreen: ScreenshotManager.enabled = {sm.enabled}")
+        log_info(f"BuildQueueScreen: ScreenshotManager.base_dir = {sm.base_dir}")
         sm.capture(label="build_queue")
-        log_info("Screenshot: Build Queue screen captured (F12)")
+        log_info("BuildQueueScreen: sm.capture() completed")
         self._show_screenshot_toast()
+        log_info("BuildQueueScreen._take_screenshot() EXITING")
 
     def _show_screenshot_toast(self):
         """Show a brief toast notification for screenshot feedback."""

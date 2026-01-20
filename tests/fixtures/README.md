@@ -114,9 +114,14 @@ Provides pre-configured AI behaviors and mock targets for AI testing.
 
 ### common.py
 
-**Purpose:** Common test utilities.
+**Purpose:** Common data initialization fixtures.
 
-Shared helper functions used across multiple fixture modules.
+**Fixtures:**
+- `initialized_ship_data` - Load vehicle classes and components (function-scoped)
+- `initialized_ship_data_with_modifiers` - Load data + modifiers (function-scoped)
+
+**Note:** For read-only tests that don't modify registry state, prefer the session-scoped
+`global_ship_data` and `global_ship_data_with_modifiers` fixtures in `tests/conftest.py`.
 
 ---
 

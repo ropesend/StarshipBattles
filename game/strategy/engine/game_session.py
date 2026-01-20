@@ -87,7 +87,7 @@ class GameSession:
     def process_turn(self):
         """Advance the game simulation by one full turn."""
         log_info(f"GameSession: Processing Turn {self.turn_number}...")
-        self.turn_engine.process_turn(self.empires, self.galaxy)
+        self.turn_engine.process_turn(self.empires, self.galaxy, self.save_path)
         self.turn_number += 1
         
     def get_current_player_empire(self, player_index):

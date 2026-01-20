@@ -65,16 +65,36 @@ def pytest_configure_node(node):
 @pytest.fixture(autouse=True)
 def pygame_display_reset():
     """
-    Reset pygame display to session state after each test.
+    Ensure pygame is initialized and display is reset for each UI test.
 
-    The root conftest's enforce_headless fixture manages pygame lifecycle
-    at session scope. This fixture ensures any display modifications made
-    by tests are reset without destroying the session-level pygame state.
+    This fixture:
+    1. Initializes pygame if not already initialized (handles cases where
+       earlier tests called pygame.quit())
+    2. Sets up a headless display for tests that need surfaces
+    3. Resets display state after each test
 
-    IMPORTANT: Do NOT call pygame.quit() here - that destroys the session
-    fixture's pygame initialization and breaks subsequent tests.
+    IMPORTANT: Do NOT call pygame.quit() here - that would break subsequent tests.
     """
+    import os
     import pygame
+
+    # Ensure headless mode for CI/testing
+    os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
+
+    # Initialize pygame if not already initialized
+    # This is critical for sequential test runs where earlier tests may have quit pygame
+    if not pygame.get_init():
+        pygame.init()
+
+    # Ensure display is initialized with a valid size
+    if not pygame.display.get_init():
+        pygame.display.init()
+
+    # Set up a display surface (required for pygame_gui and Surface creation)
+    try:
+        pygame.display.set_mode((1440, 900), pygame.NOFRAME)
+    except Exception:
+        pass  # Display may not be available in some environments
 
     # Ensure pygame font subsystem is initialized for this test
     # This fixes "font not initialized" errors in parallel execution

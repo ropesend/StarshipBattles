@@ -297,3 +297,58 @@ def test_drag_item_uses_1_turn_default(build_queue_screen):
 
     # Verify default is 1
     assert turns == 1
+
+
+def test_add_ship_to_queue_with_shipyard(build_queue_screen):
+    """Test that ships can be added when planet has a shipyard facility.
+
+    Regression test for BUG-24: Ships couldn't be added to build queue
+    even when planet had a space shipyard facility.
+    """
+    from game.strategy.data.planet import PlanetaryFacility
+
+    # Add a shipyard facility with correct design_data structure
+    # This mimics how _spawn_complex creates facilities
+    shipyard = PlanetaryFacility(
+        instance_id="test-shipyard-1",
+        design_id="space_shipyard_complex",
+        name="Space Shipyard",
+        design_data={
+            "layers": {
+                "OUTER": [{"id": "space_shipyard", "modifiers": []}]
+            }
+        },
+        is_operational=True
+    )
+    build_queue_screen.planet.facilities.append(shipyard)
+
+    # Verify has_space_shipyard returns True
+    assert build_queue_screen.planet.has_space_shipyard == True, \
+        "has_space_shipyard should return True when shipyard facility exists"
+
+    # Try to add a ship
+    initial_queue_len = len(build_queue_screen.planet.construction_queue)
+    build_queue_screen._set_category("ship")
+    build_queue_screen._add_to_queue("test_frigate", turns=1)
+
+    # Verify ship was added
+    assert len(build_queue_screen.planet.construction_queue) == initial_queue_len + 1, \
+        "Ship should be added to construction queue when shipyard exists"
+    assert build_queue_screen.planet.construction_queue[-1]["type"] == "ship"
+    assert build_queue_screen.planet.construction_queue[-1]["design_id"] == "test_frigate"
+
+
+def test_add_ship_fails_without_shipyard(build_queue_screen):
+    """Test that ships cannot be added without a shipyard facility."""
+    # Ensure no shipyard exists
+    build_queue_screen.planet.facilities = []
+    assert build_queue_screen.planet.has_space_shipyard == False
+
+    # Try to add a ship
+    initial_queue_len = len(build_queue_screen.planet.construction_queue)
+    build_queue_screen._set_category("ship")
+    build_queue_screen._add_to_queue("test_frigate", turns=1)
+
+    # Verify ship was NOT added
+    assert len(build_queue_screen.planet.construction_queue) == initial_queue_len, \
+        "Ship should NOT be added without a shipyard"

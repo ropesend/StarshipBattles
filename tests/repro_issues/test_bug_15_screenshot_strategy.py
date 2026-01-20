@@ -281,6 +281,64 @@ class TestBuildQueueScreenshotSupport(unittest.TestCase):
             # For now, just verify the method exists and is callable
             self.assertTrue(hasattr(BuildQueueScreen, '_take_screenshot'))
 
+    @patch('game.ui.screens.build_queue_screen.ScreenshotManager')
+    def test_build_queue_f12_event_calls_take_screenshot(self, mock_sm_class):
+        """
+        BUG-15 Rev 5: Verify F12 KEYDOWN event triggers _take_screenshot via handle_event.
+        """
+        from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+        mock_sm = MagicMock()
+        mock_sm.enabled = True
+        mock_sm.base_dir = "test_screenshots"
+        mock_sm_class.instance.return_value = mock_sm
+
+        # Mock UIManager and its methods
+        mock_manager = MagicMock()
+        mock_manager.get_root_container.return_value.get_container.return_value.get_size.return_value = (1280, 720)
+
+        mock_planet = MagicMock()
+        mock_planet.name = "Test Planet"
+        mock_planet.owner_id = 1
+        mock_planet.construction_queue = []
+        mock_planet.facilities = []
+
+        mock_session = MagicMock()
+        mock_session.save_path = None
+
+        with patch('game.ui.screens.build_queue_screen.DesignLibrary') as mock_design_lib, \
+             patch('game.ui.screens.build_queue_screen.PlanetReportPanel'), \
+             patch('game.ui.screens.build_queue_screen.DesignReportPanel'), \
+             patch('game.ui.screens.build_queue_screen.ui.UIPanel'), \
+             patch('game.ui.screens.build_queue_screen.ui.UIButton'), \
+             patch('game.ui.screens.build_queue_screen.ui.UITextBox'), \
+             patch('game.ui.screens.build_queue_screen.ui.UILabel'), \
+             patch('game.ui.screens.build_queue_screen.ui.UIScrollingContainer'):
+
+            mock_design_lib.return_value.scan_designs.return_value = []
+            mock_design_lib.return_value.designs_folder = "test"
+
+            # Create screen instance
+            screen = BuildQueueScreen(
+                mock_manager,
+                mock_planet,
+                mock_session,
+                on_close_callback=lambda: None
+            )
+
+            # Create F12 KEYDOWN event
+            f12_event = MagicMock()
+            f12_event.type = pygame.KEYDOWN
+            f12_event.key = pygame.K_F12
+
+            # Call handle_event with F12
+            screen.handle_event(f12_event)
+
+            # Verify ScreenshotManager.instance() was called
+            mock_sm_class.instance.assert_called()
+            # Verify capture was called
+            mock_sm.capture.assert_called_once_with(label="build_queue")
+
 
 if __name__ == '__main__':
     unittest.main()
