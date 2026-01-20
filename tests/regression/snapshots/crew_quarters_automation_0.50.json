@@ -1,0 +1,52 @@
+{
+  "component": {
+    "id": "crew_quarters",
+    "name": "Crew Quarters",
+    "mass": 45.0,
+    "base_mass": 30,
+    "max_hp": 60,
+    "base_max_hp": 60,
+    "cost": 0,
+    "type_str": "CrewQuarters",
+    "stats": {
+      "mass_mult": 1.5,
+      "hp_mult": 1.0,
+      "damage_mult": 1.0,
+      "range_mult": 1.0,
+      "cost_mult": 1.5,
+      "thrust_mult": 1.0,
+      "turn_mult": 1.0,
+      "strategic_mult": 1.0,
+      "energy_gen_mult": 1.0,
+      "capacity_mult": 1.0,
+      "crew_capacity_mult": 1.0,
+      "life_support_capacity_mult": 1.0,
+      "consumption_mult": 1.0,
+      "mass_add": 0.0,
+      "arc_add": 0.0,
+      "accuracy_add": 0.0,
+      "arc_set": null,
+      "properties": {},
+      "reload_mult": 1.0,
+      "endurance_mult": 1.0,
+      "projectile_hp_mult": 1.0,
+      "projectile_damage_mult": 1.0,
+      "projectile_stealth_level": 0.0,
+      "crew_req_mult": 0.5
+    },
+    "modifiers": [
+      {
+        "id": "automation",
+        "value": 0.5
+      }
+    ]
+  },
+  "abilities": [
+    {
+      "class_name": "CrewCapacity",
+      "tags": [],
+      "amount": 10,
+      "base_amount": 10
+    }
+  ]
+}

@@ -1,10 +1,16 @@
 from typing import Dict, Any, List
 
 from .base import Ability, AbilityLayer, AbilityScope
+from .stat_keys import StatKey, AbilityStatBinding
 
 
 class CombatPropulsion(Ability):
     """Provides Thrust."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(StatKey.THRUST_MULT, 'thrust_force', 'multiply', 'base_thrust'),
+    ]
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         # Handle 'val' if primitive shortcut used, else explicit 'value'
@@ -13,7 +19,7 @@ class CombatPropulsion(Ability):
         self.thrust_force = self.base_thrust
 
     def recalculate(self):
-        self.thrust_force = self.base_thrust * self.component.stats.get('thrust_mult', 1.0)
+        self.thrust_force = self.base_thrust * self.get_effective_stat('thrust_mult', 1.0)
 
     def get_ui_rows(self):
         return [{'label': 'Thrust', 'value': f"{self.thrust_force:.0f} N", 'color_hint': '#64FF64'}]  # Light Green
@@ -24,6 +30,11 @@ class CombatPropulsion(Ability):
 
 class ManeuveringThruster(Ability):
     """Provides Rotation."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(StatKey.TURN_MULT, 'turn_rate', 'multiply', 'base_turn_rate'),
+    ]
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
@@ -31,7 +42,7 @@ class ManeuveringThruster(Ability):
         self.turn_rate = self.base_turn_rate
 
     def recalculate(self):
-        self.turn_rate = self.base_turn_rate * self.component.stats.get('turn_mult', 1.0)
+        self.turn_rate = self.base_turn_rate * self.get_effective_stat('turn_mult', 1.0)
 
     def get_ui_rows(self):
         return [{'label': 'Turn Speed', 'value': f"{self.turn_rate:.1f} deg/s", 'color_hint': '#64FF96'}]  # Slightly different green
@@ -61,6 +72,10 @@ class StrategicMovement(Ability):
     allowed_scopes = [AbilityScope.SELF, AbilityScope.ALLIED_SECTOR, AbilityScope.ALLIED_SYSTEM]
     default_scope = AbilityScope.SELF
 
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(StatKey.STRATEGIC_MULT, 'movement_points', 'multiply', 'base_movement_points'),
+    ]
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
@@ -68,7 +83,7 @@ class StrategicMovement(Ability):
         self.movement_points = self.base_movement_points
 
     def recalculate(self):
-        self.movement_points = self.base_movement_points * self.component.stats.get('strategic_mult', 1.0)
+        self.movement_points = self.base_movement_points * self.get_effective_stat('strategic_mult', 1.0)
 
     def get_ui_rows(self) -> List[Dict[str, str]]:
         return [{'label': 'Strategic Mobility', 'value': f"{self.movement_points:.0f} MP", 'color_hint': '#6496FF'}]
@@ -93,6 +108,9 @@ class WarpJump(Ability):
     layer = AbilityLayer.STRATEGIC
     allowed_scopes = [AbilityScope.SELF]
     default_scope = AbilityScope.SELF
+
+    # WarpJump does not consume any modifier stats
+    STAT_BINDINGS: List[AbilityStatBinding] = []
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)

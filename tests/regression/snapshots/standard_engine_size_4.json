@@ -1,0 +1,63 @@
+{
+  "component": {
+    "id": "standard_engine",
+    "name": "Engine",
+    "mass": 320.0,
+    "base_mass": 80,
+    "max_hp": 400,
+    "base_max_hp": 100,
+    "cost": 0,
+    "type_str": "Engine",
+    "stats": {
+      "mass_mult": 4.0,
+      "hp_mult": 4.0,
+      "damage_mult": 4.0,
+      "range_mult": 1.0,
+      "cost_mult": 4.0,
+      "thrust_mult": 4.0,
+      "turn_mult": 4.0,
+      "strategic_mult": 4.0,
+      "energy_gen_mult": 4.0,
+      "capacity_mult": 4.0,
+      "crew_capacity_mult": 4.0,
+      "life_support_capacity_mult": 4.0,
+      "consumption_mult": 4.0,
+      "mass_add": 0.0,
+      "arc_add": 0.0,
+      "accuracy_add": 0.0,
+      "arc_set": null,
+      "properties": {},
+      "reload_mult": 1.0,
+      "endurance_mult": 1.0,
+      "projectile_hp_mult": 1.0,
+      "projectile_damage_mult": 1.0,
+      "projectile_stealth_level": 0.0,
+      "crew_req_mult": 1.0
+    },
+    "modifiers": [
+      {
+        "id": "simple_size_mount",
+        "value": 4
+      }
+    ]
+  },
+  "abilities": [
+    {
+      "class_name": "CombatPropulsion",
+      "tags": [],
+      "thrust_force": 600.0,
+      "base_thrust": 150.0
+    },
+    {
+      "class_name": "StrategicMovement",
+      "tags": [],
+      "movement_points": 400.0,
+      "base_movement_points": 100.0
+    },
+    {
+      "class_name": "ResourceConsumption",
+      "tags": [],
+      "amount": 2.0
+    }
+  ]
+}

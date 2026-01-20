@@ -1,11 +1,17 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from game.core.config import PhysicsConfig
 from .base import Ability
+from .stat_keys import StatKey, AbilityStatBinding
 
 
 class VehicleLaunchAbility(Ability):
     """Allows storing and launching fighters."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(StatKey.CAPACITY_MULT, 'capacity', 'multiply', '_base_capacity'),
+    ]
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         self.fighter_class = data.get('fighter_class', 'Fighter (Small)')
@@ -16,7 +22,7 @@ class VehicleLaunchAbility(Ability):
 
     def recalculate(self):
         # Apply capacity mult
-        self.capacity = int(self._base_capacity * self.component.stats.get('capacity_mult', 1.0))
+        self.capacity = int(self._base_capacity * self.get_effective_stat('capacity_mult', 1.0))
 
     def update(self) -> bool:
         if self.cooldown > 0:
@@ -41,6 +47,9 @@ class VehicleLaunchAbility(Ability):
 
 class CommandAndControl(Ability):
     """Marks component as providing ship command capability."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
+
     def get_ui_rows(self):
         return [{'label': 'Command', 'value': 'Active', 'color_hint': '#96FF96'}]
 
@@ -50,6 +59,9 @@ class CommandAndControl(Ability):
 
 class RequiresCommandAndControl(Ability):
     """Marker ability: Component (e.g. Hull) requires Command and Control to be operational."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
+
     def get_ui_rows(self):
         return [{'label': 'Requires C&C', 'value': 'Yes', 'color_hint': '#FFCC66'}]
 
@@ -59,6 +71,9 @@ class RequiresCommandAndControl(Ability):
 
 class RequiresCombatMovement(Ability):
     """Marker ability: Component (e.g. Hull) requires Combat Propulsion to be operational."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
+
     def get_ui_rows(self):
         return [{'label': 'Requires Propulsion', 'value': 'Yes', 'color_hint': '#FFCC66'}]
 
@@ -68,5 +83,8 @@ class RequiresCombatMovement(Ability):
 
 class StructuralIntegrity(Ability):
     """Marker ability: Hull provides structural integrity for the ship."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
+
     def get_ui_rows(self):
         return [{'label': 'Structural Integrity', 'value': 'Yes', 'color_hint': '#96FF96'}]

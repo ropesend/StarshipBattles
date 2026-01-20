@@ -27,22 +27,66 @@ class LayerType(Enum):
 
 
 class Modifier:
-    """Definition of a modifier that can be applied to components."""
+    """
+    Definition of a modifier that can be applied to components.
+
+    Supports two formats:
+    - V1: effects is a dict with 'special' key referencing a handler function
+    - V2: effects is a list of effect objects with 'stat' and 'formula' fields
+    """
     def __init__(self, data):
         self.id = data['id']
-        self.name = data['name']
-        self.type_str = data['type']  # 'boolean' or 'linear'
+        self.name = data.get('name', data['id'])
         self.description = data.get('description', '')
-        self.effects = data.get('effects', {})
         self.restrictions = data.get('restrictions', {})
-        self.param_name = data.get('param_name', 'value')
-        self.min_val = data.get('min_val', 0)
-        self.max_val = data.get('max_val', 100)
-        self.default_val = data.get('default_val', self.min_val)
         self.readonly = data.get('readonly', False)
+
+        # Detect format and load accordingly
+        effects = data.get('effects', {})
+        self.is_v2_format = isinstance(effects, list)
+
+        if self.is_v2_format:
+            # V2 format: effects is a list, param is a nested object
+            self.effects = effects
+            param = data.get('param', {})
+            self.type_str = param.get('type', 'linear')
+            self.param_name = param.get('name', 'value')
+            self.min_val = param.get('min', 0)
+            self.max_val = param.get('max', 100)
+            self.default_val = param.get('default', self.min_val)
+        else:
+            # V1 format: effects is a dict, param fields at top level
+            self.effects = effects
+            self.type_str = data.get('type', 'linear')
+            self.param_name = data.get('param_name', 'value')
+            self.min_val = data.get('min_val', 0)
+            self.max_val = data.get('max_val', 100)
+            self.default_val = data.get('default_val', self.min_val)
 
     def create_modifier(self, value=None):
         return ApplicationModifier(self, value)
+
+    def evaluate_effects(self, param_value):
+        """
+        Evaluate all effects with the given parameter value.
+
+        Only works for V2 format modifiers. V1 modifiers use the old
+        apply_modifier_effects() path.
+
+        Args:
+            param_value: The parameter value to evaluate with
+
+        Returns:
+            List[ModifierEffect] for V2 format, None for V1 format
+        """
+        if not self.is_v2_format:
+            return None
+
+        from .modifier_effects import ModifierEffectEvaluator
+        return ModifierEffectEvaluator.evaluate_modifier(
+            {'id': self.id, 'name': self.name, 'effects': self.effects},
+            param_value
+        )
 
 
 class ApplicationModifier:

@@ -1,13 +1,23 @@
 import math
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from game.core.logger import log_debug
 from game.core.config import PhysicsConfig
 from .base import Ability
+from .stat_keys import StatKey, AbilityStatBinding
 
 
 class WeaponAbility(Ability):
     """Base for offensive capabilities."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(StatKey.DAMAGE_MULT, 'damage', 'multiply', '_base_damage'),
+        AbilityStatBinding(StatKey.RANGE_MULT, 'range', 'multiply', '_base_range'),
+        AbilityStatBinding(StatKey.RELOAD_MULT, 'reload_time', 'multiply', '_base_reload'),
+        AbilityStatBinding(StatKey.ARC_SET, 'firing_arc', 'set'),
+        AbilityStatBinding(StatKey.ARC_ADD, 'firing_arc', 'add', '_base_firing_arc'),
+    ]
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
 
@@ -115,21 +125,22 @@ class WeaponAbility(Ability):
     def recalculate(self):
         pass
 
-        # Apply modifiers to base stats
+        # Apply modifiers to base stats using get_effective_stat for multi-ability support
         if hasattr(self, '_base_damage'):
-            self.damage = self._base_damage * self.component.stats.get('damage_mult', 1.0)
+            self.damage = self._base_damage * self.get_effective_stat('damage_mult', 1.0)
         if hasattr(self, '_base_range'):
-            self.range = self._base_range * self.component.stats.get('range_mult', 1.0)
+            self.range = self._base_range * self.get_effective_stat('range_mult', 1.0)
         if hasattr(self, '_base_reload'):
-            self.reload_time = self._base_reload * self.component.stats.get('reload_mult', 1.0)
+            self.reload_time = self._base_reload * self.get_effective_stat('reload_mult', 1.0)
 
         # Apply Arc Modifiers
         if hasattr(self, '_base_firing_arc'):
             # Check for override first (`arc_set`) then additive (`arc_add`)
-            if self.component.stats.get('arc_set') is not None:
-                self.firing_arc = self.component.stats['arc_set']
+            arc_set = self.get_effective_stat('arc_set', None)
+            if arc_set is not None:
+                self.firing_arc = arc_set
             else:
-                self.firing_arc = self._base_firing_arc + self.component.stats.get('arc_add', 0.0)
+                self.firing_arc = self._base_firing_arc + self.get_effective_stat('arc_add', 0.0)
 
         # Sync facing_angle from properties (if not already overridden)
         if 'facing_angle' in self.component.stats.get('properties', {}):
@@ -219,6 +230,11 @@ class ProjectileWeaponAbility(WeaponAbility):
 
 
 class BeamWeaponAbility(WeaponAbility):
+    # Extend parent bindings with accuracy
+    STAT_BINDINGS: List[AbilityStatBinding] = WeaponAbility.STAT_BINDINGS + [
+        AbilityStatBinding(StatKey.ACCURACY_ADD, 'base_accuracy', 'add', '_base_accuracy'),
+    ]
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         if isinstance(data, dict):
@@ -231,7 +247,7 @@ class BeamWeaponAbility(WeaponAbility):
 
     def recalculate(self):
         super().recalculate()
-        self.base_accuracy = self._base_accuracy + self.component.stats.get('accuracy_add', 0.0)
+        self.base_accuracy = self._base_accuracy + self.get_effective_stat('accuracy_add', 0.0)
 
     def get_ui_rows(self):
         rows = super().get_ui_rows()
@@ -269,6 +285,14 @@ class BeamWeaponAbility(WeaponAbility):
 
 
 class SeekerWeaponAbility(WeaponAbility):
+    # Extend parent bindings with seeker-specific stats
+    STAT_BINDINGS: List[AbilityStatBinding] = WeaponAbility.STAT_BINDINGS + [
+        AbilityStatBinding(StatKey.ENDURANCE_MULT, 'endurance', 'multiply', '_base_endurance'),
+        AbilityStatBinding(StatKey.PROJECTILE_DAMAGE_MULT, 'projectile_damage', 'multiply', '_base_projectile_damage'),
+        AbilityStatBinding(StatKey.PROJECTILE_HP_MULT, 'projectile_hp', 'multiply', '_base_projectile_hp'),
+        AbilityStatBinding(StatKey.PROJECTILE_STEALTH_LEVEL, 'projectile_stealth', 'add', '_base_projectile_stealth'),
+    ]
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         if isinstance(data, dict):
@@ -276,17 +300,39 @@ class SeekerWeaponAbility(WeaponAbility):
             self.endurance = float(data.get('endurance', 3.0))
             self.turn_rate = float(data.get('turn_rate', 30.0))
             self.to_hit_defense = float(data.get('to_hit_defense', 0.0))
+            # Seeker projectile stats
+            self.projectile_damage = float(data.get('projectile_damage', data.get('damage', 0)))
+            self.projectile_hp = float(data.get('projectile_hp', 1.0))
+            self.projectile_stealth = float(data.get('projectile_stealth', 0.0))
         else:
             self.projectile_speed = float(getattr(self.component, 'projectile_speed', 500))
             self.endurance = float(getattr(self.component, 'endurance', 3.0))
             self.turn_rate = float(getattr(self.component, 'turn_rate', 30.0))
             self.to_hit_defense = float(getattr(self.component, 'to_hit_defense', 0.0))
+            self.projectile_damage = float(getattr(self.component, 'projectile_damage', 0))
+            self.projectile_hp = float(getattr(self.component, 'projectile_hp', 1.0))
+            self.projectile_stealth = float(getattr(self.component, 'projectile_stealth', 0.0))
+
+        # Store base values for modifier recalculation
+        self._base_endurance = self.endurance
+        self._base_projectile_damage = self.projectile_damage
+        self._base_projectile_hp = self.projectile_hp
+        self._base_projectile_stealth = self.projectile_stealth
 
         # Recalculate range based on endurance if basic range not set or derived
         # Seekers use 80% of straight-line range to account for maneuvering
         if self.range <= 0 and self.projectile_speed > 0:
             self.range = int(self.projectile_speed * self.endurance * 0.8)
             self._base_range = self.range
+
+    def recalculate(self):
+        super().recalculate()
+        # Apply seeker-specific stats
+        stats = self.component.stats
+        self.endurance = self._base_endurance * stats.get('endurance_mult', 1.0)
+        self.projectile_damage = self._base_projectile_damage * stats.get('projectile_damage_mult', 1.0)
+        self.projectile_hp = self._base_projectile_hp * stats.get('projectile_hp_mult', 1.0)
+        self.projectile_stealth = self._base_projectile_stealth + stats.get('projectile_stealth_level', 0.0)
 
     def check_firing_solution(self, ship_pos, ship_angle, target_pos) -> bool:
         """Seekers are omni-directional and ignore firing arcs."""

@@ -56,12 +56,8 @@ class TestComponentCapabilities(unittest.TestCase):
         self.assertEqual(storage.max_amount, 100.0)
         
         # Apply Modifier (Simulate 'capacity_mult')
-        # We need a defined modifier. Let's manually inject one or rely on mocking if needed.
-        # But for unit test helper 'add_modifier' needs registry. 
-        # Alternatively, we can mock the modifier logic or register a temp one.
-        # Easiest: Manually trigger _apply_base_stats with a crafted stats dict for unit testing internal logic.
-        
-        stats = {
+        # Phase 4 Unified Pipeline: Set stats dict, then abilities recalculate themselves
+        c.stats = {
             'mass_mult': 1.0, 'hp_mult': 1.0, 'damage_mult': 1.0, 'range_mult': 1.0,
             'cost_mult': 1.0, 'thrust_mult': 1.0, 'turn_mult': 1.0, 'energy_gen_mult': 1.0,
             'capacity_mult': 2.0, # The key modifier
@@ -69,12 +65,12 @@ class TestComponentCapabilities(unittest.TestCase):
             'consumption_mult': 1.0, 'mass_add': 0.0, 'arc_add': 0.0, 'accuracy_add': 0.0,
             'arc_set': None, 'properties': {}, 'reload_mult': 1.0, 'endurance_mult': 1.0,
             'projectile_hp_mult': 1.0, 'projectile_damage_mult': 1.0, 'projectile_stealth_level': 0.0,
-            'crew_req_mult': 1.0
+            'crew_req_mult': 1.0, 'strategic_mult': 1.0
         }
-        
-        # We can call _apply_base_stats directly to verifying the logic handles mapping stats -> ability
-        c._apply_base_stats(stats, old_max_hp=100)
-        
+
+        # Abilities recalculate themselves via STAT_BINDINGS
+        storage.recalculate()
+
         self.assertEqual(storage.max_amount, 200.0, "Capacity modifier failed to scale ResourceStorage ability")
 
     def test_energy_activation_ability(self):

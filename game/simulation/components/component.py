@@ -55,10 +55,11 @@ class Component:
         self.base_abilities = copy.deepcopy(self.abilities)
         
         self.ship = None # Container reference
-        
+
         self.stats = {} # Current stats dictionary (calcualted)
+        self.ability_stats = {}  # Phase 5: Ability-specific stats for targeted effects
         self.modifiers = [] # list of ApplicationModifier
-        
+
         # Ability Instances (New System)
         self.ability_instances = []
         self._is_operational = True # Tracks if component has resources to operate
@@ -462,40 +463,10 @@ class Component:
         # Ensure cap
         self.current_hp = min(self.current_hp, self.max_hp)
 
-        # Generic Sync: Update Activation Abilities if attributes changed
-        from game.simulation.systems.resource_manager import ResourceConsumption, ResourceStorage, ResourceGeneration
-        
+        # Phase 4 Unified Pipeline: All abilities recalculate via STAT_BINDINGS
+        # Abilities now handle their own stat application in recalculate()
         for ab in self.ability_instances:
-            # General Recalculate (Protocol for active abilities to sync with stats)
             ab.recalculate()
-            
-            ab_cls = ab.__class__.__name__
-            ab_data = ab.data
-            
-            # Helper to get base value safely from dict or primitive
-            def get_base(data, key, default=0.0):
-                if isinstance(data, dict):
-                    return data.get(key, default)
-                if isinstance(data, (int, float)):
-                    return float(data)
-                return default
-
-            # ResourceConsumption (Base amount * consumption_mult)
-            if ab_cls == 'ResourceConsumption':
-                 base = get_base(ab_data, 'amount')
-                 ab.amount = base * stats.get('consumption_mult', 1.0)
-            
-            # ResourceStorage (Base amount * capacity_mult)
-            elif ab_cls == 'ResourceStorage':
-                 base = get_base(ab_data, 'amount')
-                 ab.max_amount = base * stats.get('capacity_mult', 1.0)
-            
-            # ResourceGeneration (Base amount * energy_gen_mult)
-            elif ab_cls == 'ResourceGeneration':
-                 # Apply energy_gen_mult only if resource is energy, or generic 'generation_mult' if we had one.
-                 if getattr(ab, 'resource_type', '') == 'energy':
-                     base = get_base(ab_data, 'amount')
-                     ab.rate = base * stats.get('energy_gen_mult', 1.0)
 
 
 

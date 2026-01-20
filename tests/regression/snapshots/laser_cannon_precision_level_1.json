@@ -1,0 +1,71 @@
+{
+  "component": {
+    "id": "laser_cannon",
+    "name": "Laser Cannon",
+    "mass": 30.0,
+    "base_mass": 20,
+    "max_hp": 40,
+    "base_max_hp": 40,
+    "cost": 0,
+    "type_str": "BeamWeaponAbility",
+    "stats": {
+      "mass_mult": 1.5,
+      "hp_mult": 1.0,
+      "damage_mult": 1.0,
+      "range_mult": 1.0,
+      "cost_mult": 1.5,
+      "thrust_mult": 1.0,
+      "turn_mult": 1.0,
+      "strategic_mult": 1.0,
+      "energy_gen_mult": 1.0,
+      "capacity_mult": 1.0,
+      "crew_capacity_mult": 1.0,
+      "life_support_capacity_mult": 1.0,
+      "consumption_mult": 1.0,
+      "mass_add": 0.0,
+      "arc_add": 0.0,
+      "accuracy_add": 0.5,
+      "arc_set": null,
+      "properties": {},
+      "reload_mult": 1.0,
+      "endurance_mult": 1.0,
+      "projectile_hp_mult": 1.0,
+      "projectile_damage_mult": 1.0,
+      "projectile_stealth_level": 0.0,
+      "crew_req_mult": 1.0
+    },
+    "modifiers": [
+      {
+        "id": "precision_mount",
+        "value": 1
+      }
+    ]
+  },
+  "abilities": [
+    {
+      "class_name": "CrewRequired",
+      "tags": [],
+      "amount": 2,
+      "base_amount": 1
+    },
+    {
+      "class_name": "ResourceConsumption",
+      "tags": [],
+      "amount": 5.0
+    },
+    {
+      "class_name": "BeamWeaponAbility",
+      "tags": [],
+      "damage": 0.0,
+      "base_damage": 0.0,
+      "range": 2000.0,
+      "base_range": 2000.0,
+      "reload_time": 0.2,
+      "base_reload": 0.2,
+      "firing_arc": 1.0,
+      "base_firing_arc": 1.0,
+      "base_accuracy": 2.5,
+      "_base_accuracy": 2.0
+    }
+  ]
+}

@@ -1,11 +1,17 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from game.core.config import PhysicsConfig
 from .base import Ability
+from .stat_keys import StatKey, AbilityStatBinding
 
 
 class ShieldProjection(Ability):
     """Provides Shield Capacity."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(StatKey.CAPACITY_MULT, 'capacity', 'multiply', 'base_capacity'),
+    ]
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
@@ -14,7 +20,7 @@ class ShieldProjection(Ability):
 
     def recalculate(self):
         # Apply capacity_mult from component stats (populated by modifiers)
-        mult = self.component.stats.get('capacity_mult', 1.0)
+        mult = self.get_effective_stat('capacity_mult', 1.0)
         self.capacity = self.base_capacity * mult
 
     def get_ui_rows(self):
@@ -26,6 +32,11 @@ class ShieldProjection(Ability):
 
 class ShieldRegeneration(Ability):
     """Regenerates Shields."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(StatKey.ENERGY_GEN_MULT, 'rate', 'multiply', 'base_rate'),
+    ]
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
@@ -34,7 +45,7 @@ class ShieldRegeneration(Ability):
 
     def recalculate(self):
         # Apply energy_gen_mult (modifier stat key)
-        mult = self.component.stats.get('energy_gen_mult', 1.0)
+        mult = self.get_effective_stat('energy_gen_mult', 1.0)
         self.rate = self.base_rate * mult
 
     def get_ui_rows(self):
@@ -45,6 +56,10 @@ class ShieldRegeneration(Ability):
 
 
 class ToHitAttackModifier(Ability):
+    """Modifier for to-hit attack bonuses."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []  # No modifier stats consumed
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
@@ -67,6 +82,10 @@ class ToHitAttackModifier(Ability):
 
 
 class ToHitDefenseModifier(Ability):
+    """Modifier for to-hit defense bonuses."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []  # No modifier stats consumed
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
@@ -86,6 +105,10 @@ class ToHitDefenseModifier(Ability):
 
 
 class EmissiveArmor(Ability):
+    """Provides damage ignore (ablative armor)."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []  # No modifier stats consumed
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
