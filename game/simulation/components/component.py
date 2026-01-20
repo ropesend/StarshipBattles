@@ -55,10 +55,11 @@ class Component:
         self.base_abilities = copy.deepcopy(self.abilities)
         
         self.ship = None # Container reference
-        
+
         self.stats = {} # Current stats dictionary (calcualted)
+        self.ability_stats = {}  # Stats keyed by ability class name for targeted modifier effects
         self.modifiers = [] # list of ApplicationModifier
-        
+
         # Ability Instances (New System)
         self.ability_instances = []
         self._is_operational = True # Tracks if component has resources to operate
@@ -395,7 +396,7 @@ class Component:
                 new_val = evaluate_math_formula(val[1:], context)
                 self.abilities[ability_name] = new_val
             elif isinstance(val, dict):
-                 # Phase 7: Generically evaluate formulas in any key of the ability dict
+                 # Recursively evaluate formulas in nested ability dictionaries
                  for key, sub_val in val.items():
                      if isinstance(sub_val, str) and sub_val.startswith("="):
                          new_val = evaluate_math_formula(sub_val[1:], context)
@@ -411,6 +412,7 @@ class Component:
             'cost_mult': 1.0,
             'thrust_mult': 1.0,
             'turn_mult': 1.0,
+            'strategic_mult': 1.0,  # Strategic movement multiplier (scales same as thrust)
             'energy_gen_mult': 1.0,
             'capacity_mult': 1.0,
             'crew_capacity_mult': 1.0,
@@ -461,40 +463,9 @@ class Component:
         # Ensure cap
         self.current_hp = min(self.current_hp, self.max_hp)
 
-        # Generic Sync: Update Activation Abilities if attributes changed
-        from game.simulation.systems.resource_manager import ResourceConsumption, ResourceStorage, ResourceGeneration
-        
+        # Recalculate all abilities with updated stats from modifiers
         for ab in self.ability_instances:
-            # General Recalculate (Protocol for active abilities to sync with stats)
             ab.recalculate()
-            
-            ab_cls = ab.__class__.__name__
-            ab_data = ab.data
-            
-            # Helper to get base value safely from dict or primitive
-            def get_base(data, key, default=0.0):
-                if isinstance(data, dict):
-                    return data.get(key, default)
-                if isinstance(data, (int, float)):
-                    return float(data)
-                return default
-
-            # ResourceConsumption (Base amount * consumption_mult)
-            if ab_cls == 'ResourceConsumption':
-                 base = get_base(ab_data, 'amount')
-                 ab.amount = base * stats.get('consumption_mult', 1.0)
-            
-            # ResourceStorage (Base amount * capacity_mult)
-            elif ab_cls == 'ResourceStorage':
-                 base = get_base(ab_data, 'amount')
-                 ab.max_amount = base * stats.get('capacity_mult', 1.0)
-            
-            # ResourceGeneration (Base amount * energy_gen_mult)
-            elif ab_cls == 'ResourceGeneration':
-                 # Apply energy_gen_mult only if resource is energy, or generic 'generation_mult' if we had one.
-                 if getattr(ab, 'resource_type', '') == 'energy':
-                     base = get_base(ab_data, 'amount')
-                     ab.rate = base * stats.get('energy_gen_mult', 1.0)
 
 
 
@@ -510,15 +481,11 @@ class Component:
         return self.__class__(self.data)
 
 
-# Phase 7 Simplified: Aliased types now use Component directly
-# Types with custom logic (Shield, Hangar, etc.) are now also aliases
-# as their logic has been unified into the Ability system.
-
-# Export types for compatibility (Phase 6 Regression Triage)
+# All component types use Component directly via the ability system.
+# Type-specific behavior is handled by ability instances (WeaponAbility, etc.)
 
 
-# Caching for performance (Phase 2 Test Stabilization)
-# Refactored to thread-safe singleton pattern (Code Review Phase 0)
+# Thread-safe singleton for component and modifier caches
 class ComponentCacheManager:
     """Thread-safe singleton manager for component and modifier caches."""
     _instance = None

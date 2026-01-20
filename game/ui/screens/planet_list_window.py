@@ -38,8 +38,8 @@ class PlanetListWindow(UIWindow):
             'mass': [0.0, 500.0]    # Min/Max Earths
         }
         
-        # Sort State
-        self.sort_column_id = None
+        # Sort State - default sort by owner name as per BUG-23
+        self.sort_column_id = 'owner'
         self.sort_descending = False
         
         # UI References (for reading values)
@@ -52,7 +52,7 @@ class PlanetListWindow(UIWindow):
             {'id': 'name', 'width': 150, 'title': 'Name', 'attr': 'name', 'visible': True},
             {'id': 'type', 'width': 100, 'title': 'Type', 'attr': 'planet_type.name', 'visible': True},
             {'id': 'system', 'width': 120, 'title': 'System', 'func': self._get_system_name, 'visible': True},
-            {'id': 'owner', 'width': 100, 'title': 'Owner', 'func': self._get_owner_name, 'visible': True},
+            {'id': 'owner', 'width': 140, 'title': 'Owner', 'func': self._get_owner_name, 'visible': True},
             {'id': 'mass', 'width': 100, 'title': 'Mass (M_E)', 'func': self._get_mass_earth, 'visible': True},
             {'id': 'grav', 'width': 90, 'title': 'Grav (g)', 'func': lambda p: f"{p.surface_gravity/9.81:.2f}", 'visible': True},
             {'id': 'temp', 'width': 90, 'title': 'Temp (K)', 'attr': 'surface_temperature', 'fmt': "{:.0f}", 'visible': True},
@@ -140,9 +140,23 @@ class PlanetListWindow(UIWindow):
         return "?"
 
     def _get_owner_name(self, planet):
-        if planet.owner_id is None: return "Unowned"
-        if planet.owner_id == self.empire.id: return "Player"
-        return "Enemy" # Simplify for now
+        """Get the owner name for a planet, with proper empire lookup."""
+        if planet.owner_id is None:
+            return "— None —"
+
+        # Try to get empire name from galaxy's empires list
+        if hasattr(self, 'galaxy') and hasattr(self.galaxy, 'empires'):
+            for emp in self.galaxy.empires:
+                if emp.id == planet.owner_id:
+                    # Add indicator if it's the player's empire
+                    if planet.owner_id == self.empire.id:
+                        return f"★ {emp.name}"
+                    return emp.name
+
+        # Fallback to simple labels
+        if planet.owner_id == self.empire.id:
+            return "★ Player"
+        return "Enemy"
         
     def _get_mass_earth(self, planet):
          m_earth = 5.97e24
@@ -227,7 +241,36 @@ class PlanetListWindow(UIWindow):
                 x = x_start
                 y_off += 35
         if x != x_start: y_off += 35
-        
+
+        # --- Owner Filter --- (BUG-27)
+        UILabel(pygame.Rect(10, y_off, width, 20), "Owner:", self.ui_manager, container=content_container)
+        y_off += 25
+
+        # All / None Buttons for owner
+        self.btn_all_owners = UIButton(pygame.Rect(10, y_off, 60, 25), "All", self.ui_manager, container=content_container)
+        self.btn_none_owners = UIButton(pygame.Rect(80, y_off, 60, 25), "None", self.ui_manager, container=content_container)
+        y_off += 30
+
+        # Owner toggle buttons
+        owners = ['Player', 'Enemy', 'Unowned']
+        self.ui_filters['owners'] = {}
+
+        x = x_start
+        for o in owners:
+            btn = UIButton(
+                relative_rect=pygame.Rect(x, y_off, 80, 30),
+                text=o,
+                manager=self.ui_manager,
+                container=content_container,
+                object_id='@filter_toggle_on'
+            )
+            self.ui_filters['owners'][o] = btn
+            x += 90
+            if x > width - 80:
+                x = x_start
+                y_off += 35
+        if x != x_start: y_off += 35
+
         # --- Range Sliders ---
         # Helper to add range
         def add_range(label, key, min_limit, max_limit):
@@ -446,10 +489,11 @@ class PlanetListWindow(UIWindow):
         min_m = self.ui_filters['mass']['min'].get_current_value()
         max_m = self.ui_filters['mass']['max'].get_current_value()
 
-        # Use extracted filter function
+        # Use extracted filter function (BUG-27: added owner filter)
         self.filtered_planets = filter_planets(
             self.all_planets, search_lower, self.filter_types,
-            min_g, max_g, min_t, max_t, min_m, max_m
+            min_g, max_g, min_t, max_t, min_m, max_m,
+            filter_owner=self.filter_owner, empire=self.empire
         )
 
         # 1b. Sort using extracted function
@@ -712,7 +756,35 @@ class PlanetListWindow(UIWindow):
                     btn.unselect()
                     btn.set_text(f"{t}")
                 self.refresh_list()
-                
+
+        # Handle Owner All/None buttons (BUG-27)
+        if hasattr(self, 'btn_all_owners') and self.btn_all_owners.check_pressed():
+            for o, btn in self.ui_filters.get('owners', {}).items():
+                self.filter_owner[o] = True
+                btn.select()
+                btn.set_text(f"[{o}]")
+            self.refresh_list()
+
+        if hasattr(self, 'btn_none_owners') and self.btn_none_owners.check_pressed():
+            for o, btn in self.ui_filters.get('owners', {}).items():
+                self.filter_owner[o] = False
+                btn.unselect()
+                btn.set_text(f"{o}")
+            self.refresh_list()
+
+        # Handle Owner Toggles (BUG-27)
+        for o, btn in self.ui_filters.get('owners', {}).items():
+            if btn.check_pressed():
+                state = not self.filter_owner[o]
+                self.filter_owner[o] = state
+                if state:
+                    btn.select()
+                    btn.set_text(f"[{o}]")
+                else:
+                    btn.unselect()
+                    btn.set_text(f"{o}")
+                self.refresh_list()
+
         # Handle Column Toggles
         for col_id, btn in self.ui_filters.get('columns', {}).items():
             if btn.check_pressed():

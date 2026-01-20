@@ -4,7 +4,7 @@ Provides centralized configuration with sensible defaults.
 """
 import os
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import List, Optional
 
 
 def _get_default_asset_path() -> str:
@@ -18,6 +18,64 @@ def _get_default_asset_path() -> str:
     return os.path.join(project_root, "assets", "ShipThemes")
 
 
+# Theme defaults for auto-assignment based on player number
+# Format: (theme_id, default_color)
+THEME_DEFAULTS = [
+    ("Federation", (0, 100, 255)),    # Blue
+    ("Atlantians", (0, 200, 150)),    # Teal
+    ("Romulans", (0, 180, 0)),        # Green
+    ("Klingons", (255, 50, 50)),      # Red
+]
+
+
+@dataclass
+class PlayerConfig:
+    """
+    Configuration for a single player/empire.
+    """
+    name: str = "Empire"
+    theme: str = "Federation"
+    color: tuple = (128, 128, 128)
+    is_human: bool = True
+
+    def to_dict(self) -> dict:
+        """Serialize PlayerConfig to dict."""
+        return {
+            'name': self.name,
+            'theme': self.theme,
+            'color': list(self.color),  # Tuple to list for JSON
+            'is_human': self.is_human
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'PlayerConfig':
+        """Deserialize PlayerConfig from dict."""
+        return cls(
+            name=data.get('name', 'Empire'),
+            theme=data.get('theme', 'Federation'),
+            color=tuple(data.get('color', [128, 128, 128])),
+            is_human=data.get('is_human', True)
+        )
+
+
+def _get_default_players() -> List[PlayerConfig]:
+    """Create default 2-player setup."""
+    return [
+        PlayerConfig(
+            name="Terran Command",
+            theme=THEME_DEFAULTS[0][0],  # Federation
+            color=THEME_DEFAULTS[0][1],
+            is_human=True
+        ),
+        PlayerConfig(
+            name="Xeno Hive",
+            theme=THEME_DEFAULTS[1][0],  # Atlantians
+            color=THEME_DEFAULTS[1][1],
+            is_human=True
+        )
+    ]
+
+
 @dataclass
 class GameConfig:
     """
@@ -28,54 +86,58 @@ class GameConfig:
     """
     # Asset paths
     asset_base_path: str = field(default_factory=_get_default_asset_path)
-    player_theme: str = "Atlantians"
-    enemy_theme: str = "Federation"
 
     # Galaxy generation
     galaxy_radius: int = 4000
     system_count: int = 25
 
-    # Empire configuration
-    player_name: str = "Terran Command"
-    player_color: tuple = (0, 0, 255)
-    enemy_name: str = "Xeno Hive"
-    enemy_color: tuple = (255, 0, 0)
+    # Save game name (user-provided)
+    save_name: str = ""
 
-    @property
-    def player_theme_path(self) -> str:
-        """Full path to player empire's ship theme."""
-        return os.path.join(self.asset_base_path, self.player_theme)
+    # Player configurations
+    players: List[PlayerConfig] = field(default_factory=_get_default_players)
 
-    @property
-    def enemy_theme_path(self) -> str:
-        """Full path to enemy empire's ship theme."""
-        return os.path.join(self.asset_base_path, self.enemy_theme)
+    def __post_init__(self):
+        """Validate configuration after initialization."""
+        if len(self.players) < 1:
+            raise ValueError("GameConfig requires at least 1 player")
+        if len(self.players) > 4:
+            raise ValueError("GameConfig supports at most 4 players")
+
+    def get_player_theme_path(self, player_index: int) -> Optional[str]:
+        """
+        Get full path to a player's ship theme.
+
+        Args:
+            player_index: Index of player in players list
+
+        Returns:
+            Full path to theme folder, or None if index invalid
+        """
+        if 0 <= player_index < len(self.players):
+            return os.path.join(self.asset_base_path, self.players[player_index].theme)
+        return None
 
     def to_dict(self) -> dict:
         """Serialize GameConfig to dict."""
         return {
             'asset_base_path': self.asset_base_path,
-            'player_theme': self.player_theme,
-            'enemy_theme': self.enemy_theme,
             'galaxy_radius': self.galaxy_radius,
             'system_count': self.system_count,
-            'player_name': self.player_name,
-            'player_color': list(self.player_color),  # Tuple to list
-            'enemy_name': self.enemy_name,
-            'enemy_color': list(self.enemy_color)  # Tuple to list
+            'save_name': self.save_name,
+            'players': [p.to_dict() for p in self.players]
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> 'GameConfig':
         """Deserialize GameConfig from dict."""
+        players_data = data.get('players', [])
+        players = [PlayerConfig.from_dict(p) for p in players_data] if players_data else _get_default_players()
+
         return cls(
             asset_base_path=data.get('asset_base_path', _get_default_asset_path()),
-            player_theme=data.get('player_theme', 'Atlantians'),
-            enemy_theme=data.get('enemy_theme', 'Federation'),
             galaxy_radius=data.get('galaxy_radius', 4000),
             system_count=data.get('system_count', 25),
-            player_name=data.get('player_name', 'Terran Command'),
-            player_color=tuple(data.get('player_color', [0, 0, 255])),
-            enemy_name=data.get('enemy_name', 'Xeno Hive'),
-            enemy_color=tuple(data.get('enemy_color', [255, 0, 0]))
+            save_name=data.get('save_name', ''),
+            players=players
         )

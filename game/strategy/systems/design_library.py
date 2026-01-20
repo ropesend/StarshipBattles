@@ -25,29 +25,39 @@ class DesignLibrary:
             savegame_path: Path to the savegame directory (None if no savegame)
             empire_id: ID of the empire this library belongs to
         """
+        from game.core.logger import log_info, log_debug, log_error
+
         self.savegame_path = savegame_path
         self.empire_id = empire_id
 
+        log_debug(f"DesignLibrary.__init__ called:")
+        log_debug(f"  savegame_path: {savegame_path}")
+        log_debug(f"  empire_id: {empire_id}")
+
         # Determine designs folder location
         if savegame_path is not None and savegame_path != "":
-            self.designs_folder = os.path.join(savegame_path, "designs")
+            # Use per-empire subfolder: designs/empire_N/
+            self.designs_folder = os.path.join(savegame_path, "designs", f"empire_{empire_id}")
+            log_info(f"DesignLibrary: Using savegame designs folder: {self.designs_folder}")
         else:
             # Use temp folder for designs when no savegame exists
             import tempfile
             temp_base = os.path.join(tempfile.gettempdir(), "starship_battles_temp_designs")
             self.designs_folder = os.path.join(temp_base, f"empire_{empire_id}")
+            log_info(f"DesignLibrary: No savegame path - using temp folder: {self.designs_folder}")
 
         # Ensure designs folder exists
         try:
             os.makedirs(self.designs_folder, exist_ok=True)
+            log_debug(f"DesignLibrary: Ensured designs folder exists: {self.designs_folder}")
         except Exception as e:
-            from game.core.logger import log_error
             log_error(f"Failed to create designs folder: {e}")
             # Fallback to temp directory
             import tempfile
             temp_base = os.path.join(tempfile.gettempdir(), "starship_battles_temp_designs")
             self.designs_folder = os.path.join(temp_base, f"empire_{empire_id}")
             os.makedirs(self.designs_folder, exist_ok=True)
+            log_error(f"DesignLibrary: Using fallback temp folder: {self.designs_folder}")
 
     def scan_designs(self) -> List[DesignMetadata]:
         """

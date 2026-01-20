@@ -15,7 +15,8 @@ class TestDesignLibrary(unittest.TestCase):
     def setUp(self):
         """Create temporary directory for test designs"""
         self.tmpdir = tempfile.mkdtemp()
-        self.designs_folder = os.path.join(self.tmpdir, "designs")
+        # Create per-empire folder structure (empire_id=1)
+        self.designs_folder = os.path.join(self.tmpdir, "designs", "empire_1")
         os.makedirs(self.designs_folder)
 
         self.library = DesignLibrary(self.tmpdir, empire_id=1)
@@ -330,6 +331,99 @@ class TestDesignLibrary(unittest.TestCase):
         from game.core.json_utils import load_json_required
         updated = load_json_required(os.path.join(self.designs_folder, "buildable.json"))
         self.assertEqual(updated["_metadata"]["times_built"], 1)
+
+
+class TestDesignLibraryPerEmpire(unittest.TestCase):
+    """Tests for per-empire design folder structure"""
+
+    def setUp(self):
+        """Create temporary directory for test designs"""
+        self.tmpdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        """Clean up temporary directory"""
+        import shutil
+        shutil.rmtree(self.tmpdir)
+
+    def test_design_library_uses_empire_subfolder(self):
+        """DesignLibrary stores designs in empire_N subfolder"""
+        # Create library for empire 0
+        library = DesignLibrary(self.tmpdir, empire_id=0)
+
+        # Designs folder should include empire_0
+        self.assertIn("empire_0", library.designs_folder)
+        self.assertTrue(library.designs_folder.endswith(os.path.join("designs", "empire_0")))
+
+    def test_design_library_isolates_empires(self):
+        """Empire 0 designs not visible to Empire 1 library"""
+        # Create per-empire design folders
+        designs_base = os.path.join(self.tmpdir, "designs")
+        empire0_folder = os.path.join(designs_base, "empire_0")
+        empire1_folder = os.path.join(designs_base, "empire_1")
+        os.makedirs(empire0_folder)
+        os.makedirs(empire1_folder)
+
+        # Create design in empire 0's folder
+        design = {
+            "name": "Empire0 Ship",
+            "ship_class": "Escort",
+            "vehicle_type": "Ship",
+            "mass": 1000.0,
+            "layers": {}
+        }
+        save_json(os.path.join(empire0_folder, "e0_ship.json"), design)
+
+        # Create libraries for each empire
+        lib0 = DesignLibrary(self.tmpdir, empire_id=0)
+        lib1 = DesignLibrary(self.tmpdir, empire_id=1)
+
+        # Empire 0 should see the design
+        designs0 = lib0.scan_designs()
+        self.assertEqual(len(designs0), 1)
+        self.assertEqual(designs0[0].name, "Empire0 Ship")
+
+        # Empire 1 should NOT see it
+        designs1 = lib1.scan_designs()
+        self.assertEqual(len(designs1), 0)
+
+    def test_design_library_creates_empire_folder(self):
+        """DesignLibrary creates empire folder if missing"""
+        # Don't pre-create any folders
+        library = DesignLibrary(self.tmpdir, empire_id=2)
+
+        # Empire folder should exist now
+        expected_path = os.path.join(self.tmpdir, "designs", "empire_2")
+        self.assertTrue(os.path.exists(expected_path))
+        self.assertEqual(library.designs_folder, expected_path)
+
+    def test_design_library_saves_to_empire_folder(self):
+        """Saving design goes to correct empire folder"""
+        library = DesignLibrary(self.tmpdir, empire_id=1)
+
+        # Create mock ship
+        ship = MagicMock()
+        ship.name = "Test Ship"
+        ship.ship_class = "Escort"
+        ship.vehicle_type = "Ship"
+        ship.mass = 1000.0
+        ship.theme_id = "Federation"
+        ship.layers = {}
+        ship.to_dict.return_value = {
+            "name": "Test Ship",
+            "ship_class": "Escort",
+            "vehicle_type": "Ship",
+            "mass": 1000.0,
+            "layers": {}
+        }
+
+        # Save design
+        success, message = library.save_design(ship, "Test Ship", set())
+
+        self.assertTrue(success)
+
+        # Verify file is in empire_1 folder
+        expected_file = os.path.join(self.tmpdir, "designs", "empire_1", "Test_Ship.json")
+        self.assertTrue(os.path.exists(expected_file))
 
 
 if __name__ == '__main__':

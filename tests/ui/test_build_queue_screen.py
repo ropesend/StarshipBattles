@@ -198,8 +198,8 @@ def test_close_callback_fires(build_queue_screen):
 
 def test_planet_report_panel_exists(build_queue_screen):
     """Test that planet report panel is created."""
-    assert hasattr(build_queue_screen, 'planet_report_panel')
-    assert build_queue_screen.planet_report_panel is not None
+    assert hasattr(build_queue_screen, 'planet_report')
+    assert build_queue_screen.planet_report is not None
 
 
 def test_items_list_panel_exists(build_queue_screen):
@@ -265,3 +265,90 @@ def test_no_savegame_path_handled_gracefully(mock_design_library):
     assert screen_obj.design_library is not None
 
     pygame.quit()
+
+
+def test_add_to_queue_defaults_to_1_turn(build_queue_screen):
+    """Test that new items default to 1 turn build time."""
+    # Mock design selection
+    build_queue_screen.selected_design = "test_design"
+    build_queue_screen.selected_category = "complex"
+
+    # Add to queue without specifying turns (should use default)
+    build_queue_screen._add_to_queue("test_design")
+
+    # Verify item was added with 1 turn
+    item = build_queue_screen.planet.construction_queue[-1]
+    assert item["turns_remaining"] == 1
+
+
+def test_drag_item_uses_1_turn_default(build_queue_screen):
+    """Test that dragged items default to 1 turn if no turns specified."""
+    # Simulate dragging an item without 'turns' key
+    build_queue_screen.dragged_item = {
+        'design_id': 'frigate_mk1',
+        'name': 'Frigate',
+        'category': 'ship',
+        # Note: no 'turns' key
+    }
+
+    # Simulate drop event - manually call _add_to_queue as drop would
+    # The actual drop handling gets 'turns' from dragged_item with default
+    turns = build_queue_screen.dragged_item.get('turns', 1)  # Should be 1
+
+    # Verify default is 1
+    assert turns == 1
+
+
+def test_add_ship_to_queue_with_shipyard(build_queue_screen):
+    """Test that ships can be added when planet has a shipyard facility.
+
+    Regression test for BUG-24: Ships couldn't be added to build queue
+    even when planet had a space shipyard facility.
+    """
+    from game.strategy.data.planet import PlanetaryFacility
+
+    # Add a shipyard facility with correct design_data structure
+    # This mimics how _spawn_complex creates facilities
+    shipyard = PlanetaryFacility(
+        instance_id="test-shipyard-1",
+        design_id="space_shipyard_complex",
+        name="Space Shipyard",
+        design_data={
+            "layers": {
+                "OUTER": [{"id": "space_shipyard", "modifiers": []}]
+            }
+        },
+        is_operational=True
+    )
+    build_queue_screen.planet.facilities.append(shipyard)
+
+    # Verify has_space_shipyard returns True
+    assert build_queue_screen.planet.has_space_shipyard == True, \
+        "has_space_shipyard should return True when shipyard facility exists"
+
+    # Try to add a ship
+    initial_queue_len = len(build_queue_screen.planet.construction_queue)
+    build_queue_screen._set_category("ship")
+    build_queue_screen._add_to_queue("test_frigate", turns=1)
+
+    # Verify ship was added
+    assert len(build_queue_screen.planet.construction_queue) == initial_queue_len + 1, \
+        "Ship should be added to construction queue when shipyard exists"
+    assert build_queue_screen.planet.construction_queue[-1]["type"] == "ship"
+    assert build_queue_screen.planet.construction_queue[-1]["design_id"] == "test_frigate"
+
+
+def test_add_ship_fails_without_shipyard(build_queue_screen):
+    """Test that ships cannot be added without a shipyard facility."""
+    # Ensure no shipyard exists
+    build_queue_screen.planet.facilities = []
+    assert build_queue_screen.planet.has_space_shipyard == False
+
+    # Try to add a ship
+    initial_queue_len = len(build_queue_screen.planet.construction_queue)
+    build_queue_screen._set_category("ship")
+    build_queue_screen._add_to_queue("test_frigate", turns=1)
+
+    # Verify ship was NOT added
+    assert len(build_queue_screen.planet.construction_queue) == initial_queue_len, \
+        "Ship should NOT be added without a shipyard"

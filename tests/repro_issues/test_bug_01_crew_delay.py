@@ -55,13 +55,20 @@ class TestBug01CrewDelay:
         # I saw 'crew_req_mult' in component.py line 374! 
         # So we can use a real modifier that targets 'crew_req_mult'.
         
+        # V2 format: effects is a list with stat/formula objects
         mod_data = {
             "id": "mount_size_test",
             "name": "Mount Size",
-            "type": "linear",
-            "effects": {
-                "crew_req_mult": 1.0 # +100% = Double crew req
-            }
+            "param": {
+                "name": "Level",
+                "type": "linear",
+                "min": 1.0,
+                "max": 10.0,
+                "default": 1.0
+            },
+            "effects": [
+                {"stat": "crew_req_mult", "formula": "param", "operation": "multiply"}
+            ]
         }
         
         mod_def = Modifier(mod_data)

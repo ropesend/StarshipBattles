@@ -13,7 +13,7 @@ from .base import Ability
 from .resources import ResourceConsumption, ResourceStorage, ResourceGeneration
 
 # Propulsion abilities
-from .propulsion import CombatPropulsion, ManeuveringThruster
+from .propulsion import CombatPropulsion, ManeuveringThruster, StrategicMovement, WarpJump
 
 # Defense abilities
 from .defense import (
@@ -55,6 +55,8 @@ ABILITY_REGISTRY = {
     "ResourceGeneration": ResourceGeneration,
     "CombatPropulsion": CombatPropulsion,
     "ManeuveringThruster": ManeuveringThruster,
+    "StrategicMovement": StrategicMovement,
+    "WarpJump": WarpJump,
     "ShieldProjection": ShieldProjection,
     "ShieldRegeneration": ShieldRegeneration,
     "VehicleLaunch": VehicleLaunchAbility,
@@ -118,6 +120,8 @@ __all__ = [
     # Propulsion
     'CombatPropulsion',
     'ManeuveringThruster',
+    'StrategicMovement',
+    'WarpJump',
     # Defense
     'ShieldProjection',
     'ShieldRegeneration',

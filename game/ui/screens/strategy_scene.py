@@ -27,6 +27,7 @@ from game.ui.screens.strategy_camera_nav import CameraNavigator
 from game.ui.screens.strategy_fleet_ops import FleetOperations
 from game.ui.screens.strategy_colonization import ColonizationSystem
 from game.ui.screens.strategy_input_handler import InputHandler
+from game.strategy.systems.save_game_service import SaveGameService
 
 
 class StrategyScene:
@@ -140,10 +141,6 @@ class StrategyScene:
         self.camera.update(dt)
         self.ui.update(dt)
 
-        # Update build queue screen if open
-        if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
-            self.build_queue_screen.update(dt)
-
     def draw(self, screen):
         """Render the scene."""
         self._renderer.draw(screen)
@@ -153,7 +150,7 @@ class StrategyScene:
 
         self.ui.draw(screen)
 
-        # Draw build queue screen if open (overlay on top)
+        # Draw build queue screen overlay (including drag preview)
         if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
             self.build_queue_screen.draw(screen)
 
@@ -262,6 +259,14 @@ class StrategyScene:
         # Process turn for all empires
         self.session.process_turn()
 
+        # Auto-save after turn processing
+        if self.session.save_path:
+            success, message, _ = SaveGameService.save_game(self.session)
+            if success:
+                log_info(f"Auto-saved: {message}")
+            else:
+                log_warning(f"Auto-save failed: {message}")
+
         # Re-center Camera on current player's home
         current_player_id = self.human_player_ids[self.current_player_index]
         current_empire = next((e for e in self.empires if e.id == current_player_id), self.player_empire)
@@ -318,19 +323,30 @@ class StrategyScene:
             planet = self.selected_object
             if planet.owner_id == self.current_empire.id:
                 from game.ui.screens.build_queue_screen import BuildQueueScreen
+                
+                # Hide main UI
+                self.ui.hide_ui()
+
+                # Get planet portrait from asset system
+                portrait_surface = self._get_object_asset(planet)
 
                 # Create screen
                 self.build_queue_screen = BuildQueueScreen(
                     self.ui.manager,
                     planet,
                     self.session,
-                    on_close_callback=self._on_build_queue_close
+                    on_close_callback=self._on_build_queue_close,
+                    portrait_surface=portrait_surface
                 )
                 log_info(f"Opened build queue for {planet.name}")
 
     def _on_build_queue_close(self):
         """Handle build queue screen closing."""
         self.build_queue_screen = None
+        
+        # Show main UI again
+        self.ui.show_ui()
+        
         # Refresh planet details to show updated queue/facilities
         if self.selected_object:
             img = self._get_object_asset(self.selected_object)
@@ -415,20 +431,30 @@ class StrategyScene:
     def _load_assets(self):
         """Load visual assets using AssetManager."""
         from game.assets.asset_manager import get_asset_manager
+        from game.strategy.engine.game_config import GameConfig
 
         am = get_asset_manager()
         am.load_manifest()
 
+        # Get current asset base path (works regardless of saved paths)
+        config = GameConfig()
+        asset_base = config.asset_base_path
+
         for emp in self.empires:
             self.empire_assets[emp.id] = {}
-            if emp.theme_path and os.path.exists(emp.theme_path):
+
+            # Recalculate theme_path using empire_theme_id and current asset location
+            # This fixes BUG-13: saved absolute paths may not exist on current machine
+            theme_path = os.path.join(asset_base, emp.empire_theme_id)
+
+            if os.path.exists(theme_path):
                 # Colony Flag
-                colony_path = os.path.join(emp.theme_path, "Flags", "Colony_Flag.jpg")
+                colony_path = os.path.join(theme_path, "Flags", "Colony_Flag.jpg")
                 if os.path.exists(colony_path):
                     self.empire_assets[emp.id]['colony'] = am.load_external_image(colony_path)
 
                 # Fleet Icon
-                fleet_path = os.path.join(emp.theme_path, "Skins", "Battlecruiser.png")
+                fleet_path = os.path.join(theme_path, "Skins", "Battlecruiser.png")
                 if os.path.exists(fleet_path):
                     self.empire_assets[emp.id]['fleet'] = am.load_external_image(fleet_path)
 

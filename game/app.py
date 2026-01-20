@@ -19,6 +19,7 @@ from game.ui.renderer.sprites import SpriteManager
 from game.ui.screens.battle_scene import BattleScene
 from game.ui.screens.setup_screen import BattleSetupScreen
 from game.ui.screens.strategy_scene import StrategyScene
+from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 from Tools.formation_editor import FormationEditorScene
 from ui.test_lab_scene import TestLabScene
 from game.core.profiling import PROFILER, profile_action
@@ -156,10 +157,73 @@ class Game:
         self.battle_setup.start(preserve_teams=preserve_teams)
 
     def start_strategy_layer(self):
-        """Enter strategy layer."""
-        self.state = STRATEGY
-        if hasattr(self.strategy_scene, 'handle_resize'):
-            self.strategy_scene.handle_resize(WIDTH, HEIGHT)
+        """Show new game setup screen."""
+        import pygame_gui
+
+        log_info("Opening new game setup")
+
+        # Create UI manager if needed
+        if not hasattr(self, 'menu_ui_manager'):
+            self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+
+        # Create new game setup window
+        window_width = 500
+        window_height = 450
+        window_rect = pygame.Rect(
+            (WIDTH - window_width) // 2,
+            (HEIGHT - window_height) // 2,
+            window_width,
+            window_height
+        )
+
+        self.new_game_setup_window = NewGameSetupScreen(
+            window_rect,
+            self.menu_ui_manager,
+            on_start_callback=self._on_new_game_start,
+            on_cancel_callback=self._on_new_game_cancel
+        )
+
+        # Set flag to render window
+        self.showing_new_game_setup = True
+
+    def _on_new_game_start(self, config):
+        """Handle new game start from setup screen."""
+        from game.strategy.engine.game_session import GameSession
+        from game.strategy.systems.save_game_service import SaveGameService
+
+        log_info(f"Starting new game: {config.save_name} with {len(config.players)} players")
+
+        # Create game session
+        session = GameSession(config=config)
+
+        # Save initial state
+        success, message, save_path = SaveGameService.save_game(session, config.save_name)
+
+        if success:
+            session.save_path = save_path
+            log_info(f"Initial save created: {save_path}")
+
+            # Create strategy scene with new session
+            self.strategy_scene = StrategyScene(WIDTH, HEIGHT, session=session)
+            self.state = STRATEGY
+            self.showing_new_game_setup = False
+        else:
+            log_error(f"Failed to create initial save: {message}")
+            # Show error dialog
+            import pygame_gui.windows
+            error_rect = pygame.Rect(0, 0, 400, 200)
+            error_rect.center = (WIDTH // 2, HEIGHT // 2)
+            pygame_gui.windows.UIMessageWindow(
+                rect=error_rect,
+                html_message=f"<b>Save Failed</b><br><br>{message}",
+                manager=self.menu_ui_manager,
+                window_title="Error"
+            )
+
+    def _on_new_game_cancel(self):
+        """Cancel new game setup."""
+        self.showing_new_game_setup = False
+        log_debug("New game setup cancelled")
 
     def show_load_menu(self):
         """Show load game menu."""
@@ -192,14 +256,14 @@ class Game:
         # Set flag to render window
         self.showing_load_menu = True
 
-    def _on_load_game(self, save_path):
+    def _on_load_game(self, save_path, turn_number=None):
         """Load the selected save game."""
         from game.strategy.systems.save_game_service import SaveGameService
 
-        log_info(f"Loading game from: {save_path}")
+        log_info(f"Loading game from: {save_path}, turn: {turn_number}")
 
-        # Load game session
-        game_session, message = SaveGameService.load_game(save_path)
+        # Load game session (optionally at specific turn)
+        game_session, message = SaveGameService.load_game(save_path, turn_number=turn_number)
 
         if game_session:
             # Create new strategy scene with loaded session
@@ -307,6 +371,11 @@ class Game:
 
     def _forward_event_to_scene(self, event):
         """Forward event to the current active scene."""
+        # Handle new game setup if showing
+        if hasattr(self, 'showing_new_game_setup') and self.showing_new_game_setup and hasattr(self, 'menu_ui_manager'):
+            self.menu_ui_manager.process_events(event)
+            return
+
         # Handle load menu if showing
         if self.showing_load_menu and hasattr(self, 'menu_ui_manager'):
             self.menu_ui_manager.process_events(event)
@@ -454,8 +523,13 @@ class Game:
         for btn in self.menu_buttons:
             btn.draw(self.screen)
 
+        # Draw new game setup UI if showing
+        if hasattr(self, 'showing_new_game_setup') and self.showing_new_game_setup and hasattr(self, 'menu_ui_manager'):
+            self.menu_ui_manager.update(self.clock.get_time() / 1000.0)
+            self.menu_ui_manager.draw_ui(self.screen)
+
         # Draw load menu UI if showing
-        if self.showing_load_menu and hasattr(self, 'menu_ui_manager'):
+        elif self.showing_load_menu and hasattr(self, 'menu_ui_manager'):
             self.menu_ui_manager.update(self.clock.get_time() / 1000.0)
             self.menu_ui_manager.draw_ui(self.screen)
 

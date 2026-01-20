@@ -163,3 +163,111 @@
 * **Solution Implemented:** Modified `_clear_design` in `game/ui/screens/builder_screen.py` to skip the `LayerType.HULL` layer when clearing components. This ensures the structural hull is preserved while user-added components are removed.
 * **Test Case:** `tests/repro_issues/test_bug_13_clear_removes_hull.py`
 
+---
+
+## [BUG-13b] - Colony Flags Replaced by Colored Circles
+* **Date Solved:** 2026-01-18
+* **Original Issue:** Colony flags in the strategy layer were replaced by colored circles when loading saved games. The saved `theme_path` was an absolute path that became invalid when the project location changed or when loading from a different machine.
+* **Solution Implemented:** Modified `_load_assets()` in `game/ui/screens/strategy_scene.py` to recalculate the theme path using `GameConfig.asset_base_path` and the empire's `empire_theme_id` field, instead of trusting the saved absolute `theme_path`.
+* **Test Case:** `tests/repro_issues/test_bug_13_colony_flags.py`
+* **Notes:** Always derive asset paths relative to current project location rather than storing absolute paths in saves.
+
+---
+
+## [BUG-16] - Atmosphere Raw Data Button Mispositioned
+* **Date Solved:** 2026-01-18
+* **Original Issue:** The Raw Data button for atmosphere data was positioned at the top-left of the entire planet detail panel instead of the top-right of the graph box.
+* **Solution Implemented:** Modified `game/ui/screens/strategy_screen.py` to calculate button position based on `graph_rect` during initialization instead of using `(0, 0)` placeholder.
+* **Test Case:** `tests/repro_issues/test_bug_16_raw_data_button.py`
+* **Notes:** Button position now correctly calculated as `(graph_rect.right - 22, graph_rect.top + 2)` at construction time.
+
+---
+
+## [BUG-18] - Available Designs Need Miniature Portrait Icons
+* **Date Solved:** 2026-01-18
+* **Original Issue:** Available Designs list in Build Queue lacked visual icons for each design.
+* **Solution Implemented:** Modified `game/ui/screens/build_queue_screen.py` to wrap each design in a UIPanel row with a 36x36 portrait icon. Added `_load_design_portrait()` method that loads portraits from theme assets or falls back to colored placeholders.
+* **Test Case:** `tests/ui/test_build_queue_drag_drop.py`
+* **Notes:** Portraits loaded from `assets/ShipThemes/{theme}/Portraits/{ShipClass}_Portrait.jpg` with fallback placeholders by type.
+
+---
+
+## [BUG-20] - Build Queue Items Need Miniature Portrait Icons
+* **Date Solved:** 2026-01-18
+* **Original Issue:** Build Queue items lacked visual portrait icons.
+* **Solution Implemented:** Modified `_refresh_queue_display()` in `game/ui/screens/build_queue_screen.py` to add 50x50 portrait icons to each queue item. Added `_load_queue_item_portrait()` method for design lookup and portrait loading.
+* **Test Case:** `tests/ui/test_build_queue_drag_drop.py`
+* **Notes:** Provides visual consistency with Available Designs list (BUG-18).
+
+---
+
+## [BUG-21] - Build Queue Drag/Drop Leaves Stale Graphics
+* **Date Solved:** 2026-01-18
+* **Original Issue:** Dragging items from the build queue and dropping outside the panel left visual artifacts.
+* **Solution Implemented:** Added `came_from_queue` flag in `game/ui/screens/build_queue_screen.py` to track item origin. On drop outside queue panel, calls `_refresh_queue_display()` if item originated from queue.
+* **Test Case:** `tests/ui/test_build_queue_drag_drop.py`
+* **Notes:** Ensures queue visual is always in sync with `planet.construction_queue` after any drag operation.
+
+---
+
+## [BUG-23] - Galactic Planet Registry Missing Owner Column
+* **Date Solved:** 2026-01-18
+* **Original Issue:** Owner column only showed generic labels ("Unowned", "Player", "Enemy") instead of actual empire names.
+* **Solution Implemented:** Enhanced `_get_owner_name()` in `game/ui/screens/planet_list_window.py` to look up actual empire names from `galaxy.empires`. Added star prefix for player colonies, widened column to 140px, and set default sort to owner.
+* **Test Case:** `tests/ui/test_planet_list_window.py`
+* **Notes:** Flag icons deferred for future enhancement; star (★) indicator provides visual distinction for player colonies.
+
+---
+
+## [BUG-19] - Planet Window Missing Colony Complexes List
+* **Date Solved:** 2026-01-18
+* **Original Issue:** The planet window in the main Strategy Layer had no list indicating what complexes exist on a colony.
+* **Solution Implemented:** Updated `format_planet_info()` in `game/ui/screens/strategy_screen.py` (the main sidebar method) to add colony status and facilities list. Shows "Colony Status: Owned" and lists all complexes by name for colonized planets; uncolonized planets show no change.
+* **Test Case:** 195 passed (strategy + planet tests)
+* **Notes:** There are TWO `format_planet_info` methods - one in `strategy_detail_fmt.py` (PlanetReportPanel) and one in `strategy_screen.py` (main sidebar). Both were updated.
+
+---
+
+## [BUG-22] - Zoom Level Indicator Visible When Sub-Panels Open
+* **Date Solved:** 2026-01-18
+* **Original Issue:** The Strategy Layer Zoom level indicator on the bottom left was visible when sub-panels (Build Queue, Design Workshop, Planet List) were open, and mouse wheel zoom still worked.
+* **Solution Implemented:** Added `planet_list_window` tracking to `strategy_screen.py`, updated `_has_modal_open()` to check for Planet List Window, and modified `strategy_input_handler.py` to block mouse wheel zoom when any modal is open.
+* **Test Case:** 4 passed (strategy button tests)
+* **Notes:** Modal check now covers: Build Queue Screen, Fleet Orders Window, Design Workshop, and Planet List Window.
+
+---
+
+## [BUG-25] - Build Queue Category Selection Does Not Clear Stale Options
+* **Date Solved:** 2026-01-18
+* **Original Issue:** Selecting a category with fewer designs than the previous category left stale option elements visible.
+* **Solution Implemented:** Fixed list mutation during iteration in `game/ui/screens/build_queue_screen.py` by copying the elements list before iterating and killing elements.
+* **Test Case:** 18 passed (build queue tests)
+* **Notes:** When iterating over UI element lists to kill them, always copy the list first to avoid skipping elements.
+
+---
+
+## [BUG-27] - Planet List Missing Owner Filter
+* **Date Solved:** 2026-01-18
+* **Original Issue:** The Planet List window had no UI filter for Owner (None/Player/Opponents).
+* **Solution Implemented:** Added "Owner:" section with All/None buttons and toggle buttons (Player, Enemy, Unowned) to `planet_list_window.py`. Updated `filter_planets()` in `planet_list_filters.py` to accept `filter_owner` and `empire` parameters and filter by owner category.
+* **Test Case:** 28 passed (planet-related tests)
+* **Notes:** Filter logic: Unowned = `owner_id is None`, Player = `owner_id == empire.id`, Enemy = `owner_id != None and != empire.id`.
+
+---
+
+## [BUG-14] - Multi-Planet Sectors Need Planet Position Offset
+* **Date Solved:** 2026-01-19
+* **Original Issue:** In the strategy layer, planets in multi-planet sectors were not positioned correctly. The largest planet needed to be offset left by 20% of its diameter, and smaller planets needed to be arranged using polar coordinates centered on the largest planet.
+* **Solution Implemented:** Modified `game/ui/screens/strategy_renderer.py` (lines 344-387) to: (1) Offset largest planet left by 20% of diameter; (2) Position smaller planets using polar coordinates centered on largest planet with angles [0°] for 1, [30°,-30°] for 2, [15°,0°,-45°] for 3; (3) Set center-to-center distance to 1.5x largest planet radius.
+* **Test Case:** `tests/repro_issues/test_bug_14_multi_planet_offset.py` (9 passed)
+* **Notes:** Smaller planets orbit around the largest planet's center, not the hex center.
+
+---
+
+## [BUG-17] - Build Queue Drag and Drop Not Visually Obvious
+* **Date Solved:** 2026-01-19
+* **Original Issue:** In the build queue, dragging and dropping was not visually obvious - the dragged item seemed to disappear.
+* **Solution Implemented:** Modified `game/ui/screens/strategy_scene.py` (lines 152-154) to call `build_queue_screen.draw(screen)` in the render loop. The drag preview code in `build_queue_screen.py` was working but never being rendered because `draw()` wasn't called from the main scene.
+* **Test Case:** `tests/ui/test_build_queue_drag_drop.py` (3 passed)
+* **Notes:** The root cause was the missing `draw()` call in strategy_scene, not the preview rendering logic itself.
+

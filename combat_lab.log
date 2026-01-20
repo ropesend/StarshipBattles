@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 2026-01-19 21:50:31 - CombatLab - DEBUG - Combat Lab logging initialized
 2026-01-19 21:50:31 - CombatLab - DEBUG - Log file: c:\Developer\StarshipBattles\combat_lab.log
 2026-01-19 21:50:31 - CombatLab - DEBUG - Console level: INFO
@@ -59,3 +60,18 @@
 2026-01-19 21:50:31 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
 2026-01-19 21:50:31 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
 2026-01-19 21:50:31 - CombatLab.test_framework.registry - INFO - Discovered 51 scenarios
+=======
+2026-01-19 22:27:27 - CombatLab - DEBUG - Combat Lab logging initialized
+2026-01-19 22:27:27 - CombatLab - DEBUG - Log file: c:\Dev\Starship Battles\combat_lab.log
+2026-01-19 22:27:27 - CombatLab - DEBUG - Console level: INFO
+2026-01-19 22:27:27 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Instantiating scenario class for headless run
+2026-01-19 22:27:27 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario instantiated: Test Scenario
+2026-01-19 22:27:27 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Loading test data for scenario
+2026-01-19 22:27:27 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test data loaded successfully
+2026-01-19 22:27:27 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Clearing battle engine
+2026-01-19 22:27:27 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Calling scenario.setup()
+2026-01-19 22:27:27 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Scenario setup complete
+2026-01-19 22:27:27 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Starting headless simulation loop (max_ticks=100)
+2026-01-19 22:27:27 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Simulation complete: 100 ticks in 0.00s (99180 ticks/sec)
+2026-01-19 22:27:27 - CombatLab.test_framework.services.test_execution_service - DEBUG -  Test PASSED
+>>>>>>> 4dfa2c6a279838a527acf2235722ee6b8e35f612

@@ -17,6 +17,7 @@ def _get_builder_events():
     return _BuilderEvents
 import json
 from ui.builder.modifier_logic import ModifierLogic
+from game.simulation.components.modifier_introspection import ModifierIntrospection
 
 class ComponentDetailPanel:
     def __init__(self, manager, rect, image_base_path, event_bus=None):
@@ -141,13 +142,45 @@ class ComponentDetailPanel:
         # --- Dynamic Ability Stats (The Refactor) ---
         # Instead of manually checking attributes, we ask the component.
         # This covers: Weapons, Engines, Shields, Resources, Hangars
-        
+
         if hasattr(comp, 'get_ui_rows'):
             for row in comp.get_ui_rows():
                 label = row.get('label', 'Unknown')
                 val = row.get('value', '')
                 color = row.get('color_hint', '#C8C8C8')
                 add_line(f"{label}: {val}", color)
+
+        # Show detailed ability stats with base vs current (if modifiers are applied)
+        if comp.modifiers and hasattr(comp, 'ability_instances'):
+            has_modified_stats = False
+            modified_lines = []
+
+            for ability in comp.ability_instances:
+                stats_display = ModifierIntrospection.generate_ability_stats_display(ability)
+                # Only show stats that have been modified
+                modified_stats = [s for s in stats_display if s.get('modified', False)]
+                if modified_stats:
+                    has_modified_stats = True
+                    ability_name = ability.__class__.__name__.replace('Ability', '')
+                    modified_lines.append(f"<font color='#C8C8FF'>{ability_name}:</font>")
+                    for stat in modified_stats:
+                        change = stat.get('change_percent', 0)
+                        # Color: green for positive, red for negative
+                        if change > 0:
+                            change_color = '#96FF96'  # Green
+                            sign = '+'
+                        else:
+                            change_color = '#FF9696'  # Red
+                            sign = ''
+                        modified_lines.append(
+                            f"  {stat['label']}: {stat['current']:.1f} "
+                            f"<font color='#808080'>(base: {stat['base']:.1f})</font> "
+                            f"<font color='{change_color}'>{sign}{change:.0f}%</font>"
+                        )
+
+            if has_modified_stats:
+                lines.append("<br>Modified Stats:")
+                lines.extend(modified_lines)
 
         # Abilities (Unregistered / Custom Data / Fallback)
         if comp.abilities:
@@ -185,20 +218,57 @@ class ComponentDetailPanel:
                 add_line(f"• {label}: {display_val}", '#C8C8C8')
 
                     
-        # Modifiers
+        # Modifiers with effect details
         if comp.modifiers:
             lines.append("<br>Modifiers:")
+
+            # Get the full modifier summary for total stats
+            mod_summary = ModifierIntrospection.get_component_modifier_summary(comp)
+
             for m in comp.modifiers:
                 is_mandatory = ModifierLogic.is_modifier_mandatory(m.definition.id, comp)
-                
+
                 name_str = m.definition.name
                 color = '#96FF96' # Green for optional
-                
+
                 if is_mandatory:
                     name_str = f"{name_str} [A]" # Auto
                     color = '#FFD700' # Gold
-                    
+
                 add_line(f"• {name_str}: {m.value:.2f}", color)
+
+                # Show effect details for this modifier
+                for applied_mod in mod_summary['applied_modifiers']:
+                    if applied_mod['id'] == m.definition.id:
+                        for effect_desc in applied_mod['effects'][:2]:  # Show max 2 effects
+                            add_line(f"    {effect_desc}", '#A0A0A0')
+                        if len(applied_mod['effects']) > 2:
+                            add_line(f"    ...", '#A0A0A0')
+                        break
+
+            # Show total stat impact summary
+            total_stats = mod_summary.get('total_stats', {})
+            impact_parts = []
+            for stat_key, stat_val in total_stats.items():
+                if stat_key == 'properties':
+                    continue
+                # Only show stats that differ from default (1.0 for mult, 0.0 for add)
+                is_mult = '_mult' in stat_key
+                default = 1.0 if is_mult else 0.0
+                if abs(stat_val - default) > 0.001:
+                    short_name = stat_key.replace('_mult', '').replace('_add', '+')
+                    if is_mult:
+                        impact_parts.append(f"{short_name}: x{stat_val:.2f}")
+                    else:
+                        sign = '+' if stat_val >= 0 else ''
+                        impact_parts.append(f"{short_name}: {sign}{stat_val:.1f}")
+
+            if impact_parts:
+                lines.append("<br>Total Impact:")
+                # Display in rows of up to 3 effects
+                for i in range(0, len(impact_parts), 3):
+                    row = ", ".join(impact_parts[i:i+3])
+                    add_line(f"  {row}", '#88CCFF')
         
         full_html = "<br>".join(lines)
         if full_html != self.last_html:

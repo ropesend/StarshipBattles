@@ -16,6 +16,9 @@ class Empire:
         self.designed_ships = []  # List[DesignMetadata] - cached design list
         self.built_ship_designs = set()  # Set of design_ids that were ever built
 
+        # Fleet ID generator
+        self._next_fleet_id = 10000
+
     def add_colony(self, planet):
         if planet not in self.colonies:
             self.colonies.append(planet)
@@ -34,6 +37,12 @@ class Empire:
         if fleet in self.fleets:
             self.fleets.remove(fleet)
 
+    def get_next_fleet_id(self) -> int:
+        """Generate unique sequential fleet ID."""
+        fleet_id = self._next_fleet_id
+        self._next_fleet_id += 1
+        return fleet_id
+
     def to_dict(self) -> dict:
         """
         Serialize Empire to dict.
@@ -49,7 +58,8 @@ class Empire:
             'empire_theme_id': self.empire_theme_id,
             'colony_ids': [p.id for p in self.colonies],  # Store IDs only
             'fleets': [f.to_dict() for f in self.fleets],
-            'built_ship_designs': list(self.built_ship_designs)
+            'built_ship_designs': list(self.built_ship_designs),
+            '_next_fleet_id': self._next_fleet_id
         }
 
     @classmethod
@@ -76,6 +86,9 @@ class Empire:
 
         # Restore built_ship_designs set
         empire.built_ship_designs = set(data.get('built_ship_designs', []))
+
+        # Restore fleet ID counter
+        empire._next_fleet_id = data.get('_next_fleet_id', 10000)
 
         # Restore fleets
         empire.fleets = [Fleet.from_dict(f) for f in data.get('fleets', [])]

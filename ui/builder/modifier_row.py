@@ -1,7 +1,9 @@
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIButton, UITextEntryLine, UIHorizontalSlider, UIPanel
+from pygame_gui.elements import UIButton, UITextEntryLine, UIHorizontalSlider, UIPanel, UILabel
 from ui.builder.modifier_logic import ModifierLogic
+from game.simulation.components.modifier_introspection import ModifierIntrospection
+from game.simulation.components.modifier_effects import ModifierEffectEvaluator
 
 class ModifierControlRow:
     """
@@ -20,19 +22,79 @@ class ModifierControlRow:
         self.buttons = {} # Map button -> data
         self.slider = None
         self.entry = None
-        
+        self.effect_preview_label = None  # Label showing live effect values
+
         self.current_value = 0.0
         self.is_active = False
         self.component_context = None # Set during update
-        
-        self.height = 32 # Default height
-        
-        # We don't build layout in __init__ because we might be pooled? 
-        # Actually standard practice is build in init for UI widget. 
+
+        self.height = 52  # Increased height for effect preview row
+
+        # We don't build layout in __init__ because we might be pooled?
+        # Actually standard practice is build in init for UI widget.
         # For pooling, we might just hide/show or update data.
         # But to keep it simple first, let's build.
-        # Wait, if we use container, we need to know Y position. 
+        # Wait, if we use container, we need to know Y position.
         # So we likely need a `layout(y)` method.
+
+    def _generate_tooltip(self) -> str:
+        """Generate tooltip using ModifierIntrospection for detailed effect information."""
+        try:
+            # Convert mod_def to dict format for introspection
+            mod_dict = {
+                'id': self.mod_def.id,
+                'name': self.mod_def.name,
+                'description': self.mod_def.description,
+                'effects': self.mod_def.effects if hasattr(self.mod_def, 'effects') else [],
+            }
+            return ModifierIntrospection.generate_modifier_tooltip(
+                mod_def=mod_dict,
+                param_value=self.current_value if self.current_value > 0 else self.mod_def.default_val,
+                component=self.component_context
+            )
+        except Exception:
+            # Fallback to basic description if introspection fails
+            return self.mod_def.description
+
+    def _generate_effect_preview(self) -> str:
+        """Generate a short effect preview string showing current stat values."""
+        try:
+            # Get effects from modifier definition
+            effects = self.mod_def.effects if hasattr(self.mod_def, 'effects') else []
+            if not effects:
+                return ""
+
+            # Use current value or default
+            param_value = self.current_value if self.current_value > 0 else self.mod_def.default_val
+
+            # Convert to dict for evaluator
+            mod_dict = {
+                'id': self.mod_def.id,
+                'name': self.mod_def.name,
+                'effects': effects,
+            }
+
+            # Evaluate effects
+            evaluated = ModifierEffectEvaluator.evaluate_modifier(mod_dict, param_value)
+
+            # Build preview string (max 3 effects to keep it concise)
+            preview_parts = []
+            for effect in evaluated[:3]:
+                stat = effect.stat_key.replace('_mult', '').replace('_add', '+')
+                if effect.operation == 'multiply':
+                    preview_parts.append(f"{stat}: x{effect.value:.2f}")
+                elif effect.operation == 'add':
+                    sign = '+' if effect.value >= 0 else ''
+                    preview_parts.append(f"{stat}: {sign}{effect.value:.1f}")
+                elif effect.operation == 'set':
+                    preview_parts.append(f"{stat}: ={effect.value:.0f}")
+
+            if len(evaluated) > 3:
+                preview_parts.append("...")
+
+            return "  ".join(preview_parts)
+        except Exception:
+            return ""
 
     def build_ui(self, y):
         """Constructs the UI elements at the given y position."""
@@ -48,7 +110,7 @@ class ModifierControlRow:
             manager=self.manager,
             container=self.container,
             object_id=f'#mod_{safe_mod_id}',
-            tool_tip_text=self.mod_def.description
+            tool_tip_text=self._generate_tooltip()
         )
         self.ui_elements.append(self.toggle_btn)
         
@@ -116,9 +178,20 @@ class ModifierControlRow:
         if hasattr(self.slider, 'enable_arrow_buttons'):
             self.slider.enable_arrow_buttons = False
             self.slider.rebuild()
-            
+
         self.ui_elements.append(self.slider)
         current_x += available_slider_width + 5
+
+        # Effect Preview Label (second row below controls)
+        preview_y = y + 28
+        self.effect_preview_label = UILabel(
+            relative_rect=pygame.Rect(start_x, preview_y, self.width - start_x - 20, 20),
+            text=self._generate_effect_preview(),
+            manager=self.manager,
+            container=self.container,
+            object_id='#effect_preview'
+        )
+        self.ui_elements.append(self.effect_preview_label)
 
     def _clear_ui(self):
         for el in self.ui_elements:
@@ -127,6 +200,7 @@ class ModifierControlRow:
         self.buttons = {}
         self.slider = None
         self.entry = None
+        self.effect_preview_label = None
 
     def update(self, component, template_modifiers, is_readonly=False):
         """Updates the row state based on the current component or template."""
@@ -156,17 +230,20 @@ class ModifierControlRow:
 
         self.is_active = is_active
         self.current_value = val
-        
+
         # 2. Update UI Text/Visuals
         check_char = 'x' if is_active else ' '
-        
+
         # Readonly check
         if self.mod_def.readonly or (component and ModifierLogic.is_modifier_mandatory(self.mod_id, component)):
              # Even if mandatory, we show [x] or [AUTO]?
              # Let's keep [x] but maybe disable toggle
              pass
-             
+
         self.toggle_btn.set_text(f"[{check_char}] {self.mod_def.name}")
+
+        # Update tooltip with current value effects
+        self.toggle_btn.set_tooltip(self._generate_tooltip())
         
         # Enable/Disable Controls
         if self.is_active:
@@ -203,6 +280,11 @@ class ModifierControlRow:
                      btn.disable()
         else:
              self.toggle_btn.enable()
+
+        # Update effect preview label with current values
+        if self.effect_preview_label:
+            preview_text = self._generate_effect_preview() if self.is_active else ""
+            self.effect_preview_label.set_text(preview_text)
 
     def handle_event(self, event):
         """Handle internal events. Returns True if a change occurred."""

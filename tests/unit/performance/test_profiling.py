@@ -117,11 +117,12 @@ class TestProfiling(unittest.TestCase):
     def test_context_manager(self):
         PROFILER.start()
         with profile_block("block_action"):
-            time.sleep(0.01)
-        
+            time.sleep(0.02)  # 20ms sleep for more reliable timing
+
         self.assertEqual(len(PROFILER.records), 1)
         self.assertEqual(PROFILER.records[0]['name'], "block_action")
-        self.assertGreater(PROFILER.records[0]['duration_ms'], 9.0)
+        # Allow for system timer imprecision - 20ms sleep should be > 15ms
+        self.assertGreater(PROFILER.records[0]['duration_ms'], 15.0)
 
     def test_decorator(self):
         PROFILER.start()

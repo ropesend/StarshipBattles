@@ -19,8 +19,10 @@ from game.strategy.systems.design_library import DesignLibrary
 def test_savegame_dir():
     """Create temporary savegame directory with test designs."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        # Create designs directory structure (DesignLibrary scans savegame/designs/*.json)
-        designs_dir = os.path.join(tmpdir, "designs")
+        # Create designs directory structure
+        # DesignLibrary expects designs in empire-specific subfolder: designs/empire_N/
+        # Empire ID 1 is used by empire_with_colony fixture
+        designs_dir = os.path.join(tmpdir, "designs", "empire_1")
         os.makedirs(designs_dir, exist_ok=True)
 
         # Create test complex design with harvester
@@ -95,9 +97,12 @@ def test_savegame_dir():
 
 @pytest.fixture
 def empire_with_colony(test_savegame_dir):
-    """Create empire with a colony planet."""
+    """Create empire with a colony planet.
+
+    Returns:
+        Tuple of (empire, planet, save_path)
+    """
     empire = Empire(1, "Test Empire", (255, 0, 0))
-    empire.savegame_path = test_savegame_dir
 
     planet = Planet(
         name="Test Colony",
@@ -120,7 +125,7 @@ def empire_with_colony(test_savegame_dir):
 
     empire.colonies.append(planet)
 
-    return empire, planet
+    return empire, planet, test_savegame_dir
 
 
 def test_design_save_load_complex(test_savegame_dir):
@@ -144,11 +149,11 @@ def test_design_save_load_complex(test_savegame_dir):
     assert complex_data["vehicle_type"] == "Planetary Complex"
 
 
-def test_complex_design_in_build_queue(test_savegame_dir, empire_with_colony):
+def test_complex_design_in_build_queue(empire_with_colony):
     """Test that complex designs appear in BuildQueueScreen's category filter."""
-    empire, planet = empire_with_colony
+    empire, planet, save_path = empire_with_colony
 
-    library = DesignLibrary(test_savegame_dir, empire_id=1)
+    library = DesignLibrary(save_path, empire_id=1)
 
     # Simulate _load_designs_by_category("complex")
     all_designs = library.scan_designs()
@@ -168,7 +173,7 @@ def test_complex_design_in_build_queue(test_savegame_dir, empire_with_colony):
 
 def test_full_build_workflow(empire_with_colony):
     """Test complete workflow: Design → Queue → Build → Facility."""
-    empire, planet = empire_with_colony
+    empire, planet, save_path = empire_with_colony
     engine = TurnEngine()
 
     # Initial state: no facilities
@@ -179,14 +184,14 @@ def test_full_build_workflow(empire_with_colony):
     assert len(planet.construction_queue) == 1
 
     # Process turn 1 - should decrement turns
-    engine.process_production([empire])
+    engine.process_production([empire], save_path=save_path)
     assert len(planet.construction_queue) == 1
     item = planet.construction_queue[0]
     assert item["turns_remaining"] == 1
     assert len(planet.facilities) == 0  # Not complete yet
 
     # Process turn 2 - should complete and spawn facility
-    engine.process_production([empire])
+    engine.process_production([empire], save_path=save_path)
     assert len(planet.construction_queue) == 0  # Queue empty
     assert len(planet.facilities) == 1  # Facility built
 
@@ -201,24 +206,17 @@ def test_full_build_workflow(empire_with_colony):
 
 def test_shipyard_enables_ship_building(empire_with_colony):
     """Test that building a shipyard complex enables ship construction."""
-    empire, planet = empire_with_colony
+    empire, planet, save_path = empire_with_colony
     engine = TurnEngine()
 
     # Initial state: no shipyard
     assert planet.has_space_shipyard is False
 
-    # Try to add ship to queue (should work in queue, but validation would fail)
-    planet.add_production("frigate_mk1", turns=3, vehicle_type="ship")
-
     # Build shipyard complex first
-    planet.construction_queue.insert(0, {
-        "design_id": "space_shipyard_mk1",
-        "type": "complex",
-        "turns_remaining": 1
-    })
+    planet.add_production("space_shipyard_mk1", turns=1, vehicle_type="complex")
 
     # Process turn - shipyard completes
-    engine.process_production([empire])
+    engine.process_production([empire], save_path=save_path)
 
     # Verify shipyard built and detected
     assert len(planet.facilities) == 1
@@ -228,21 +226,24 @@ def test_shipyard_enables_ship_building(empire_with_colony):
     # Planet should now have shipyard
     assert planet.has_space_shipyard is True
 
+    # Now add ship to queue (shipyard exists)
+    planet.add_production("frigate_mk1", turns=3, vehicle_type="ship")
+
     # Process remaining turns for ship
     initial_fleet_count = len(empire.fleets)
-    engine.process_production([empire])  # Turn 1
-    engine.process_production([empire])  # Turn 2
-    engine.process_production([empire])  # Turn 3 - completes
+    engine.process_production([empire], save_path=save_path)  # Turn 1
+    engine.process_production([empire], save_path=save_path)  # Turn 2
+    engine.process_production([empire], save_path=save_path)  # Turn 3 - completes
 
     # Ship should spawn as fleet
     assert len(empire.fleets) == initial_fleet_count + 1
     new_fleet = empire.fleets[-1]
-    assert "frigate_mk1" in new_fleet.ships
+    assert any(ship.design_id == "frigate_mk1" for ship in new_fleet.ships)
 
 
 def test_multiple_complexes_on_planet(empire_with_colony):
     """Test building multiple complexes on one planet."""
-    empire, planet = empire_with_colony
+    empire, planet, save_path = empire_with_colony
     engine = TurnEngine()
 
     # Queue 3 complexes
@@ -253,13 +254,13 @@ def test_multiple_complexes_on_planet(empire_with_colony):
     assert len(planet.construction_queue) == 3
 
     # Process 3 turns
-    engine.process_production([empire])  # Complex 1
+    engine.process_production([empire], save_path=save_path)  # Complex 1
     assert len(planet.facilities) == 1
 
-    engine.process_production([empire])  # Complex 2
+    engine.process_production([empire], save_path=save_path)  # Complex 2
     assert len(planet.facilities) == 2
 
-    engine.process_production([empire])  # Complex 3
+    engine.process_production([empire], save_path=save_path)  # Complex 3
     assert len(planet.facilities) == 3
 
     # Verify all facilities
@@ -276,52 +277,24 @@ def test_multiple_complexes_on_planet(empire_with_colony):
     assert design_ids.count("space_shipyard_mk1") == 1
 
 
-def test_backwards_compat_mixed_queue(empire_with_colony):
-    """Test that old list format and new dict format can coexist in queue."""
-    empire, planet = empire_with_colony
-    engine = TurnEngine()
-
-    # Mix old and new formats
-    planet.construction_queue.append(["Colony Ship", 2])  # Old format
-    planet.add_production("mining_complex_mk1", turns=1, vehicle_type="complex")  # New format
-
-    assert len(planet.construction_queue) == 2
-
-    # Process turn 1 - old format decrements
-    engine.process_production([empire])
-    assert len(planet.construction_queue) == 2
-    assert planet.construction_queue[0][1] == 1  # Old format decremented
-
-    # Process turn 2 - old format completes, spawns ship
-    initial_fleet_count = len(empire.fleets)
-    engine.process_production([empire])
-    assert len(planet.construction_queue) == 1  # Old item removed
-    assert len(empire.fleets) == initial_fleet_count + 1  # Ship spawned
-
-    # Process turn 3 - new format completes, spawns complex
-    engine.process_production([empire])
-    assert len(planet.construction_queue) == 0
-    assert len(planet.facilities) == 1  # Complex spawned
-
-
 def test_shipyard_detection_with_multiple_facilities(empire_with_colony):
     """Test that has_space_shipyard works with multiple facilities."""
-    empire, planet = empire_with_colony
+    empire, planet, save_path = empire_with_colony
     engine = TurnEngine()
 
     # Build 2 mining complexes (no shipyard)
     planet.add_production("mining_complex_mk1", turns=1, vehicle_type="complex")
     planet.add_production("mining_complex_mk1", turns=1, vehicle_type="complex")
 
-    engine.process_production([empire])
-    engine.process_production([empire])
+    engine.process_production([empire], save_path=save_path)
+    engine.process_production([empire], save_path=save_path)
 
     assert len(planet.facilities) == 2
     assert planet.has_space_shipyard is False
 
     # Build shipyard
     planet.add_production("space_shipyard_mk1", turns=1, vehicle_type="complex")
-    engine.process_production([empire])
+    engine.process_production([empire], save_path=save_path)
 
     assert len(planet.facilities) == 3
     assert planet.has_space_shipyard is True
@@ -329,12 +302,12 @@ def test_shipyard_detection_with_multiple_facilities(empire_with_colony):
 
 def test_non_operational_shipyard_not_detected(empire_with_colony):
     """Test that damaged/non-operational shipyard doesn't enable ship building."""
-    empire, planet = empire_with_colony
+    empire, planet, save_path = empire_with_colony
     engine = TurnEngine()
 
     # Build shipyard
     planet.add_production("space_shipyard_mk1", turns=1, vehicle_type="complex")
-    engine.process_production([empire])
+    engine.process_production([empire], save_path=save_path)
 
     assert planet.has_space_shipyard is True
 

@@ -36,7 +36,11 @@ class TestBuilderUISync(unittest.TestCase):
         strat_mgr = StrategyManager.instance()
         strat_mgr.strategies = cache.get_strategies()
         strat_mgr._loaded = True
-        
+
+        # Re-initialize pygame - required because other tests may have called pygame.quit()
+        # which destroys the session-scoped pygame state from root conftest.
+        # pygame.init() is idempotent, so safe to call even if already initialized.
+        pygame.init()
         pygame.display.set_mode((800, 600))  # Dummy mode
         self.manager = pygame_gui.UIManager((800, 600))
         
@@ -60,6 +64,12 @@ class TestBuilderUISync(unittest.TestCase):
     def tearDown(self):
         # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
         patch.stopall()
+
+        # Clean up UIManager to prevent ResourceLoader state pollution in parallel execution.
+        # This is necessary because UIManager's internal ResourceLoader caches fonts globally,
+        # and without cleanup, subsequent tests on the same worker may fail to load fonts.
+        if hasattr(self, 'manager') and self.manager:
+            self.manager.clear_and_reset()
 
         # NOTE: Do NOT call pygame.quit() here - it destroys the session-scoped
         # pygame initialization from root conftest's enforce_headless fixture.

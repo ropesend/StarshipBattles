@@ -4,10 +4,13 @@ Harvester and Production abilities for planetary complexes.
 
 from typing import Dict, Any, List
 from .base import Ability
+from .stat_keys import AbilityStatBinding
 
 
 class ResourceHarvesterAbility(Ability):
     """Enables resource harvesting on planets."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
@@ -41,6 +44,8 @@ class ResourceHarvesterAbility(Ability):
 
 class SpaceShipyardAbility(Ability):
     """Enables ship construction at colonies."""
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)

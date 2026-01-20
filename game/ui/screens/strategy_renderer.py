@@ -345,26 +345,46 @@ class StrategyRenderer:
                 planets.sort(key=lambda x: x.mass, reverse=True)
                 largest = planets[0]
 
-                base_r = hex_px_radius * 0.25
+                # Rev 4: Largest planet draw radius is 50% of hex_px_radius
+                largest_draw_r = hex_px_radius * 0.5
+                largest_diameter = largest_draw_r * 2
+                # Offset left by 20% of the largest planet's diameter (was 10%)
+                group_offset_x = -largest_diameter * 0.20
 
                 draw_order = planets[1:] + [planets[0]]
+
+                # Rev 4: Define angles for smaller planets based on count
+                # Polar coordinates centered on largest planet
+                smaller_count = len(planets) - 1
+                if smaller_count == 1:
+                    smaller_angles = [0]  # Right of largest
+                elif smaller_count == 2:
+                    smaller_angles = [30, -30]  # 30° above and below horizontal
+                elif smaller_count == 3:
+                    smaller_angles = [15, 0, -45]  # 15° up, horizontal, 45° down
+                else:
+                    # More planets: spread them from 45° to -60°
+                    smaller_angles = [45 - i * (105 / max(1, smaller_count - 1)) for i in range(smaller_count)]
 
                 for i, p in enumerate(planets):
                     rel_scale = p.radius / largest.radius
                     if rel_scale < 0.4:
                         rel_scale = 0.4
 
+                    base_r = hex_px_radius * 0.25
                     draw_r = max(2, int(base_r * rel_scale))
 
                     if p == largest:
-                        final_offset = pygame.math.Vector2(-hex_px_radius * 0.6, 0)
-                        primary_draw_r = max(2, int((hex_px_radius * 0.5) * rel_scale))
+                        final_offset = pygame.math.Vector2(group_offset_x, 0)
+                        primary_draw_r = max(2, int(largest_draw_r * rel_scale))
                         draw_r = primary_draw_r
                     else:
                         idx = planets.index(p) - 1
-                        angle = idx * (180 / max(1, len(planets) - 1)) - 90
-                        dist = hex_px_radius * 0.5
-                        final_offset = pygame.math.Vector2(dist, 0).rotate(angle)
+                        angle = smaller_angles[idx] if idx < len(smaller_angles) else 0
+                        # Rev 4: Distance = 1.5x radius of largest planet (center to center)
+                        dist = largest_draw_r * 1.5
+                        # Offset from the center of the largest planet (not from hex center)
+                        final_offset = pygame.math.Vector2(group_offset_x + dist, 0).rotate(-angle)
 
                     current_offset = final_offset * expansion_t
                     p_screen = hex_center_screen + current_offset

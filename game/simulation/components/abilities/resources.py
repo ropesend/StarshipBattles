@@ -1,7 +1,8 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from game.core.config import PhysicsConfig
 from .base import Ability
+from .stat_keys import StatKey, AbilityStatBinding
 
 
 class ResourceConsumption(Ability):
@@ -9,10 +10,16 @@ class ResourceConsumption(Ability):
     Ability to consume resources.
     Data: { "resource": "fuel", "amount": 10, "trigger": "constant"|"activation" }
     """
+
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(StatKey.CONSUMPTION_MULT, 'amount', 'multiply', '_base_amount'),
+    ]
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         self.resource_name = data.get('resource', '')
         self.amount = data.get('amount', 0.0)
+        self._base_amount = self.amount
         self.trigger = data.get('trigger', 'constant')  # 'constant' or 'activation'
 
     def sync_data(self, data: Any):
@@ -20,10 +27,15 @@ class ResourceConsumption(Ability):
         if isinstance(data, dict):
             self.resource_name = data.get('resource', self.resource_name)
             self.amount = data.get('amount', 0.0)
+            self._base_amount = self.amount
             self.trigger = data.get('trigger', 'constant')
         elif isinstance(data, (int, float)):
             self.amount = float(data)
+            self._base_amount = self.amount
             self.trigger = 'constant'  # Default for shortcut
+
+    def recalculate(self):
+        self.amount = self._base_amount * self.get_effective_stat('consumption_mult', 1.0)
 
     def update(self) -> bool:
         if self.trigger == 'constant':
@@ -83,18 +95,29 @@ class ResourceStorage(Ability):
     Ability to store resources.
     Data: { "resource": "fuel", "amount": 100 }
     """
+
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(StatKey.CAPACITY_MULT, 'max_amount', 'multiply', '_base_max_amount'),
+    ]
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         self.resource_type = data.get('resource', '')
         self.max_amount = data.get('amount', 0.0)
+        self._base_max_amount = self.max_amount
 
     def sync_data(self, data: Any):
         super().sync_data(data)
         if isinstance(data, dict):
             self.resource_type = data.get('resource', self.resource_type)
             self.max_amount = data.get('amount', 0.0)
+            self._base_max_amount = self.max_amount
         elif isinstance(data, (int, float)):
             self.max_amount = float(data)
+            self._base_max_amount = self.max_amount
+
+    def recalculate(self):
+        self.max_amount = self._base_max_amount * self.get_effective_stat('capacity_mult', 1.0)
 
     def get_ui_rows(self):
         color = '#64FFFF'  # Cyan default for caps
@@ -112,18 +135,29 @@ class ResourceGeneration(Ability):
     Ability to generate resources.
     Data: { "resource": "energy", "amount": 10 }
     """
+
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(StatKey.ENERGY_GEN_MULT, 'rate', 'multiply', '_base_rate'),
+    ]
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         self.resource_type = data.get('resource', '')
         self.rate = data.get('amount', 0.0)
+        self._base_rate = self.rate
 
     def sync_data(self, data: Any):
         super().sync_data(data)
         if isinstance(data, dict):
             self.resource_type = data.get('resource', self.resource_type)
             self.rate = data.get('amount', 0.0)
+            self._base_rate = self.rate
         elif isinstance(data, (int, float)):
             self.rate = float(data)
+            self._base_rate = self.rate
+
+    def recalculate(self):
+        self.rate = self._base_rate * self.get_effective_stat('energy_gen_mult', 1.0)
 
     def get_ui_rows(self):
         color = '#FFFFFF'

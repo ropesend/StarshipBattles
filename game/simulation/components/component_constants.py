@@ -27,22 +27,43 @@ class LayerType(Enum):
 
 
 class Modifier:
-    """Definition of a modifier that can be applied to components."""
+    """
+    Definition of a modifier that can be applied to components.
+
+    Uses V2 format: effects is a list of effect objects with 'stat' and 'formula' fields.
+    """
     def __init__(self, data):
         self.id = data['id']
-        self.name = data['name']
-        self.type_str = data['type']  # 'boolean' or 'linear'
+        self.name = data.get('name', data['id'])
         self.description = data.get('description', '')
-        self.effects = data.get('effects', {})
         self.restrictions = data.get('restrictions', {})
-        self.param_name = data.get('param_name', 'value')
-        self.min_val = data.get('min_val', 0)
-        self.max_val = data.get('max_val', 100)
-        self.default_val = data.get('default_val', self.min_val)
         self.readonly = data.get('readonly', False)
+
+        # V2 format: effects is a list, param is a nested object
+        self.effects = data.get('effects', [])
+        param = data.get('param', {})
+        self.min_val = param.get('min', 0)
+        self.max_val = param.get('max', 100)
+        self.default_val = param.get('default', self.min_val)
 
     def create_modifier(self, value=None):
         return ApplicationModifier(self, value)
+
+    def evaluate_effects(self, param_value):
+        """
+        Evaluate all effects with the given parameter value.
+
+        Args:
+            param_value: The parameter value to evaluate with
+
+        Returns:
+            List[ModifierEffect] from formula evaluation
+        """
+        from .modifier_effects import ModifierEffectEvaluator
+        return ModifierEffectEvaluator.evaluate_modifier(
+            {'id': self.id, 'name': self.name, 'effects': self.effects},
+            param_value
+        )
 
 
 class ApplicationModifier:

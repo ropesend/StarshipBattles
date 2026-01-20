@@ -33,7 +33,9 @@
       "Bash(while read file)",
       "Bash(do if ! grep -q \"log_\\\\|logger\\\\|logging\\\\.\" \"$file\")",
       "Bash(then echo \"$file\")",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(where:*)",
+      "Bash(move:*)"
     ]
   }
 }
