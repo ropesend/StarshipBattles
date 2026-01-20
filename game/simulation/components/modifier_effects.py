@@ -13,6 +13,9 @@ These classes enable:
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional
 import math
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -192,8 +195,12 @@ class ModifierEffectEvaluator:
 
                 try:
                     value = cls.evaluate_formula(formula, context)
-                except ValueError:
-                    # Fallback to param value if formula fails
+                except ValueError as e:
+                    # Log error and fallback to param value
+                    logger.error(
+                        f"Formula evaluation failed for modifier '{modifier_id}': "
+                        f"formula='{formula}', param={param_value}, error={e}"
+                    )
                     value = param_value
 
                 effects.append(ModifierEffect(
@@ -210,37 +217,76 @@ class ModifierEffectEvaluator:
         return effects
 
     @classmethod
-    def get_modifier_preview(
-        cls,
-        mod_def: Dict[str, Any],
-        param_value: float
-    ) -> Dict[str, Any]:
+    def validate_formula(cls, formula: str) -> List[str]:
         """
-        Generate a preview of what a modifier will do at a given param value.
+        Validate a formula string without evaluating it.
 
-        Used for UI tooltips when hovering over a modifier slider.
+        Checks for:
+        - Syntax errors
+        - Undefined variables (only 'param' and math functions are allowed)
+
+        Args:
+            formula: Formula string to validate
 
         Returns:
-            {
-                'modifier_id': 'hardened_mount',
-                'modifier_name': 'Hardened',
-                'param_value': 2.0,
-                'effects': [
-                    {'stat': 'mass_mult', 'value': 2.0, 'description': 'mass_mult x2.00'},
-                    {'stat': 'hp_mult', 'value': 4.0, 'description': 'hp_mult x4.00'},
-                ],
-                'affected_stats': ['mass_mult', 'hp_mult'],
-            }
+            List of error messages (empty if valid)
         """
-        effects = cls.evaluate_modifier(mod_def, param_value)
+        import ast
 
-        return {
-            'modifier_id': mod_def.get('id', 'unknown'),
-            'modifier_name': mod_def.get('name', 'Unknown'),
-            'param_value': param_value,
-            'effects': [e.to_dict() for e in effects],
-            'affected_stats': list(set(e.stat_key for e in effects)),
-            'targeted_abilities': list(set(
-                e.target_ability for e in effects if e.target_ability
-            )),
+        errors = []
+
+        # Replace ^ with ** for Python
+        py_formula = formula.replace('^', '**')
+
+        # Allowed names in formulas
+        allowed_names = {
+            'param',
+            'ln', 'log', 'log10', 'sqrt', 'abs', 'min', 'max',
+            'pi', 'e', 'True', 'False'
         }
+
+        # Parse and check for syntax errors
+        try:
+            tree = ast.parse(py_formula, mode='eval')
+        except SyntaxError as e:
+            errors.append(f"Syntax error in formula '{formula}': {e.msg}")
+            return errors
+
+        # Walk AST to find undefined names
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Name):
+                if node.id not in allowed_names:
+                    errors.append(f"Undefined variable '{node.id}' in formula '{formula}'")
+
+        return errors
+
+    @classmethod
+    def validate_modifier_definition(cls, mod_def: Dict[str, Any]) -> List[str]:
+        """
+        Validate all formulas in a modifier definition.
+
+        Args:
+            mod_def: Modifier definition dict
+
+        Returns:
+            List of error messages (empty if valid)
+        """
+        errors = []
+        modifier_id = mod_def.get('id', 'unknown')
+
+        if 'effects' not in mod_def:
+            return errors
+
+        effects = mod_def.get('effects', [])
+        if not isinstance(effects, list):
+            errors.append(f"Modifier '{modifier_id}': effects must be a list")
+            return errors
+
+        for i, effect in enumerate(effects):
+            formula = effect.get('formula', 'param')
+            formula_errors = cls.validate_formula(formula)
+            for err in formula_errors:
+                errors.append(f"Modifier '{modifier_id}' effect {i}: {err}")
+
+        return errors
+

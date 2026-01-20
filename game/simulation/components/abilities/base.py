@@ -184,7 +184,7 @@ class Ability:
             else:
                 default = None  # Return None for unknown keys (like 'arc_set')
 
-        # Phase 5: Check ability-specific stats first
+        # Check ability-specific stats first (for targeted modifier effects)
         ability_stats = getattr(self.component, 'ability_stats', {})
         class_name = self.__class__.__name__
         if class_name in ability_stats:

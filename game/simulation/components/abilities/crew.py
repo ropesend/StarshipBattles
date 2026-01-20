@@ -50,10 +50,23 @@ class LifeSupportCapacity(Ability):
 
 
 class CrewRequired(Ability):
+    """
+    Ability that specifies how much crew a component requires to operate.
+
+    Note on stat bindings:
+        This ability uses mass_mult with non-standard handling (sqrt scaling)
+        in addition to the standard crew_req_mult binding. The mass_mult dependency
+        is intentionally NOT declared in STAT_BINDINGS because:
+        1. It uses sqrt(mass_mult) rather than direct multiplication
+        2. The STAT_BINDINGS framework doesn't support custom operation functions
+        3. The crew scales with the square root of mass to reflect that
+           larger components need more crew but not linearly proportional
+
+        This is documented behavior, not a bug. See recalculate() for implementation.
+    """
 
     STAT_BINDINGS: List[AbilityStatBinding] = [
         AbilityStatBinding(StatKey.CREW_REQ_MULT, 'amount', 'multiply', '_base_amount'),
-        # Note: mass_mult is also used but with sqrt(), so we don't add it as a standard binding
     ]
 
     def __init__(self, component, data: Dict[str, Any]):

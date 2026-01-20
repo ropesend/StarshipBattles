@@ -532,6 +532,101 @@ class TestPropulsionModifierRegression:
 # REGRESSION TESTS - UTILITY MODIFIERS
 # =============================================================================
 
+class TestFacingModifierRegression:
+    """Regression tests for facing modifier."""
+
+    def test_railgun_no_facing(self, setup_registries):
+        """Baseline: Railgun with no facing modifier (default forward)."""
+        railgun = create_component('railgun')
+        railgun.recalculate_stats()
+
+        snapshot = snapshot_full_component(railgun)
+        expected = load_snapshot('railgun_facing_0')
+
+        if expected is None:
+            save_snapshot('railgun_facing_0', snapshot)
+            pytest.skip("Baseline snapshot created - re-run test")
+
+        diffs = compare_snapshots(snapshot, expected)
+        assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
+
+    @pytest.mark.parametrize("angle", [0, 45, 90, 180, 270])
+    def test_railgun_facing_angles(self, setup_registries, angle):
+        """Railgun with facing modifier at different angles."""
+        railgun = create_component('railgun')
+        if angle > 0:
+            railgun.add_modifier('facing', angle)
+        railgun.recalculate_stats()
+
+        snapshot = snapshot_full_component(railgun)
+        snapshot_name = f'railgun_facing_{angle}'
+        expected = load_snapshot(snapshot_name)
+
+        if expected is None:
+            save_snapshot(snapshot_name, snapshot)
+            pytest.skip(f"Baseline snapshot '{snapshot_name}' created - re-run test")
+
+        diffs = compare_snapshots(snapshot, expected)
+        assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
+
+    def test_laser_cannon_facing(self, setup_registries):
+        """Laser cannon with facing modifier."""
+        laser = create_component('laser_cannon')
+        laser.add_modifier('facing', 90)
+        laser.recalculate_stats()
+
+        snapshot = snapshot_full_component(laser)
+        expected = load_snapshot('laser_cannon_facing_90')
+
+        if expected is None:
+            save_snapshot('laser_cannon_facing_90', snapshot)
+            pytest.skip("Baseline snapshot created - re-run test")
+
+        diffs = compare_snapshots(snapshot, expected)
+        assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
+
+
+class TestEfficientEnginesModifierRegression:
+    """Regression tests for efficient_engines modifier."""
+
+    def test_standard_engine_efficient(self, setup_registries):
+        """Standard engine with efficient_engines modifier."""
+        engine = create_component('standard_engine')
+        engine.add_modifier('efficient_engines')
+        engine.recalculate_stats()
+
+        snapshot = snapshot_full_component(engine)
+        expected = load_snapshot('standard_engine_efficient')
+
+        if expected is None:
+            save_snapshot('standard_engine_efficient', snapshot)
+            pytest.skip("Baseline snapshot created - re-run test")
+
+        diffs = compare_snapshots(snapshot, expected)
+        assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
+
+    def test_thruster_efficient(self, setup_registries):
+        """Thruster with efficient_engines modifier (if applicable)."""
+        thruster = create_component('thruster')
+        # Check if thruster supports efficient_engines
+        try:
+            thruster.add_modifier('efficient_engines')
+            thruster.recalculate_stats()
+
+            snapshot = snapshot_full_component(thruster)
+            expected = load_snapshot('thruster_efficient')
+
+            if expected is None:
+                save_snapshot('thruster_efficient', snapshot)
+                pytest.skip("Baseline snapshot created - re-run test")
+
+            diffs = compare_snapshots(snapshot, expected)
+            assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
+        except (ValueError, KeyError):
+            # Modifier may not be supported on this component
+            pytest.skip("efficient_engines not supported on thruster")
+
+
 class TestUtilityModifierRegression:
     """Regression tests for utility modifiers (automation, efficiency)."""
 
@@ -830,6 +925,38 @@ def generate_all_snapshots():
         generator.recalculate_stats()
         save_snapshot(f'generator_efficiency_{resource_mult:.2f}', snapshot_full_component(generator))
         print(f"  Created: generator_efficiency_{resource_mult:.2f}")
+
+    # Facing modifier tests
+    for angle in [0, 45, 90, 180, 270]:
+        railgun = create_component('railgun')
+        if angle > 0:
+            railgun.add_modifier('facing', angle)
+        railgun.recalculate_stats()
+        save_snapshot(f'railgun_facing_{angle}', snapshot_full_component(railgun))
+        print(f"  Created: railgun_facing_{angle}")
+
+    laser = create_component('laser_cannon')
+    laser.add_modifier('facing', 90)
+    laser.recalculate_stats()
+    save_snapshot('laser_cannon_facing_90', snapshot_full_component(laser))
+    print("  Created: laser_cannon_facing_90")
+
+    # Efficient engines modifier tests
+    engine = create_component('standard_engine')
+    engine.add_modifier('efficient_engines')
+    engine.recalculate_stats()
+    save_snapshot('standard_engine_efficient', snapshot_full_component(engine))
+    print("  Created: standard_engine_efficient")
+
+    # Try thruster with efficient_engines if supported
+    try:
+        thruster = create_component('thruster')
+        thruster.add_modifier('efficient_engines')
+        thruster.recalculate_stats()
+        save_snapshot('thruster_efficient', snapshot_full_component(thruster))
+        print("  Created: thruster_efficient")
+    except (ValueError, KeyError):
+        print("  Skipped: thruster_efficient (modifier not supported)")
 
     print(f"\nAll snapshots saved to: {Path(__file__).parent / 'snapshots'}")
 

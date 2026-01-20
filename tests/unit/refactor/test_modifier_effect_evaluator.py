@@ -189,28 +189,6 @@ class TestModifierEffectEvaluator:
         assert effects[0].param_value == 2.0
         assert effects[0].formula_str == 'param'
 
-    def test_get_modifier_preview(self):
-        """get_modifier_preview() should return UI-friendly summary."""
-        from game.simulation.components.modifier_effects import ModifierEffectEvaluator
-
-        mod_def = {
-            'id': 'hardened_mount',
-            'name': 'Hardened',
-            'effects': [
-                {'stat': 'mass_mult', 'formula': 'param'},
-                {'stat': 'hp_mult', 'formula': 'param ^ 2'}
-            ]
-        }
-
-        preview = ModifierEffectEvaluator.get_modifier_preview(mod_def, 2.0)
-
-        assert preview['modifier_id'] == 'hardened_mount'
-        assert preview['modifier_name'] == 'Hardened'
-        assert preview['param_value'] == 2.0
-        assert 'mass_mult' in preview['affected_stats']
-        assert 'hp_mult' in preview['affected_stats']
-        assert len(preview['effects']) == 2
-
     def test_evaluate_inverse_formula(self):
         """Should evaluate '1.0 / param' correctly."""
         from game.simulation.components.modifier_effects import ModifierEffectEvaluator

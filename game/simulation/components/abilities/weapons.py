@@ -206,7 +206,7 @@ class WeaponAbility(Ability):
         # Shortest angular difference
         diff = (aim_angle - comp_facing + 180) % 360 - 180
 
-        # Phase 7: Use epsilon for boundary floating point stability
+        # Use epsilon (0.01) for boundary floating point stability
         if abs(diff) <= (self.firing_arc / 2) + 0.01:
             return True
 
@@ -327,12 +327,11 @@ class SeekerWeaponAbility(WeaponAbility):
 
     def recalculate(self):
         super().recalculate()
-        # Apply seeker-specific stats
-        stats = self.component.stats
-        self.endurance = self._base_endurance * stats.get('endurance_mult', 1.0)
-        self.projectile_damage = self._base_projectile_damage * stats.get('projectile_damage_mult', 1.0)
-        self.projectile_hp = self._base_projectile_hp * stats.get('projectile_hp_mult', 1.0)
-        self.projectile_stealth = self._base_projectile_stealth + stats.get('projectile_stealth_level', 0.0)
+        # Apply seeker-specific stats using get_effective_stat for multi-ability support
+        self.endurance = self._base_endurance * self.get_effective_stat('endurance_mult', 1.0)
+        self.projectile_damage = self._base_projectile_damage * self.get_effective_stat('projectile_damage_mult', 1.0)
+        self.projectile_hp = self._base_projectile_hp * self.get_effective_stat('projectile_hp_mult', 1.0)
+        self.projectile_stealth = self._base_projectile_stealth + self.get_effective_stat('projectile_stealth_level', 0.0)
 
     def check_firing_solution(self, ship_pos, ship_angle, target_pos) -> bool:
         """Seekers are omni-directional and ignore firing arcs."""

@@ -188,8 +188,8 @@ class ShipStatsCalculator:
                         elif res_type == 'ammo':
                             total_ammo_gen += rate
             
-            # Phase 3: Ability-Based Stats Aggregation
-            
+            # Aggregate stats from ability instances
+
             # Thrust from CombatPropulsion abilities
             for ab in comp.get_abilities('CombatPropulsion'):
                 total_thrust += ab.thrust_force
@@ -337,10 +337,7 @@ class ShipStatsCalculator:
         # Ammo Generation (SumStacking)
         ship.ammo_gen_rate = self._get_ability_total(component_pool, 'AmmoGeneration')
 
-        # 6. Aggregate Resources (Storage & Generation) - DEPRECATED / REMOVED
-        # Phase 3 already handles Ability aggregation for Ship properties and ResourceRegistry.
-        # This block was legacy/redundant and risked double-counting if active.
-        pass
+        # Resource aggregation is handled by ability instances above
 
 
         # Armor Pool Init (if starting)

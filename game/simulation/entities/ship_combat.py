@@ -1,7 +1,7 @@
 import pygame
 import math
 import random
-from game.simulation.components.component import LayerType, ComponentStatus  # Phase 7: Removed Bridge, Weapon, etc. (now use abilities)
+from game.simulation.components.component import LayerType, ComponentStatus
 from game.core.logger import log_debug, log_info
 from game.core.constants import AttackType
 

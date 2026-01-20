@@ -24,6 +24,11 @@ class SaveGameService:
     SAVE_VERSION = "2.0.0"
     DEFAULT_SAVES_FOLDER = "saves"
 
+    # Versions that can be migrated to current version
+    # The modifier system was refactored in 2.0.0, but save format is compatible
+    # since modifier IDs and values are version-agnostic (stored as {"id": "xxx", "value": N})
+    MIGRATABLE_VERSIONS = ["1.0.0", "1.1.0", "1.2.0", "1.9.0"]
+
     @staticmethod
     def save_game(game_session, save_name: Optional[str] = None) -> Tuple[bool, str, Optional[str]]:
         """
@@ -177,10 +182,14 @@ class SaveGameService:
             if missing_keys:
                 return None, f"Save file corrupted: Missing metadata fields: {', '.join(missing_keys)}"
 
-            # Check version compatibility (strict - version 2.0.0 only)
+            # Check version compatibility
             save_version = metadata.get('version')
             if not SaveGameService._is_compatible_version(save_version):
                 return None, f"Incompatible save version: {save_version} (requires {SaveGameService.SAVE_VERSION})"
+
+            # Log migration if loading older version
+            if save_version != SaveGameService.SAVE_VERSION:
+                log_info(f"SaveGameService: Migrating save from version {save_version} to {SaveGameService.SAVE_VERSION}")
 
             # Determine which turn to load
             if turn_number is None:
@@ -371,14 +380,44 @@ class SaveGameService:
     @staticmethod
     def _is_compatible_version(save_version: Optional[str]) -> bool:
         """
-        Check if save version is compatible.
+        Check if save version is compatible (current or migratable).
 
-        Only accepts version 2.0.0 (strict, no backward compatibility).
+        Accepts current version directly, or migratable older versions
+        that can be upgraded on load.
         """
         if save_version is None:
             return False
 
-        return save_version == SaveGameService.SAVE_VERSION
+        # Current version is always compatible
+        if save_version == SaveGameService.SAVE_VERSION:
+            return True
+
+        # Check if version can be migrated
+        return SaveGameService._can_migrate_version(save_version)
+
+    @staticmethod
+    def _can_migrate_version(save_version: Optional[str]) -> bool:
+        """
+        Check if a save version can be migrated to current version.
+
+        The modifier system refactor (V2) changed internal processing but not
+        the save format - modifier IDs and values remain version-agnostic.
+
+        Args:
+            save_version: The version string from the save metadata
+
+        Returns:
+            True if this version can be migrated to current
+        """
+        if save_version is None:
+            return False
+
+        # Current version doesn't need migration
+        if save_version == SaveGameService.SAVE_VERSION:
+            return True
+
+        # Check against known migratable versions
+        return save_version in SaveGameService.MIGRATABLE_VERSIONS
 
     @staticmethod
     def get_save_info(save_path: str) -> Optional[dict]:

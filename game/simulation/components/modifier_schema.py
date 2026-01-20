@@ -1,24 +1,36 @@
 """
-Modifier Schema Validation for V2 Format - Phase 2 Task 2.1
+Modifier Schema Validation for V2 Format.
 
-This module provides validation functions for the new JSON-based modifier format
-that uses formula expressions instead of Python handler functions.
+This module provides validation functions for the V2 JSON-based modifier format
+that uses formula expressions. All modifiers are now required to be in V2 format.
+
+V1 format (dict-based effects with 'special' handlers) is no longer supported
+in production code. The V1 to V2 converter has been archived to tools/archive/.
+
+Functions:
+- is_v2_format: Validates that a modifier uses the V2 array-based effects format
+- validate_*_v2: Various validation functions for V2 modifier structures
+- convert_v1_*_to_v2: Legacy conversion helpers (kept for reference only)
 """
 from typing import Dict, Any, List, Optional
 
 
 def is_v2_format(modifier: Dict[str, Any]) -> bool:
     """
-    Detect if a modifier is in V2 format.
+    Validate that a modifier uses V2 format.
 
-    V2 format has 'effects' as an array of effect objects.
-    V1 format has 'effects' as a dict with 'special' key or direct stat keys.
+    This function is used for validation purposes to ensure all loaded
+    modifiers conform to the V2 format specification. V1 format is no
+    longer supported in production.
+
+    V2 format: 'effects' is an array of effect objects with 'stat' and 'formula'
+    V1 format (deprecated): 'effects' is a dict with 'special' key or direct stat keys
 
     Args:
         modifier: The modifier definition dict
 
     Returns:
-        True if V2 format, False if V1 format
+        True if V2 format, False otherwise (V1 or invalid format)
     """
     effects = modifier.get('effects')
     if effects is None:

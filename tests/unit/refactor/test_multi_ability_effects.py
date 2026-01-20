@@ -363,28 +363,3 @@ class TestEffectDescriptionWithTarget:
         assert 'mass_mult' in desc
         assert 'x2.00' in desc
         assert '(' not in desc  # No "(on AbilityName)"
-
-
-class TestModifierPreviewWithTargets:
-    """Tests for modifier preview functionality with targeting."""
-
-    def test_preview_includes_targeted_abilities(self):
-        """Modifier preview should list targeted abilities."""
-        from game.simulation.components.modifier_effects import ModifierEffectEvaluator
-
-        mod_def = {
-            'id': 'multi_target',
-            'name': 'Multi Target',
-            'effects': [
-                {'stat': 'damage_mult', 'formula': '1.5', 'target_ability': 'WeaponAbility'},
-                {'stat': 'capacity_mult', 'formula': '1.3', 'target_ability': 'ResourceStorage'},
-                {'stat': 'mass_mult', 'formula': '1.2'}
-            ]
-        }
-
-        preview = ModifierEffectEvaluator.get_modifier_preview(mod_def, 1.0)
-
-        assert 'targeted_abilities' in preview
-        assert 'WeaponAbility' in preview['targeted_abilities']
-        assert 'ResourceStorage' in preview['targeted_abilities']
-        assert len(preview['targeted_abilities']) == 2

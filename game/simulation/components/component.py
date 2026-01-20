@@ -57,7 +57,7 @@ class Component:
         self.ship = None # Container reference
 
         self.stats = {} # Current stats dictionary (calcualted)
-        self.ability_stats = {}  # Phase 5: Ability-specific stats for targeted effects
+        self.ability_stats = {}  # Stats keyed by ability class name for targeted modifier effects
         self.modifiers = [] # list of ApplicationModifier
 
         # Ability Instances (New System)
@@ -396,7 +396,7 @@ class Component:
                 new_val = evaluate_math_formula(val[1:], context)
                 self.abilities[ability_name] = new_val
             elif isinstance(val, dict):
-                 # Phase 7: Generically evaluate formulas in any key of the ability dict
+                 # Recursively evaluate formulas in nested ability dictionaries
                  for key, sub_val in val.items():
                      if isinstance(sub_val, str) and sub_val.startswith("="):
                          new_val = evaluate_math_formula(sub_val[1:], context)
@@ -463,8 +463,7 @@ class Component:
         # Ensure cap
         self.current_hp = min(self.current_hp, self.max_hp)
 
-        # Phase 4 Unified Pipeline: All abilities recalculate via STAT_BINDINGS
-        # Abilities now handle their own stat application in recalculate()
+        # Recalculate all abilities with updated stats from modifiers
         for ab in self.ability_instances:
             ab.recalculate()
 
@@ -482,15 +481,11 @@ class Component:
         return self.__class__(self.data)
 
 
-# Phase 7 Simplified: Aliased types now use Component directly
-# Types with custom logic (Shield, Hangar, etc.) are now also aliases
-# as their logic has been unified into the Ability system.
-
-# Export types for compatibility (Phase 6 Regression Triage)
+# All component types use Component directly via the ability system.
+# Type-specific behavior is handled by ability instances (WeaponAbility, etc.)
 
 
-# Caching for performance (Phase 2 Test Stabilization)
-# Refactored to thread-safe singleton pattern (Code Review Phase 0)
+# Thread-safe singleton for component and modifier caches
 class ComponentCacheManager:
     """Thread-safe singleton manager for component and modifier caches."""
     _instance = None

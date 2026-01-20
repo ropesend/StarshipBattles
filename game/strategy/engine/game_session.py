@@ -335,11 +335,11 @@ class GameSession:
         # Initialize turn engine
         session.turn_engine = TurnEngine()
 
-        # Phase 1: Load Galaxy (creates all planets with IDs)
+        # Step 1: Load Galaxy (creates all planets with IDs)
         session.galaxy = Galaxy.from_dict(data['galaxy'])
         session.systems = list(session.galaxy.systems.values())
 
-        # Phase 2: Load Empires (resolves planet references via galaxy)
+        # Step 2: Load Empires (resolves planet references via galaxy)
         session.empires = [
             Empire.from_dict(emp_data, galaxy=session.galaxy)
             for emp_data in data.get('empires', [])
