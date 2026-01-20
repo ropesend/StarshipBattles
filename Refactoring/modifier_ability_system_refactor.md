@@ -1,27 +1,50 @@
 # Modifier-Ability System Refactor Plan
 
 > **Status**: COMPLETED
-> **Last Updated**: 2026-01-19
+> **Last Updated**: 2026-01-20
 > **Phases 0-7**: COMPLETED (Core Refactor)
 > **Phase 8**: COMPLETED (Critical Fixes)
 > **Phase 9**: COMPLETED (Major Fixes)
 > **Phase 10**: COMPLETED (UI Integration)
 > **Phase 11**: COMPLETED (Polish)
-> **Audit Report**: See `Refactoring/MODIFIER_SYSTEM_AUDIT_REPORT.md`
+> **Phase 12**: COMPLETED (Final Cleanup)
+> **Phase 13**: COMPLETED (Documentation Fixes)
+> **Phase 14**: COMPLETED (Second Audit Remediation - Critical)
+> **Phase 15**: COMPLETED (Second Audit Remediation - Minor)
+> **Audit Report**: See `Refactoring/INDEPENDENT_AUDIT_REPORT.md`
 
 ---
 
-## Audit Summary (2026-01-19)
+## Audit Summary (2026-01-20)
 
+### First Audit (2026-01-19)
 An independent code review identified gaps in the "completed" refactor:
 
 | Severity | Count | Status |
 |----------|-------|--------|
-| **CRITICAL** | 4 | Phase 8 - Must fix before production |
-| **MAJOR** | 6 | Phase 9-10 - Should fix before release |
-| **MINOR** | 4 | Phase 11 - Nice to have |
+| **CRITICAL** | 4 | Phase 8 - COMPLETED |
+| **MAJOR** | 6 | Phase 9-10 - COMPLETED |
+| **MINOR** | 4 | Phase 11 - COMPLETED |
 
-**Estimated Completion**: ~85% → 100% after Phases 8-11
+### Second Audit (2026-01-20)
+A skeptical verification audit re-examined all findings with independent agents:
+
+| Severity | Count | Status |
+|----------|-------|--------|
+| **HIGH** | 1 | Phase 14 - FIXED - Invalid operation now logs warning |
+| **MEDIUM** | 2 | Phase 14 - FIXED - Empty effects rejected, edge case tests added |
+| **MINOR** | 4 | Phase 15 - COMPLETED - Dead code decisions made, archived files cleaned |
+
+**7 initially-flagged issues were DISPROVEN** by skeptical verification:
+- Silent formula errors (actually logged - Phase 8 fixed)
+- ability_stats crash (always initialized)
+- eval() performance (evaluated once, not per-frame)
+- CrewRequired binding (documented exception)
+- get_component_modifier_summary() dead (actually used in UI)
+- V1 backup files (intentional for rollback)
+- Undefined stat_key (intentional graceful degradation)
+
+**Completion**: 100% - All phases completed
 
 ---
 
@@ -644,7 +667,7 @@ Refactor the modifier-ability system to be:
 
 1. **Error Handling Tester** - [x] Formula errors are logged with full context
 2. **Multi-Ability Tester** - [x] SeekerWeaponAbility uses get_effective_stat()
-3. **Regression Test Runner** - [x] 72 regression tests pass (was 63)
+3. **Regression Test Runner** - [x] 70 regression tests pass (was 63, then 72, reduced to 70 after efficient_engines removal)
 4. **Save Game Tester** - [x] V1 saves pass version compatibility check
 
 **Phase 8 Sign-off**: [x] All verification completed - 2026-01-19
@@ -844,7 +867,262 @@ Refactor the modifier-ability system to be:
 
 ---
 
-## Final Sign-off Checklist (100% Complete)
+## Phase 12: Final Cleanup (Audit Remediation)
+> **Status**: COMPLETED
+> **Goal**: Fix remaining issues from independent audit
+> **Priority**: HIGH - Cleanup before final release
+> **Completed**: 2026-01-19
+
+### Task 12.1: Delete Obsolete Archived Tests
+> **Severity**: MINOR
+> **Problem**: `tests/archive/test_modifier_format_converter.py` imports deleted module
+
+- [x] **12.1.1**: Deleted `tests/archive/test_modifier_format_converter.py`
+- [x] **12.1.2**: Verified no other files import from it
+
+### Task 12.2: Fix Modifier Default Values
+> **Severity**: CRITICAL (Bug)
+> **Problem**: `range_mount` and `precision_mount` defaults changed from 0 to 1, breaking expected behavior
+
+- [x] **12.2.1**: Changed `range_mount` default from 1 to 0 in `data/modifiers.json`
+  - param=0 means 2^0=1x (no modification), param=1 means 2^1=2x range
+- [x] **12.2.2**: Changed `precision_mount` default from 1 to 0 in `data/modifiers.json`
+  - param=0 means 0*0.5=+0 accuracy (no modification)
+- [x] **12.2.3**: Regression tests verified unchanged at param=0
+
+### Task 12.3: Remove efficient_engines Modifier
+> **Severity**: N/A (User requested removal)
+> **Problem**: Modifier was deprecated and requested to be deleted entirely
+
+- [x] **12.3.1**: Deleted `efficient_engines` entry from `data/modifiers.json`
+- [x] **12.3.2**: Removed efficient_engines regression tests from `test_modifier_ability_snapshots.py`
+- [x] **12.3.3**: Deleted snapshot files: `standard_engine_efficient.json`, `thruster_efficient.json`
+- [x] **12.3.4**: Updated `test_scaling_logic.py` to use `efficiency_mount` instead
+- [x] **12.3.5**: Updated `docs/architecture/resource_system_refactor.md` reference
+
+### Task 12.4: Remove Dead V1 Conversion Code
+> **Severity**: MAJOR
+> **Problem**: Dead conversion functions in production code
+
+- [x] **12.4.1**: Removed `convert_v1_param_to_v2()` function from `modifier_schema.py`
+- [x] **12.4.2**: Removed `convert_v1_restrictions_to_v2()` function from `modifier_schema.py`
+- [x] **12.4.3**: Updated module docstring to remove references to conversion helpers
+- [x] **12.4.4**: Removed unused `Optional` import
+
+### Task 12.5: Add Missing Modifier Warning on Save Load
+> **Severity**: MAJOR
+> **Problem**: Silent modifier loss when loading saves with unknown modifier IDs
+
+- [x] **12.5.1**: Updated `ship_serialization.py` to log warning when modifier ID not in registry
+- [x] **12.5.2**: Warning message: `"ShipSerializer: Modifier '{mid}' not found in registry, skipping"`
+
+### Phase 12 Verification
+> **Completed verification:**
+
+1. **Dead Code Removed** - [x] `test_modifier_format_converter.py` deleted, conversion functions removed
+2. **Modifier Defaults Fixed** - [x] `range_mount` and `precision_mount` default to 0
+3. **efficient_engines Removed** - [x] No references in production code
+4. **Missing Modifier Warning** - [x] `ship_serialization.py` logs warning
+
+**Phase 12 Sign-off**: [x] All verification completed - 2026-01-19
+
+---
+
+## Phase 13: Documentation Fixes (Audit Remediation)
+> **Status**: COMPLETED
+> **Goal**: Fix documentation drift identified in audit
+> **Priority**: MEDIUM - Ensure docs match code
+> **Completed**: 2026-01-19
+
+### Task 13.1: Fix StatKey Import Paths
+> **Severity**: MAJOR
+> **Problem**: Docs reference `modifier_schema.py` for StatKey, but it's in `abilities/stat_keys.py`
+
+- [x] **13.1.1**: Updated `docs/modifier_system.md` - added correct path to file table
+- [x] **13.1.2**: Updated `docs/adding_abilities.md` - fixed 3 StatKey import references
+- [x] **13.1.3**: Updated `docs/adding_modifiers.md` - fixed StatKey reference
+
+### Task 13.2: Fix Restriction Format in Docs
+> **Severity**: MAJOR
+> **Problem**: Docs show obsolete `allow_types`/`deny_types` format
+
+- [x] **13.2.1**: Replaced `allow_types`/`deny_types` examples with `allow_abilities`/`deny_abilities`
+- [x] **13.2.2**: Removed non-existent `mandatory_for_abilities` example
+- [x] **13.2.3**: Added explanation that restrictions use ability class names
+
+### Task 13.3: Remove efficient_engines from Docs
+- [x] **13.3.1**: Updated `docs/architecture/resource_system_refactor.md` to note removal
+
+### Task 13.4: Update Refactor Plan Document
+- [x] **13.4.1**: Added Phase 12 and 13 sections
+- [x] **13.4.2**: Updated header status to show phases 12-13 completed
+- [x] **13.4.3**: Updated audit report reference to `INDEPENDENT_AUDIT_REPORT.md`
+
+### Phase 13 Verification
+> **Completed verification:**
+
+1. **Import Paths** - [x] All docs reference `abilities/stat_keys.py` for StatKey
+2. **Restriction Format** - [x] All docs use `allow_abilities`/`deny_abilities`
+3. **efficient_engines** - [x] Noted as removed in historical docs
+
+**Phase 13 Sign-off**: [x] All verification completed - 2026-01-19
+
+---
+
+## Phase 14: Second Audit Remediation - Critical/Medium Issues
+> **Status**: COMPLETED
+> **Completed**: 2026-01-20
+> **Goal**: Fix confirmed issues from skeptical verification audit (2026-01-20)
+> **Priority**: HIGH - Must fix before production
+> **Audit Reference**: Second independent audit with skeptical verification agents
+
+### Task 14.1: Fix Invalid Operation Silent Ignore (TDD)
+> **Severity**: HIGH
+> **Files**: `game/simulation/components/modifiers.py:79-108`, `game/simulation/components/component.py:603-604`
+> **Problem**: Effects with invalid operation values (not in ['multiply', 'add_to_mult', 'add', 'set']) are silently ignored with no warning. Schema validation exists but is never called during loading.
+
+- [x] **14.1.1**: Write test `tests/unit/refactor/test_invalid_operation_handling.py`
+  - Test that invalid operation logs a warning
+  - Test that valid operations still work correctly
+  - Test that schema validation catches invalid operations at load time
+- [x] **14.1.2**: Run tests (failed as expected - no validation/logging)
+- [x] **14.1.3**: Add else clause to `_apply_effect_to_dict()` in `modifiers.py` (lines 22-42)
+  - Log warning: `logger.warning(f"Unknown operation '{operation}' for stat '{stat_key}', effect ignored")`
+- [x] **14.1.4**: Add else clause to `apply_modifier_effects()` in `modifiers.py` (lines 79-108)
+  - Log warning with same format
+- [x] **14.1.5**: Add logging import to `modifiers.py`
+  - Added `import logging` and `logger = logging.getLogger(__name__)`
+- [x] **14.1.6**: Call `validate_modifier_v2()` in `load_modifiers()` at `component.py:603`
+  - Log warning if validation fails but still load (graceful degradation)
+- [x] **14.1.7**: Run tests (all 11 tests passed)
+- [x] **14.1.8**: Verify all 70 regression tests still pass
+
+### Task 14.2: Fix Empty Effects Array Validation Bug (TDD)
+> **Severity**: MEDIUM
+> **File**: `game/simulation/components/modifier_schema.py:240-243`
+> **Problem**: A modifier with `"effects": []` (empty array) passes validation but does nothing. This is likely unintended - modifiers should have at least one effect.
+
+- [x] **14.2.1**: Write test in `tests/unit/refactor/test_modifier_json_schema.py`
+  - `test_empty_effects_array_rejected()` - validates that `[]` is rejected
+- [x] **14.2.2**: Run test (failed as expected - currently allows empty)
+- [x] **14.2.3**: Update `validate_modifier_v2()` in `modifier_schema.py`
+  - Added check: `if not modifier['effects']: return False` after line 238
+- [x] **14.2.4**: Run test (passed)
+- [x] **14.2.5**: Verified no existing modifiers have empty effects
+
+### Task 14.3: Add Missing Schema Edge Case Tests (TDD)
+> **Severity**: MEDIUM
+> **File**: `tests/unit/refactor/test_modifier_json_schema.py`
+> **Problem**: Three edge cases have no test coverage despite schema handling them
+
+- [x] **14.3.1**: Add `test_modifier_without_effects_key_rejected()`
+  - Modifier like `{'id': 'test'}` with no 'effects' key should be rejected
+- [x] **14.3.2**: Add `test_invalid_operation_value_rejected()`
+  - Effect with `'operation': 'invalid_op'` should be rejected by schema
+- [x] **14.3.3**: Run all new tests (all 4 edge case tests passed - schema already handles these)
+- [x] **14.3.4**: Added `test_modifier_with_invalid_effect_rejected()` for complete coverage
+
+### Phase 14 Verification
+> **Run these verification steps after completing all tasks:**
+
+```bash
+# Run new tests
+pytest tests/unit/refactor/test_invalid_operation_handling.py -v
+pytest tests/unit/refactor/test_modifier_json_schema.py -v
+
+# Verify regression tests still pass
+pytest tests/regression/test_modifier_ability_snapshots.py -v
+
+# Verify no invalid operations in existing modifiers
+python -c "import json; d=json.load(open('data/modifiers.json')); ops=[e.get('operation','multiply') for m in d['modifiers'] for e in m.get('effects',[])]; invalid=[o for o in ops if o not in ['multiply','add','set','add_to_mult']]; print(f'Invalid ops: {invalid}' if invalid else 'All operations valid')"
+```
+
+**Phase 14 Verification Checklist:**
+- [x] Invalid operation warning test passes (11 tests)
+- [x] Empty effects array rejection test passes
+- [x] Missing edge case tests all pass (4 tests in TestModifierV2EdgeCases)
+- [x] All 70 regression tests pass
+- [x] No invalid operations in data/modifiers.json
+
+**Phase 14 Sign-off**: [x] All verification completed - 2026-01-20
+
+---
+
+## Phase 15: Second Audit Remediation - Minor Issues
+> **Status**: COMPLETED
+> **Completed**: 2026-01-20
+> **Goal**: Clean up minor issues from skeptical verification audit
+> **Priority**: LOW - Nice to have, no production impact
+
+### Task 15.1: Update Regression Test Count in Documentation
+> **Severity**: MINOR
+> **Problem**: Documentation claims "72 regression tests" but actual count is 70 (2 were removed with efficient_engines in Phase 12)
+
+- [x] **15.1.1**: Updated Phase 8 regression count reference (line 670)
+  - Changed "72 regression tests pass" to "70 regression tests pass"
+- [x] **15.1.2**: Final Sign-off Checklist already has correct count (70 tests)
+
+### Task 15.2: Clean Up Dead Code (Optional)
+> **Severity**: MINOR
+> **Problem**: Some methods are defined but never called in production
+
+- [x] **15.2.1**: Evaluate `is_v2_format()` in `modifier_schema.py:20-49`
+  - Decision: [x] Keep for tests - provides V2 format detection for validation tests
+  - Note: Only used in tests, was for V1/V2 migration detection
+  - Action: Added docstring note that this is primarily for testing/validation
+- [x] **15.2.2**: Evaluate `get_ability_modifier_summary()` in `modifier_introspection.py:159`
+  - Decision: [x] Keep for future UI - useful API for ability tooltips
+  - Note: TDD artifact, could be useful for future ability-level modifier display
+  - Action: No changes needed - valid introspection API
+- [x] **15.2.3**: Evaluate `ModifierEffect.to_dict()` in `modifier_effects.py:79-91`
+  - Decision: [x] Keep for serialization/debugging - standard dataclass method
+  - Note: Never called in production but useful for debugging and potential serialization
+  - Action: No changes needed - standard pattern
+
+### Task 15.3: Clean Up Archived Files (Optional)
+> **Severity**: MINOR
+> **Problem**: Archived converter has broken imports
+
+- [x] **15.3.1**: Deleted `Tools/archive/modifier_converter.py`
+  - Decision: [x] Delete - conversion complete, file had broken imports
+  - Note: Conversion was a one-time migration, no longer needed
+
+### Task 15.4: Add Logging for Graceful Degradation (Optional)
+> **Severity**: MINOR
+> **Problem**: When stats are gracefully skipped (stat_key not in dict), there's no visibility
+
+- [x] **15.4.1**: Evaluated debug logging for graceful stat skipping
+  - Decision: [x] Leave silent - intentional design for graceful degradation
+  - Rationale: Skipping stats is expected behavior when modifiers apply to components
+    that don't have all stat types. Adding DEBUG logging would create noise without
+    providing actionable information. Invalid operations (Phase 14.1) are the only
+    case worth logging since they indicate a data error.
+
+### Phase 15 Verification
+> **Run these verification steps after completing all tasks:**
+
+```bash
+# Verify documentation accuracy
+grep -n "72.*test" Refactoring/modifier_ability_system_refactor.md
+
+# Verify dead code decisions are documented
+# (manual review of decisions above)
+
+# Run full test suite to ensure no regressions
+pytest tests/unit/refactor/ -v
+pytest tests/regression/ -v
+```
+
+**Phase 15 Verification Checklist:**
+- [x] Documentation test counts are accurate (70 regression tests)
+- [x] Dead code decisions documented (keep all 3 methods)
+- [x] All tests still pass (250 refactor tests + 70 regression tests)
+
+**Phase 15 Sign-off**: [x] All verification completed - 2026-01-20
+
+---
+
+## Final Sign-off Checklist (Updated for Phases 14-15)
 
 ### Core Refactor (Phases 0-7)
 - [x] All core phases completed (0-7)
@@ -856,7 +1134,7 @@ Refactor the modifier-ability system to be:
 ### Critical Fixes (Phase 8)
 - [x] Formula error handling logs errors (not silent)
 - [x] SeekerWeaponAbility uses get_effective_stat()
-- [x] All modifiers have regression tests (72 tests)
+- [x] All modifiers have regression tests (70 tests) *(was 72, reduced after efficient_engines removal)*
 - [x] Save game backward compatibility implemented
 
 ### Major Fixes (Phase 9)
@@ -876,7 +1154,32 @@ Refactor the modifier-ability system to be:
 - [x] Phase comments cleaned up (12 instances across 8 files)
 - [x] External documentation created (3 docs in `docs/` folder)
 
-**Refactor 100% Complete**: [x] All phases 0-11 completed - 2026-01-19
+### Final Cleanup (Phase 12)
+- [x] Deleted obsolete archived test file
+- [x] Fixed `range_mount` and `precision_mount` defaults (1 → 0)
+- [x] Removed `efficient_engines` modifier completely (regression tests: 72 → 70)
+- [x] Removed dead V1 conversion functions from `modifier_schema.py`
+- [x] Added missing modifier warning on save load
+
+### Documentation Fixes (Phase 13)
+- [x] Fixed StatKey import paths in all docs
+- [x] Fixed restriction format examples (allow_types → allow_abilities)
+- [x] Updated refactor plan with phases 12-13
+
+### Second Audit - Critical/Medium (Phase 14)
+- [x] Invalid operation values log warnings (not silent) - 11 new tests
+- [x] Empty effects array validation rejects `[]`
+- [x] Schema edge case tests added (4 tests in TestModifierV2EdgeCases)
+- [x] Schema validation called during modifier loading (graceful degradation)
+
+### Second Audit - Minor (Phase 15)
+- [x] Dead code decisions documented - keep all 3 methods as useful API/debugging tools
+- [x] Archived files cleaned up - deleted `Tools/archive/modifier_converter.py`
+- [x] Debug logging for graceful stat skipping - decided to leave silent (intentional design)
+
+**First Audit Complete**: [x] All phases 0-13 completed - 2026-01-19
+**Second Audit Complete**: [x] All phases 14-15 completed - 2026-01-20
+**REFACTOR FULLY COMPLETE**: [x] All 16 phases completed - 2026-01-20
 
 ## Summary of Changes
 
@@ -970,6 +1273,33 @@ Component.ability_stats dict (targeted effects)
     ↓
 ability.recalculate() (reads via STAT_BINDINGS/get_effective_stat())
 ```
+
+### Phases 14-15 (Second Audit Remediation - COMPLETED)
+
+#### Phase 14 Files Modified:
+- `game/simulation/components/modifiers.py` - Added warning logging for invalid operations
+  - Added `import logging` and `logger = logging.getLogger(__name__)`
+  - Added else clause to `_apply_effect_to_dict()` logging unknown operations
+  - Added else clause to `apply_modifier_effects()` logging unknown operations
+- `game/simulation/components/modifier_schema.py` - Reject empty effects arrays
+  - Added `if not modifier['effects']: return False` check
+- `game/simulation/components/component.py` - Call schema validation during load
+  - Added `validate_modifier_v2()` call in `load_modifiers()` with graceful degradation
+
+#### Phase 14 Test Files Created:
+- `tests/unit/refactor/test_invalid_operation_handling.py` - 11 tests for invalid operation handling
+
+#### Phase 14 Test Files Modified:
+- `tests/unit/refactor/test_modifier_json_schema.py` - Added `TestModifierV2EdgeCases` class (4 tests)
+
+#### Phase 15 Files Deleted:
+- `Tools/archive/modifier_converter.py` - Removed obsolete converter with broken imports
+
+#### Phase 15 Decisions (No Code Changes):
+- `is_v2_format()` - Keep for tests (useful validation function)
+- `get_ability_modifier_summary()` - Keep for future UI (valid introspection API)
+- `ModifierEffect.to_dict()` - Keep for serialization/debugging (standard pattern)
+- Graceful stat skipping - Leave silent (intentional design)
 
 ---
 

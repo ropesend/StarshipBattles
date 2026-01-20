@@ -586,47 +586,6 @@ class TestFacingModifierRegression:
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
 
 
-class TestEfficientEnginesModifierRegression:
-    """Regression tests for efficient_engines modifier."""
-
-    def test_standard_engine_efficient(self, setup_registries):
-        """Standard engine with efficient_engines modifier."""
-        engine = create_component('standard_engine')
-        engine.add_modifier('efficient_engines')
-        engine.recalculate_stats()
-
-        snapshot = snapshot_full_component(engine)
-        expected = load_snapshot('standard_engine_efficient')
-
-        if expected is None:
-            save_snapshot('standard_engine_efficient', snapshot)
-            pytest.skip("Baseline snapshot created - re-run test")
-
-        diffs = compare_snapshots(snapshot, expected)
-        assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
-
-    def test_thruster_efficient(self, setup_registries):
-        """Thruster with efficient_engines modifier (if applicable)."""
-        thruster = create_component('thruster')
-        # Check if thruster supports efficient_engines
-        try:
-            thruster.add_modifier('efficient_engines')
-            thruster.recalculate_stats()
-
-            snapshot = snapshot_full_component(thruster)
-            expected = load_snapshot('thruster_efficient')
-
-            if expected is None:
-                save_snapshot('thruster_efficient', snapshot)
-                pytest.skip("Baseline snapshot created - re-run test")
-
-            diffs = compare_snapshots(snapshot, expected)
-            assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
-        except (ValueError, KeyError):
-            # Modifier may not be supported on this component
-            pytest.skip("efficient_engines not supported on thruster")
-
-
 class TestUtilityModifierRegression:
     """Regression tests for utility modifiers (automation, efficiency)."""
 
@@ -940,23 +899,6 @@ def generate_all_snapshots():
     laser.recalculate_stats()
     save_snapshot('laser_cannon_facing_90', snapshot_full_component(laser))
     print("  Created: laser_cannon_facing_90")
-
-    # Efficient engines modifier tests
-    engine = create_component('standard_engine')
-    engine.add_modifier('efficient_engines')
-    engine.recalculate_stats()
-    save_snapshot('standard_engine_efficient', snapshot_full_component(engine))
-    print("  Created: standard_engine_efficient")
-
-    # Try thruster with efficient_engines if supported
-    try:
-        thruster = create_component('thruster')
-        thruster.add_modifier('efficient_engines')
-        thruster.recalculate_stats()
-        save_snapshot('thruster_efficient', snapshot_full_component(thruster))
-        print("  Created: thruster_efficient")
-    except (ValueError, KeyError):
-        print("  Skipped: thruster_efficient (modifier not supported)")
 
     print(f"\nAll snapshots saved to: {Path(__file__).parent / 'snapshots'}")
 

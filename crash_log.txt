@@ -1,16 +1,20 @@
 Traceback (most recent call last):
-  File "C:\Developer\StarshipBattles\game\app.py", line 499, in main
+  File "C:\Dev\Starship Battles\game\app.py", line 573, in main
     game.run()
-  File "C:\Developer\StarshipBattles\game\app.py", line 262, in run
+  File "C:\Dev\Starship Battles\game\app.py", line 326, in run
     self._handle_normal_events(events)
-  File "C:\Developer\StarshipBattles\game\app.py", line 306, in _handle_normal_events
-    self._forward_event_to_scene(event)
-  File "C:\Developer\StarshipBattles\game\app.py", line 312, in _forward_event_to_scene
-    self.menu_ui_manager.process_events(event)
-  File "C:\Users\rossr\AppData\Roaming\Python\Python311\site-packages\pygame_gui\ui_manager.py", line 320, in process_events
-    consumed_event = ui_element.process_event(event)
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Developer\StarshipBattles\game\ui\screens\save_selection_window.py", line 126, in process_event
-    if selected_index is not None and selected_index < len(self.saves_list):
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: '<' not supported between instances of 'str' and 'int'
+  File "C:\Dev\Starship Battles\game\app.py", line 361, in _handle_normal_events
+    self._handle_click(event)
+  File "C:\Dev\Starship Battles\game\app.py", line 430, in _handle_click
+    self.strategy_scene.handle_click(mx, my, event.button)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_scene.py", line 176, in handle_click
+    return self._input.handle_click(mx, my, button)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_input_handler.py", line 130, in handle_click
+    return self._handle_colonize_mode_click(mx, my, button)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_input_handler.py", line 214, in _handle_colonize_mode_click
+    self.scene.on_ui_selection(self.scene.selected_fleet)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_scene.py", line 313, in on_ui_selection
+    self.ui.show_detailed_report(obj, img)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_screen.py", line 508, in show_detailed_report
+    if order.type == OrderType.MOVE:
+NameError: name 'OrderType' is not defined

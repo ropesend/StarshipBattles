@@ -23,7 +23,8 @@ Create in appropriate module (e.g., `abilities/movement.py`):
 
 ```python
 from typing import Dict, Any, List
-from .base import Ability, AbilityStatBinding, StatKey
+from .base import Ability
+from .stat_keys import AbilityStatBinding, StatKey
 
 class ThrusterAbility(Ability):
     """
@@ -98,7 +99,7 @@ STAT_BINDINGS: List[AbilityStatBinding] = [
 
 ### Available StatKeys
 
-From `modifier_schema.py`:
+From `game/simulation/components/abilities/stat_keys.py`:
 
 | StatKey | Typical Use |
 |---------|-------------|
@@ -211,7 +212,7 @@ def get_effect_summary(self):
 def test_thruster_ability_stat_bindings():
     """ThrusterAbility should have correct STAT_BINDINGS."""
     from game.simulation.components.abilities.movement import ThrusterAbility
-    from game.simulation.components.modifier_schema import StatKey
+    from game.simulation.components.abilities.stat_keys import StatKey
 
     assert ThrusterAbility.STAT_BINDINGS is not None
 
@@ -263,7 +264,7 @@ def test_thruster_modifier_integration():
 | `game/simulation/components/abilities/movement.py` | Propulsion abilities |
 | `game/simulation/components/abilities/crew.py` | Crew/life support |
 | `game/simulation/components/abilities/resources.py` | Storage/generation |
-| `game/simulation/components/modifier_schema.py` | StatKey enum |
+| `game/simulation/components/abilities/stat_keys.py` | StatKey enum, AbilityStatBinding |
 
 ## Marker Abilities
 

@@ -4,13 +4,13 @@
 
 ## Quick Start
 
-1. Add modifier definition to `data/modifiers_v2.json`
+1. Add modifier definition to `data/modifiers.json`
 2. Write regression tests
 3. Done!
 
 ## Step 1: Define the Modifier
 
-Add to `data/modifiers_v2.json`:
+Add to `data/modifiers.json`:
 
 ```json
 {
@@ -19,6 +19,7 @@ Add to `data/modifiers_v2.json`:
   "description": "What this modifier does",
   "param": {
     "name": "Slider Label",
+    "type": "linear",
     "min": 1.0,
     "max": 10.0,
     "default": 1.0
@@ -28,7 +29,7 @@ Add to `data/modifiers_v2.json`:
     {"stat": "damage_mult", "formula": "param ^ 0.5"}
   ],
   "restrictions": {
-    "allow_types": ["Weapon"],
+    "allow_abilities": ["WeaponAbility"],
     "deny_abilities": ["Armor"]
   }
 }
@@ -38,7 +39,7 @@ Add to `data/modifiers_v2.json`:
 
 ### Available Stat Keys
 
-From `game/simulation/components/modifier_schema.py`:
+From `game/simulation/components/abilities/stat_keys.py`:
 
 | Stat Key | Operation | Affects |
 |----------|-----------|---------|
@@ -92,33 +93,36 @@ max(a, b)       Maximum
 
 ## Step 4: Add Restrictions
 
-### Restrict by Component Type
+Restrictions use ability class names to control which components can use a modifier.
+
+### Allow Specific Abilities
 
 ```json
 "restrictions": {
-  "allow_types": ["Weapon", "ProjectileWeapon"],
-  "deny_types": ["Hull", "Bridge"]
+  "allow_abilities": ["WeaponAbility", "ProjectileWeaponAbility", "BeamWeaponAbility"]
 }
 ```
 
-### Restrict by Ability
+### Deny Specific Abilities
 
 ```json
 "restrictions": {
-  "allow_abilities": ["WeaponAbility"],
   "deny_abilities": ["Armor", "LifeSupport"]
 }
 ```
 
-### Make Mandatory (Auto-Applied)
+### Combined Restrictions
 
-Set in the modifier definition or via component data:
+You can combine allow and deny:
 
 ```json
 "restrictions": {
-  "mandatory_for_abilities": ["TurretMount"]
+  "allow_abilities": ["WeaponAbility"],
+  "deny_abilities": ["SeekerWeaponAbility"]
 }
 ```
+
+This allows projectile and beam weapons but not seeker/missile weapons.
 
 ## Step 5: Targeted Effects (Advanced)
 
@@ -197,7 +201,7 @@ if errors:
 
 ## Checklist
 
-- [ ] Added to `data/modifiers_v2.json`
+- [ ] Added to `data/modifiers.json`
 - [ ] Formula syntax is valid
 - [ ] Restrictions are appropriate
 - [ ] Regression test written

@@ -1,0 +1,14 @@
+{
+    "version": "2.0.0",
+    "timestamp": "2026-01-20T06:50:15.594297",
+    "player_name": "Picard",
+    "empire_count": 2,
+    "empire_names": [
+        "Picard",
+        "Jamal"
+    ],
+    "latest_turn_number": 7,
+    "turn_number": 7,
+    "galaxy_radius": 4000,
+    "system_count": 25
+}

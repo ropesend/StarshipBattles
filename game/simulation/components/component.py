@@ -79,9 +79,7 @@ class Component:
                     mod_def = mods[mod_id]
                     self.modifiers.append(mod_def.create_modifier(val))
                 else:
-                    # If modifiers loaded later, this might fail. 
-                    # Ideally modifiers are loaded before components.
-                    pass
+                    log_warning(f"Component '{self.id}': Modifier '{mod_id}' not found in registry, skipping")
                     
         # Parse Formulas
         self.formulas = {}
@@ -581,6 +579,7 @@ def load_modifiers(filepath="data/modifiers.json"):
     import os
     import copy
     from game.core.registry import get_modifier_registry
+    from game.simulation.components.modifier_schema import validate_modifier_v2
 
     cache_mgr = ComponentCacheManager.instance()
 
@@ -601,6 +600,10 @@ def load_modifiers(filepath="data/modifiers.json"):
 
         temp_cache = {}
         for mod_def in data['modifiers']:
+            # Validate modifier schema (graceful degradation - warn but continue)
+            if not validate_modifier_v2(mod_def):
+                mod_id = mod_def.get('id', 'unknown')
+                log_warning(f"Modifier '{mod_id}' failed schema validation, loading anyway")
             mod = Modifier(mod_def)
             temp_cache[mod.id] = mod
 

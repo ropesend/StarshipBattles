@@ -162,6 +162,8 @@ class ShipSerializer:
                         mval = m_dat['value']
                         if mid in mods:
                             new_comp.add_modifier(mid, mval)
+                        else:
+                            log_warning(f"ShipSerializer: Modifier '{mid}' not found in registry, skipping")
 
                     s.add_component(new_comp, layer_type)
         
