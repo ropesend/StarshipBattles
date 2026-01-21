@@ -6,6 +6,7 @@ from game.core.config import UIConfig
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_list_window import PlanetListWindow
 from game.ui.screens.fleet_orders_window import FleetOrdersWindow
+from game.ui.screens.fleet_report_window import FleetReportWindow
 from game.core.constants import DATA_DIR
 from game.strategy.data.fleet import OrderType
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
@@ -26,6 +27,7 @@ class StrategyInterface:
         self.sidebar_width = UIConfig.STRATEGY_SIDEBAR_WIDTH
         self.fleet_orders_window = None  # active window instance
         self.planet_list_window = None   # planet list window instance (BUG-22)
+        self.fleet_report_window = None  # fleet report window instance (PROJ-03)
 
 
         # UI State
@@ -273,6 +275,14 @@ class StrategyInterface:
             container=self.detail_panel,
             visible=0 # Hidden by default
         )
+
+        self.btn_fleet_report = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(210, rect_detail.height - 50, 120, 40),
+            text="Fleet Report",
+            manager=self.manager,
+            container=self.detail_panel,
+            visible=0 # Hidden by default
+        )
         
         self.panels = [
             self.top_bar,
@@ -408,6 +418,7 @@ class StrategyInterface:
         self.btn_colonize.hide()
         self.btn_build_yard.hide()
         self.btn_orders.hide()
+        self.btn_fleet_report.hide()
         self.current_raw_data = ""
         
         # Determine Current Player (Local to UI or passed?) 
@@ -520,7 +531,8 @@ class StrategyInterface:
             # Show Fleet Buttons
             if obj.owner_id == current_empire_id:
                  self.btn_orders.show()
-                 
+                 self.btn_fleet_report.show()
+
                  # Check if we can colonize (Ask Engine)
                  # We query for 'Any Planet' (target=None) to see if *something* is possible here.
                  if hasattr(self.scene, 'turn_engine'):
@@ -711,14 +723,17 @@ class StrategyInterface:
                  obj = self.current_selection
                  if obj and hasattr(obj, 'ships'):
                       self.open_orders_window(obj)
-            
-            elif event.ui_element == self.btn_orders:
-                if self.current_selection and hasattr(self.current_selection, 'orders'):
-                     self.open_orders_window(self.current_selection)
+
+            elif event.ui_element == self.btn_fleet_report:
+                 obj = self.current_selection
+                 if obj and hasattr(obj, 'ships'):
+                      self.open_fleet_report_window(obj)
 
             elif event.type == pygame_gui.UI_WINDOW_CLOSE:
                  if event.ui_element == self.fleet_orders_window:
                       self.fleet_orders_window = None
+                 elif event.ui_element == self.fleet_report_window:
+                      self.fleet_report_window = None
 
                     
         
@@ -838,9 +853,29 @@ class StrategyInterface:
         """Open the Fleet Orders Window."""
         if self.fleet_orders_window:
             self.fleet_orders_window.kill()
-            
+
         w, h = 400, 500
         rect = pygame.Rect((self.width - w)/2, (self.height - h)/2, w, h)
-        
+
         self.fleet_orders_window = FleetOrdersWindow(rect, self.manager, fleet)
+
+    def open_fleet_report_window(self, fleet):
+        """Open the Fleet Report Window."""
+        if self.fleet_report_window:
+            self.fleet_report_window.kill()
+
+        # Match PlanetListWindow size for consistency
+        w, h = 1200, 700
+        rect = pygame.Rect((self.width - w)/2, (self.height - h)/2, w, h)
+
+        self.fleet_report_window = FleetReportWindow(
+            rect,
+            self.manager,
+            fleet,
+            on_close_callback=self._on_fleet_report_closed
+        )
+
+    def _on_fleet_report_closed(self):
+        """Callback when fleet report window is closed."""
+        self.fleet_report_window = None
 

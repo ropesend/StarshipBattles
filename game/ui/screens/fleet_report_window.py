@@ -1,0 +1,717 @@
+"""
+Fleet Report Window - Displays detailed fleet information, ship lists, and individual ship reports.
+
+PROJ-03: Fleet Report Window feature implementation.
+"""
+import pygame
+from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UIVerticalScrollBar
+
+from game.core.config import UIConfig
+from game.core.logger import log_info
+from game.ui.screens.fleet_report_filters import calculate_fleet_stats, filter_ships, sort_ships
+from game.ui.panels.ship_detail_panel import ShipDetailPanel
+
+
+class FleetReportWindow(UIWindow):
+    """
+    Window to view detailed fleet information including:
+    - Fleet summary statistics (left panel)
+    - Ship list with filtering/sorting (center)
+    - Individual ship details with damage (right panel)
+    """
+
+    def __init__(self, rect, manager, fleet, on_close_callback=None):
+        """
+        Initialize the Fleet Report Window.
+
+        Args:
+            rect: Window position and size (pygame.Rect)
+            manager: pygame_gui UIManager
+            fleet: Fleet object to display
+            on_close_callback: Function to call when window is closed
+        """
+        super().__init__(
+            rect=rect,
+            manager=manager,
+            window_display_title=f"Fleet Report: {fleet.id}",
+            resizable=True
+        )
+
+        self.fleet = fleet
+        self.on_close_callback = on_close_callback
+
+        # --- Layout Constants ---
+        self.sidebar_width = 300  # Left panel for summary + filters
+        self.detail_width = 350   # Right panel for ship details
+        self.header_height = UIConfig.HEADER_HEIGHT
+        self.row_height = UIConfig.ROW_HEIGHT_LARGE
+
+        # --- State ---
+        self.selected_ship = None
+        self.filtered_ships = []
+
+        # Filter State
+        self.filter_show_damaged = True
+        self.filter_show_undamaged = True
+        self.filter_show_derelict = True
+        self.filter_show_destroyed = False
+
+        # Sort State
+        self.sort_column_id = 'serial'
+        self.sort_descending = False
+
+        # Column Configuration
+        # ID, Width, Title, Visible
+        self.columns = [
+            {'id': 'icon', 'width': 50, 'title': '', 'type': 'image', 'visible': True},
+            {'id': 'serial', 'width': 130, 'title': 'Serial ID', 'visible': True},
+            {'id': 'design', 'width': 100, 'title': 'Design', 'visible': True},
+            {'id': 'name', 'width': 120, 'title': 'Name', 'visible': True},
+            {'id': 'hp_pct', 'width': 80, 'title': 'HP %', 'visible': True},
+            {'id': 'status', 'width': 100, 'title': 'Status', 'visible': True},
+        ]
+
+        # --- Build UI ---
+        self._init_layout()
+
+        # Initial data load
+        self.refresh_list()
+
+    def _init_layout(self):
+        """Initialize the three-panel layout."""
+        window_rect = self.get_container().get_rect()
+        content_height = window_rect.height - 50  # Account for title bar
+
+        # 1. Left Sidebar (Summary + Filters)
+        self.sidebar_panel = UIPanel(
+            relative_rect=pygame.Rect(0, 0, self.sidebar_width, content_height),
+            manager=self.ui_manager,
+            container=self,
+            anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'}
+        )
+        self._init_sidebar()
+
+        # 2. Center Ship List
+        list_width = window_rect.width - self.sidebar_width - self.detail_width - 10
+        self.list_panel = UIPanel(
+            relative_rect=pygame.Rect(self.sidebar_width, 0, list_width, content_height),
+            manager=self.ui_manager,
+            container=self,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+        )
+        self._init_ship_list()
+
+        # 3. Right Detail Panel
+        self.detail_panel = UIPanel(
+            relative_rect=pygame.Rect(-self.detail_width, 0, self.detail_width, content_height),
+            manager=self.ui_manager,
+            container=self,
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+        )
+        self._init_detail_panel()
+
+    def _init_sidebar(self):
+        """Initialize the left sidebar with summary and filters."""
+        y = 10
+
+        # --- Combat Stats Section ---
+        UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 25),
+            text="COMBAT STATUS",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 28
+
+        # Ship count
+        self.lbl_ship_count = UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 22),
+            text="Ships: --",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 24
+
+        # Average HP
+        self.lbl_avg_hp = UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 22),
+            text="Avg HP: --",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 24
+
+        # Damaged count
+        self.lbl_damaged = UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 22),
+            text="Damaged: --",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 24
+
+        # Derelict count
+        self.lbl_derelict = UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 22),
+            text="Derelict: --",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 32
+
+        # --- Logistics Section ---
+        UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 25),
+            text="LOGISTICS",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 28
+
+        # Total tonnage
+        self.lbl_tonnage = UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 22),
+            text="Tonnage: --",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 24
+
+        # Fleet speed
+        self.lbl_speed = UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 22),
+            text="Speed: --",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 24
+
+        # Fuel
+        self.lbl_fuel = UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 22),
+            text="Fuel: --",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 24
+
+        # Energy
+        self.lbl_energy = UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 22),
+            text="Energy: --",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 32
+
+        # --- Filters Section ---
+        UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 30),
+            text="FILTERS",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 35
+
+        # Status filter checkboxes
+        self.filter_buttons = {}
+        filter_configs = [
+            ('damaged', 'Damaged', self.filter_show_damaged),
+            ('undamaged', 'Undamaged', self.filter_show_undamaged),
+            ('derelict', 'Derelict', self.filter_show_derelict),
+            ('destroyed', 'Destroyed', self.filter_show_destroyed),
+        ]
+
+        for filter_id, label, is_on in filter_configs:
+            btn_text = f"[{label}]" if is_on else label
+            btn = UIButton(
+                relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 28),
+                text=btn_text,
+                manager=self.ui_manager,
+                container=self.sidebar_panel,
+                object_id=f"#filter_{filter_id}"
+            )
+            if is_on:
+                btn.select()
+            self.filter_buttons[filter_id] = btn
+            y += 30
+
+        y += 10
+
+        # --- Column Configuration Section ---
+        UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 30),
+            text="COLUMNS",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 35
+
+        # Column visibility toggles
+        self.column_buttons = {}
+        for col in self.columns:
+            col_id = col['id']
+            title = col['title'] or col_id
+
+            # Skip icon column (always visible, no title)
+            if col_id == 'icon':
+                continue
+
+            is_visible = col.get('visible', True)
+            btn_text = f"[x] {title}" if is_visible else f"[ ] {title}"
+            btn = UIButton(
+                relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 28),
+                text=btn_text,
+                manager=self.ui_manager,
+                container=self.sidebar_panel,
+                object_id=f"#column_{col_id}"
+            )
+            btn.col_ref = col  # Store reference to column config
+            self.column_buttons[col_id] = btn
+            y += 30
+
+    def _init_ship_list(self):
+        """Initialize the center ship list panel."""
+        panel_rect = self.list_panel.get_relative_rect()
+
+        # Header row
+        self.header_container = UIPanel(
+            relative_rect=pygame.Rect(0, 0, panel_rect.width, self.header_height),
+            manager=self.ui_manager,
+            container=self.list_panel,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top'}
+        )
+
+        # List viewport
+        list_height = panel_rect.height - self.header_height
+        self.list_view_panel = UIPanel(
+            relative_rect=pygame.Rect(0, self.header_height, panel_rect.width - 20, list_height),
+            manager=self.ui_manager,
+            container=self.list_panel,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+        )
+
+        # Scrollbar
+        self.scroll_bar = UIVerticalScrollBar(
+            relative_rect=pygame.Rect(-20, self.header_height, 20, list_height),
+            visible_percentage=1.0,
+            manager=self.ui_manager,
+            container=self.list_panel,
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+        )
+
+        # Row pool for virtual scrolling
+        self.row_pool = []
+        self.virtual_scroll_y = 0.0
+
+        # Build header buttons and row pool
+        self._rebuild_headers()
+        self._rebuild_row_pool()
+
+    def _init_detail_panel(self):
+        """Initialize the right detail panel with ShipDetailPanel."""
+        # Create the ship detail panel filling the detail_panel container
+        panel_rect = self.detail_panel.get_relative_rect()
+        detail_rect = pygame.Rect(0, 0, panel_rect.width, panel_rect.height)
+
+        self.ship_detail_panel = ShipDetailPanel(
+            manager=self.ui_manager,
+            rect=detail_rect,
+            container=self.detail_panel
+        )
+
+    def _rebuild_headers(self):
+        """Build column header buttons."""
+        # Clear existing headers
+        if hasattr(self, 'header_widgets'):
+            for widget in self.header_widgets:
+                widget.kill()
+        self.header_widgets = []
+
+        x = 0
+        for col in self.columns:
+            if not col.get('visible', True):
+                continue
+
+            width = col['width']
+
+            # Sort indicator
+            sort_indicator = ""
+            if col['id'] == self.sort_column_id:
+                sort_indicator = " ▼" if self.sort_descending else " ▲"
+
+            btn = UIButton(
+                relative_rect=pygame.Rect(x, 0, width, self.header_height),
+                text=col['title'] + sort_indicator,
+                manager=self.ui_manager,
+                container=self.header_container,
+                object_id=f"#header_{col['id']}"
+            )
+            self.header_widgets.append(btn)
+            x += width
+
+    def _rebuild_row_pool(self):
+        """Build the row pool for virtual scrolling."""
+        # Clear existing rows
+        for row in self.row_pool:
+            if 'bg' in row and row['bg']:
+                row['bg'].kill()
+            for widget in row.get('widgets', []):
+                widget.kill()
+        self.row_pool.clear()
+
+        # Calculate how many rows we need
+        panel_rect = self.list_view_panel.get_relative_rect()
+        visible_rows = max(1, (panel_rect.height // self.row_height) + 2)  # +2 for buffer
+
+        for i in range(visible_rows):
+            y = i * self.row_height
+
+            # Row background panel
+            row_bg = UIPanel(
+                relative_rect=pygame.Rect(0, y, panel_rect.width, self.row_height),
+                manager=self.ui_manager,
+                container=self.list_view_panel
+            )
+
+            # Create widgets for each visible column
+            widgets = []
+            x = 0
+            for col in self.columns:
+                if not col.get('visible', True):
+                    continue
+
+                width = col['width']
+
+                if col.get('type') == 'image':
+                    # For icons, we'll use a panel or image widget
+                    # Placeholder for now
+                    widget = UILabel(
+                        relative_rect=pygame.Rect(x, 0, width, self.row_height),
+                        text="",
+                        manager=self.ui_manager,
+                        container=row_bg
+                    )
+                else:
+                    widget = UILabel(
+                        relative_rect=pygame.Rect(x, 0, width, self.row_height),
+                        text="",
+                        manager=self.ui_manager,
+                        container=row_bg
+                    )
+                widgets.append(widget)
+                x += width
+
+            self.row_pool.append({
+                'bg': row_bg,
+                'widgets': widgets,
+                'ship_index': -1  # Will be set during update
+            })
+
+    def _update_visible_rows(self):
+        """Update visible rows based on scroll position."""
+        if not self.filtered_ships:
+            # Hide all rows
+            for row in self.row_pool:
+                row['bg'].hide()
+            return
+
+        total_height = len(self.filtered_ships) * self.row_height
+        panel_rect = self.list_view_panel.get_relative_rect()
+
+        # Calculate scroll offset
+        scroll_pct = self.scroll_bar.scroll_position if hasattr(self.scroll_bar, 'scroll_position') else 0
+        max_scroll = max(0, total_height - panel_rect.height)
+        scroll_y = scroll_pct * max_scroll
+
+        # Determine which ships are visible
+        first_visible = int(scroll_y // self.row_height)
+
+        for i, row in enumerate(self.row_pool):
+            ship_index = first_visible + i
+
+            if 0 <= ship_index < len(self.filtered_ships):
+                ship = self.filtered_ships[ship_index]
+                row['ship_index'] = ship_index
+
+                # Position the row
+                y_pos = (ship_index * self.row_height) - scroll_y
+                row['bg'].set_relative_position((0, int(y_pos)))
+                row['bg'].show()
+
+                # Update column values
+                self._update_row_data(row, ship)
+            else:
+                row['bg'].hide()
+                row['ship_index'] = -1
+
+    def _update_row_data(self, row, ship):
+        """Update a single row with ship data."""
+        widget_idx = 0
+        for col in self.columns:
+            if not col.get('visible', True):
+                continue
+
+            if widget_idx >= len(row['widgets']):
+                break
+
+            widget = row['widgets'][widget_idx]
+            value = self._get_column_value(ship, col)
+
+            if hasattr(widget, 'set_text'):
+                widget.set_text(str(value))
+
+            widget_idx += 1
+
+    def _get_column_value(self, ship, col):
+        """Get the display value for a column."""
+        col_id = col['id']
+
+        if col_id == 'icon':
+            return ""  # Icons handled separately
+        elif col_id == 'serial':
+            display_id = ship.get_display_id()
+            return display_id if display_id else ship.instance_id[:8]
+        elif col_id == 'design':
+            return ship.design_data.get('name', ship.design_id)
+        elif col_id == 'name':
+            return ship.name
+        elif col_id == 'hp_pct':
+            return f"{ship.get_hp_percentage() * 100:.0f}%"
+        elif col_id == 'status':
+            if ship.is_destroyed:
+                return "DESTROYED"
+            elif ship.is_derelict:
+                return "DERELICT"
+            elif ship.is_damaged():
+                return "DAMAGED"
+            else:
+                return "OK"
+        else:
+            return ""
+
+    def refresh_list(self):
+        """Refresh the ship list with current fleet data."""
+        # Get ships from fleet
+        ships = self.fleet.get_ship_instances()
+
+        # Apply filters
+        self.filtered_ships = self._apply_filters(ships)
+
+        # Apply sort
+        self.filtered_ships = self._apply_sort(self.filtered_ships)
+
+        # Update summary
+        self._update_summary()
+
+        # Update scroll bar
+        total_height = len(self.filtered_ships) * self.row_height
+        panel_rect = self.list_view_panel.get_relative_rect()
+        visible_pct = min(1.0, panel_rect.height / max(1, total_height))
+        self.scroll_bar.set_visible_percentage(visible_pct)
+
+        # Update visible rows
+        self._update_visible_rows()
+
+    def _apply_filters(self, ships):
+        """Apply current filter state to ship list using filter_ships."""
+        filter_state = {
+            'show_damaged': self.filter_show_damaged,
+            'show_undamaged': self.filter_show_undamaged,
+            'show_derelict': self.filter_show_derelict,
+            'show_destroyed': self.filter_show_destroyed,
+        }
+        return filter_ships(ships, filter_state)
+
+    def _apply_sort(self, ships):
+        """Apply current sort to ship list using sort_ships."""
+        return sort_ships(ships, self.sort_column_id, self.sort_descending)
+
+    def _update_summary(self):
+        """Update the fleet summary labels using calculate_fleet_stats."""
+        ships = self.fleet.get_ship_instances()
+        stats = calculate_fleet_stats(ships)
+
+        # Combat Status
+        self.lbl_ship_count.set_text(
+            f"Ships: {stats['combat_capable_count']}/{stats['ship_count']} combat ready"
+        )
+        if stats['ship_count'] > 0:
+            self.lbl_avg_hp.set_text(f"Avg HP: {stats['avg_hp_percent'] * 100:.0f}%")
+        else:
+            self.lbl_avg_hp.set_text("Avg HP: --")
+        self.lbl_damaged.set_text(f"Damaged: {stats['damaged_count']}")
+        self.lbl_derelict.set_text(f"Derelict: {stats['derelict_count']}")
+
+        # Logistics
+        self.lbl_tonnage.set_text(f"Tonnage: {stats['total_tonnage']:,.0f}")
+        self.lbl_speed.set_text(f"Speed: {self.fleet.speed}")
+
+        # Fuel percentage
+        if stats['max_fuel'] > 0:
+            fuel_pct = stats['total_fuel'] / stats['max_fuel'] * 100
+            self.lbl_fuel.set_text(f"Fuel: {stats['total_fuel']:.0f}/{stats['max_fuel']:.0f} ({fuel_pct:.0f}%)")
+        else:
+            self.lbl_fuel.set_text("Fuel: N/A")
+
+        # Energy percentage
+        if stats['max_energy'] > 0:
+            energy_pct = stats['total_energy'] / stats['max_energy'] * 100
+            self.lbl_energy.set_text(f"Energy: {stats['total_energy']:.0f}/{stats['max_energy']:.0f} ({energy_pct:.0f}%)")
+        else:
+            self.lbl_energy.set_text("Energy: N/A")
+
+    def process_event(self, event):
+        """Handle UI events."""
+        handled = super().process_event(event)
+
+        if event.type == pygame.USEREVENT:
+            if hasattr(event, 'user_type') and event.user_type == 'ui_button_pressed':
+                # Check for header clicks (sorting)
+                obj_id = event.ui_element.object_ids[-1] if event.ui_element.object_ids else ""
+                if obj_id.startswith("#header_"):
+                    col_id = obj_id[8:]  # Remove "#header_" prefix
+                    self._handle_header_click(col_id)
+                    handled = True
+
+        # Handle scroll events
+        if hasattr(event, 'user_type') and event.user_type == 'ui_vertical_scroll_bar_moved':
+            if event.ui_element == self.scroll_bar:
+                self._update_visible_rows()
+                handled = True
+
+        # Handle mouse clicks on ship rows
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self._handle_row_click(event.pos):
+                handled = True
+
+        # Forward events to ship detail panel for layer toggle buttons
+        if hasattr(self, 'ship_detail_panel') and self.ship_detail_panel:
+            if self.ship_detail_panel.process_event(event):
+                handled = True
+
+        return handled
+
+    def _handle_row_click(self, pos):
+        """Handle click on a ship row to select it."""
+        # Check if click is within the list view panel
+        list_rect = self.list_view_panel.get_abs_rect()
+
+        if not list_rect.collidepoint(pos):
+            return False
+
+        # Find which row was clicked
+        for row in self.row_pool:
+            if not row['bg'].visible:
+                continue
+
+            row_rect = row['bg'].get_abs_rect()
+            if row_rect.collidepoint(pos):
+                ship_index = row.get('ship_index', -1)
+                if 0 <= ship_index < len(self.filtered_ships):
+                    ship = self.filtered_ships[ship_index]
+                    self.select_ship(ship)
+                    return True
+
+        return False
+
+    def _handle_header_click(self, col_id):
+        """Handle clicking on a column header for sorting."""
+        if self.sort_column_id == col_id:
+            # Toggle direction
+            self.sort_descending = not self.sort_descending
+        else:
+            # New column, default to ascending
+            self.sort_column_id = col_id
+            self.sort_descending = False
+
+        self._rebuild_headers()
+        self.refresh_list()
+
+    def select_ship(self, ship):
+        """Select a ship to show in the detail panel."""
+        self.selected_ship = ship
+        self._update_detail_panel()
+
+    def _update_detail_panel(self):
+        """Update the detail panel with selected ship info."""
+        self.ship_detail_panel.update_ship(self.selected_ship)
+
+    def update(self, time_delta: float):
+        """Update UI elements and handle toggle button clicks."""
+        super().update(time_delta)
+
+        # Handle filter toggle buttons
+        for filter_id, btn in self.filter_buttons.items():
+            if btn.check_pressed():
+                self._toggle_filter(filter_id)
+
+        # Handle column visibility toggle buttons
+        for col_id, btn in self.column_buttons.items():
+            if btn.check_pressed():
+                self._toggle_column(col_id)
+
+    def _toggle_filter(self, filter_id: str):
+        """Toggle a filter state and update UI."""
+        # Toggle the state
+        if filter_id == 'damaged':
+            self.filter_show_damaged = not self.filter_show_damaged
+            new_state = self.filter_show_damaged
+            label = 'Damaged'
+        elif filter_id == 'undamaged':
+            self.filter_show_undamaged = not self.filter_show_undamaged
+            new_state = self.filter_show_undamaged
+            label = 'Undamaged'
+        elif filter_id == 'derelict':
+            self.filter_show_derelict = not self.filter_show_derelict
+            new_state = self.filter_show_derelict
+            label = 'Derelict'
+        elif filter_id == 'destroyed':
+            self.filter_show_destroyed = not self.filter_show_destroyed
+            new_state = self.filter_show_destroyed
+            label = 'Destroyed'
+        else:
+            return
+
+        # Update button appearance
+        btn = self.filter_buttons[filter_id]
+        if new_state:
+            btn.select()
+            btn.set_text(f"[{label}]")
+        else:
+            btn.unselect()
+            btn.set_text(label)
+
+        # Refresh the list with new filters
+        self.refresh_list()
+
+    def _toggle_column(self, col_id: str):
+        """Toggle a column's visibility and update UI."""
+        btn = self.column_buttons[col_id]
+        col = btn.col_ref
+
+        # Toggle visibility
+        col['visible'] = not col['visible']
+        is_visible = col['visible']
+        title = col['title'] or col_id
+
+        # Update button text
+        if is_visible:
+            btn.set_text(f"[x] {title}")
+        else:
+            btn.set_text(f"[ ] {title}")
+
+        # Rebuild headers and rows to reflect column changes
+        self._rebuild_headers()
+        self._rebuild_row_pool()
+        self.refresh_list()
+
+    def kill(self):
+        """Clean up when window is closed."""
+        # Clean up ship detail panel
+        if hasattr(self, 'ship_detail_panel') and self.ship_detail_panel:
+            self.ship_detail_panel.kill()
+
+        if self.on_close_callback:
+            self.on_close_callback()
+        super().kill()

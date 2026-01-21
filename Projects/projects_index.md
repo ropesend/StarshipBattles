@@ -6,6 +6,7 @@
 |----|-------|--------|---------|--------------|
 | PROJ-01 | Design Workshop UI Enhancement | Awaiting Verification | 2026-01-21 | 2026-01-21 |
 | PROJ-02 | Race Setup Screen | Awaiting Audit | 2026-01-21 | 2026-01-21 |
+| PROJ-03 | Fleet Report Window | Planning | 2026-01-21 | 2026-01-21 |
 
 ## Archived Projects
 
@@ -26,4 +27,4 @@
 
 ---
 
-## Next Project ID: PROJ-03
+## Next Project ID: PROJ-04
