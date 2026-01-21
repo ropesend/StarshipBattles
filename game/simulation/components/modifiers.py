@@ -7,6 +7,9 @@ which uses formula-based effects defined in JSON.
 V1 handler functions were removed in Phase 7 cleanup.
 All modifier behavior is now defined via formulas in data/modifiers.json.
 """
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def _apply_effect_to_dict(stat_key, effect_value, operation, target_dict):
@@ -40,6 +43,9 @@ def _apply_effect_to_dict(stat_key, effect_value, operation, target_dict):
     elif operation == 'set':
         # Set stats: dict[key] = value
         target_dict[stat_key] = effect_value
+    else:
+        # Unknown operation - log warning and ignore
+        logger.warning(f"Unknown operation '{operation}' for stat '{stat_key}', effect ignored")
 
 
 def apply_modifier_effects(modifier_def, value, stats, component=None):
@@ -106,3 +112,6 @@ def apply_modifier_effects(modifier_def, value, stats, component=None):
                 stats['properties']['facing_angle'] = effect_value
             else:
                 stats[stat_key] = effect_value
+        else:
+            # Unknown operation - log warning and ignore
+            logger.warning(f"Unknown operation '{operation}' for stat '{stat_key}', effect ignored")

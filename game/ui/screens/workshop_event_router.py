@@ -10,7 +10,7 @@ from pygame_gui.elements import UIDropDownMenu
 from pygame_gui.windows import UIConfirmationDialog
 
 from game.core.profiling import profile_block
-from game.core.registry import get_modifier_registry, get_vehicle_classes
+from game.core.registry import get_vehicle_classes
 from game.simulation.entities.ship import LayerType
 
 from game.core.logger import log_error, log_info, log_warning, log_debug
@@ -60,7 +60,10 @@ class WorkshopEventRouter:
         
         # Pass to weapons panel
         gui.weapons_report_panel.handle_event(event)
-        
+
+        # Pass to detail panel (for modifier grid scrolling)
+        gui.detail_panel.handle_event(event)
+
         # Pass to controller
         gui.controller.handle_event(event)
         
@@ -104,17 +107,12 @@ class WorkshopEventRouter:
         elif act_type == 'add_group' or act_type == 'add_individual':
             self._handle_add_component(act_type, data)
             
-        elif act_type == 'apply_preset':
-            gui.template_modifiers = data
-            gui.rebuild_modifier_ui()
-            
         elif act_type == 'clear_settings':
             with profile_block("Builder: Clear Settings"):
                 gui.controller.selected_component = None
-                gui.template_modifiers = {}
                 gui.on_selection_changed(None)
                 gui.rebuild_modifier_ui()
-                log_debug("Cleared settings or deselected component")
+                log_debug("Deselected component")
                 
         elif act_type == 'toggle_layer':
             # Layer header toggle - already handled by callback
@@ -132,24 +130,11 @@ class WorkshopEventRouter:
             gui.layer_panel.selected_component_id = None
             gui.on_selection_changed(None)
             gui.layer_panel.rebuild()
-            
+
+            # Clone component with default modifiers
             gui.controller.dragged_item = c.clone()
-            # Apply template modifiers
-            mods = get_modifier_registry()
-            for m_id, val in gui.template_modifiers.items():
-                if m_id in mods:
-                    mod_def = mods[m_id]
-                    allow = True
-                    if mod_def.restrictions:
-                        if 'allow_types' in mod_def.restrictions and c.type_str not in mod_def.restrictions['allow_types']:
-                            allow = False
-                    if allow:
-                        gui.controller.dragged_item.add_modifier(m_id)
-                        m = gui.controller.dragged_item.get_modifier(m_id)
-                        if m:
-                            m.value = val
             gui.controller.dragged_item.recalculate_stats()
-            
+
             # Set as selected so modifiers panel updates
             gui.on_selection_changed(gui.controller.dragged_item)
     
@@ -413,15 +398,9 @@ class WorkshopEventRouter:
             return True
         return False
     
-    def _handle_right_click(self, event) -> bool:
-        """Handle right-click events (preset deletion)."""
-        gui = self.gui
-        for preset_name, btn in getattr(gui, 'preset_buttons', []):
-            if btn.rect.collidepoint(event.pos):
-                gui.preset_manager.delete_preset(preset_name)
-                gui.left_panel.rebuild_modifier_ui()
-                log_info(f"Deleted preset: {preset_name}")
-                return True
+    def _handle_right_click(self, event) -> bool:  # noqa: ARG002
+        """Handle right-click events."""
+        # Preset deletion removed - no longer applicable
         return False
     
     def _handle_keydown(self, event) -> bool:

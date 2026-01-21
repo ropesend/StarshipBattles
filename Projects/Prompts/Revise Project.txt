@@ -1,0 +1,76 @@
+!EXECUTE_PROTOCOL: Projects\protocols\06_revise_project.md
+
+I need to revise a completed project based on feedback from real-world usage.
+
+**Project:** PROJ-XX
+**Feedback:** [Describe what you discovered while using the feature]
+
+---
+
+## MANDATORY RULES (YOU MUST FOLLOW THESE)
+
+### Rule 1: DO NOT modify completed phases
+- Previous work is historical record
+- Add NEW phases, do not edit old ones
+- Number new phases sequentially (if project had 5, start at Phase 6)
+
+### Rule 2: Document the revision reason
+- Add entry to Decisions Log explaining WHY
+- Include "Revision Reason" in new phase header
+- Be specific about what user feedback prompted this
+
+### Rule 3: Keep revision focused
+- Address the specific feedback given
+- If scope creep detected, recommend new project instead
+- Don't re-plan the entire project
+
+### Rule 4: Update Current State
+Before stopping, ensure Current State reflects:
+- Project is in Revision status
+- What was planned
+- What the next action is
+
+---
+
+## PROCEDURE
+
+1. LOAD the protocol file `protocols/06_revise_project.md`
+2. LOAD the project plan: `Projects/active_projects/PROJ-XX.md` (or archived_projects/ if archived)
+3. ASSESS the revision scope (Minor Tweak / Enhancement / Significant Rework)
+4. REACTIVATE if project was archived (move file, update index)
+5. DOCUMENT the revision in Decisions Log
+6. PLAN new phase(s) with specific tasks and subtasks
+7. UPDATE verification checklist for revision items
+8. PRESENT plan to user for approval
+
+---
+
+## REQUIRED OUTPUT
+
+Your response MUST include:
+
+### Revision Summary
+- **Project:** PROJ-XX
+- **Revision Type:** [Minor Tweak / Enhancement / Significant Rework]
+- **Phases Added:** Phase N - [Name]
+- **Tasks Added:** [Count]
+
+### New Phase(s) Preview
+[Show the new phase structure you added]
+
+### Next Steps
+- [ ] User approves revision plan
+- [ ] Use "Continue Project" prompt to implement
+- [ ] Audit when complete
+
+---
+
+<revision_feedback>
+
+[DESCRIBE YOUR FEEDBACK HERE]
+
+- What did you discover while using the completed feature?
+- What needs to change, improve, or be fixed?
+- How urgent is this? (nice-to-have vs blocking issue)
+
+</revision_feedback>

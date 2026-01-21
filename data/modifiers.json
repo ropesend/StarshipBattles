@@ -133,7 +133,7 @@
                 "type": "linear",
                 "min": 0,
                 "max": 3,
-                "default": 1
+                "default": 0
             },
             "effects": [
                 {
@@ -198,7 +198,7 @@
                 "type": "linear",
                 "min": 0,
                 "max": 5,
-                "default": 1
+                "default": 0
             },
             "effects": [
                 {
@@ -409,25 +409,6 @@
             "restrictions": {
                 "allow_abilities": [
                     "CrewRequired"
-                ]
-            }
-        },
-        {
-            "id": "efficient_engines",
-            "name": "Efficient Engines",
-            "description": "Reduces fuel/energy consumption by 20%.",
-            "effects": [
-                {
-                    "stat": "consumption_mult",
-                    "formula": "1.0 + -0.2"
-                }
-            ],
-            "restrictions": {
-                "allow_abilities": [
-                    "Engine",
-                    "Generator",
-                    "Weapon",
-                    "Thruster"
                 ]
             }
         },

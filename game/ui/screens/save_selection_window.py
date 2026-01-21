@@ -223,14 +223,11 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
             return
 
         # Find selection in mapping by matching text
+        # UISelectionList.item_list returns dicts with "text", "selected", etc.
         items = self.saves_listbox.item_list
         selected_idx = None
         for i, item in enumerate(items):
-            # UISelectionList returns the text content
-            if hasattr(item, 'text'):
-                item_text = item.text
-            else:
-                item_text = str(item)
+            item_text = item["text"] if isinstance(item, dict) else str(item)
 
             if item_text == selected_item and i < len(self.list_item_mapping):
                 selected_idx = i

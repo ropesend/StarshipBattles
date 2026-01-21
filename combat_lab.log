@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 2026-01-21 09:59:36 - CombatLab - DEBUG - Combat Lab logging initialized
 2026-01-21 09:59:36 - CombatLab - DEBUG - Log file: c:\Developer\StarshipBattles\combat_lab.log
 2026-01-21 09:59:36 - CombatLab - DEBUG - Console level: INFO
@@ -59,3 +60,8 @@
 2026-01-21 09:59:36 - CombatLab.test_framework.registry - WARNING - PropulsionScenario in templates.py has no metadata
 2026-01-21 09:59:36 - CombatLab.test_framework.registry - WARNING - StaticTargetScenario in templates.py has no metadata
 2026-01-21 09:59:36 - CombatLab.test_framework.registry - INFO - Discovered 51 scenarios
+=======
+2026-01-21 09:58:14 - CombatLab - DEBUG - Combat Lab logging initialized
+2026-01-21 09:58:14 - CombatLab - DEBUG - Log file: C:\Dev\Starship Battles\combat_lab.log
+2026-01-21 09:58:14 - CombatLab - DEBUG - Console level: INFO
+>>>>>>> f8e8ac715babcdd7b407fb8284707203216cda50

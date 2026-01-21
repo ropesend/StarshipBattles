@@ -7,6 +7,7 @@ from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_list_window import PlanetListWindow
 from game.ui.screens.fleet_orders_window import FleetOrdersWindow
 from game.core.constants import DATA_DIR
+from game.strategy.data.fleet import OrderType
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 from game.ui.panels.system_tree_panel import SystemTreePanel
 from game.ui.screens.strategy_detail_fmt import (

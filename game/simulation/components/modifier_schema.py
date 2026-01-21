@@ -4,15 +4,17 @@ Modifier Schema Validation for V2 Format.
 This module provides validation functions for the V2 JSON-based modifier format
 that uses formula expressions. All modifiers are now required to be in V2 format.
 
-V1 format (dict-based effects with 'special' handlers) is no longer supported
-in production code. The V1 to V2 converter has been archived to tools/archive/.
+V1 format (dict-based effects with 'special' handlers) is no longer supported.
 
 Functions:
 - is_v2_format: Validates that a modifier uses the V2 array-based effects format
-- validate_*_v2: Various validation functions for V2 modifier structures
-- convert_v1_*_to_v2: Legacy conversion helpers (kept for reference only)
+- validate_effect_v2: Validates a single effect object
+- validate_param_v2: Validates a parameter definition
+- validate_restrictions_v2: Validates restriction rules
+- validate_modifier_v2: Validates a complete modifier definition
+- normalize_effect_v2: Applies defaults to an effect object
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 
 def is_v2_format(modifier: Dict[str, Any]) -> bool:
@@ -229,10 +231,13 @@ def validate_modifier_v2(modifier: Dict[str, Any]) -> bool:
     if not isinstance(modifier['id'], str):
         return False
 
-    # Required: effects as array
+    # Required: effects as non-empty array
     if 'effects' not in modifier:
         return False
     if not isinstance(modifier['effects'], list):
+        return False
+    if not modifier['effects']:
+        # Empty effects array is invalid - modifiers should have at least one effect
         return False
 
     # Validate each effect
@@ -251,63 +256,3 @@ def validate_modifier_v2(modifier: Dict[str, Any]) -> bool:
             return False
 
     return True
-
-
-def convert_v1_param_to_v2(v1_modifier: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """
-    Convert V1 parameter definition to V2 format.
-
-    Args:
-        v1_modifier: V1 modifier dict
-
-    Returns:
-        V2 param dict or None if no param defined
-    """
-    # V1 uses top-level fields: param_name, type, min_val, max_val, default_val
-    if 'param_name' not in v1_modifier:
-        return None
-
-    return {
-        'name': v1_modifier.get('param_name', 'Value'),
-        'type': v1_modifier.get('type', 'linear'),
-        'min': v1_modifier.get('min_val', 0),
-        'max': v1_modifier.get('max_val', 10),
-        'default': v1_modifier.get('default_val', 1)
-    }
-
-
-def convert_v1_restrictions_to_v2(v1_modifier: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """
-    Convert V1 restrictions to V2 format.
-
-    V1 uses 'allow_types', 'deny_types', 'allow_abilities'
-    V2 uses 'allow_abilities', 'deny_abilities', 'require_mode'
-
-    Args:
-        v1_modifier: V1 modifier dict
-
-    Returns:
-        V2 restrictions dict or None if no restrictions
-    """
-    v1_restrictions = v1_modifier.get('restrictions')
-    if not v1_restrictions:
-        return None
-
-    v2_restrictions = {}
-
-    # Convert allow_types to allow_abilities
-    if 'allow_types' in v1_restrictions:
-        v2_restrictions['allow_abilities'] = v1_restrictions['allow_types']
-
-    # Preserve allow_abilities if present
-    if 'allow_abilities' in v1_restrictions:
-        v2_restrictions['allow_abilities'] = v1_restrictions['allow_abilities']
-
-    # Convert deny_types to deny_abilities
-    if 'deny_types' in v1_restrictions:
-        v2_restrictions['deny_abilities'] = v1_restrictions['deny_types']
-
-    if not v2_restrictions:
-        return None
-
-    return v2_restrictions

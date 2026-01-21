@@ -190,6 +190,68 @@ class TestModifierV2Schema:
         assert validate_effect_v2(effect) is True
 
 
+class TestModifierV2EdgeCases:
+    """Tests for edge cases in V2 schema validation (Phase 14)."""
+
+    def test_empty_effects_array_rejected(self):
+        """A modifier with an empty effects array should be rejected."""
+        from game.simulation.components.modifier_schema import validate_modifier_v2
+
+        modifier_with_empty_effects = {
+            'id': 'test_empty',
+            'name': 'Empty Modifier',
+            'effects': []  # Empty array - should be rejected
+        }
+
+        assert validate_modifier_v2(modifier_with_empty_effects) is False, \
+            "Modifier with empty effects array should be rejected"
+
+    def test_modifier_without_effects_key_rejected(self):
+        """A modifier without an 'effects' key should be rejected."""
+        from game.simulation.components.modifier_schema import validate_modifier_v2
+
+        modifier_no_effects = {
+            'id': 'test_no_effects',
+            'name': 'No Effects Modifier'
+            # No 'effects' key at all
+        }
+
+        assert validate_modifier_v2(modifier_no_effects) is False, \
+            "Modifier without effects key should be rejected"
+
+    def test_invalid_operation_value_rejected(self):
+        """An effect with an invalid operation value should be rejected."""
+        from game.simulation.components.modifier_schema import validate_effect_v2
+
+        effect_with_invalid_op = {
+            'stat': 'damage_mult',
+            'formula': 'param',
+            'operation': 'invalid_operation'  # Not a valid operation
+        }
+
+        assert validate_effect_v2(effect_with_invalid_op) is False, \
+            "Effect with invalid operation should be rejected"
+
+    def test_modifier_with_invalid_effect_rejected(self):
+        """A modifier with an invalid effect should be rejected."""
+        from game.simulation.components.modifier_schema import validate_modifier_v2
+
+        modifier_with_bad_effect = {
+            'id': 'test_bad_effect',
+            'name': 'Bad Effect Modifier',
+            'effects': [
+                {
+                    'stat': 'damage_mult',
+                    'formula': 'param',
+                    'operation': 'bogus_op'  # Invalid operation
+                }
+            ]
+        }
+
+        assert validate_modifier_v2(modifier_with_bad_effect) is False, \
+            "Modifier with invalid effect should be rejected"
+
+
 class TestModifierV2Examples:
     """Tests with real modifier examples from current_formulas.md."""
 

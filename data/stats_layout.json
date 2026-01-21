@@ -11,6 +11,12 @@
                     "validator": "mass_validator"
                 },
                 {
+                    "id": "strategic_speed",
+                    "label": "Strategic Speed",
+                    "getter": "get_strategic_speed",
+                    "unit": " hex/turn"
+                },
+                {
                     "id": "max_hp",
                     "label": "Max HP"
                 },

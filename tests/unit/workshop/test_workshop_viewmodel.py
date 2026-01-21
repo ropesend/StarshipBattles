@@ -193,54 +193,15 @@ class TestWorkshopViewModel(unittest.TestCase):
         """Selection changes emit SELECTION_CHANGED event."""
         from game.simulation.entities.ship import LayerType
         from game.simulation.components.component import create_component
-        
+
         self.event_bus.clear()
-        
+
         comp = create_component('armor_plate')
         self.viewmodel.select_component((LayerType.ARMOR, 0, comp))
-        
+
         events = self.event_bus.get_events('SELECTION_CHANGED')
         self.assertEqual(len(events), 1)
-        
-    # ─────────────────────────────────────────────────────────────────
-    # Template Modifiers Tests
-    # ─────────────────────────────────────────────────────────────────
-    
-    def test_template_modifiers_setter_emits_event(self):
-        """Setting template_modifiers emits event."""
-        self.event_bus.clear()
-        
-        self.viewmodel.template_modifiers = {'armor_quality': 2}
-        
-        events = self.event_bus.get_events('TEMPLATE_MODIFIERS_CHANGED')
-        self.assertEqual(len(events), 1)
-        self.assertEqual(events[0][1], {'armor_quality': 2})
-        
-    def test_set_template_modifier(self):
-        """set_template_modifier updates single modifier."""
-        self.viewmodel.set_template_modifier('armor_quality', 3)
-        
-        self.assertEqual(self.viewmodel.template_modifiers.get('armor_quality'), 3)
-        
-    def test_remove_template_modifier(self):
-        """remove_template_modifier removes a modifier."""
-        self.viewmodel._template_modifiers = {'armor_quality': 2, 'damage_boost': 1}
-        self.event_bus.clear()
-        
-        self.viewmodel.remove_template_modifier('armor_quality')
-        
-        self.assertNotIn('armor_quality', self.viewmodel.template_modifiers)
-        self.assertIn('damage_boost', self.viewmodel.template_modifiers)
-        
-    def test_clear_template_modifiers(self):
-        """clear_template_modifiers empties all modifiers."""
-        self.viewmodel._template_modifiers = {'armor_quality': 2, 'damage_boost': 1}
-        self.event_bus.clear()
-        
-        self.viewmodel.clear_template_modifiers()
-        
-        self.assertEqual(len(self.viewmodel.template_modifiers), 0)
-        
+
     # ─────────────────────────────────────────────────────────────────
     # Drag State Tests
     # ─────────────────────────────────────────────────────────────────

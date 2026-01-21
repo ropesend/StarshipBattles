@@ -25,13 +25,12 @@ class TestBuilderWarningLogic(unittest.TestCase):
 
         # Mock internal managers in both builder_screen and workshop_screen modules
         self.p1 = patch('game.ui.screens.workshop_screen.SpriteManager')
-        self.p2 = patch('game.ui.screens.workshop_screen.PresetManager')
-        self.p3 = patch('game.ui.screens.workshop_screen.ShipThemeManager')
-        self.p4 = patch('game.ui.screens.workshop_screen.UIConfirmationDialog')
-        self.p5 = patch('game.ui.screens.workshop_event_router.UIConfirmationDialog')
-        self.p1.start(); self.p2.start(); self.p3.start(); self.p4.start(); self.p5.start()
-        self.addCleanup(self.p1.stop); self.addCleanup(self.p2.stop);
-        self.addCleanup(self.p3.stop); self.addCleanup(self.p4.stop); self.addCleanup(self.p5.stop)
+        self.p2 = patch('game.ui.screens.workshop_screen.ShipThemeManager')
+        self.p3 = patch('game.ui.screens.workshop_screen.UIConfirmationDialog')
+        self.p4 = patch('game.ui.screens.workshop_event_router.UIConfirmationDialog')
+        self.p1.start(); self.p2.start(); self.p3.start(); self.p4.start()
+        self.addCleanup(self.p1.stop); self.addCleanup(self.p2.stop)
+        self.addCleanup(self.p3.stop); self.addCleanup(self.p4.stop)
 
         self.builder = BuilderSceneGUI(800, 600, MagicMock())
 

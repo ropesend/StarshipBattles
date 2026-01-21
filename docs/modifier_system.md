@@ -27,7 +27,7 @@ Ability.recalculate() applies via STAT_BINDINGS
 
 ### 1. Modifier Definition (JSON)
 
-V2 format stored in `data/modifiers_v2.json`:
+V2 format stored in `data/modifiers.json`:
 
 ```json
 {
@@ -36,6 +36,7 @@ V2 format stored in `data/modifiers_v2.json`:
   "description": "HP scales quadratically with mass",
   "param": {
     "name": "Mass Mult",
+    "type": "linear",
     "min": 1.0,
     "max": 10.0,
     "default": 1.0
@@ -114,11 +115,12 @@ When `ability.recalculate()` is called, bindings automatically apply stats.
 |------|---------|
 | `game/simulation/components/modifier_effects.py` | ModifierEffect, ModifierEffectEvaluator |
 | `game/simulation/components/modifiers.py` | apply_modifier_effects(), aggregation |
-| `game/simulation/components/modifier_schema.py` | StatKey enum |
+| `game/simulation/components/abilities/stat_keys.py` | StatKey enum, AbilityStatBinding |
+| `game/simulation/components/modifier_schema.py` | V2 format validation |
 | `game/simulation/components/modifier_introspection.py` | UI introspection utilities |
 | `game/simulation/components/component_constants.py` | Modifier, ApplicationModifier classes |
 | `game/simulation/components/abilities/base.py` | Ability base class, STAT_BINDINGS |
-| `data/modifiers_v2.json` | Modifier definitions |
+| `data/modifiers.json` | Modifier definitions |
 
 ## Targeted Effects
 

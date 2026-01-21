@@ -104,7 +104,7 @@ Passive regeneration of a resource.
     *   **Unit Tests**: Resolved regressions in `test_modifiers.py`, `test_shields.py`, `test_scaling_logic.py`, and `test_ship_loading.py`.
     *   **Test Pollution**: Fixed `test_ui_dynamic_update.py` by removing harmful `importlib.reload` calls.
     *   **Registry**: Added `EnergyConsumption` to `ABILITY_REGISTRY` in `resources.py` to support legacy data equivalence.
-    *   **Data**: Added missing `efficient_engines` modifier to `modifiers.json`.
+    *   **Data**: Added `efficiency_mount` modifier to `modifiers.json` (note: `efficient_engines` was later removed in modifier system cleanup).
     *   **Verified**: 100% pass rate on resource-related unit tests.
 
 ## What May Be Needed (Post-Migration)

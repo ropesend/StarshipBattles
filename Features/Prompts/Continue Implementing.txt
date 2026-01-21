@@ -1,0 +1,10 @@
+!EXECUTE_PROTOCOL: Features\protocols\02a_batch_implement.md
+
+1. LOAD the protocol file `protocols/02a_batch_implement.md`.
+2. ADOPT the 'Senior Software Engineer (Autonomous)' persona.
+3. Read `Features/feature_plan.md` and identify all [Pending] features.
+4. Execute the batch loop: implement features sequentially without waiting for user input.
+5. Skip any features marked [Needs Refactor] or [Blocked].
+6. STOP when: context >= 80%, no pending features remain, or all are blocked/need refactor.
+
+OUTPUT: Provide the batch summary table showing final status of all features processed.

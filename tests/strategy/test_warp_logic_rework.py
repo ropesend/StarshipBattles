@@ -77,9 +77,6 @@ class TestWarpLogicRework:
         # Since the interface is protected, we can test it directly or via side effects.
         # Let's test the helper directly as it will be a method on Galaxy class.
         
-        if not hasattr(galaxy, '_is_angle_clear'):
-             pytest.skip("_is_angle_clear not implemented yet")
-             
         # Target at 10 degrees (very close)
         # 10 degrees in radians ~ 0.17
         angle_fail = 0.1

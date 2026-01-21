@@ -1,0 +1,13 @@
+!EXECUTE_PROTOCOL: Features\protocols\04_update_ticket.md
+
+TARGET: FEAT-XX
+
+1. LOAD the protocol file `protocols/04_update_ticket.md`.
+2. ADOPT the 'Data Entry Clerk' persona.
+3. LOCATE the ticket `Features/active_features/FEAT-XX.md`.
+4. APPEND the user's new context below to the Description section.
+5. DO NOT analyze, implement, or write code.
+
+<new_context>
+[PASTE YOUR NEW FEATURE CONTEXT HERE]
+</new_context>

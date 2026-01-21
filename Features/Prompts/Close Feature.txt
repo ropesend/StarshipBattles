@@ -1,0 +1,12 @@
+!EXECUTE_PROTOCOL: Features\protocols\03_close_feature.md
+
+TARGET: FEAT-XX
+
+1. LOAD the protocol file `protocols/03_close_feature.md`.
+2. READ the active ticket `Features/active_features/FEAT-XX.md` to extract the final implementation summary and the key test case used.
+3. EXECUTE the Archival Process:
+   - APPEND the summary entry to `completed_features.md`.
+   - MOVE (do not delete) the ticket file to `Features/archived_features/`.
+   - REMOVE the entry from `feature_plan.md`.
+
+CONFIRMATION: List the 3 specific file paths that were modified/moved to confirm the operation is complete.

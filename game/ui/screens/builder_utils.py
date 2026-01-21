@@ -21,8 +21,8 @@ class PanelWidths:
 class PanelHeights:
     """Fixed panel heights (in pixels)."""
     bottom_bar: int = 60           # Bottom button bar
-    weapons_report: int = 500      # Weapons report panel
-    modifier_panel: int = 360      # Modifier editor at bottom
+    weapons_report: int = 400      # Weapons report panel (matched with modifier panel)
+    modifier_panel: int = 400      # Modifier editor (matched with weapons report)
 
 
 @dataclass(frozen=True)
@@ -110,6 +110,25 @@ def calculate_dynamic_layer_width(screen_width: int) -> int:
     # Layer panel takes 30% of center, capped between 300-500px
     dynamic_width = int(center * 0.3)
     return max(300, min(500, dynamic_width))
+
+
+def calculate_bottom_panel_height(screen_height: int) -> int:
+    """
+    Calculate shared height for bottom panels (modifier panel and weapons report).
+
+    Both panels should have the same height for visual alignment.
+
+    Args:
+        screen_height: Total screen height
+
+    Returns:
+        Height for bottom panels (modifier panel, weapons report)
+    """
+    # Use a proportion of available space, with min/max bounds
+    available = screen_height - PANEL_HEIGHTS.bottom_bar - 100  # Leave space for top content
+    # Bottom panels get 40% of available, clamped between 300-500px
+    panel_height = int(available * 0.4)
+    return max(300, min(500, panel_height))
 
 
 # Event types for UI synchronization

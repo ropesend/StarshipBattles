@@ -6,7 +6,7 @@ Extracted from DesignWorkshopGUI for better separation of concerns and testabili
 
 Uses VehicleDesignService for ship operations, providing validation and error handling.
 """
-from typing import List, Tuple, Dict, Optional, Any
+from typing import List, Tuple, Optional
 from dataclasses import dataclass, field
 
 from game.simulation.entities.ship import Ship, LayerType
@@ -54,7 +54,6 @@ class WorkshopViewModel:
         # Core state
         self._ship: Optional[Ship] = None
         self._selected_components: List[Tuple[LayerType, int, Component]] = []
-        self._template_modifiers: Dict[str, Any] = {}
         self._dragged_item: Optional[Component] = None
         self._available_components: List[Component] = []
         self._show_hull_layer: bool = False
@@ -189,36 +188,6 @@ class WorkshopViewModel:
         """Clear all selected components."""
         self._selected_components = []
         self._emit_selection_changed()
-        
-    # ─────────────────────────────────────────────────────────────────
-    # Template Modifiers Property
-    # ─────────────────────────────────────────────────────────────────
-    
-    @property
-    def template_modifiers(self) -> Dict[str, Any]:
-        """Modifiers to apply to new components."""
-        return self._template_modifiers
-    
-    @template_modifiers.setter
-    def template_modifiers(self, value: Dict[str, Any]):
-        self._template_modifiers = value
-        self.event_bus.emit(BuilderEvents.TEMPLATE_MODIFIERS_CHANGED, value)
-        
-    def set_template_modifier(self, mod_id: str, value: Any):
-        """Set a single template modifier value."""
-        self._template_modifiers[mod_id] = value
-        self.event_bus.emit(BuilderEvents.TEMPLATE_MODIFIERS_CHANGED, self._template_modifiers)
-        
-    def remove_template_modifier(self, mod_id: str):
-        """Remove a template modifier."""
-        if mod_id in self._template_modifiers:
-            del self._template_modifiers[mod_id]
-            self.event_bus.emit(BuilderEvents.TEMPLATE_MODIFIERS_CHANGED, self._template_modifiers)
-            
-    def clear_template_modifiers(self):
-        """Clear all template modifiers."""
-        self._template_modifiers = {}
-        self.event_bus.emit(BuilderEvents.TEMPLATE_MODIFIERS_CHANGED, self._template_modifiers)
         
     # ─────────────────────────────────────────────────────────────────
     # Drag State Property
@@ -526,7 +495,6 @@ class WorkshopViewModel:
         log_info("Clearing ship design")
         self._ship.clear_non_hull_components()
 
-        self._template_modifiers = {}
         self._ship.ai_strategy = "standard_ranged"
         self._ship.name = "Custom Ship"
 

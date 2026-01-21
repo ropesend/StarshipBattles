@@ -19,8 +19,10 @@ import json
 from ui.builder.modifier_logic import ModifierLogic
 from game.simulation.components.modifier_introspection import ModifierIntrospection
 
+
 class ComponentDetailPanel:
     def __init__(self, manager, rect, image_base_path, event_bus=None):
+        from game.ui.panels.modifier_impact_grid import ModifierImpactGrid
         self.manager = manager
         self.rect = rect
         self.image_base_path = image_base_path
@@ -76,6 +78,26 @@ class ComponentDetailPanel:
             container=self.panel
         )
 
+        # Modifier Impact Grid (drawn as overlay)
+        # Position below the stats text box area, above the details button
+        grid_height = 150
+        grid_y = button_y - grid_height - 5
+        self.modifier_grid = ModifierImpactGrid(
+            manager,
+            self.panel,
+            pygame.Rect(5, grid_y, rect.width - 10, grid_height)
+        )
+        self.modifier_grid.panel.hide()  # Hidden until component with modifiers selected
+
+        # Subscribe to ship updates to refresh grid
+        if event_bus:
+            event_bus.subscribe(_get_builder_events().SHIP_UPDATED, self._on_ship_updated)
+
+    def _on_ship_updated(self, _data):
+        """Refresh modifier grid when ship/component changes."""
+        if self.current_component:
+            self.modifier_grid.update(self.current_component)
+
     def on_selection_changed(self, selection_data):
          # selection_data matches what BuilderSceneGUI emits: self.selected_component
          # which is a tuple (layer, idx, comp) or None using the new system
@@ -97,18 +119,28 @@ class ComponentDetailPanel:
             self.placeholder_label.show()
             self.stats_text_box.hide()
             self.details_btn.hide()
+            self.modifier_grid.panel.hide()
+            self.modifier_grid.update(None)
             return
-            
+
         self.placeholder_label.hide()
         self.stats_text_box.show()
         self.details_btn.show()
-        
+
         # 1. Update Image (only if changed)
         if comp != self.last_img_comp:
             self._update_image(comp)
             self.last_img_comp = comp
-            
+
         self.current_component = comp
+
+        # Update modifier grid
+        if comp.modifiers:
+            self.modifier_grid.update(comp)
+            self.modifier_grid.panel.show()
+        else:
+            self.modifier_grid.panel.hide()
+            self.modifier_grid.update(None)
         
         # 2. Update Stats
         lines = []
@@ -220,7 +252,7 @@ class ComponentDetailPanel:
                     
         # Modifiers with effect details
         if comp.modifiers:
-            lines.append("<br>Modifiers:")
+            lines.append("<br><font color='#FFFF64'>── Modifiers ──</font>")
 
             # Get the full modifier summary for total stats
             mod_summary = ModifierIntrospection.get_component_modifier_summary(comp)
@@ -229,11 +261,11 @@ class ComponentDetailPanel:
                 is_mandatory = ModifierLogic.is_modifier_mandatory(m.definition.id, comp)
 
                 name_str = m.definition.name
-                color = '#96FF96' # Green for optional
+                color = '#96FF96'  # Green for optional
 
                 if is_mandatory:
-                    name_str = f"{name_str} [A]" # Auto
-                    color = '#FFD700' # Gold
+                    name_str = f"{name_str} [A]"  # Auto
+                    color = '#FFD700'  # Gold
 
                 add_line(f"• {name_str}: {m.value:.2f}", color)
 
@@ -246,29 +278,46 @@ class ComponentDetailPanel:
                             add_line(f"    ...", '#A0A0A0')
                         break
 
-            # Show total stat impact summary
+            # Show total stat impact summary - enhanced formatting
             total_stats = mod_summary.get('total_stats', {})
-            impact_parts = []
+            multipliers = []
+            additions = []
+
             for stat_key, stat_val in total_stats.items():
                 if stat_key == 'properties':
                     continue
-                # Only show stats that differ from default (1.0 for mult, 0.0 for add)
+                if stat_val is None:
+                    continue
+
                 is_mult = '_mult' in stat_key
                 default = 1.0 if is_mult else 0.0
-                if abs(stat_val - default) > 0.001:
-                    short_name = stat_key.replace('_mult', '').replace('_add', '+')
-                    if is_mult:
-                        impact_parts.append(f"{short_name}: x{stat_val:.2f}")
-                    else:
-                        sign = '+' if stat_val >= 0 else ''
-                        impact_parts.append(f"{short_name}: {sign}{stat_val:.1f}")
 
-            if impact_parts:
-                lines.append("<br>Total Impact:")
-                # Display in rows of up to 3 effects
-                for i in range(0, len(impact_parts), 3):
-                    row = ", ".join(impact_parts[i:i+3])
-                    add_line(f"  {row}", '#88CCFF')
+                if abs(stat_val - default) > 0.001:
+                    # Format stat name nicely
+                    short_name = stat_key.replace('_mult', '').replace('_add', '').replace('_', ' ').title()
+
+                    if is_mult:
+                        # Color code: green if > 1.0 (buff), red if < 1.0 (debuff)
+                        color = '#96FF96' if stat_val > 1.0 else '#FF9696'
+                        multipliers.append((short_name, stat_val, color))
+                    else:
+                        # Color code: green if positive, red if negative
+                        color = '#96FF96' if stat_val > 0 else '#FF9696'
+                        additions.append((short_name, stat_val, color))
+
+            if multipliers or additions:
+                lines.append("<br><font color='#88CCFF'>── Net Impact ──</font>")
+
+                # Show multipliers first
+                if multipliers:
+                    for name, val, color in multipliers:
+                        add_line(f"  {name}: <font color='{color}'>x{val:.2f}</font>", '#C8C8C8')
+
+                # Show additions
+                if additions:
+                    for name, val, color in additions:
+                        sign = '+' if val >= 0 else ''
+                        add_line(f"  {name}: <font color='{color}'>{sign}{val:.1f}</font>", '#C8C8C8')
         
         full_html = "<br>".join(lines)
         if full_html != self.last_html:
@@ -367,3 +416,22 @@ class ComponentDetailPanel:
         self.panel.set_position(pos)
         self.rect.topleft = pos
 
+    def draw(self, screen):
+        """Draw custom content that can't be rendered with pygame_gui elements.
+
+        Call this after the GUI manager's draw() to render the modifier grid
+        with rotated headers.
+        """
+        if self.current_component and self.modifier_grid.panel.visible:
+            self.modifier_grid.draw(screen)
+
+    def handle_event(self, event):
+        """Handle pygame events for the detail panel.
+
+        Returns:
+            True if event was consumed
+        """
+        if self.modifier_grid.panel.visible:
+            if self.modifier_grid.handle_event(event):
+                return True
+        return False

@@ -1,0 +1,11 @@
+!EXECUTE_PROTOCOL: Debugging\protocols\02_fix_bug.md
+
+1. LOAD the attached protocol file protocols/02_fix_bug.md.
+2. READ Debugging/debug_plan.md to identify the highest priority [Pending] bug.
+3. LOAD the specific ticket file for that bug (e.g., Debugging/active_bugs/BUG-XX.md).
+4. EXECUTE "Phase 1: Reproduction".
+   * Create the test file.
+   * Confirm the failure.
+   * Update the ## Work Log in the ticket file.
+
+STATUS REPORT: Tell me which bug you are starting and show me the reproduction test plan.

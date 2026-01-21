@@ -42,11 +42,6 @@ class TestBuilderDragDropReal(unittest.TestCase):
         self.MockSpriteManager = p_sprite.start()
         self.patchers.append(p_sprite)
 
-        # Patch PresetManager
-        p_preset = patch('game.ui.screens.workshop_screen.PresetManager')
-        self.MockPresetManager = p_preset.start()
-        self.patchers.append(p_preset)
-
         # Patch ThemeManager
         p_theme = patch('game.ui.screens.workshop_screen.ShipThemeManager')
         self.MockThemeManager = p_theme.start()
