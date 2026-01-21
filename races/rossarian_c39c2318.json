@@ -3,7 +3,7 @@
   "name": "Rossarian",
   "flag_id": "flag_4lg1ov4lg1ov4lg1",
   "portrait_id": "Gemini_Generated_Image_r7fixkr7fixkr7fi.jpg",
-  "theme_id": "Romulans",
+  "theme_id": "Federation",
   "gravity_ideal": 1.0757372654155497,
   "gravity_tolerance": 0.23324396782841822,
   "temperature_ideal": 306.03217158176943,
@@ -20,5 +20,5 @@
   "bio_description": "",
   "socio_description": "",
   "created_date": "2026-01-21T11:54:09.142557",
-  "modified_date": "2026-01-21T11:54:09.142557"
+  "modified_date": "2026-01-21T13:05:31.258976"
 }

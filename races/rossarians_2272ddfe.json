@@ -1,9 +1,9 @@
 {
   "race_id": "rossarians_2272ddfe",
   "name": "Rossarians",
-  "flag_id": "flag_4lg1ov4lg1ov4lg1",
+  "flag_id": "flag_5xx9c15xx9c15xx9",
   "portrait_id": "Gemini_Generated_Image_6dgi486dgi486dgi.jpg",
-  "theme_id": "Klingons",
+  "theme_id": "Federation",
   "gravity_ideal": 1.9467905405405406,
   "gravity_tolerance": 0.5996621621621622,
   "temperature_ideal": 369.5945945945946,
@@ -20,5 +20,5 @@
   "bio_description": "Biped",
   "socio_description": "Weird",
   "created_date": "2026-01-21T07:53:26.591824",
-  "modified_date": "2026-01-21T07:53:26.591824"
+  "modified_date": "2026-01-21T12:55:23.699083"
 }

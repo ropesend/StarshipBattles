@@ -19,6 +19,311 @@ from game.strategy.systems.race_library import RaceLibrary
 from game.simulation.ship_theme import ShipThemeManager
 
 
+class RaceBrowserDialog(pygame_gui.elements.UIWindow):
+    """
+    In-game dialog for browsing and selecting saved races.
+
+    Shows a scrollable list of races with small previews:
+    - Portrait (60px)
+    - Flag (60px, all 3 shapes)
+    - Ship (60px, top-down view)
+    - Race name
+    """
+
+    # Preview sizes
+    PREVIEW_SIZE = 60
+    ROW_HEIGHT = 80
+
+    def __init__(self, rect: pygame.Rect, manager: pygame_gui.UIManager,
+                 race_library: RaceLibrary,
+                 on_select_callback: Callable[[RaceConfig], None],
+                 on_cancel_callback: Callable[[], None]):
+        """
+        Create race browser dialog.
+
+        Args:
+            rect: Window rectangle
+            manager: pygame_gui UIManager
+            race_library: RaceLibrary instance for loading races
+            on_select_callback: Callback(RaceConfig) when user selects a race
+            on_cancel_callback: Callback() when user cancels
+        """
+        super().__init__(
+            rect,
+            manager,
+            window_display_title="Load Race",
+            object_id="#race_browser_dialog",
+            resizable=False
+        )
+
+        self.race_library = race_library
+        self.on_select_callback = on_select_callback
+        self.on_cancel_callback = on_cancel_callback
+
+        # Track UI elements for cleanup
+        self.race_rows = []  # List of dicts with row UI elements
+        self.selected_race = None
+        self.selected_row_index = -1
+
+        self._create_ui()
+        self._load_races()
+
+    def _create_ui(self):
+        """Create the dialog UI elements."""
+        container = self.get_container()
+        content_width = container.get_size()[0] - 20
+        content_height = container.get_size()[1]
+
+        # Scrolling container for race list
+        scroll_height = content_height - 80  # Leave room for buttons
+        self.scroll_container = pygame_gui.elements.UIScrollingContainer(
+            relative_rect=pygame.Rect(10, 10, content_width, scroll_height),
+            manager=self.ui_manager,
+            container=container
+        )
+
+        # Bottom buttons
+        btn_width = 120
+        btn_height = 40
+        btn_y = content_height - 55
+
+        self.btn_cancel = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(10, btn_y, btn_width, btn_height),
+            text="Cancel",
+            manager=self.ui_manager,
+            container=container
+        )
+
+        self.btn_load = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(content_width - btn_width, btn_y, btn_width, btn_height),
+            text="Load",
+            manager=self.ui_manager,
+            container=container
+        )
+        self.btn_load.disable()  # Disabled until a race is selected
+
+        # "No races" label (hidden by default)
+        self.no_races_label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, scroll_height // 2, content_width, 30),
+            text="No saved races found. Create one first!",
+            manager=self.ui_manager,
+            container=container
+        )
+        self.no_races_label.hide()
+
+    def _load_races(self):
+        """Load all races and populate the list."""
+        races = self.race_library.get_all_races()
+
+        if not races:
+            self.no_races_label.show()
+            return
+
+        # Initialize ShipThemeManager for ship previews
+        theme_manager = ShipThemeManager.instance()
+        theme_manager.initialize()
+
+        # Set scrollable area size
+        scroll_rect = self.scroll_container.get_relative_rect()
+        total_height = len(races) * self.ROW_HEIGHT + 10
+        self.scroll_container.set_scrollable_area_dimensions(
+            (scroll_rect.width - 20, max(total_height, scroll_rect.height))
+        )
+
+        y = 5
+        for i, race in enumerate(races):
+            row = self._create_race_row(race, y, i, theme_manager)
+            self.race_rows.append(row)
+            y += self.ROW_HEIGHT
+
+    def _create_race_row(self, race: RaceConfig, y: int, index: int,
+                         theme_manager: ShipThemeManager) -> dict:
+        """Create a single race row with previews."""
+        scroll_rect = self.scroll_container.get_relative_rect()
+        row_width = scroll_rect.width - 40
+
+        row = {
+            'race': race,
+            'index': index,
+            'elements': []
+        }
+
+        x = 5
+
+        # Row button (clickable background)
+        row_btn = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(x, y, row_width, self.ROW_HEIGHT - 5),
+            text="",
+            manager=self.ui_manager,
+            container=self.scroll_container,
+            object_id=f"#race_row_{index}"
+        )
+        row['button'] = row_btn
+        row['elements'].append(row_btn)
+
+        # Portrait preview
+        x += 10
+        portrait_surf = self._load_portrait_preview(race.portrait_id)
+        if portrait_surf:
+            portrait_img = pygame_gui.elements.UIImage(
+                relative_rect=pygame.Rect(x, y + 10, self.PREVIEW_SIZE, self.PREVIEW_SIZE),
+                image_surface=portrait_surf,
+                manager=self.ui_manager,
+                container=self.scroll_container
+            )
+            row['elements'].append(portrait_img)
+        x += self.PREVIEW_SIZE + 10
+
+        # Flag preview (single shape, not all 3)
+        flag_surf = self._load_flag_preview(race.flag_id)
+        if flag_surf:
+            flag_img = pygame_gui.elements.UIImage(
+                relative_rect=pygame.Rect(x, y + 10, self.PREVIEW_SIZE, self.PREVIEW_SIZE),
+                image_surface=flag_surf,
+                manager=self.ui_manager,
+                container=self.scroll_container
+            )
+            row['elements'].append(flag_img)
+        x += self.PREVIEW_SIZE + 10
+
+        # Ship preview (top-down view)
+        if race.theme_id:
+            ship_surf = theme_manager.get_image(race.theme_id, "Cruiser")
+            if ship_surf:
+                # Scale to preview size
+                w, h = ship_surf.get_size()
+                scale = min(self.PREVIEW_SIZE / w, self.PREVIEW_SIZE / h)
+                new_size = (int(w * scale), int(h * scale))
+                scaled_ship = pygame.transform.smoothscale(ship_surf, new_size)
+
+                ship_img = pygame_gui.elements.UIImage(
+                    relative_rect=pygame.Rect(x, y + 10, self.PREVIEW_SIZE, self.PREVIEW_SIZE),
+                    image_surface=scaled_ship,
+                    manager=self.ui_manager,
+                    container=self.scroll_container
+                )
+                row['elements'].append(ship_img)
+        x += self.PREVIEW_SIZE + 15
+
+        # Race name label
+        name_label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(x, y + 25, row_width - x - 10, 30),
+            text=race.name or "[Unnamed Race]",
+            manager=self.ui_manager,
+            container=self.scroll_container
+        )
+        row['elements'].append(name_label)
+        row['name_label'] = name_label
+
+        return row
+
+    def _load_portrait_preview(self, portrait_id: Optional[str]) -> Optional[pygame.Surface]:
+        """Load and scale a portrait for preview."""
+        if not portrait_id:
+            return None
+
+        portraits_dir = os.path.join(ASSET_DIR, "RacePortraits")
+        portrait_path = os.path.join(portraits_dir, portrait_id)
+
+        if not os.path.exists(portrait_path):
+            return None
+
+        try:
+            # Load first image in the directory
+            for fname in os.listdir(portrait_path):
+                if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    img_path = os.path.join(portrait_path, fname)
+                    surf = pygame.image.load(img_path).convert_alpha()
+                    # Scale to preview size
+                    return pygame.transform.smoothscale(surf, (self.PREVIEW_SIZE, self.PREVIEW_SIZE))
+        except Exception as e:
+            log_warning(f"Failed to load portrait preview: {e}")
+
+        return None
+
+    def _load_flag_preview(self, flag_id: Optional[str]) -> Optional[pygame.Surface]:
+        """Load and scale a flag for preview (rectangle shape only)."""
+        if not flag_id:
+            return None
+
+        flags_dir = os.path.join(ASSET_DIR, "RaceFlags")
+        flag_path = os.path.join(flags_dir, flag_id)
+
+        if not os.path.exists(flag_path):
+            return None
+
+        try:
+            # Look for rectangle flag
+            for fname in os.listdir(flag_path):
+                if 'rectangle' in fname.lower() and fname.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    img_path = os.path.join(flag_path, fname)
+                    surf = pygame.image.load(img_path).convert_alpha()
+                    # Scale to preview size
+                    return pygame.transform.smoothscale(surf, (self.PREVIEW_SIZE, self.PREVIEW_SIZE))
+            # Fallback to any image
+            for fname in os.listdir(flag_path):
+                if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    img_path = os.path.join(flag_path, fname)
+                    surf = pygame.image.load(img_path).convert_alpha()
+                    return pygame.transform.smoothscale(surf, (self.PREVIEW_SIZE, self.PREVIEW_SIZE))
+        except Exception as e:
+            log_warning(f"Failed to load flag preview: {e}")
+
+        return None
+
+    def _select_row(self, index: int):
+        """Select a race row."""
+        # Deselect previous
+        if self.selected_row_index >= 0 and self.selected_row_index < len(self.race_rows):
+            old_row = self.race_rows[self.selected_row_index]
+            old_row['button'].unselect()
+
+        # Select new
+        self.selected_row_index = index
+        if index >= 0 and index < len(self.race_rows):
+            row = self.race_rows[index]
+            row['button'].select()
+            self.selected_race = row['race']
+            self.btn_load.enable()
+        else:
+            self.selected_race = None
+            self.btn_load.disable()
+
+    def process_event(self, event: pygame.event.Event) -> bool:
+        """Handle UI events."""
+        consumed = super().process_event(event)
+
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.btn_cancel:
+                self.on_cancel_callback()
+                self.kill()
+                return True
+
+            elif event.ui_element == self.btn_load:
+                if self.selected_race:
+                    self.on_select_callback(self.selected_race)
+                    self.kill()
+                return True
+
+            # Check if a race row was clicked
+            for i, row in enumerate(self.race_rows):
+                if event.ui_element == row['button']:
+                    self._select_row(i)
+                    return True
+
+        # Double-click to load
+        if event.type == pygame_gui.UI_BUTTON_DOUBLE_CLICKED:
+            for i, row in enumerate(self.race_rows):
+                if event.ui_element == row['button']:
+                    self._select_row(i)
+                    if self.selected_race:
+                        self.on_select_callback(self.selected_race)
+                        self.kill()
+                    return True
+
+        return consumed
+
+
 class RaceSetupScreen(pygame_gui.elements.UIWindow):
     """Tab-based window for race configuration."""
 
@@ -800,12 +1105,9 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             log_debug("ship_preview_scroll not found, returning")
             return
 
-        container = self.ship_preview_scroll.get_container()
-        if container is None:
-            log_error("get_container() returned None!")
-            return
-
-        container_width = self.ship_preview_scroll.get_relative_rect().width - 30
+        # Use the scrolling container directly for adding elements
+        container = self.ship_preview_scroll
+        container_width = container.get_relative_rect().width - 30
         log_debug(f"Container width: {container_width}")
 
         # Representative ship classes to display
@@ -825,6 +1127,14 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         ship_size = self.THEME_SHIP_SIZE  # 180px
         col_width = container_width // 2
         row_height = ship_size + 60  # Space for ship images + label
+
+        # Calculate and set scrollable area BEFORE adding elements
+        total_rows = (len(ship_classes) + 1) // 2
+        scroll_height = 10 + total_rows * (row_height + 20) + 50
+        self.ship_preview_scroll.set_scrollable_area_dimensions(
+            (container_width, scroll_height)
+        )
+
         y = 10
 
         for i, ship_class in enumerate(ship_classes):
@@ -873,12 +1183,6 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                     container=container
                 )
                 self._ship_preview_elements.append(img)
-
-        # Set scrollable area
-        total_rows = (len(ship_classes) + 1) // 2
-        self.ship_preview_scroll.set_scrollable_area_dimensions(
-            (container_width, 10 + total_rows * (row_height + 20))
-        )
 
     def _load_ship_portrait(self, theme_id: str, ship_class: str) -> Optional[pygame.Surface]:
         """
@@ -1335,6 +1639,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self.summary_labels = {}
         self.summary_flag_images = []
         self.summary_portrait_image = None
+        self.summary_ship_images = []
 
         # Title and Load Race button at top
         pygame_gui.elements.UILabel(
@@ -1409,19 +1714,34 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             object_id="#summary_preview"
         )
 
-        # Ship Theme
+        # Ship Theme header (next to portrait)
+        ship_theme_y = y + 35 + portrait_preview_size + 15
         self.summary_labels['theme_header'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(col2_x, y + 35 + portrait_preview_size + 15, col_width, 30),
+            relative_rect=pygame.Rect(col2_x, ship_theme_y, col_width, 30),
             text="Ship Theme:",
             manager=self.ui_manager,
             container=panel
         )
         self.summary_labels['theme_value'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(col2_x, y + 35 + portrait_preview_size + 45, col_width, 30),
+            relative_rect=pygame.Rect(col2_x, ship_theme_y + 30, col_width, 30),
             text="[Click Ships tab to set]",
             manager=self.ui_manager,
             container=panel
         )
+
+        # Ship preview panel - full width across bottom
+        # Shows 3 categories (Fighter, Satellite, Capital) with top-down + portrait views
+        ship_panel_y = y + 400  # Below flag and portrait areas
+        ship_preview_width = panel_width - 20  # Full width minus margins
+        ship_preview_height = 200  # Height for 150px images + 30px labels + padding
+        self.summary_ship_panel = pygame_gui.elements.UIPanel(
+            relative_rect=pygame.Rect(10, ship_panel_y, ship_preview_width, ship_preview_height),
+            manager=self.ui_manager,
+            container=panel,
+            object_id="#summary_preview"
+        )
+        self.summary_ship_images = []  # Track ship preview images for cleanup
+        self.summary_ship_labels = []  # Track ship labels for cleanup
 
         # Column 3: Environment and Descriptions
         col3_x = col2_x + col_width + 15
@@ -1571,6 +1891,96 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                     container=self.summary_portrait_panel
                 )
 
+        # Update ship preview (show 1 ship per category with top-down + portrait views)
+        for img in self.summary_ship_images:
+            img.kill()
+        self.summary_ship_images = []
+
+        # Also clean up ship labels
+        if hasattr(self, 'summary_ship_labels'):
+            for lbl in self.summary_ship_labels:
+                lbl.kill()
+        self.summary_ship_labels = []
+
+        if self.race_config.theme_id and hasattr(self, 'summary_ship_panel'):
+            theme_manager = ShipThemeManager.instance()
+            theme_manager.initialize()
+
+            # Show one representative from each category with both views
+            # Categories: Fighter, Satellite, Capital Ship
+            ship_categories = [
+                ("Fighter (Medium)", "Fighter"),
+                ("Satellite (Medium)", "Satellite"),
+                ("Cruiser", "Capital Ship")
+            ]
+
+            # Large images since we only show 3 ships
+            ship_size = 150  # Size for each view (top-down and portrait)
+            label_height = 30
+            gap = 20
+
+            # Layout: each category gets top-down + portrait side by side
+            # [Top-Down | Portrait] [Label]
+            cell_width = (ship_size * 2) + gap  # Two images side by side
+            x = 20
+            y = 10
+
+            for ship_class, category_name in ship_categories:
+                # Get top-down skin
+                skin_surf = theme_manager.get_image(self.race_config.theme_id, ship_class)
+                # Get portrait
+                portrait_surf = theme_manager.get_portrait_image(self.race_config.theme_id, ship_class)
+
+                # Display top-down view
+                if skin_surf:
+                    w, h = skin_surf.get_size()
+                    scale = min(ship_size / w, ship_size / h)
+                    new_size = (int(w * scale), int(h * scale))
+                    scaled = pygame.transform.smoothscale(skin_surf, new_size)
+
+                    # Center in left cell
+                    img_x = x + (ship_size - new_size[0]) // 2
+                    img_y = y + (ship_size - new_size[1]) // 2
+
+                    img = pygame_gui.elements.UIImage(
+                        relative_rect=pygame.Rect(img_x, img_y, new_size[0], new_size[1]),
+                        image_surface=scaled,
+                        manager=self.ui_manager,
+                        container=self.summary_ship_panel
+                    )
+                    self.summary_ship_images.append(img)
+
+                # Display portrait view
+                if portrait_surf:
+                    w, h = portrait_surf.get_size()
+                    scale = min(ship_size / w, ship_size / h)
+                    new_size = (int(w * scale), int(h * scale))
+                    scaled = pygame.transform.smoothscale(portrait_surf, new_size)
+
+                    # Center in right cell
+                    img_x = x + ship_size + gap + (ship_size - new_size[0]) // 2
+                    img_y = y + (ship_size - new_size[1]) // 2
+
+                    img = pygame_gui.elements.UIImage(
+                        relative_rect=pygame.Rect(img_x, img_y, new_size[0], new_size[1]),
+                        image_surface=scaled,
+                        manager=self.ui_manager,
+                        container=self.summary_ship_panel
+                    )
+                    self.summary_ship_images.append(img)
+
+                # Add category label below both images
+                lbl = pygame_gui.elements.UILabel(
+                    relative_rect=pygame.Rect(x, y + ship_size, cell_width, label_height),
+                    text=category_name,
+                    manager=self.ui_manager,
+                    container=self.summary_ship_panel
+                )
+                self.summary_ship_labels.append(lbl)
+
+                # Move to next category (horizontal layout)
+                x += cell_width + 30
+
         # Update gravity
         if 'gravity' in self.summary_labels:
             grav = f"Gravity: {self.race_config.gravity_ideal:.1f}g ± {self.race_config.gravity_tolerance:.2f}"
@@ -1674,9 +2084,13 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         if self.error_label:
             self.error_label.set_text("")
 
-        # Refresh summary if showing Summary tab
+        # Refresh content when showing specific tabs
         if step_num == self.TAB_SUMMARY:
             self._refresh_summary()
+        elif step_num == self.TAB_SHIPS:
+            # Refresh ship preview when Ships tab is shown
+            if self.race_config.theme_id:
+                self._refresh_ship_preview(self.race_config.theme_id)
 
     def _update_navigation_buttons(self):
         """Update navigation button visibility based on current tab."""
@@ -1729,47 +2143,48 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self._show_step(tab_index)
 
     def _on_load_race(self):
-        """Handle Load Race button click - open file dialog to load saved race."""
-        import tkinter as tk
-        from tkinter import filedialog
+        """Handle Load Race button click - open in-game race browser dialog."""
+        log_debug("Opening race browser dialog")
 
-        log_debug("Opening load race dialog")
+        # Get window position for dialog placement
+        window_rect = self.get_abs_rect()
+        dialog_width = 600
+        dialog_height = 500
 
-        # Create hidden tkinter root window
-        root = tk.Tk()
-        root.withdraw()
+        # Center dialog over the main window
+        dialog_x = window_rect.centerx - dialog_width // 2
+        dialog_y = window_rect.centery - dialog_height // 2
 
-        # Get races directory
-        races_dir = self.race_library.races_folder
+        dialog_rect = pygame.Rect(dialog_x, dialog_y, dialog_width, dialog_height)
 
-        # Open file dialog
-        filepath = filedialog.askopenfilename(
-            title="Load Race Configuration",
-            initialdir=races_dir,
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+        # Create and show the race browser dialog
+        self.race_browser = RaceBrowserDialog(
+            rect=dialog_rect,
+            manager=self.ui_manager,
+            race_library=self.race_library,
+            on_select_callback=self._on_race_selected,
+            on_cancel_callback=self._on_race_browser_cancelled
         )
 
-        root.destroy()
+    def _on_race_selected(self, loaded_config: RaceConfig):
+        """Handle race selection from browser dialog."""
+        log_info(f"Loaded race: {loaded_config.name}")
+        self.race_config = loaded_config
+        self.is_editing = True
 
-        if filepath:
-            # Load the race configuration
-            loaded_config = RaceConfig.load(filepath)
-            if loaded_config:
-                log_info(f"Loaded race: {loaded_config.name}")
-                self.race_config = loaded_config
-                self.is_editing = True
+        # Update UI to reflect loaded data
+        self._populate_ui_from_config()
 
-                # Update UI to reflect loaded data
-                self._populate_ui_from_config()
+        # Update save button text
+        if self.btn_save:
+            self.btn_save.set_text("Update")
 
-                # Update save button text
-                if self.btn_save:
-                    self.btn_save.set_text("Update")
+        # Refresh the summary
+        self._refresh_summary()
 
-                # Refresh the summary
-                self._refresh_summary()
-            else:
-                self.error_label.set_text("Failed to load race file")
+    def _on_race_browser_cancelled(self):
+        """Handle race browser cancellation."""
+        log_debug("Race browser cancelled")
 
     def _populate_ui_from_config(self):
         """Populate all UI elements from the current race_config."""
