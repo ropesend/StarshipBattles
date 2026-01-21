@@ -38,6 +38,11 @@ class InputHandler:
             self.scene.build_queue_screen.handle_event(event)
             return
 
+        # If planet list window is open, let pygame_gui handle it (skip our F11/F12)
+        if hasattr(self.scene, 'ui') and hasattr(self.scene.ui, 'planet_list_window') and self.scene.ui.planet_list_window is not None:
+            self.scene.ui.handle_event(event)
+            return
+
         self.scene.ui.handle_event(event)
 
         # Button Events

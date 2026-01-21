@@ -313,5 +313,52 @@ class TestSaveGameServiceMetadata(unittest.TestCase):
         self.assertIn("Beta Empire", metadata['empire_names'])
 
 
+class TestSaveGameServiceNoDesignMigration(unittest.TestCase):
+    """Tests for BUG-29: New games should not inherit designs from temp folder."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.original_cwd = os.getcwd()
+        os.chdir(self.tmpdir)
+
+        # Create temp designs folder with some designs (simulating previous game sessions)
+        self.temp_designs = os.path.join(tempfile.gettempdir(), "starship_battles_temp_designs", "empire_0")
+        os.makedirs(self.temp_designs, exist_ok=True)
+
+        # Create a test design in temp folder
+        test_design = {
+            "name": "Old Design From Temp",
+            "ship_class": "Escort",
+            "vehicle_type": "Ship",
+            "mass": 1000.0,
+            "layers": {}
+        }
+        save_json(os.path.join(self.temp_designs, "old_design.json"), test_design)
+
+    def tearDown(self):
+        os.chdir(self.original_cwd)
+        shutil.rmtree(self.tmpdir)
+        # Clean up temp design we created
+        temp_design_file = os.path.join(self.temp_designs, "old_design.json")
+        if os.path.exists(temp_design_file):
+            os.remove(temp_design_file)
+
+    def test_new_game_does_not_migrate_temp_designs(self):
+        """BUG-29: New game save should NOT copy designs from temp folder"""
+        session = MockGameSession()
+
+        success, message, save_path = SaveGameService.save_game(session, "NewGame")
+
+        self.assertTrue(success)
+
+        # Check that the designs folder for empire 0 is EMPTY
+        empire_designs = os.path.join(save_path, "designs", "empire_0")
+        self.assertTrue(os.path.exists(empire_designs), "Empire designs folder should exist")
+
+        design_files = [f for f in os.listdir(empire_designs) if f.endswith('.json')]
+        self.assertEqual(len(design_files), 0,
+            f"New game should have NO designs, but found: {design_files}")
+
+
 if __name__ == '__main__':
     unittest.main()

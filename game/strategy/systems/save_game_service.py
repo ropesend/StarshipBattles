@@ -71,8 +71,10 @@ class SaveGameService:
                 empire_designs_folder = os.path.join(designs_folder, f"empire_{empire.id}")
                 os.makedirs(empire_designs_folder, exist_ok=True)
 
-            # Migrate designs from temp folder if this is the first save
-            SaveGameService._migrate_temp_designs(game_session, designs_folder)
+            # BUG-29 FIX: Do NOT migrate designs from temp folder
+            # New games should start with empty design libraries
+            # The temp folder migration was causing designs from other games to appear
+            # SaveGameService._migrate_temp_designs(game_session, designs_folder)
 
             # Update game session's save_path
             game_session.save_path = save_path

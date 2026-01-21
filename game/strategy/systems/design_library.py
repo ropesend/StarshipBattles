@@ -40,7 +40,7 @@ class DesignLibrary:
             self.designs_folder = os.path.join(savegame_path, "designs", f"empire_{empire_id}")
             log_info(f"DesignLibrary: Using savegame designs folder: {self.designs_folder}")
         else:
-            # Use temp folder for designs when no savegame exists
+            # Use temp folder for designs when no savegame exists (standalone Workshop mode)
             import tempfile
             temp_base = os.path.join(tempfile.gettempdir(), "starship_battles_temp_designs")
             self.designs_folder = os.path.join(temp_base, f"empire_{empire_id}")

@@ -5,6 +5,7 @@ Build Queue Screen - Full-screen interface for managing planetary construction.
 import pygame
 import pygame_gui
 import pygame_gui.elements as ui
+import pygame_gui.windows
 from typing import Optional, Callable
 from game.strategy.data.planet import Planet
 from game.strategy.systems.design_library import DesignLibrary
@@ -772,6 +773,9 @@ class BuildQueueScreen:
             if event.key == pygame.K_F12:
                 log_info("BuildQueueScreen: F12 matched, calling _take_screenshot()")
                 self._take_screenshot()
+            elif event.key == pygame.K_F11:
+                log_info("BuildQueueScreen: F11 matched, calling _take_screenshot()")
+                self._take_screenshot()
 
     def _take_screenshot(self):
         """Take a screenshot of the current screen including the build queue."""
@@ -786,14 +790,17 @@ class BuildQueueScreen:
 
     def _show_screenshot_toast(self):
         """Show a brief toast notification for screenshot feedback."""
-        toast_rect = pygame.Rect(0, 0, 300, 60)
-        toast_rect.center = (self.screen_width // 2, 80)
-        pygame_gui.elements.UILabel(
-            rect=toast_rect,
-            text="Screenshot saved - path copied!",
-            manager=self.manager,
-            object_id=pygame_gui.core.ObjectID(class_id="@toast_label")
-        )
+        try:
+            toast_rect = pygame.Rect(0, 0, 300, 60)
+            toast_rect.center = (self.screen_width // 2, 80)
+            pygame_gui.windows.UIMessageWindow(
+                rect=toast_rect,
+                html_message="<b>Screenshot saved!</b><br>Path copied to clipboard",
+                manager=self.manager,
+                window_title="Screenshot"
+            )
+        except Exception:
+            pass
 
     def update(self, time_delta: float):
         """

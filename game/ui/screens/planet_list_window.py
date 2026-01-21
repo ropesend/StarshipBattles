@@ -1,9 +1,12 @@
 import pygame
+import pygame_gui.windows
 from game.strategy.data.planet import PLANET_RESOURCES
 from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UITextEntryLine, UIHorizontalSlider, UIDropDownMenu, UIImage, UIVerticalScrollBar
 from pygame_gui import UI_TEXT_ENTRY_FINISHED
 
 from game.core.config import UIConfig
+from game.core.logger import log_info
+from game.core.screenshot_manager import ScreenshotManager
 from game.ui.screens.planet_list_filters import gather_planets, filter_planets, sort_planets, get_column_value
 from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
 
@@ -672,6 +675,12 @@ class PlanetListWindow(UIWindow):
                     except ValueError:
                         pass # Ignore invalid
 
+        # Screenshot Handling
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F12 or event.key == pygame.K_F11:
+                self._take_screenshot()
+                return True
+
         # Wheel Handling - Use scrollbar's official API
         if event.type == pygame.MOUSEWHEEL:
             m_pos = pygame.mouse.get_pos()
@@ -870,6 +879,27 @@ class PlanetListWindow(UIWindow):
     def _get_visible_columns(self):
         """Return list of currently visible columns."""
         return [c for c in self.columns if c.get('visible', True)]
+
+    def _take_screenshot(self):
+        """Take a screenshot of the current screen including the planet list."""
+        sm = ScreenshotManager.instance()
+        sm.capture(label="planet_list")
+        log_info("Screenshot: Planet List window captured")
+        self._show_screenshot_toast()
+
+    def _show_screenshot_toast(self):
+        """Show a brief toast notification for screenshot feedback."""
+        try:
+            toast_rect = pygame.Rect(0, 0, 300, 60)
+            toast_rect.center = (self.rect.width // 2, 80)
+            pygame_gui.windows.UIMessageWindow(
+                rect=toast_rect,
+                html_message="<b>Screenshot saved!</b><br>Path copied to clipboard",
+                manager=self.ui_manager,
+                window_title="Screenshot"
+            )
+        except Exception:
+            pass
 
     def kill(self):
         if self.on_close_callback:

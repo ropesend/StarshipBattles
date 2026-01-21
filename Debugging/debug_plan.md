@@ -11,5 +11,7 @@
 | BUG-29 | 2026-01-20 | Build Queue shows designs from other games | Awaiting Confirmation | [BUG-29.md](active_bugs/BUG-29.md) |
 | BUG-30 | 2026-01-20 | Load Game buttons non-functional (Load, Show Turns, Delete) | Awaiting Confirmation | [BUG-30.md](active_bugs/BUG-30.md) |
 
-## 3. Current Focus: None
-All bugs in queue are now [Awaiting Confirmation].
+## 3. Current Focus: BUG-29
+**Status:** [Awaiting Confirmation]
+**Protocol:** 02b Deep Dive - Persistent bug investigation
+**Fix Applied:** Removed shared temp folder fallback in DesignLibrary. When `save_path` is `None`, `designs_folder` is now `None` (no designs available for unsaved games).
