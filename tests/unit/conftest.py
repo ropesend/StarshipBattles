@@ -19,6 +19,7 @@ def pytest_configure(config):
         assert hasattr(game.ui, 'screens'), "game.ui.screens not loaded"
         assert hasattr(game.ui, 'panels'), "game.ui.panels not loaded"
     except (ImportError, AssertionError) as e:
-        print(f"Warning: Could not pre-import game.ui in root conftest: {e}", 
-              file=sys.stderr)
+        if os.environ.get("PYTEST_XDIST_WORKER") is None:
+            print(f"Warning: Could not pre-import game.ui in root conftest: {e}", 
+                  file=sys.stderr)
         # Don't fail - tests may mock game.ui

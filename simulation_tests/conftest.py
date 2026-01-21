@@ -49,7 +49,7 @@ def validate_test_data_schemas():
     passed, failed = validate_test_data(verbose=True)
 
     # Referential integrity validation
-    valid_refs, invalid_refs = validate_component_references(verbose=True)
+    valid_refs, invalid_refs = validate_component_references(verbose=False)
 
     # Fail fast if validation errors found
     if failed > 0:
@@ -58,7 +58,8 @@ def validate_test_data_schemas():
     if invalid_refs > 0:
         pytest.fail(f"Component reference validation failed: {invalid_refs} ships have invalid component references.")
 
-    print("[SUCCESS] All test data validated successfully\n")
+    if os.environ.get("PYTEST_XDIST_WORKER") is None:
+        print("[SUCCESS] All test data validated successfully\n")
 
 
 @pytest.fixture(scope='session', autouse=True)

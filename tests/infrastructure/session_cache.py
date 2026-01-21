@@ -71,9 +71,12 @@ class SessionRegistryCache:
                 self.strategies_data = copy.deepcopy(StrategyManager.instance().strategies)
 
                 self._is_loaded = True
-                print(f"[SessionRegistryCache] Loaded {len(self.components_data)} components, {len(self.vehicle_classes_data)} classes, {len(self.strategies_data)} strategies.")
+
+                if os.environ.get("PYTEST_XDIST_WORKER") is None:
+                    print(f"[SessionRegistryCache] Loaded {len(self.components_data)} components, {len(self.vehicle_classes_data)} classes, {len(self.strategies_data)} strategies.")
 
             except Exception as e:
+                # Always print critical errors
                 print(f"[SessionRegistryCache] CRITICAL ERROR loading data: {e}")
                 import traceback
                 traceback.print_exc()

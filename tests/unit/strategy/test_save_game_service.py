@@ -160,15 +160,15 @@ class TestSaveGameServiceVersion(unittest.TestCase):
         self.assertEqual(metadata['version'], "2.0.0")
 
     def test_load_rejects_old_version(self):
-        """Loading version 1.0.0 save returns error"""
-        # Create save with valid structure but old version
+        """Loading incompatible version save returns error"""
+        # Create save with valid structure but incompatible version
         save_folder = os.path.join(self.tmpdir, "saves", "OldSave")
         turns_folder = os.path.join(save_folder, "turns")
         os.makedirs(turns_folder)
 
-        # Old version metadata
+        # Incompatible version metadata (not in MIGRATABLE_VERSIONS)
         metadata = {
-            'version': '1.0.0',
+            'version': '0.5.0',
             'timestamp': '2026-01-01T00:00:00',
             'player_name': 'Test',
             'turn_number': 1,

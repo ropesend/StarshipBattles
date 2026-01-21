@@ -1,0 +1,12 @@
+!EXECUTE_PROTOCOL: Debugging\protocols\02a_batch_fix.md
+
+1. LOAD the attached protocol file protocols/02a_batch_fix.md.
+2. READ Debugging/debug_plan.md to identify all [Pending] and [In-Progress] bugs.
+3. BEGIN BATCH LOOP:
+   * Select highest priority bug.
+   * LOAD ticket file (e.g., Debugging/active_bugs/BUG-XX.md).
+   * EXECUTE full TDD cycle (Reproduce -> Fix -> Document -> Set [Awaiting Confirmation]).
+   * DO NOT wait for input - proceed to next bug.
+4. EXIT when context >= 80% OR no Pending bugs remain.
+
+AUTONOMOUS MODE: Do not stop between bugs. Only stop for context limit or empty queue.

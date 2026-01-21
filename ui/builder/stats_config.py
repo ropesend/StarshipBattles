@@ -113,6 +113,22 @@ def get_armor_hp(ship):
 def get_maneuver_points(ship):
     return getattr(ship, 'total_maneuver_points', 0)
 
+def get_strategic_speed(ship):
+    """Calculate strategic speed (hexes per turn) from movement points and mass."""
+    # Uses same formula as FleetMobilityService
+    K_STRATEGIC = 25
+    MAX_HEXES = 10
+    MIN_HEXES = 0
+
+    mass = getattr(ship, 'mass', 0)
+    movement_points = getattr(ship, 'total_strategic_movement', 0)
+
+    if mass <= 0 or movement_points <= 0:
+        return 0
+
+    raw_hexes = (movement_points * K_STRATEGIC) / mass
+    return max(MIN_HEXES, min(MAX_HEXES, int(raw_hexes)))
+
 def get_zero(ship):
     return 0
 
@@ -223,6 +239,7 @@ GETTERS = {
     # New
     'get_armor_hp': get_armor_hp,
     'get_maneuver_points': get_maneuver_points,
+    'get_strategic_speed': get_strategic_speed,
     'get_zero': get_zero,
     
     # Generic Resource Getters

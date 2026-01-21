@@ -270,4 +270,28 @@
 * **Solution Implemented:** Modified `game/ui/screens/strategy_scene.py` (lines 152-154) to call `build_queue_screen.draw(screen)` in the render loop. The drag preview code in `build_queue_screen.py` was working but never being rendered because `draw()` wasn't called from the main scene.
 * **Test Case:** `tests/ui/test_build_queue_drag_drop.py` (3 passed)
 * **Notes:** The root cause was the missing `draw()` call in strategy_scene, not the preview rendering logic itself.
+---
 
+## [BUG-24] - Cannot Add Ships to Build Queue With Space Yard
+* **Date Solved:** 2026-01-18
+* **Original Issue:** Ships could not be added to the build queue because the `has_space_shipyard` property was checking for an `abilities` dictionary, which is absent in saved design JSON (which uses component IDs).
+* **Solution Implemented:** Updated `game/strategy/data/planet.py` to check for both component IDs (real saved designs) and `abilities` dictionaries (test fixtures).
+* **Test Case:** Production and planetary facilities tests (`tests/strategy/test_planet_facilities.py`)
+
+---
+
+## [BUG-26] - Overlapping planet drawn in System and Sector Report panels
+* **Date Solved:** 2026-01-19
+* **Original Issue:** Ghost planet icons remained visible in UI panels due to list mutation during iteration when calling `kill()` on items. Position also became stale after hide/show cycles.
+* **Solution Implemented:** 
+    1. Fixed list mutation by copying lists before iteration in `system_tree_panel.py`, `planet_report_panel.py`, and `build_queue_screen.py`.
+    2. Added explicit `layout()` calls in `strategy_screen.py:show_ui()` to refresh tree positioning after returning from the Build Queue.
+* **Test Case:** Strategy and build queue tests (`tests/ui/test_build_queue_drag_drop.py`, `tests/strategy/test_strategy_logic.py`)
+
+---
+
+## [BUG-30] - NameError: name 'OrderType' is not defined
+* **Date Solved:** 2026-01-20
+* **Original Issue:** The game crashed when clicking fleets because `OrderType` was used in `strategy_screen.py` without being imported.
+* **Solution Implemented:** Added `from game.strategy.data.fleet import OrderType` to `game/ui/screens/strategy_screen.py`.
+* **Test Case:** `tests/repro_issues/test_bug_27_ordertype.py`

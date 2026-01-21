@@ -252,6 +252,8 @@ class ComponentDetailPanel:
             for stat_key, stat_val in total_stats.items():
                 if stat_key == 'properties':
                     continue
+                if stat_val is None:
+                    continue
                 # Only show stats that differ from default (1.0 for mult, 0.0 for add)
                 is_mult = '_mult' in stat_key
                 default = 1.0 if is_mult else 0.0

@@ -249,5 +249,94 @@ class TestSaveSelectionEmpireInfo(unittest.TestCase):
         self.assertIn("Romulans", info['empire_names'])
 
 
+class TestSaveSelectionWindowButtons(unittest.TestCase):
+    """Tests for SaveSelectionWindow button enable/disable behavior (BUG-30)."""
+
+    def setUp(self):
+        """Create temporary directory and set up pygame for UI testing."""
+        self.tmpdir = tempfile.mkdtemp()
+        self.original_cwd = os.getcwd()
+        os.chdir(self.tmpdir)
+
+        # Set up pygame and pygame_gui
+        import pygame
+        import pygame_gui
+        os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
+        if not pygame.get_init():
+            pygame.init()
+        pygame.display.set_mode((1440, 900), pygame.NOFRAME)
+
+        self.manager = pygame_gui.UIManager((1440, 900))
+
+    def tearDown(self):
+        """Clean up temporary directory."""
+        os.chdir(self.original_cwd)
+        shutil.rmtree(self.tmpdir)
+
+    def test_buttons_enable_after_selection(self):
+        """BUG-30: Load/Show Turns/Delete buttons should enable when save is selected."""
+        import pygame
+        import pygame_gui
+        from game.ui.screens.save_selection_window import SaveSelectionWindow
+
+        # Create a save first
+        session = MockGameSession(turn_number=1)
+        success, _, save_path = SaveGameService.save_game(session, "TestSave")
+        self.assertTrue(success)
+
+        # Create window
+        load_callback = MagicMock()
+        cancel_callback = MagicMock()
+
+        window = SaveSelectionWindow(
+            rect=pygame.Rect(100, 100, 600, 500),
+            manager=self.manager,
+            on_load_callback=load_callback,
+            on_cancel_callback=cancel_callback
+        )
+
+        # Verify buttons start disabled
+        self.assertFalse(window.btn_load.is_enabled)
+        self.assertFalse(window.btn_expand.is_enabled)
+        self.assertFalse(window.btn_delete.is_enabled)
+
+        # Verify save is in the list
+        self.assertEqual(len(window.saves_list), 1)
+        self.assertEqual(len(window.list_item_mapping), 1)
+
+        # Simulate selecting the first save
+        # UISelectionList.item_list returns dicts with "text", "selected", etc.
+        items = window.saves_listbox.item_list
+        self.assertTrue(len(items) > 0, "No items in saves list")
+
+        # Get the first item - it's a dict with "text" key
+        first_item = items[0]
+        self.assertIsInstance(first_item, dict)
+        self.assertIn("text", first_item)
+
+        # Simulate selection by marking the item as selected in the internal list
+        first_item["selected"] = True
+
+        # Process the selection change (this is what the event handler calls)
+        window._handle_selection_change()
+
+        # BUG-30: After selection, buttons should be enabled
+        self.assertTrue(
+            window.btn_load.is_enabled,
+            "Load button should be enabled after selecting a save"
+        )
+        self.assertTrue(
+            window.btn_expand.is_enabled,
+            "Show Turns button should be enabled after selecting a save"
+        )
+        self.assertTrue(
+            window.btn_delete.is_enabled,
+            "Delete button should be enabled after selecting a save"
+        )
+
+        # Clean up
+        window.kill()
+
+
 if __name__ == '__main__':
     unittest.main()
