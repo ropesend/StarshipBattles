@@ -61,7 +61,11 @@ class WorkshopEventRouter:
         # Pass to weapons panel
         gui.weapons_report_panel.handle_event(event)
 
-        # Pass to detail panel (for modifier grid scrolling)
+        # Pass to component modifier grid panel (if it exists)
+        if hasattr(gui, 'component_modifier_grid_panel'):
+            gui.component_modifier_grid_panel.handle_event(event)
+
+        # Pass to detail panel
         gui.detail_panel.handle_event(event)
 
         # Pass to controller

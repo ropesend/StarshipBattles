@@ -29,12 +29,12 @@ class ModifierImpactGrid:
     """
 
     # Layout constants
-    ROW_HEIGHT = 22  # Slightly smaller for more rows
-    HEADER_HEIGHT = 50  # Space for rotated headers (reduced)
-    COLUMN_WIDTH = 50  # Slightly narrower columns
-    NAME_COLUMN_WIDTH = 100  # Narrower name column
+    ROW_HEIGHT = 26  # Reduced by 20% from 33
+    HEADER_HEIGHT = 75  # Space for rotated headers
+    COLUMN_WIDTH = 75  # Wider columns for larger text
+    NAME_COLUMN_WIDTH = 150  # Wider name column
     PADDING = 5
-    TITLE_HEIGHT = 20  # Height of title area
+    TITLE_HEIGHT = 0  # No title - more room for column headers
 
     # Colors
     COLOR_HEADER_BG = (40, 40, 50)
@@ -79,10 +79,10 @@ class ModifierImpactGrid:
         # UI elements for cleanup
         self._ui_elements: List = []
 
-        # Fonts
-        self.font = pygame.font.SysFont("Arial", 11)
-        self.header_font = pygame.font.SysFont("Arial", 10)
-        self.net_font = pygame.font.SysFont("Arial", 11, bold=True)
+        # Fonts (reduced 10% from 17/15 for tighter rows)
+        self.font = pygame.font.SysFont("Arial", 15)
+        self.header_font = pygame.font.SysFont("Arial", 14)
+        self.net_font = pygame.font.SysFont("Arial", 15, bold=True)
 
         # Cached surfaces for headers (rotated text)
         self._header_cache: Dict[str, pygame.Surface] = {}
@@ -105,8 +105,11 @@ class ModifierImpactGrid:
         # Get modifier stat summary from component
         summary = component.get_modifier_stat_summary()
 
-        # Filter to only affected stats
-        self.stat_columns = self._get_affected_stats(summary)
+        # Get stats this component's abilities actually consume
+        component_stats = self._get_component_consumed_stats(component)
+
+        # Filter to only affected stats that the component actually uses
+        self.stat_columns = self._get_affected_stats(summary, component_stats)
 
         # Build row data for each modifier
         self.modifier_rows = []
@@ -139,18 +142,51 @@ class ModifierImpactGrid:
         # Build the UI
         self._build_ui()
 
-    def _get_affected_stats(self, summary: Dict[str, Dict]) -> List[str]:
+    def _get_component_consumed_stats(self, component: 'Component') -> Optional[set]:
+        """
+        Get all stat keys that this component's abilities actually consume.
+
+        This filters the grid to only show stats the component can be affected by.
+        For example, weapons consume damage_mult/range_mult but not thrust_mult.
+
+        Args:
+            component: The component to check
+
+        Returns:
+            Set of stat_key strings that the component's abilities use,
+            or None if the component has no ability_instances (show all stats)
+        """
+        if not hasattr(component, 'ability_instances') or not component.ability_instances:
+            return None  # No filtering - show all affected stats
+
+        stat_keys = set()
+        for ability in component.ability_instances:
+            ability_class = ability.__class__
+            # Get stat keys from STAT_BINDINGS
+            if hasattr(ability_class, 'STAT_BINDINGS'):
+                for binding in ability_class.STAT_BINDINGS:
+                    stat_keys.add(binding.stat_key.value)
+
+        return stat_keys if stat_keys else None
+
+    def _get_affected_stats(self, summary: Dict[str, Dict], filter_stats: Optional[set] = None) -> List[str]:
         """
         Get list of stat keys that are actually affected (not at default).
 
         Args:
             summary: Stat summary from component.get_modifier_stat_summary()
+            filter_stats: Optional set of stat keys to filter to (component's consumed stats).
+                          If None, all affected stats are returned.
 
         Returns:
             List of stat_key strings for stats that have changed
         """
         affected = []
         for stat_key, data in summary.items():
+            # If filter provided, skip stats not in the filter
+            if filter_stats is not None and stat_key not in filter_stats:
+                continue
+
             operation = data.get('operation', 'multiply')
             net_value = data.get('net_value', 0)
 
@@ -194,25 +230,62 @@ class ModifierImpactGrid:
 
     def _format_value(self, value: float, operation: str) -> str:
         """
-        Format a modifier value for display.
+        Format a modifier value for display with 4 significant digits.
 
         Args:
             value: The numeric value
             operation: 'multiply', 'add', or 'set'
 
         Returns:
-            Formatted string like 'x2.00' or '+90'
+            Formatted string like 'x73.73' or '+90'
         """
         if operation == 'multiply':
-            return f"x{value:.2f}"
+            return f"x{self._format_sig_digits(value)}"
         elif operation == 'add':
+            formatted = self._format_sig_digits(value)
             if value >= 0:
-                return f"+{int(value)}"
+                return f"+{formatted}"
             else:
-                return f"{int(value)}"
+                return formatted
         elif operation == 'set':
-            return f"={int(value)}"
+            return f"={self._format_sig_digits(value)}"
         return str(value)
+
+    def _format_sig_digits(self, value: float, sig_digits: int = 4) -> str:
+        """
+        Format a value to a specified number of significant digits.
+
+        Examples:
+            1000.73 -> '1001'
+            350.76 -> '350.8'
+            73.725 -> '73.73'
+            1.131 -> '1.131'
+            0.617 -> '0.617'
+
+        Args:
+            value: The numeric value
+            sig_digits: Number of significant digits (default 4)
+
+        Returns:
+            Formatted string
+        """
+        abs_val = abs(value)
+
+        if abs_val == 0:
+            return "0"
+
+        if abs_val >= 1000:
+            # No decimals for values >= 1000
+            return f"{round(value)}"
+        elif abs_val >= 100:
+            # 1 decimal place for values >= 100
+            return f"{value:.1f}"
+        elif abs_val >= 10:
+            # 2 decimal places for values >= 10
+            return f"{value:.2f}"
+        else:
+            # 3 decimal places for values < 10
+            return f"{value:.3f}"
 
     def _get_value_color(self, value: float, operation: str) -> tuple:
         """
@@ -270,15 +343,7 @@ class ModifierImpactGrid:
             self._ui_elements.append(msg)
             return
 
-        # Title
-        title = UILabel(
-            relative_rect=pygame.Rect(5, 2, self.NAME_COLUMN_WIDTH, 20),
-            text="── Modifier Impact ──",
-            manager=self.manager,
-            container=self.panel
-        )
-        self._ui_elements.append(title)
-
+        # No title - grid content starts immediately
         # We'll draw the actual grid content in draw() method
         # since pygame_gui doesn't have a native grid/table
 
@@ -294,16 +359,17 @@ class ModifierImpactGrid:
         if not self.stat_columns or not self.current_component:
             return
 
-        # Calculate positions relative to screen
-        base_x = self.rect.x
-        base_y = self.rect.y + self.TITLE_HEIGHT  # Below title
+        # Get the panel's absolute screen position
+        abs_rect = self.panel.get_abs_rect()
+        base_x = abs_rect.x
+        base_y = abs_rect.y + self.TITLE_HEIGHT  # Below title
 
         # Set up clipping for the content area (below title and header)
         content_area = pygame.Rect(
             base_x,
             base_y + self.HEADER_HEIGHT,
-            self.rect.width,
-            self.rect.height - self.TITLE_HEIGHT - self.HEADER_HEIGHT
+            abs_rect.width,
+            abs_rect.height - self.TITLE_HEIGHT - self.HEADER_HEIGHT
         )
         old_clip = screen.get_clip()
 
@@ -334,7 +400,7 @@ class ModifierImpactGrid:
 
             # Alternating row background
             bg_color = self.COLOR_ROW_ALT_BG if row_idx % 2 else self.COLOR_ROW_BG
-            row_rect = pygame.Rect(base_x, row_y, self.rect.width, self.ROW_HEIGHT)
+            row_rect = pygame.Rect(base_x, row_y, abs_rect.width, self.ROW_HEIGHT)
             pygame.draw.rect(screen, bg_color, row_rect)
 
             # Modifier name (truncated)
@@ -364,9 +430,9 @@ class ModifierImpactGrid:
 
         # Draw net values footer (at bottom of grid, outside clip area)
         if hasattr(self, '_stat_summary'):
-            # Footer position - at bottom of panel
-            footer_y = self.rect.y + self.rect.height - self.ROW_HEIGHT
-            footer_rect = pygame.Rect(base_x, footer_y, self.rect.width, self.ROW_HEIGHT)
+            # Footer position - at bottom of panel (use absolute position)
+            footer_y = abs_rect.y + abs_rect.height - self.ROW_HEIGHT
+            footer_rect = pygame.Rect(base_x, footer_y, abs_rect.width, self.ROW_HEIGHT)
             pygame.draw.rect(screen, self.COLOR_FOOTER_BG, footer_rect)
 
             # "Net" label
@@ -399,12 +465,13 @@ class ModifierImpactGrid:
             True if event was consumed
         """
         if event.type == pygame.MOUSEWHEEL:
-            # Check if mouse is over the grid
+            # Check if mouse is over the grid (use absolute position)
             mx, my = pygame.mouse.get_pos()
-            if self.rect.collidepoint(mx, my):
+            abs_rect = self.panel.get_abs_rect()
+            if abs_rect.collidepoint(mx, my):
                 # Calculate scroll
                 total_content_height = (len(self.modifier_rows) + 1) * self.ROW_HEIGHT
-                visible_height = self.rect.height - self.TITLE_HEIGHT - self.HEADER_HEIGHT - self.ROW_HEIGHT
+                visible_height = abs_rect.height - self.TITLE_HEIGHT - self.HEADER_HEIGHT - self.ROW_HEIGHT
                 max_scroll = max(0, total_content_height - visible_height)
 
                 # Scroll direction (event.y is positive for up, negative for down)

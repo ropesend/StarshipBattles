@@ -23,6 +23,7 @@ class PanelHeights:
     bottom_bar: int = 60           # Bottom button bar
     weapons_report: int = 400      # Weapons report panel (matched with modifier panel)
     modifier_panel: int = 400      # Modifier editor (matched with weapons report)
+    modifier_grid_panel: int = 450 # Component modifier impact grid (above weapons report)
 
 
 @dataclass(frozen=True)
