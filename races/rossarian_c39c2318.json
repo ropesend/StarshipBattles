@@ -1,0 +1,24 @@
+{
+  "race_id": "rossarian_c39c2318",
+  "name": "Rossarian",
+  "flag_id": "flag_4lg1ov4lg1ov4lg1",
+  "portrait_id": "Gemini_Generated_Image_r7fixkr7fixkr7fi.jpg",
+  "theme_id": "Romulans",
+  "gravity_ideal": 1.0757372654155497,
+  "gravity_tolerance": 0.23324396782841822,
+  "temperature_ideal": 306.03217158176943,
+  "temperature_tolerance": 35.053619302949066,
+  "atmosphere_preferences": {
+    "Oxygen": 28.33078101071976,
+    "Nitrogen": -34.76263399693721,
+    "Carbon Dioxide": -32.312404287901984,
+    "Methane": 44.56355283307809,
+    "Hydrogen": 58.34609494640122,
+    "Helium": -53.44563552833078
+  },
+  "radiation_tolerance": 10.053619302949059,
+  "bio_description": "",
+  "socio_description": "",
+  "created_date": "2026-01-21T11:54:09.142557",
+  "modified_date": "2026-01-21T11:54:09.142557"
+}

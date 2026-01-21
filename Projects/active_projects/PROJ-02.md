@@ -30,11 +30,11 @@ Create a new "Race Setup" screen accessible from the main menu that allows playe
 
 ## Current State
 **Last Updated:** 2026-01-21
-**Current Phase:** Complete - Audit Passed
-**Last Agent Action:** Audit cycle 2 passed with no significant issues
-**Next Action:** User verification required
+**Current Phase:** Revision Complete - Awaiting Manual Verification
+**Last Agent Action:** Implemented all Phase 9 and Phase 10 tasks
+**Next Action:** Manual testing on 2560x1600 display
 **Blockers:** None
-**Context for Next Agent:** Project is audit-complete. User needs to verify and close. Key deferred items: Load Race button (Task 6.4), Cancel confirmation dialog (Task 7.2), UI tests (Task 7.3).
+**Context for Next Agent:** Revision complete. Key changes: (1) Tab-based navigation with 5 tabs, (2) Summary is landing page with Load Race button, (3) Images increased to 256px, (4) Ships tab shows portrait + top-down views at 180px, (5) Window size 1800x1200. Minor deferred: clickable summary sections, ship preview in summary.
 
 ## Decisions Log
 | Date | Decision | Rationale |
@@ -43,6 +43,9 @@ Create a new "Race Setup" screen accessible from the main menu that allows playe
 | 2026-01-21 | Flag design = all 3 shapes | All shapes (rectangle/shield/triangle) from same directory used together |
 | 2026-01-21 | Dual sliders for env prefs | Separate ideal value + tolerance controls |
 | 2026-01-21 | Save to `races/` folder | Dedicated folder at project root |
+| 2026-01-21 | Revision: Tab-based navigation | User feedback - wants to start on Summary, navigate via tabs instead of Next/Back |
+| 2026-01-21 | Revision: Larger images (256px) | User feedback - images too small on 2560x1600 display |
+| 2026-01-21 | Revision: Separate Ship Theme tab | User feedback - ship selection needs own page with portrait + top-down views |
 
 ## Key Files Reference
 | Component | File Path | Lines/Class |
@@ -317,6 +320,102 @@ Create a new "Race Setup" screen accessible from the main menu that allows playe
 
 ---
 
+### Phase 9: Tab-Based Navigation Refactor [Complex]
+**Objective:** Change wizard from linear Next/Back flow to tab-based navigation starting on Summary
+**Status:** Complete
+**Revision Reason:** User feedback - wants to start on Summary and navigate via tabs, with Load Race functionality
+
+#### Task 9.1: Create Tab Navigation System [Medium]
+**File:** `game/ui/screens/race_setup_screen.py`
+**Tests:** Manual - verify tabs appear and switch panels
+- [x] Replace step indicator with clickable tab buttons at top
+- [x] Reorder steps: Summary (0) -> Visuals (1) -> Ship Theme (2) -> Environment (3) -> Descriptions (4)
+- [x] Remove Next/Back buttons
+- [x] Keep Save button on Summary tab only
+- [x] Update `_show_step()` to work with tab clicks
+**Notes:** Implemented `_create_tab_buttons()`, `_update_tab_highlighting()`, removed back/next handlers
+
+#### Task 9.2: Redesign Summary as Landing Page [Medium]
+**File:** `game/ui/screens/race_setup_screen.py`
+**Tests:** Manual - verify Summary shows first, Load Race works
+- [x] Make Summary the default tab (step 0)
+- [x] Add "Load Race" button to Summary panel
+- [x] Implement `_on_load_race()` with file browser dialog
+- [x] Show "incomplete" indicators for sections not yet configured
+- [ ] Each section in summary should be clickable to jump to that tab
+**Notes:** Load Race uses tkinter file dialog, loads and populates UI. Clickable sections deferred.
+
+#### Task 9.3: Split Visuals into Two Tabs [Medium]
+**File:** `game/ui/screens/race_setup_screen.py`
+**Tests:** Manual - verify Flags/Portraits on one tab, Ships on another
+- [x] Create "Visuals" tab for Flags and Portraits only (2-column layout)
+- [x] Create separate "Ship Theme" tab for ship selection
+- [x] Update step panel array and navigation
+**Notes:** 5 tabs now: Summary, Visuals, Ships, Environment, Descriptions
+
+---
+
+### Phase 10: Larger Image Displays [Medium]
+**Objective:** Increase size of all visual selection elements for 2560x1600 displays
+**Status:** Complete
+**Revision Reason:** User feedback - images too small, need clear non-condensed display
+
+#### Task 10.1: Increase Flag Display Size [Simple]
+**File:** `game/ui/screens/race_setup_screen.py`
+**Tests:** Manual - verify larger flag thumbnails and previews
+- [x] Increase `FLAG_THUMB_SIZE` from 64 to 256
+- [x] Increase flag preview panel height to show larger shapes (280px)
+- [x] Adjust gallery grid calculations for new size
+**Notes:** Preview panel shows all 3 shapes at 256px each
+
+#### Task 10.2: Increase Portrait Display Size [Simple]
+**File:** `game/ui/screens/race_setup_screen.py`
+**Tests:** Manual - verify larger portrait thumbnails and previews
+- [x] Increase `PORTRAIT_THUMB_SIZE` from 80 to 256
+- [x] Increase portrait preview panel size (280px)
+- [x] Adjust gallery grid calculations for new size
+**Notes:** Preview shows 256px portrait
+
+#### Task 10.3: Create Full Ship Theme Page [Medium]
+**File:** `game/ui/screens/race_setup_screen.py`
+**Tests:** Manual - verify ship types visible with both views
+- [x] Create dedicated Ship Theme panel with large layout
+- [x] Add theme selector buttons at top (one per theme)
+- [x] For selected theme, show representative subset of ships (6 key types)
+- [x] Display BOTH portrait view AND top-down view for each ship
+- [x] Use larger ship images: 180px per view for clarity
+- [x] Add ship class name label under each pair
+- [x] Highlight selected theme button
+**Notes:** Ships: Fighter (Medium), Satellite (Medium), Escort, Cruiser, Battleship, Dreadnought
+
+#### Task 10.4: Update Summary Preview Sizes [Simple]
+**File:** `game/ui/screens/race_setup_screen.py`
+**Tests:** Manual - verify Summary shows larger previews
+- [x] Increase flag preview in summary (3 shapes at 85px each in 280px panel)
+- [x] Increase portrait preview in summary (256x256 in 280px panel)
+- [ ] Add ship theme preview images to summary
+**Notes:** Ship preview in summary deferred - shows theme name for now
+
+#### Task 10.5: Add Portrait Loading to ShipThemeManager [Simple]
+**File:** `game/simulation/ship_theme.py`
+**Tests:** Manual - verify portrait images load correctly
+- [x] Add `get_portrait_image(theme_name, ship_class)` method
+- [x] Load from `{theme_dir}/Portraits/{ShipClass}_Portrait.jpg`
+- [x] Add portrait cache similar to existing skin cache
+- [x] Handle missing portraits gracefully
+**Notes:** Added `_ship_class_to_portrait_name()` for filename conversion
+
+#### Task 10.6: Increase Window and Panel Sizes [Medium]
+**File:** `game/ui/screens/race_setup_screen.py`
+**Tests:** Manual - verify all content fits with minimal scrolling on 2560x1600
+- [x] Increase window size significantly (1800x1200)
+- [x] Increase panel content areas to accommodate 256px images
+- [x] Reduce need for scrolling by using larger visible areas
+- [x] Ensure layout works well on minimum target resolution (2560x1600)
+**Notes:** Window in app.py increased from 900x700 to 1800x1200
+
+---
+
 ## Verification Checklist
 
 ### After Phase 1
@@ -357,6 +456,22 @@ Create a new "Race Setup" screen accessible from the main menu that allows playe
 - [x] Save race creates JSON file
 - [x] All unit tests pass: 48 tests passing
 - [ ] No memory leaks verification needed
+
+### After Phase 9 (Revision)
+- [ ] Tabs appear at top of window
+- [ ] Summary tab is shown first on open
+- [ ] Load Race button works (opens file dialog, populates UI)
+- [ ] Clicking tabs switches between sections
+- [ ] Ship Theme has its own dedicated tab
+
+### After Phase 10 (Revision)
+- [ ] Flag thumbnails are 256px (clear, not condensed)
+- [ ] Portrait thumbnails are 256px (clear, not condensed)
+- [ ] Ship Theme page shows representative ships per theme
+- [ ] Each ship shows BOTH portrait and top-down views
+- [ ] Ship images are large and clear (150-200px per view)
+- [ ] Summary reflects new larger preview sizes
+- [ ] Window is large enough for 2560x1600 display with minimal scrolling
 
 ---
 
