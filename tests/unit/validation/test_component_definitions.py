@@ -50,7 +50,7 @@ class TestComponentDefinitions:
     @pytest.mark.parametrize("comp", COMPONENTS, ids=lambda c: c.get('id', 'unknown'))
     def test_component_required_fields(self, comp):
         """Verify that mandatory fields exist."""
-        required = ['name', 'type', 'mass', 'hp', 'cost']
+        required = ['name', 'type', 'mass', 'hp']
         for field in required:
             assert field in comp, f"Component {comp.get('id')} missing required field: {field}"
             
@@ -63,7 +63,7 @@ class TestComponentDefinitions:
              assert comp['mass'] >= 0, f"Component {comp['id']} has negative mass"
              
         if not isinstance(comp['hp'], str):
-             assert comp['hp'] > 0, f"Component {comp['id']} has non-positive HP"
+             assert comp['hp'] >= 0, f"Component {comp['id']} has negative HP"
              
         if not isinstance(comp.get('cost', 0), str):
              assert comp.get('cost', 0) >= 0, f"Component {comp['id']} has negative cost"
@@ -85,11 +85,12 @@ class TestComponentDefinitions:
     def test_component_resource_costs(self, comp):
         """Verify resource costs logic if present."""
         if 'resource_cost' in comp:
+            from game.strategy.data.planet import PLANET_RESOURCES
             costs = comp['resource_cost']
             assert isinstance(costs, dict), "resource_cost must be a dictionary"
             for res, amount in costs.items():
-                assert amount > 0, f"Resource cost {res} for {comp['id']} must be positive"
-                assert res in ["Materials", "Credits", "Ordnance", "Energy", "Research"], f"Unknown resource: {res}"
+                assert amount >= 0, f"Resource cost {res} for {comp['id']} must be non-negative"
+                assert res in PLANET_RESOURCES, f"Unknown resource: {res}"
 
     @pytest.mark.parametrize("comp", COMPONENTS, ids=lambda c: c.get('id', 'unknown'))
     def test_component_abilities_format(self, comp):

@@ -22,7 +22,7 @@ class TestDetailPanelRendering(unittest.TestCase):
         self.uiimage_patch = patch('ui.builder.detail_panel.UIImage')
         self.uibutton_patch = patch('ui.builder.detail_panel.UIButton')
         self.uitextbox_patch = patch('ui.builder.detail_panel.UITextBox')
-        self.modifier_grid_patch = patch('ui.builder.detail_panel.ModifierImpactGrid')
+        self.modifier_grid_patch = patch('game.ui.panels.modifier_impact_grid.ModifierImpactGrid')
 
         self.MockUIPanel = self.uipanel_patch.start()
         self.MockUILabel = self.uilabel_patch.start()
