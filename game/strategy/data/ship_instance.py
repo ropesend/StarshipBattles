@@ -16,6 +16,7 @@ import json
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
+    from game.strategy.data.empire import Empire
 
 
 @dataclass
@@ -52,6 +53,9 @@ class ShipInstance:
     kills: int = 0
     battles_survived: int = 0
 
+    # Serial number - unique per design within an empire
+    serial: Optional[int] = None
+
     @classmethod
     def create(
         cls,
@@ -59,6 +63,7 @@ class ShipInstance:
         owner_id: int,
         name: Optional[str] = None,
         design_id: Optional[str] = None,
+        empire: Optional['Empire'] = None,
     ) -> 'ShipInstance':
         """
         Create a new ship instance from a design.
@@ -68,16 +73,25 @@ class ShipInstance:
             owner_id: Empire that owns this ship
             name: Instance name (defaults to design name)
             design_id: Design identifier (defaults to design name)
+            empire: Empire to get serial number from (optional)
         """
         design_name = design_data.get('name', 'Unknown Ship')
+        actual_design_id = design_id or design_name
 
-        return cls(
+        # Get serial number from empire if provided
+        serial = None
+        if empire is not None:
+            serial = empire.get_next_serial(actual_design_id)
+
+        instance = cls(
             instance_id=str(uuid.uuid4()),
-            design_id=design_id or design_name,
+            design_id=actual_design_id,
             name=name or design_name,
             owner_id=owner_id,
             design_data=design_data,
         )
+        instance.serial = serial
+        return instance
 
     @classmethod
     def from_ship(cls, ship: 'Ship', owner_id: int) -> 'ShipInstance':
@@ -155,6 +169,157 @@ class ShipInstance:
         if max_val <= 0:
             return 0.0
         return current / max_val
+
+    def get_display_id(self) -> Optional[str]:
+        """
+        Get human-readable display ID in format "DesignName-000001".
+
+        Returns:
+            Display ID string if serial is set, None otherwise.
+        """
+        if self.serial is None:
+            return None
+        # Use design name from design_data for display
+        design_name = self.design_data.get('name', self.design_id)
+        return f"{design_name}-{self.serial:06d}"
+
+    def get_component_damage_summary(self) -> Dict[str, int]:
+        """
+        Get summary of damaged components.
+
+        Returns:
+            Dict mapping component_id to current HP for damaged components.
+        """
+        return dict(self.component_damage)
+
+    def get_damaged_component_count(self) -> int:
+        """
+        Get count of damaged components.
+
+        Returns:
+            Number of components with recorded damage.
+        """
+        return len(self.component_damage)
+
+    def get_layer_damage_summary(self) -> Dict[str, float]:
+        """
+        Get damage summary grouped by layer.
+
+        Note: Without converting to a Ship, we can't determine layer membership
+        of damaged components. Returns empty dict for ShipInstance.
+        Full layer info requires calling to_ship() first.
+
+        Returns:
+            Empty dict (layer info requires live Ship object).
+        """
+        return {}
+
+    def get_status_text(self) -> str:
+        """
+        Get human-readable status text.
+
+        Returns:
+            One of: "OK", "DAMAGED", "DERELICT", "DESTROYED"
+        """
+        if self.is_destroyed:
+            return "DESTROYED"
+        elif self.is_derelict:
+            return "DERELICT"
+        elif self.is_damaged():
+            return "DAMAGED"
+        else:
+            return "OK"
+
+    def get_hp_display(self) -> str:
+        """
+        Get HP as display string "current/max".
+
+        Returns:
+            HP display string like "150/200"
+        """
+        max_hp = self.design_data.get('expected_stats', {}).get('max_hp', 100)
+
+        if self.current_hp is None:
+            return f"{max_hp}/{max_hp}"
+        else:
+            return f"{self.current_hp}/{max_hp}"
+
+    def get_resource_display(self, resource_name: str) -> str:
+        """
+        Get resource as display string "current/max".
+
+        Args:
+            resource_name: Name of resource (fuel, energy, ammo)
+
+        Returns:
+            Resource display string like "250/500", or "N/A" if not tracked
+        """
+        max_key = f'max_{resource_name}'
+        max_val = self.design_data.get('expected_stats', {}).get(max_key)
+
+        if max_val is None:
+            return "N/A"
+
+        if resource_name in self.resource_levels:
+            current = int(self.resource_levels[resource_name])
+        else:
+            current = int(max_val)  # Full if not tracked
+
+        return f"{current}/{int(max_val)}"
+
+    def get_components_by_layer(self) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Get components grouped by layer from design data.
+
+        Returns:
+            Dict mapping layer name (CORE, INNER, etc.) to list of component entries.
+        """
+        layers = self.design_data.get('layers', {})
+        return {layer_name: list(comps) for layer_name, comps in layers.items()}
+
+    def get_damaged_components_by_layer(self) -> Dict[str, List[Tuple[str, int]]]:
+        """
+        Get damaged components grouped by layer.
+
+        Matches damaged component IDs against the design's layer structure
+        to determine which layer each damaged component belongs to.
+
+        Returns:
+            Dict mapping layer name to list of (component_id, current_hp) tuples
+            for damaged components in that layer.
+        """
+        if not self.component_damage:
+            return {}
+
+        # Build lookup from component base ID to layer
+        layers = self.design_data.get('layers', {})
+        comp_to_layer: Dict[str, str] = {}
+
+        for layer_name, components in layers.items():
+            for i, comp_entry in enumerate(components):
+                # Component IDs in damage dict are typically "base_id_index"
+                comp_id = comp_entry.get('id') if isinstance(comp_entry, dict) else comp_entry
+                # Map both the base ID and indexed versions
+                comp_to_layer[comp_id] = layer_name
+                comp_to_layer[f"{comp_id}_{i}"] = layer_name
+
+        # Group damaged components by layer
+        result: Dict[str, List[Tuple[str, int]]] = {}
+
+        for comp_id, current_hp in self.component_damage.items():
+            # Try to find layer for this component
+            layer_name = comp_to_layer.get(comp_id)
+
+            if layer_name is None:
+                # Try matching by base ID (strip trailing _N)
+                base_id = '_'.join(comp_id.rsplit('_', 1)[:-1]) if '_' in comp_id else comp_id
+                layer_name = comp_to_layer.get(base_id, 'UNKNOWN')
+
+            if layer_name not in result:
+                result[layer_name] = []
+            result[layer_name].append((comp_id, current_hp))
+
+        return result
 
     def to_ship(self, position: Tuple[float, float], team_id: int) -> 'Ship':
         """
@@ -302,6 +467,7 @@ class ShipInstance:
             'experience': self.experience,
             'kills': self.kills,
             'battles_survived': self.battles_survived,
+            'serial': self.serial,
         }
 
     @classmethod
@@ -321,6 +487,7 @@ class ShipInstance:
             experience=data.get('experience', 0),
             kills=data.get('kills', 0),
             battles_survived=data.get('battles_survived', 0),
+            serial=data.get('serial'),
         )
 
     def to_json(self, indent: int = 2) -> str:

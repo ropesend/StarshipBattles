@@ -19,6 +19,9 @@ class Empire:
         # Fleet ID generator
         self._next_fleet_id = 10000
 
+        # Ship serial number counters - per design_id
+        self._design_serial_counters = {}  # Dict[str, int]
+
     def add_colony(self, planet):
         if planet not in self.colonies:
             self.colonies.append(planet)
@@ -43,6 +46,23 @@ class Empire:
         self._next_fleet_id += 1
         return fleet_id
 
+    def get_next_serial(self, design_id: str) -> int:
+        """
+        Generate unique sequential serial number for a ship design.
+
+        Each design_id has its own counter starting at 1.
+
+        Args:
+            design_id: The ship design identifier
+
+        Returns:
+            Next serial number for this design (1, 2, 3, ...)
+        """
+        current = self._design_serial_counters.get(design_id, 0)
+        next_serial = current + 1
+        self._design_serial_counters[design_id] = next_serial
+        return next_serial
+
     def to_dict(self) -> dict:
         """
         Serialize Empire to dict.
@@ -59,7 +79,8 @@ class Empire:
             'colony_ids': [p.id for p in self.colonies],  # Store IDs only
             'fleets': [f.to_dict() for f in self.fleets],
             'built_ship_designs': list(self.built_ship_designs),
-            '_next_fleet_id': self._next_fleet_id
+            '_next_fleet_id': self._next_fleet_id,
+            '_design_serial_counters': self._design_serial_counters,
         }
 
     @classmethod
@@ -89,6 +110,9 @@ class Empire:
 
         # Restore fleet ID counter
         empire._next_fleet_id = data.get('_next_fleet_id', 10000)
+
+        # Restore ship serial counters
+        empire._design_serial_counters = data.get('_design_serial_counters', {})
 
         # Restore fleets
         empire.fleets = [Fleet.from_dict(f) for f in data.get('fleets', [])]

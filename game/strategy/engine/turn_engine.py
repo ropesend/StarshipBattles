@@ -209,12 +209,13 @@ class TurnEngine:
             log_warning(f"Cannot spawn {design_id}: design data not found")
             return
 
-        # Create ShipInstance
+        # Create ShipInstance (with serial number)
         ship_instance = ShipInstance.create(
             design_id=design_id,
             design_data=design_data,
             owner_id=empire.id,
-            name=design_data.get("name", design_id)
+            name=design_data.get("name", design_id),
+            empire=empire
         )
 
         # Create fleet with unique ID
