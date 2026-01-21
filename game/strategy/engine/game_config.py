@@ -32,20 +32,36 @@ THEME_DEFAULTS = [
 class PlayerConfig:
     """
     Configuration for a single player/empire.
+
+    Race visual properties (flag_id, portrait_id) are used when a player
+    selects a custom race during game setup. If not set, default theme
+    visuals are used.
     """
     name: str = "Empire"
     theme: str = "Federation"
     color: tuple = (128, 128, 128)
     is_human: bool = True
+    # Race visual identity (optional - from RaceConfig selection)
+    race_id: Optional[str] = None
+    flag_id: str = ""
+    portrait_id: str = ""
 
     def to_dict(self) -> dict:
         """Serialize PlayerConfig to dict."""
-        return {
+        data = {
             'name': self.name,
             'theme': self.theme,
             'color': list(self.color),  # Tuple to list for JSON
             'is_human': self.is_human
         }
+        # Only include race fields if set (backwards compatibility)
+        if self.race_id:
+            data['race_id'] = self.race_id
+        if self.flag_id:
+            data['flag_id'] = self.flag_id
+        if self.portrait_id:
+            data['portrait_id'] = self.portrait_id
+        return data
 
     @classmethod
     def from_dict(cls, data: dict) -> 'PlayerConfig':
@@ -54,7 +70,10 @@ class PlayerConfig:
             name=data.get('name', 'Empire'),
             theme=data.get('theme', 'Federation'),
             color=tuple(data.get('color', [128, 128, 128])),
-            is_human=data.get('is_human', True)
+            is_human=data.get('is_human', True),
+            race_id=data.get('race_id'),
+            flag_id=data.get('flag_id', ''),
+            portrait_id=data.get('portrait_id', '')
         )
 
 

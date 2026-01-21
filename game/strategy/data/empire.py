@@ -2,12 +2,16 @@ class Empire:
     """
     Represents a player or AI faction.
     """
-    def __init__(self, empire_id, name, color, theme_path=None, empire_theme_id="Federation"):
+    def __init__(self, empire_id, name, color, theme_path=None, empire_theme_id="Federation",
+                 flag_id: str = "", portrait_id: str = ""):
         self.id = empire_id
         self.name = name
         self.color = color
         self.theme_path = theme_path
         self.empire_theme_id = empire_theme_id  # Ship theme for this empire's designs
+        # Race visual identity (from RaceConfig selection during game setup)
+        self.flag_id = flag_id  # Custom flag directory (e.g., "flag_2fl0bh2fl0bh2fl0")
+        self.portrait_id = portrait_id  # Race portrait filename
 
         self.colonies = [] # List[Planet]
         self.fleets = [] # List[Fleet]
@@ -50,7 +54,7 @@ class Empire:
         Stores colony IDs only (not full Planet objects) to avoid circular references.
         Planets will be resolved during load via galaxy.get_planet_by_id().
         """
-        return {
+        data = {
             'id': self.id,
             'name': self.name,
             'color': self.color,
@@ -61,6 +65,12 @@ class Empire:
             'built_ship_designs': list(self.built_ship_designs),
             '_next_fleet_id': self._next_fleet_id
         }
+        # Include race visual identity if set (backwards compatibility)
+        if self.flag_id:
+            data['flag_id'] = self.flag_id
+        if self.portrait_id:
+            data['portrait_id'] = self.portrait_id
+        return data
 
     @classmethod
     def from_dict(cls, data: dict, galaxy=None) -> 'Empire':
@@ -81,7 +91,9 @@ class Empire:
             name=data['name'],
             color=data['color'],
             theme_path=data.get('theme_path'),
-            empire_theme_id=data.get('empire_theme_id', 'Federation')
+            empire_theme_id=data.get('empire_theme_id', 'Federation'),
+            flag_id=data.get('flag_id', ''),
+            portrait_id=data.get('portrait_id', '')
         )
 
         # Restore built_ship_designs set

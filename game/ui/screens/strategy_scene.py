@@ -432,6 +432,8 @@ class StrategyScene:
         """Load visual assets using AssetManager."""
         from game.assets.asset_manager import get_asset_manager
         from game.strategy.engine.game_config import GameConfig
+        from game.core.constants import ASSET_DIR
+        from game.core.logger import log_debug
 
         am = get_asset_manager()
         am.load_manifest()
@@ -440,20 +442,45 @@ class StrategyScene:
         config = GameConfig()
         asset_base = config.asset_base_path
 
+        # Race flags are stored in a different location
+        race_flags_base = os.path.join(ASSET_DIR, "Images", "Flags", "Processed")
+
         for emp in self.empires:
             self.empire_assets[emp.id] = {}
+
+            # Check if empire has custom race flag
+            if emp.flag_id:
+                # Load race-specific flags from Flags/Processed/{flag_id}/
+                flag_dir = os.path.join(race_flags_base, emp.flag_id)
+                if os.path.exists(flag_dir):
+                    # Rectangle flag for colonies (try 256 size first, then root)
+                    rect_flag_path = os.path.join(flag_dir, "256", "rectangle.png")
+                    if not os.path.exists(rect_flag_path):
+                        rect_flag_path = os.path.join(flag_dir, "rectangle.png")
+                    if os.path.exists(rect_flag_path):
+                        self.empire_assets[emp.id]['colony'] = am.load_external_image(rect_flag_path)
+                        log_debug(f"Loaded race rectangle flag for empire {emp.id}: {rect_flag_path}")
+
+                    # Shield flag for fleets
+                    shield_flag_path = os.path.join(flag_dir, "256", "shield.png")
+                    if not os.path.exists(shield_flag_path):
+                        shield_flag_path = os.path.join(flag_dir, "shield.png")
+                    if os.path.exists(shield_flag_path):
+                        self.empire_assets[emp.id]['fleet_flag'] = am.load_external_image(shield_flag_path)
+                        log_debug(f"Loaded race shield flag for empire {emp.id}: {shield_flag_path}")
 
             # Recalculate theme_path using empire_theme_id and current asset location
             # This fixes BUG-13: saved absolute paths may not exist on current machine
             theme_path = os.path.join(asset_base, emp.empire_theme_id)
 
             if os.path.exists(theme_path):
-                # Colony Flag
-                colony_path = os.path.join(theme_path, "Flags", "Colony_Flag.jpg")
-                if os.path.exists(colony_path):
-                    self.empire_assets[emp.id]['colony'] = am.load_external_image(colony_path)
+                # Colony Flag - only load from theme if not already loaded from race
+                if 'colony' not in self.empire_assets[emp.id]:
+                    colony_path = os.path.join(theme_path, "Flags", "Colony_Flag.jpg")
+                    if os.path.exists(colony_path):
+                        self.empire_assets[emp.id]['colony'] = am.load_external_image(colony_path)
 
-                # Fleet Icon
+                # Fleet Icon (ship silhouette - always load from theme)
                 fleet_path = os.path.join(theme_path, "Skins", "Battlecruiser.png")
                 if os.path.exists(fleet_path):
                     self.empire_assets[emp.id]['fleet'] = am.load_external_image(fleet_path)
