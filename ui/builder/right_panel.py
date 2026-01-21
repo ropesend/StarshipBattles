@@ -138,6 +138,7 @@ class BuilderRightPanel:
         UILabel(pygame.Rect(10, y, 60, 25), "Theme:", manager=self.manager, container=self.panel)
         theme_options = self.builder.theme_manager.get_available_themes()
         curr_theme = getattr(self.viewmodel.ship, 'theme_id', 'Federation')
+        print(f"DEBUG: RightPanel creating theme_dropdown with curr_theme={curr_theme}")
         if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
 
         self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)

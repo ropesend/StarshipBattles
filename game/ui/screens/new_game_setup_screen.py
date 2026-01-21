@@ -517,8 +517,10 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             # Get theme and color: from race if available, otherwise defaults
             if race and race.theme_id:
                 theme = race.theme_id
+                log_debug(f"Player {i} using race theme: {theme}")
             else:
                 theme = THEME_DEFAULTS[i][0]
+                log_debug(f"Player {i} using default theme: {theme}")
 
             color = THEME_DEFAULTS[i][1]  # Color still comes from defaults
 

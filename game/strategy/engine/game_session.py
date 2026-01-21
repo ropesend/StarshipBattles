@@ -33,6 +33,7 @@ class GameSession:
         self.empires = []
         for i, player_cfg in enumerate(config.players):
             theme_path = config.get_player_theme_path(i)
+            log_info(f"GameSession: Creating empire {i} with theme={player_cfg.theme}, theme_path={theme_path}")
             empire = Empire(
                 empire_id=i,
                 name=player_cfg.name,

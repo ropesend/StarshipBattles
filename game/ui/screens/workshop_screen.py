@@ -104,6 +104,9 @@ class DesignWorkshopGUI:
         # In integrated mode, set ship theme from empire
         if self.context.is_integrated() and self.context.empire_theme_id:
             self.ship.theme_id = self.context.empire_theme_id
+            print(f"DEBUG: Workshop set ship.theme_id to {self.ship.theme_id}")
+        else:
+            print(f"DEBUG: Workshop NOT setting theme - integrated={self.context.is_integrated()}, empire_theme_id={self.context.empire_theme_id}")
         
         # Managers
         self.viewmodel.refresh_available_components()
