@@ -215,17 +215,18 @@ class DesignWorkshopGUI:
                 self.sprite_mgr
             )
 
-        # Component Modifier Grid Panel (above Weapons Report)
+        # Detail Panel X position (needed for modifier grid width calculation)
+        detail_x = self.width - self.right_panel_width - self.detail_panel_width
+
+        # Component Modifier Grid Panel (above Weapons Report, ends at Component Report)
         modifier_grid_y = weapons_panel_y - self.modifier_grid_panel_height
+        modifier_grid_width = detail_x - weapons_panel_x  # End at left edge of Component Report
         with profile_block("Builder: Init Modifier Grid Panel"):
             self.component_modifier_grid_panel = ComponentModifierGridPanel(
                 self.ui_manager,
-                pygame.Rect(weapons_panel_x, modifier_grid_y, weapons_panel_width, self.modifier_grid_panel_height),
+                pygame.Rect(weapons_panel_x, modifier_grid_y, modifier_grid_width, self.modifier_grid_panel_height),
                 event_bus=self.event_bus
             )
-
-        # Detail Panel
-        detail_x = self.width - self.right_panel_width - self.detail_panel_width
         avail_height = self.height - self.bottom_bar_height - self.weapons_report_height
         
         # Component Image Path

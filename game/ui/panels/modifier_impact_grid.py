@@ -10,7 +10,7 @@ Only shows stats that are actually affected (not at default values).
 """
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIPanel, UILabel, UIButton, UIWindow
+from pygame_gui.elements import UIPanel, UILabel
 from typing import Dict, Any, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -29,12 +29,12 @@ class ModifierImpactGrid:
     """
 
     # Layout constants
-    ROW_HEIGHT = 22  # Slightly smaller for more rows
-    HEADER_HEIGHT = 50  # Space for rotated headers (reduced)
-    COLUMN_WIDTH = 50  # Slightly narrower columns
-    NAME_COLUMN_WIDTH = 100  # Narrower name column
+    ROW_HEIGHT = 26  # Reduced by 20% from 33
+    HEADER_HEIGHT = 75  # Space for rotated headers
+    COLUMN_WIDTH = 75  # Wider columns for larger text
+    NAME_COLUMN_WIDTH = 150  # Wider name column
     PADDING = 5
-    TITLE_HEIGHT = 20  # Height of title area
+    TITLE_HEIGHT = 0  # No title - more room for column headers
 
     # Colors
     COLOR_HEADER_BG = (40, 40, 50)
@@ -79,15 +79,10 @@ class ModifierImpactGrid:
         # UI elements for cleanup
         self._ui_elements: List = []
 
-        # Expand button and popup references
-        self.expand_btn: Optional[UIButton] = None
-        self.expanded_window: Optional[UIWindow] = None
-        self.expanded_grid: Optional['ModifierImpactGrid'] = None
-
-        # Fonts
-        self.font = pygame.font.SysFont("Arial", 11)
-        self.header_font = pygame.font.SysFont("Arial", 10)
-        self.net_font = pygame.font.SysFont("Arial", 11, bold=True)
+        # Fonts (reduced 10% from 17/15 for tighter rows)
+        self.font = pygame.font.SysFont("Arial", 15)
+        self.header_font = pygame.font.SysFont("Arial", 14)
+        self.net_font = pygame.font.SysFont("Arial", 15, bold=True)
 
         # Cached surfaces for headers (rotated text)
         self._header_cache: Dict[str, pygame.Surface] = {}
@@ -348,27 +343,7 @@ class ModifierImpactGrid:
             self._ui_elements.append(msg)
             return
 
-        # Title
-        title = UILabel(
-            relative_rect=pygame.Rect(5, 2, self.NAME_COLUMN_WIDTH, 20),
-            text="── Modifier Impact ──",
-            manager=self.manager,
-            container=self.panel
-        )
-        self._ui_elements.append(title)
-
-        # Expand button in upper-right corner
-        btn_size = 24
-        self.expand_btn = UIButton(
-            relative_rect=pygame.Rect(self.rect.width - btn_size - 5, 2, btn_size, btn_size - 4),
-            text="⬜",  # Unicode expand icon
-            manager=self.manager,
-            container=self.panel,
-            object_id='#expand_grid_btn',
-            tool_tip_text="Expand to larger view"
-        )
-        self._ui_elements.append(self.expand_btn)
-
+        # No title - grid content starts immediately
         # We'll draw the actual grid content in draw() method
         # since pygame_gui doesn't have a native grid/table
 
@@ -481,7 +456,7 @@ class ModifierImpactGrid:
 
     def handle_event(self, event) -> bool:
         """
-        Handle pygame events for scrolling and button clicks.
+        Handle pygame events for scrolling.
 
         Args:
             event: pygame event
@@ -489,12 +464,6 @@ class ModifierImpactGrid:
         Returns:
             True if event was consumed
         """
-        # Handle expand button click
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if hasattr(self, 'expand_btn') and event.ui_element == self.expand_btn:
-                self.show_expanded_popup()
-                return True
-
         if event.type == pygame.MOUSEWHEEL:
             # Check if mouse is over the grid (use absolute position)
             mx, my = pygame.mouse.get_pos()
@@ -531,40 +500,3 @@ class ModifierImpactGrid:
         """Set the position of the grid panel."""
         self.rect.topleft = pos
         self.panel.set_position(pos)
-
-    def show_expanded_popup(self):
-        """
-        Show an expanded popup window with a larger view of the grid.
-
-        Creates a UIWindow approximately 4x the size of the current grid
-        containing a larger ModifierImpactGrid instance.
-        """
-        if not self.current_component:
-            return
-
-        # Calculate expanded size (approximately 4x area = 2x each dimension)
-        expanded_width = 600
-        expanded_height = 500
-
-        # Center on screen (rough estimate, actual screen size not available)
-        # Use a reasonable default position
-        win_x = 200
-        win_y = 100
-
-        # Create the popup window
-        self.expanded_window = UIWindow(
-            rect=pygame.Rect(win_x, win_y, expanded_width, expanded_height),
-            manager=self.manager,
-            window_display_title=f"Modifier Impact: {self.current_component.name}",
-            resizable=True
-        )
-
-        # Create a larger grid inside the window
-        grid_rect = pygame.Rect(5, 5, expanded_width - 30, expanded_height - 60)
-        self.expanded_grid = ModifierImpactGrid(
-            self.manager,
-            self.expanded_window,
-            grid_rect
-        )
-        self.expanded_grid.update(self.current_component)
-        self.expanded_grid.panel.show()

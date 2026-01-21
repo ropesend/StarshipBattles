@@ -28,11 +28,11 @@ Refactor the Design Workshop's component modifier panel and component report to 
 
 ## Current State
 **Last Updated:** 2026-01-21
-**Current Phase:** Phase 8 COMPLETE
-**Last Agent Action:** Implemented all 5 Phase 8 tasks - dedicated Component Modifier Grid Panel
-**Next Action:** User verification of Phase 8 changes
+**Current Phase:** Phase 9 COMPLETE
+**Last Agent Action:** Implemented all 4 Phase 9 tasks - grid panel size & layout improvements
+**Next Action:** User verification of Phase 9 changes
 **Blockers:** None
-**Context for Next Agent:** Phase 8 revision complete. Created new dedicated ComponentModifierGridPanel (180px tall strip above Weapons Report) with more horizontal space for modifier grid. Removed embedded grid from ComponentDetailPanel. Changed precision to 4 significant digits. All 2037 tests passing.
+**Context for Next Agent:** Phase 9 revision complete. Increased ComponentModifierGridPanel height to 450px (2.5x). Increased font sizes by 50%. Changed panel width to end at left edge of Component Report (no overlap). Removed expand button and popup functionality. All 2037 tests passing.
 
 ## Implementation Summary
 
@@ -464,6 +464,39 @@ A "Net Impact" text section was added to detail_panel.py (lines 249-288) showing
 
 ---
 
+### Phase 9: Grid Panel Size & Layout Improvements [Medium] ✅ COMPLETE
+**Objective:** Increase grid panel size and improve layout per user feedback
+**Status:** Complete
+**Revision Reason:** User feedback: panel should be 2.5x taller, text 50% larger, no overlap with Component Report, remove expand button
+
+#### Task 9.1: Increase panel height to 450px [Simple] ✅
+**File:** `game/ui/screens/builder_utils.py`
+- [x] Changed `modifier_grid_panel: int = 180` to `modifier_grid_panel: int = 450`
+**Notes:** 2.5x height increase
+
+#### Task 9.2: Adjust panel width to end at Component Report [Simple] ✅
+**File:** `game/ui/screens/workshop_screen.py`
+- [x] Calculated `detail_x` before modifier grid panel creation
+- [x] Changed width from `weapons_panel_width` to `detail_x - weapons_panel_x`
+**Notes:** Panel now ends at left edge of Component Report (no overlap)
+
+#### Task 9.3: Increase font sizes by 50% [Simple] ✅
+**File:** `game/ui/panels/modifier_impact_grid.py`
+- [x] Changed fonts: 11→17, 10→15, 11 bold→17 bold
+- [x] Updated layout constants: ROW_HEIGHT 22→33, HEADER_HEIGHT 50→75, COLUMN_WIDTH 50→75, NAME_COLUMN_WIDTH 100→150, TITLE_HEIGHT 20→30
+**Notes:** All dimensions scaled 1.5x
+
+#### Task 9.4: Remove expand button and popup functionality [Simple] ✅
+**File:** `game/ui/panels/modifier_impact_grid.py`
+- [x] Removed UIButton and UIWindow imports
+- [x] Removed expand_btn, expanded_window, expanded_grid attributes
+- [x] Removed expand button creation in _build_ui()
+- [x] Removed expand button click handling in handle_event()
+- [x] Removed show_expanded_popup() method
+**Notes:** No longer needed with larger panel
+
+---
+
 ## Verification Checklist
 
 ### After Each Phase
@@ -519,6 +552,7 @@ A "Net Impact" text section was added to detail_panel.py (lines 249-288) showing
 - [x] All Phase 6 tasks checked off
 - [x] All Phase 7 tasks checked off (Revision)
 - [x] All Phase 8 tasks checked off (Revision)
+- [x] All Phase 9 tasks checked off (Revision)
 - [x] All tests passing (2037 passed, 1 skipped)
 - [x] Regression tests passing
 - [x] New tests added: 17 (8 for Component methods, 9 for ModifierImpactGrid)
@@ -528,17 +562,21 @@ A "Net Impact" text section was added to detail_panel.py (lines 249-288) showing
 ### Revision Verification (Phase 7)
 - [ ] Task 7.1: Weapons show only damage/range/reload/arc columns (no thrust)
 - [ ] Task 7.1: Engines show only thrust columns (no damage)
-- [ ] Task 7.2: Grid appears within Component Report Panel (right side)
+- [ ] Task 7.2: Grid appears within dedicated panel (not Component Report)
 - [ ] Task 7.2: Grid does NOT overlay Component List or Ship Structure
-- [ ] Task 7.3: Expand button visible in upper-right of grid
-- [ ] Task 7.3: Click opens popup window ~600x500
 - [x] Regression: Builder tests passing (106 passed)
 - [x] Modifier grid tests passing (9 passed)
 
 ### Revision Verification (Phase 8)
 - [ ] Task 8.2: New panel appears as horizontal strip above Weapons Report
-- [ ] Task 8.2: Panel spans same width as Weapons Report
 - [ ] Task 8.4: Component Report no longer has embedded grid
 - [ ] Task 8.4: Component Report stats text box has more vertical space
 - [ ] Task 8.5: Values show 4 significant digits (73.73, 350.8, 1001)
+- [x] Full test suite passing (2037 passed, 1 skipped)
+
+### Revision Verification (Phase 9)
+- [ ] Task 9.1: Panel is 450px tall (2.5x previous)
+- [ ] Task 9.2: Panel ends at left edge of Component Report (no overlap)
+- [ ] Task 9.3: Text is 50% larger and readable
+- [ ] Task 9.4: No expand button visible
 - [x] Full test suite passing (2037 passed, 1 skipped)
