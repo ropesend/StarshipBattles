@@ -55,7 +55,10 @@ class ShipThemeManager:
         
         # Cache for metrics
         self.image_metrics = {} # {theme_name: {class_name: rect}}
-        
+
+        # Cache for portrait images
+        self.portraits = {}  # {theme_name: {class_name: surface}}
+
         self.base_path = None
         self.default_theme = "Federation"
         self.discovery_complete = False
@@ -69,6 +72,7 @@ class ShipThemeManager:
                 self.themes = {}
                 self.theme_data = {}
                 self.image_metrics = {}
+                self.portraits = {}
                 self.discovery_complete = False
                 log_info("ShipThemeManager caches cleared.")
 
@@ -246,3 +250,97 @@ class ShipThemeManager:
     def get_available_themes(self):
         """Return list of available theme names."""
         return list(self.theme_data.keys())
+
+    def get_portrait_image(self, theme_name, ship_class):
+        """
+        Get the portrait image for a specific theme and ship class.
+
+        Portrait images are located in {theme_dir}/Portraits/{ShipClass}_Portrait.jpg
+        These are artistic side-view images, as opposed to the top-down gameplay sprites.
+
+        Args:
+            theme_name: Theme name (e.g., "Atlantians")
+            ship_class: Ship class name (e.g., "Battleship", "Fighter (Medium)")
+
+        Returns:
+            pygame.Surface or None if not found
+        """
+        if not self.discovery_complete:
+            return None
+
+        # Fallback to default if theme missing
+        if theme_name not in self.theme_data:
+            theme_name = self.default_theme
+
+        # Check cache
+        if theme_name in self.portraits and ship_class in self.portraits[theme_name]:
+            return self.portraits[theme_name][ship_class]
+
+        # Load on demand
+        return self._load_portrait_image(theme_name, ship_class)
+
+    def _load_portrait_image(self, theme_name, ship_class):
+        """Load a portrait image from disk and cache it."""
+        with self._io_lock:
+            # Double-check cache after acquiring lock
+            if theme_name in self.portraits and ship_class in self.portraits[theme_name]:
+                return self.portraits[theme_name][ship_class]
+
+            # Convert ship class to portrait filename format
+            # e.g., "Fighter (Medium)" -> "MediumFighter_Portrait.jpg"
+            # e.g., "Battleship" -> "Battleship_Portrait.jpg"
+            portrait_name = self._ship_class_to_portrait_name(ship_class)
+            portrait_filename = f"{portrait_name}_Portrait.jpg"
+
+            # Get theme directory from theme_data
+            # We need to find the theme directory - look at any existing path
+            theme_dir = None
+            if theme_name in self.theme_data and self.theme_data[theme_name]:
+                # Get any path and derive theme dir from it
+                any_ship = next(iter(self.theme_data[theme_name].values()))
+                any_path = any_ship['path']
+                # Path is like: .../ShipThemes/Atlantians/Skins/Escort.png
+                # Theme dir is: .../ShipThemes/Atlantians
+                theme_dir = os.path.dirname(os.path.dirname(any_path))
+
+            if not theme_dir:
+                theme_dir = os.path.join(ASSET_DIR, "ShipThemes", theme_name)
+
+            portrait_path = os.path.join(theme_dir, "Portraits", portrait_filename)
+
+            if os.path.exists(portrait_path):
+                try:
+                    surf = pygame.image.load(portrait_path).convert_alpha()
+
+                    # Update cache
+                    if theme_name not in self.portraits:
+                        self.portraits[theme_name] = {}
+                    self.portraits[theme_name][ship_class] = surf
+
+                    return surf
+                except Exception as e:
+                    log_error(f"Failed to load portrait {portrait_path}: {e}")
+
+            return None
+
+    def _ship_class_to_portrait_name(self, ship_class):
+        """
+        Convert ship class name to portrait filename format.
+
+        Examples:
+            "Fighter (Medium)" -> "MediumFighter"
+            "Satellite (Heavy)" -> "HeavySatellite"
+            "Battleship" -> "Battleship"
+            "Light Cruiser" -> "LightCruiser"
+        """
+        # Handle compound names with parentheses (e.g., "Fighter (Medium)")
+        if "(" in ship_class and ")" in ship_class:
+            # Split on " (" to get base and modifier
+            parts = ship_class.replace(")", "").split(" (")
+            if len(parts) == 2:
+                base = parts[0]  # e.g., "Fighter"
+                modifier = parts[1]  # e.g., "Medium"
+                return f"{modifier}{base}"
+
+        # Handle space-separated names (e.g., "Light Cruiser")
+        return ship_class.replace(" ", "")

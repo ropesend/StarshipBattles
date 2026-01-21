@@ -318,9 +318,9 @@ class Game:
         if not hasattr(self, 'menu_ui_manager'):
             self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
 
-        # Create race setup window
-        window_width = 900
-        window_height = 700
+        # Create race setup window (larger for 2560x1600 displays)
+        window_width = 1800
+        window_height = 1200
         window_rect = pygame.Rect(
             (WIDTH - window_width) // 2,
             (HEIGHT - window_height) // 2,
