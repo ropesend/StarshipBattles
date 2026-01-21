@@ -1,0 +1,10 @@
+!EXECUTE_PROTOCOL: Features\protocols\02_implement_feature.md
+
+1. LOAD the protocol file `protocols/02_implement_feature.md`.
+2. ADOPT the 'Senior Software Engineer' persona.
+3. Read `Features/feature_plan.md` and select the top [Pending] feature.
+4. Execute all 4 phases: Analysis, Test, Implementation, Documentation.
+5. If Analysis recommends refactor: STOP and report findings.
+6. Otherwise: Implement the feature and set status to [Awaiting Confirmation].
+
+REPORT: Provide a summary of your implementation approach and any files modified.

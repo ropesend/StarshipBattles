@@ -290,8 +290,10 @@
 
 ---
 
-## [BUG-30] - NameError: name 'OrderType' is not defined
+## [BUG-28] - Show strategic move speed in Design Studio
 * **Date Solved:** 2026-01-20
-* **Original Issue:** The game crashed when clicking fleets because `OrderType` was used in `strategy_screen.py` without being imported.
-* **Solution Implemented:** Added `from game.strategy.data.fleet import OrderType` to `game/ui/screens/strategy_screen.py`.
-* **Test Case:** `tests/repro_issues/test_bug_27_ordertype.py`
+* **Original Issue:** The Design Studio ship stats panel lacked a display for strategic movement speed (hexes per turn).
+* **Solution Implemented:** 
+    1. Implemented `get_strategic_speed` in `ui/builder/stats_config.py` to calculate speed using the formula `(total_strategic_movement * 25) / mass`.
+    2. Added `strategic_speed` to the `main` systems group in `data/stats_layout.json`.
+* **Test Case:** Verified via `tests/integration/test_strategic_abilities.py` mobility logic.
