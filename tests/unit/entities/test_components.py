@@ -210,5 +210,126 @@ class TestTurretMount(unittest.TestCase):
             msg=f"Size 2x + Turret 90° should stack multiplicatively")
 
 
+class TestModifierDataMethods(unittest.TestCase):
+    """Test the new modifier data methods: get_all_modifier_effects, get_modifier_stat_summary."""
+
+    def test_get_all_modifier_effects_no_modifiers(self):
+        """Component with no modifiers returns empty list."""
+        railgun = create_component('railgun')
+        # Remove any default modifiers
+        railgun.modifiers = []
+        railgun.recalculate_stats()
+
+        effects = railgun.get_all_modifier_effects()
+
+        self.assertIsInstance(effects, list)
+        self.assertEqual(len(effects), 0)
+
+    def test_get_all_modifier_effects_single_modifier(self):
+        """Single modifier returns its evaluated effects."""
+        railgun = create_component('railgun')
+        railgun.modifiers = []
+        railgun.add_modifier('simple_size_mount', 2.0)
+
+        effects = railgun.get_all_modifier_effects()
+
+        self.assertIsInstance(effects, list)
+        self.assertGreater(len(effects), 0)
+
+        # Check that effects have the expected structure
+        for effect in effects:
+            self.assertTrue(hasattr(effect, 'stat_key'))
+            self.assertTrue(hasattr(effect, 'value'))
+            self.assertTrue(hasattr(effect, 'operation'))
+            self.assertTrue(hasattr(effect, 'source_modifier_id'))
+
+    def test_get_all_modifier_effects_multiple_modifiers(self):
+        """Multiple modifiers return all their effects combined."""
+        railgun = create_component('railgun')
+        railgun.modifiers = []
+        railgun.add_modifier('simple_size_mount', 2.0)
+        railgun.add_modifier('hardened_mount', 1.5)
+
+        effects = railgun.get_all_modifier_effects()
+
+        # Should have effects from both modifiers
+        source_ids = {e.source_modifier_id for e in effects}
+        self.assertIn('simple_size_mount', source_ids)
+        self.assertIn('hardened_mount', source_ids)
+
+    def test_get_all_modifier_effects_returns_modifier_effect_objects(self):
+        """Effects should be ModifierEffect dataclass instances."""
+        from game.simulation.components.modifier_effects import ModifierEffect
+
+        railgun = create_component('railgun')
+        railgun.modifiers = []
+        railgun.add_modifier('simple_size_mount', 2.0)
+
+        effects = railgun.get_all_modifier_effects()
+
+        for effect in effects:
+            self.assertIsInstance(effect, ModifierEffect)
+
+    def test_get_modifier_stat_summary_no_modifiers(self):
+        """Component with no modifiers returns empty/default summary."""
+        railgun = create_component('railgun')
+        railgun.modifiers = []
+        railgun.recalculate_stats()
+
+        summary = railgun.get_modifier_stat_summary()
+
+        self.assertIsInstance(summary, dict)
+        # Should have empty or default values
+
+    def test_get_modifier_stat_summary_single_modifier(self):
+        """Single modifier returns correct stat summary grouped by stat."""
+        railgun = create_component('railgun')
+        railgun.modifiers = []
+        railgun.add_modifier('simple_size_mount', 2.0)  # 2x mass_mult, 2x hp_mult
+
+        summary = railgun.get_modifier_stat_summary()
+
+        self.assertIsInstance(summary, dict)
+        # Should have stats as keys
+        self.assertIn('mass_mult', summary)
+
+        # Each stat entry should have net_value and contributors
+        mass_entry = summary['mass_mult']
+        self.assertIn('net_value', mass_entry)
+        self.assertIn('contributors', mass_entry)
+        self.assertIn('operation', mass_entry)
+
+    def test_get_modifier_stat_summary_multiple_modifiers_same_stat(self):
+        """Multiple modifiers affecting same stat show correct net value."""
+        railgun = create_component('railgun')
+        railgun.modifiers = []
+        railgun.add_modifier('simple_size_mount', 2.0)  # 2x mass_mult
+        railgun.add_modifier('hardened_mount', 1.5)  # 1.5x mass_mult
+
+        summary = railgun.get_modifier_stat_summary()
+
+        # Net mass_mult should be multiplicative: 2.0 * 1.5 = 3.0
+        mass_entry = summary.get('mass_mult', {})
+        self.assertAlmostEqual(mass_entry.get('net_value', 0), 3.0, places=2)
+
+        # Contributors should list both modifiers
+        contributors = mass_entry.get('contributors', [])
+        self.assertEqual(len(contributors), 2)
+
+    def test_get_modifier_stat_summary_add_operations(self):
+        """Addition operations should sum values correctly."""
+        railgun = create_component('railgun')
+        railgun.modifiers = []
+        # Turret mount uses arc_add
+        railgun.add_modifier('turret_mount', 90)
+
+        summary = railgun.get_modifier_stat_summary()
+
+        if 'arc_add' in summary:
+            arc_entry = summary['arc_add']
+            self.assertIn('net_value', arc_entry)
+            self.assertEqual(arc_entry['operation'], 'add')
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -20,9 +20,8 @@ class TestBuilderStructureFeatures(unittest.TestCase):
 
         # Patch internal managers
         self.p1 = patch('game.ui.screens.workshop_screen.SpriteManager')
-        self.p2 = patch('game.ui.screens.workshop_screen.PresetManager')
-        self.p3 = patch('game.ui.screens.workshop_screen.ShipThemeManager')
-        self.p1.start(); self.p2.start(); self.p3.start()
+        self.p2 = patch('game.ui.screens.workshop_screen.ShipThemeManager')
+        self.p1.start(); self.p2.start()
 
         # Mock Ship and Components
         self.ship = MagicMock(spec=Ship)
@@ -98,7 +97,6 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         self.patcher_create_ui.stop()
         self.p1.stop()
         self.p2.stop()
-        self.p3.stop()
 
         pygame.quit()
         RegistryManager.instance().clear()

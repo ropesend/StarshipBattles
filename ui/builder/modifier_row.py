@@ -1,131 +1,122 @@
+import json
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIButton, UITextEntryLine, UIHorizontalSlider, UIPanel, UILabel
+from pygame_gui.elements import UIButton, UITextEntryLine, UIHorizontalSlider
+from pygame_gui.windows import UIMessageWindow
 from ui.builder.modifier_logic import ModifierLogic
-from game.simulation.components.modifier_introspection import ModifierIntrospection
 from game.simulation.components.modifier_effects import ModifierEffectEvaluator
 
 class ModifierControlRow:
     """
     A single row in the modifier panel containing controls for one modifier.
+
+    Compact layout: Name Label | Value Entry | Slider | JSON Button
     """
     def __init__(self, manager, container, width, mod_id, mod_def, config, on_change_callback):
         self.manager = manager
-        self.container = container # The panel this row sits in
+        self.container = container  # The panel this row sits in
         self.width = width
         self.mod_id = mod_id
         self.mod_def = mod_def
         self.config = config
         self.on_change_callback = on_change_callback
-        
-        self.ui_elements = [] # Keep track for destruction
-        self.buttons = {} # Map button -> data
+
+        self.ui_elements = []  # Keep track for destruction
+        self.buttons = {}  # Map button -> data
         self.slider = None
         self.entry = None
-        self.effect_preview_label = None  # Label showing live effect values
+        self.name_label = None
+        self.json_btn = None
 
         self.current_value = 0.0
         self.is_active = False
-        self.component_context = None # Set during update
+        self.component_context = None  # Set during update
 
-        self.height = 52  # Increased height for effect preview row
-
-        # We don't build layout in __init__ because we might be pooled?
-        # Actually standard practice is build in init for UI widget.
-        # For pooling, we might just hide/show or update data.
-        # But to keep it simple first, let's build.
-        # Wait, if we use container, we need to know Y position.
-        # So we likely need a `layout(y)` method.
+        self.height = 28  # Compact single-row layout
 
     def _generate_tooltip(self) -> str:
-        """Generate tooltip using ModifierIntrospection for detailed effect information."""
+        """Generate enhanced tooltip with description and all effect details."""
         try:
-            # Convert mod_def to dict format for introspection
-            mod_dict = {
-                'id': self.mod_def.id,
-                'name': self.mod_def.name,
-                'description': self.mod_def.description,
-                'effects': self.mod_def.effects if hasattr(self.mod_def, 'effects') else [],
-            }
-            return ModifierIntrospection.generate_modifier_tooltip(
-                mod_def=mod_dict,
-                param_value=self.current_value if self.current_value > 0 else self.mod_def.default_val,
-                component=self.component_context
-            )
-        except Exception:
-            # Fallback to basic description if introspection fails
-            return self.mod_def.description
+            lines = []
 
-    def _generate_effect_preview(self) -> str:
-        """Generate a short effect preview string showing current stat values."""
-        try:
+            # Add description
+            if self.mod_def.description:
+                lines.append(self.mod_def.description)
+                lines.append("")
+
             # Get effects from modifier definition
             effects = self.mod_def.effects if hasattr(self.mod_def, 'effects') else []
-            if not effects:
-                return ""
+            if effects:
+                param_value = self.current_value if self.current_value > 0 else self.mod_def.default_val
 
-            # Use current value or default
-            param_value = self.current_value if self.current_value > 0 else self.mod_def.default_val
+                # Convert to dict for evaluator
+                mod_dict = {
+                    'id': self.mod_def.id,
+                    'name': self.mod_def.name,
+                    'effects': effects,
+                }
 
-            # Convert to dict for evaluator
-            mod_dict = {
-                'id': self.mod_def.id,
-                'name': self.mod_def.name,
-                'effects': effects,
-            }
+                # Evaluate effects
+                evaluated = ModifierEffectEvaluator.evaluate_modifier(mod_dict, param_value)
 
-            # Evaluate effects
-            evaluated = ModifierEffectEvaluator.evaluate_modifier(mod_dict, param_value)
+                if evaluated:
+                    lines.append("Effects at current value:")
+                    for effect in evaluated:
+                        stat = effect.stat_key.replace('_', ' ').title()
+                        if effect.operation == 'multiply':
+                            lines.append(f"  {stat}: x{effect.value:.2f}")
+                        elif effect.operation == 'add':
+                            sign = '+' if effect.value >= 0 else ''
+                            lines.append(f"  {stat}: {sign}{effect.value:.1f}")
+                        elif effect.operation == 'set':
+                            lines.append(f"  {stat}: ={effect.value:.0f}")
 
-            # Build preview string (max 3 effects to keep it concise)
-            preview_parts = []
-            for effect in evaluated[:3]:
-                stat = effect.stat_key.replace('_mult', '').replace('_add', '+')
-                if effect.operation == 'multiply':
-                    preview_parts.append(f"{stat}: x{effect.value:.2f}")
-                elif effect.operation == 'add':
-                    sign = '+' if effect.value >= 0 else ''
-                    preview_parts.append(f"{stat}: {sign}{effect.value:.1f}")
-                elif effect.operation == 'set':
-                    preview_parts.append(f"{stat}: ={effect.value:.0f}")
+            # Add range info
+            lines.append("")
+            lines.append(f"Range: {self.mod_def.min_val:.1f} - {self.mod_def.max_val:.1f}")
 
-            if len(evaluated) > 3:
-                preview_parts.append("...")
-
-            return "  ".join(preview_parts)
+            return "\n".join(lines)
         except Exception:
-            return ""
+            # Fallback to basic description if introspection fails
+            return self.mod_def.description if self.mod_def.description else self.mod_def.name
 
     def build_ui(self, y):
-        """Constructs the UI elements at the given y position."""
+        """Constructs the UI elements at the given y position.
+
+        Compact layout: Name Button (150px) | Value Entry (50px) | Slider (dynamic) | JSON Button (28px)
+        """
         self._clear_ui()
         self.y = y
-        
-        # 1. Main Toggle Button / Label
+
         safe_mod_id = self.mod_id.replace(' ', '_').replace('.', '_')
-        
-        self.toggle_btn = UIButton(
-            relative_rect=pygame.Rect(10, y, 170, 28),
-            text=f"[ ] {self.mod_def.name}",
+
+        # 1. Name Button (styled as label but with tooltip support)
+        self.name_label = UIButton(
+            relative_rect=pygame.Rect(10, y, 150, 28),
+            text=self.mod_def.name,
             manager=self.manager,
             container=self.container,
-            object_id=f'#mod_{safe_mod_id}',
+            object_id='#modifier_name_btn',
             tool_tip_text=self._generate_tooltip()
         )
-        self.ui_elements.append(self.toggle_btn)
-        
-        # 2. Controls Area
-        # If linear/stepped, we need entry and sliders
+        self.ui_elements.append(self.name_label)
+
+        # 2. Controls Area - always build for linear/stepped types
         if self.config.get('control_type') in ['linear', 'linear_stepped', 'facing_selector']:
-            self._build_linear_controls(y, 185, safe_mod_id)
-            
+            self._build_linear_controls(y, 165, safe_mod_id)
+
         return self.height
 
     def _build_linear_controls(self, y, start_x, safe_id):
+        """Build compact controls: Entry | Step Buttons | Slider | JSON Button."""
         current_x = start_x
-        
-        # Entry
-        entry_w = 60
+
+        # Reserve space for JSON button at end (28px + 5px margin)
+        json_btn_width = 28
+        right_margin = 10
+
+        # Entry (50px)
+        entry_w = 50
         self.entry = UITextEntryLine(
             relative_rect=pygame.Rect(current_x, y, entry_w, 28),
             manager=self.manager,
@@ -133,43 +124,50 @@ class ModifierControlRow:
             object_id=f'#entry_{safe_id}'
         )
         self.ui_elements.append(self.entry)
-        current_x += entry_w + 5
-        
-        # Presets (Facing)
+        current_x += entry_w + 3
+
+        # Presets (Facing) - compact 28px buttons
         if 'presets' in self.config:
             for val in self.config['presets']:
                 btn = UIButton(
-                    relative_rect=pygame.Rect(current_x, y, 32, 28),
+                    relative_rect=pygame.Rect(current_x, y, 28, 28),
                     text=str(val),
                     manager=self.manager,
                     container=self.container
                 )
                 self.buttons[btn] = {'action': 'set_value', 'value': val}
                 self.ui_elements.append(btn)
-                current_x += 34
-            current_x += 5
-            
-        # Step Buttons - Render ALL on the left
+                current_x += 30
+            current_x += 3
+
+        # Step Buttons - compact 26px buttons
         step_btns = self.config.get('step_buttons', [])
-        btn_width = 30
-        
+        btn_width = 26
+
         for b_def in step_btns:
-            btn = UIButton(pygame.Rect(current_x, y, btn_width, 28), b_def['label'], manager=self.manager, container=self.container, object_id='#mini_arrow_btn')
+            btn = UIButton(
+                pygame.Rect(current_x, y, btn_width, 28),
+                b_def['label'],
+                manager=self.manager,
+                container=self.container,
+                object_id='#mini_arrow_btn'
+            )
             self.buttons[btn] = {'action': b_def['mode'], 'value': b_def['value']}
             self.ui_elements.append(btn)
-            current_x += (btn_width + 2)
-            
-        current_x += 3 # Gap for slider
-            
-        # Slider - Takes remaining space
-        safe_width = self.width - 20 # margin
-        available_slider_width = safe_width - current_x
-        if available_slider_width < 40: available_slider_width = 40
-        
+            current_x += btn_width + 2
+
+        current_x += 3  # Gap for slider
+
+        # Slider - Takes remaining space before JSON button
+        slider_end_x = self.width - json_btn_width - right_margin - 5
+        slider_width = slider_end_x - current_x
+        if slider_width < 40:
+            slider_width = 40
+
         self.slider = UIHorizontalSlider(
-            relative_rect=pygame.Rect(current_x, y, available_slider_width, 28),
-            start_value=0, # Updated later
-            value_range=(0.0, 100.0), # Updated later
+            relative_rect=pygame.Rect(current_x, y, slider_width, 28),
+            start_value=0,  # Updated later
+            value_range=(0.0, 100.0),  # Updated later
             manager=self.manager,
             container=self.container,
             object_id=f'#slider_{safe_id}',
@@ -180,18 +178,18 @@ class ModifierControlRow:
             self.slider.rebuild()
 
         self.ui_elements.append(self.slider)
-        current_x += available_slider_width + 5
+        current_x += slider_width + 5
 
-        # Effect Preview Label (second row below controls)
-        preview_y = y + 28
-        self.effect_preview_label = UILabel(
-            relative_rect=pygame.Rect(start_x, preview_y, self.width - start_x - 20, 20),
-            text=self._generate_effect_preview(),
+        # JSON Button at end
+        self.json_btn = UIButton(
+            relative_rect=pygame.Rect(self.width - json_btn_width - right_margin, y, json_btn_width, 28),
+            text="{ }",
             manager=self.manager,
             container=self.container,
-            object_id='#effect_preview'
+            object_id='#json_btn',
+            tool_tip_text="Show modifier definition as JSON"
         )
-        self.ui_elements.append(self.effect_preview_label)
+        self.ui_elements.append(self.json_btn)
 
     def _clear_ui(self):
         for el in self.ui_elements:
@@ -200,91 +198,67 @@ class ModifierControlRow:
         self.buttons = {}
         self.slider = None
         self.entry = None
-        self.effect_preview_label = None
+        self.name_label = None
+        self.json_btn = None
 
-    def update(self, component, template_modifiers, is_readonly=False):
-        """Updates the row state based on the current component or template."""
+    def update(self, component, is_readonly=False):
+        """Updates the row state based on the current component."""
         self.component_context = component
         self.is_readonly = is_readonly
-        
+
         # 1. Determine State (Active/Value)
+        # All visible modifiers are always active when a component is selected
         is_active = False
         val = self.mod_def.min_val
-        
+
         if component:
             mod = component.get_modifier(self.mod_id)
             if mod:
                 is_active = True
                 val = mod.value
-            
-            # Check mandatory status (Auto-set if needed)
-            if ModifierLogic.is_modifier_mandatory(self.mod_id, component) and not is_active:
-                # Should have been handled by Logic ensure, but visually treat as active
-                # Actually, main panel should ensure logic. 
-                # If we are here and it's mandatory but missing, it's inactive.
-                pass
-        else:
-            if self.mod_id in template_modifiers:
-                is_active = True
-                val = template_modifiers[self.mod_id]
 
         self.is_active = is_active
         self.current_value = val
 
-        # 2. Update UI Text/Visuals
-        check_char = 'x' if is_active else ' '
+        # 2. Update tooltip with current value effects
+        if self.name_label:
+            self.name_label.set_tooltip(self._generate_tooltip())
 
-        # Readonly check
-        if self.mod_def.readonly or (component and ModifierLogic.is_modifier_mandatory(self.mod_id, component)):
-             # Even if mandatory, we show [x] or [AUTO]?
-             # Let's keep [x] but maybe disable toggle
-             pass
-
-        self.toggle_btn.set_text(f"[{check_char}] {self.mod_def.name}")
-
-        # Update tooltip with current value effects
-        self.toggle_btn.set_tooltip(self._generate_tooltip())
-        
-        # Enable/Disable Controls
+        # 3. Enable/Disable Controls based on active state
         if self.is_active:
-            if self.entry: 
+            if self.entry:
                 self.entry.enable()
                 self.entry.set_text(f"{val:.2f}")
-            if self.slider: 
+            if self.slider:
                 self.slider.enable()
                 # Update Range
                 min_v, max_v = ModifierLogic.get_local_min_max(self.mod_id, component) if component else (self.mod_def.min_val, self.mod_def.max_val)
                 self.slider.value_range = (min_v, max_v)
                 self.slider.set_current_value(val)
-                
+
             for btn in self.buttons.keys():
                 btn.enable()
         else:
-            if self.entry: 
+            if self.entry:
                 self.entry.disable()
-                self.entry.set_text(f"{val:.2f}") # Show default/last
-            if self.slider: 
+                self.entry.set_text(f"{val:.2f}")  # Show default/last
+            if self.slider:
                 self.slider.disable()
             for btn in self.buttons.keys():
                 btn.disable()
-                
-                
-        # Mandatory lock or Readonly lock
-        if self.is_readonly or (component and ModifierLogic.is_modifier_mandatory(self.mod_id, component)):
-            # Disable toggle so it can't be unchecked (visual cue + prevent click)
-             self.toggle_btn.disable()
-             if self.is_readonly:
-                 if self.entry: self.entry.disable()
-                 if self.slider: self.slider.disable()
-                 for btn in self.buttons.keys():
-                     btn.disable()
-        else:
-             self.toggle_btn.enable()
 
-        # Update effect preview label with current values
-        if self.effect_preview_label:
-            preview_text = self._generate_effect_preview() if self.is_active else ""
-            self.effect_preview_label.set_text(preview_text)
+        # Readonly lock - disable all controls
+        if self.is_readonly:
+            if self.entry:
+                self.entry.disable()
+            if self.slider:
+                self.slider.disable()
+            for btn in self.buttons.keys():
+                btn.disable()
+
+        # JSON button always enabled (read-only operation)
+        if self.json_btn:
+            self.json_btn.enable()
 
     def handle_event(self, event):
         """Handle internal events. Returns True if a change occurred."""
@@ -292,33 +266,26 @@ class ModifierControlRow:
         if not hasattr(event, 'ui_element'):
             return False
 
-        if (not self.is_active or self.is_readonly) and event.ui_element != self.toggle_btn:
+        # JSON button is always handled (read-only operation)
+        if event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.json_btn:
+            self._show_json_popup()
+            return True
+
+        # Skip other events if not active or readonly
+        if not self.is_active or self.is_readonly:
             return False
-            
-        if self.is_readonly:
-            return False
-            
+
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.toggle_btn:
-                # Toggle Logic
-                if self.component_context and ModifierLogic.is_modifier_mandatory(self.mod_id, self.component_context):
-                    return False # Ignore click on mandatory
-                
-                # Active Flip
-                new_active = not self.is_active
-                self.on_change_callback('toggle', self.mod_id, new_active)
-                return True
-                
-            elif event.ui_element in self.buttons:
+            if event.ui_element in self.buttons:
                 # Step Button
                 action = self.buttons[event.ui_element]
                 mode = action['action']
                 step = action['value']
-                
+
                 min_v, max_v = ModifierLogic.get_local_min_max(self.mod_id, self.component_context) if self.component_context else (self.mod_def.min_val, self.mod_def.max_val)
-                
+
                 smart_floor = self.config.get('smart_floor', False)
-                
+
                 new_val = self.current_value
                 if mode == 'set_value':
                     new_val = float(step)
@@ -330,10 +297,10 @@ class ModifierControlRow:
                     new_val = ModifierLogic.calculate_snap_value(self.current_value, step, -1, min_v, max_v, smart_floor)
                 elif mode == 'snap_ceil':
                     new_val = ModifierLogic.calculate_snap_value(self.current_value, step, 1, min_v, max_v, smart_floor)
-                    
+
                 # Clamp
                 new_val = max(min_v, min(max_v, new_val))
-                
+
                 if new_val != self.current_value:
                     self.on_change_callback('value_change', self.mod_id, new_val)
                     return True
@@ -343,10 +310,8 @@ class ModifierControlRow:
                 val = self.slider.get_current_value()
                 if val != self.current_value:
                     self.on_change_callback('value_change', self.mod_id, val)
-                    # Don't return True immediately for throttling? 
-                    # User requested immediate update in review.
                     return True
-                    
+
         elif event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
             if event.ui_element == self.entry:
                 try:
@@ -357,8 +322,37 @@ class ModifierControlRow:
                     return True
                 except ValueError:
                     pass
-        
+
         return False
+
+    def _show_json_popup(self):
+        """Show a popup window with the modifier definition as JSON."""
+        # Build modifier definition dict
+        mod_dict = {
+            'id': self.mod_def.id,
+            'name': self.mod_def.name,
+            'description': self.mod_def.description,
+            'type': getattr(self.mod_def, 'type', 'unknown'),
+            'min_val': self.mod_def.min_val,
+            'max_val': self.mod_def.max_val,
+            'default_val': self.mod_def.default_val,
+            'current_value': self.current_value,
+        }
+
+        # Add effects if present
+        if hasattr(self.mod_def, 'effects') and self.mod_def.effects:
+            mod_dict['effects'] = self.mod_def.effects
+
+        # Format as pretty JSON
+        json_text = json.dumps(mod_dict, indent=2, default=str)
+
+        # Create popup window
+        UIMessageWindow(
+            rect=pygame.Rect(100, 100, 500, 400),
+            html_message=f"<pre>{json_text}</pre>",
+            manager=self.manager,
+            window_title=f"Modifier: {self.mod_def.name}"
+        )
 
     def kill(self):
         self._clear_ui()

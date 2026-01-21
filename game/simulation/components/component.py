@@ -334,8 +334,73 @@ class Component:
             if m.definition.id == mod_id:
                 return m
         return None
-        
 
+    def get_all_modifier_effects(self):
+        """Get all evaluated effects from all applied modifiers.
+
+        Returns:
+            List[ModifierEffect]: All effects from all modifiers on this component
+        """
+        all_effects = []
+        for app_mod in self.modifiers:
+            effects = app_mod.definition.evaluate_effects(app_mod.value)
+            all_effects.extend(effects)
+        return all_effects
+
+    def get_modifier_stat_summary(self):
+        """Get summary grouped by stat with net values and contributors.
+
+        Returns:
+            Dict[str, Dict]: Mapping from stat_key to:
+                {
+                    'net_value': float,  # Combined value for this stat
+                    'operation': str,    # 'multiply', 'add', or 'set'
+                    'contributors': [    # List of contributing modifiers
+                        {
+                            'modifier_id': str,
+                            'modifier_name': str,
+                            'value': float,
+                            'formula': str
+                        },
+                        ...
+                    ]
+                }
+        """
+        summary = {}
+
+        all_effects = self.get_all_modifier_effects()
+
+        for effect in all_effects:
+            stat_key = effect.stat_key
+
+            if stat_key not in summary:
+                # Initialize based on operation type
+                default_value = 1.0 if effect.operation == 'multiply' else 0.0
+                summary[stat_key] = {
+                    'net_value': default_value,
+                    'operation': effect.operation,
+                    'contributors': []
+                }
+
+            entry = summary[stat_key]
+
+            # Add contributor info
+            entry['contributors'].append({
+                'modifier_id': effect.source_modifier_id,
+                'modifier_name': effect.source_modifier_name,
+                'value': effect.value,
+                'formula': effect.formula_str
+            })
+
+            # Calculate net value based on operation
+            if effect.operation == 'multiply':
+                entry['net_value'] *= effect.value
+            elif effect.operation == 'add':
+                entry['net_value'] += effect.value
+            elif effect.operation == 'set':
+                entry['net_value'] = effect.value  # Last set wins
+
+        return summary
 
     def recalculate_stats(self):
         """Recalculate component stats with multiplicative modifier stacking."""

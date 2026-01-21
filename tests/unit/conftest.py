@@ -3,6 +3,7 @@ Root test configuration for all unit tests.
 Ensures game.ui package is imported early to prevent race conditions.
 """
 import sys
+import os
 import pytest
 
 def pytest_configure(config):

@@ -59,7 +59,7 @@ class TestMandatoryModifiers(unittest.TestCase):
         return mock_comp, mods
 
     def test_auto_apply_turret(self):
-        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
+        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock())
         mock_comp, mods = self._setup_mock_comp('ProjectileWeapon')
         mock_comp.firing_arc = 45 # Base arc
         mock_comp.data['firing_arc'] = 45
@@ -77,7 +77,7 @@ class TestMandatoryModifiers(unittest.TestCase):
         
     def test_turret_min_constraint_updates(self):
         # Ensure buttons respect the base firing arc constraint
-        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
+        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock())
         mock_comp, mods = self._setup_mock_comp('ProjectileWeapon')
         mock_comp.firing_arc = 45
         mock_comp.data['firing_arc'] = 45
@@ -160,7 +160,7 @@ class TestMandatoryModifiers(unittest.TestCase):
 
     def test_range_limit_seeker(self):
         # Range should NOT apply to Seeker
-        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
+        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock())
         mock_comp, mods = self._setup_mock_comp('SeekerWeapon')
         
         test_registry = {
@@ -175,7 +175,7 @@ class TestMandatoryModifiers(unittest.TestCase):
         self.assertNotIn('range_mount', mods)
 
     def test_auto_apply_size(self):
-        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
+        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock())
         mock_comp, mods = self._setup_mock_comp('reactor')
         # Ensure registry has simple_size_mount
         with patch.dict(RegistryManager.instance().modifiers, {'simple_size_mount': Modifier({'id': 'simple_size_mount', 'name': 'Size', 'type': 'linear', 'min_val': 1, 'max_val': 100})}, clear=True):
@@ -186,7 +186,7 @@ class TestMandatoryModifiers(unittest.TestCase):
         self.assertIn('simple_size_mount', mods)
         
     def test_auto_apply_range_weapon(self):
-        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
+        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock())
         # USE CORRECT TYPE STRING
         mock_comp, mods = self._setup_mock_comp('ProjectileWeapon')
         
@@ -213,7 +213,7 @@ class TestMandatoryModifiers(unittest.TestCase):
         self.assertIn('facing', mods)
         
     def test_no_auto_apply_range_non_weapon(self):
-        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
+        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock())
         mock_comp, mods = self._setup_mock_comp('Reactor') # PascalCase for non-weapon too likely
         
         test_registry = {
@@ -232,7 +232,7 @@ class TestMandatoryModifiers(unittest.TestCase):
         self.assertIn('simple_size_mount', mods)
 
     def test_prevent_removal(self):
-        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock(), MagicMock())
+        panel = ModifierEditorPanel(self.manager, self.container, 400, MagicMock())
         mock_comp, mods = self._setup_mock_comp('Reactor')
         
         # Pre-add
@@ -253,7 +253,7 @@ class TestMandatoryModifiers(unittest.TestCase):
                 self.fail("simple_size_mount row not created")
                 
             row = panel.modifier_rows['simple_size_mount']
-            btn = row.toggle_btn
+            btn = row.name_label
             
             event = MagicMock()
             event.type = pygame_gui.UI_BUTTON_PRESSED

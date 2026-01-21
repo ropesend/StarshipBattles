@@ -14,12 +14,11 @@ from pygame_gui.windows import UIConfirmationDialog
 from game.core.profiling import profile_action, profile_block
 
 from game.simulation.entities.ship import LayerType
-from game.core.registry import RegistryManager, get_component_registry, get_modifier_registry, get_vehicle_classes
+from game.core.registry import RegistryManager, get_component_registry, get_vehicle_classes
 from game.simulation.components.component import (
     get_all_components
 )
 from game.ui.renderer.sprites import SpriteManager
-from game.simulation.preset_manager import PresetManager
 from game.simulation.systems.persistence import ShipIO
 from game.ui.panels.builder_widgets import ModifierEditorPanel
 from game.simulation.ship_theme import ShipThemeManager
@@ -27,7 +26,7 @@ from ui.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel, 
 from ui.builder.schematic_view import SchematicView
 from ui.builder.interaction_controller import InteractionController
 from ui.builder.event_bus import EventBus
-from game.ui.screens.builder_utils import PANEL_WIDTHS, PANEL_HEIGHTS, MARGINS, BuilderEvents, calculate_dynamic_layer_width
+from game.ui.screens.builder_utils import PANEL_WIDTHS, PANEL_HEIGHTS, MARGINS, BuilderEvents, calculate_dynamic_layer_width, calculate_bottom_panel_height
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.screens.workshop_event_router import WorkshopEventRouter
 from game.ui.screens.workshop_data_loader import WorkshopDataLoader
@@ -110,7 +109,6 @@ class DesignWorkshopGUI:
         self.sprite_mgr = SpriteManager.get_instance()
         
         with profile_block("Builder: Init Managers"):
-            self.preset_manager = PresetManager(os.path.join(DATA_DIR, "presets.json"))
             self.theme_manager = ShipThemeManager.get_instance()
             self.theme_manager.initialize() # No path needed anymore
         
@@ -148,8 +146,10 @@ class DesignWorkshopGUI:
         self._create_ui()
         
     def _create_ui(self):
-        # New Layout Dimensions
-        self.modifier_panel_height = 360
+        # Use shared height calculation for bottom panels
+        self.bottom_panel_height = calculate_bottom_panel_height(self.height)
+        self.modifier_panel_height = self.bottom_panel_height
+        self.weapons_report_height = self.bottom_panel_height  # Override instance variable
         avail_height = self.height - self.bottom_bar_height
         panels_height = avail_height - self.modifier_panel_height
         
@@ -198,9 +198,9 @@ class DesignWorkshopGUI:
                 manager=self.ui_manager,
                 container=self.modifier_container_panel,
                 width=mod_panel_rect.width,
-                preset_manager=self.preset_manager,
                 on_change_callback=self._on_modifier_change
             )
+            self.modifier_panel.set_panel_height(self.modifier_panel_height)
         
         weapons_panel_y = self.height - self.bottom_bar_height - self.weapons_report_height
         # Shifted weapons panel
@@ -314,7 +314,7 @@ class DesignWorkshopGUI:
              is_readonly = True
              
         # Start Y is 0 relative to the modifier container panel
-        self.modifier_panel.rebuild(editing_component, self.template_modifiers, is_readonly=is_readonly)
+        self.modifier_panel.rebuild(editing_component, is_readonly=is_readonly)
         self.modifier_panel.layout(0)
         
     @property
@@ -355,15 +355,6 @@ class DesignWorkshopGUI:
     def selected_components(self, value):
         # Direct assignment to internal list for backward compat
         self.viewmodel._selected_components = value
-        
-    @property
-    def template_modifiers(self):
-        """Proxy property for backward compatibility - delegates to ViewModel."""
-        return self.viewmodel.template_modifiers
-        
-    @template_modifiers.setter
-    def template_modifiers(self, value):
-        self.viewmodel.template_modifiers = value
         
     @property
     def available_components(self):
@@ -471,21 +462,9 @@ class DesignWorkshopGUI:
                  mx, my = pygame.mouse.get_pos()
                  hovered_item = self.left_panel.get_hovered_list_item(mx, my)
                  if hovered_item:
-                     # Create preview with current template modifiers
-                     comp_template = hovered_item.component
-                     preview_comp = comp_template.clone()
-                     for m_id, val in self.template_modifiers.items():
-                        mods = get_modifier_registry()
-                        if m_id in mods:
-                            mod_def = mods[m_id]
-                            if mod_def.restrictions and 'allow_types' in mod_def.restrictions and preview_comp.type_str not in mod_def.restrictions['allow_types']:
-                                continue
-                            preview_comp.add_modifier(m_id)
-                            m = preview_comp.get_modifier(m_id)
-                            if m: m.value = val
-                     preview_comp.recalculate_stats()
-                     target_comp = preview_comp
-        
+                     # Show preview with default modifiers
+                     target_comp = hovered_item.component
+
         self.detail_panel.show_component(target_comp)
         self.ui_manager.update(dt)
         
@@ -503,19 +482,8 @@ class DesignWorkshopGUI:
              if not self.view.rect.collidepoint(mx, my):
                  hovered_item = self.left_panel.get_hovered_list_item(mx, my)
                  if hovered_item:
-                     comp_template = hovered_item.component
-                     preview_comp = comp_template.clone()
-                     for m_id, val in self.template_modifiers.items():
-                        mods = get_modifier_registry()
-                        if m_id in mods:
-                            mod_def = mods[m_id]
-                            if mod_def.restrictions and 'allow_types' in mod_def.restrictions and preview_comp.type_str not in mod_def.restrictions['allow_types']:
-                                continue
-                            preview_comp.add_modifier(m_id)
-                            m = preview_comp.get_modifier(m_id)
-                            if m: m.value = val
-                     preview_comp.recalculate_stats()
-                     hovered = preview_comp
+                     # Show component with default modifiers
+                     hovered = hovered_item.component
         
         # Also check if hovering a weapon in the weapons report panel
         if not hovered and hasattr(self, 'weapons_report_panel'):
@@ -529,6 +497,7 @@ class DesignWorkshopGUI:
         # Layer panel drawing removed (it's handled by UI manager + overlay highlights handled by panel.draw if any)
         self.layer_panel.draw(screen)  # Draw selection highlights AFTER UI manager
         self.weapons_report_panel.draw(screen)
+        self.detail_panel.draw(screen)  # Draw modifier impact grid
         
         if hovered and not self.controller.dragged_item:
             # Tooltip removed
@@ -622,7 +591,6 @@ class DesignWorkshopGUI:
         
         # Refresh Builder State
         self.available_components = get_all_components()
-        self.template_modifiers = {}
         
         # Reset Ship with new default class (using service layer via viewmodel)
         self.ship = self.viewmodel.create_default_ship(ship_class=default_class)
@@ -862,7 +830,6 @@ class DesignWorkshopGUI:
         log_info("Clearing ship design")
         self.ship.clear_non_hull_components()
 
-        self.template_modifiers = {}
         self.ship.ai_strategy = "standard_ranged"
 
         # Reset Name

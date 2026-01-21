@@ -1,20 +1,30 @@
 Traceback (most recent call last):
-  File "C:\Dev\Starship Battles\game\app.py", line 573, in main
+  File "C:\Dev\Starship Battles\game\app.py", line 631, in main
     game.run()
-  File "C:\Dev\Starship Battles\game\app.py", line 326, in run
+  File "C:\Dev\Starship Battles\game\app.py", line 374, in run
     self._handle_normal_events(events)
-  File "C:\Dev\Starship Battles\game\app.py", line 370, in _handle_normal_events
+  File "C:\Dev\Starship Battles\game\app.py", line 418, in _handle_normal_events
     self._forward_event_to_scene(event)
-  File "C:\Dev\Starship Battles\game\app.py", line 394, in _forward_event_to_scene
-    self.strategy_scene.handle_event(event)
-  File "C:\Dev\Starship Battles\game\ui\screens\strategy_scene.py", line 172, in handle_event
-    self._input.handle_event(event)
-  File "C:\Dev\Starship Battles\game\ui\screens\strategy_input_handler.py", line 38, in handle_event
-    self.scene.build_queue_screen.handle_event(event)
-  File "C:\Dev\Starship Battles\game\ui\screens\build_queue_screen.py", line 774, in handle_event
-    self._take_screenshot()
-  File "C:\Dev\Starship Battles\game\ui\screens\build_queue_screen.py", line 784, in _take_screenshot
-    self._show_screenshot_toast()
-  File "C:\Dev\Starship Battles\game\ui\screens\build_queue_screen.py", line 791, in _show_screenshot_toast
-    pygame_gui.elements.UILabel(
-TypeError: UILabel.__init__() got an unexpected keyword argument 'rect'
+  File "C:\Dev\Starship Battles\game\app.py", line 439, in _forward_event_to_scene
+    btn.handle_event(event)
+  File "C:\Dev\Starship Battles\ui\components.py", line 23, in handle_event
+    self.callback()
+  File "C:\Dev\Starship Battles\game\app.py", line 334, in start_race_setup
+    self.race_setup_window = RaceSetupScreen(
+  File "C:\Dev\Starship Battles\game\ui\screens\race_setup_screen.py", line 107, in __init__
+    self._create_ui()
+  File "C:\Dev\Starship Battles\game\ui\screens\race_setup_screen.py", line 124, in _create_ui
+    self._create_step_panels(container, content_width, panel_top, panel_height)
+  File "C:\Dev\Starship Battles\game\ui\screens\race_setup_screen.py", line 163, in _create_step_panels
+    self._create_visuals_panel_content(panel_visuals)
+  File "C:\Dev\Starship Battles\game\ui\screens\race_setup_screen.py", line 417, in _create_visuals_panel_content
+    self._create_portrait_gallery(panel, 15 + col_width, y, col_width)
+  File "C:\Dev\Starship Battles\game\ui\screens\race_setup_screen.py", line 538, in _create_portrait_gallery
+    btn = pygame_gui.elements.UIButton(
+  File "C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\elements\ui_button.py", line 91, in __init__
+    super().__init__(
+  File "C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_element.py", line 127, in __init__
+    self._create_valid_ids(
+  File "C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\pygame_gui\core\ui_element.py", line 547, in _create_valid_ids
+    raise ValueError(
+ValueError: Object ID cannot contain fullstops or spaces: #portrait_Gemini_Generated_Image_59rl4259rl4259rl.jpg

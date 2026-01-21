@@ -22,12 +22,19 @@ class TestDetailPanelRendering(unittest.TestCase):
         self.uiimage_patch = patch('ui.builder.detail_panel.UIImage')
         self.uibutton_patch = patch('ui.builder.detail_panel.UIButton')
         self.uitextbox_patch = patch('ui.builder.detail_panel.UITextBox')
-        
+        self.modifier_grid_patch = patch('ui.builder.detail_panel.ModifierImpactGrid')
+
         self.MockUIPanel = self.uipanel_patch.start()
         self.MockUILabel = self.uilabel_patch.start()
         self.MockUIImage = self.uiimage_patch.start()
         self.MockUIButton = self.uibutton_patch.start()
         self.MockUITextBox = self.uitextbox_patch.start()
+        self.MockModifierGrid = self.modifier_grid_patch.start()
+
+        # Configure mock grid
+        self.mock_grid_instance = self.MockModifierGrid.return_value
+        self.mock_grid_instance.panel = MagicMock()
+        self.mock_grid_instance.panel.visible = False
         
         # Ensure the mock instance behaves like a UITextBox for our tests
         # We'll use a property mock or just capture set_text calls
@@ -232,7 +239,7 @@ class TestDetailPanelRendering(unittest.TestCase):
         self.mock_textbox_instance.set_text.assert_called()
         html = self.mock_textbox_instance.set_text.call_args[0][0]
         
-        self.assertIn("Modifiers:", html)
+        self.assertIn("Modifiers", html)  # Header changed to "── Modifiers ──"
         
         # Mandatory: Gold + [A]
         self.assertIn("Turbo [A]", html)

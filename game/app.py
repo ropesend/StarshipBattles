@@ -49,6 +49,7 @@ BATTLE_SETUP = GameState.BATTLE_SETUP
 FORMATION = GameState.FORMATION
 TEST_LAB = GameState.TEST_LAB
 STRATEGY = GameState.STRATEGY
+RACE_SETUP = GameState.RACE_SETUP
 
 # Initialize fonts
 pygame.font.init()
@@ -90,6 +91,8 @@ class Game:
         self.running = True
         self.show_exit_dialog = False
         self.showing_load_menu = False
+        self.showing_race_setup = False
+        self.race_setup_window = None
         self.state = MENU
 
         # Load game data
@@ -118,12 +121,13 @@ class Game:
 
     def update_menu_buttons(self):
         self.menu_buttons = [
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 150, 200, 50, "New Game", self.start_strategy_layer),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 80, 200, 50, "Load Game", self.show_load_menu),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 10, 200, 50, "Design Workshop", self.start_builder),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 60, 200, 50, "Battle Setup", self.start_battle_setup),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 130, 200, 50, "Formation Editor", self.start_formation_editor),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 200, 200, 50, "Combat Lab", self.start_test_lab)
+            Button(WIDTH // 2 - 100, HEIGHT // 2 - 180, 200, 50, "New Game", self.start_strategy_layer),
+            Button(WIDTH // 2 - 100, HEIGHT // 2 - 110, 200, 50, "Load Game", self.show_load_menu),
+            Button(WIDTH // 2 - 100, HEIGHT // 2 - 40, 200, 50, "Race Setup", self.start_race_setup),
+            Button(WIDTH // 2 - 100, HEIGHT // 2 + 30, 200, 50, "Design Workshop", self.start_builder),
+            Button(WIDTH // 2 - 100, HEIGHT // 2 + 100, 200, 50, "Battle Setup", self.start_battle_setup),
+            Button(WIDTH // 2 - 100, HEIGHT // 2 + 170, 200, 50, "Formation Editor", self.start_formation_editor),
+            Button(WIDTH // 2 - 100, HEIGHT // 2 + 240, 200, 50, "Combat Lab", self.start_test_lab)
         ]
 
     @profile_action("App: Start Builder")
@@ -304,6 +308,50 @@ class Game:
         self.state = TEST_LAB
         self.return_state = TEST_LAB
 
+    def start_race_setup(self):
+        """Open race setup wizard."""
+        import pygame_gui
+
+        log_info("Opening race setup wizard")
+
+        # Create UI manager if needed
+        if not hasattr(self, 'menu_ui_manager'):
+            self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+
+        # Create race setup window
+        window_width = 900
+        window_height = 700
+        window_rect = pygame.Rect(
+            (WIDTH - window_width) // 2,
+            (HEIGHT - window_height) // 2,
+            window_width,
+            window_height
+        )
+
+        # Import here to avoid circular imports
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        self.race_setup_window = RaceSetupScreen(
+            window_rect,
+            self.menu_ui_manager,
+            on_complete_callback=self._on_race_setup_complete,
+            on_cancel_callback=self._on_race_setup_cancel
+        )
+
+        self.showing_race_setup = True
+
+    def _on_race_setup_complete(self, race_config):
+        """Handle race setup completion."""
+        log_info(f"Race setup complete: {race_config.name}")
+        self.showing_race_setup = False
+        self.race_setup_window = None
+
+    def _on_race_setup_cancel(self):
+        """Cancel race setup."""
+        self.showing_race_setup = False
+        self.race_setup_window = None
+        log_debug("Race setup cancelled")
+
     def start_battle(self, team1_ships, team2_ships, headless=False):
         """Start a battle with the given ships."""
         self.state = BATTLE
@@ -378,6 +426,11 @@ class Game:
 
         # Handle load menu if showing
         if self.showing_load_menu and hasattr(self, 'menu_ui_manager'):
+            self.menu_ui_manager.process_events(event)
+            return
+
+        # Handle race setup if showing
+        if self.showing_race_setup and hasattr(self, 'menu_ui_manager'):
             self.menu_ui_manager.process_events(event)
             return
 
@@ -530,6 +583,11 @@ class Game:
 
         # Draw load menu UI if showing
         elif self.showing_load_menu and hasattr(self, 'menu_ui_manager'):
+            self.menu_ui_manager.update(self.clock.get_time() / 1000.0)
+            self.menu_ui_manager.draw_ui(self.screen)
+
+        # Draw race setup UI if showing
+        elif self.showing_race_setup and hasattr(self, 'menu_ui_manager'):
             self.menu_ui_manager.update(self.clock.get_time() / 1000.0)
             self.menu_ui_manager.draw_ui(self.screen)
 
