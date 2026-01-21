@@ -38,7 +38,9 @@ class GameSession:
                 name=player_cfg.name,
                 color=player_cfg.color,
                 theme_path=theme_path,
-                empire_theme_id=player_cfg.theme
+                empire_theme_id=player_cfg.theme,
+                flag_id=player_cfg.flag_id,
+                portrait_id=player_cfg.portrait_id
             )
             self.empires.append(empire)
 

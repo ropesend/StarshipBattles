@@ -4,8 +4,8 @@ New Game Setup Screen - UI for configuring a new game.
 Allows users to:
 - Enter a save name
 - Select number of players (1-4)
-- Name each empire
-- Start the game with auto-assigned themes
+- Select or create races for each player
+- Start the game with race-based themes and visuals
 """
 import os
 import re
@@ -15,6 +15,8 @@ from typing import Callable, Optional, Tuple, List
 
 from game.core.logger import log_debug, log_info
 from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS
+from game.strategy.data.race_config import RaceConfig
+from game.strategy.systems.race_library import RaceLibrary
 
 
 class NewGameSetupScreen(pygame_gui.elements.UIWindow):
@@ -45,6 +47,18 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         self.player_count = 2  # Default
         self.empire_name_inputs = []  # List of UITextEntryLine
         self.theme_labels = []  # List of UILabel showing assigned theme
+        self.num_labels = []  # List of UILabel for player numbers
+
+        # Race selection state
+        self.race_library = RaceLibrary()
+        self.player_races: List[Optional[RaceConfig]] = [None, None, None, None]
+        self.race_preview_labels: List[pygame_gui.elements.UILabel] = []
+        self.load_race_buttons: List[pygame_gui.elements.UIButton] = []
+        self.setup_race_buttons: List[pygame_gui.elements.UIButton] = []
+
+        # Modal state tracking
+        self.active_race_modal = None
+        self.race_modal_player_index = -1
 
         self._create_ui()
 
@@ -89,16 +103,16 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         )
         y_offset += 50
 
-        # Empire name section header
+        # Empire/Race section header
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(10, y_offset, content_width, 25),
-            text="Empire Names:",
+            text="Player Races:",
             manager=self.ui_manager,
             container=container
         )
         y_offset += 30
 
-        # Create empire name inputs (4 max, hide unused)
+        # Create empire name inputs with race selection (4 max, hide unused)
         self.empire_inputs_start_y = y_offset
         self._create_empire_inputs()
 
@@ -130,58 +144,96 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         self.error_label.text_colour = pygame.Color(255, 100, 100)
 
     def _create_empire_inputs(self):
-        """Create empire name input fields for each player slot."""
+        """Create empire name input fields with race selection for each player slot."""
         container = self.get_container()
         content_width = container.get_size()[0] - 20
         y_offset = self.empire_inputs_start_y
 
-        # Clear existing
+        # Clear existing elements
         for inp in self.empire_name_inputs:
             inp.kill()
         for lbl in self.theme_labels:
             lbl.kill()
+        for lbl in self.num_labels:
+            lbl.kill()
+        for lbl in self.race_preview_labels:
+            lbl.kill()
+        for btn in self.load_race_buttons:
+            btn.kill()
+        for btn in self.setup_race_buttons:
+            btn.kill()
+
         self.empire_name_inputs = []
         self.theme_labels = []
+        self.num_labels = []
+        self.race_preview_labels = []
+        self.load_race_buttons = []
+        self.setup_race_buttons = []
+
+        # Row height for each player (name row + race row + spacing)
+        row_height = 95
 
         # Create inputs for each potential player
         for i in range(4):
-            # Empire number label
+            row_y = y_offset + (i * row_height)
+
+            # Player number label
             num_label = pygame_gui.elements.UILabel(
-                relative_rect=pygame.Rect(10, y_offset, 80, 30),
+                relative_rect=pygame.Rect(10, row_y, 80, 30),
                 text=f"Player {i + 1}:",
                 manager=self.ui_manager,
                 container=container
             )
+            self.num_labels.append(num_label)
 
-            # Name input
+            # Name input (hidden when race selected - race name becomes empire name)
             name_input = pygame_gui.elements.UITextEntryLine(
-                relative_rect=pygame.Rect(90, y_offset, 200, 30),
+                relative_rect=pygame.Rect(90, row_y, 200, 30),
                 manager=self.ui_manager,
                 container=container,
                 placeholder_text=f"Empire {i + 1}"
             )
+            self.empire_name_inputs.append(name_input)
 
-            # Theme label (auto-assigned)
+            # Theme label (auto-assigned, shows race theme when selected)
             theme_name = THEME_DEFAULTS[i][0]
             theme_label = pygame_gui.elements.UILabel(
-                relative_rect=pygame.Rect(300, y_offset, 150, 30),
-                text=f"({theme_name})",
+                relative_rect=pygame.Rect(300, row_y, 200, 30),
+                text=f"Theme: {theme_name}",
                 manager=self.ui_manager,
                 container=container
             )
-
-            self.empire_name_inputs.append(name_input)
             self.theme_labels.append(theme_label)
 
-            # Also store the number label for visibility toggling
-            if not hasattr(self, 'num_labels'):
-                self.num_labels = []
-            if len(self.num_labels) <= i:
-                self.num_labels.append(num_label)
-            else:
-                self.num_labels[i] = num_label
+            # Race selection row (below name row)
+            race_row_y = row_y + 35
 
-            y_offset += 40
+            # Race preview label (shows selected race name or instruction)
+            race_preview = pygame_gui.elements.UILabel(
+                relative_rect=pygame.Rect(90, race_row_y, 280, 30),
+                text="No race selected (using defaults)",
+                manager=self.ui_manager,
+                container=container
+            )
+            self.race_preview_labels.append(race_preview)
+
+            # Load Race button
+            load_btn = pygame_gui.elements.UIButton(
+                relative_rect=pygame.Rect(380, race_row_y, 100, 30),
+                text="Load Race",
+                manager=self.ui_manager,
+                container=container
+            )
+            self.load_race_buttons.append(load_btn)
+
+            # Setup Race button
+            setup_btn = pygame_gui.elements.UIButton(
+                relative_rect=pygame.Rect(490, race_row_y, 110, 30),
+                text="Setup Race",
+                manager=self.ui_manager,
+                container=container
+            )
+            self.setup_race_buttons.append(setup_btn)
 
         # Update visibility based on current player count
         self._update_empire_visibility()
@@ -190,19 +242,50 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         """Show/hide empire inputs based on player count."""
         for i in range(4):
             visible = i < self.player_count
-            if visible:
-                self.empire_name_inputs[i].show()
-                self.theme_labels[i].show()
-                if hasattr(self, 'num_labels') and i < len(self.num_labels):
-                    self.num_labels[i].show()
-            else:
-                self.empire_name_inputs[i].hide()
-                self.theme_labels[i].hide()
-                if hasattr(self, 'num_labels') and i < len(self.num_labels):
-                    self.num_labels[i].hide()
+            elements = [
+                self.empire_name_inputs[i],
+                self.theme_labels[i],
+                self.num_labels[i],
+                self.race_preview_labels[i],
+                self.load_race_buttons[i],
+                self.setup_race_buttons[i]
+            ]
+            for elem in elements:
+                if visible:
+                    elem.show()
+                else:
+                    elem.hide()
+
+            # Clear race selection for hidden players
+            if not visible and self.player_races[i] is not None:
+                self.player_races[i] = None
+                self._update_race_display(i)
+
+    def _update_race_display(self, player_index: int):
+        """Update the race preview display for a player."""
+        race = self.player_races[player_index]
+
+        if race:
+            # Race selected - show race name and theme
+            self.race_preview_labels[player_index].set_text(f"Race: {race.name}")
+            self.theme_labels[player_index].set_text(f"Theme: {race.theme_id}")
+            # Hide name input - race name will be used
+            self.empire_name_inputs[player_index].hide()
+        else:
+            # No race - show default state
+            self.race_preview_labels[player_index].set_text("No race selected (using defaults)")
+            default_theme = THEME_DEFAULTS[player_index][0]
+            self.theme_labels[player_index].set_text(f"Theme: {default_theme}")
+            # Show name input for manual entry
+            if player_index < self.player_count:
+                self.empire_name_inputs[player_index].show()
 
     def process_event(self, event: pygame.event.Event) -> bool:
         """Process pygame events."""
+        # If a modal is active, let it handle events first
+        if self.active_race_modal is not None:
+            return super().process_event(event)
+
         handled = super().process_event(event)
 
         if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
@@ -218,8 +301,103 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             elif event.ui_element == self.btn_cancel:
                 self._on_cancel_clicked()
                 handled = True
+            else:
+                # Check race buttons
+                for i, btn in enumerate(self.load_race_buttons):
+                    if event.ui_element == btn:
+                        self._on_load_race_clicked(i)
+                        handled = True
+                        break
+
+                for i, btn in enumerate(self.setup_race_buttons):
+                    if event.ui_element == btn:
+                        self._on_setup_race_clicked(i)
+                        handled = True
+                        break
 
         return handled
+
+    def _on_load_race_clicked(self, player_index: int):
+        """Handle Load Race button click - open race browser dialog."""
+        log_debug(f"Opening race browser for player {player_index + 1}")
+
+        # Import here to avoid circular imports
+        from game.ui.screens.race_setup_screen import RaceBrowserDialog
+
+        # Get window position for dialog placement
+        window_rect = self.get_abs_rect()
+        dialog_width = 600
+        dialog_height = 500
+
+        # Center dialog over the main window
+        dialog_x = window_rect.centerx - dialog_width // 2
+        dialog_y = window_rect.centery - dialog_height // 2
+
+        dialog_rect = pygame.Rect(dialog_x, dialog_y, dialog_width, dialog_height)
+
+        # Create and show the race browser dialog
+        self.active_race_modal = RaceBrowserDialog(
+            rect=dialog_rect,
+            manager=self.ui_manager,
+            race_library=self.race_library,
+            on_select_callback=lambda race: self._on_race_selected(player_index, race),
+            on_cancel_callback=self._on_race_dialog_cancelled
+        )
+        self.race_modal_player_index = player_index
+
+    def _on_setup_race_clicked(self, player_index: int):
+        """Handle Setup Race button click - open race setup screen."""
+        log_debug(f"Opening race setup for player {player_index + 1}")
+
+        # Import here to avoid circular imports
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        # Race setup is larger - center it on screen
+        setup_width = 1400
+        setup_height = 900
+
+        # Center on screen (use reasonable defaults)
+        screen_width = 1920  # Fallback
+        screen_height = 1080
+        if self.ui_manager:
+            screen_width = self.ui_manager.window_resolution[0]
+            screen_height = self.ui_manager.window_resolution[1]
+
+        setup_x = (screen_width - setup_width) // 2
+        setup_y = (screen_height - setup_height) // 2
+
+        setup_rect = pygame.Rect(setup_x, setup_y, setup_width, setup_height)
+
+        # Create and show the race setup screen
+        self.active_race_modal = RaceSetupScreen(
+            rect=setup_rect,
+            manager=self.ui_manager,
+            on_complete_callback=lambda race: self._on_race_created(player_index, race),
+            on_cancel_callback=self._on_race_dialog_cancelled
+        )
+        self.race_modal_player_index = player_index
+
+    def _on_race_selected(self, player_index: int, race_config: RaceConfig):
+        """Handle race selection from browser dialog."""
+        log_info(f"Player {player_index + 1} selected race: {race_config.name}")
+        self.player_races[player_index] = race_config
+        self._update_race_display(player_index)
+        self.active_race_modal = None
+        self.race_modal_player_index = -1
+
+    def _on_race_created(self, player_index: int, race_config: RaceConfig):
+        """Handle race creation from setup screen."""
+        log_info(f"Player {player_index + 1} created race: {race_config.name}")
+        self.player_races[player_index] = race_config
+        self._update_race_display(player_index)
+        self.active_race_modal = None
+        self.race_modal_player_index = -1
+
+    def _on_race_dialog_cancelled(self):
+        """Handle race dialog cancellation."""
+        log_debug("Race dialog cancelled")
+        self.active_race_modal = None
+        self.race_modal_player_index = -1
 
     def _on_start_clicked(self):
         """Handle Start Game button click."""
@@ -233,15 +411,25 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             self.error_label.set_text(error)
             return
 
-        # Collect empire names
+        # Collect empire names (from race or manual input)
         empire_names = []
         for i in range(self.player_count):
-            name = self.empire_name_inputs[i].get_text().strip()
+            if self.player_races[i]:
+                # Use race name as empire name
+                name = self.player_races[i].name
+            else:
+                # Use manual input or default
+                name = self.empire_name_inputs[i].get_text().strip()
             empire_names.append(name)
 
-        # Build config
+        # Build config with race data
         try:
-            config = self.build_game_config(save_name, self.player_count, empire_names)
+            config = self.build_game_config(
+                save_name,
+                self.player_count,
+                empire_names,
+                self.player_races[:self.player_count]
+            )
         except ValueError as e:
             self.error_label.set_text(str(e))
             return
@@ -294,7 +482,8 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
 
     @staticmethod
     def build_game_config(save_name: str, player_count: int,
-                          empire_names: List[str]) -> GameConfig:
+                          empire_names: List[str],
+                          race_configs: Optional[List[Optional[RaceConfig]]] = None) -> GameConfig:
         """
         Build a GameConfig from setup screen values.
 
@@ -302,6 +491,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             save_name: Name for the save folder
             player_count: Number of players (1-4)
             empire_names: List of empire names (may include empty strings)
+            race_configs: Optional list of RaceConfig for each player (None = use defaults)
 
         Returns:
             Configured GameConfig
@@ -314,18 +504,37 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
 
         players = []
         for i in range(player_count):
-            # Get name, use default if empty
-            name = empire_names[i] if i < len(empire_names) and empire_names[i].strip() else f"Empire {i + 1}"
+            race = race_configs[i] if race_configs and i < len(race_configs) else None
 
-            # Auto-assign theme and color from THEME_DEFAULTS
-            theme = THEME_DEFAULTS[i][0]
-            color = THEME_DEFAULTS[i][1]
+            # Get name: race name > manual input > default
+            if race and race.name:
+                name = race.name
+            elif i < len(empire_names) and empire_names[i].strip():
+                name = empire_names[i].strip()
+            else:
+                name = f"Empire {i + 1}"
+
+            # Get theme and color: from race if available, otherwise defaults
+            if race and race.theme_id:
+                theme = race.theme_id
+            else:
+                theme = THEME_DEFAULTS[i][0]
+
+            color = THEME_DEFAULTS[i][1]  # Color still comes from defaults
+
+            # Get race visual identity
+            flag_id = race.flag_id if race else ""
+            portrait_id = race.portrait_id if race else ""
+            race_id = race.race_id if race else None
 
             players.append(PlayerConfig(
                 name=name,
                 theme=theme,
                 color=color,
-                is_human=True  # All players are human in new game
+                is_human=True,
+                race_id=race_id,
+                flag_id=flag_id,
+                portrait_id=portrait_id
             ))
 
         return GameConfig(

@@ -501,6 +501,18 @@ class StrategyRenderer:
 
                         screen.blit(scaled, dest)
 
+                        # Draw shield flag alongside ship icon (if race has custom flag)
+                        if emp_assets and 'fleet_flag' in emp_assets:
+                            flag_img = emp_assets['fleet_flag']
+                            # Shield flag is smaller, positioned to top-right of ship icon
+                            flag_size = max(8, int(size * 0.6))
+                            scaled_flag = pygame.transform.smoothscale(flag_img, (flag_size, flag_size))
+                            # Position flag at top-right corner of ship icon
+                            flag_x = int(f_screen.x + size * 0.4)
+                            flag_y = int(f_screen.y - size * 0.4)
+                            flag_dest = scaled_flag.get_rect(center=(flag_x, flag_y))
+                            screen.blit(scaled_flag, flag_dest)
+
                         if self.scene.selected_fleet == f:
                             pygame.draw.rect(screen, (255, 255, 0), dest.inflate(4, 4), 1)
                     else:
