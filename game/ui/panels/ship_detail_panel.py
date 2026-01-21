@@ -6,11 +6,12 @@ component damage visualization.
 """
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIPanel, UILabel, UIButton, UIScrollingContainer
+from pygame_gui.elements import UIPanel, UILabel, UIButton, UIScrollingContainer, UIImage
 from typing import Dict, Optional, Tuple, List
 
 from game.strategy.data.ship_instance import ShipInstance
 from game.simulation.components.component import LayerType
+from game.simulation.ship_theme import ShipThemeManager
 
 
 def get_damage_color(hp_percentage: float) -> Tuple[int, int, int]:
@@ -109,6 +110,43 @@ class ShipDetailPanel:
         self.ui_elements.clear()
         self.layer_buttons.clear()
 
+    def _get_scaled_image(self, raw_surf: Optional[pygame.Surface], target_size: int) -> pygame.Surface:
+        """
+        Scale an image to fit within a square target size while preserving aspect ratio.
+
+        Args:
+            raw_surf: Source surface, or None for placeholder
+            target_size: Target width/height in pixels
+
+        Returns:
+            Scaled surface centered on a target_size x target_size background
+        """
+        result = pygame.Surface((target_size, target_size), pygame.SRCALPHA)
+        result.fill((40, 40, 40))  # Dark background
+
+        if raw_surf:
+            w, h = raw_surf.get_size()
+            scale = min(target_size / w, target_size / h) * 0.9  # 90% to leave margin
+            new_w, new_h = int(w * scale), int(h * scale)
+            scaled = pygame.transform.smoothscale(raw_surf, (new_w, new_h))
+
+            # Center on result
+            x_off = (target_size - new_w) // 2
+            y_off = (target_size - new_h) // 2
+            result.blit(scaled, (x_off, y_off))
+        else:
+            # Draw placeholder icon
+            pygame.draw.rect(result, (60, 60, 60), (10, 10, target_size - 20, target_size - 20), 2)
+            # Simple ship silhouette
+            center = target_size // 2
+            pygame.draw.polygon(result, (80, 80, 80), [
+                (center, 20),
+                (center + 30, target_size - 30),
+                (center - 30, target_size - 30)
+            ])
+
+        return result
+
     def update_ship(self, ship_instance: Optional[ShipInstance]):
         """
         Update display for a ship instance.
@@ -129,6 +167,45 @@ class ShipDetailPanel:
         """Build the full ship display."""
         y = 10
         width = self.rect.width - 40
+
+        # --- Ship Images (Portrait + Top-Down) ---
+        image_size = 120
+        image_spacing = 10
+        total_images_width = image_size * 2 + image_spacing
+        images_x = (self.rect.width - total_images_width) // 2 - 10  # Center the images
+
+        # Get theme and ship class
+        theme_id = ship.design_data.get('theme_id', 'Federation')
+        ship_class = ship.design_data.get('ship_class', 'Unknown')
+        theme_mgr = ShipThemeManager.instance()
+
+        # Portrait image (left)
+        portrait_surf = self._get_scaled_image(
+            theme_mgr.get_portrait_image(theme_id, ship_class),
+            image_size
+        )
+        portrait_img = UIImage(
+            relative_rect=pygame.Rect(images_x, y, image_size, image_size),
+            image_surface=portrait_surf,
+            manager=self.manager,
+            container=self.scroll_container
+        )
+        self.ui_elements.append(portrait_img)
+
+        # Top-down image (right)
+        topdown_surf = self._get_scaled_image(
+            theme_mgr.get_image(theme_id, ship_class),
+            image_size
+        )
+        topdown_img = UIImage(
+            relative_rect=pygame.Rect(images_x + image_size + image_spacing, y, image_size, image_size),
+            image_surface=topdown_surf,
+            manager=self.manager,
+            container=self.scroll_container
+        )
+        self.ui_elements.append(topdown_img)
+
+        y += image_size + 10
 
         # --- Header ---
         display_id = ship.get_display_id() or ship.instance_id[:8]

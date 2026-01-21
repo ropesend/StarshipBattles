@@ -639,6 +639,10 @@ class StrategyInterface:
         if self.planet_list_window is not None:
             return True
 
+        # Check for fleet report window (PROJ-03)
+        if self.fleet_report_window is not None:
+            return True
+
         # Check if workshop is being opened
         if hasattr(self.scene, 'action_open_design') and self.scene.action_open_design:
             return True
@@ -864,8 +868,8 @@ class StrategyInterface:
         if self.fleet_report_window:
             self.fleet_report_window.kill()
 
-        # Match PlanetListWindow size for consistency
-        w, h = 1200, 700
+        # Match PlanetListWindow size (90% of screen)
+        w, h = self.width * 0.9, self.height * 0.9
         rect = pygame.Rect((self.width - w)/2, (self.height - h)/2, w, h)
 
         self.fleet_report_window = FleetReportWindow(
