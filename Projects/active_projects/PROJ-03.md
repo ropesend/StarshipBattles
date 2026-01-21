@@ -32,32 +32,21 @@ Create a comprehensive Fleet Report window for the strategy layer that displays 
 
 ## Current State
 **Last Updated:** 2026-01-21
-**Current Phase:** Phase 5 Complete - Ready for Phase 6
-**Last Agent Action:** Completed Phase 5 (Filters and Column Configuration) - added filter toggle buttons and column visibility toggles to sidebar
-**Next Action:** Begin Phase 6 (Polish and Integration) - add screenshot support, resize handling, fleet state changes
+**Current Phase:** Phase 7 Complete - Ready for Phase 6
+**Last Agent Action:** Completed Phase 7 (Fleet Report UI Enhancements based on user feedback)
+**Next Action:** Begin Phase 6 (Polish and Integration) or proceed to user verification
 **Blockers:** None
 **Context for Next Agent:**
-- Phase 1 complete: Serial number system (16 tests)
-- Phase 2 complete: Basic window functional with 3-panel layout
-- Phase 3 complete: Enhanced summary panel (18 tests)
-- Phase 4 complete: Ship detail panel with damage display (21 tests)
-- Phase 5 complete: Filters and column configuration
-  - Added filter toggle buttons in sidebar:
-    - Show Damaged (default: on)
-    - Show Undamaged (default: on)
-    - Show Derelict (default: on)
-    - Show Destroyed (default: off)
-  - Added column visibility toggles in sidebar:
-    - Each column (except icon) has a `[x] Title` / `[ ] Title` toggle button
-    - Toggling a column rebuilds headers and row pool
-  - Added `update()` method to FleetReportWindow:
-    - Handles filter button clicks via `_toggle_filter(filter_id)`
-    - Handles column button clicks via `_toggle_column(col_id)`
-  - Uses `btn.check_pressed()` pattern from PlanetListWindow
-  - Filter logic already existed in fleet_report_filters.py (Phase 3)
-  - 243 total strategy tests passing
-- Phase 6 needs: Screenshot support (F12), window resize handling, fleet state change refresh
-- Manual testing recommended: Toggle filters and columns to verify list updates correctly
+- Phases 1-5 complete
+- Phase 7 complete (Revision based on user feedback):
+  - Task 7.1: Window now uses 90% screen size (matching PlanetListWindow)
+  - Task 7.2: Zoom disabled while window open via `_has_modal_open()` check
+  - Task 7.3: Portrait and top-down views in both list columns and detail panel
+  - Task 7.4: WarpJump capability filter (9 new tests, 27 total filter tests)
+  - Task 7.5: Ship selection already working from Phase 4
+- Phase 6 (Polish) not started - screenshot support, resize handling, state changes
+- 252 strategy tests passing
+- PROJ-05 planned separately for fleet movement/supply system
 
 ## Key Files Reference
 | Component | File Path | Class/Function |
@@ -80,6 +69,7 @@ Create a comprehensive Fleet Report window for the strategy layer that displays 
 | 2026-01-21 | Fleet summary: Include all stat categories | Combat stats (firepower, HP%, shields), logistics (fuel rate, supply days), and composition (class breakdown, damaged count, abilities) |
 | 2026-01-21 | Component damage: Collapsible groups by layer | Group components by layer (Hull, Core, etc.) with expand/collapse. Show damage % per component when expanded |
 | 2026-01-21 | Window size: Match Planet List | Same size and proportions as Planet List for UI consistency |
+| 2026-01-21 | Revision initiated: UI enhancements | User feedback after real-world usage: window should be larger, need portrait+top-down views, warp filter, zoom blocking. Movement/supply mechanics deferred to PROJ-05 |
 
 ## Initial Analysis
 
@@ -474,6 +464,59 @@ from game.ui.panels.design_report_panel import DesignReportPanel
 
 ---
 
+### Phase 7: Fleet Report UI Enhancements [Medium]
+**Objective:** Address user feedback from real-world usage
+**Status:** Not Started
+**Revision Reason:** User tested Fleet Report and found: window too small, needs dual ship views (portrait + top-down), needs warp capability filter, zoom should be blocked while window open
+
+#### Task 7.1: Increase Default Window Size [Simple]
+**Files:** `game/ui/screens/fleet_report_window.py`, `game/ui/screens/strategy_screen.py`
+**Tests:** Manual - window opens at larger size
+- [x] Check current PlanetListWindow size (uses screen-relative sizing)
+- [x] Update `open_fleet_report_window()` to use same dimensions
+- [ ] Verify panel proportions work at new size
+**Notes:** Changed from hardcoded 1200x700 to `self.width * 0.9, self.height * 0.9` to match PlanetListWindow pattern.
+
+#### Task 7.2: Disable Strategy Layer Zoom While Window Open [Simple]
+**Files:** `game/ui/screens/strategy_screen.py`, `game/ui/screens/strategy_input_handler.py`
+**Tests:** Manual - zoom disabled while window open
+- [x] Add check for active fleet_report_window in zoom handlers
+- [x] Block mouse wheel zoom when window open
+- [x] Block +/- keyboard zoom when window open
+- [x] Re-enable zoom when window closes
+**Notes:** Added `fleet_report_window is not None` check to `_has_modal_open()`. Input handler already blocks MOUSEWHEEL when modal_open is True. Zoom re-enables automatically when window is closed (reference set to None).
+
+#### Task 7.3: Add Dual Ship Views (Portrait + Top-Down) [Medium]
+**Files:** `game/ui/screens/fleet_report_window.py`, `game/ui/panels/ship_detail_panel.py`
+**Tests:** Manual - both views visible in list columns and detail panel
+- [x] Add portrait column to ship list (small icon, ~40x40)
+- [x] Add top-down sprite column to ship list (small icon, ~40x40)
+- [x] Both columns visible by default
+- [x] Add larger portrait view to ship detail panel (right side)
+- [x] Add larger top-down view to ship detail panel (right side)
+- [x] Handle missing sprites gracefully (placeholder fallback)
+**Notes:** Portrait via ShipThemeManager.get_portrait_image(), top-down via ShipThemeManager.get_image(). Added image caching in FleetReportWindow._image_cache. Detail panel shows 120x120 centered images side-by-side.
+
+#### Task 7.4: Add WarpJump Capability Filter [Simple]
+**Files:** `game/ui/screens/fleet_report_filters.py`, `game/ui/screens/fleet_report_window.py`, `tests/unit/strategy/test_fleet_report_filters.py`
+**Tests:** `pytest tests/unit/strategy/test_fleet_report_filters.py`
+- [x] Add `has_warp_capability(ship_instance) -> bool` helper in fleet_report_filters.py
+- [x] Add `filter_show_warp_capable = True` / `filter_show_not_warp_capable = True` states
+- [x] Add "Warp Capable" and "Not Warp Capable" toggle buttons to sidebar filters
+- [x] Wire filter into `filter_ships()` function
+- [x] Add unit tests for warp capability check
+**Notes:** Added 9 new unit tests (6 for has_warp_capability, 3 for warp filtering). Total: 27 tests in fleet_report_filters. Checks WarpJump in both primitive and dict formats.
+
+#### Task 7.5: Verify Ship Selection Updates Right Panel [Simple]
+**File:** `game/ui/screens/fleet_report_window.py`
+**Tests:** Manual - click ship, detail panel updates
+- [x] Confirm clicking ship row selects it
+- [x] Confirm selection updates ShipDetailPanel
+- [x] Fix any selection/update issues found
+**Notes:** Row click handling already implemented in Phase 4. Click detection via `_handle_row_click()` → `select_ship()` → `_update_detail_panel()` → `ship_detail_panel.update_ship()`. No fixes needed.
+
+---
+
 ## Verification Checklist
 
 ### After Each Phase
@@ -509,6 +552,7 @@ from game.ui.panels.design_report_panel import DesignReportPanel
 - [ ] All Phase 4 tasks checked off (Ship Detail)
 - [ ] All Phase 5 tasks checked off (Filters)
 - [ ] All Phase 6 tasks checked off (Polish)
+- [ ] All Phase 7 tasks checked off (UI Enhancements - Revision)
 - [ ] All tests passing
 - [ ] Regression tests passing
 - [ ] Audit passed (no significant issues)

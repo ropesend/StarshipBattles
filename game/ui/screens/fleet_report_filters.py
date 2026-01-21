@@ -8,6 +8,44 @@ from typing import Dict, Any, List
 from game.strategy.data.ship_instance import ShipInstance
 
 
+def has_warp_capability(ship: ShipInstance) -> bool:
+    """
+    Check if a ship has WarpJump ability that exceeds its own mass.
+
+    A ship is warp-capable if it has a WarpJump ability component with
+    max_tonnage greater than the ship's mass.
+
+    Args:
+        ship: ShipInstance to check
+
+    Returns:
+        True if ship can use warp points, False otherwise
+    """
+    # Get ship mass
+    ship_mass = ship.design_data.get('expected_stats', {}).get('mass', 0)
+    if ship_mass <= 0:
+        return False
+
+    # Search for WarpJump ability in component layers
+    layers = ship.design_data.get('layers', {})
+    for layer_name, components in layers.items():
+        for comp in components:
+            abilities = comp.get('abilities', {})
+            if 'WarpJump' in abilities:
+                warp_data = abilities['WarpJump']
+                # WarpJump can be a dict with max_tonnage or a primitive (the tonnage itself)
+                if isinstance(warp_data, dict):
+                    max_tonnage = warp_data.get('max_tonnage', 0)
+                else:
+                    # Primitive value is the max_tonnage
+                    max_tonnage = warp_data
+
+                if max_tonnage >= ship_mass:
+                    return True
+
+    return False
+
+
 def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
     """
     Calculate comprehensive statistics for a fleet.
@@ -100,12 +138,26 @@ def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, bool]) -> Li
             - show_undamaged: Include undamaged ships
             - show_derelict: Include derelict ships
             - show_destroyed: Include destroyed ships
+            - show_warp_capable: Include warp-capable ships
+            - show_not_warp_capable: Include ships without warp capability
 
     Returns:
         Filtered list of ships
     """
     result = []
     for ship in ships:
+        # Warp capability filter (if either warp filter is specified)
+        show_warp = filter_state.get('show_warp_capable', True)
+        show_not_warp = filter_state.get('show_not_warp_capable', True)
+
+        # If either filter is off, we need to check warp capability
+        if not show_warp or not show_not_warp:
+            is_warp_capable = has_warp_capability(ship)
+            if is_warp_capable and not show_warp:
+                continue
+            if not is_warp_capable and not show_not_warp:
+                continue
+
         # Destroyed filter
         if ship.is_destroyed:
             if not filter_state.get('show_destroyed', True):

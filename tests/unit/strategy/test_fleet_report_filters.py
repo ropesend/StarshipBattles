@@ -16,7 +16,8 @@ def make_mock_ship(
     max_fuel=100,
     current_fuel=100,
     max_energy=100,
-    current_energy=100
+    current_energy=100,
+    warp_tonnage=None  # If set, adds WarpJump ability with this max_tonnage
 ):
     """Helper to create a mock ship for testing."""
     ship = MagicMock(spec=ShipInstance)
@@ -27,7 +28,19 @@ def make_mock_ship(
     ship.is_derelict = is_derelict
     ship.is_damaged.return_value = is_damaged
 
-    # Set up design_data
+    # Set up design_data with optional warp ability
+    layers = {}
+    if warp_tonnage is not None:
+        layers['CORE'] = [
+            {
+                'id': 'warp_drive',
+                'name': 'Warp Drive',
+                'abilities': {
+                    'WarpJump': warp_tonnage  # primitive form
+                }
+            }
+        ]
+
     ship.design_data = {
         'name': design_name,
         'expected_stats': {
@@ -35,7 +48,8 @@ def make_mock_ship(
             'max_hp': 100,
             'max_fuel': max_fuel,
             'max_energy': max_energy,
-        }
+        },
+        'layers': layers
     }
 
     # Set HP percentage
@@ -278,6 +292,129 @@ class TestFilterShips:
 
         assert len(result) == 1
         assert not result[0].is_destroyed
+
+
+class TestHasWarpCapability:
+    """Test cases for has_warp_capability function."""
+
+    def test_ship_without_warp_drive(self):
+        """Ship without WarpJump ability should return False."""
+        from game.ui.screens.fleet_report_filters import has_warp_capability
+
+        ship = make_mock_ship(mass=1000, warp_tonnage=None)
+        assert has_warp_capability(ship) is False
+
+    def test_ship_with_sufficient_warp_drive(self):
+        """Ship with WarpJump exceeding mass should return True."""
+        from game.ui.screens.fleet_report_filters import has_warp_capability
+
+        ship = make_mock_ship(mass=1000, warp_tonnage=1500)
+        assert has_warp_capability(ship) is True
+
+    def test_ship_with_equal_warp_tonnage(self):
+        """Ship with WarpJump equal to mass should return True."""
+        from game.ui.screens.fleet_report_filters import has_warp_capability
+
+        ship = make_mock_ship(mass=1000, warp_tonnage=1000)
+        assert has_warp_capability(ship) is True
+
+    def test_ship_with_insufficient_warp_drive(self):
+        """Ship with WarpJump less than mass should return False."""
+        from game.ui.screens.fleet_report_filters import has_warp_capability
+
+        ship = make_mock_ship(mass=1000, warp_tonnage=500)
+        assert has_warp_capability(ship) is False
+
+    def test_ship_with_zero_mass(self):
+        """Ship with zero mass should return False (edge case)."""
+        from game.ui.screens.fleet_report_filters import has_warp_capability
+
+        ship = make_mock_ship(mass=0, warp_tonnage=1000)
+        assert has_warp_capability(ship) is False
+
+    def test_warp_capability_with_dict_format(self):
+        """WarpJump ability in dict format should work."""
+        from game.ui.screens.fleet_report_filters import has_warp_capability
+
+        ship = make_mock_ship(mass=1000)
+        # Override with dict format
+        ship.design_data['layers'] = {
+            'CORE': [{
+                'id': 'warp_drive',
+                'abilities': {
+                    'WarpJump': {'max_tonnage': 1500}
+                }
+            }]
+        }
+        assert has_warp_capability(ship) is True
+
+
+class TestFilterShipsWarp:
+    """Test cases for warp capability filtering in filter_ships."""
+
+    def test_filter_hide_warp_capable(self):
+        """Hide warp-capable ships when filter is off."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+
+        ships = [
+            make_mock_ship(mass=1000, warp_tonnage=1500),  # warp capable
+            make_mock_ship(mass=1000, warp_tonnage=None),   # not warp capable
+        ]
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+            'show_warp_capable': False,
+            'show_not_warp_capable': True,
+        }
+        result = filter_ships(ships, filter_state)
+
+        assert len(result) == 1
+        # The remaining ship should not have warp capability
+        assert 'WarpJump' not in result[0].design_data['layers'].get('CORE', [{}])[0].get('abilities', {})
+
+    def test_filter_hide_not_warp_capable(self):
+        """Hide non-warp-capable ships when filter is off."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+
+        ships = [
+            make_mock_ship(mass=1000, warp_tonnage=1500),  # warp capable
+            make_mock_ship(mass=1000, warp_tonnage=None),   # not warp capable
+        ]
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+            'show_warp_capable': True,
+            'show_not_warp_capable': False,
+        }
+        result = filter_ships(ships, filter_state)
+
+        assert len(result) == 1
+        # The remaining ship should have warp capability
+        assert 'WarpJump' in result[0].design_data['layers'].get('CORE', [{}])[0].get('abilities', {})
+
+    def test_filter_show_all_warp_states(self):
+        """With both warp filters enabled, all ships should pass warp filter."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+
+        ships = [
+            make_mock_ship(mass=1000, warp_tonnage=1500),  # warp capable
+            make_mock_ship(mass=1000, warp_tonnage=None),   # not warp capable
+        ]
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+            'show_warp_capable': True,
+            'show_not_warp_capable': True,
+        }
+        result = filter_ships(ships, filter_state)
+
+        assert len(result) == 2
 
 
 class TestSortShips:

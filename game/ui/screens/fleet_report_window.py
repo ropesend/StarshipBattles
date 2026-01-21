@@ -4,12 +4,13 @@ Fleet Report Window - Displays detailed fleet information, ship lists, and indiv
 PROJ-03: Fleet Report Window feature implementation.
 """
 import pygame
-from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UIVerticalScrollBar
+from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UIVerticalScrollBar, UIImage
 
 from game.core.config import UIConfig
 from game.core.logger import log_info
 from game.ui.screens.fleet_report_filters import calculate_fleet_stats, filter_ships, sort_ships
 from game.ui.panels.ship_detail_panel import ShipDetailPanel
+from game.simulation.ship_theme import ShipThemeManager
 
 
 class FleetReportWindow(UIWindow):
@@ -55,6 +56,8 @@ class FleetReportWindow(UIWindow):
         self.filter_show_undamaged = True
         self.filter_show_derelict = True
         self.filter_show_destroyed = False
+        self.filter_show_warp_capable = True
+        self.filter_show_not_warp_capable = True
 
         # Sort State
         self.sort_column_id = 'serial'
@@ -63,13 +66,17 @@ class FleetReportWindow(UIWindow):
         # Column Configuration
         # ID, Width, Title, Visible
         self.columns = [
-            {'id': 'icon', 'width': 50, 'title': '', 'type': 'image', 'visible': True},
+            {'id': 'portrait', 'width': 44, 'title': '', 'type': 'image', 'visible': True},
+            {'id': 'topdown', 'width': 44, 'title': '', 'type': 'image', 'visible': True},
             {'id': 'serial', 'width': 130, 'title': 'Serial ID', 'visible': True},
             {'id': 'design', 'width': 100, 'title': 'Design', 'visible': True},
             {'id': 'name', 'width': 120, 'title': 'Name', 'visible': True},
             {'id': 'hp_pct', 'width': 80, 'title': 'HP %', 'visible': True},
             {'id': 'status', 'width': 100, 'title': 'Status', 'visible': True},
         ]
+
+        # Image cache for ship portraits and top-down sprites
+        self._image_cache = {}  # {(ship_id, image_type): pygame.Surface}
 
         # --- Build UI ---
         self._init_layout()
@@ -238,6 +245,36 @@ class FleetReportWindow(UIWindow):
 
         y += 10
 
+        # Warp capability filter section
+        UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 25),
+            text="WARP CAPABILITY",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 28
+
+        warp_filter_configs = [
+            ('warp_capable', 'Warp Capable', self.filter_show_warp_capable),
+            ('not_warp_capable', 'Not Warp Capable', self.filter_show_not_warp_capable),
+        ]
+
+        for filter_id, label, is_on in warp_filter_configs:
+            btn_text = f"[{label}]" if is_on else label
+            btn = UIButton(
+                relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 28),
+                text=btn_text,
+                manager=self.ui_manager,
+                container=self.sidebar_panel,
+                object_id=f"#filter_{filter_id}"
+            )
+            if is_on:
+                btn.select()
+            self.filter_buttons[filter_id] = btn
+            y += 30
+
+        y += 10
+
         # --- Column Configuration Section ---
         UILabel(
             relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 30),
@@ -253,8 +290,8 @@ class FleetReportWindow(UIWindow):
             col_id = col['id']
             title = col['title'] or col_id
 
-            # Skip icon column (always visible, no title)
-            if col_id == 'icon':
+            # Skip image columns (always visible, no title)
+            if col.get('type') == 'image':
                 continue
 
             is_visible = col.get('visible', True)
@@ -382,16 +419,20 @@ class FleetReportWindow(UIWindow):
                     continue
 
                 width = col['width']
+                col_id = col['id']
 
                 if col.get('type') == 'image':
-                    # For icons, we'll use a panel or image widget
-                    # Placeholder for now
-                    widget = UILabel(
-                        relative_rect=pygame.Rect(x, 0, width, self.row_height),
-                        text="",
+                    # Use UIImage for portrait/topdown columns
+                    # Create placeholder surface
+                    placeholder = pygame.Surface((width - 4, self.row_height - 4))
+                    placeholder.fill((40, 40, 40))
+                    widget = UIImage(
+                        relative_rect=pygame.Rect(x + 2, 2, width - 4, self.row_height - 4),
+                        image_surface=placeholder,
                         manager=self.ui_manager,
                         container=row_bg
                     )
+                    widget.col_id = col_id  # Tag with column ID for update
                 else:
                     widget = UILabel(
                         relative_rect=pygame.Rect(x, 0, width, self.row_height),
@@ -456,19 +497,73 @@ class FleetReportWindow(UIWindow):
                 break
 
             widget = row['widgets'][widget_idx]
-            value = self._get_column_value(ship, col)
+            col_id = col['id']
 
-            if hasattr(widget, 'set_text'):
-                widget.set_text(str(value))
+            if col.get('type') == 'image':
+                # Handle image columns
+                image_surf = self._get_ship_image(ship, col_id)
+                if image_surf and hasattr(widget, 'set_image'):
+                    widget.set_image(image_surf)
+            else:
+                # Handle text columns
+                value = self._get_column_value(ship, col)
+                if hasattr(widget, 'set_text'):
+                    widget.set_text(str(value))
 
             widget_idx += 1
+
+    def _get_ship_image(self, ship, image_type: str) -> pygame.Surface:
+        """Get a ship image (portrait or top-down) scaled for list display."""
+        # Get theme and ship class from design_data
+        theme_id = ship.design_data.get('theme_id', 'Federation')
+        ship_class = ship.design_data.get('ship_class', 'Unknown')
+
+        # Check cache
+        cache_key = (ship.instance_id, image_type)
+        if cache_key in self._image_cache:
+            return self._image_cache[cache_key]
+
+        # Get image from theme manager
+        theme_mgr = ShipThemeManager.instance()
+        target_size = (40, self.row_height - 4)  # Small icon size
+
+        if image_type == 'portrait':
+            raw_surf = theme_mgr.get_portrait_image(theme_id, ship_class)
+        elif image_type == 'topdown':
+            raw_surf = theme_mgr.get_image(theme_id, ship_class)
+        else:
+            raw_surf = None
+
+        if raw_surf:
+            # Scale to fit while preserving aspect ratio
+            w, h = raw_surf.get_size()
+            scale = min(target_size[0] / w, target_size[1] / h)
+            new_w, new_h = int(w * scale), int(h * scale)
+            scaled = pygame.transform.smoothscale(raw_surf, (new_w, new_h))
+
+            # Center on target surface
+            result = pygame.Surface(target_size, pygame.SRCALPHA)
+            result.fill((30, 30, 30))
+            x_off = (target_size[0] - new_w) // 2
+            y_off = (target_size[1] - new_h) // 2
+            result.blit(scaled, (x_off, y_off))
+        else:
+            # Create placeholder
+            result = pygame.Surface(target_size)
+            result.fill((50, 50, 50))
+            # Draw a simple ship silhouette placeholder
+            pygame.draw.rect(result, (80, 80, 80), (5, 10, 30, 20), 1)
+
+        # Cache the result
+        self._image_cache[cache_key] = result
+        return result
 
     def _get_column_value(self, ship, col):
         """Get the display value for a column."""
         col_id = col['id']
 
-        if col_id == 'icon':
-            return ""  # Icons handled separately
+        if col_id in ('portrait', 'topdown'):
+            return ""  # Images handled separately
         elif col_id == 'serial':
             display_id = ship.get_display_id()
             return display_id if display_id else ship.instance_id[:8]
@@ -520,6 +615,8 @@ class FleetReportWindow(UIWindow):
             'show_undamaged': self.filter_show_undamaged,
             'show_derelict': self.filter_show_derelict,
             'show_destroyed': self.filter_show_destroyed,
+            'show_warp_capable': self.filter_show_warp_capable,
+            'show_not_warp_capable': self.filter_show_not_warp_capable,
         }
         return filter_ships(ships, filter_state)
 
@@ -670,6 +767,14 @@ class FleetReportWindow(UIWindow):
             self.filter_show_destroyed = not self.filter_show_destroyed
             new_state = self.filter_show_destroyed
             label = 'Destroyed'
+        elif filter_id == 'warp_capable':
+            self.filter_show_warp_capable = not self.filter_show_warp_capable
+            new_state = self.filter_show_warp_capable
+            label = 'Warp Capable'
+        elif filter_id == 'not_warp_capable':
+            self.filter_show_not_warp_capable = not self.filter_show_not_warp_capable
+            new_state = self.filter_show_not_warp_capable
+            label = 'Not Warp Capable'
         else:
             return
 

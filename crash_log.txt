@@ -1,18 +1,16 @@
 Traceback (most recent call last):
-  File "C:\Developer\StarshipBattles\game\app.py", line 631, in main
+  File "C:\Dev\Starship Battles\game\app.py", line 631, in main
     game.run()
-  File "C:\Developer\StarshipBattles\game\app.py", line 374, in run
-    self._handle_normal_events(events)
-  File "C:\Developer\StarshipBattles\game\app.py", line 418, in _handle_normal_events
-    self._forward_event_to_scene(event)
-  File "C:\Developer\StarshipBattles\game\app.py", line 434, in _forward_event_to_scene
-    self.menu_ui_manager.process_events(event)
-  File "C:\Users\rossr\AppData\Roaming\Python\Python311\site-packages\pygame_gui\ui_manager.py", line 320, in process_events
-    consumed_event = ui_element.process_event(event)
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Developer\StarshipBattles\game\ui\screens\race_setup_screen.py", line 1847, in process_event
-    self._on_load_race()
-  File "C:\Developer\StarshipBattles\game\ui\screens\race_setup_screen.py", line 1719, in _on_load_race
-    races_dir = self.race_library.races_dir
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'RaceLibrary' object has no attribute 'races_dir'
+  File "C:\Dev\Starship Battles\game\app.py", line 376, in run
+    self._update_and_draw(frame_time, events)
+  File "C:\Dev\Starship Battles\game\app.py", line 528, in _update_and_draw
+    self.strategy_scene.draw(self.screen)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_scene.py", line 146, in draw
+    self._renderer.draw(screen)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_renderer.py", line 87, in draw
+    self._draw_fleets(screen)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_renderer.py", line 484, in _draw_fleets
+    fx, fy = hex_to_pixel(f.location, self.HEX_SIZE)
+  File "C:\Dev\Starship Battles\game\strategy\data\hex_math.py", line 63, in hex_to_pixel
+    q = hex_coord.q
+AttributeError: 'NoneType' object has no attribute 'q'
