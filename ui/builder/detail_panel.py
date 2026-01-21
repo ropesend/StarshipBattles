@@ -22,7 +22,6 @@ from game.simulation.components.modifier_introspection import ModifierIntrospect
 
 class ComponentDetailPanel:
     def __init__(self, manager, rect, image_base_path, event_bus=None):
-        from game.ui.panels.modifier_impact_grid import ModifierImpactGrid
         self.manager = manager
         self.rect = rect
         self.image_base_path = image_base_path
@@ -78,26 +77,6 @@ class ComponentDetailPanel:
             container=self.panel
         )
 
-        # Modifier Impact Grid (drawn as overlay)
-        # Position below the stats text box area, above the details button
-        grid_height = 150
-        grid_y = button_y - grid_height - 5
-        self.modifier_grid = ModifierImpactGrid(
-            manager,
-            self.panel,
-            pygame.Rect(5, grid_y, rect.width - 10, grid_height)
-        )
-        self.modifier_grid.panel.hide()  # Hidden until component with modifiers selected
-
-        # Subscribe to ship updates to refresh grid
-        if event_bus:
-            event_bus.subscribe(_get_builder_events().SHIP_UPDATED, self._on_ship_updated)
-
-    def _on_ship_updated(self, _data):
-        """Refresh modifier grid when ship/component changes."""
-        if self.current_component:
-            self.modifier_grid.update(self.current_component)
-
     def on_selection_changed(self, selection_data):
          # selection_data matches what BuilderSceneGUI emits: self.selected_component
          # which is a tuple (layer, idx, comp) or None using the new system
@@ -119,8 +98,6 @@ class ComponentDetailPanel:
             self.placeholder_label.show()
             self.stats_text_box.hide()
             self.details_btn.hide()
-            self.modifier_grid.panel.hide()
-            self.modifier_grid.update(None)
             return
 
         self.placeholder_label.hide()
@@ -133,14 +110,6 @@ class ComponentDetailPanel:
             self.last_img_comp = comp
 
         self.current_component = comp
-
-        # Update modifier grid
-        if comp.modifiers:
-            self.modifier_grid.update(comp)
-            self.modifier_grid.panel.show()
-        else:
-            self.modifier_grid.panel.hide()
-            self.modifier_grid.update(None)
         
         # 2. Update Stats
         lines = []
@@ -308,16 +277,30 @@ class ComponentDetailPanel:
             if multipliers or additions:
                 lines.append("<br><font color='#88CCFF'>── Net Impact ──</font>")
 
+                def format_sig_digits(value):
+                    """Format value with 4 significant digits."""
+                    abs_val = abs(value)
+                    if abs_val == 0:
+                        return "0"
+                    elif abs_val >= 1000:
+                        return f"{round(value)}"
+                    elif abs_val >= 100:
+                        return f"{value:.1f}"
+                    elif abs_val >= 10:
+                        return f"{value:.2f}"
+                    else:
+                        return f"{value:.3f}"
+
                 # Show multipliers first
                 if multipliers:
                     for name, val, color in multipliers:
-                        add_line(f"  {name}: <font color='{color}'>x{val:.2f}</font>", '#C8C8C8')
+                        add_line(f"  {name}: <font color='{color}'>x{format_sig_digits(val)}</font>", '#C8C8C8')
 
                 # Show additions
                 if additions:
                     for name, val, color in additions:
                         sign = '+' if val >= 0 else ''
-                        add_line(f"  {name}: <font color='{color}'>{sign}{val:.1f}</font>", '#C8C8C8')
+                        add_line(f"  {name}: <font color='{color}'>{sign}{format_sig_digits(val)}</font>", '#C8C8C8')
         
         full_html = "<br>".join(lines)
         if full_html != self.last_html:
@@ -419,11 +402,9 @@ class ComponentDetailPanel:
     def draw(self, screen):
         """Draw custom content that can't be rendered with pygame_gui elements.
 
-        Call this after the GUI manager's draw() to render the modifier grid
-        with rotated headers.
+        Note: Modifier grid has been moved to ComponentModifierGridPanel.
         """
-        if self.current_component and self.modifier_grid.panel.visible:
-            self.modifier_grid.draw(screen)
+        pass
 
     def handle_event(self, event):
         """Handle pygame events for the detail panel.
@@ -431,7 +412,4 @@ class ComponentDetailPanel:
         Returns:
             True if event was consumed
         """
-        if self.modifier_grid.panel.visible:
-            if self.modifier_grid.handle_event(event):
-                return True
         return False

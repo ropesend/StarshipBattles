@@ -28,11 +28,11 @@ Refactor the Design Workshop's component modifier panel and component report to 
 
 ## Current State
 **Last Updated:** 2026-01-21
-**Current Phase:** Phase 6 COMPLETE
-**Last Agent Action:** Fixed 7 test failures in test_mandatory_modifiers.py (signature + attribute name changes)
-**Next Action:** User verification
+**Current Phase:** Phase 8 COMPLETE
+**Last Agent Action:** Implemented all 5 Phase 8 tasks - dedicated Component Modifier Grid Panel
+**Next Action:** User verification of Phase 8 changes
 **Blockers:** None
-**Context for Next Agent:** All phases complete. 1527 tests pass. Audit Cycle 3 passed after fixing test compatibility issues from Phase 1 & 2 API changes.
+**Context for Next Agent:** Phase 8 revision complete. Created new dedicated ComponentModifierGridPanel (180px tall strip above Weapons Report) with more horizontal space for modifier grid. Removed embedded grid from ComponentDetailPanel. Changed precision to 4 significant digits. All 2037 tests passing.
 
 ## Implementation Summary
 
@@ -78,6 +78,8 @@ Refactor the Design Workshop's component modifier panel and component report to 
 | 2026-01-21 | Row layout: Name + Value + Slider + JSON | User decision - compact but retain full controls |
 | 2026-01-21 | Exact height match with Weapons Report | User decision - visual consistency |
 | 2026-01-21 | Implement full ModifierImpactGrid widget | User decision during audit - text display insufficient, need full grid with rotated headers |
+| 2026-01-21 | Revision initiated: Modifier grid improvements | User feedback after real-world usage: (1) grid shows stats component doesn't possess, (2) grid position overlays wrong panels, (3) needs expand button, (4) too many decimal places |
+| 2026-01-21 | Second revision: Dedicated panel for modifier grid | User feedback: grid lacks horizontal space, needs dedicated panel above Weapons Report, 4 significant digits precision |
 
 ## Key Files Reference
 
@@ -377,6 +379,91 @@ A "Net Impact" text section was added to detail_panel.py (lines 249-288) showing
 
 ---
 
+### Phase 7: Modifier Grid Improvements [Medium] ✅ COMPLETE
+**Objective:** Address user feedback on modifier grid from real-world usage
+**Status:** Complete
+**Revision Reason:** User tested modifier grid and found 4 issues: wrong columns shown, wrong position, missing expand feature, excessive decimal precision
+
+#### Task 7.1: Filter columns to component-possessed stats [Medium] ✅
+**File:** `game/ui/panels/modifier_impact_grid.py`
+**Tests:** Manual test with weapons (no thrust columns), engines (no damage columns)
+- [x] Add `_get_component_consumed_stats(component)` method to collect stats from ability STAT_BINDINGS
+- [x] Modify `update()` to filter columns using component stats intersection
+- [x] Update `_get_affected_stats()` to accept optional filter set
+**Notes:** Method iterates ability_instances and collects stat keys from STAT_BINDINGS. Returns None if no abilities (shows all stats for backward compat).
+
+#### Task 7.2: Relocate grid within Component Report Panel [Simple] ✅
+**File:** `game/ui/panels/modifier_impact_grid.py`
+**Tests:** Manual test - grid should appear inside report panel, not overlaying other panels
+- [x] Fixed grid draw() to use panel.get_abs_rect() for absolute screen coordinates
+- [x] Fixed content_area, row_rect, footer_rect to use absolute positioning
+- [x] Fixed handle_event() mouse collision to use absolute rect
+**Notes:** Grid now properly uses absolute screen coordinates instead of relative panel coords.
+
+#### Task 7.3: Add expand button with popup window [Medium] ✅
+**Files:** `game/ui/panels/modifier_impact_grid.py`, `ui/builder/detail_panel.py`
+**Tests:** Manual test - click expand button, verify larger popup appears
+- [x] Add expand button (⬜) in upper-right of grid title area (24x20)
+- [x] Create `show_expanded_popup()` method creating UIWindow (600x500)
+- [x] Expanded window contains larger ModifierImpactGrid instance
+- [x] Handle UI_BUTTON_PRESSED event in handle_event()
+- [x] Events already wired through detail_panel.py
+**Notes:** Added UIButton and UIWindow imports. Button uses Unicode ⬜ character.
+
+#### Task 7.4: Limit multiplier precision to 3 digits [Simple] ✅
+**Files:** `game/ui/panels/modifier_impact_grid.py`, `ui/builder/detail_panel.py`
+**Tests:** Manual test - verify values display as x1.234 not x1.23456789
+- [x] Changed _format_value() from `.2f` to `.3f`
+- [x] Updated Net Impact in detail_panel.py: `x{val:.2f}` → `x{val:.3f}`
+- [x] Updated test expectations in test_modifier_impact_grid.py
+**Notes:**
+
+---
+
+### Phase 8: Component Modifier Grid Panel [Medium] ✅ COMPLETE
+**Objective:** Create dedicated panel for modifier grid with more horizontal space
+**Status:** Complete
+**Revision Reason:** User feedback: grid in ComponentDetailPanel lacks space, needs dedicated panel above Weapons Report
+
+#### Task 8.1: Add new panel height constant [Simple] ✅
+**File:** `game/ui/screens/builder_utils.py`
+- [x] Added `modifier_grid_panel: int = 180` to PanelHeights dataclass
+**Notes:**
+
+#### Task 8.2: Create ComponentModifierGridPanel class [Medium] ✅
+**File:** `game/ui/panels/component_modifier_grid_panel.py` (NEW)
+- [x] Created new panel class wrapping ModifierImpactGrid
+- [x] Subscribes to SELECTION_CHANGED and SHIP_UPDATED events
+- [x] Shows/hides based on component modifiers
+- [x] Full-width panel (same width as Weapons Report)
+**Notes:**
+
+#### Task 8.3: Update workshop_screen layout [Medium] ✅
+**File:** `game/ui/screens/workshop_screen.py`
+- [x] Added import for ComponentModifierGridPanel
+- [x] Added modifier_grid_panel_height instance variable
+- [x] Adjusted schematic view height to account for new panel
+- [x] Created ComponentModifierGridPanel positioned above Weapons Report
+- [x] Added draw() call for new panel
+**Notes:** Panel positioned at modifier_grid_y = weapons_panel_y - modifier_grid_panel_height
+
+#### Task 8.4: Remove grid from ComponentDetailPanel [Simple] ✅
+**File:** `ui/builder/detail_panel.py`
+- [x] Removed ModifierImpactGrid import and creation
+- [x] Removed grid update calls from show_component()
+- [x] Simplified draw() and handle_event() methods
+**Notes:** Stats text box now has more vertical space
+
+#### Task 8.5: Update precision to 4 significant digits [Simple] ✅
+**Files:** `game/ui/panels/modifier_impact_grid.py`, `ui/builder/detail_panel.py`
+- [x] Added `_format_sig_digits()` method with 4 sig digit logic
+- [x] Updated `_format_value()` to use new formatting
+- [x] Updated Net Impact section in detail_panel.py
+- [x] Updated tests for new format expectations
+**Notes:** Values >=1000: no decimals, >=100: 1 decimal, >=10: 2 decimals, <10: 3 decimals
+
+---
+
 ## Verification Checklist
 
 ### After Each Phase
@@ -430,8 +517,28 @@ A "Net Impact" text section was added to detail_panel.py (lines 249-288) showing
 - [x] All Phase 4 tasks checked off
 - [x] All Phase 5 tasks checked off
 - [x] All Phase 6 tasks checked off
-- [x] All tests passing (1527 passed, 1 skipped)
+- [x] All Phase 7 tasks checked off (Revision)
+- [x] All Phase 8 tasks checked off (Revision)
+- [x] All tests passing (2037 passed, 1 skipped)
 - [x] Regression tests passing
 - [x] New tests added: 17 (8 for Component methods, 9 for ModifierImpactGrid)
 - [x] Audit passed (Cycle 3)
 - [ ] User verified
+
+### Revision Verification (Phase 7)
+- [ ] Task 7.1: Weapons show only damage/range/reload/arc columns (no thrust)
+- [ ] Task 7.1: Engines show only thrust columns (no damage)
+- [ ] Task 7.2: Grid appears within Component Report Panel (right side)
+- [ ] Task 7.2: Grid does NOT overlay Component List or Ship Structure
+- [ ] Task 7.3: Expand button visible in upper-right of grid
+- [ ] Task 7.3: Click opens popup window ~600x500
+- [x] Regression: Builder tests passing (106 passed)
+- [x] Modifier grid tests passing (9 passed)
+
+### Revision Verification (Phase 8)
+- [ ] Task 8.2: New panel appears as horizontal strip above Weapons Report
+- [ ] Task 8.2: Panel spans same width as Weapons Report
+- [ ] Task 8.4: Component Report no longer has embedded grid
+- [ ] Task 8.4: Component Report stats text box has more vertical space
+- [ ] Task 8.5: Values show 4 significant digits (73.73, 350.8, 1001)
+- [x] Full test suite passing (2037 passed, 1 skipped)

@@ -23,6 +23,7 @@ from game.simulation.systems.persistence import ShipIO
 from game.ui.panels.builder_widgets import ModifierEditorPanel
 from game.simulation.ship_theme import ShipThemeManager
 from ui.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel, LayerPanel
+from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
 from ui.builder.schematic_view import SchematicView
 from ui.builder.interaction_controller import InteractionController
 from ui.builder.event_bus import EventBus
@@ -119,6 +120,7 @@ class DesignWorkshopGUI:
         self.detail_panel_width = PANEL_WIDTHS.detail_panel
         self.bottom_bar_height = PANEL_HEIGHTS.bottom_bar
         self.weapons_report_height = PANEL_HEIGHTS.weapons_report
+        self.modifier_grid_panel_height = PANEL_HEIGHTS.modifier_grid_panel
         
         # MVC Lite
         # Schematic View shifted right
@@ -126,7 +128,7 @@ class DesignWorkshopGUI:
         rect = pygame.Rect(
             sch_x, 0,
             self.width - sch_x - self.right_panel_width,
-            self.height - self.bottom_bar_height - self.weapons_report_height
+            self.height - self.bottom_bar_height - self.weapons_report_height - self.modifier_grid_panel_height
         )
         self.view = SchematicView(rect, self.sprite_mgr, self.theme_manager)
         self.controller = InteractionController(self, self.view)
@@ -211,6 +213,15 @@ class DesignWorkshopGUI:
                 self, self.ui_manager,
                 pygame.Rect(weapons_panel_x, weapons_panel_y, weapons_panel_width, self.weapons_report_height),
                 self.sprite_mgr
+            )
+
+        # Component Modifier Grid Panel (above Weapons Report)
+        modifier_grid_y = weapons_panel_y - self.modifier_grid_panel_height
+        with profile_block("Builder: Init Modifier Grid Panel"):
+            self.component_modifier_grid_panel = ComponentModifierGridPanel(
+                self.ui_manager,
+                pygame.Rect(weapons_panel_x, modifier_grid_y, weapons_panel_width, self.modifier_grid_panel_height),
+                event_bus=self.event_bus
             )
 
         # Detail Panel
@@ -497,7 +508,8 @@ class DesignWorkshopGUI:
         # Layer panel drawing removed (it's handled by UI manager + overlay highlights handled by panel.draw if any)
         self.layer_panel.draw(screen)  # Draw selection highlights AFTER UI manager
         self.weapons_report_panel.draw(screen)
-        self.detail_panel.draw(screen)  # Draw modifier impact grid
+        self.component_modifier_grid_panel.draw(screen)  # Draw modifier impact grid
+        self.detail_panel.draw(screen)
         
         if hovered and not self.controller.dragged_item:
             # Tooltip removed

@@ -145,8 +145,12 @@ class TestModifierImpactGrid(unittest.TestCase):
         rect = pygame.Rect(10, 10, 400, 300)
         grid = ModifierImpactGrid(self.manager, self.container, rect)
 
-        self.assertEqual(grid._format_value(2.0, 'multiply'), 'x2.00')
-        self.assertEqual(grid._format_value(0.5, 'multiply'), 'x0.50')
+        self.assertEqual(grid._format_value(2.0, 'multiply'), 'x2.000')
+        self.assertEqual(grid._format_value(0.5, 'multiply'), 'x0.500')
+        # 4 significant digits tests
+        self.assertEqual(grid._format_value(73.73, 'multiply'), 'x73.73')  # 2 decimals for 10-99
+        self.assertEqual(grid._format_value(1000.73, 'multiply'), 'x1001')  # No decimals for >=1000
+        self.assertEqual(grid._format_value(350.76, 'multiply'), 'x350.8')  # 1 decimal for 100-999
 
     def test_format_value_add(self):
         """Test value formatting for add operations."""
@@ -155,8 +159,8 @@ class TestModifierImpactGrid(unittest.TestCase):
         rect = pygame.Rect(10, 10, 400, 300)
         grid = ModifierImpactGrid(self.manager, self.container, rect)
 
-        self.assertEqual(grid._format_value(90.0, 'add'), '+90')
-        self.assertEqual(grid._format_value(-10.0, 'add'), '-10')
+        self.assertEqual(grid._format_value(90.0, 'add'), '+90.00')
+        self.assertEqual(grid._format_value(-10.0, 'add'), '-10.00')
 
     def test_kill_cleans_up_elements(self):
         """Test that kill() properly cleans up UI elements."""
