@@ -4,7 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| | | | | |
+| PROJ-01 | Design Workshop UI Enhancement | Planning | 2026-01-21 | 2026-01-21 |
 
 ## Archived Projects
 
@@ -24,4 +24,4 @@
 
 ---
 
-## Next Project ID: PROJ-01
+## Next Project ID: PROJ-02

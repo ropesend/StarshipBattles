@@ -5,6 +5,39 @@
 
 ---
 
+## CRITICAL: The PROJ-XX.md File Is The Single Source of Truth
+
+**The project file (`Projects/active_projects/PROJ-XX.md`) must contain ALL context needed for any agent to pick up the work at any point.**
+
+This means:
+- Every task must have **specific file paths** and **line number references**
+- Every subtask must be a **concrete, checkable action** (not vague descriptions)
+- The **Current State** section must always be accurate and detailed
+- Any agent should be able to read ONLY this file and know exactly what to do next
+
+**Bad Example:**
+```markdown
+#### Task 1.1: Update the panel [Medium]
+- [ ] Change the layout
+- [ ] Fix the styling
+- [ ] Update tests
+```
+
+**Good Example:**
+```markdown
+#### Task 1.1: Remove PresetManagerUI from ModifierEditorPanel [Simple]
+**File:** `game/ui/panels/builder_widgets.py`
+**Tests:** Run `pytest tests/unit/builder/` after changes
+- [ ] Remove import: `from ui.builder.preset_ui import PresetManagerUI` (line 10)
+- [ ] Remove `self.preset_ui = PresetManagerUI(...)` in `__init__` (line 29)
+- [ ] Remove `self.preset_ui.layout(y)` call in `layout()` method (lines 107-108)
+- [ ] Remove `self.preset_ui.clear()` call (line 110)
+- [ ] Remove `preset_manager` parameter from `__init__` signature
+**Notes:** [Added during implementation if discoveries made]
+```
+
+---
+
 ## Phase A: Initial Understanding
 
 1. **Read User's Description**
@@ -95,10 +128,15 @@ Launch **6-8 Explore agents in parallel** to analyze the codebase with the tenta
    - Present any significant risks and get user acknowledgment
    - Add all decisions to `## Decisions Log`
 
-3. **Create Detailed Plan**
+3. **Create Detailed Plan** ⚠️ CRITICAL STEP
    - Break into logical Phases
    - Each Phase contains Tasks
-   - Each Task contains Subtasks (checkboxes)
+   - **Each Task MUST include:**
+     - Specific file path(s) being modified
+     - Test command to run after the task
+     - Subtasks as checkboxes with SPECIFIC actions
+     - Line numbers where changes occur (when known)
+     - Code snippets showing the change (for complex modifications)
    - Apply complexity tags: [Simple], [Medium], [Complex]
    - **IMPORTANT:** Any [Complex] task should be broken into simpler subtasks
    - Include test requirements for each task
@@ -139,10 +177,16 @@ Create `Projects/active_projects/PROJ-XX.md` with this structure:
 
 ## Current State
 **Last Updated:** [YYYY-MM-DD HH:MM]
-**Last Agent Action:** [What was just completed]
-**Next Action:** [What should happen next]
+**Current Phase:** [Phase X - Task Y.Z / Planning / Complete]
+**Last Agent Action:** [Specific description of what was just completed]
+**Next Action:** [Specific description of what should happen next]
 **Blockers:** [Any blockers or None]
-**Context for Next Agent:** [Important context]
+**Context for Next Agent:** [Important context - decisions made, approaches tried, etc.]
+
+## Key Files Reference
+| Component | File Path | Class/Function |
+|-----------|-----------|----------------|
+| [Name] | `path/to/file.py` | `ClassName` or `function_name` |
 
 ## Decisions Log
 | Date | Decision | Rationale |
@@ -152,44 +196,67 @@ Create `Projects/active_projects/PROJ-XX.md` with this structure:
 ## Initial Analysis
 [Findings from Phase A code review]
 
-## Swarm Findings
+## Swarm Findings Summary
+### Architecture
+[Key architecture points relevant to implementation]
 
-### Architecture Analysis
-[Findings]
+### Key Patterns to Reuse
+- **[Pattern Name]**: `file:lines` - description
 
-### Dependency Map
-[Findings]
+### Risks Identified
+1. **[Risk]** - mitigation approach
 
-### Test Impact
-[Findings]
-
-### Hidden Dangers
-- [Risk 1]
-
-### Opportunities
-- [Opportunity 1]
+---
 
 ## Phases
 
-### Phase 1: [Phase Name]
+### Phase 1: [Phase Name] [Complexity]
 **Objective:** [What this phase accomplishes]
 **Status:** [Not Started / In Progress / Complete]
 
-#### Task 1.1: [Task Name] [Simple/Medium]
-**Tests:** [Test file/location - written BEFORE implementation]
-- [ ] Subtask A
-- [ ] Subtask B
-- [ ] Subtask C
-**Notes:** [Added during implementation]
+#### Task 1.1: [Specific Task Name] [Simple/Medium/Complex]
+**File:** `path/to/file.py`
+**Tests:** `pytest tests/path/to/test.py` or "Manual test - [description]"
+- [ ] [Specific action with file reference] (line XX)
+- [ ] [Specific action with file reference] (line YY)
+- [ ] [Specific action with code snippet if complex]:
+  ```python
+  # Change this:
+  old_code()
+  # To this:
+  new_code()
+  ```
+- [ ] [Verify step - what to check after changes]
+**Notes:** [Empty initially, filled during implementation with discoveries]
 
-#### Task 1.2: [Task Name] [Simple]
-**Tests:** [Test file/location]
-- [ ] Subtask A
-- [ ] Subtask B
+#### Task 1.2: [Task Name] [Complexity]
+**File:** `path/to/another/file.py`
+**Tests:** [Test command or description]
+- [ ] [Subtask with specific details]
+- [ ] [Subtask with specific details]
 **Notes:**
 
-### Phase 2: [Phase Name]
-...
+### Phase 2: [Phase Name] [Complexity]
+**Objective:** [What this phase accomplishes]
+**Status:** Not Started
+
+#### Task 2.1: ...
+
+---
+
+## Verification Checklist
+
+### After Each Phase
+- [ ] Run `pytest tests/unit/` - all tests pass
+- [ ] Manual test [specific scenario] - no crashes
+- [ ] Verify [specific behavior]
+
+### Final Verification
+- [ ] [End-to-end test scenario 1]
+- [ ] [End-to-end test scenario 2]
+- [ ] Run full test suite: `pytest`
+
+---
 
 ## Audit Log
 | Cycle | Date | Findings | Resolution |
@@ -197,7 +264,9 @@ Create `Projects/active_projects/PROJ-XX.md` with this structure:
 | 1 | | | |
 
 ## Completion Checklist
-- [ ] All tasks checked off
+- [ ] All Phase 1 tasks checked off
+- [ ] All Phase 2 tasks checked off
+- [ ] [... for each phase]
 - [ ] All tests passing
 - [ ] Regression tests passing
 - [ ] Audit passed (no significant issues)

@@ -293,7 +293,38 @@
 ## [BUG-28] - Show strategic move speed in Design Studio
 * **Date Solved:** 2026-01-20
 * **Original Issue:** The Design Studio ship stats panel lacked a display for strategic movement speed (hexes per turn).
-* **Solution Implemented:** 
+* **Solution Implemented:**
     1. Implemented `get_strategic_speed` in `ui/builder/stats_config.py` to calculate speed using the formula `(total_strategic_movement * 25) / mass`.
     2. Added `strategic_speed` to the `main` systems group in `data/stats_layout.json`.
 * **Test Case:** Verified via `tests/integration/test_strategic_abilities.py` mobility logic.
+
+---
+
+## [BUG-15] - Screenshot System Strategy Layer Support
+* **Date Solved:** 2026-01-20
+* **Original Issue:** The screenshot system did not work in the strategy layer or Build Queue screen. F12 key was unresponsive in the Build Queue modal.
+* **Solution Implemented:**
+    1. Added `capture_strategy_layer()` method to `ScreenshotManager` for layered strategy scene capture.
+    2. Added F12/F11 handlers in `strategy_input_handler.py` for strategy layer screenshots.
+    3. Added F12 handler in `build_queue_screen.py` for Build Queue screenshots.
+    4. Fixed `_show_screenshot_toast()` crash - incorrect `rect=` parameter changed to `UIMessageWindow` with correct API.
+* **Test Case:** `tests/repro_issues/test_bug_15_screenshot_strategy.py`
+* **Notes:** Root cause was `TypeError` crash in toast notification due to incorrect pygame_gui API usage (UILabel with `rect=` instead of `relative_rect=`).
+
+---
+
+## [BUG-29] - Build Queue Shows Designs From Other Games
+* **Date Solved:** 2026-01-21
+* **Original Issue:** In the Build Queue, designs from previous game sessions appeared in new games.
+* **Solution Implemented:** Commented out the `_migrate_temp_designs()` call in `save_game_service.py` which was copying designs from the temp folder into new saves.
+* **Test Case:** `tests/repro_issues/test_bug_29_design_contamination.py`
+* **Notes:** The temp design migration feature was copying stale designs from previous sessions into every new game. New games should start with empty design libraries.
+
+---
+
+## [BUG-30] - Load Game Buttons Non-Functional
+* **Date Solved:** 2026-01-20
+* **Original Issue:** Load, Show Turns, and Delete buttons in the Load Game dialog did not respond to clicks. Only Cancel worked.
+* **Solution Implemented:** Fixed `_handle_selection_change()` in `save_selection_window.py` to use `item["text"]` dictionary access instead of `item.text` dot notation, since `UISelectionList.item_list` returns dictionaries.
+* **Test Case:** `tests/unit/ui/test_save_selection.py`
+* **Notes:** The `hasattr(item, 'text')` check returned False for dicts, causing `str(item)` to convert the entire dictionary to a string which never matched.
