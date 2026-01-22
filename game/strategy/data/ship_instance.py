@@ -170,6 +170,84 @@ class ShipInstance:
             return 0.0
         return current / max_val
 
+    def get_fuel_cost_per_hex(self) -> float:
+        """
+        Get strategic fuel consumption per hex from design data.
+
+        Returns:
+            Fuel consumed per hex of strategic movement, or 0 if no consumption.
+        """
+        return self.design_data.get('expected_stats', {}).get('strategic_fuel_per_hex', 0)
+
+    def get_current_fuel(self) -> float:
+        """
+        Get current fuel level.
+
+        Returns:
+            Current fuel amount. Returns max_fuel if not tracked (assumed full).
+        """
+        max_fuel = self.design_data.get('expected_stats', {}).get('max_fuel', 0)
+        return self.resource_levels.get('fuel', max_fuel)
+
+    def consume_fuel(self, amount: float) -> bool:
+        """
+        Consume fuel from this ship.
+
+        Args:
+            amount: Fuel to consume
+
+        Returns:
+            True if fuel was available and consumed, False if insufficient
+        """
+        max_fuel = self.design_data.get('expected_stats', {}).get('max_fuel', 0)
+        current = self.resource_levels.get('fuel', max_fuel)
+
+        if current < amount:
+            return False
+
+        new_level = current - amount
+        self.resource_levels['fuel'] = new_level
+        return True
+
+    def get_warp_energy_cost(self) -> float:
+        """
+        Get energy cost per warp jump from design data.
+
+        Returns:
+            Energy consumed per warp jump, or 0 if no cost.
+        """
+        return self.design_data.get('expected_stats', {}).get('warp_energy_cost', 0)
+
+    def get_current_energy(self) -> float:
+        """
+        Get current energy level.
+
+        Returns:
+            Current energy amount. Returns max_energy if not tracked (assumed full).
+        """
+        max_energy = self.design_data.get('expected_stats', {}).get('max_energy', 0)
+        return self.resource_levels.get('energy', max_energy)
+
+    def consume_energy(self, amount: float) -> bool:
+        """
+        Consume energy from this ship.
+
+        Args:
+            amount: Energy to consume
+
+        Returns:
+            True if energy was available and consumed, False if insufficient
+        """
+        max_energy = self.design_data.get('expected_stats', {}).get('max_energy', 0)
+        current = self.resource_levels.get('energy', max_energy)
+
+        if current < amount:
+            return False
+
+        new_level = current - amount
+        self.resource_levels['energy'] = new_level
+        return True
+
     def get_display_id(self) -> Optional[str]:
         """
         Get human-readable display ID in format "DesignName-000001".

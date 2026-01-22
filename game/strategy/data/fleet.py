@@ -67,17 +67,36 @@ class Fleet:
     def add_ship(self, ship: Union[str, 'ShipInstance']):
         """Add a ship to the fleet (string name or ShipInstance)."""
         self.ships.append(ship)
+        self._trigger_speed_recalculation()
 
     def add_ship_instance(self, instance: 'ShipInstance'):
         """Add a ShipInstance to the fleet."""
         self.ships.append(instance)
+        self._trigger_speed_recalculation()
 
     def remove_ship(self, ship: Union[str, 'ShipInstance']) -> bool:
         """Remove a ship from the fleet. Returns True if found and removed."""
         if ship in self.ships:
             self.ships.remove(ship)
+            self._trigger_speed_recalculation()
             return True
         return False
+
+    def _trigger_speed_recalculation(self):
+        """
+        Trigger fleet speed recalculation based on current ship composition.
+
+        Fleet speed is the minimum of all combat-capable ships' speeds,
+        ensuring the fleet moves at the pace of its slowest member.
+
+        Note: Only recalculates if there are ShipInstance objects.
+        Fleets with only legacy string ships preserve their current speed.
+        """
+        if not self.has_ship_instances():
+            return  # Preserve current speed for legacy string-only fleets
+
+        from game.strategy.services.fleet_mobility_service import FleetMobilityService
+        FleetMobilityService.recalculate_fleet_speed(self)
 
     def get_ship_instances(self) -> List['ShipInstance']:
         """Get all ShipInstance objects (filters out legacy strings)."""
@@ -106,6 +125,220 @@ class Fleet:
         """Check if fleet contains any ShipInstance objects."""
         from game.strategy.data.ship_instance import ShipInstance
         return any(isinstance(s, ShipInstance) for s in self.ships)
+
+    def can_use_warp(self) -> bool:
+        """
+        Check if ALL ships in fleet can use warp points.
+
+        A fleet can only use warp points if every combat-capable ship has
+        a WarpJump ability with max_tonnage >= that ship's mass.
+
+        Returns:
+            True if all combat-capable ships are warp-capable, False otherwise.
+            Returns False if fleet has no combat-capable ships.
+        """
+        from game.ui.screens.fleet_report_filters import has_warp_capability
+
+        combat_ships = self.get_combat_capable_ships()
+        if not combat_ships:
+            return False
+
+        for ship in combat_ships:
+            if not has_warp_capability(ship):
+                return False
+        return True
+
+    def get_warp_limiting_ship(self) -> Optional['ShipInstance']:
+        """
+        Get the ship that prevents the fleet from using warp, if any.
+
+        Returns:
+            The first ship without warp capability, or None if all ships are warp-capable.
+        """
+        from game.ui.screens.fleet_report_filters import has_warp_capability
+
+        for ship in self.get_combat_capable_ships():
+            if not has_warp_capability(ship):
+                return ship
+        return None
+
+    # --- Fuel Consumption Methods ---
+
+    def get_fuel_cost_per_hex(self) -> float:
+        """
+        Calculate total fleet fuel consumption per hex.
+
+        Returns:
+            Sum of all combat-capable ships' strategic fuel costs.
+        """
+        total = 0.0
+        for ship in self.get_combat_capable_ships():
+            total += ship.get_fuel_cost_per_hex()
+        return total
+
+    def has_fuel_for_movement(self) -> bool:
+        """
+        Check if fleet has fuel for at least one hex of movement.
+
+        Returns:
+            True if all combat-capable ships have enough fuel for one hex.
+        """
+        for ship in self.get_combat_capable_ships():
+            cost = ship.get_fuel_cost_per_hex()
+            if cost > 0:
+                current = ship.get_current_fuel()
+                if current < cost:
+                    return False
+        return True
+
+    def consume_fleet_fuel(self, hexes: int = 1) -> bool:
+        """
+        Consume fuel from all ships for movement.
+
+        Args:
+            hexes: Number of hexes moved (default 1)
+
+        Returns:
+            True if all ships had sufficient fuel, False otherwise.
+            Note: If False, no fuel is consumed (atomic operation).
+        """
+        ships = self.get_combat_capable_ships()
+
+        # First, verify all ships have enough fuel
+        for ship in ships:
+            cost = ship.get_fuel_cost_per_hex() * hexes
+            if cost > 0:
+                current = ship.get_current_fuel()
+                if current < cost:
+                    return False
+
+        # All ships have enough, now consume
+        for ship in ships:
+            cost = ship.get_fuel_cost_per_hex() * hexes
+            if cost > 0:
+                ship.consume_fuel(cost)
+
+        return True
+
+    # --- Warp Energy Methods ---
+
+    def get_warp_energy_cost(self) -> float:
+        """
+        Calculate total fleet energy cost for a warp jump.
+
+        Returns:
+            Sum of all combat-capable ships' warp energy costs.
+        """
+        total = 0.0
+        for ship in self.get_combat_capable_ships():
+            total += ship.get_warp_energy_cost()
+        return total
+
+    def has_energy_for_warp(self) -> bool:
+        """
+        Check if fleet has energy for a warp jump.
+
+        Returns:
+            True if all combat-capable ships have enough energy for one warp.
+        """
+        for ship in self.get_combat_capable_ships():
+            cost = ship.get_warp_energy_cost()
+            if cost > 0:
+                current = ship.get_current_energy()
+                if current < cost:
+                    return False
+        return True
+
+    def consume_warp_energy(self) -> bool:
+        """
+        Consume energy from all ships for a warp jump.
+
+        Returns:
+            True if all ships had sufficient energy, False otherwise.
+            Note: If False, no energy is consumed (atomic operation).
+        """
+        ships = self.get_combat_capable_ships()
+
+        # First, verify all ships have enough energy
+        for ship in ships:
+            cost = ship.get_warp_energy_cost()
+            if cost > 0:
+                current = ship.get_current_energy()
+                if current < cost:
+                    return False
+
+        # All ships have enough, now consume
+        for ship in ships:
+            cost = ship.get_warp_energy_cost()
+            if cost > 0:
+                ship.consume_energy(cost)
+
+        return True
+
+    # --- Capability Summary Methods ---
+
+    def fuel_endurance(self) -> int:
+        """
+        Calculate fleet fuel endurance in hexes.
+
+        Returns:
+            Minimum hexes any ship can travel before running out of fuel.
+            Returns -1 if fleet has unlimited endurance (no fuel consumption).
+        """
+        min_endurance = float('inf')
+
+        for ship in self.get_combat_capable_ships():
+            cost_per_hex = ship.get_fuel_cost_per_hex()
+            if cost_per_hex <= 0:
+                continue  # This ship doesn't consume fuel
+
+            current_fuel = ship.get_current_fuel()
+            endurance = int(current_fuel / cost_per_hex) if cost_per_hex > 0 else float('inf')
+            min_endurance = min(min_endurance, endurance)
+
+        return int(min_endurance) if min_endurance != float('inf') else -1
+
+    def warp_jumps_remaining(self) -> int:
+        """
+        Calculate how many warp jumps fleet can make.
+
+        Returns:
+            Minimum jumps any ship can make based on energy.
+            Returns 0 if fleet cannot use warp at all.
+            Returns -1 if fleet has unlimited jumps (no energy cost).
+        """
+        if not self.can_use_warp():
+            return 0
+
+        min_jumps = float('inf')
+
+        for ship in self.get_combat_capable_ships():
+            cost = ship.get_warp_energy_cost()
+            if cost <= 0:
+                continue  # No energy cost for warp
+
+            current_energy = ship.get_current_energy()
+            jumps = int(current_energy / cost) if cost > 0 else float('inf')
+            min_jumps = min(min_jumps, jumps)
+
+        return int(min_jumps) if min_jumps != float('inf') else -1
+
+    def get_capability_summary(self) -> Dict[str, Any]:
+        """
+        Get comprehensive fleet capability summary for UI.
+
+        Returns:
+            Dict with all fleet capability information.
+        """
+        return {
+            'speed': self.speed,
+            'can_warp': self.can_use_warp(),
+            'warp_limiting_ship': self.get_warp_limiting_ship(),
+            'fuel_endurance': self.fuel_endurance(),
+            'warp_jumps': self.warp_jumps_remaining(),
+            'fuel_cost_per_hex': self.get_fuel_cost_per_hex(),
+            'warp_energy_cost': self.get_warp_energy_cost(),
+        }
 
     def to_battle_ships(
         self,
@@ -197,6 +430,9 @@ class Fleet:
 
         self.ships = new_ships
 
+        # Recalculate speed (ships may have been destroyed or damaged)
+        self._trigger_speed_recalculation()
+
     def add_order(self, order, index=None):
         """Add an order to the queue."""
         if index is None:
@@ -234,6 +470,9 @@ class Fleet:
 
         # Clear orders (this fleet is effectively gone)
         self.clear_orders()
+
+        # Recalculate speed for the target fleet (new composition)
+        other_fleet._trigger_speed_recalculation()
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for save game."""

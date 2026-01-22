@@ -8,7 +8,12 @@ from .stat_keys import StatKey, AbilityStatBinding
 class ResourceConsumption(Ability):
     """
     Ability to consume resources.
-    Data: { "resource": "fuel", "amount": 10, "trigger": "constant"|"activation" }
+    Data: { "resource": "fuel", "amount": 10, "trigger": "constant"|"activation"|"strategic_per_hex" }
+
+    Triggers:
+    - "constant": Per-tick consumption during combat (e.g., engine fuel drain)
+    - "activation": Per-use consumption (e.g., weapon ammo)
+    - "strategic_per_hex": Per-hex consumption during strategic map movement
     """
 
     STAT_BINDINGS: List[AbilityStatBinding] = [
@@ -71,8 +76,24 @@ class ResourceConsumption(Ability):
                 return self.amount <= 0
         return False
 
+    def get_strategic_cost(self) -> float:
+        """
+        Get per-hex strategic movement cost.
+
+        Returns:
+            Fuel/resource cost per hex if trigger is 'strategic_per_hex', else 0.
+        """
+        if self.trigger == 'strategic_per_hex':
+            return self.amount
+        return 0.0
+
     def get_ui_rows(self):
-        trigger_str = "/s" if self.trigger == 'constant' else "/use"
+        if self.trigger == 'strategic_per_hex':
+            trigger_str = "/hex"
+        elif self.trigger == 'constant':
+            trigger_str = "/s"
+        else:
+            trigger_str = "/use"
 
         # Color mapping based on resource type
         color = '#FFFFFF'

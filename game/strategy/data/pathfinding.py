@@ -114,26 +114,44 @@ def find_nearest_system(galaxy, hex_c):
             best_sys = sys
     return best_sys
 
-def find_hybrid_path(galaxy, start_hex, end_hex):
+def find_hybrid_path(galaxy, start_hex, end_hex, fleet=None):
     """
     Calculate path combining local hex movement and interstellar warp jumps.
-    Returns list of HexCoords.
+
+    Args:
+        galaxy: Galaxy object containing star systems and warp points
+        start_hex: Starting HexCoord
+        end_hex: Destination HexCoord
+        fleet: Optional Fleet object. If provided and fleet cannot use warp,
+               falls back to direct hex path (no warp network).
+
+    Returns:
+        List of HexCoords representing the path.
     """
+    # Check if fleet can use warp points
+    can_use_warp = True
+    if fleet is not None and hasattr(fleet, 'can_use_warp'):
+        can_use_warp = fleet.can_use_warp()
+
     # 1. Identify Start/End Systems
     # If in deep space, find NEAREST system to enter/exit the network.
     start_sys = get_system_at_hex(galaxy, start_hex)
     if not start_sys:
         start_sys = find_nearest_system(galaxy, start_hex)
-        
+
     end_sys = get_system_at_hex(galaxy, end_hex)
     if not end_sys:
         end_sys = find_nearest_system(galaxy, end_hex)
-    
+
     # Case A: Same System (or both Deep Space near same system)
     if start_sys and end_sys and start_sys == end_sys:
         return find_path_deep_space(start_hex, end_hex)
-        
-    # Case B: Interstellar
+
+    # Case B: Fleet cannot warp - use direct hex path
+    if not can_use_warp:
+        return find_path_deep_space(start_hex, end_hex)
+
+    # Case C: Interstellar with warp capability
     if start_sys and end_sys:
         # 1. Find System Path
         sys_path = find_path_interstellar(start_sys, end_sys, galaxy)

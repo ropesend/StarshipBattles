@@ -1,5 +1,5 @@
 Traceback (most recent call last):
-  File "C:\Dev\Starship Battles\game\app.py", line 631, in main
+  File "C:\Dev\Starship Battles\game\app.py", line 632, in main
     game.run()
   File "C:\Dev\Starship Battles\game\app.py", line 376, in run
     self._update_and_draw(frame_time, events)

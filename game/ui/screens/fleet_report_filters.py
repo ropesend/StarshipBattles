@@ -113,6 +113,9 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
         else:
             total_energy += ship_max_energy  # Full if not tracked
 
+    # Warp capability counts
+    warp_capable_count = sum(1 for s in ships if has_warp_capability(s))
+
     return {
         'ship_count': ship_count,
         'combat_capable_count': combat_capable_count,
@@ -124,6 +127,8 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
         'max_fuel': max_fuel,
         'total_energy': total_energy,
         'max_energy': max_energy,
+        'warp_capable_count': warp_capable_count,
+        'all_warp_capable': warp_capable_count == ship_count and ship_count > 0,
     }
 
 

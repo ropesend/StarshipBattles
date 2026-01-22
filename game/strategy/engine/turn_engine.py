@@ -279,8 +279,30 @@ class TurnEngine:
         
         # --- Phase 2: Apply Moves ---
         for fleet, next_hex in move_queue:
+            # Check fuel before moving
+            if not fleet.has_fuel_for_movement():
+                log_warning(f"Fleet {fleet.id} stranded - insufficient fuel for movement")
+                fleet.clear_orders()
+                continue
+
+            # Detect warp jump (hex distance > 1 indicates warp transit)
+            from game.strategy.data.hex_math import hex_distance
+            is_warp = hex_distance(fleet.location, next_hex) > 1
+
+            # Check and consume warp energy if this is a warp jump
+            if is_warp:
+                if not fleet.has_energy_for_warp():
+                    log_warning(f"Fleet {fleet.id} cannot warp - insufficient energy")
+                    fleet.clear_orders()
+                    continue
+                fleet.consume_warp_energy()
+
+            # Consume fuel for this hex of movement
+            fleet.consume_fleet_fuel(1)
+
+            # Apply movement
             fleet.location = next_hex
-            
+
             # If path complete, order is done
             if not fleet.path:
                 fleet.pop_order()
@@ -329,7 +351,7 @@ class TurnEngine:
                 fleet.pop_order()
                 return None
 
-            fleet.path = find_hybrid_path(galaxy, fleet.location, destination)
+            fleet.path = find_hybrid_path(galaxy, fleet.location, destination, fleet=fleet)
             
             # Remove start hex if path begins with current location
             if fleet.path and fleet.path[0] == fleet.location:

@@ -105,7 +105,7 @@ class TestAdvancedFleetOrders(unittest.TestCase):
         
         # Verify
         mock_calc_intercept.assert_called_with(self.f1, self.f2, self.galaxy)
-        mock_find_path.assert_called_with(self.galaxy, HexCoord(0, 0), predicted_hex)
+        mock_find_path.assert_called_with(self.galaxy, HexCoord(0, 0), predicted_hex, fleet=self.f1)
         self.assertEqual(self.f1.location, HexCoord(1, 0))
 
     @patch('game.strategy.data.pathfinding.find_hybrid_path')

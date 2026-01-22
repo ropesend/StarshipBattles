@@ -211,6 +211,42 @@ class FleetReportWindow(UIWindow):
         )
         y += 32
 
+        # --- Movement Capabilities Section ---
+        UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 25),
+            text="MOVEMENT",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 28
+
+        # Warp Capable
+        self.lbl_warp_capable = UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 22),
+            text="Warp: --",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 24
+
+        # Fuel Endurance
+        self.lbl_fuel_endurance = UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 22),
+            text="Fuel Range: --",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 24
+
+        # Warp Jumps Remaining
+        self.lbl_warp_jumps = UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 22),
+            text="Warp Jumps: --",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 32
+
         # --- Filters Section ---
         UILabel(
             relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 30),
@@ -657,6 +693,39 @@ class FleetReportWindow(UIWindow):
             self.lbl_energy.set_text(f"Energy: {stats['total_energy']:.0f}/{stats['max_energy']:.0f} ({energy_pct:.0f}%)")
         else:
             self.lbl_energy.set_text("Energy: N/A")
+
+        # Movement Capabilities - use fleet methods
+        capabilities = self.fleet.get_capability_summary()
+
+        # Warp Capable
+        if capabilities['can_warp']:
+            self.lbl_warp_capable.set_text("Warp: Yes")
+        else:
+            limiting_ship = capabilities.get('warp_limiting_ship')
+            if limiting_ship:
+                self.lbl_warp_capable.set_text(f"Warp: No ({limiting_ship.name})")
+            else:
+                self.lbl_warp_capable.set_text("Warp: No")
+
+        # Fuel Endurance
+        fuel_endurance = capabilities['fuel_endurance']
+        if fuel_endurance == -1:
+            self.lbl_fuel_endurance.set_text("Fuel Range: Unlimited")
+        elif fuel_endurance == 0:
+            self.lbl_fuel_endurance.set_text("Fuel Range: EMPTY")
+        else:
+            self.lbl_fuel_endurance.set_text(f"Fuel Range: {fuel_endurance} hexes")
+
+        # Warp Jumps Remaining
+        warp_jumps = capabilities['warp_jumps']
+        if not capabilities['can_warp']:
+            self.lbl_warp_jumps.set_text("Warp Jumps: N/A")
+        elif warp_jumps == -1:
+            self.lbl_warp_jumps.set_text("Warp Jumps: Unlimited")
+        elif warp_jumps == 0:
+            self.lbl_warp_jumps.set_text("Warp Jumps: NONE")
+        else:
+            self.lbl_warp_jumps.set_text(f"Warp Jumps: {warp_jumps}")
 
     def process_event(self, event):
         """Handle UI events."""
