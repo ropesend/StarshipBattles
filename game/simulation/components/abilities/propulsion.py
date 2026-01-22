@@ -117,8 +117,10 @@ class WarpJump(Ability):
         # Handle primitive shortcut: "WarpJump": 5000 means max_tonnage=5000
         if isinstance(data, (int, float)):
             self.max_tonnage = float(data)
+            self.energy_cost = 0.0
         else:
             self.max_tonnage = float(data.get('max_tonnage', 0))
+            self.energy_cost = float(data.get('energy_cost', 0))
 
     def can_jump(self, ship_mass: float) -> bool:
         """
@@ -133,10 +135,13 @@ class WarpJump(Ability):
         return ship_mass <= self.max_tonnage
 
     def get_ui_rows(self) -> List[Dict[str, str]]:
-        return [
+        rows = [
             {'label': 'Warp Capable', 'value': 'Yes', 'color_hint': '#00FFFF'},
             {'label': 'Max Tonnage', 'value': f'{self.max_tonnage:,.0f} kg', 'color_hint': '#FFFFFF'},
         ]
+        if self.energy_cost > 0:
+            rows.append({'label': 'Warp Energy', 'value': f'{self.energy_cost:,.0f}', 'color_hint': '#64C8FF'})
+        return rows
 
     def get_primary_value(self) -> float:
         return self.max_tonnage

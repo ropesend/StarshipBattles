@@ -15722,14 +15722,389 @@
                             }
                         }
                     ],
-                    "orders": [
+                    "orders": [],
+                    "path": []
+                },
+                {
+                    "id": 10001,
+                    "owner_id": 0,
+                    "location": null,
+                    "speed": 7.0,
+                    "ships": [
                         {
-                            "type": "MOVE",
-                            "target": {
-                                "type": "raw",
-                                "value": "HexCoord(12, -1279)"
+                            "type": "instance",
+                            "value": {
+                                "instance_id": "3e1fbb1e-e890-4a00-9ea2-7ca332155267",
+                                "design_id": "ES1",
+                                "name": "ES1",
+                                "owner_id": 0,
+                                "design_data": {
+                                    "name": "ES1",
+                                    "ship_class": "Escort",
+                                    "vehicle_type": "Ship",
+                                    "theme_id": "Romulans",
+                                    "team_id": 0,
+                                    "color": [
+                                        100,
+                                        100,
+                                        255
+                                    ],
+                                    "ai_strategy": "standard_ranged",
+                                    "layers": {
+                                        "CORE": [
+                                            {
+                                                "id": "bridge",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "automation",
+                                                        "value": 0.0
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "id": "crew_quarters",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "id": "life_support",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "OUTER": [
+                                            {
+                                                "id": "standard_engine",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "efficiency_mount",
+                                                        "value": 1.0
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "id": "fuel_tank",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "id": "warp_drive_light",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "id": "fuel_tank",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "ARMOR": []
+                                    },
+                                    "resources": {
+                                        "fuel": 100000.0,
+                                        "energy": 0.0,
+                                        "ammo": 0.0
+                                    },
+                                    "expected_stats": {
+                                        "max_hp": 820,
+                                        "max_fuel": 100000.0,
+                                        "max_energy": 0.0,
+                                        "max_ammo": 0.0,
+                                        "max_speed": 11.029411764705882,
+                                        "acceleration_rate": 3.2439446366782008,
+                                        "turn_speed": 0.0,
+                                        "total_thrust": 150.0,
+                                        "strategic_movement": 100.0,
+                                        "mass": 340.0,
+                                        "armor_hp_pool": 0,
+                                        "warp_max_tonnage": 2000.0,
+                                        "warp_energy_cost": 0,
+                                        "strategic_fuel_per_hex": 0
+                                    },
+                                    "_metadata": {
+                                        "is_obsolete": false,
+                                        "times_built": 1,
+                                        "created_date": "2026-01-21T16:21:44.966208",
+                                        "last_modified": "2026-01-21T16:21:44.966208"
+                                    }
+                                },
+                                "current_hp": null,
+                                "component_damage": {},
+                                "resource_levels": {},
+                                "is_destroyed": false,
+                                "is_derelict": false,
+                                "experience": 0,
+                                "kills": 0,
+                                "battles_survived": 0,
+                                "serial": 2
                             }
                         }
                     ],
-                    "path": [
-                        
+                    "orders": [],
+                    "path": []
+                },
+                {
+                    "id": 10002,
+                    "owner_id": 0,
+                    "location": null,
+                    "speed": 7.0,
+                    "ships": [
+                        {
+                            "type": "instance",
+                            "value": {
+                                "instance_id": "5000004c-6efe-44c4-ae08-54fe9c976c2c",
+                                "design_id": "ES1",
+                                "name": "ES1",
+                                "owner_id": 0,
+                                "design_data": {
+                                    "name": "ES1",
+                                    "ship_class": "Escort",
+                                    "vehicle_type": "Ship",
+                                    "theme_id": "Romulans",
+                                    "team_id": 0,
+                                    "color": [
+                                        100,
+                                        100,
+                                        255
+                                    ],
+                                    "ai_strategy": "standard_ranged",
+                                    "layers": {
+                                        "CORE": [
+                                            {
+                                                "id": "bridge",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "automation",
+                                                        "value": 0.0
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "id": "crew_quarters",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "id": "life_support",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "OUTER": [
+                                            {
+                                                "id": "standard_engine",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "efficiency_mount",
+                                                        "value": 1.0
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "id": "fuel_tank",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "id": "warp_drive_light",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "id": "fuel_tank",
+                                                "modifiers": [
+                                                    {
+                                                        "id": "simple_size_mount",
+                                                        "value": 1.0
+                                                    },
+                                                    {
+                                                        "id": "hardened_mount",
+                                                        "value": 1.0
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "ARMOR": []
+                                    },
+                                    "resources": {
+                                        "fuel": 100000.0,
+                                        "energy": 0.0,
+                                        "ammo": 0.0
+                                    },
+                                    "expected_stats": {
+                                        "max_hp": 820,
+                                        "max_fuel": 100000.0,
+                                        "max_energy": 0.0,
+                                        "max_ammo": 0.0,
+                                        "max_speed": 11.029411764705882,
+                                        "acceleration_rate": 3.2439446366782008,
+                                        "turn_speed": 0.0,
+                                        "total_thrust": 150.0,
+                                        "strategic_movement": 100.0,
+                                        "mass": 340.0,
+                                        "armor_hp_pool": 0,
+                                        "warp_max_tonnage": 2000.0,
+                                        "warp_energy_cost": 0,
+                                        "strategic_fuel_per_hex": 0
+                                    },
+                                    "_metadata": {
+                                        "is_obsolete": false,
+                                        "times_built": 4,
+                                        "created_date": "2026-01-21T16:21:44.966208",
+                                        "last_modified": "2026-01-21T16:21:44.966208"
+                                    }
+                                },
+                                "current_hp": null,
+                                "component_damage": {},
+                                "resource_levels": {},
+                                "is_destroyed": false,
+                                "is_derelict": false,
+                                "experience": 0,
+                                "kills": 0,
+                                "battles_survived": 0,
+                                "serial": 3
+                            }
+                        }
+                    ],
+                    "orders": [],
+                    "path": []
+                }
+            ],
+            "built_ship_designs": [],
+            "_next_fleet_id": 10003,
+            "_design_serial_counters": {
+                "ES1": 3
+            },
+            "flag_id": "flag_jmn9cdjmn9cdjmn9",
+            "portrait_id": "Gemini_Generated_Image_dj3cb9dj3cb9dj3c.jpg"
+        },
+        {
+            "id": 1,
+            "name": "Rossarian",
+            "color": [
+                0,
+                200,
+                150
+            ],
+            "theme_path": "C:\\Dev\\Starship Battles\\assets\\ShipThemes\\Federation",
+            "empire_theme_id": "Federation",
+            "colony_ids": [
+                224
+            ],
+            "fleets": [],
+            "built_ship_designs": [],
+            "_next_fleet_id": 10000,
+            "_design_serial_counters": {},
+            "flag_id": "flag_4lg1ov4lg1ov4lg1",
+            "portrait_id": "Gemini_Generated_Image_r7fixkr7fixkr7fi.jpg"
+        }
+    ],
+    "human_player_ids": [
+        0,
+        1
+    ]
+}

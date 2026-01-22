@@ -13,7 +13,7 @@ def has_warp_capability(ship: ShipInstance) -> bool:
     Check if a ship has WarpJump ability that exceeds its own mass.
 
     A ship is warp-capable if it has a WarpJump ability component with
-    max_tonnage greater than the ship's mass.
+    max_tonnage greater than or equal to the ship's mass.
 
     Args:
         ship: ShipInstance to check
@@ -21,29 +21,18 @@ def has_warp_capability(ship: ShipInstance) -> bool:
     Returns:
         True if ship can use warp points, False otherwise
     """
+    expected_stats = ship.design_data.get('expected_stats', {})
+
     # Get ship mass
-    ship_mass = ship.design_data.get('expected_stats', {}).get('mass', 0)
+    ship_mass = expected_stats.get('mass', 0)
     if ship_mass <= 0:
         return False
 
-    # Search for WarpJump ability in component layers
-    layers = ship.design_data.get('layers', {})
-    for layer_name, components in layers.items():
-        for comp in components:
-            abilities = comp.get('abilities', {})
-            if 'WarpJump' in abilities:
-                warp_data = abilities['WarpJump']
-                # WarpJump can be a dict with max_tonnage or a primitive (the tonnage itself)
-                if isinstance(warp_data, dict):
-                    max_tonnage = warp_data.get('max_tonnage', 0)
-                else:
-                    # Primitive value is the max_tonnage
-                    max_tonnage = warp_data
+    # Check warp_max_tonnage from expected_stats (serialized from WarpJump ability)
+    warp_max_tonnage = expected_stats.get('warp_max_tonnage', 0)
 
-                if max_tonnage >= ship_mass:
-                    return True
-
-    return False
+    # Ship can warp if its warp drive can handle its own mass
+    return warp_max_tonnage >= ship_mass
 
 
 def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:

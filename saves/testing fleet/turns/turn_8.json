@@ -1,5 +1,5 @@
 {
-    "turn_number": 6,
+    "turn_number": 8,
     "save_path": "C:\\Dev\\Starship Battles\\saves\\testing fleet",
     "config": {
         "asset_base_path": "C:\\Dev\\Starship Battles\\assets\\ShipThemes",
@@ -130,18 +130,7 @@
                             "planet_type": "GAS_GIANT",
                             "orbit_parent_name": null,
                             "owner_id": 0,
-                            "construction_queue": [
-                                {
-                                    "design_id": "ES1-NW",
-                                    "type": "ship",
-                                    "turns_remaining": 1
-                                },
-                                {
-                                    "design_id": "ES1-NW",
-                                    "type": "ship",
-                                    "turns_remaining": 1
-                                }
-                            ],
+                            "construction_queue": [],
                             "resources": {
                                 "Metals": {
                                     "quantity": 766047,
@@ -16043,42 +16032,14 @@
                             }
                         }
                     ],
-                    "orders": [],
-                    "path": []
-                }
-            ],
-            "built_ship_designs": [],
-            "_next_fleet_id": 10004,
-            "_design_serial_counters": {
-                "ES1": 3,
-                "ES1-NW": 1
-            },
-            "flag_id": "flag_jmn9cdjmn9cdjmn9",
-            "portrait_id": "Gemini_Generated_Image_dj3cb9dj3cb9dj3c.jpg"
-        },
-        {
-            "id": 1,
-            "name": "Rossarian",
-            "color": [
-                0,
-                200,
-                150
-            ],
-            "theme_path": "C:\\Dev\\Starship Battles\\assets\\ShipThemes\\Federation",
-            "empire_theme_id": "Federation",
-            "colony_ids": [
-                224
-            ],
-            "fleets": [],
-            "built_ship_designs": [],
-            "_next_fleet_id": 10000,
-            "_design_serial_counters": {},
-            "flag_id": "flag_4lg1ov4lg1ov4lg1",
-            "portrait_id": "Gemini_Generated_Image_r7fixkr7fixkr7fi.jpg"
-        }
-    ],
-    "human_player_ids": [
-        0,
-        1
-    ]
-}
+                    "orders": [
+                        {
+                            "type": "MOVE",
+                            "target": {
+                                "type": "raw",
+                                "value": "HexCoord(-2469, 580)"
+                            }
+                        }
+                    ],
+                    "path": [
+                        

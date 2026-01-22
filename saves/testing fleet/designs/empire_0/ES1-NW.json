@@ -1,5 +1,5 @@
 {
-    "name": "ES1",
+    "name": "ES1-NW",
     "ship_class": "Escort",
     "vehicle_type": "Ship",
     "theme_id": "Romulans",
@@ -88,19 +88,6 @@
                 ]
             },
             {
-                "id": "warp_drive_light",
-                "modifiers": [
-                    {
-                        "id": "simple_size_mount",
-                        "value": 1.0
-                    },
-                    {
-                        "id": "hardened_mount",
-                        "value": 1.0
-                    }
-                ]
-            },
-            {
                 "id": "fuel_tank",
                 "modifiers": [
                     {
@@ -122,25 +109,25 @@
         "ammo": 0.0
     },
     "expected_stats": {
-        "max_hp": 820,
+        "max_hp": 760,
         "max_fuel": 100000.0,
         "max_energy": 0.0,
         "max_ammo": 0.0,
-        "max_speed": 11.029411764705882,
-        "acceleration_rate": 3.2439446366782008,
+        "max_speed": 12.096774193548388,
+        "acceleration_rate": 3.902185223725286,
         "turn_speed": 0.0,
         "total_thrust": 150.0,
         "strategic_movement": 100.0,
-        "mass": 340.0,
+        "mass": 310.0,
         "armor_hp_pool": 0,
-        "warp_max_tonnage": 2000.0,
+        "warp_max_tonnage": 0,
         "warp_energy_cost": 0,
         "strategic_fuel_per_hex": 0
     },
     "_metadata": {
         "is_obsolete": false,
-        "times_built": 5,
-        "created_date": "2026-01-21T16:21:44.966208",
-        "last_modified": "2026-01-21T16:21:44.966208"
+        "times_built": 3,
+        "created_date": "2026-01-21T16:43:11.677785",
+        "last_modified": "2026-01-21T16:43:11.677785"
     }
 }
