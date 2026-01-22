@@ -121,6 +121,8 @@ class Game:
 
     def update_menu_buttons(self):
         self.menu_buttons = [
+            Button(WIDTH // 2 - 100, HEIGHT // 2 - 320, 200, 50, "Quickstart 1P", self.start_quickstart_1p),
+            Button(WIDTH // 2 - 100, HEIGHT // 2 - 250, 200, 50, "Quickstart 2P", self.start_quickstart_2p),
             Button(WIDTH // 2 - 100, HEIGHT // 2 - 180, 200, 50, "New Game", self.start_strategy_layer),
             Button(WIDTH // 2 - 100, HEIGHT // 2 - 110, 200, 50, "Load Game", self.show_load_menu),
             Button(WIDTH // 2 - 100, HEIGHT // 2 - 40, 200, 50, "Race Setup", self.start_race_setup),
@@ -228,6 +230,56 @@ class Game:
         """Cancel new game setup."""
         self.showing_new_game_setup = False
         log_debug("New game setup cancelled")
+
+    def start_quickstart_1p(self):
+        """Start a single-player quickstart game."""
+        from game.strategy.quickstart_builder import QuickstartBuilder
+        from game.strategy.engine.game_session import GameSession
+        from game.strategy.systems.save_game_service import SaveGameService
+
+        log_info("Starting Quickstart 1P")
+
+        config = QuickstartBuilder.build_1p_config()
+        session = GameSession(config=config)
+
+        success, message, save_path = SaveGameService.save_game(session, config.save_name)
+
+        if success:
+            session.save_path = save_path
+            log_info(f"Quickstart 1P save created: {save_path}")
+
+            # Copy quickstart designs for empire 0
+            QuickstartBuilder.copy_quickstart_designs(save_path, [0])
+
+            self.strategy_scene = StrategyScene(WIDTH, HEIGHT, session=session)
+            self.state = STRATEGY
+        else:
+            log_error(f"Quickstart 1P failed: {message}")
+
+    def start_quickstart_2p(self):
+        """Start a two-player quickstart game."""
+        from game.strategy.quickstart_builder import QuickstartBuilder
+        from game.strategy.engine.game_session import GameSession
+        from game.strategy.systems.save_game_service import SaveGameService
+
+        log_info("Starting Quickstart 2P")
+
+        config = QuickstartBuilder.build_2p_config()
+        session = GameSession(config=config)
+
+        success, message, save_path = SaveGameService.save_game(session, config.save_name)
+
+        if success:
+            session.save_path = save_path
+            log_info(f"Quickstart 2P save created: {save_path}")
+
+            # Copy quickstart designs for both empires
+            QuickstartBuilder.copy_quickstart_designs(save_path, [0, 1])
+
+            self.strategy_scene = StrategyScene(WIDTH, HEIGHT, session=session)
+            self.state = STRATEGY
+        else:
+            log_error(f"Quickstart 2P failed: {message}")
 
     def show_load_menu(self):
         """Show load game menu."""

@@ -1,0 +1,24 @@
+{
+  "race_id": "test_emp2",
+  "name": "TestEmp2",
+  "flag_id": "flag_4lg1ov4lg1ov4lg1",
+  "portrait_id": "Gemini_Generated_Image_6dgi486dgi486dgi.jpg",
+  "theme_id": "Atlantians",
+  "gravity_ideal": 1.0,
+  "gravity_tolerance": 0.3,
+  "temperature_ideal": 293.0,
+  "temperature_tolerance": 50.0,
+  "atmosphere_preferences": {
+    "Oxygen": 50.0,
+    "Nitrogen": 30.0,
+    "Carbon Dioxide": -20.0,
+    "Methane": -50.0,
+    "Hydrogen": -30.0,
+    "Helium": 0.0
+  },
+  "radiation_tolerance": 10.0,
+  "bio_description": "Test empire 2 for quickstart functionality.",
+  "socio_description": "A second test civilization for two-player quickstart.",
+  "created_date": "2026-01-21T00:00:00.000000",
+  "modified_date": "2026-01-21T00:00:00.000000"
+}
