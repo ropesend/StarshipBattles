@@ -94,29 +94,31 @@ class FleetMovementSimulator:
             # COLONIZE, JOIN_FLEET etc. have no movement component
             return None
     
-    def calculate_path(self, state: FleetState, destination: HexCoord, galaxy) -> list:
+    def calculate_path(self, state: FleetState, destination: HexCoord, galaxy, fleet: Optional[Fleet] = None) -> list:
         """
         Calculate path from current location to destination.
-        
+
         Args:
             state: Current fleet state
             destination: Target hex
             galaxy: Galaxy object for pathfinding
-            
+            fleet: Optional Fleet object for warp capability check.
+                   If provided and fleet cannot warp, uses direct hex path.
+
         Returns:
             List of HexCoords representing the path (excluding start if it matches location)
         """
         from game.strategy.data.pathfinding import find_hybrid_path
-        
+
         if state.location == destination:
             return []
-            
-        path = find_hybrid_path(galaxy, state.location, destination)
-        
+
+        path = find_hybrid_path(galaxy, state.location, destination, fleet=fleet)
+
         # Remove start hex if it matches current location
         if path and path[0] == state.location:
             path = path[1:]
-            
+
         return path if path else []
     
     def calculate_next_step(self, state: FleetState, galaxy) -> tuple[Optional[HexCoord], FleetState]:
