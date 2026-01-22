@@ -46,7 +46,8 @@
     {
       "class_name": "ResourceConsumption",
       "tags": [],
-      "amount": 5.0
+      "amount": 5.0,
+      "base_amount": 5
     },
     {
       "class_name": "BeamWeaponAbility",

@@ -52,7 +52,14 @@
     {
       "class_name": "ResourceConsumption",
       "tags": [],
-      "amount": 0.5
+      "amount": 0.5,
+      "base_amount": 0.5
+    },
+    {
+      "class_name": "ResourceConsumption",
+      "tags": [],
+      "amount": 100.0,
+      "base_amount": 100
     }
   ]
 }

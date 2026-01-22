@@ -117,8 +117,12 @@
         "acceleration_rate": 4.63,
         "turn_speed": 0.0,
         "total_thrust": 150.0,
+        "strategic_movement": 100.0,
         "mass": 300.0,
-        "armor_hp_pool": 0
+        "armor_hp_pool": 0,
+        "warp_max_tonnage": 2000,
+        "warp_energy_cost": 500,
+        "strategic_fuel_per_hex": 100.0
     },
     "_metadata": {
         "is_obsolete": false,

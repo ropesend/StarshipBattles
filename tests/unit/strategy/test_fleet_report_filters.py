@@ -30,25 +30,17 @@ def make_mock_ship(
 
     # Set up design_data with optional warp ability
     layers = {}
-    if warp_tonnage is not None:
-        layers['CORE'] = [
-            {
-                'id': 'warp_drive',
-                'name': 'Warp Drive',
-                'abilities': {
-                    'WarpJump': warp_tonnage  # primitive form
-                }
-            }
-        ]
+    expected_stats = {
+        'mass': mass,
+        'max_hp': 100,
+        'max_fuel': max_fuel,
+        'max_energy': max_energy,
+        'warp_max_tonnage': warp_tonnage if warp_tonnage is not None else 0,
+    }
 
     ship.design_data = {
         'name': design_name,
-        'expected_stats': {
-            'mass': mass,
-            'max_hp': 100,
-            'max_fuel': max_fuel,
-            'max_energy': max_energy,
-        },
+        'expected_stats': expected_stats,
         'layers': layers
     }
 
@@ -332,20 +324,13 @@ class TestHasWarpCapability:
         ship = make_mock_ship(mass=0, warp_tonnage=1000)
         assert has_warp_capability(ship) is False
 
-    def test_warp_capability_with_dict_format(self):
-        """WarpJump ability in dict format should work."""
+    def test_warp_capability_with_expected_stats(self):
+        """Warp capability determined from expected_stats should work."""
         from game.ui.screens.fleet_report_filters import has_warp_capability
 
-        ship = make_mock_ship(mass=1000)
-        # Override with dict format
-        ship.design_data['layers'] = {
-            'CORE': [{
-                'id': 'warp_drive',
-                'abilities': {
-                    'WarpJump': {'max_tonnage': 1500}
-                }
-            }]
-        }
+        ship = make_mock_ship(mass=1000, warp_tonnage=1500)
+        # Verify expected_stats has warp_max_tonnage
+        assert ship.design_data['expected_stats']['warp_max_tonnage'] == 1500
         assert has_warp_capability(ship) is True
 
 
@@ -393,8 +378,8 @@ class TestFilterShipsWarp:
         result = filter_ships(ships, filter_state)
 
         assert len(result) == 1
-        # The remaining ship should have warp capability
-        assert 'WarpJump' in result[0].design_data['layers'].get('CORE', [{}])[0].get('abilities', {})
+        # The remaining ship should have warp capability (via expected_stats)
+        assert result[0].design_data['expected_stats']['warp_max_tonnage'] == 1500
 
     def test_filter_show_all_warp_states(self):
         """With both warp filters enabled, all ships should pass warp filter."""

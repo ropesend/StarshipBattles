@@ -59,7 +59,8 @@
     {
       "class_name": "ResourceConsumption",
       "tags": [],
-      "amount": 1.0
+      "amount": 1.0,
+      "base_amount": 1
     },
     {
       "class_name": "ProjectileWeaponAbility",

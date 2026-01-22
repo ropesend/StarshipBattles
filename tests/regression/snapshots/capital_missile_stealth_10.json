@@ -51,7 +51,8 @@
     {
       "class_name": "ResourceConsumption",
       "tags": [],
-      "amount": 5.0
+      "amount": 5.0,
+      "base_amount": 5
     },
     {
       "class_name": "SeekerWeaponAbility",
@@ -64,7 +65,10 @@
       "base_reload": 4.0,
       "firing_arc": 1.0,
       "base_firing_arc": 1.0,
+      "projectile_damage": 100.0,
+      "projectile_hp": 1.0,
       "endurance": 3.0,
+      "base_endurance": 3.0,
       "turn_rate": 200.0
     }
   ]
