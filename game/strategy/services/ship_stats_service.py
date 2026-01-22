@@ -66,13 +66,11 @@ class ShipStatsService:
         # Initialize accumulators
         total_mass = 0.0
         total_hp = 0.0
-        total_fuel_storage = 0.0
-        total_energy_storage = 0.0
-        total_ammo_storage = 0.0
+        resource_storage: Dict[str, float] = {}  # Generic resource storage
         total_strategic_movement = 0.0
         total_strategic_fuel_per_hex = 0.0
         warp_max_tonnage = 0
-        warp_energy_cost = 0.0
+        warp_resource_costs: Dict[str, float] = {}  # Generic warp resource costs
 
         # Iterate through all components in design
         components_found = ShipStatsService._iterate_design_components(design_data)
@@ -81,6 +79,14 @@ class ShipStatsService:
         # This handles test fixtures and designs without component registry entries
         if not components_found:
             expected = design_data.get('expected_stats', {})
+            # Build warp_resource_costs from legacy fields if present
+            fallback_warp_costs = expected.get('warp_resource_costs', {})
+            if not fallback_warp_costs:
+                # Check legacy specific cost fields
+                if expected.get('warp_energy_cost', 0) > 0:
+                    fallback_warp_costs['energy'] = expected['warp_energy_cost']
+                if expected.get('warp_fuel_cost', 0) > 0:
+                    fallback_warp_costs['fuel'] = expected['warp_fuel_cost']
             return {
                 'max_hp': expected.get('max_hp', 0),
                 'mass': expected.get('mass', 0),
@@ -90,7 +96,10 @@ class ShipStatsService:
                 'strategic_movement': expected.get('strategic_movement', 0),
                 'strategic_fuel_per_hex': expected.get('strategic_fuel_per_hex', 0),
                 'warp_max_tonnage': expected.get('warp_max_tonnage', 0),
+                'warp_resource_costs': fallback_warp_costs,
+                # Keep legacy fields for backward compatibility
                 'warp_energy_cost': expected.get('warp_energy_cost', 0),
+                'warp_fuel_cost': expected.get('warp_fuel_cost', 0),
             }
 
         for layer_name, comp_entry, comp_def in components_found:
@@ -159,15 +168,18 @@ class ShipStatsService:
                     if isinstance(warp_data, dict):
                         tonnage = warp_data.get('max_tonnage', 0)
                         energy = warp_data.get('energy_cost', 0)
+                        fuel = warp_data.get('fuel_cost', 0)
                     else:
                         # Simple numeric value = max_tonnage
                         tonnage = warp_data if isinstance(warp_data, (int, float)) else 0
                         energy = 0
+                        fuel = 0
 
                     # Use largest warp drive tonnage
                     if tonnage > warp_max_tonnage:
                         warp_max_tonnage = tonnage
                     warp_energy_cost += energy
+                    warp_fuel_cost += fuel
 
         return {
             'max_hp': int(total_hp),
@@ -179,6 +191,7 @@ class ShipStatsService:
             'strategic_fuel_per_hex': total_strategic_fuel_per_hex,
             'warp_max_tonnage': warp_max_tonnage,
             'warp_energy_cost': warp_energy_cost,
+            'warp_fuel_cost': warp_fuel_cost,
         }
 
     @staticmethod

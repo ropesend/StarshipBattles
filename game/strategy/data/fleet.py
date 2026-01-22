@@ -220,7 +220,7 @@ class Fleet:
 
         return True
 
-    # --- Warp Energy Methods ---
+    # --- Warp Resource Methods ---
 
     def get_warp_energy_cost(self) -> float:
         """
@@ -234,46 +234,110 @@ class Fleet:
             total += ship.get_warp_energy_cost()
         return total
 
-    def has_energy_for_warp(self) -> bool:
+    def get_warp_fuel_cost(self) -> float:
         """
-        Check if fleet has energy for a warp jump.
+        Calculate total fleet fuel cost for a warp jump.
 
         Returns:
-            True if all combat-capable ships have enough energy for one warp.
+            Sum of all combat-capable ships' warp fuel costs.
+        """
+        total = 0.0
+        for ship in self.get_combat_capable_ships():
+            total += ship.get_warp_fuel_cost()
+        return total
+
+    def has_resources_for_warp(self) -> bool:
+        """
+        Check if fleet has all required resources for a warp jump.
+
+        This is data-driven - checks energy if warp drives require energy,
+        checks fuel if warp drives require fuel. If no resource cost is
+        specified in the WarpJump ability, no resource check is performed.
+
+        Returns:
+            True if all combat-capable ships have enough resources for one warp.
         """
         for ship in self.get_combat_capable_ships():
-            cost = ship.get_warp_energy_cost()
-            if cost > 0:
-                current = ship.get_current_energy()
-                if current < cost:
+            # Check energy cost
+            energy_cost = ship.get_warp_energy_cost()
+            if energy_cost > 0:
+                current_energy = ship.get_current_energy()
+                if current_energy < energy_cost:
                     return False
+
+            # Check fuel cost
+            fuel_cost = ship.get_warp_fuel_cost()
+            if fuel_cost > 0:
+                current_fuel = ship.get_current_fuel()
+                if current_fuel < fuel_cost:
+                    return False
+
         return True
 
-    def consume_warp_energy(self) -> bool:
+    def has_energy_for_warp(self) -> bool:
         """
-        Consume energy from all ships for a warp jump.
+        Check if fleet has resources for a warp jump.
+
+        This is an alias for has_resources_for_warp() for backward compatibility.
+        The actual check is data-driven based on warp drive configuration.
 
         Returns:
-            True if all ships had sufficient energy, False otherwise.
-            Note: If False, no energy is consumed (atomic operation).
+            True if all combat-capable ships have enough resources for one warp.
+        """
+        return self.has_resources_for_warp()
+
+    def consume_warp_resources(self) -> bool:
+        """
+        Consume all required resources from all ships for a warp jump.
+
+        This is data-driven - consumes energy if warp drives require energy,
+        consumes fuel if warp drives require fuel. If no resource cost is
+        specified, no resources are consumed.
+
+        Returns:
+            True if all ships had sufficient resources, False otherwise.
+            Note: If False, no resources are consumed (atomic operation).
         """
         ships = self.get_combat_capable_ships()
 
-        # First, verify all ships have enough energy
+        # First, verify all ships have enough resources
         for ship in ships:
-            cost = ship.get_warp_energy_cost()
-            if cost > 0:
-                current = ship.get_current_energy()
-                if current < cost:
+            energy_cost = ship.get_warp_energy_cost()
+            if energy_cost > 0:
+                current_energy = ship.get_current_energy()
+                if current_energy < energy_cost:
+                    return False
+
+            fuel_cost = ship.get_warp_fuel_cost()
+            if fuel_cost > 0:
+                current_fuel = ship.get_current_fuel()
+                if current_fuel < fuel_cost:
                     return False
 
         # All ships have enough, now consume
         for ship in ships:
-            cost = ship.get_warp_energy_cost()
-            if cost > 0:
-                ship.consume_energy(cost)
+            energy_cost = ship.get_warp_energy_cost()
+            if energy_cost > 0:
+                ship.consume_energy(energy_cost)
+
+            fuel_cost = ship.get_warp_fuel_cost()
+            if fuel_cost > 0:
+                ship.consume_fuel(fuel_cost)
 
         return True
+
+    def consume_warp_energy(self) -> bool:
+        """
+        Consume resources from all ships for a warp jump.
+
+        This is an alias for consume_warp_resources() for backward compatibility.
+        The actual consumption is data-driven based on warp drive configuration.
+
+        Returns:
+            True if all ships had sufficient resources, False otherwise.
+            Note: If False, no resources are consumed (atomic operation).
+        """
+        return self.consume_warp_resources()
 
     # --- Capability Summary Methods ---
 
@@ -302,10 +366,13 @@ class Fleet:
         """
         Calculate how many warp jumps fleet can make.
 
+        This is data-driven - considers both energy and fuel costs as
+        specified by the warp drive components.
+
         Returns:
-            Minimum jumps any ship can make based on energy.
+            Minimum jumps any ship can make based on resources.
             Returns 0 if fleet cannot use warp at all.
-            Returns -1 if fleet has unlimited jumps (no energy cost).
+            Returns -1 if fleet has unlimited jumps (no resource cost).
         """
         if not self.can_use_warp():
             return 0
@@ -313,13 +380,19 @@ class Fleet:
         min_jumps = float('inf')
 
         for ship in self.get_combat_capable_ships():
-            cost = ship.get_warp_energy_cost()
-            if cost <= 0:
-                continue  # No energy cost for warp
+            # Check energy-limited jumps
+            energy_cost = ship.get_warp_energy_cost()
+            if energy_cost > 0:
+                current_energy = ship.get_current_energy()
+                energy_jumps = int(current_energy / energy_cost)
+                min_jumps = min(min_jumps, energy_jumps)
 
-            current_energy = ship.get_current_energy()
-            jumps = int(current_energy / cost) if cost > 0 else float('inf')
-            min_jumps = min(min_jumps, jumps)
+            # Check fuel-limited jumps
+            fuel_cost = ship.get_warp_fuel_cost()
+            if fuel_cost > 0:
+                current_fuel = ship.get_current_fuel()
+                fuel_jumps = int(current_fuel / fuel_cost)
+                min_jumps = min(min_jumps, fuel_jumps)
 
         return int(min_jumps) if min_jumps != float('inf') else -1
 
@@ -338,6 +411,7 @@ class Fleet:
             'warp_jumps': self.warp_jumps_remaining(),
             'fuel_cost_per_hex': self.get_fuel_cost_per_hex(),
             'warp_energy_cost': self.get_warp_energy_cost(),
+            'warp_fuel_cost': self.get_warp_fuel_cost(),
         }
 
     def to_battle_ships(

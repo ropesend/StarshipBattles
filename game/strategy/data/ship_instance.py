@@ -249,9 +249,18 @@ class ShipInstance:
         Get energy cost per warp jump, accounting for component damage.
 
         Returns:
-            Energy consumed per warp jump, or 0 if no warp capability.
+            Energy consumed per warp jump, or 0 if no energy cost.
         """
         return self.get_calculated_stats().get('warp_energy_cost', 0)
+
+    def get_warp_fuel_cost(self) -> float:
+        """
+        Get fuel cost per warp jump, accounting for component damage.
+
+        Returns:
+            Fuel consumed per warp jump, or 0 if no fuel cost.
+        """
+        return self.get_calculated_stats().get('warp_fuel_cost', 0)
 
     def get_current_energy(self) -> float:
         """
