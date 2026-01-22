@@ -44,6 +44,10 @@ def make_mock_ship(
         'layers': layers
     }
 
+    # Configure get_calculated_stats() to return the expected_stats
+    # This is needed since code now uses get_calculated_stats() instead of expected_stats
+    ship.get_calculated_stats.return_value = expected_stats
+
     # Set HP percentage
     ship.get_hp_percentage.return_value = hp_pct
 

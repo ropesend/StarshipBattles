@@ -18,13 +18,12 @@ class TestFleetMobilityServiceShipSpeed(unittest.TestCase):
         # Create mock ship instance with known values
         # mass=1000, strategic_movement=100 -> (100 * 25) / 1000 = 2500 / 1000 = 2.5 -> 2
         ship_instance = MagicMock()
+        stats = {'mass': 1000, 'strategic_movement': 100}
         ship_instance.design_data = {
             'vehicle_type': 'Ship',
-            'expected_stats': {
-                'mass': 1000,
-                'strategic_movement': 100
-            }
+            'expected_stats': stats
         }
+        ship_instance.get_calculated_stats.return_value = stats
 
         speed = FleetMobilityService.calculate_ship_speed(ship_instance)
 
@@ -37,13 +36,12 @@ class TestFleetMobilityServiceShipSpeed(unittest.TestCase):
 
         # mass=1000, strategic_movement=300 -> (300 * 25) / 1000 = 7500 / 1000 = 7.5 -> 7
         ship_instance = MagicMock()
+        stats = {'mass': 1000, 'strategic_movement': 300}
         ship_instance.design_data = {
             'vehicle_type': 'Ship',
-            'expected_stats': {
-                'mass': 1000,
-                'strategic_movement': 300
-            }
+            'expected_stats': stats
         }
+        ship_instance.get_calculated_stats.return_value = stats
 
         speed = FleetMobilityService.calculate_ship_speed(ship_instance)
 
@@ -56,13 +54,12 @@ class TestFleetMobilityServiceShipSpeed(unittest.TestCase):
 
         # Extremely high movement points should still cap at 10
         ship_instance = MagicMock()
+        stats = {'mass': 100, 'strategic_movement': 10000}  # Very light, very high
         ship_instance.design_data = {
             'vehicle_type': 'Ship',
-            'expected_stats': {
-                'mass': 100,  # Very light
-                'strategic_movement': 10000  # Very high
-            }
+            'expected_stats': stats
         }
+        ship_instance.get_calculated_stats.return_value = stats
 
         speed = FleetMobilityService.calculate_ship_speed(ship_instance)
 
@@ -107,13 +104,12 @@ class TestFleetMobilityServiceShipSpeed(unittest.TestCase):
         from game.strategy.services.fleet_mobility_service import FleetMobilityService
 
         ship_instance = MagicMock()
+        stats = {'mass': 1000, 'strategic_movement': 0}
         ship_instance.design_data = {
             'vehicle_type': 'Ship',
-            'expected_stats': {
-                'mass': 1000,
-                'strategic_movement': 0
-            }
+            'expected_stats': stats
         }
+        ship_instance.get_calculated_stats.return_value = stats
 
         speed = FleetMobilityService.calculate_ship_speed(ship_instance)
 
@@ -128,6 +124,8 @@ class TestFleetMobilityServiceShipSpeed(unittest.TestCase):
             'vehicle_type': 'Ship',
             # No expected_stats
         }
+        # get_calculated_stats returns empty dict when no components
+        ship_instance.get_calculated_stats.return_value = {}
 
         speed = FleetMobilityService.calculate_ship_speed(ship_instance)
 
@@ -142,18 +140,22 @@ class TestFleetMobilityServiceFleetSpeed(unittest.TestCase):
         from game.strategy.services.fleet_mobility_service import FleetMobilityService
 
         # Create fleet with two ships - one fast, one slow
+        fast_stats = {'mass': 500, 'strategic_movement': 200}
         fast_ship = MagicMock()
         fast_ship.design_data = {
             'vehicle_type': 'Ship',
-            'expected_stats': {'mass': 500, 'strategic_movement': 200}
+            'expected_stats': fast_stats
         }
+        fast_ship.get_calculated_stats.return_value = fast_stats
         fast_ship.is_combat_capable.return_value = True
 
+        slow_stats = {'mass': 10000, 'strategic_movement': 100}
         slow_ship = MagicMock()
         slow_ship.design_data = {
             'vehicle_type': 'Ship',
-            'expected_stats': {'mass': 10000, 'strategic_movement': 100}
+            'expected_stats': slow_stats
         }
+        slow_ship.get_calculated_stats.return_value = slow_stats
         slow_ship.is_combat_capable.return_value = True
 
         fleet = MagicMock()
@@ -170,11 +172,13 @@ class TestFleetMobilityServiceFleetSpeed(unittest.TestCase):
         """Fleet with one ship should use that ship's speed."""
         from game.strategy.services.fleet_mobility_service import FleetMobilityService
 
+        stats = {'mass': 1000, 'strategic_movement': 150}
         ship = MagicMock()
         ship.design_data = {
             'vehicle_type': 'Ship',
-            'expected_stats': {'mass': 1000, 'strategic_movement': 150}
+            'expected_stats': stats
         }
+        ship.get_calculated_stats.return_value = stats
         ship.is_combat_capable.return_value = True
 
         fleet = MagicMock()
@@ -202,18 +206,22 @@ class TestFleetMobilityServiceFleetSpeed(unittest.TestCase):
         """Should exclude destroyed/derelict ships from speed calculation."""
         from game.strategy.services.fleet_mobility_service import FleetMobilityService
 
+        working_stats = {'mass': 1000, 'strategic_movement': 100}
         working_ship = MagicMock()
         working_ship.design_data = {
             'vehicle_type': 'Ship',
-            'expected_stats': {'mass': 1000, 'strategic_movement': 100}
+            'expected_stats': working_stats
         }
+        working_ship.get_calculated_stats.return_value = working_stats
         working_ship.is_combat_capable.return_value = True
 
+        destroyed_stats = {'mass': 500, 'strategic_movement': 50}  # Would be slower
         destroyed_ship = MagicMock()
         destroyed_ship.design_data = {
             'vehicle_type': 'Ship',
-            'expected_stats': {'mass': 500, 'strategic_movement': 50}  # Would be slower
+            'expected_stats': destroyed_stats
         }
+        destroyed_ship.get_calculated_stats.return_value = destroyed_stats
         destroyed_ship.is_combat_capable.return_value = False  # Destroyed
 
         fleet = MagicMock()
@@ -229,11 +237,13 @@ class TestFleetMobilityServiceFleetSpeed(unittest.TestCase):
         """recalculate_fleet_speed() should update fleet.speed attribute."""
         from game.strategy.services.fleet_mobility_service import FleetMobilityService
 
+        stats = {'mass': 1000, 'strategic_movement': 150}
         ship = MagicMock()
         ship.design_data = {
             'vehicle_type': 'Ship',
-            'expected_stats': {'mass': 1000, 'strategic_movement': 150}
+            'expected_stats': stats
         }
+        ship.get_calculated_stats.return_value = stats
         ship.is_combat_capable.return_value = True
 
         fleet = MagicMock()

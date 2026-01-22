@@ -56,6 +56,9 @@ class ShipInstance:
     # Serial number - unique per design within an empire
     serial: Optional[int] = None
 
+    # Cached calculated stats (invalidated on damage change)
+    _cached_stats: Optional[Dict[str, Any]] = field(default=None, repr=False)
+
     @classmethod
     def create(
         cls,
@@ -148,11 +151,43 @@ class ShipInstance:
         """Check if ship can participate in combat."""
         return not self.is_destroyed and not self.is_derelict
 
+    def get_calculated_stats(self, force_refresh: bool = False) -> Dict[str, Any]:
+        """
+        Get calculated stats from components, respecting damage state.
+
+        Uses ShipStatsService to calculate stats dynamically rather than
+        reading from cached expected_stats. Results are cached and invalidated
+        when component damage changes.
+
+        Args:
+            force_refresh: If True, recalculate even if cached
+
+        Returns:
+            Dict with calculated stats (max_hp, mass, max_fuel, etc.)
+        """
+        if self._cached_stats is None or force_refresh:
+            # Import here to avoid circular imports
+            from game.strategy.services.ship_stats_service import ShipStatsService
+            self._cached_stats = ShipStatsService.calculate_stats(
+                self.design_data,
+                self.component_damage
+            )
+        return self._cached_stats
+
+    def invalidate_stats_cache(self) -> None:
+        """
+        Invalidate cached stats.
+
+        Call this when component damage changes, after battle,
+        or after repair operations.
+        """
+        self._cached_stats = None
+
     def get_hp_percentage(self) -> float:
         """Get current HP as percentage of max."""
         if self.current_hp is None:
             return 1.0
-        max_hp = self.design_data.get('expected_stats', {}).get('max_hp', 100)
+        max_hp = self.get_calculated_stats().get('max_hp', 100)
         if max_hp <= 0:
             return 0.0
         return self.current_hp / max_hp
@@ -164,7 +199,7 @@ class ShipInstance:
 
         current = self.resource_levels[resource_name]
         max_key = f'max_{resource_name}'
-        max_val = self.design_data.get('expected_stats', {}).get(max_key, 100)
+        max_val = self.get_calculated_stats().get(max_key, 100)
 
         if max_val <= 0:
             return 0.0
@@ -172,12 +207,12 @@ class ShipInstance:
 
     def get_fuel_cost_per_hex(self) -> float:
         """
-        Get strategic fuel consumption per hex from design data.
+        Get strategic fuel consumption per hex, accounting for component damage.
 
         Returns:
             Fuel consumed per hex of strategic movement, or 0 if no consumption.
         """
-        return self.design_data.get('expected_stats', {}).get('strategic_fuel_per_hex', 0)
+        return self.get_calculated_stats().get('strategic_fuel_per_hex', 0)
 
     def get_current_fuel(self) -> float:
         """
@@ -186,7 +221,7 @@ class ShipInstance:
         Returns:
             Current fuel amount. Returns max_fuel if not tracked (assumed full).
         """
-        max_fuel = self.design_data.get('expected_stats', {}).get('max_fuel', 0)
+        max_fuel = self.get_calculated_stats().get('max_fuel', 0)
         return self.resource_levels.get('fuel', max_fuel)
 
     def consume_fuel(self, amount: float) -> bool:
@@ -199,7 +234,7 @@ class ShipInstance:
         Returns:
             True if fuel was available and consumed, False if insufficient
         """
-        max_fuel = self.design_data.get('expected_stats', {}).get('max_fuel', 0)
+        max_fuel = self.get_calculated_stats().get('max_fuel', 0)
         current = self.resource_levels.get('fuel', max_fuel)
 
         if current < amount:
@@ -211,12 +246,12 @@ class ShipInstance:
 
     def get_warp_energy_cost(self) -> float:
         """
-        Get energy cost per warp jump from design data.
+        Get energy cost per warp jump, accounting for component damage.
 
         Returns:
-            Energy consumed per warp jump, or 0 if no cost.
+            Energy consumed per warp jump, or 0 if no warp capability.
         """
-        return self.design_data.get('expected_stats', {}).get('warp_energy_cost', 0)
+        return self.get_calculated_stats().get('warp_energy_cost', 0)
 
     def get_current_energy(self) -> float:
         """
@@ -225,7 +260,7 @@ class ShipInstance:
         Returns:
             Current energy amount. Returns max_energy if not tracked (assumed full).
         """
-        max_energy = self.design_data.get('expected_stats', {}).get('max_energy', 0)
+        max_energy = self.get_calculated_stats().get('max_energy', 0)
         return self.resource_levels.get('energy', max_energy)
 
     def consume_energy(self, amount: float) -> bool:
@@ -238,7 +273,7 @@ class ShipInstance:
         Returns:
             True if energy was available and consumed, False if insufficient
         """
-        max_energy = self.design_data.get('expected_stats', {}).get('max_energy', 0)
+        max_energy = self.get_calculated_stats().get('max_energy', 0)
         current = self.resource_levels.get('energy', max_energy)
 
         if current < amount:
@@ -315,7 +350,7 @@ class ShipInstance:
         Returns:
             HP display string like "150/200"
         """
-        max_hp = self.design_data.get('expected_stats', {}).get('max_hp', 100)
+        max_hp = self.get_calculated_stats().get('max_hp', 100)
 
         if self.current_hp is None:
             return f"{max_hp}/{max_hp}"
@@ -333,9 +368,9 @@ class ShipInstance:
             Resource display string like "250/500", or "N/A" if not tracked
         """
         max_key = f'max_{resource_name}'
-        max_val = self.design_data.get('expected_stats', {}).get(max_key)
+        max_val = self.get_calculated_stats().get(max_key)
 
-        if max_val is None:
+        if max_val is None or max_val <= 0:
             return "N/A"
 
         if resource_name in self.resource_levels:
@@ -486,6 +521,9 @@ class ShipInstance:
         # Update battle stats
         self.battles_survived += 1
 
+        # Invalidate stats cache (damage changed)
+        self.invalidate_stats_cache()
+
     def repair(self, amount: int) -> int:
         """
         Repair the ship by a certain amount.
@@ -495,7 +533,7 @@ class ShipInstance:
         if self.current_hp is None:
             return 0  # Already at full health
 
-        max_hp = self.design_data.get('expected_stats', {}).get('max_hp', 100)
+        max_hp = self.get_calculated_stats().get('max_hp', 100)
         old_hp = self.current_hp
         self.current_hp = min(max_hp, self.current_hp + amount)
 
@@ -503,6 +541,9 @@ class ShipInstance:
         if self.current_hp >= max_hp:
             self.current_hp = None
             self.component_damage.clear()
+
+        # Invalidate stats cache (damage changed)
+        self.invalidate_stats_cache()
 
         return self.current_hp - old_hp if self.current_hp else max_hp - old_hp
 
@@ -516,7 +557,7 @@ class ShipInstance:
             return 0  # Already at full
 
         max_key = f'max_{resource_name}'
-        max_val = self.design_data.get('expected_stats', {}).get(max_key, 100)
+        max_val = self.get_calculated_stats().get(max_key, 100)
 
         old_val = self.resource_levels[resource_name]
         new_val = min(max_val, old_val + amount)

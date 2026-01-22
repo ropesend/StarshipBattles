@@ -13,7 +13,8 @@ def has_warp_capability(ship: ShipInstance) -> bool:
     Check if a ship has WarpJump ability that exceeds its own mass.
 
     A ship is warp-capable if it has a WarpJump ability component with
-    max_tonnage greater than or equal to the ship's mass.
+    max_tonnage greater than or equal to the ship's mass. Damaged warp
+    drives (any damage) disable warp capability.
 
     Args:
         ship: ShipInstance to check
@@ -21,15 +22,16 @@ def has_warp_capability(ship: ShipInstance) -> bool:
     Returns:
         True if ship can use warp points, False otherwise
     """
-    expected_stats = ship.design_data.get('expected_stats', {})
+    # Use calculated stats which respect component damage
+    calculated_stats = ship.get_calculated_stats()
 
     # Get ship mass
-    ship_mass = expected_stats.get('mass', 0)
+    ship_mass = calculated_stats.get('mass', 0)
     if ship_mass <= 0:
         return False
 
-    # Check warp_max_tonnage from expected_stats (serialized from WarpJump ability)
-    warp_max_tonnage = expected_stats.get('warp_max_tonnage', 0)
+    # Check warp_max_tonnage - will be 0 if warp drive is damaged
+    warp_max_tonnage = calculated_stats.get('warp_max_tonnage', 0)
 
     # Ship can warp if its warp drive can handle its own mass
     return warp_max_tonnage >= ship_mass
@@ -70,7 +72,7 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
     ship_count = len(ships)
     combat_capable_count = sum(1 for s in ships if s.is_combat_capable())
     total_tonnage = sum(
-        s.design_data.get('expected_stats', {}).get('mass', 0)
+        s.get_calculated_stats().get('mass', 0)
         for s in ships
     )
     avg_hp_percent = sum(s.get_hp_percentage() for s in ships) / ship_count
@@ -84,10 +86,11 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
     max_energy = 0
 
     for ship in ships:
-        expected_stats = ship.design_data.get('expected_stats', {})
+        # Use calculated stats which respect component damage
+        calculated_stats = ship.get_calculated_stats()
 
         # Fuel
-        ship_max_fuel = expected_stats.get('max_fuel', 0)
+        ship_max_fuel = calculated_stats.get('max_fuel', 0)
         max_fuel += ship_max_fuel
         if 'fuel' in ship.resource_levels:
             total_fuel += ship.resource_levels['fuel']
@@ -95,7 +98,7 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
             total_fuel += ship_max_fuel  # Full if not tracked
 
         # Energy
-        ship_max_energy = expected_stats.get('max_energy', 0)
+        ship_max_energy = calculated_stats.get('max_energy', 0)
         max_energy += ship_max_energy
         if 'energy' in ship.resource_levels:
             total_energy += ship.resource_levels['energy']

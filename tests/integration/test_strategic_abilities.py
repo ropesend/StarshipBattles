@@ -65,13 +65,12 @@ class TestStrategicMovementIntegration:
 
         # Create mock ship instance with design data containing strategic movement
         mock_ship = MagicMock()
+        stats = {'mass': 1000, 'strategic_movement': 100}  # 1000 kg ship, 100 movement points
         mock_ship.design_data = {
             'vehicle_type': 'Ship',
-            'expected_stats': {
-                'mass': 1000,  # 1000 kg ship
-                'strategic_movement': 100  # 100 movement points
-            }
+            'expected_stats': stats
         }
+        mock_ship.get_calculated_stats.return_value = stats
         mock_ship.is_combat_capable.return_value = True
 
         # Calculate speed: floor((100 * 25) / 1000) = floor(2500/1000) = floor(2.5) = 2
@@ -82,25 +81,23 @@ class TestStrategicMovementIntegration:
     def test_fleet_speed_with_multiple_ships(self):
         """Test fleet uses slowest ship speed."""
         # Fast ship
+        fast_stats = {'mass': 100, 'strategic_movement': 200}
         fast_ship = MagicMock()
         fast_ship.design_data = {
             'vehicle_type': 'Ship',
-            'expected_stats': {
-                'mass': 100,
-                'strategic_movement': 200
-            }
+            'expected_stats': fast_stats
         }
+        fast_ship.get_calculated_stats.return_value = fast_stats
         fast_ship.is_combat_capable.return_value = True
 
         # Slow ship (heavy cruiser)
+        slow_stats = {'mass': 5000, 'strategic_movement': 100}
         slow_ship = MagicMock()
         slow_ship.design_data = {
             'vehicle_type': 'Ship',
-            'expected_stats': {
-                'mass': 5000,
-                'strategic_movement': 100
-            }
+            'expected_stats': slow_stats
         }
+        slow_ship.get_calculated_stats.return_value = slow_stats
         slow_ship.is_combat_capable.return_value = True
 
         # Create mock fleet
@@ -109,8 +106,8 @@ class TestStrategicMovementIntegration:
 
         fleet_speed = FleetMobilityService.calculate_fleet_speed(mock_fleet)
 
-        # Fast ship: floor((200 * 0.5) / sqrt(100)) = floor(10) = 10
-        # Slow ship: floor((100 * 0.5) / sqrt(5000)) = floor(0.707) = 0
+        # Fast ship: floor((200 * 25) / 100) = floor(50) = clamped to 10
+        # Slow ship: floor((100 * 25) / 5000) = floor(0.5) = 0
         # Fleet speed = min(10, 0) = 0
         assert fleet_speed == 0.0
 

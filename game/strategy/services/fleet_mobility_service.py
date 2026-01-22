@@ -75,10 +75,10 @@ class FleetMobilityService:
         if vehicle_type in CARRIER_BASED_TYPES:
             return 0
 
-        # Get stats from design data
-        expected_stats = design_data.get('expected_stats', {})
-        mass = expected_stats.get('mass', 0)
-        movement_points = expected_stats.get('strategic_movement', 0)
+        # Get stats from calculated values (respects component damage)
+        calculated_stats = ship_instance.get_calculated_stats()
+        mass = calculated_stats.get('mass', 0)
+        movement_points = calculated_stats.get('strategic_movement', 0)
 
         if mass <= 0 or movement_points <= 0:
             return 0
