@@ -7,6 +7,7 @@
 | PROJ-01 | Design Workshop UI Enhancement | Awaiting Verification | 2026-01-21 | 2026-01-21 |
 | PROJ-02 | Race Setup Screen | Awaiting Audit | 2026-01-21 | 2026-01-21 |
 | PROJ-03 | Fleet Report Window | Revision | 2026-01-21 | 2026-01-21 |
+| PROJ-06 | Quickstart 1P / 2P Buttons | Awaiting Verification | 2026-01-21 | 2026-01-21 |
 
 ## Archived Projects
 
@@ -27,4 +28,4 @@
 
 ---
 
-## Next Project ID: PROJ-04
+## Next Project ID: PROJ-07
