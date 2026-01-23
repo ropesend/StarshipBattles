@@ -16,6 +16,7 @@ class GameState(IntEnum):
     TEST_LAB = 5
     STRATEGY = 6
     RACE_SETUP = 7
+    RESEARCH_TREE = 8
 
 # Colors
 WHITE = (255, 255, 255)

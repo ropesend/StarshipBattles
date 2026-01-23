@@ -1,0 +1,2078 @@
+{
+    "tech_tree": [
+        {
+            "comment": "--- ASTROPHYSICS BRANCH ---",
+            "id": "TS1",
+            "name": "Astrophysics",
+            "max_levels": 8,
+            "requirements": []
+        },
+        {
+            "id": "AS33",
+            "name": "Stellar Harnessing",
+            "max_levels": 6,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS1",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT19",
+            "name": "Tractor / Repulsor Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS1",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT20",
+            "name": "Weapon Overloading Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS1",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT24",
+            "name": "Gravitational Weapons",
+            "max_levels": 6,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS1",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS25",
+            "name": "Gravitational Manipulation",
+            "max_levels": 4,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS1",
+                        "level_range": [
+                            4,
+                            6
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT25",
+            "name": "Warp Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS1",
+                        "level_range": [
+                            4,
+                            6
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "TS11",
+            "name": "Stellar Manipulation",
+            "max_levels": 8,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS1",
+                        "level_range": [
+                            5,
+                            7
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- STELLAR MANIPULATION SUB-BRANCH ---",
+            "id": "AS69",
+            "name": "Storm Manipulation",
+            "max_levels": 2,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS11",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS70",
+            "name": "Planetary Manipulation",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS11",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS71",
+            "name": "Warp Point Manipulation",
+            "max_levels": 6,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS11",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS72",
+            "name": "Star Manipulation",
+            "max_levels": 2,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS11",
+                        "level_range": [
+                            4,
+                            6
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS73",
+            "name": "Nebulae Manipulation",
+            "max_levels": 2,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS11",
+                        "level_range": [
+                            4,
+                            6
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS74",
+            "name": "Black Hole Manipulation",
+            "max_levels": 2,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS11",
+                        "level_range": [
+                            5,
+                            7
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS75",
+            "name": "Stellar Construction",
+            "max_levels": 3,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS11",
+                        "level_range": [
+                            6,
+                            8
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- BIOLOGY BRANCH ---",
+            "id": "TS2",
+            "name": "Biology",
+            "max_levels": 4,
+            "requirements": []
+        },
+        {
+            "id": "AS53",
+            "name": "Medical Treatment",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS2",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT28",
+            "name": "Biological Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS2",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- CHEMISTRY BRANCH ---",
+            "id": "TS3",
+            "name": "Chemistry",
+            "max_levels": 5,
+            "requirements": []
+        },
+        {
+            "id": "AS34",
+            "name": "Armor",
+            "max_levels": 20,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS3",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT13",
+            "name": "Plasma Missile Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS3",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS55",
+            "name": "Resource Manipulation",
+            "max_levels": 15,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS3",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- COLONIZATION BRANCH ---",
+            "id": "TS4",
+            "name": "Colonization",
+            "max_levels": 3,
+            "requirements": []
+        },
+        {
+            "id": "AS1",
+            "name": "Rock Planet Colonization",
+            "max_levels": 1,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS4",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS2",
+            "name": "Ice Planet Colonization",
+            "max_levels": 1,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS4",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS3",
+            "name": "Gas Giant Colonization",
+            "max_levels": 1,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS4",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- CULTURAL STUDIES BRANCH ---",
+            "id": "CA1",
+            "name": "Cultural Studies",
+            "max_levels": 3,
+            "requirements": []
+        },
+        {
+            "id": "CA2",
+            "name": "Civics",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "CA1",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "CA3",
+            "name": "Conservation",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "CA1",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "CA4",
+            "name": "Diplomacy",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "CA1",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "CA5",
+            "name": "Economics",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "CA1",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "CA6",
+            "name": "Education",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "CA1",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "CA7",
+            "name": "Engineering",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "CA1",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "CA8",
+            "name": "Environment",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "CA1",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "CA9",
+            "name": "Ethics",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "CA1",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "CA10",
+            "name": "Logistics",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "CA1",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "CA11",
+            "name": "Military",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "CA1",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "CA12",
+            "name": "Recreation",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "CA1",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "CA13",
+            "name": "Sociology",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "CA1",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- INTELLIGENCE BRANCH ---",
+            "id": "AS59",
+            "name": "Intelligence Services",
+            "max_levels": 11,
+            "requirements": []
+        },
+        {
+            "id": "AS60",
+            "name": "Sabotage - Ships & Fleets",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS59",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS64",
+            "name": "Espionage - Ships & Fleets",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS59",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS61",
+            "name": "Sabotage - Planets & Colonies",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS59",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS65",
+            "name": "Espionage - Planets & Colonies",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS59",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS66",
+            "name": "Espionage - Empire Wide",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS59",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS62",
+            "name": "Sabotage - Empire Wide",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS59",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS63",
+            "name": "Sabotage - Political",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS59",
+                        "level_range": [
+                            4,
+                            6
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS67",
+            "name": "Espionage - Political",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS59",
+                        "level_range": [
+                            4,
+                            6
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS68",
+            "name": "Cooperative Intelligence",
+            "max_levels": 5,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS59",
+                        "level_range": [
+                            5,
+                            7
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- CONSTRUCTION BRANCH ---",
+            "id": "TS5",
+            "name": "Construction",
+            "max_levels": 6,
+            "requirements": []
+        },
+        {
+            "id": "AS12",
+            "name": "Small Ship Construction",
+            "max_levels": 6,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS5",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS13",
+            "name": "Medium Ship Construction",
+            "max_levels": 9,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS12",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS14",
+            "name": "Large Ship Construction",
+            "max_levels": 9,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS13",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS15",
+            "name": "Baseship Construction",
+            "max_levels": 6,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS14",
+                        "level_range": [
+                            4,
+                            6
+                        ]
+                    },
+                    {
+                        "node_id": "AS17",
+                        "level_range": [
+                            4,
+                            6
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS10",
+            "name": "Space Yards",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS5",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS11",
+            "name": "Repair",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS5",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS16",
+            "name": "Small Base Construction",
+            "max_levels": 6,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS5",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS24",
+            "name": "Vehicle Systems",
+            "max_levels": 6,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS5",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS40",
+            "name": "Weapon Mounts",
+            "max_levels": 1,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS5",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS41",
+            "name": "Ship Weapon Mounts",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS40",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS42",
+            "name": "Base Weapon Mounts",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS40",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS43",
+            "name": "Unit Weapon Mounts",
+            "max_levels": 5,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS40",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS17",
+            "name": "Large Base Construction",
+            "max_levels": 6,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS5",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS18",
+            "name": "Troops",
+            "max_levels": 9,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS5",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT30",
+            "name": "Troop Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS18",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS19",
+            "name": "Fighters",
+            "max_levels": 7,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS5",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS20",
+            "name": "Satellites",
+            "max_levels": 5,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS5",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS21",
+            "name": "Weapon Platforms",
+            "max_levels": 5,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS5",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS22",
+            "name": "Mines",
+            "max_levels": 5,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS5",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS49",
+            "name": "Robotics",
+            "max_levels": 9,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS5",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- INDUSTRY BRANCH ---",
+            "id": "TS6",
+            "name": "Industry",
+            "max_levels": 6,
+            "requirements": []
+        },
+        {
+            "id": "AS45",
+            "name": "Storage",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS6",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS44",
+            "name": "Cargo",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS6",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS56",
+            "name": "Minerals Extraction",
+            "max_levels": 15,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS6",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS46",
+            "name": "Applied Research",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS6",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS57",
+            "name": "Organics Extraction",
+            "max_levels": 15,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS6",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS26",
+            "name": "Computers",
+            "max_levels": 6,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS6",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS23",
+            "name": "Drones",
+            "max_levels": 5,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS26",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT26",
+            "name": "Computer Combat",
+            "max_levels": 3,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS26",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS50",
+            "name": "Centralized Computer Systems",
+            "max_levels": 5,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS26",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS58",
+            "name": "Radioactives Extraction",
+            "max_levels": 15,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS6",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS32",
+            "name": "Resupply",
+            "max_levels": 20,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS6",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- MILITARY SCIENCE BRANCH ---",
+            "id": "TS7",
+            "name": "Military Science",
+            "max_levels": 6,
+            "requirements": []
+        },
+        {
+            "id": "WT33",
+            "name": "Smaller Weapons",
+            "max_levels": 6,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS7",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT16",
+            "name": "Projectile Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS7",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT12",
+            "name": "Missile Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS7",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT15",
+            "name": "Point-Defense Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS7",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT32",
+            "name": "Warheads",
+            "max_levels": 16,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS7",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT29",
+            "name": "Bombardment Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS7",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT27",
+            "name": "Ship Capture",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS7",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS39",
+            "name": "Defense Systems",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS7",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT14",
+            "name": "Torpedo Weapons",
+            "max_levels": 20,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS7",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS47",
+            "name": "Advanced Military Science",
+            "max_levels": 5,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS7",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- PHYSICS BRANCH ---",
+            "id": "TS8",
+            "name": "Physics",
+            "max_levels": 8,
+            "requirements": []
+        },
+        {
+            "id": "AS28",
+            "name": "Ion Engines",
+            "max_levels": 5,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS8",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT21",
+            "name": "Engine Overloading Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS28",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS29",
+            "name": "Contra-Terrene Engines",
+            "max_levels": 5,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS8",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS30",
+            "name": "Jacketed-Photon Engines",
+            "max_levels": 5,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS29",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS31",
+            "name": "Quantum Engines",
+            "max_levels": 5,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS30",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT10",
+            "name": "High-Energy Discharge Weapons",
+            "max_levels": 15,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS8",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT11",
+            "name": "Phased Energy Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS8",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS36",
+            "name": "Cloaking",
+            "max_levels": 10,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS8",
+                        "level_range": [
+                            4,
+                            6
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT17",
+            "name": "Focused Energy Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS8",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS37",
+            "name": "Sensors",
+            "max_levels": 20,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS8",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS51_Defenses",
+            "name": "Planetary Defenses",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS37",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT8",
+            "name": "Energy Stream Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS8",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT7",
+            "name": "Energy Pulse Weapons",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS8",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS35",
+            "name": "Shields",
+            "max_levels": 20,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS8",
+                        "level_range": [
+                            2,
+                            4
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT16_Shield",
+            "name": "Shield Damaging Weapons",
+            "max_levels": 15,
+            "requirements": [
+                [
+                    {
+                        "node_id": "AS35",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS38",
+            "name": "Scanners",
+            "max_levels": 11,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS8",
+                        "level_range": [
+                            3,
+                            5
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- PLANETARY ENGINEERING BRANCH ---",
+            "id": "TS9",
+            "name": "Planetary Engineering",
+            "max_levels": 3,
+            "requirements": []
+        },
+        {
+            "id": "AS51_Utilization",
+            "name": "Planet Utilization",
+            "max_levels": 15,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS9",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- PSYCHOLOGY BRANCH ---",
+            "id": "TS10",
+            "name": "Psychology",
+            "max_levels": 3,
+            "requirements": []
+        },
+        {
+            "id": "AS48",
+            "name": "Applied Political Science",
+            "max_levels": 5,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS10",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- XENOARCHAEOLOGY BRANCH ---",
+            "id": "TS12",
+            "name": "Xenoarchaeology",
+            "max_levels": 1,
+            "requirements": []
+        },
+        {
+            "comment": "--- UNIQUE DISCOVERIES (Logic placeholders for artifacts found in game) ---",
+            "id": "UD_1",
+            "name": "Unique Discovery 1",
+            "max_levels": 1,
+            "requirements": []
+        },
+        {
+            "id": "UD_2",
+            "name": "Unique Discovery 2",
+            "max_levels": 1,
+            "requirements": []
+        },
+        {
+            "id": "UD_3",
+            "name": "Unique Discovery 3",
+            "max_levels": 1,
+            "requirements": []
+        },
+        {
+            "id": "UD_4",
+            "name": "Unique Discovery 4",
+            "max_levels": 1,
+            "requirements": []
+        },
+        {
+            "id": "UD_5",
+            "name": "Unique Discovery 5",
+            "max_levels": 1,
+            "requirements": []
+        },
+        {
+            "id": "UD_6",
+            "name": "Unique Discovery 6",
+            "max_levels": 1,
+            "requirements": []
+        },
+        {
+            "comment": "--- ANCIENT WEAPONS & TECH ---",
+            "id": "WT17_Ancient",
+            "name": "Massive Shield Depleting Weapons",
+            "max_levels": 3,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS12",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    },
+                    {
+                        "node_id": "UD_1",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT22",
+            "name": "Massive Engine Destroying Weapons",
+            "max_levels": 3,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS12",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    },
+                    {
+                        "node_id": "UD_2",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS27",
+            "name": "Neural Computer Interface",
+            "max_levels": 3,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS12",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    },
+                    {
+                        "node_id": "UD_3",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "AS52",
+            "name": "Massive Planetary Shielding",
+            "max_levels": 3,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS12",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    },
+                    {
+                        "node_id": "UD_4",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT18",
+            "name": "Shield Implosion",
+            "max_levels": 3,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS12",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    },
+                    {
+                        "node_id": "UD_5",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT23",
+            "name": "Power Leech",
+            "max_levels": 6,
+            "requirements": [
+                [
+                    {
+                        "node_id": "TS12",
+                        "level_range": [
+                            1,
+                            3
+                        ]
+                    },
+                    {
+                        "node_id": "UD_6",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- CRYSTALLURGY (RACIAL) ---",
+            "id": "RT1",
+            "name": "Crystallurgy (Racial Trait)",
+            "max_levels": 1,
+            "requirements": []
+        },
+        {
+            "id": "AS4",
+            "name": "Crystalline Technology",
+            "max_levels": 20,
+            "requirements": [
+                [
+                    {
+                        "node_id": "RT1",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT1",
+            "name": "Crystalline Weapons",
+            "max_levels": 20,
+            "requirements": [
+                [
+                    {
+                        "node_id": "RT1",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- INTERDIMENSIONAL (RACIAL) ---",
+            "id": "RT2",
+            "name": "Interdimensional (Racial Trait)",
+            "max_levels": 1,
+            "requirements": []
+        },
+        {
+            "id": "AS5",
+            "name": "Interdimensional Technology",
+            "max_levels": 15,
+            "requirements": [
+                [
+                    {
+                        "node_id": "RT2",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT2",
+            "name": "Interdimensional Weapons",
+            "max_levels": 15,
+            "requirements": [
+                [
+                    {
+                        "node_id": "RT2",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- ORGANIC MANIPULATION (RACIAL) ---",
+            "id": "RT3",
+            "name": "Organic Manipulation (Racial Trait)",
+            "max_levels": 1,
+            "requirements": []
+        },
+        {
+            "id": "AS6",
+            "name": "Organic Technology",
+            "max_levels": 20,
+            "requirements": [
+                [
+                    {
+                        "node_id": "RT3",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT3",
+            "name": "Organic Weapons",
+            "max_levels": 20,
+            "requirements": [
+                [
+                    {
+                        "node_id": "RT3",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- PSYCHIC (RACIAL) ---",
+            "id": "RT4",
+            "name": "Psychic (Racial Trait)",
+            "max_levels": 1,
+            "requirements": []
+        },
+        {
+            "id": "AS7",
+            "name": "Psychic Technology",
+            "max_levels": 15,
+            "requirements": [
+                [
+                    {
+                        "node_id": "RT4",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT4",
+            "name": "Psychic Weapons",
+            "max_levels": 15,
+            "requirements": [
+                [
+                    {
+                        "node_id": "RT4",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- DEEPLY RELIGIOUS (RACIAL) ---",
+            "id": "RT5",
+            "name": "Deeply Religious (Racial Trait)",
+            "max_levels": 1,
+            "requirements": []
+        },
+        {
+            "id": "AS8",
+            "name": "Religious Technology",
+            "max_levels": 20,
+            "requirements": [
+                [
+                    {
+                        "node_id": "RT5",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "comment": "--- TEMPORAL KNOWLEDGE (RACIAL) ---",
+            "id": "RT6",
+            "name": "Temporal Knowledge (Racial Trait)",
+            "max_levels": 1,
+            "requirements": []
+        },
+        {
+            "id": "AS9",
+            "name": "Temporal Technology",
+            "max_levels": 15,
+            "requirements": [
+                [
+                    {
+                        "node_id": "RT6",
+                        "level": 1
+                    }
+                ]
+            ]
+        },
+        {
+            "id": "WT5",
+            "name": "Temporal Weapons",
+            "max_levels": 20,
+            "requirements": [
+                [
+                    {
+                        "node_id": "RT6",
+                        "level": 1
+                    }
+                ]
+            ]
+        }
+    ]
+}

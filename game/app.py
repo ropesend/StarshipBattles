@@ -50,6 +50,7 @@ FORMATION = GameState.FORMATION
 TEST_LAB = GameState.TEST_LAB
 STRATEGY = GameState.STRATEGY
 RACE_SETUP = GameState.RACE_SETUP
+RESEARCH_TREE = GameState.RESEARCH_TREE
 
 # Initialize fonts
 pygame.font.init()
@@ -129,7 +130,8 @@ class Game:
             Button(WIDTH // 2 - 100, HEIGHT // 2 + 30, 200, 50, "Design Workshop", self.start_builder),
             Button(WIDTH // 2 - 100, HEIGHT // 2 + 100, 200, 50, "Battle Setup", self.start_battle_setup),
             Button(WIDTH // 2 - 100, HEIGHT // 2 + 170, 200, 50, "Formation Editor", self.start_formation_editor),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 240, 200, 50, "Combat Lab", self.start_test_lab)
+            Button(WIDTH // 2 - 100, HEIGHT // 2 + 240, 200, 50, "Combat Lab", self.start_test_lab),
+            Button(WIDTH // 2 - 100, HEIGHT // 2 + 310, 200, 50, "Research Tree", self.start_research_tree)
         ]
 
     @profile_action("App: Start Builder")
@@ -360,6 +362,22 @@ class Game:
         self.state = TEST_LAB
         self.return_state = TEST_LAB
 
+    def start_research_tree(self):
+        """Enter Research Tree sandbox."""
+        from game.research.ui.research_scene import ResearchTreeScene
+
+        log_info("Starting Research Tree sandbox")
+        self.state = RESEARCH_TREE
+        self.research_tree_scene = ResearchTreeScene(
+            WIDTH, HEIGHT,
+            on_close_callback=self.on_research_tree_return
+        )
+
+    def on_research_tree_return(self):
+        """Return from Research Tree to menu."""
+        self.state = MENU
+        self.research_tree_scene = None
+
     def start_race_setup(self):
         """Open race setup wizard."""
         import pygame_gui
@@ -499,6 +517,9 @@ class Game:
             self.strategy_scene.handle_event(event)
         elif self.state == TEST_LAB:
             self.test_lab_scene.handle_input([event])
+        elif self.state == RESEARCH_TREE:
+            if hasattr(self, 'research_tree_scene') and self.research_tree_scene:
+                self.research_tree_scene.handle_event(event)
 
     def _handle_resize(self, w, h):
         """Handle window resize."""
@@ -519,6 +540,9 @@ class Game:
             self.test_lab_scene._create_ui()
         elif self.state == STRATEGY:
             self.strategy_scene.handle_resize(w, h)
+        elif self.state == RESEARCH_TREE:
+            if hasattr(self, 'research_tree_scene') and self.research_tree_scene:
+                self.research_tree_scene.handle_resize(w, h)
 
     def _handle_keydown(self, event):
         """Handle key press events."""
@@ -619,6 +643,11 @@ class Game:
         elif self.state == TEST_LAB:
             self.test_lab_scene.update()
             self.test_lab_scene.draw(self.screen)
+        elif self.state == RESEARCH_TREE:
+            if hasattr(self, 'research_tree_scene') and self.research_tree_scene:
+                self.research_tree_scene.handle_input(frame_time, events)
+                self.research_tree_scene.update(frame_time)
+                self.research_tree_scene.draw(self.screen)
 
         if self.show_exit_dialog:
             draw_exit_dialog(self.screen, font_large, font_med)
