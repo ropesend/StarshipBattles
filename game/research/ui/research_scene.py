@@ -105,9 +105,11 @@ class ResearchTreeScene:
             pygame.Rect(self.canvas_width, 0, self.SIDEBAR_WIDTH, screen_height),
             self.ui_manager,
             self.tracker,
+            self.tech_tree,
             on_next_turn=self._on_next_turn,
             on_close=self._on_close,
-            on_reset=self._on_reset
+            on_reset=self._on_reset,
+            on_auto_spread_changed=self._on_auto_spread_changed
         )
 
         log_info(f"ResearchTreeScene: Initialized with {len(self.tech_tree.nodes)} nodes")
@@ -238,9 +240,11 @@ class ResearchTreeScene:
             pygame.Rect(self.canvas_width, 0, self.SIDEBAR_WIDTH, height),
             self.ui_manager,
             self.tracker,
+            self.tech_tree,
             on_next_turn=self._on_next_turn,
             on_close=self._on_close,
-            on_reset=self._on_reset
+            on_reset=self._on_reset,
+            on_auto_spread_changed=self._on_auto_spread_changed
         )
 
         # Update selection if still valid
@@ -296,7 +300,15 @@ class ResearchTreeScene:
 
     def _on_next_turn(self):
         """Process one turn of research."""
-        events = ResearchService.process_turn(self.tech_tree, self.tracker)
+        # Cache tech_levels once for performance (avoid recomputing)
+        tech_levels = self.tracker.get_all_tech_levels()
+
+        # If auto-spread is enabled, recalculate allocations before processing
+        if self.tracker.auto_spread_enabled:
+            self.tracker.spread_rp_evenly(self.tech_tree, tech_levels)
+            self.control_panel.update_budget_display()
+
+        events = ResearchService.process_turn(self.tech_tree, self.tracker, tech_levels)
 
         # Update control panel with results
         self.control_panel.update_turn_log(events, self.tracker.turn_number)
@@ -330,9 +342,21 @@ class ResearchTreeScene:
 
         # Update control panel
         self.control_panel.tracker = self.tracker
+        self.control_panel.tech_tree = self.tech_tree
         self.control_panel.clear_selection()
         self.control_panel.update_budget_display()
         self.control_panel.clear_log()
+        self.control_panel._update_auto_spread_button()
+
+    def _on_auto_spread_changed(self, enabled: bool):
+        """Handle auto-spread toggle change."""
+        log_debug(f"Auto-spread {'enabled' if enabled else 'disabled'}")
+
+        # Update selected node display if one is selected
+        if self.selected_node_id:
+            node = self.tech_tree.get_node(self.selected_node_id)
+            if node:
+                self.control_panel.update_selected_node(node, self.tracker)
 
     def handle_input(self, dt: float, events: list):
         """
@@ -343,7 +367,6 @@ class ResearchTreeScene:
             events: List of pygame events
         """
         # Let camera handle keyboard pan
-        keys = pygame.key.get_pressed()
         mx, my = pygame.mouse.get_pos()
 
         # Only handle input when mouse is over canvas

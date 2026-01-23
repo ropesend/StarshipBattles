@@ -3,8 +3,11 @@ ResearchTracker - Manages per-session research state including node levels,
 breakthrough chances, and RP allocations.
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, TYPE_CHECKING
 import random
+
+if TYPE_CHECKING:
+    from game.research.data.tech_tree import TechTree
 
 
 @dataclass
@@ -60,6 +63,7 @@ class ResearchTracker:
         self.rp_budget: int = self.DEFAULT_RP_BUDGET
         self.turn_number: int = 0
         self.turn_log: List[Dict[str, Any]] = []  # Events from last turn
+        self.auto_spread_enabled: bool = False  # Toggle for auto-spreading RP
 
     def get_state(self, node_id: str) -> NodeState:
         """
@@ -140,6 +144,44 @@ class ResearchTracker:
         for state in self.node_states.values():
             state.rp_allocation = 0
 
+    def spread_rp_evenly(self, tech_tree: 'TechTree', tech_levels: Dict[str, int] = None) -> int:
+        """
+        Spread RP budget evenly across all available (unlocked, not maxed) nodes.
+
+        Args:
+            tech_tree: The tech tree to check node status
+            tech_levels: Optional pre-computed tech levels (for performance)
+
+        Returns:
+            Number of nodes that received allocation
+        """
+        if tech_levels is None:
+            tech_levels = self.get_all_tech_levels()
+
+        # Find all available nodes (not locked, not completed)
+        available_nodes = []
+        for node in tech_tree.nodes.values():
+            state = self.get_state(node.id)
+            status = node.get_status(state.current_level, tech_levels)
+            if status == 'available':
+                available_nodes.append(node.id)
+
+        # Clear all existing allocations
+        self.clear_all_allocations()
+
+        if not available_nodes:
+            return 0
+
+        # Distribute evenly with remainder going to first N nodes
+        base_rp = self.rp_budget // len(available_nodes)
+        remainder = self.rp_budget % len(available_nodes)
+
+        for i, node_id in enumerate(available_nodes):
+            allocation = base_rp + (1 if i < remainder else 0)
+            self.set_allocation(node_id, allocation)
+
+        return len(available_nodes)
+
     def set_rp_budget(self, budget: int) -> None:
         """
         Set total RP available per turn.
@@ -177,6 +219,7 @@ class ResearchTracker:
             'session_seed': self.session_seed,
             'rp_budget': self.rp_budget,
             'turn_number': self.turn_number,
+            'auto_spread_enabled': self.auto_spread_enabled,
             'node_states': {nid: s.to_dict() for nid, s in self.node_states.items()}
         }
 
@@ -186,6 +229,7 @@ class ResearchTracker:
         tracker = cls(session_seed=data.get('session_seed'))
         tracker.rp_budget = data.get('rp_budget', cls.DEFAULT_RP_BUDGET)
         tracker.turn_number = data.get('turn_number', 0)
+        tracker.auto_spread_enabled = data.get('auto_spread_enabled', False)
         for nid, state_data in data.get('node_states', {}).items():
             tracker.node_states[nid] = NodeState.from_dict(state_data)
         return tracker
