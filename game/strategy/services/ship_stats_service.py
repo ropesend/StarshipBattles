@@ -40,7 +40,8 @@ class ShipStatsService:
     @staticmethod
     def calculate_stats(
         design_data: Dict[str, Any],
-        component_damage: Optional[Dict[str, int]] = None
+        component_damage: Optional[Dict[str, int]] = None,
+        component_toggles: Optional[Dict[str, bool]] = None
     ) -> Dict[str, Any]:
         """
         Calculate all ship stats from design data and component damage.
@@ -49,28 +50,35 @@ class ShipStatsService:
             design_data: Serialized ship design containing 'layers' dict
             component_damage: Optional dict of component_id -> current_hp
                              If None, assumes all components undamaged
+            component_toggles: Optional dict of component_id -> enabled
+                              If None, assumes all components enabled
 
         Returns:
-            Dict with calculated stats matching expected_stats structure:
+            Dict with calculated stats including:
             - max_hp: Total HP from all components
             - mass: Total mass (doesn't degrade with damage)
-            - max_fuel, max_energy, max_ammo: Resource storage capacities
+            - resource_storage: Dict of resource_type -> capacity
+            - resource_consumption_per_hex: Dict of resource_type -> cost per hex
+            - resource_consumption_per_turn: Dict of resource_type -> cost per turn
+            - warp_resource_costs: Dict of resource_type -> cost per warp jump
             - strategic_movement: Movement points for strategic map
-            - strategic_fuel_per_hex: Fuel cost per hex moved
             - warp_max_tonnage: Max ship mass for warp (0 if damaged)
-            - warp_energy_cost: Energy cost per warp jump
+            - Legacy fields for backward compatibility (max_fuel, max_energy, etc.)
         """
         if component_damage is None:
             component_damage = {}
+        if component_toggles is None:
+            component_toggles = {}
 
-        # Initialize accumulators
+        # Initialize accumulators - ALL generic dicts
         total_mass = 0.0
         total_hp = 0.0
-        resource_storage: Dict[str, float] = {}  # Generic resource storage
+        resource_storage: Dict[str, float] = {}
+        resource_consumption_per_hex: Dict[str, float] = {}
+        resource_consumption_per_turn: Dict[str, float] = {}
+        warp_resource_costs: Dict[str, float] = {}
         total_strategic_movement = 0.0
-        total_strategic_fuel_per_hex = 0.0
         warp_max_tonnage = 0
-        warp_resource_costs: Dict[str, float] = {}  # Generic warp resource costs
 
         # Iterate through all components in design
         components_found = ShipStatsService._iterate_design_components(design_data)
@@ -79,25 +87,44 @@ class ShipStatsService:
         # This handles test fixtures and designs without component registry entries
         if not components_found:
             expected = design_data.get('expected_stats', {})
-            # Build warp_resource_costs from legacy fields if present
+            # Build resource_storage from legacy fields
+            fallback_storage = expected.get('resource_storage', {})
+            if not fallback_storage:
+                if expected.get('max_fuel', 0) > 0:
+                    fallback_storage['fuel'] = expected['max_fuel']
+                if expected.get('max_energy', 0) > 0:
+                    fallback_storage['energy'] = expected['max_energy']
+                if expected.get('max_ammo', 0) > 0:
+                    fallback_storage['ammo'] = expected['max_ammo']
+
+            # Build resource_consumption_per_hex from legacy fields
+            fallback_per_hex = expected.get('resource_consumption_per_hex', {})
+            if not fallback_per_hex and expected.get('strategic_fuel_per_hex', 0) > 0:
+                fallback_per_hex['fuel'] = expected['strategic_fuel_per_hex']
+
+            # Build warp_resource_costs from legacy fields
             fallback_warp_costs = expected.get('warp_resource_costs', {})
             if not fallback_warp_costs:
-                # Check legacy specific cost fields
                 if expected.get('warp_energy_cost', 0) > 0:
                     fallback_warp_costs['energy'] = expected['warp_energy_cost']
                 if expected.get('warp_fuel_cost', 0) > 0:
                     fallback_warp_costs['fuel'] = expected['warp_fuel_cost']
+
             return {
                 'max_hp': expected.get('max_hp', 0),
                 'mass': expected.get('mass', 0),
+                # New generic fields
+                'resource_storage': fallback_storage,
+                'resource_consumption_per_hex': fallback_per_hex,
+                'resource_consumption_per_turn': expected.get('resource_consumption_per_turn', {}),
+                'warp_resource_costs': fallback_warp_costs,
+                'strategic_movement': expected.get('strategic_movement', 0),
+                'warp_max_tonnage': expected.get('warp_max_tonnage', 0),
+                # Legacy fields for backward compatibility
                 'max_fuel': expected.get('max_fuel', 0),
                 'max_energy': expected.get('max_energy', 0),
                 'max_ammo': expected.get('max_ammo', 0),
-                'strategic_movement': expected.get('strategic_movement', 0),
                 'strategic_fuel_per_hex': expected.get('strategic_fuel_per_hex', 0),
-                'warp_max_tonnage': expected.get('warp_max_tonnage', 0),
-                'warp_resource_costs': fallback_warp_costs,
-                # Keep legacy fields for backward compatibility
                 'warp_energy_cost': expected.get('warp_energy_cost', 0),
                 'warp_fuel_cost': expected.get('warp_fuel_cost', 0),
             }
@@ -107,6 +134,13 @@ class ShipStatsService:
                 continue
 
             comp_id = comp_entry.get('id', '')
+
+            # Check if component is toggled off
+            if not component_toggles.get(comp_id, True):
+                # Still count mass, skip abilities
+                comp_mass = ShipStatsService._get_numeric_value(comp_def, 'mass', 0)
+                total_mass += comp_mass
+                continue
 
             # Get effectiveness based on damage (0.0 to 1.0)
             effectiveness = ShipStatsService.get_component_effectiveness(
@@ -124,39 +158,49 @@ class ShipStatsService:
             # Get abilities from component definition
             abilities = getattr(comp_def, 'abilities', {}) or {}
 
-            # Resource Storage - degrades with damage
+            # Resource Storage - degrades with damage (generic handling)
             for ability_data in ShipStatsService._get_ability_list(abilities, 'ResourceStorage'):
                 resource_type = ability_data.get('resource', '')
-                # Check both 'max_amount' and 'amount' keys (components use 'amount')
                 max_amount = ability_data.get('max_amount') or ability_data.get('amount', 0)
-                if resource_type == 'fuel':
-                    total_fuel_storage += max_amount * effectiveness
-                elif resource_type == 'energy':
-                    total_energy_storage += max_amount * effectiveness
-                elif resource_type == 'ammo':
-                    total_ammo_storage += max_amount * effectiveness
+                if resource_type:
+                    resource_storage[resource_type] = (
+                        resource_storage.get(resource_type, 0) + max_amount * effectiveness
+                    )
 
             # Also check shortcut abilities (FuelStorage, EnergyStorage, AmmoStorage)
             if 'FuelStorage' in abilities:
                 val = ShipStatsService._get_ability_value(abilities, 'FuelStorage')
-                total_fuel_storage += val * effectiveness
+                resource_storage['fuel'] = resource_storage.get('fuel', 0) + val * effectiveness
             if 'EnergyStorage' in abilities:
                 val = ShipStatsService._get_ability_value(abilities, 'EnergyStorage')
-                total_energy_storage += val * effectiveness
+                resource_storage['energy'] = resource_storage.get('energy', 0) + val * effectiveness
             if 'AmmoStorage' in abilities:
                 val = ShipStatsService._get_ability_value(abilities, 'AmmoStorage')
-                total_ammo_storage += val * effectiveness
+                resource_storage['ammo'] = resource_storage.get('ammo', 0) + val * effectiveness
 
             # Strategic Movement - degrades with damage
             if 'StrategicMovement' in abilities:
                 movement = ShipStatsService._get_ability_value(abilities, 'StrategicMovement')
                 total_strategic_movement += movement * effectiveness
 
-            # Strategic Fuel Consumption - degrades (less fuel consumed when damaged)
+            # Resource Consumption - generic handling by trigger type
             for ability_data in ShipStatsService._get_ability_list(abilities, 'ResourceConsumption'):
-                if ability_data.get('trigger') == 'strategic_per_hex':
-                    if ability_data.get('resource') == 'fuel':
-                        total_strategic_fuel_per_hex += ability_data.get('amount', 0) * effectiveness
+                resource_type = ability_data.get('resource', '')
+                amount = ability_data.get('amount', 0)
+                trigger = ability_data.get('trigger', 'constant')
+
+                if trigger == 'strategic_per_hex':
+                    resource_consumption_per_hex[resource_type] = (
+                        resource_consumption_per_hex.get(resource_type, 0) + amount * effectiveness
+                    )
+                elif trigger == 'per_turn':
+                    resource_consumption_per_turn[resource_type] = (
+                        resource_consumption_per_turn.get(resource_type, 0) + amount * effectiveness
+                    )
+                elif trigger == 'warp_jump':
+                    warp_resource_costs[resource_type] = (
+                        warp_resource_costs.get(resource_type, 0) + amount * effectiveness
+                    )
 
             # Warp Jump - requires 100% HP (effectiveness must be 1.0)
             if 'WarpJump' in abilities:
@@ -167,31 +211,45 @@ class ShipStatsService:
                     warp_data = abilities.get('WarpJump', {})
                     if isinstance(warp_data, dict):
                         tonnage = warp_data.get('max_tonnage', 0)
-                        energy = warp_data.get('energy_cost', 0)
-                        fuel = warp_data.get('fuel_cost', 0)
+                        # Legacy: support energy_cost/fuel_cost in WarpJump ability
+                        legacy_energy = warp_data.get('energy_cost', 0)
+                        legacy_fuel = warp_data.get('fuel_cost', 0)
                     else:
-                        # Simple numeric value = max_tonnage
                         tonnage = warp_data if isinstance(warp_data, (int, float)) else 0
-                        energy = 0
-                        fuel = 0
+                        legacy_energy = 0
+                        legacy_fuel = 0
 
                     # Use largest warp drive tonnage
                     if tonnage > warp_max_tonnage:
                         warp_max_tonnage = tonnage
-                    warp_energy_cost += energy
-                    warp_fuel_cost += fuel
+
+                    # Add legacy costs to warp_resource_costs
+                    if legacy_energy > 0:
+                        warp_resource_costs['energy'] = (
+                            warp_resource_costs.get('energy', 0) + legacy_energy
+                        )
+                    if legacy_fuel > 0:
+                        warp_resource_costs['fuel'] = (
+                            warp_resource_costs.get('fuel', 0) + legacy_fuel
+                        )
 
         return {
             'max_hp': int(total_hp),
             'mass': total_mass,
-            'max_fuel': total_fuel_storage,
-            'max_energy': total_energy_storage,
-            'max_ammo': total_ammo_storage,
+            # New generic fields
+            'resource_storage': resource_storage,
+            'resource_consumption_per_hex': resource_consumption_per_hex,
+            'resource_consumption_per_turn': resource_consumption_per_turn,
+            'warp_resource_costs': warp_resource_costs,
             'strategic_movement': total_strategic_movement,
-            'strategic_fuel_per_hex': total_strategic_fuel_per_hex,
             'warp_max_tonnage': warp_max_tonnage,
-            'warp_energy_cost': warp_energy_cost,
-            'warp_fuel_cost': warp_fuel_cost,
+            # Legacy fields for backward compatibility
+            'max_fuel': resource_storage.get('fuel', 0),
+            'max_energy': resource_storage.get('energy', 0),
+            'max_ammo': resource_storage.get('ammo', 0),
+            'strategic_fuel_per_hex': resource_consumption_per_hex.get('fuel', 0),
+            'warp_energy_cost': warp_resource_costs.get('energy', 0),
+            'warp_fuel_cost': warp_resource_costs.get('fuel', 0),
         }
 
     @staticmethod

@@ -1903,9 +1903,11 @@
             "sprite_index": 82,
             "abilities": {
                 "WarpJump": {
-                    "max_tonnage": 2000,
-                    "energy_cost": 500
-                }
+                    "max_tonnage": 2000
+                },
+                "ResourceConsumption": [
+                    {"resource": "energy", "amount": 500, "trigger": "warp_jump"}
+                ]
             },
             "major_classification": "Engines",
             "resource_cost": {
@@ -1926,9 +1928,11 @@
             "sprite_index": 82,
             "abilities": {
                 "WarpJump": {
-                    "max_tonnage": 5000,
-                    "energy_cost": 1000
-                }
+                    "max_tonnage": 5000
+                },
+                "ResourceConsumption": [
+                    {"resource": "energy", "amount": 1000, "trigger": "warp_jump"}
+                ]
             },
             "major_classification": "Engines",
             "resource_cost": {
@@ -1949,9 +1953,11 @@
             "sprite_index": 82,
             "abilities": {
                 "WarpJump": {
-                    "max_tonnage": 15000,
-                    "energy_cost": 2000
-                }
+                    "max_tonnage": 15000
+                },
+                "ResourceConsumption": [
+                    {"resource": "energy", "amount": 2000, "trigger": "warp_jump"}
+                ]
             },
             "major_classification": "Engines",
             "resource_cost": {
@@ -1972,9 +1978,11 @@
             "sprite_index": 82,
             "abilities": {
                 "WarpJump": {
-                    "max_tonnage": 50000,
-                    "energy_cost": 5000
-                }
+                    "max_tonnage": 50000
+                },
+                "ResourceConsumption": [
+                    {"resource": "energy", "amount": 5000, "trigger": "warp_jump"}
+                ]
             },
             "major_classification": "Engines",
             "resource_cost": {

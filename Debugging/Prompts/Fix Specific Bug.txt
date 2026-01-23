@@ -1,9 +1,9 @@
 !EXECUTE_PROTOCOL: Debugging\protocols\02_fix_bug.md
 
-TARGET: BUG-05
+TARGET: BUG-XX
 
 1. LOAD the attached protocol file.
-2. LOAD the ticket file Debugging/active_bugs/BUG-05.md.
+2. LOAD the ticket file Debugging/active_bugs/BUG-XX.md.
 3. ADOPT the 'Senior Software Engineer' persona.
 4. EXECUTE "Phase 1: Reproduction" immediately.
    * Do not write the fix yet.

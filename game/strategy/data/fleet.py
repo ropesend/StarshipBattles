@@ -220,7 +220,89 @@ class Fleet:
 
         return True
 
+    # --- Generic Movement Resource Methods ---
+
+    def get_movement_resource_costs(self) -> Dict[str, float]:
+        """
+        Get total fleet resource costs per hex of movement.
+
+        Returns:
+            Dict mapping resource type to total fleet cost per hex.
+        """
+        total_costs: Dict[str, float] = {}
+        for ship in self.get_combat_capable_ships():
+            ship_costs = ship.get_all_resource_costs_per_hex()
+            for resource_type, cost in ship_costs.items():
+                total_costs[resource_type] = total_costs.get(resource_type, 0) + cost
+        return total_costs
+
+    def has_resources_for_movement(self) -> bool:
+        """
+        Check if fleet has resources for at least one hex of movement.
+
+        This is data-driven - checks all resource types that have per-hex costs.
+
+        Returns:
+            True if all combat-capable ships have enough of all required resources.
+        """
+        for ship in self.get_combat_capable_ships():
+            costs = ship.get_all_resource_costs_per_hex()
+            for resource_type, cost in costs.items():
+                if cost > 0:
+                    current = ship.get_current_resource(resource_type)
+                    if current < cost:
+                        return False
+        return True
+
+    def consume_movement_resources(self, hexes: int = 1) -> bool:
+        """
+        Consume all movement resources from all ships.
+
+        This is data-driven - consumes all resource types that have per-hex costs.
+
+        Args:
+            hexes: Number of hexes moved (default 1)
+
+        Returns:
+            True if all ships had sufficient resources, False otherwise.
+            Note: If False, no resources are consumed (atomic operation).
+        """
+        ships = self.get_combat_capable_ships()
+
+        # First, verify all ships have enough resources
+        for ship in ships:
+            costs = ship.get_all_resource_costs_per_hex()
+            for resource_type, cost in costs.items():
+                total_cost = cost * hexes
+                if total_cost > 0:
+                    if ship.get_current_resource(resource_type) < total_cost:
+                        return False
+
+        # All ships have enough, now consume
+        for ship in ships:
+            costs = ship.get_all_resource_costs_per_hex()
+            for resource_type, cost in costs.items():
+                total_cost = cost * hexes
+                if total_cost > 0:
+                    ship.consume_resource(resource_type, total_cost)
+
+        return True
+
     # --- Warp Resource Methods ---
+
+    def get_warp_resource_costs(self) -> Dict[str, float]:
+        """
+        Get total fleet resource costs for a warp jump.
+
+        Returns:
+            Dict mapping resource type to total fleet cost per warp jump.
+        """
+        total_costs: Dict[str, float] = {}
+        for ship in self.get_combat_capable_ships():
+            ship_costs = ship.get_warp_resource_costs()
+            for resource_type, cost in ship_costs.items():
+                total_costs[resource_type] = total_costs.get(resource_type, 0) + cost
+        return total_costs
 
     def get_warp_energy_cost(self) -> float:
         """
@@ -250,28 +332,19 @@ class Fleet:
         """
         Check if fleet has all required resources for a warp jump.
 
-        This is data-driven - checks energy if warp drives require energy,
-        checks fuel if warp drives require fuel. If no resource cost is
-        specified in the WarpJump ability, no resource check is performed.
+        This is data-driven - checks all resource types defined in warp costs.
+        If no resource cost is specified, no resource check is performed.
 
         Returns:
             True if all combat-capable ships have enough resources for one warp.
         """
         for ship in self.get_combat_capable_ships():
-            # Check energy cost
-            energy_cost = ship.get_warp_energy_cost()
-            if energy_cost > 0:
-                current_energy = ship.get_current_energy()
-                if current_energy < energy_cost:
-                    return False
-
-            # Check fuel cost
-            fuel_cost = ship.get_warp_fuel_cost()
-            if fuel_cost > 0:
-                current_fuel = ship.get_current_fuel()
-                if current_fuel < fuel_cost:
-                    return False
-
+            warp_costs = ship.get_warp_resource_costs()
+            for resource_type, cost in warp_costs.items():
+                if cost > 0:
+                    current = ship.get_current_resource(resource_type)
+                    if current < cost:
+                        return False
         return True
 
     def has_energy_for_warp(self) -> bool:
@@ -290,9 +363,8 @@ class Fleet:
         """
         Consume all required resources from all ships for a warp jump.
 
-        This is data-driven - consumes energy if warp drives require energy,
-        consumes fuel if warp drives require fuel. If no resource cost is
-        specified, no resources are consumed.
+        This is data-driven - consumes all resource types defined in warp costs.
+        If no resource cost is specified, no resources are consumed.
 
         Returns:
             True if all ships had sufficient resources, False otherwise.
@@ -302,27 +374,18 @@ class Fleet:
 
         # First, verify all ships have enough resources
         for ship in ships:
-            energy_cost = ship.get_warp_energy_cost()
-            if energy_cost > 0:
-                current_energy = ship.get_current_energy()
-                if current_energy < energy_cost:
-                    return False
-
-            fuel_cost = ship.get_warp_fuel_cost()
-            if fuel_cost > 0:
-                current_fuel = ship.get_current_fuel()
-                if current_fuel < fuel_cost:
-                    return False
+            warp_costs = ship.get_warp_resource_costs()
+            for resource_type, cost in warp_costs.items():
+                if cost > 0:
+                    if ship.get_current_resource(resource_type) < cost:
+                        return False
 
         # All ships have enough, now consume
         for ship in ships:
-            energy_cost = ship.get_warp_energy_cost()
-            if energy_cost > 0:
-                ship.consume_energy(energy_cost)
-
-            fuel_cost = ship.get_warp_fuel_cost()
-            if fuel_cost > 0:
-                ship.consume_fuel(fuel_cost)
+            warp_costs = ship.get_warp_resource_costs()
+            for resource_type, cost in warp_costs.items():
+                if cost > 0:
+                    ship.consume_resource(resource_type, cost)
 
         return True
 

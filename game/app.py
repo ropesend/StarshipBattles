@@ -13,6 +13,7 @@ parser.add_argument('--force-resolution', action='store_true',
 args, _ = parser.parse_known_args()
 
 from game.simulation.components.component import load_components, load_modifiers
+from game.core.resources import load_resources
 from ui import Button
 from game.ui.screens.builder_screen import BuilderSceneGUI
 from game.ui.renderer.sprites import SpriteManager
@@ -100,6 +101,7 @@ class Game:
         base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         load_components(os.path.join(base_path, "data", "components.json"))
         load_modifiers(os.path.join(base_path, "data", "modifiers.json"))
+        load_resources(os.path.join(base_path, "data", "resources.json"))
 
         # Initialize ship data
         from game.simulation.entities.ship import initialize_ship_data

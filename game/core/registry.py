@@ -52,7 +52,8 @@ class RegistryManager:
         self.components: Dict[str, Any] = {}
         self.modifiers: Dict[str, Any] = {}
         self.vehicle_classes: Dict[str, Any] = {}
-        self._validator: Any = None 
+        self.resources: Dict[str, Any] = {}
+        self._validator: Any = None
         self._frozen: bool = False
 
     @classmethod
@@ -94,35 +95,40 @@ class RegistryManager:
         """
         self._frozen = True
 
-    def hydrate(self, components_data: Dict[str, Any], modifiers_data: Dict[str, Any], vehicle_classes_data: Dict[str, Any]):
+    def hydrate(self, components_data: Dict[str, Any], modifiers_data: Dict[str, Any], vehicle_classes_data: Dict[str, Any], resources_data: Optional[Dict[str, Any]] = None):
         """
         Fast hydration from pre-loaded dictionary data.
-        
+
         Used by test fixtures to populate registries from SessionRegistryCache
         without disk I/O. Updates dictionaries in-place to preserve any
         existing references.
-        
+
         Args:
             components_data: Pre-loaded component definitions
-            modifiers_data: Pre-loaded modifier definitions  
+            modifiers_data: Pre-loaded modifier definitions
             vehicle_classes_data: Pre-loaded vehicle class definitions
-            
+            resources_data: Optional pre-loaded resource definitions
+
         Raises:
             RuntimeError: If the registry is frozen
         """
         if self._frozen:
             raise RuntimeError("Cannot hydrate a frozen RegistryManager")
-            
+
         # NOTE: We update dictionaries in-place rather than replacing them.
         # This ensures any code holding references to these dicts sees the updates.
         self.components.clear()
         self.components.update(components_data)
-        
+
         self.modifiers.clear()
         self.modifiers.update(modifiers_data)
-        
+
         self.vehicle_classes.clear()
         self.vehicle_classes.update(vehicle_classes_data)
+
+        self.resources.clear()
+        if resources_data:
+            self.resources.update(resources_data)
 
     def clear(self):
         """
@@ -139,6 +145,7 @@ class RegistryManager:
         self.components.clear()
         self.modifiers.clear()
         self.vehicle_classes.clear()
+        self.resources.clear()
         self._validator = None
 
     def get_validator(self):
@@ -182,3 +189,7 @@ def get_vehicle_classes() -> Dict[str, Any]:
 def get_validator():
     """Get the ship design validator (lazy-loaded)."""
     return RegistryManager.instance().get_validator()
+
+def get_resource_registry() -> Dict[str, Any]:
+    """Get the resource registry dictionary."""
+    return RegistryManager.instance().resources

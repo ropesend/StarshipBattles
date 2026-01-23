@@ -231,15 +231,19 @@ class TurnEngine:
 
     def _process_tick(self, tick, empires, galaxy):
         """Process 1 sub-tick of movement and combat.
-        
-        Four-phase processing:
-        Phase 0: Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
-        Phase 1: Calculate paths/next moves for all fleets (based on current positions)
-        Phase 2: Apply all movements simultaneously
-        Phase 3: Combat
+
+        Five-phase processing:
+        Phase 0: Per-turn resource consumption (1/100th of per_turn costs)
+        Phase 1: Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
+        Phase 2: Calculate paths/next moves for all fleets (based on current positions)
+        Phase 3: Apply all movements simultaneously
+        Phase 4: Combat
         """
-        
-        # --- Phase 0: Instant Orders (JOIN_FLEET) ---
+
+        # --- Phase 0: Per-turn Resource Consumption ---
+        self._process_per_turn_resources(tick, empires)
+
+        # --- Phase 1: Instant Orders (JOIN_FLEET) ---
         # Process JOIN_FLEET orders for any fleets that are already co-located with their target.
         # This happens every subtick so fleets can join as soon as they arrive.
         fleets_to_remove = []
@@ -258,7 +262,7 @@ class TurnEngine:
         for empire, fleet in fleets_to_remove:
             empire.remove_fleet(fleet)
         
-        # --- Phase 1: Calculate Moves ---
+        # --- Phase 2: Calculate Moves ---
         # Collect (fleet, next_hex) pairs for all fleets that should move this tick
         move_queue = []
         
@@ -277,11 +281,11 @@ class TurnEngine:
                     if next_hex is not None:
                         move_queue.append((fleet, next_hex))
         
-        # --- Phase 2: Apply Moves ---
+        # --- Phase 3: Apply Moves ---
         for fleet, next_hex in move_queue:
-            # Check fuel before moving
-            if not fleet.has_fuel_for_movement():
-                log_warning(f"Fleet {fleet.id} stranded - insufficient fuel for movement")
+            # Check resources before moving (data-driven - any resource type)
+            if not fleet.has_resources_for_movement():
+                log_warning(f"Fleet {fleet.id} stranded - insufficient resources for movement")
                 fleet.clear_orders()
                 continue
 
@@ -289,16 +293,16 @@ class TurnEngine:
             from game.strategy.data.hex_math import hex_distance
             is_warp = hex_distance(fleet.location, next_hex) > 1
 
-            # Check and consume warp energy if this is a warp jump
+            # Check and consume warp resources if this is a warp jump
             if is_warp:
-                if not fleet.has_energy_for_warp():
-                    log_warning(f"Fleet {fleet.id} cannot warp - insufficient energy")
+                if not fleet.has_resources_for_warp():
+                    log_warning(f"Fleet {fleet.id} cannot warp - insufficient resources")
                     fleet.clear_orders()
                     continue
-                fleet.consume_warp_energy()
+                fleet.consume_warp_resources()
 
-            # Consume fuel for this hex of movement
-            fleet.consume_fleet_fuel(1)
+            # Consume movement resources for this hex (data-driven)
+            fleet.consume_movement_resources(1)
 
             # Apply movement
             fleet.location = next_hex
@@ -307,7 +311,7 @@ class TurnEngine:
             if not fleet.path:
                 fleet.pop_order()
 
-        # --- Phase 3: Combat ---
+        # --- Phase 4: Combat ---
         self._resolve_conflicts(empires)
 
     def _calculate_next_hex(self, fleet, galaxy):
@@ -396,6 +400,75 @@ class TurnEngine:
             # If path complete, order is done
             if not fleet.path:
                 fleet.pop_order()
+
+    def _process_per_turn_resources(self, tick: int, empires) -> None:
+        """
+        Process per-turn resource consumption (1/100th per tick).
+
+        Components with ResourceConsumption abilities using trigger='per_turn'
+        consume resources spread across all 100 ticks of a turn.
+
+        If a ship runs out of a required resource, the component that needs
+        it is automatically disabled.
+
+        Args:
+            tick: Current tick number (1-100)
+            empires: List of Empire objects to process
+        """
+        for empire in empires:
+            for fleet in empire.fleets:
+                for ship in fleet.get_ship_instances():
+                    if not ship.is_combat_capable():
+                        continue
+
+                    per_turn_costs = ship.get_all_resource_costs_per_turn()
+                    for resource_type, total_cost in per_turn_costs.items():
+                        if total_cost <= 0:
+                            continue
+
+                        # Consume 1/100th of the per-turn cost each tick
+                        tick_cost = total_cost / 100.0
+                        if not ship.consume_resource(resource_type, tick_cost):
+                            # Resource depleted - auto-disable components that need it
+                            self._auto_disable_components_for_resource(ship, resource_type)
+
+    def _auto_disable_components_for_resource(self, ship, resource_type: str) -> None:
+        """
+        Auto-disable components that require a depleted resource.
+
+        Finds all components with per_turn ResourceConsumption for the specified
+        resource type and disables them.
+
+        Args:
+            ship: ShipInstance with the resource shortage
+            resource_type: The depleted resource type
+        """
+        from game.core.registry import get_component_registry
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        registry = get_component_registry()
+        layers = ship.design_data.get('layers', {})
+
+        for layer_name, components in layers.items():
+            if isinstance(components, list):
+                comp_list = components
+            elif isinstance(components, dict):
+                comp_list = components.get('components', [])
+            else:
+                continue
+
+            for comp_entry in comp_list:
+                comp_id = comp_entry.get('id', '') if isinstance(comp_entry, dict) else comp_entry
+                comp_def = registry.get(comp_id)
+                if comp_def is None:
+                    continue
+
+                abilities = getattr(comp_def, 'abilities', {}) or {}
+                for ability_data in ShipStatsService._get_ability_list(abilities, 'ResourceConsumption'):
+                    if (ability_data.get('trigger') == 'per_turn' and
+                        ability_data.get('resource') == resource_type):
+                        ship.set_component_enabled(comp_id, False)
+                        log_info(f"Ship {ship.name}: Auto-disabled {comp_id} - insufficient {resource_type}")
 
     def _resolve_conflicts(self, empires):
         """Check for collisions and resolve battles."""

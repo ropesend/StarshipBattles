@@ -43,6 +43,7 @@ class ShipInstance:
     current_hp: Optional[int] = None
     component_damage: Dict[str, int] = field(default_factory=dict)  # component_id -> current_hp
     resource_levels: Dict[str, float] = field(default_factory=dict)  # resource_name -> current
+    component_toggles: Dict[str, bool] = field(default_factory=dict)  # component_id -> enabled
 
     # Status
     is_destroyed: bool = False
@@ -170,7 +171,8 @@ class ShipInstance:
             from game.strategy.services.ship_stats_service import ShipStatsService
             self._cached_stats = ShipStatsService.calculate_stats(
                 self.design_data,
-                self.component_damage
+                self.component_damage,
+                self.component_toggles
             )
         return self._cached_stats
 
@@ -291,6 +293,114 @@ class ShipInstance:
         new_level = current - amount
         self.resource_levels['energy'] = new_level
         return True
+
+    # --- Generic Resource Methods ---
+
+    def get_resource_capacity(self, resource_type: str) -> float:
+        """
+        Get maximum capacity for any resource type.
+
+        Args:
+            resource_type: Resource type (e.g., 'fuel', 'energy', 'ammo')
+
+        Returns:
+            Maximum capacity for the resource, or 0 if not available.
+        """
+        stats = self.get_calculated_stats()
+        resource_storage = stats.get('resource_storage', {})
+        return resource_storage.get(resource_type, 0)
+
+    def get_current_resource(self, resource_type: str) -> float:
+        """
+        Get current level of any resource type.
+
+        Args:
+            resource_type: Resource type (e.g., 'fuel', 'energy', 'ammo')
+
+        Returns:
+            Current resource level. Returns max capacity if not tracked (assumed full).
+        """
+        max_val = self.get_resource_capacity(resource_type)
+        return self.resource_levels.get(resource_type, max_val)
+
+    def consume_resource(self, resource_type: str, amount: float) -> bool:
+        """
+        Consume a specified amount of any resource type.
+
+        Args:
+            resource_type: Resource type to consume
+            amount: Amount to consume
+
+        Returns:
+            True if resource was available and consumed, False if insufficient.
+        """
+        max_val = self.get_resource_capacity(resource_type)
+        current = self.resource_levels.get(resource_type, max_val)
+
+        if current < amount:
+            return False
+
+        self.resource_levels[resource_type] = current - amount
+        return True
+
+    def get_all_resource_costs_per_hex(self) -> Dict[str, float]:
+        """
+        Get all per-hex consumption costs.
+
+        Returns:
+            Dict mapping resource type to cost per hex of movement.
+        """
+        stats = self.get_calculated_stats()
+        return stats.get('resource_consumption_per_hex', {})
+
+    def get_all_resource_costs_per_turn(self) -> Dict[str, float]:
+        """
+        Get all per-turn consumption costs.
+
+        Returns:
+            Dict mapping resource type to cost per turn.
+        """
+        stats = self.get_calculated_stats()
+        return stats.get('resource_consumption_per_turn', {})
+
+    def get_warp_resource_costs(self) -> Dict[str, float]:
+        """
+        Get all resource costs for a warp jump.
+
+        Returns:
+            Dict mapping resource type to cost per warp jump.
+        """
+        stats = self.get_calculated_stats()
+        return stats.get('warp_resource_costs', {})
+
+    # --- Component Toggle Methods ---
+
+    def set_component_enabled(self, component_id: str, enabled: bool) -> None:
+        """
+        Enable or disable a component manually.
+
+        Disabled components don't contribute abilities to stats but still
+        contribute their mass. Useful for conserving resources or managing
+        damage states.
+
+        Args:
+            component_id: ID of the component to toggle
+            enabled: True to enable, False to disable
+        """
+        self.component_toggles[component_id] = enabled
+        self.invalidate_stats_cache()
+
+    def is_component_enabled(self, component_id: str) -> bool:
+        """
+        Check if a component is enabled.
+
+        Args:
+            component_id: ID of the component to check
+
+        Returns:
+            True if component is enabled (or not in toggles dict), False if disabled.
+        """
+        return self.component_toggles.get(component_id, True)
 
     def get_display_id(self) -> Optional[str]:
         """
@@ -590,6 +700,7 @@ class ShipInstance:
             'current_hp': self.current_hp,
             'component_damage': self.component_damage,
             'resource_levels': self.resource_levels,
+            'component_toggles': self.component_toggles,
             'is_destroyed': self.is_destroyed,
             'is_derelict': self.is_derelict,
             'experience': self.experience,
@@ -610,6 +721,7 @@ class ShipInstance:
             current_hp=data.get('current_hp'),
             component_damage=data.get('component_damage', {}),
             resource_levels=data.get('resource_levels', {}),
+            component_toggles=data.get('component_toggles', {}),
             is_destroyed=data.get('is_destroyed', False),
             is_derelict=data.get('is_derelict', False),
             experience=data.get('experience', 0),
@@ -631,7 +743,7 @@ class ShipInstance:
     def clone(self) -> 'ShipInstance':
         """Create a deep copy of this instance (for hypothetical battles)."""
         import copy
-        return cls(
+        return ShipInstance(
             instance_id=str(uuid.uuid4()),  # New ID for clone
             design_id=self.design_id,
             name=self.name,
@@ -640,6 +752,7 @@ class ShipInstance:
             current_hp=self.current_hp,
             component_damage=copy.deepcopy(self.component_damage),
             resource_levels=copy.deepcopy(self.resource_levels),
+            component_toggles=copy.deepcopy(self.component_toggles),
             is_destroyed=self.is_destroyed,
             is_derelict=self.is_derelict,
             experience=self.experience,
