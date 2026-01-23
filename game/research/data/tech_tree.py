@@ -83,6 +83,8 @@ class TechTree:
                 requirements=requirements,
                 base_decay=node_data.get("base_decay", 0.005),
                 volatility=node_data.get("volatility", 0.1),
+                price=node_data.get("price", 1.0),
+                price_curve=node_data.get("price_curve", "flat"),
                 comment=node_data.get("comment")
             )
             tree.nodes[node.id] = node

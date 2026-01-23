@@ -3,6 +3,7 @@ TechNode and TechRequirement data models for the research system.
 """
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Tuple
+import math
 import random
 
 
@@ -64,6 +65,8 @@ class TechNode:
     requirements: List[List[TechRequirement]] = field(default_factory=list)
     base_decay: float = 0.005  # Default 0.5% decay per turn
     volatility: float = 0.1   # Default volatility coefficient
+    price: float = 1.0        # Base RP multiplier (1.0 = normal, 2.0 = 2x RP needed)
+    price_curve: str = "flat" # How price scales with level: flat, linear, quadratic, exponential, logarithmic, sqrt
     comment: Optional[str] = None  # Optional section comment from JSON
 
     def resolve_requirements(self, rng: random.Random) -> None:
@@ -103,6 +106,39 @@ class TechNode:
                 return 'available'
 
         return 'locked'
+
+    def get_effective_price(self, level: int) -> float:
+        """
+        Calculate effective RP multiplier for a given level.
+
+        The effective price determines how much RP is needed - higher price means
+        RP is divided by this value, making research harder.
+
+        Args:
+            level: Target level (1-based, i.e., the level you're trying to reach)
+
+        Returns:
+            Effective price multiplier (>= 1.0)
+        """
+        if self.price_curve == "flat":
+            return self.price
+        elif self.price_curve == "linear":
+            # +50% per level: L1=1.5x, L2=2x, L5=3.5x
+            return self.price * (1 + 0.5 * level)
+        elif self.price_curve == "quadratic":
+            # Slow start, accelerates: L1=1.2x, L2=1.8x, L5=6x
+            return self.price * (1 + 0.2 * level * level)
+        elif self.price_curve == "exponential":
+            # Doubles roughly every 2 levels: L1=1.5x, L2=2.25x, L5=7.6x
+            return self.price * (1.5 ** level)
+        elif self.price_curve == "logarithmic":
+            # Fast early, slows down: L1=1.7x, L2=2.1x, L5=2.8x
+            return self.price * (1 + math.log(1 + level))
+        elif self.price_curve == "sqrt":
+            # Slow growth: L1=2x, L2=2.4x, L5=3.2x
+            return self.price * (1 + math.sqrt(level))
+        # Default to flat if unknown curve type
+        return self.price
 
     def get_prerequisite_node_ids(self) -> List[str]:
         """

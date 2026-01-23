@@ -5,7 +5,11 @@
             "id": "TS1",
             "name": "Astrophysics",
             "max_levels": 8,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0043,
+            "volatility": 0.071,
+            "price": 1.42,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS33",
@@ -21,7 +25,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0043,
+            "volatility": 0.084,
+            "price": 1.37,
+            "price_curve": "sqrt"
         },
         {
             "id": "WT19",
@@ -37,7 +45,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0032,
+            "volatility": 0.083,
+            "price": 1.22,
+            "price_curve": "sqrt"
         },
         {
             "id": "WT20",
@@ -53,7 +65,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0035,
+            "volatility": 0.088,
+            "price": 1.65,
+            "price_curve": "exponential"
         },
         {
             "id": "WT24",
@@ -69,7 +85,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0048,
+            "volatility": 0.098,
+            "price": 1.14,
+            "price_curve": "flat"
         },
         {
             "id": "AS25",
@@ -85,7 +105,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0055,
+            "volatility": 0.086,
+            "price": 1.21,
+            "price_curve": "linear"
         },
         {
             "id": "WT25",
@@ -101,7 +125,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0033,
+            "volatility": 0.099,
+            "price": 1.47,
+            "price_curve": "linear"
         },
         {
             "id": "TS11",
@@ -117,7 +145,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0038,
+            "volatility": 0.081,
+            "price": 1.48,
+            "price_curve": "quadratic"
         },
         {
             "comment": "--- STELLAR MANIPULATION SUB-BRANCH ---",
@@ -134,7 +166,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0074,
+            "volatility": 0.136,
+            "price": 1.11,
+            "price_curve": "logarithmic"
         },
         {
             "id": "AS70",
@@ -150,7 +186,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0032,
+            "volatility": 0.079,
+            "price": 1.7,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS71",
@@ -166,7 +206,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0052,
+            "volatility": 0.108,
+            "price": 1.02,
+            "price_curve": "linear"
         },
         {
             "id": "AS72",
@@ -182,7 +226,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0073,
+            "volatility": 0.149,
+            "price": 1.17,
+            "price_curve": "flat"
         },
         {
             "id": "AS73",
@@ -198,7 +246,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0061,
+            "volatility": 0.123,
+            "price": 1.17,
+            "price_curve": "flat"
         },
         {
             "id": "AS74",
@@ -214,7 +266,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0061,
+            "volatility": 0.11,
+            "price": 1.05,
+            "price_curve": "flat"
         },
         {
             "id": "AS75",
@@ -230,14 +286,22 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0068,
+            "volatility": 0.109,
+            "price": 1.15,
+            "price_curve": "flat"
         },
         {
             "comment": "--- BIOLOGY BRANCH ---",
             "id": "TS2",
             "name": "Biology",
             "max_levels": 4,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0049,
+            "volatility": 0.091,
+            "price": 1.46,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS53",
@@ -253,7 +317,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0041,
+            "volatility": 0.091,
+            "price": 1.87,
+            "price_curve": "linear"
         },
         {
             "id": "WT28",
@@ -269,14 +337,22 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0035,
+            "volatility": 0.071,
+            "price": 1.45,
+            "price_curve": "quadratic"
         },
         {
             "comment": "--- CHEMISTRY BRANCH ---",
             "id": "TS3",
             "name": "Chemistry",
             "max_levels": 5,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0041,
+            "volatility": 0.117,
+            "price": 1.28,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS34",
@@ -292,7 +368,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0036,
+            "volatility": 0.09,
+            "price": 1.52,
+            "price_curve": "quadratic"
         },
         {
             "id": "WT13",
@@ -308,7 +388,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0033,
+            "volatility": 0.074,
+            "price": 1.8,
+            "price_curve": "exponential"
         },
         {
             "id": "AS55",
@@ -324,14 +408,22 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0035,
+            "volatility": 0.088,
+            "price": 1.92,
+            "price_curve": "quadratic"
         },
         {
             "comment": "--- COLONIZATION BRANCH ---",
             "id": "TS4",
             "name": "Colonization",
             "max_levels": 3,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0061,
+            "volatility": 0.15,
+            "price": 1.03,
+            "price_curve": "logarithmic"
         },
         {
             "id": "AS1",
@@ -347,7 +439,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0053,
+            "volatility": 0.102,
+            "price": 1.02,
+            "price_curve": "flat"
         },
         {
             "id": "AS2",
@@ -363,7 +459,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0074,
+            "volatility": 0.121,
+            "price": 1.01,
+            "price_curve": "logarithmic"
         },
         {
             "id": "AS3",
@@ -379,14 +479,22 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0068,
+            "volatility": 0.123,
+            "price": 1.05,
+            "price_curve": "sqrt"
         },
         {
             "comment": "--- CULTURAL STUDIES BRANCH ---",
             "id": "CA1",
             "name": "Cultural Studies",
             "max_levels": 3,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0076,
+            "volatility": 0.101,
+            "price": 1.14,
+            "price_curve": "sqrt"
         },
         {
             "id": "CA2",
@@ -402,7 +510,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0045,
+            "volatility": 0.093,
+            "price": 1.47,
+            "price_curve": "quadratic"
         },
         {
             "id": "CA3",
@@ -418,7 +530,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0039,
+            "volatility": 0.084,
+            "price": 1.96,
+            "price_curve": "quadratic"
         },
         {
             "id": "CA4",
@@ -434,7 +550,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0049,
+            "volatility": 0.093,
+            "price": 1.61,
+            "price_curve": "linear"
         },
         {
             "id": "CA5",
@@ -450,7 +570,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0047,
+            "volatility": 0.079,
+            "price": 1.71,
+            "price_curve": "exponential"
         },
         {
             "id": "CA6",
@@ -466,7 +590,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0034,
+            "volatility": 0.081,
+            "price": 1.33,
+            "price_curve": "exponential"
         },
         {
             "id": "CA7",
@@ -482,7 +610,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0048,
+            "volatility": 0.088,
+            "price": 1.59,
+            "price_curve": "linear"
         },
         {
             "id": "CA8",
@@ -498,7 +630,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0049,
+            "volatility": 0.096,
+            "price": 1.87,
+            "price_curve": "quadratic"
         },
         {
             "id": "CA9",
@@ -514,7 +650,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0035,
+            "volatility": 0.077,
+            "price": 1.65,
+            "price_curve": "linear"
         },
         {
             "id": "CA10",
@@ -530,7 +670,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0032,
+            "volatility": 0.085,
+            "price": 1.26,
+            "price_curve": "exponential"
         },
         {
             "id": "CA11",
@@ -546,7 +690,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0045,
+            "volatility": 0.074,
+            "price": 1.58,
+            "price_curve": "exponential"
         },
         {
             "id": "CA12",
@@ -562,7 +710,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0033,
+            "volatility": 0.086,
+            "price": 1.69,
+            "price_curve": "sqrt"
         },
         {
             "id": "CA13",
@@ -578,14 +730,22 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0049,
+            "volatility": 0.093,
+            "price": 1.75,
+            "price_curve": "quadratic"
         },
         {
             "comment": "--- INTELLIGENCE BRANCH ---",
             "id": "AS59",
             "name": "Intelligence Services",
             "max_levels": 11,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0038,
+            "volatility": 0.09,
+            "price": 1.5,
+            "price_curve": "exponential"
         },
         {
             "id": "AS60",
@@ -601,7 +761,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0039,
+            "volatility": 0.077,
+            "price": 1.25,
+            "price_curve": "linear"
         },
         {
             "id": "AS64",
@@ -617,7 +781,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0042,
+            "volatility": 0.077,
+            "price": 1.38,
+            "price_curve": "linear"
         },
         {
             "id": "AS61",
@@ -633,7 +801,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0044,
+            "volatility": 0.072,
+            "price": 1.25,
+            "price_curve": "linear"
         },
         {
             "id": "AS65",
@@ -649,7 +821,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0047,
+            "volatility": 0.072,
+            "price": 1.39,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS66",
@@ -665,7 +841,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0034,
+            "volatility": 0.074,
+            "price": 1.95,
+            "price_curve": "exponential"
         },
         {
             "id": "AS62",
@@ -681,7 +861,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0042,
+            "volatility": 0.077,
+            "price": 1.58,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS63",
@@ -697,7 +881,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0034,
+            "volatility": 0.073,
+            "price": 1.54,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS67",
@@ -713,7 +901,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0038,
+            "volatility": 0.096,
+            "price": 1.24,
+            "price_curve": "linear"
         },
         {
             "id": "AS68",
@@ -729,14 +921,22 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0041,
+            "volatility": 0.109,
+            "price": 1.4,
+            "price_curve": "flat"
         },
         {
             "comment": "--- CONSTRUCTION BRANCH ---",
             "id": "TS5",
             "name": "Construction",
             "max_levels": 6,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0045,
+            "volatility": 0.088,
+            "price": 1.22,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS12",
@@ -752,7 +952,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0044,
+            "volatility": 0.099,
+            "price": 1.44,
+            "price_curve": "flat"
         },
         {
             "id": "AS13",
@@ -768,7 +972,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0039,
+            "volatility": 0.096,
+            "price": 1.64,
+            "price_curve": "linear"
         },
         {
             "id": "AS14",
@@ -784,7 +992,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0043,
+            "volatility": 0.086,
+            "price": 1.21,
+            "price_curve": "linear"
         },
         {
             "id": "AS15",
@@ -807,7 +1019,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0059,
+            "volatility": 0.114,
+            "price": 1.08,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS10",
@@ -823,7 +1039,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.004,
+            "volatility": 0.096,
+            "price": 1.92,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS11",
@@ -839,7 +1059,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0038,
+            "volatility": 0.1,
+            "price": 1.41,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS16",
@@ -855,7 +1079,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0046,
+            "volatility": 0.108,
+            "price": 1.37,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS24",
@@ -871,7 +1099,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0053,
+            "volatility": 0.099,
+            "price": 1.09,
+            "price_curve": "linear"
         },
         {
             "id": "AS40",
@@ -887,7 +1119,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0079,
+            "volatility": 0.129,
+            "price": 1.11,
+            "price_curve": "linear"
         },
         {
             "id": "AS41",
@@ -903,7 +1139,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0031,
+            "volatility": 0.088,
+            "price": 1.6,
+            "price_curve": "exponential"
         },
         {
             "id": "AS42",
@@ -919,7 +1159,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0033,
+            "volatility": 0.099,
+            "price": 1.26,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS43",
@@ -935,7 +1179,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0041,
+            "volatility": 0.083,
+            "price": 1.43,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS17",
@@ -951,7 +1199,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0042,
+            "volatility": 0.116,
+            "price": 1.12,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS18",
@@ -967,7 +1219,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0031,
+            "volatility": 0.072,
+            "price": 1.73,
+            "price_curve": "exponential"
         },
         {
             "id": "WT30",
@@ -983,7 +1239,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.004,
+            "volatility": 0.098,
+            "price": 1.36,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS19",
@@ -999,7 +1259,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0045,
+            "volatility": 0.096,
+            "price": 1.34,
+            "price_curve": "linear"
         },
         {
             "id": "AS20",
@@ -1015,7 +1279,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0049,
+            "volatility": 0.117,
+            "price": 1.47,
+            "price_curve": "flat"
         },
         {
             "id": "AS21",
@@ -1031,7 +1299,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0049,
+            "volatility": 0.12,
+            "price": 1.5,
+            "price_curve": "flat"
         },
         {
             "id": "AS22",
@@ -1047,7 +1319,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0051,
+            "volatility": 0.1,
+            "price": 1.07,
+            "price_curve": "linear"
         },
         {
             "id": "AS49",
@@ -1063,14 +1339,22 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0048,
+            "volatility": 0.096,
+            "price": 1.5,
+            "price_curve": "sqrt"
         },
         {
             "comment": "--- INDUSTRY BRANCH ---",
             "id": "TS6",
             "name": "Industry",
             "max_levels": 6,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0049,
+            "volatility": 0.102,
+            "price": 1.15,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS45",
@@ -1086,7 +1370,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0041,
+            "volatility": 0.09,
+            "price": 1.64,
+            "price_curve": "linear"
         },
         {
             "id": "AS44",
@@ -1102,7 +1390,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0049,
+            "volatility": 0.074,
+            "price": 1.29,
+            "price_curve": "linear"
         },
         {
             "id": "AS56",
@@ -1118,7 +1410,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0045,
+            "volatility": 0.075,
+            "price": 1.43,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS46",
@@ -1134,7 +1430,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0044,
+            "volatility": 0.076,
+            "price": 1.71,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS57",
@@ -1150,7 +1450,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.004,
+            "volatility": 0.078,
+            "price": 1.93,
+            "price_curve": "linear"
         },
         {
             "id": "AS26",
@@ -1166,7 +1470,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0042,
+            "volatility": 0.097,
+            "price": 1.14,
+            "price_curve": "flat"
         },
         {
             "id": "AS23",
@@ -1182,7 +1490,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0047,
+            "volatility": 0.085,
+            "price": 1.49,
+            "price_curve": "linear"
         },
         {
             "id": "WT26",
@@ -1198,7 +1510,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0072,
+            "volatility": 0.128,
+            "price": 1.09,
+            "price_curve": "flat"
         },
         {
             "id": "AS50",
@@ -1214,7 +1530,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0042,
+            "volatility": 0.118,
+            "price": 1.35,
+            "price_curve": "linear"
         },
         {
             "id": "AS58",
@@ -1230,7 +1550,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0041,
+            "volatility": 0.095,
+            "price": 1.67,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS32",
@@ -1246,14 +1570,22 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0039,
+            "volatility": 0.071,
+            "price": 1.49,
+            "price_curve": "linear"
         },
         {
             "comment": "--- MILITARY SCIENCE BRANCH ---",
             "id": "TS7",
             "name": "Military Science",
             "max_levels": 6,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0058,
+            "volatility": 0.088,
+            "price": 1.12,
+            "price_curve": "flat"
         },
         {
             "id": "WT33",
@@ -1269,7 +1601,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0047,
+            "volatility": 0.102,
+            "price": 1.44,
+            "price_curve": "sqrt"
         },
         {
             "id": "WT16",
@@ -1285,7 +1621,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0045,
+            "volatility": 0.098,
+            "price": 1.39,
+            "price_curve": "sqrt"
         },
         {
             "id": "WT12",
@@ -1301,7 +1641,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.005,
+            "volatility": 0.094,
+            "price": 1.91,
+            "price_curve": "linear"
         },
         {
             "id": "WT15",
@@ -1317,7 +1661,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0034,
+            "volatility": 0.098,
+            "price": 1.83,
+            "price_curve": "quadratic"
         },
         {
             "id": "WT32",
@@ -1333,7 +1681,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0046,
+            "volatility": 0.096,
+            "price": 1.85,
+            "price_curve": "quadratic"
         },
         {
             "id": "WT29",
@@ -1349,7 +1701,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0033,
+            "volatility": 0.091,
+            "price": 1.51,
+            "price_curve": "linear"
         },
         {
             "id": "WT27",
@@ -1365,7 +1721,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0047,
+            "volatility": 0.077,
+            "price": 1.85,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS39",
@@ -1381,7 +1741,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0037,
+            "volatility": 0.095,
+            "price": 1.9,
+            "price_curve": "sqrt"
         },
         {
             "id": "WT14",
@@ -1397,7 +1761,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.003,
+            "volatility": 0.076,
+            "price": 1.46,
+            "price_curve": "linear"
         },
         {
             "id": "AS47",
@@ -1413,14 +1781,22 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0059,
+            "volatility": 0.091,
+            "price": 1.32,
+            "price_curve": "sqrt"
         },
         {
             "comment": "--- PHYSICS BRANCH ---",
             "id": "TS8",
             "name": "Physics",
             "max_levels": 8,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0044,
+            "volatility": 0.095,
+            "price": 1.46,
+            "price_curve": "linear"
         },
         {
             "id": "AS28",
@@ -1436,7 +1812,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0042,
+            "volatility": 0.119,
+            "price": 1.09,
+            "price_curve": "linear"
         },
         {
             "id": "WT21",
@@ -1452,7 +1832,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0031,
+            "volatility": 0.088,
+            "price": 1.48,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS29",
@@ -1468,7 +1852,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0049,
+            "volatility": 0.119,
+            "price": 1.06,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS30",
@@ -1484,7 +1872,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0044,
+            "volatility": 0.082,
+            "price": 1.22,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS31",
@@ -1500,7 +1892,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0059,
+            "volatility": 0.102,
+            "price": 1.36,
+            "price_curve": "quadratic"
         },
         {
             "id": "WT10",
@@ -1516,7 +1912,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0045,
+            "volatility": 0.076,
+            "price": 1.55,
+            "price_curve": "quadratic"
         },
         {
             "id": "WT11",
@@ -1532,7 +1932,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0042,
+            "volatility": 0.09,
+            "price": 1.3,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS36",
@@ -1548,7 +1952,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.004,
+            "volatility": 0.09,
+            "price": 1.46,
+            "price_curve": "quadratic"
         },
         {
             "id": "WT17",
@@ -1564,7 +1972,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0041,
+            "volatility": 0.076,
+            "price": 1.73,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS37",
@@ -1580,7 +1992,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0044,
+            "volatility": 0.097,
+            "price": 1.69,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS51_Defenses",
@@ -1596,7 +2012,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0038,
+            "volatility": 0.095,
+            "price": 1.44,
+            "price_curve": "sqrt"
         },
         {
             "id": "WT8",
@@ -1612,7 +2032,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0039,
+            "volatility": 0.087,
+            "price": 1.72,
+            "price_curve": "quadratic"
         },
         {
             "id": "WT7",
@@ -1628,7 +2052,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0039,
+            "volatility": 0.09,
+            "price": 1.61,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS35",
@@ -1644,7 +2072,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0043,
+            "volatility": 0.079,
+            "price": 1.73,
+            "price_curve": "exponential"
         },
         {
             "id": "WT16_Shield",
@@ -1660,7 +2092,11 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0037,
+            "volatility": 0.095,
+            "price": 1.8,
+            "price_curve": "quadratic"
         },
         {
             "id": "AS38",
@@ -1676,14 +2112,22 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0034,
+            "volatility": 0.076,
+            "price": 1.22,
+            "price_curve": "sqrt"
         },
         {
             "comment": "--- PLANETARY ENGINEERING BRANCH ---",
             "id": "TS9",
             "name": "Planetary Engineering",
             "max_levels": 3,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.008,
+            "volatility": 0.131,
+            "price": 1.15,
+            "price_curve": "logarithmic"
         },
         {
             "id": "AS51_Utilization",
@@ -1699,14 +2143,22 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0038,
+            "volatility": 0.089,
+            "price": 1.36,
+            "price_curve": "quadratic"
         },
         {
             "comment": "--- PSYCHOLOGY BRANCH ---",
             "id": "TS10",
             "name": "Psychology",
             "max_levels": 3,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0065,
+            "volatility": 0.112,
+            "price": 1.13,
+            "price_curve": "flat"
         },
         {
             "id": "AS48",
@@ -1722,51 +2174,83 @@
                         ]
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0058,
+            "volatility": 0.114,
+            "price": 1.44,
+            "price_curve": "sqrt"
         },
         {
             "comment": "--- XENOARCHAEOLOGY BRANCH ---",
             "id": "TS12",
             "name": "Xenoarchaeology",
             "max_levels": 1,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0057,
+            "volatility": 0.14,
+            "price": 1.14,
+            "price_curve": "logarithmic"
         },
         {
             "comment": "--- UNIQUE DISCOVERIES (Logic placeholders for artifacts found in game) ---",
             "id": "UD_1",
             "name": "Unique Discovery 1",
             "max_levels": 1,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0052,
+            "volatility": 0.112,
+            "price": 1.17,
+            "price_curve": "logarithmic"
         },
         {
             "id": "UD_2",
             "name": "Unique Discovery 2",
             "max_levels": 1,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0054,
+            "volatility": 0.123,
+            "price": 1.11,
+            "price_curve": "sqrt"
         },
         {
             "id": "UD_3",
             "name": "Unique Discovery 3",
             "max_levels": 1,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0068,
+            "volatility": 0.148,
+            "price": 1.18,
+            "price_curve": "sqrt"
         },
         {
             "id": "UD_4",
             "name": "Unique Discovery 4",
             "max_levels": 1,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0074,
+            "volatility": 0.145,
+            "price": 1.09,
+            "price_curve": "sqrt"
         },
         {
             "id": "UD_5",
             "name": "Unique Discovery 5",
             "max_levels": 1,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0063,
+            "volatility": 0.108,
+            "price": 1.17,
+            "price_curve": "logarithmic"
         },
         {
             "id": "UD_6",
             "name": "Unique Discovery 6",
             "max_levels": 1,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0058,
+            "volatility": 0.112,
+            "price": 1.13,
+            "price_curve": "sqrt"
         },
         {
             "comment": "--- ANCIENT WEAPONS & TECH ---",
@@ -1787,7 +2271,11 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0065,
+            "volatility": 0.112,
+            "price": 1.09,
+            "price_curve": "linear"
         },
         {
             "id": "WT22",
@@ -1807,7 +2295,11 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0057,
+            "volatility": 0.117,
+            "price": 1.18,
+            "price_curve": "flat"
         },
         {
             "id": "AS27",
@@ -1827,7 +2319,11 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0054,
+            "volatility": 0.112,
+            "price": 1.14,
+            "price_curve": "flat"
         },
         {
             "id": "AS52",
@@ -1847,7 +2343,11 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0052,
+            "volatility": 0.12,
+            "price": 1.11,
+            "price_curve": "logarithmic"
         },
         {
             "id": "WT18",
@@ -1867,7 +2367,11 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0052,
+            "volatility": 0.142,
+            "price": 1.08,
+            "price_curve": "sqrt"
         },
         {
             "id": "WT23",
@@ -1887,14 +2391,22 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0059,
+            "volatility": 0.081,
+            "price": 1.44,
+            "price_curve": "sqrt"
         },
         {
             "comment": "--- CRYSTALLURGY (RACIAL) ---",
             "id": "RT1",
             "name": "Crystallurgy (Racial Trait)",
             "max_levels": 1,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0061,
+            "volatility": 0.1,
+            "price": 1.07,
+            "price_curve": "logarithmic"
         },
         {
             "id": "AS4",
@@ -1907,7 +2419,11 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0047,
+            "volatility": 0.099,
+            "price": 1.54,
+            "price_curve": "exponential"
         },
         {
             "id": "WT1",
@@ -1920,14 +2436,22 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0046,
+            "volatility": 0.097,
+            "price": 1.59,
+            "price_curve": "quadratic"
         },
         {
             "comment": "--- INTERDIMENSIONAL (RACIAL) ---",
             "id": "RT2",
             "name": "Interdimensional (Racial Trait)",
             "max_levels": 1,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0063,
+            "volatility": 0.101,
+            "price": 1.07,
+            "price_curve": "logarithmic"
         },
         {
             "id": "AS5",
@@ -1940,7 +2464,11 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0044,
+            "volatility": 0.095,
+            "price": 1.94,
+            "price_curve": "exponential"
         },
         {
             "id": "WT2",
@@ -1953,14 +2481,22 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0041,
+            "volatility": 0.097,
+            "price": 1.67,
+            "price_curve": "linear"
         },
         {
             "comment": "--- ORGANIC MANIPULATION (RACIAL) ---",
             "id": "RT3",
             "name": "Organic Manipulation (Racial Trait)",
             "max_levels": 1,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0053,
+            "volatility": 0.121,
+            "price": 1.17,
+            "price_curve": "flat"
         },
         {
             "id": "AS6",
@@ -1973,7 +2509,11 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0031,
+            "volatility": 0.081,
+            "price": 1.37,
+            "price_curve": "quadratic"
         },
         {
             "id": "WT3",
@@ -1986,14 +2526,22 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0037,
+            "volatility": 0.096,
+            "price": 1.42,
+            "price_curve": "quadratic"
         },
         {
             "comment": "--- PSYCHIC (RACIAL) ---",
             "id": "RT4",
             "name": "Psychic (Racial Trait)",
             "max_levels": 1,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0058,
+            "volatility": 0.104,
+            "price": 1.0,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS7",
@@ -2006,7 +2554,11 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0031,
+            "volatility": 0.099,
+            "price": 1.38,
+            "price_curve": "linear"
         },
         {
             "id": "WT4",
@@ -2019,14 +2571,22 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0046,
+            "volatility": 0.09,
+            "price": 1.8,
+            "price_curve": "sqrt"
         },
         {
             "comment": "--- DEEPLY RELIGIOUS (RACIAL) ---",
             "id": "RT5",
             "name": "Deeply Religious (Racial Trait)",
             "max_levels": 1,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0056,
+            "volatility": 0.101,
+            "price": 1.03,
+            "price_curve": "flat"
         },
         {
             "id": "AS8",
@@ -2039,14 +2599,22 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0039,
+            "volatility": 0.073,
+            "price": 1.96,
+            "price_curve": "quadratic"
         },
         {
             "comment": "--- TEMPORAL KNOWLEDGE (RACIAL) ---",
             "id": "RT6",
             "name": "Temporal Knowledge (Racial Trait)",
             "max_levels": 1,
-            "requirements": []
+            "requirements": [],
+            "base_decay": 0.0071,
+            "volatility": 0.138,
+            "price": 1.03,
+            "price_curve": "sqrt"
         },
         {
             "id": "AS9",
@@ -2059,7 +2627,11 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0049,
+            "volatility": 0.092,
+            "price": 1.82,
+            "price_curve": "sqrt"
         },
         {
             "id": "WT5",
@@ -2072,7 +2644,11 @@
                         "level": 1
                     }
                 ]
-            ]
+            ],
+            "base_decay": 0.0049,
+            "volatility": 0.073,
+            "price": 1.22,
+            "price_curve": "quadratic"
         }
     ]
 }

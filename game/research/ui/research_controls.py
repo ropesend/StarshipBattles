@@ -29,8 +29,9 @@ class ResearchControlPanel:
     """
 
     def __init__(self, rect: pygame.Rect, manager: pygame_gui.UIManager,
-                 tracker: ResearchTracker,
-                 on_next_turn: Callable, on_close: Callable, on_reset: Callable):
+                 tracker: ResearchTracker, tech_tree: TechTree,
+                 on_next_turn: Callable, on_close: Callable, on_reset: Callable,
+                 on_auto_spread_changed: Callable = None):
         """
         Initialize the control panel.
 
@@ -38,16 +39,20 @@ class ResearchControlPanel:
             rect: Rectangle for the panel area
             manager: pygame_gui UI manager
             tracker: Research tracker instance
+            tech_tree: Tech tree for auto-spread calculations
             on_next_turn: Callback for Next Turn button
             on_close: Callback for Close button
             on_reset: Callback for Reset button
+            on_auto_spread_changed: Callback when auto-spread is toggled
         """
         self.rect = rect
         self.manager = manager
         self.tracker = tracker
+        self.tech_tree = tech_tree
         self.on_next_turn = on_next_turn
         self.on_close = on_close
         self.on_reset = on_reset
+        self.on_auto_spread_changed = on_auto_spread_changed
 
         self._selected_node: Optional[TechNode] = None
 
@@ -96,8 +101,16 @@ class ResearchControlPanel:
         )
         y += 25
 
+        # Auto-Spread toggle button
+        self.btn_auto_spread = UIButton(
+            relative_rect=pygame.Rect(x, y, width, 30),
+            text="Auto-Spread: OFF",
+            manager=self.manager
+        )
+        y += 35
+
         # Separator
-        y += 10
+        y += 5
 
         # --- Node Detail Section ---
         UILabel(
@@ -138,6 +151,13 @@ class ResearchControlPanel:
         self.lbl_node_volatility = UILabel(
             relative_rect=pygame.Rect(x, y, width, 20),
             text="Volatility: -",
+            manager=self.manager
+        )
+        y += 22
+
+        self.lbl_node_price = UILabel(
+            relative_rect=pygame.Rect(x, y, width, 20),
+            text="Price: -",
             manager=self.manager
         )
         y += 22
@@ -236,6 +256,9 @@ class ResearchControlPanel:
             elif event.ui_element == self.btn_close:
                 self.on_close()
                 return True
+            elif event.ui_element == self.btn_auto_spread:
+                self._toggle_auto_spread()
+                return True
 
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
             if event.ui_element == self.slider_budget:
@@ -277,6 +300,13 @@ class ResearchControlPanel:
         self.lbl_node_chance.set_text(f"Chance: {state.current_chance * 100:.1f}%")
         self.lbl_node_decay.set_text(f"Decay: {node.base_decay * 100:.1f}% / turn")
         self.lbl_node_volatility.set_text(f"Volatility: {node.volatility:.2f}")
+        # Show effective price for next level
+        target_level = state.current_level + 1
+        if target_level <= node.max_levels:
+            eff_price = node.get_effective_price(target_level)
+            self.lbl_node_price.set_text(f"Price: {eff_price:.1f}x ({node.price_curve})")
+        else:
+            self.lbl_node_price.set_text("Price: - (maxed)")
         self.lbl_node_status.set_text(f"Status: {status.capitalize()}")
 
         # Enable allocation slider for available nodes
@@ -298,6 +328,7 @@ class ResearchControlPanel:
         self.lbl_node_chance.set_text("Chance: -")
         self.lbl_node_decay.set_text("Decay: -")
         self.lbl_node_volatility.set_text("Volatility: -")
+        self.lbl_node_price.set_text("Price: -")
         self.lbl_node_status.set_text("Status: -")
         self.slider_allocation.disable()
         self.slider_allocation.set_current_value(0)
@@ -309,6 +340,27 @@ class ResearchControlPanel:
         budget = self.tracker.rp_budget
         self.lbl_allocated.set_text(f"Allocated: {allocated} / {budget}")
         self.lbl_budget_value.set_text(str(budget))
+
+    def _toggle_auto_spread(self):
+        """Toggle auto-spread mode and apply if enabled."""
+        self.tracker.auto_spread_enabled = not self.tracker.auto_spread_enabled
+        self._update_auto_spread_button()
+
+        if self.tracker.auto_spread_enabled:
+            # Apply spread immediately when enabled
+            self.tracker.spread_rp_evenly(self.tech_tree)
+            self.update_budget_display()
+
+        # Notify callback
+        if self.on_auto_spread_changed:
+            self.on_auto_spread_changed(self.tracker.auto_spread_enabled)
+
+    def _update_auto_spread_button(self):
+        """Update auto-spread button text based on current state."""
+        if self.tracker.auto_spread_enabled:
+            self.btn_auto_spread.set_text("Auto-Spread: ON")
+        else:
+            self.btn_auto_spread.set_text("Auto-Spread: OFF")
 
     def _update_allocation_slider_range(self):
         """Update allocation slider max based on available RP."""
@@ -371,11 +423,11 @@ class ResearchControlPanel:
         else:
             new_html = log_text + "<br><br>" + current_html
 
-        # Limit log length (keep last ~50 turns worth)
-        if new_html.count("<b>Turn") > 50:
+        # Limit log length (keep last 5 turns for performance)
+        if new_html.count("<b>Turn") > 5:
             # Truncate old entries
             parts = new_html.split("<br><br>")
-            new_html = "<br><br>".join(parts[:50])
+            new_html = "<br><br>".join(parts[:5])
 
         self.log_box.html_text = new_html
         self.log_box.rebuild()

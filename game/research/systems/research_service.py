@@ -27,13 +27,15 @@ class ResearchService:
     MAX_CHANCE = 0.95  # 95% cap on breakthrough probability
 
     @classmethod
-    def process_turn(cls, tech_tree: TechTree, tracker: ResearchTracker) -> List[Dict[str, Any]]:
+    def process_turn(cls, tech_tree: TechTree, tracker: ResearchTracker,
+                     tech_levels: Dict[str, int] = None) -> List[Dict[str, Any]]:
         """
         Process one turn of research for a session.
 
         Args:
             tech_tree: The tech tree structure
             tracker: The research tracker with current state
+            tech_levels: Optional pre-computed tech levels (for performance)
 
         Returns:
             List of events:
@@ -50,7 +52,11 @@ class ResearchService:
         rng = random.Random()  # Use fresh RNG for rolls (non-deterministic)
 
         # Get current tech levels for status checks
-        tech_levels = tracker.get_all_tech_levels()
+        if tech_levels is None:
+            tech_levels = tracker.get_all_tech_levels()
+        else:
+            # Make a copy since we modify it during processing
+            tech_levels = dict(tech_levels)
 
         # Increment turn counter
         tracker.increment_turn()
@@ -106,8 +112,12 @@ class ResearchService:
                     })
                 continue
 
-            # 2. Investment: Added_Chance = Volatility * ln(1 + Invested_RP)
-            added_chance = node.volatility * math.log(1 + state.rp_allocation)
+            # 2. Investment: Added_Chance = Volatility * ln(1 + Effective_RP)
+            # Apply price multiplier based on target level
+            target_level = state.current_level + 1
+            effective_price = node.get_effective_price(target_level)
+            effective_rp = state.rp_allocation / effective_price
+            added_chance = node.volatility * math.log(1 + effective_rp)
 
             # 3. Total: Current_Chance += Added_Chance (cap at 95%)
             chance_before_investment = state.current_chance
@@ -133,6 +143,8 @@ class ResearchService:
                         'chance': final_chance,
                         'roll': roll,
                         'rp_invested': state.rp_allocation,
+                        'effective_price': effective_price,
+                        'effective_rp': effective_rp,
                         'turn': turn_num
                     }
                 })
@@ -156,6 +168,8 @@ class ResearchService:
                         'chance': state.current_chance,
                         'roll': roll,
                         'rp_invested': state.rp_allocation,
+                        'effective_price': effective_price,
+                        'effective_rp': effective_rp,
                         'added_chance': added_chance,
                         'decay_applied': decay_applied,
                         'turn': turn_num

@@ -30,7 +30,7 @@ class ResearchRenderer:
     COLOR_LINE_MET = (80, 120, 80)     # Met dependency lines
     COLOR_TEXT = (220, 220, 230)       # Node text
     COLOR_CHANCE = (255, 220, 100)     # Chance percentage
-    COLOR_ALLOCATION = (100, 200, 255) # RP allocation indicator
+    COLOR_ALLOCATION = (255, 255, 0)   # RP allocation - bright yellow for visibility
 
     def __init__(self, tech_tree: TechTree, tracker: ResearchTracker,
                  node_positions: Dict[str, Tuple[float, float]],
@@ -112,7 +112,6 @@ class ResearchRenderer:
 
                 # Check if prereq is met (for line color)
                 prereq_level = tech_levels.get(prereq_id, 0)
-                state = self.tracker.get_state(node.id)
 
                 # Find the requirement for this prereq
                 required_level = 1
@@ -227,22 +226,25 @@ class ResearchRenderer:
         level_text = f"Lv {state.current_level}/{node.max_levels}"
         level_surf = small_font.render(level_text, True, self.COLOR_TEXT)
         screen.blit(level_surf, (rect.left + padding, y_offset))
-        y_offset += level_surf.get_height() + 2
 
-        # Chance text (only for available nodes with accumulated chance)
-        if status == 'available' and state.current_chance > 0:
+        # Breakthrough chance (right side of level row) - always show for available nodes
+        if status == 'available':
             chance_pct = state.current_chance * 100
             chance_text = f"{chance_pct:.1f}%"
             chance_surf = small_font.render(chance_text, True, self.COLOR_CHANCE)
-            screen.blit(chance_surf, (rect.left + padding, y_offset))
+            chance_x = rect.right - chance_surf.get_width() - padding
+            screen.blit(chance_surf, (chance_x, y_offset))
 
-        # RP allocation (bottom right)
-        if state.rp_allocation > 0:
-            rp_text = f"{state.rp_allocation} RP"
-            rp_surf = small_font.render(rp_text, True, self.COLOR_ALLOCATION)
-            rp_x = rect.right - rp_surf.get_width() - padding
-            rp_y = rect.bottom - rp_surf.get_height() - padding - int(6 * self.camera.zoom)
-            screen.blit(rp_surf, (rp_x, rp_y))
+        y_offset += level_surf.get_height() + 2
+
+        # RP allocation (always show, bottom of node)
+        rp_text = f"{state.rp_allocation} RP"
+        # Use different color based on whether RP is allocated
+        rp_color = self.COLOR_ALLOCATION if state.rp_allocation > 0 else (160, 160, 170)
+        rp_surf = small_font.render(rp_text, True, rp_color)
+        rp_x = rect.left + padding
+        rp_y = rect.bottom - rp_surf.get_height() - padding - int(4 * self.camera.zoom)
+        screen.blit(rp_surf, (rp_x, rp_y))
 
     def _is_visible(self, screen_pos: Tuple[float, float], margin: float = 0) -> bool:
         """
