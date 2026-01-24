@@ -1,81 +1,78 @@
-# PROJ-12: Performance Optimization
-
-> **WORKING ON THIS PROJECT:**
-> - Run `python Projects/scripts/current_task.py PROJ-12` to see what to do next
-> - Open the phase checklist file for your current phase
-> - Check off tasks as you complete them
-> - Update Current State before stopping work
-
-## Quick Status
-| Phase | Status | Checklist |
-|-------|--------|-----------|
-| 1. Battle Loop Hot Path | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. AI & Spatial Queries | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Component & Stats | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-
-## Current State
-**Last Updated:** 2026-01-24 05:25
-**Active Phase:** Phase 1
-**Last Action:** Project created from review findings
-**Next Action:** Begin Phase 1 - Battle loop optimization
-**Blockers:** Should complete PROJ-10, PROJ-11 first (refactoring may change hot paths)
+# PROJ-12: God Class Decomposition
 
 ## Overview
-This project addresses **performance issues** that will become bottlenecks as battles scale (more ships, larger galaxies). Focus is on hot paths in the battle simulation loop.
+**Status:** Planning
+**Created:** 2026-01-24
+**Source:** Review 2026-01-24_general_full-codebase-maintainability
 
-**Total Findings:** 17 (Critical: 2, Major: 6, Minor: 9)
-
-**Dependencies:** Best to complete after PROJ-11 (architecture changes may affect these areas)
+This project addresses the "god class" anti-pattern identified across multiple layers. These large, monolithic classes with too many responsibilities are major blockers to maintainability and testability.
 
 ## Goals
-### Phase 1: Battle Loop Hot Path (CRITICAL)
-- Fix spatial grid rebuild every frame (PERF-02)
-- Fix inefficient type check in projectile collision (PERF-01)
-- Fix projectile removal pattern (PERF-08)
-- Fix grid clear method (PERF-12)
-
-### Phase 2: AI & Spatial Queries (MAJOR)
-- Consolidate multiple spatial queries per AI (PERF-03)
-- Cache AI query results within update cycle
-- Optimize target evaluation
-
-### Phase 3: Component & Stats (MAJOR)
-- Fix full component iteration in stat calculation (PERF-04)
-- Reduce deep copy on component creation (PERF-05)
-- Cache ability lookups (PERF-06, PERF-10)
-- Cache ability totals (PERF-14)
+1. Decompose Ship class (750+ lines) into focused components
+2. Decompose TurnEngine class (737 lines) into specialized services
+3. Decompose RaceSetupScreen (2,325 lines) into reusable UI components
+4. Improve testability of all decomposed classes
+5. Maintain backward compatibility during transition
 
 ## Scope
-**In:**
-- `game/simulation/systems/battle_engine.py` - Main loop
-- `game/simulation/projectile_manager.py` - Collision detection
-- `game/engine/spatial.py` - Spatial grid
-- `game/ai/controller.py` - AI queries
-- `game/simulation/entities/ship_stats.py` - Stat calculation
-- `game/simulation/components/component.py` - Component creation
 
-**Out:**
-- Security fixes (PROJ-10)
-- Architecture refactoring (PROJ-11)
-- Non-hot-path code optimization
+### In Scope
+- CQ-003 / AR-004: Ship class decomposition
+- STRAT-003: TurnEngine decomposition
+- AR-008: RaceSetupScreen decomposition
+- CQ-002: fire_weapons() method extraction
+- SIM-02: Ship-Component coupling reduction
+- SIM-09: Ability aggregation consolidation
+- AR-003: AIController interface extraction
 
-## Key Files
-| Component | File Path |
-|-----------|-----------|
-| Battle Engine | `game/simulation/systems/battle_engine.py` |
-| Projectile Manager | `game/simulation/projectile_manager.py` |
-| Spatial Grid | `game/engine/spatial.py` |
-| AI Controller | `game/ai/controller.py` |
-| Ship Stats | `game/simulation/entities/ship_stats.py` |
+### Out of Scope
+- Layer separation (covered in PROJ-11 - should be done first)
+- Error handling (covered in PROJ-10)
+- UI architectural patterns beyond RaceSetupScreen
+
+## Success Criteria
+- [ ] Ship class < 400 lines
+- [ ] TurnEngine class < 400 lines
+- [ ] RaceSetupScreen < 500 lines with extracted components
+- [ ] All decomposed classes have unit tests
+- [ ] No functionality regression
+- [ ] All tests pass
+
+## Phases
+
+### Phase 1: Ship Combat Extraction
+Extract combat logic from Ship class into ShipCombatEngine.
+
+### Phase 2: Ship Component Manager
+Extract component management into ShipComponentManager.
+
+### Phase 3: TurnEngine Decomposition
+Split TurnEngine into FleetMovementEngine, CombatResolutionEngine, ProductionEngine.
+
+### Phase 4: RaceSetupScreen Components
+Extract RacePreviewRenderer, RaceValidator, RaceBrowserDialog.
+
+### Phase 5: AIController Interface
+Create ShipAIInterface and decouple AI from Ship internals.
+
+## Dependencies
+- **PROJ-11** (Architecture Layer Separation) should be completed first
+- Phase 5 depends on Phase 1-2 completion
+
+## Risks
+- **High:** Ship class changes affect many parts of the codebase
+- **Mitigation:** Use facade pattern - keep Ship as thin wrapper during transition
+- **Medium:** Breaking changes to serialization
+- **Mitigation:** Maintain to_dict/from_dict compatibility
 
 ## Related Documents
-- [design.md](design.md) - Performance analysis
-- [decisions.md](decisions.md) - Decisions log
-- [Review Report](../../Reviews/results/2026-01-24_general_maintainability-extensibility-health/report.md)
-
-## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
-- [ ] Battle with 60+ ships runs at 60 FPS
-- [ ] Profile shows no obvious bottlenecks
-- [ ] Audit passed
+- [Design Document](design.md)
+- [Decisions Log](decisions.md)
+- [Phase 1 Checklist](phase_1_checklist.md)
+- [Phase 2 Checklist](phase_2_checklist.md)
+- [Phase 3 Checklist](phase_3_checklist.md)
+- [Phase 4 Checklist](phase_4_checklist.md)
+- [Phase 5 Checklist](phase_5_checklist.md)
+- [Source Review - Code Quality](../../Reviews/results/2026-01-24_general_full-codebase-maintainability/findings/code_quality_report.md)
+- [Source Review - Simulation](../../Reviews/results/2026-01-24_general_full-codebase-maintainability/findings/simulation_specialist_report.md)
+- [Source Review - Strategy](../../Reviews/results/2026-01-24_general_full-codebase-maintainability/findings/strategy_specialist_report.md)

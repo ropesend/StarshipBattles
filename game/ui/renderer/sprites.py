@@ -143,9 +143,8 @@ class SpriteManager:
             log_info(f"Loaded Atlas: {path} ({self.atlas.get_width()}x{self.atlas.get_height()})")
 
         except Exception as e:
-            log_error(f"Exception loading atlas: {e}")
             import traceback
-            traceback.print_exc()
+            log_error(f"Exception loading atlas: {e}\n{traceback.format_exc()}")
 
     def _slice_sprites(self):
         self.sprites = []

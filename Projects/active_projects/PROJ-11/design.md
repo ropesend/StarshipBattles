@@ -1,88 +1,212 @@
 # PROJ-11: Design Document
 
-> **THIS IS A REFERENCE DOCUMENT**
-> Do not modify during implementation. Refer to this for architecture decisions.
-> If you discover something that contradicts this document, add a note to decisions.md.
+## Target Architecture
 
-## Source Review
-- **Review:** [2026-01-24_general_maintainability-extensibility-health](../../Reviews/results/2026-01-24_general_maintainability-extensibility-health/)
-- **Type:** General Review (Comprehensive)
-- **Date:** 2026-01-24
-- **Report:** [View Full Report](../../Reviews/results/2026-01-24_general_maintainability-extensibility-health/report.md)
-
-## Initial Analysis
-This project addresses architectural issues identified in the review:
-- **Critical:** 5 issues (circular dependencies, god objects)
-- **Major:** 13 issues (layer coupling, SRP violations)
-- **Selected for remediation:** 18
-
-## Architecture Principles
-
-### 1. Dependency Direction
-Dependencies should flow: UI → Business Logic → Core
-- UI can depend on facades/viewmodels
-- Business logic (Strategy, Simulation) depends on Core
-- Core depends on nothing
-
-### 2. Single Responsibility
-Each class should have one reason to change:
-- UI classes: layout OR state OR events (not all three)
-- Entity classes: coordination, not implementation
-- Service classes: one domain concern
-
-### 3. Interface Segregation
-Clients should not depend on interfaces they don't use:
-- Create specific facades for UI needs
-- Create specific DTOs for data transfer
-- Avoid "god interfaces"
-
-## Key Patterns to Implement
-
-### Dependency Injection Container
-```python
-# game/core/container.py
-class Container:
-    _services = {}
-
-    @classmethod
-    def register(cls, interface, implementation):
-        cls._services[interface] = implementation
-
-    @classmethod
-    def resolve(cls, interface):
-        return cls._services[interface]
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        UI LAYER                              │
+│   game/ui/, ui/                                              │
+│   - pygame dependency OK here                                │
+│   - Uses ViewModels/DTOs, not raw simulation entities        │
+├─────────────────────────────────────────────────────────────┤
+│                     STRATEGY LAYER                           │
+│   game/strategy/                                             │
+│   - No pygame, no UI imports                                 │
+│   - Uses interfaces to call simulation                       │
+├─────────────────────────────────────────────────────────────┤
+│                    SIMULATION LAYER                          │
+│   game/simulation/, game/engine/                             │
+│   - No pygame, no strategy imports                           │
+│   - Pure game logic                                          │
+├─────────────────────────────────────────────────────────────┤
+│                       CORE LAYER                             │
+│   game/core/                                                 │
+│   - Shared utilities (math, logging, config)                 │
+│   - No business logic                                        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### GameFacade Pattern
-```python
-# game/ui/facades/battle_facade.py
-class BattleFacade:
-    def __init__(self, engine: BattleEngine):
-        self._engine = engine
+## Phase 1: Core Math Abstraction
 
-    def get_ships(self) -> List[ShipViewModel]:
-        return [ShipViewModel.from_ship(s) for s in self._engine.ships]
+### New File: `game/core/math.py`
+```python
+"""
+Core math utilities for Starship Battles.
+Provides framework-agnostic Vector2 implementation.
+"""
+from __future__ import annotations
+import math
+from typing import Tuple, Union
+
+class Vector2:
+    """2D vector class compatible with pygame.math.Vector2 API."""
+
+    __slots__ = ('x', 'y')
+
+    def __init__(self, x: float = 0, y: float = 0):
+        self.x = float(x)
+        self.y = float(y)
+
+    def __add__(self, other: 'Vector2') -> 'Vector2':
+        return Vector2(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other: 'Vector2') -> 'Vector2':
+        return Vector2(self.x - other.x, self.y - other.y)
+
+    def __mul__(self, scalar: float) -> 'Vector2':
+        return Vector2(self.x * scalar, self.y * scalar)
+
+    def __rmul__(self, scalar: float) -> 'Vector2':
+        return self.__mul__(scalar)
+
+    def __truediv__(self, scalar: float) -> 'Vector2':
+        return Vector2(self.x / scalar, self.y / scalar)
+
+    def __neg__(self) -> 'Vector2':
+        return Vector2(-self.x, -self.y)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Vector2):
+            return False
+        return self.x == other.x and self.y == other.y
+
+    def __repr__(self) -> str:
+        return f"Vector2({self.x}, {self.y})"
+
+    def length(self) -> float:
+        return math.sqrt(self.x * self.x + self.y * self.y)
+
+    def length_squared(self) -> float:
+        return self.x * self.x + self.y * self.y
+
+    def normalize(self) -> 'Vector2':
+        length = self.length()
+        if length == 0:
+            return Vector2(0, 0)
+        return Vector2(self.x / length, self.y / length)
+
+    def normalize_ip(self) -> None:
+        """Normalize in place."""
+        length = self.length()
+        if length != 0:
+            self.x /= length
+            self.y /= length
+
+    def dot(self, other: 'Vector2') -> float:
+        return self.x * other.x + self.y * other.y
+
+    def distance_to(self, other: 'Vector2') -> float:
+        return (self - other).length()
+
+    def distance_squared_to(self, other: 'Vector2') -> float:
+        return (self - other).length_squared()
+
+    def rotate(self, angle_degrees: float) -> 'Vector2':
+        """Rotate vector by angle in degrees."""
+        angle_rad = math.radians(angle_degrees)
+        cos_a = math.cos(angle_rad)
+        sin_a = math.sin(angle_rad)
+        return Vector2(
+            self.x * cos_a - self.y * sin_a,
+            self.x * sin_a + self.y * cos_a
+        )
+
+    def angle_to(self, other: 'Vector2') -> float:
+        """Return angle to other vector in degrees."""
+        return math.degrees(math.atan2(other.y - self.y, other.x - self.x))
+
+    def copy(self) -> 'Vector2':
+        return Vector2(self.x, self.y)
+
+    def as_tuple(self) -> Tuple[float, float]:
+        return (self.x, self.y)
+
+    def as_int_tuple(self) -> Tuple[int, int]:
+        return (int(self.x), int(self.y))
 ```
 
-### Component Extraction Pattern
-```python
-# Before: God object
-class StrategyInterface:
-    # 885 lines of everything
+## Phase 2: Files to Modify
 
-# After: Composed components
-class StrategyInterface:
-    def __init__(self):
-        self.layout = StrategyUILayout()
-        self.state = StrategyUIState()
-        self.events = StrategyUIEventHandler(self.state)
-        self.windows = StrategyUIWindowManager()
+### Simulation Layer (Remove pygame)
+| File | Current Usage | Replacement |
+|------|---------------|-------------|
+| `game/simulation/entities/ship.py` | `pygame.math.Vector2` | `game.core.math.Vector2` |
+| `game/simulation/entities/ship_combat.py` | `pygame.math.Vector2` | `game.core.math.Vector2` |
+| `game/simulation/entities/ship_formation.py` | `pygame.math.Vector2` | `game.core.math.Vector2` |
+| `game/simulation/entities/ship_physics.py` | `pygame.math.Vector2` | `game.core.math.Vector2` |
+| `game/simulation/entities/projectile.py` | `pygame.math.Vector2` | `game.core.math.Vector2` |
+| `game/simulation/battle_state.py` | `pygame.math.Vector2` | `game.core.math.Vector2` |
+| `game/simulation/systems/battle_engine.py` | `pygame.math.Vector2` | `game.core.math.Vector2` |
+| `game/simulation/systems/persistence.py` | `pygame.math.Vector2` | `game.core.math.Vector2` |
+| `game/simulation/projectile_manager.py` | `pygame.math.Vector2` | `game.core.math.Vector2` |
+| `game/simulation/ship_theme.py` | `pygame` (if any) | Remove |
+| `game/engine/physics.py` | `pygame.math.Vector2` | `game.core.math.Vector2` |
+| `game/engine/collision.py` | `pygame.math.Vector2` | `game.core.math.Vector2` |
+| `game/engine/spatial.py` | `pygame.math.Vector2` | `game.core.math.Vector2` |
+
+## Phase 3: Strategy-UI Separation
+
+### Move Functions to Strategy Services
+| Current Location | Function | New Location |
+|------------------|----------|--------------|
+| `game/ui/screens/fleet_report_filters.py` | `has_warp_capability()` | `game/strategy/services/ship_stats_service.py` |
+| `game/ui/screens/fleet_report_filters.py` | Other fleet filters | `game/strategy/services/fleet_query_service.py` |
+
+### Update Imports
+| File | Change |
+|------|--------|
+| `game/strategy/data/fleet.py` | Import from strategy services, not UI |
+
+### Move Constants to Core
+| Current Location | Constant | New Location |
+|------------------|----------|--------------|
+| `game/strategy/data/planet.py` | `PLANET_RESOURCES` | `game/core/constants.py` |
+
+## Phase 4: Interface Contracts
+
+### IBattleResolver Interface
+```python
+# game/strategy/interfaces/battle_resolver.py
+from abc import ABC, abstractmethod
+from typing import List, Tuple
+
+class IBattleResolver(ABC):
+    @abstractmethod
+    def resolve_battle(
+        self,
+        attacker_ships: List[dict],
+        defender_ships: List[dict],
+        seed: int
+    ) -> 'BattleResult':
+        """Resolve a battle between two fleets."""
+        pass
+
+class BattleResult:
+    """Data transfer object for battle results."""
+    winner: str  # 'attacker', 'defender', 'draw'
+    attacker_survivors: List[dict]
+    defender_survivors: List[dict]
+    attacker_losses: List[dict]
+    defender_losses: List[dict]
 ```
 
-## Dependencies & Risks
-1. **Risk: Breaking changes** - Mitigation: Small incremental changes, test after each
-2. **Risk: Regression bugs** - Mitigation: Comprehensive test coverage before refactoring
-3. **Dependency: PROJ-10** - Complete security fixes first (don't block on refactoring)
+### Simulation Adapter
+```python
+# game/strategy/adapters/simulation_adapter.py
+from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+from game.simulation.battle_controller import BattleController
 
-## Design Decisions
-See [decisions.md](decisions.md) for the full log with rationale.
+class SimulationBattleResolver(IBattleResolver):
+    """Adapter that uses simulation layer for battle resolution."""
+
+    def resolve_battle(self, attacker_ships, defender_ships, seed) -> BattleResult:
+        # Convert to simulation format, run battle, convert results back
+        pass
+```
+
+## Testing Strategy
+1. Create comprehensive Vector2 unit tests
+2. Run all simulation tests with new Vector2
+3. Test headless simulation execution
+4. Test strategy layer without UI imports
+5. Integration tests for layer boundaries

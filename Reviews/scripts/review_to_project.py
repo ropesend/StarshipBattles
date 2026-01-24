@@ -277,34 +277,143 @@ Before creating the project, consider:
 '''
 
 
+def normalize_severity(severity: str) -> str:
+    """Normalize severity string to standard values."""
+    severity = severity.strip().lower()
+    if severity == 'critical':
+        return 'Critical'
+    elif severity in ('major', 'high'):
+        # 'High' is often used as a priority/effort indicator, map to Major
+        return 'Major'
+    elif severity in ('minor', 'medium', 'low'):
+        return 'Minor'
+    elif severity in ('info', 'information'):
+        return 'Info'
+    return 'Unknown'
+
+
+def normalize_effort(effort: str) -> str:
+    """Normalize effort string to standard values."""
+    effort = effort.strip().lower()
+    if effort in ('simple', 'low', 'easy'):
+        return 'Simple'
+    elif effort in ('medium', 'moderate'):
+        return 'Medium'
+    elif effort in ('high', 'complex', 'hard', 'major', 'critical'):
+        return 'Complex'
+    return effort.title()  # Return as-is with title case
+
+
+def extract_findings_section(content: str) -> str:
+    """Extract the 'Findings by Category' or 'Findings by Severity' section from report.
+
+    This avoids parsing 'Top 10' or 'Quick Wins' sections which have different formats.
+    """
+    # Look for "## Findings by" section
+    section_match = re.search(
+        r'## Findings by (Category|Severity)\s*\n',
+        content
+    )
+    if not section_match:
+        return content  # Fall back to full content
+
+    start = section_match.end()
+
+    # Find the end - next ## section that's not a subsection (###)
+    # We want to stop at "## Module-Specific", "## Quick Wins", "## Recommended", etc.
+    end_match = re.search(r'\n## [A-Z]', content[start:])
+    if end_match:
+        end = start + end_match.start()
+    else:
+        end = len(content)
+
+    return content[start:end]
+
+
 def parse_report(report_path: Path) -> dict:
     """Parse the review report to extract findings.
 
     Supports multiple formats:
-    1. Standard table format: | ID | Title | `location` | Effort |
-    2. Priority list format: Numbered recommendations with module/area names
-    3. Top 10 table format: | Rank | Area | Coverage | Critical Findings | Priority |
+    1. 5-column table: | ID | Severity | Title | Location | Effort |
+    2. 4-column table: | ID | Title | `location` | Effort | (with section-based severity)
+    3. Top 10 / Priority tables (fallback)
+    4. Numbered recommendations (fallback)
     """
     content = report_path.read_text(encoding='utf-8')
-
     findings = []
 
-    # Format 1: Standard findings table (| ID | Title | `location` | Effort |)
-    table_pattern = re.compile(
-        r'\|\s*([A-Z]+-\d+)\s*\|\s*([^|]+)\|\s*`([^`]+)`\s*\|\s*(\w+)\s*\|'
+    # First, try to extract findings from the dedicated "Findings by" section
+    findings_section = extract_findings_section(content)
+
+    # Format 1 (PRIMARY): 5-column findings table from compile_findings.py
+    # | ID | Severity | Title | Location | Effort |
+    table_5col_pattern = re.compile(
+        r'\|\s*([A-Z]+-\d+)\s*\|'           # ID: AR-01, MOD-SIM-04, etc.
+        r'\s*([^|]+)\|'                      # Severity: Critical, Major, etc.
+        r'\s*([^|]+)\|'                      # Title: description
+        r'\s*([^|]+)\|'                      # Location: file.py:line or file.py
+        r'\s*([^|]+)\|',                     # Effort: Simple, Medium, High, etc.
+        re.IGNORECASE
     )
 
-    for match in table_pattern.finditer(content):
+    for match in table_5col_pattern.finditer(findings_section):
+        finding_id = match.group(1).strip()
+        severity_raw = match.group(2).strip()
+        title = match.group(3).strip()
+        location = match.group(4).strip()
+        effort_raw = match.group(5).strip()
+
+        # Skip table header rows
+        if finding_id.upper() == 'ID' or severity_raw.lower() == 'severity':
+            continue
+
         findings.append({
-            'id': match.group(1).strip(),
-            'title': match.group(2).strip(),
-            'location': match.group(3).strip(),
-            'effort': match.group(4).strip(),
+            'id': finding_id,
+            'severity': normalize_severity(severity_raw),
+            'title': title,
+            'location': location.strip('`'),  # Remove backticks if present
+            'effort': normalize_effort(effort_raw),
         })
 
-    # Format 2: Top 10 / Priority table (| Rank | Area | Coverage | ... | Priority |)
+    # Format 2 (FALLBACK): 4-column table (older format)
+    # | ID | Title | `location` | Effort |
     if not findings:
-        # Try to parse "Top 10" style tables
+        table_4col_pattern = re.compile(
+            r'\|\s*([A-Z]+-\d+)\s*\|\s*([^|]+)\|\s*`?([^|`]+)`?\s*\|\s*(\w+)\s*\|'
+        )
+
+        for match in table_4col_pattern.finditer(findings_section):
+            finding_id = match.group(1).strip()
+            title = match.group(2).strip()
+            location = match.group(3).strip()
+            effort = match.group(4).strip()
+
+            # Skip table header rows
+            if finding_id.upper() == 'ID':
+                continue
+
+            findings.append({
+                'id': finding_id,
+                'title': title,
+                'location': location,
+                'effort': normalize_effort(effort),
+            })
+
+        # For 4-column format, determine severity from section headers
+        current_severity = None
+        for line in findings_section.split('\n'):
+            # Match headers like "### Critical (12)" or "### Major"
+            header_match = re.match(r'###\s*(Critical|Major|Minor|Info)', line, re.IGNORECASE)
+            if header_match:
+                current_severity = normalize_severity(header_match.group(1))
+            elif current_severity:
+                # Check if this line contains a finding ID
+                for f in findings:
+                    if f['id'] in line and 'severity' not in f:
+                        f['severity'] = current_severity
+
+    # Format 3 (FALLBACK): Top 10 / Priority table
+    if not findings:
         top10_pattern = re.compile(
             r'\|\s*\*?\*?(\d+)\*?\*?\s*\|\s*([^|]+)\|\s*\*?\*?([^|]+)\*?\*?\s*\|\s*([^|]+)\|\s*([A-Z]+)\s*\|',
             re.IGNORECASE
@@ -325,27 +434,19 @@ def parse_report(report_path: Path) -> dict:
                     'severity': priority.capitalize(),
                 })
 
-    # Format 3: Numbered priority recommendations (1. **Description** - details)
+    # Format 4 (FALLBACK): Numbered priority recommendations
     if not findings:
         priority_pattern = re.compile(
             r'^(\d+)\.\s+\*\*([^*]+)\*\*\s*[-–]\s*(.+)$',
             re.MULTILINE
         )
-        current_section = None
-        for line in content.split('\n'):
-            if '### Immediate' in line or 'Critical' in line.lower():
-                current_section = 'Critical'
-            elif '### Short-term' in line or 'High Priority' in line:
-                current_section = 'Major'
-            elif '### Medium-term' in line:
-                current_section = 'Minor'
 
         for match in priority_pattern.finditer(content):
             num = match.group(1).strip()
             title = match.group(2).strip()
             description = match.group(3).strip()
 
-            # Determine severity from context
+            # Determine severity from position
             int_num = int(num) if num.isdigit() else 99
             if int_num <= 4:
                 severity = 'Critical'
@@ -365,23 +466,6 @@ def parse_report(report_path: Path) -> dict:
                 'severity': severity,
             })
 
-    # Determine severity from section headers (for Format 1)
-    current_severity = None
-    for line in content.split('\n'):
-        if '### Critical' in line:
-            current_severity = 'Critical'
-        elif '### Major' in line:
-            current_severity = 'Major'
-        elif '### Minor' in line:
-            current_severity = 'Minor'
-        elif '### Info' in line:
-            current_severity = 'Info'
-        elif current_severity:
-            # Check if this line contains a finding ID
-            for f in findings:
-                if f['id'] in line and 'severity' not in f:
-                    f['severity'] = current_severity
-
     # Extract metadata
     type_match = re.search(r'\*\*Type:\*\*\s*(.+)', content)
     date_match = re.search(r'\*\*Date:\*\*\s*(.+)', content)
@@ -400,6 +484,63 @@ def filter_findings(findings: list, selected_ids: list = None) -> list:
     else:
         # Default: all Critical and Major
         return [f for f in findings if f.get('severity') in ('Critical', 'Major')]
+
+
+def validate_parsed_findings(findings: list, min_expected: int = 5) -> tuple:
+    """Validate that parsing produced reasonable results.
+
+    Returns (is_valid, warnings, errors) tuple.
+    """
+    warnings = []
+    errors = []
+
+    if len(findings) == 0:
+        errors.append("No findings were parsed from the report")
+        return False, warnings, errors
+
+    if len(findings) < min_expected:
+        warnings.append(f"Only {len(findings)} findings parsed (expected >= {min_expected})")
+
+    # Check severity distribution
+    unknown_severity = [f for f in findings if f.get('severity') in ('Unknown', None)]
+    if len(unknown_severity) > len(findings) * 0.5:
+        warnings.append(f"{len(unknown_severity)}/{len(findings)} findings have Unknown severity")
+
+    # Check for missing locations
+    no_location = [f for f in findings if not f.get('location') or f.get('location') == 'Unknown']
+    if len(no_location) > len(findings) * 0.3:
+        warnings.append(f"{len(no_location)} findings missing specific locations")
+
+    # Check for duplicate IDs
+    ids = [f['id'] for f in findings]
+    duplicates = set([x for x in ids if ids.count(x) > 1])
+    if duplicates:
+        warnings.append(f"Duplicate finding IDs: {', '.join(duplicates)}")
+
+    is_valid = len(errors) == 0
+    return is_valid, warnings, errors
+
+
+def print_parsing_summary(findings: list) -> None:
+    """Print a summary of parsed findings for verification."""
+    print(f"\n  Parsed {len(findings)} findings:")
+
+    # Count by severity
+    by_severity = {}
+    for f in findings:
+        sev = f.get('severity', 'Unknown')
+        by_severity[sev] = by_severity.get(sev, 0) + 1
+
+    for sev in ['Critical', 'Major', 'Minor', 'Info', 'Unknown']:
+        count = by_severity.get(sev, 0)
+        if count > 0:
+            print(f"    {sev}: {count}")
+
+    # Show first few findings as sample
+    if findings:
+        print(f"\n  Sample findings:")
+        for f in findings[:3]:
+            print(f"    - {f['id']}: {f['title'][:40]}... ({f.get('severity', 'Unknown')})")
 
 
 def generate_handoff(review_folder: Path, selected_ids: list = None) -> str:
@@ -548,10 +689,29 @@ def create_project_from_review(
     parsed = parse_report(report_path)
     all_findings = parsed['findings']
 
+    # Validate parsing results
+    print_parsing_summary(all_findings)
+    is_valid, warnings, errors = validate_parsed_findings(all_findings)
+
+    if errors:
+        print("\n[ERROR] Parsing failed:")
+        for err in errors:
+            print(f"  - {err}")
+        print("\nPossible causes:")
+        print("  - Report format doesn't match expected table structure")
+        print("  - No 'Findings by Category/Severity' section in report")
+        print("\nCheck report.md format and try again.")
+        sys.exit(1)
+
+    if warnings:
+        print("\n[WARNING] Parsing completed with warnings:")
+        for warn in warnings:
+            print(f"  - {warn}")
+
     # Filter to selected findings
     selected = filter_findings(all_findings, selected_ids)
     if not selected:
-        print("WARNING: No findings selected. Using all Critical and Major findings.")
+        print("\nWARNING: No findings selected. Using all Critical and Major findings.")
         selected = filter_findings(all_findings, None)
 
     if not selected:
@@ -732,6 +892,90 @@ def create_project_from_review(
     return project_id, project_dir
 
 
+def dry_run_report(review_folder: Path, selected_ids: list = None, title: str = None) -> None:
+    """Show what would be parsed and created without making changes."""
+    report_path = review_folder / "report.md"
+    if not report_path.exists():
+        print(f"ERROR: Report not found: {report_path}")
+        return
+
+    print("\n--- DRY RUN: No files will be created ---\n")
+
+    # Parse report
+    parsed = parse_report(report_path)
+    all_findings = parsed['findings']
+
+    print(f"Report Type: {parsed['review_type']}")
+    print(f"Report Date: {parsed['review_date']}")
+
+    # Show parsing summary
+    print_parsing_summary(all_findings)
+
+    # Validate
+    is_valid, warnings, errors = validate_parsed_findings(all_findings)
+    if errors:
+        print("\n[ERRORS]:")
+        for err in errors:
+            print(f"  - {err}")
+    if warnings:
+        print("\n[WARNINGS]:")
+        for warn in warnings:
+            print(f"  - {warn}")
+
+    # Show what would be filtered
+    selected = filter_findings(all_findings, selected_ids)
+    if not selected:
+        selected = filter_findings(all_findings, None)
+
+    print(f"\n  Would select {len(selected)} findings for project:")
+
+    # Group by severity
+    by_sev = {}
+    for f in selected:
+        sev = f.get('severity', 'Unknown')
+        by_sev.setdefault(sev, []).append(f)
+
+    for sev in ['Critical', 'Major', 'Minor', 'Info', 'Unknown']:
+        findings = by_sev.get(sev, [])
+        if findings:
+            print(f"\n  {sev} ({len(findings)}):")
+            for f in findings[:5]:
+                print(f"    - {f['id']}: {f['title'][:50]}...")
+            if len(findings) > 5:
+                print(f"    ... and {len(findings) - 5} more")
+
+    # Show what phases would be created
+    critical = [f for f in selected if f.get('severity') == 'Critical']
+    major = [f for f in selected if f.get('severity') == 'Major']
+    other = [f for f in selected if f.get('severity') not in ('Critical', 'Major')]
+
+    print("\n  Would create phases:")
+    phase_num = 0
+    if critical:
+        phase_num += 1
+        print(f"    Phase {phase_num}: Critical Fixes ({len(critical)} tasks)")
+    if major:
+        phase_num += 1
+        print(f"    Phase {phase_num}: Major Issues ({len(major)} tasks)")
+    if other:
+        phase_num += 1
+        print(f"    Phase {phase_num}: Cleanup ({len(other)} tasks)")
+
+    # Generate title
+    review_name = review_folder.name
+    if title is None:
+        parts = review_name.split('_')
+        if len(parts) >= 3:
+            review_type_short = parts[1]
+            description = ' '.join(parts[2:]).replace('-', ' ').title()
+            title = f"{review_type_short.title()} Remediation: {description}"
+        else:
+            title = f"Review Remediation: {review_name}"
+
+    print(f"\n  Would create project with title: {title}")
+    print("\n--- END DRY RUN ---")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Create a project from review findings with full directory structure',
@@ -750,6 +994,9 @@ Examples:
     # Generate handoff document only (no project creation)
     python review_to_project.py 2026-01-23_general_game-logic --no-create-project
 
+    # Dry run - show what would be parsed without creating files
+    python review_to_project.py 2026-01-23_general_game-logic --dry-run
+
 If --findings is not specified, all Critical and Major findings are used.
         """
     )
@@ -765,6 +1012,9 @@ If --findings is not specified, all Critical and Major findings are used.
     parser.add_argument('--no-create-project', dest='create_project',
                         action='store_false',
                         help='Generate handoff document only, do not create project')
+    parser.add_argument('--dry-run', '-n',
+                        action='store_true',
+                        help='Show what would be parsed without creating any files')
 
     args = parser.parse_args()
 
@@ -781,6 +1031,15 @@ If --findings is not specified, all Critical and Major findings are used.
     selected_ids = None
     if args.findings:
         selected_ids = [f.strip() for f in args.findings.split(',')]
+
+    # Handle dry-run mode
+    if args.dry_run:
+        print(f"\n{'=' * 60}")
+        print("DRY RUN: Analyzing Report")
+        print('=' * 60)
+        print(f"\nReview: {folder_path.name}")
+        dry_run_report(folder_path, selected_ids, args.title)
+        sys.exit(0)
 
     print(f"\n{'=' * 60}")
     if args.create_project:

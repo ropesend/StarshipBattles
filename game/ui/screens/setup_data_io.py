@@ -40,8 +40,8 @@ def scan_ship_designs():
                     'ship_class': data.get('ship_class', 'Unknown'),
                     'ai_strategy': data.get('ai_strategy', 'standard_ranged')
                 })
-        except Exception:
-            pass  # Skip invalid ship files
+        except Exception as e:
+            log_warning(f"Failed to load ship design from '{filepath}': {e}")
     return designs
 
 
@@ -69,8 +69,8 @@ def scan_formations():
                     'name': filename.replace('.json', ''),
                     'arrows': data['arrows']
                 })
-        except Exception:
-            pass
+        except Exception as e:
+            log_warning(f"Failed to load formation from '{filepath}': {e}")
     return formations
 
 

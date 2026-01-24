@@ -327,3 +327,142 @@ class TestSaveSelectionWindowButtons:
 
         # Clean up
         window.kill()
+
+
+class TestSaveSelectionTimestampParsing:
+    """Tests for timestamp parsing in save selection window (ERR-001)."""
+
+    def setup_method(self):
+        """Create temporary directory and set up pygame for UI testing."""
+        self.tmpdir = tempfile.mkdtemp()
+        self.original_cwd = os.getcwd()
+        os.chdir(self.tmpdir)
+
+        # Set up pygame and pygame_gui
+        import pygame
+        import pygame_gui
+        os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
+        if not pygame.get_init():
+            pygame.init()
+        pygame.display.set_mode((1440, 900), pygame.NOFRAME)
+
+        self.manager = pygame_gui.UIManager((1440, 900))
+
+    def teardown_method(self):
+        """Clean up temporary directory."""
+        os.chdir(self.original_cwd)
+        shutil.rmtree(self.tmpdir)
+
+    def test_malformed_timestamp_handled_gracefully(self):
+        """Malformed timestamp should not crash, should log warning."""
+        import pygame
+        from game.ui.screens.save_selection_window import SaveSelectionWindow
+        from unittest.mock import patch
+
+        # Patch SaveGameService where it's imported (inside the methods)
+        with patch('game.strategy.systems.save_game_service.SaveGameService') as mock_svc:
+            # Return a save with malformed timestamp
+            mock_svc.list_saves.return_value = [{
+                'save_name': 'TestSave',
+                'player_name': 'Player',
+                'latest_turn_number': 1,
+                'empire_count': 1,
+                'timestamp': 'not-a-valid-timestamp',
+                'save_path': '/fake/path'
+            }]
+            mock_svc.list_turns.return_value = []
+
+            with patch('game.ui.screens.save_selection_window.log_warning') as mock_log:
+                window = SaveSelectionWindow(
+                    rect=pygame.Rect(100, 100, 600, 500),
+                    manager=self.manager,
+                    on_load_callback=MagicMock(),
+                    on_cancel_callback=MagicMock()
+                )
+
+                # Window should be created successfully
+                assert window is not None
+                assert len(window.saves_list) == 1
+
+                # Should have logged a warning about the malformed timestamp
+                mock_log.assert_called()
+                call_args = str(mock_log.call_args)
+                assert 'timestamp' in call_args.lower() or 'date' in call_args.lower()
+
+                window.kill()
+
+    def test_malformed_turn_timestamp_handled_gracefully(self):
+        """Malformed turn timestamp should not crash, should log warning."""
+        import pygame
+        from game.ui.screens.save_selection_window import SaveSelectionWindow
+        from unittest.mock import patch
+
+        with patch('game.strategy.systems.save_game_service.SaveGameService') as mock_svc:
+            # Return a valid save
+            mock_svc.list_saves.return_value = [{
+                'save_name': 'TestSave',
+                'player_name': 'Player',
+                'latest_turn_number': 2,
+                'empire_count': 1,
+                'timestamp': '2026-01-24T12:00:00',
+                'save_path': '/fake/path'
+            }]
+            # Return turns with malformed timestamp
+            mock_svc.list_turns.return_value = [
+                {'turn_number': 1, 'timestamp': 'bad-timestamp'},
+                {'turn_number': 2, 'timestamp': '2026-01-24T12:30:00'}
+            ]
+
+            with patch('game.ui.screens.save_selection_window.log_warning') as mock_log:
+                window = SaveSelectionWindow(
+                    rect=pygame.Rect(100, 100, 600, 500),
+                    manager=self.manager,
+                    on_load_callback=MagicMock(),
+                    on_cancel_callback=MagicMock()
+                )
+
+                # Expand the save to trigger turn timestamp parsing
+                window.expanded_save_idx = 0
+                window._refresh_list_display()
+
+                # Should have logged a warning about the malformed timestamp
+                mock_log.assert_called()
+
+                window.kill()
+
+    def test_valid_timestamps_parsed_correctly(self):
+        """Valid ISO format timestamps should be parsed without warnings."""
+        import pygame
+        from game.ui.screens.save_selection_window import SaveSelectionWindow
+        from unittest.mock import patch
+
+        with patch('game.strategy.systems.save_game_service.SaveGameService') as mock_svc:
+            mock_svc.list_saves.return_value = [{
+                'save_name': 'TestSave',
+                'player_name': 'Player',
+                'latest_turn_number': 1,
+                'empire_count': 1,
+                'timestamp': '2026-01-24T14:30:00',
+                'save_path': '/fake/path'
+            }]
+            mock_svc.list_turns.return_value = []
+
+            with patch('game.ui.screens.save_selection_window.log_warning') as mock_log:
+                window = SaveSelectionWindow(
+                    rect=pygame.Rect(100, 100, 600, 500),
+                    manager=self.manager,
+                    on_load_callback=MagicMock(),
+                    on_cancel_callback=MagicMock()
+                )
+
+                # With valid timestamp, no warning should be logged for timestamp parsing
+                # (other warnings may occur, so we check the call args specifically)
+                timestamp_warning_logged = False
+                for call in mock_log.call_args_list:
+                    if 'timestamp' in str(call).lower():
+                        timestamp_warning_logged = True
+                        break
+
+                assert not timestamp_warning_logged, "No timestamp warning should be logged for valid timestamps"
+
+                window.kill()

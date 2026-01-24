@@ -587,9 +587,8 @@ class DesignWorkshopGUI:
             self.show_error(f"Reloaded data from {os.path.basename(directory)}")
             
         except Exception as e:
-            log_error(f"Failed to reload data: {e}")
             import traceback
-            traceback.print_exc()
+            log_error(f"Failed to reload data: {e}\n{traceback.format_exc()}")
             self.show_error(f"Error reloading data: {e}")
     
     def _refresh_ui_after_data_reload(self, default_class: str):

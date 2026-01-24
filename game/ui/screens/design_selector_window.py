@@ -8,6 +8,7 @@ status, as well as text search.
 import os
 import pygame
 import pygame_gui
+from game.core.logger import log_warning
 from pygame_gui.elements import (
     UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer,
     UITextEntryLine, UIDropDownMenu, UIImage
@@ -401,7 +402,8 @@ class DesignSelectorWindow(UIWindow):
                 try:
                     loaded_img = pygame.image.load(path)
                     return pygame.transform.smoothscale(loaded_img, (size, size))
-                except Exception:
+                except Exception as e:
+                    log_warning(f"Failed to load portrait '{path}' for design '{design.design_id}': {e}")
                     continue
 
         # Fallback: Create placeholder with gradient

@@ -5,6 +5,7 @@ from pygame_gui.elements import UIButton, UITextEntryLine, UIHorizontalSlider
 from pygame_gui.windows import UIMessageWindow
 from ui.builder.modifier_logic import ModifierLogic
 from game.simulation.components.modifier_effects import ModifierEffectEvaluator
+from game.core.logger import log_warning
 
 class ModifierControlRow:
     """
@@ -76,8 +77,9 @@ class ModifierControlRow:
             lines.append(f"Range: {self.mod_def.min_val:.1f} - {self.mod_def.max_val:.1f}")
 
             return "\n".join(lines)
-        except Exception:
+        except Exception as e:
             # Fallback to basic description if introspection fails
+            log_warning(f"Tooltip generation failed for modifier '{self.mod_id}': {e}")
             return self.mod_def.description if self.mod_def.description else self.mod_def.name
 
     def build_ui(self, y):

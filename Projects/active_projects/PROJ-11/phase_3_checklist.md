@@ -1,83 +1,44 @@
-# Phase 3: Layer Coupling
+# PROJ-11 Phase 3: Strategy-UI Separation
 
-> **BEFORE MARKING THIS PHASE COMPLETE:**
-> 1. Run `python Projects/scripts/validate_phase.py PROJ-11 3`
-> 2. Only proceed if output shows PASSED
-> 3. Update plan.md phase table AND Current State
-
-**Status:** Not Started
-**Objective:** Establish clean layer boundaries between UI, Strategy, and Simulation
-**Priority:** MAJOR
-
----
+## Phase Overview
+Remove UI imports from strategy layer and establish clean boundaries.
 
 ## Tasks
 
-### Task 3.1: AR-02/MOD-UI-04 - Create GameFacade for UI [High]
-**Files:** `game/ui/screens/battle_scene.py`, `game/ui/screens/strategy_scene.py`
-**Tests:** `pytest tests/unit/ui/`
+### Move has_warp_capability to Strategy Services
+- [ ] Create or update `game/strategy/services/ship_capability_service.py`
+- [ ] Move `has_warp_capability()` function from `fleet_report_filters.py`
+- [ ] Update `game/strategy/data/fleet.py` to import from services
+- [ ] Update `game/ui/screens/fleet_report_filters.py` to import from services (or call directly)
+- [ ] Test warp capability checks
 
-**Issue:** UI directly accesses game internals (engine.ships, engine.projectiles, turn_engine methods).
+### Create Fleet Query Service
+- [ ] Create `game/strategy/services/fleet_query_service.py`
+- [ ] Move any other fleet filtering/query logic from UI
+- [ ] Update UI to use service
 
-**Implementation:**
-- [ ] Define BattleViewInterface with clear contracts:
-  - `get_live_ships() -> List[ShipInfo]`
-  - `get_projectiles() -> List[ProjectileInfo]`
-  - `is_simulation_over() -> bool`
-- [ ] Define StrategyViewInterface:
-  - `validate_order(fleet, order) -> ValidationResult`
-  - `request_order(fleet, order) -> Result`
-  - `get_galaxy_view() -> GalaxyInfo`
-- [ ] Implement facades that wrap game objects
-- [ ] Update UI to use facades instead of direct access
-- [ ] Create DTOs (Data Transfer Objects) for UI consumption
+### Move Constants to Core
+- [ ] Move `PLANET_RESOURCES` from `game/strategy/data/planet.py` to `game/core/constants.py`
+- [ ] Update all imports:
+  - [ ] `game/strategy/data/planet.py`
+  - [ ] `game/simulation/entities/ship_stats.py`
+  - [ ] Any other files importing PLANET_RESOURCES
+- [ ] Verify no simulation imports from strategy
 
-**Notes:** UI should never import game entity classes directly.
+### Remove Circular Import Workarounds
+- [ ] Review `game/app.py` lazy imports
+- [ ] Review `game/simulation/entities/ship_serialization.py` local imports
+- [ ] Review `game/strategy/data/ship_instance.py` local imports
+- [ ] Restructure modules if needed to eliminate late imports
+- [ ] Document any remaining late imports that are intentional
 
----
+### Address STRAT-004: Battle Resolution Coupling
+- [ ] Review TurnEngine.resolve_battle() method
+- [ ] Consider creating IBattleResolver interface (Phase 4)
+- [ ] At minimum, document the coupling
 
-### Task 3.2: AR-04 - Fix UI-to-Strategy Coupling [Medium]
-**Files:** 20+ imports from UI to Strategy
-**Tests:** `pytest tests/unit/ui/`
-
-**Issue:** UI screens directly depend on strategy data classes (Planet, Fleet, DesignMetadata).
-
-**Implementation:**
-- [ ] Create ViewModel layer for strategy data:
-  - `PlanetViewModel` - UI representation of Planet
-  - `FleetViewModel` - UI representation of Fleet
-  - `DesignViewModel` - UI representation of Design
-- [ ] ViewModels created from_entity() in facade layer
-- [ ] UI imports only viewmodels
-- [ ] Strategy module doesn't know about UI
-
-**Notes:** ViewModels are simple dataclasses with display-ready data.
-
----
-
-### Task 3.3: MOD-STR-06 - Fix Strategy-to-UI Violation [Simple]
-**File:** `game/strategy/data/fleet.py:140`
-**Tests:** `pytest tests/unit/strategy/test_fleet.py`
-
-**Issue:** Fleet module imports from UI layer (`from game.ui.screens.fleet_report_filters import has_warp_capability`).
-
-**Implementation:**
-- [ ] Move `has_warp_capability` to FleetMobilityService
-- [ ] Update Fleet to use service method
-- [ ] Remove UI import from strategy layer
-- [ ] Verify no other strategy→UI imports exist
-
-**Notes:** Quick fix - 1 hour. Low risk.
-
----
-
-## Phase Completion Checklist
-When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] No UI→Game direct imports (only facades)
-- [ ] No Strategy→UI imports
-- [ ] ViewModel layer established
-- [ ] All tests passing
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 4
+## Verification
+- [ ] Run: `grep -r "from game.ui" game/strategy/` returns nothing
+- [ ] Run: `grep -r "import game.ui" game/strategy/` returns nothing
+- [ ] Strategy tests pass without UI initialized
+- [ ] No circular import warnings at startup

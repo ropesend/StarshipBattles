@@ -1,98 +1,68 @@
-# Phase 3: Minor Fixes
+# PROJ-13 Phase 3: Documentation
 
-> **BEFORE MARKING THIS PHASE COMPLETE:**
-> 1. Run `python Projects/scripts/validate_phase.py PROJ-13 3`
-> 2. Only proceed if output shows PASSED
-> 3. Update plan.md phase table AND Current State
-
-**Status:** Not Started
-**Objective:** Address remaining minor issues for overall code health
-**Priority:** MINOR - Lower priority cleanup
-
----
+## Phase Overview
+Add critical documentation to core systems.
 
 ## Tasks
 
-### Task 3.1: Remaining Error Handling Fixes [Medium]
-**Files:** Various (see ERR-19 through ERR-38 in report)
-**Tests:** Various
+### Create Architecture Documentation
+- [ ] Create `docs/ARCHITECTURE.md`
+- [ ] Document layer structure (Simulation, Strategy, UI, Core)
+- [ ] Document dependency rules between layers
+- [ ] Add simple ASCII diagram
+- [ ] Document key design patterns in use
 
-**Issue:** Minor error handling improvements not covered in PROJ-10.
+### Document Battle System (DOC-001, DOC-002)
+- [ ] Add module docstring to `game/simulation/systems/battle_engine.py`
+- [ ] Document battle lifecycle (init → start → tick → end)
+- [ ] Document BattleLogger purpose and format
+- [ ] Add docstrings to BattleEngine public methods
+- [ ] Document collision/hit calculation in `game/engine/collision.py`
+- [ ] Explain sigmoid hit chance formula
+- [ ] Document sphere-ray intersection math
 
-**Implementation:**
-- [ ] Review remaining error handling findings
-- [ ] Add logging to silent failures (toast notifications, etc.)
-- [ ] Improve error messages with context
-- [ ] Ensure consistent error patterns
+### Document Strategy Layer (DOC-003)
+- [ ] Add module docstring to `game/strategy/engine/turn_engine.py`
+- [ ] Document turn phases and order
+- [ ] Document order processing lifecycle
+- [ ] Add module docstring to `game/strategy/engine/game_session.py`
+- [ ] Document command dispatch
 
-**Notes:** Incremental improvement. Fix highest-impact first.
+### Document Component System (DOC-005)
+- [ ] Add module docstring to `game/simulation/components/component.py`
+- [ ] Document component lifecycle
+- [ ] Document ability system
+- [ ] Add module docstring to `game/simulation/entities/ship_stats.py`
+- [ ] Document stat calculation phases
+- [ ] Add section comments for each phase
 
----
+### Document AI System (DOC-004)
+- [ ] Add module docstring to `game/ai/controller.py`
+- [ ] Document behavior selection flowchart
+- [ ] Add module docstring to `game/ai/behaviors.py`
+- [ ] Document when each behavior is used
+- [ ] Document strategy parameter effects
 
-### Task 3.2: Remove Backward Compatibility Wrappers [Medium]
-**File:** `game/ui/screens/builder_screen.py` (deprecated wrapper)
-**Tests:** `pytest tests/unit/ui/`
+### Document Physics Model (DOC-007)
+- [ ] Add module docstring to `game/engine/physics.py`
+- [ ] Document coordinate system (origin, axes, angle convention)
+- [ ] Document drag model
+- [ ] Document update sequence
 
-**Issue:** BuilderSceneGUI is a deprecated wrapper causing confusion.
+### Document Resource System (DOC-008)
+- [ ] Add module docstring to `game/simulation/systems/resource_manager.py`
+- [ ] Document resource lifecycle
+- [ ] Document regeneration mechanics
+- [ ] Add example usage
 
-**Implementation:**
-- [ ] Add deprecation warning to BuilderSceneGUI
-- [ ] Update all imports to use DesignWorkshopGUI directly
-- [ ] Update tests to mock correct class
-- [ ] Remove wrapper after all references updated
+### Document Hex Math (DOC-012)
+- [ ] Add module docstring to `game/strategy/data/hex_math.py`
+- [ ] Document coordinate system (axial, cube, offset?)
+- [ ] Document distance calculation
+- [ ] Add conversion examples
 
-**Notes:** 1-2 hours. Reduces confusion for developers.
-
----
-
-### Task 3.3: Technical Debt Markers Cleanup [Low]
-**Files:** Various (11 TODO/FIXME/BUG markers found)
-**Tests:** N/A
-
-**Issue:** Technical debt markers scattered through code need attention or removal.
-
-**Implementation:**
-- [ ] Review each TODO/FIXME/BUG marker
-- [ ] For actionable items: create GitHub issues
-- [ ] For resolved items: remove markers
-- [ ] For future work: document in backlog
-- [ ] Remove stale markers
-
-**Markers Found:**
-- `game/app.py:626` - TODO: Replace with empire.available_tech
-- `game/simulation/battle_controller.py:342,451` - TODO items
-- `game/simulation/systems/battle_engine.py:192` - TODO: magic number
-- `game/strategy/data/fleet.py:78` - TODO: restore orders
-- `game/strategy/systems/save_game_service.py:123` - BUG-29
-- Various BUG-XX markers in UI panels
-
-**Notes:** 2-3 hours. Creates proper issue tracking.
-
----
-
-### Task 3.4: UI Pattern Consistency [Low]
-**Files:** Various UI screens
-**Tests:** `pytest tests/unit/ui/`
-
-**Issue:** Inconsistent event handling patterns across screens.
-
-**Implementation:**
-- [ ] Document recommended event pattern (EventBus)
-- [ ] Identify screens using callbacks that should use EventBus
-- [ ] Gradually migrate high-traffic screens
-- [ ] Add pattern guide to developer documentation
-
-**Notes:** Long-term improvement. Document pattern first.
-
----
-
-## Phase Completion Checklist
-When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Error handling improved
-- [ ] Deprecated wrappers removed or documented
-- [ ] Technical debt markers triaged
-- [ ] All tests passing
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to "Project Complete"
+## Verification
+- [ ] All critical systems have module docstrings
+- [ ] Architecture document exists
+- [ ] Complex algorithms explained
+- [ ] New developers can understand system structure

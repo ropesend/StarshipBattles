@@ -105,3 +105,140 @@ class TestFormulaSystemFunctionality:
         assert evaluate_math_formula("undefined_var", {}) == 0
         assert evaluate_math_formula("1 / 0", {}) == 0
         assert evaluate_math_formula("invalid syntax ??", {}) == 0
+
+
+class TestFormulaSystemErrorLogging:
+    """Tests for error logging in formula evaluation (ERR-002)."""
+
+    def test_syntax_error_logs_warning(self, caplog):
+        """Syntax errors should log a warning with formula and error details."""
+        import logging
+        bad_formula = "1 +* 2"  # Actually invalid Python syntax
+
+        with caplog.at_level(logging.WARNING):
+            result = evaluate_math_formula(bad_formula, {})
+
+        assert result == 0  # Still returns 0 on error
+        # Should have logged a warning
+        assert len(caplog.records) > 0, "Should log warning on formula error"
+        # Warning should include the formula
+        warning_text = ' '.join(r.message for r in caplog.records)
+        assert bad_formula in warning_text, "Warning should include the formula string"
+
+    def test_undefined_variable_logs_warning(self, caplog):
+        """Undefined variable errors should log with context."""
+        import logging
+
+        with caplog.at_level(logging.WARNING):
+            result = evaluate_math_formula("unknown_var * 2", {'x': 1})
+
+        assert result == 0
+        assert len(caplog.records) > 0, "Should log warning for undefined variable"
+        warning_text = ' '.join(r.message for r in caplog.records)
+        assert 'unknown_var' in warning_text, "Warning should include the formula with undefined var"
+
+    def test_math_error_logs_warning(self, caplog):
+        """Math errors like division by zero should log with formula."""
+        import logging
+
+        with caplog.at_level(logging.WARNING):
+            result = evaluate_math_formula("1 / 0", {})
+
+        assert result == 0
+        assert len(caplog.records) > 0, "Should log warning for math error"
+
+    def test_valid_formula_no_warning(self, caplog):
+        """Valid formulas should not produce any warnings."""
+        import logging
+
+        with caplog.at_level(logging.WARNING):
+            result = evaluate_math_formula("sqrt(16) + 2", {'x': 5})
+
+        assert result == 6.0
+        formula_warnings = [r for r in caplog.records if 'formula' in r.message.lower()]
+        assert len(formula_warnings) == 0, "Valid formula should not log warnings"
+
+
+class TestFormulaSystemValidation:
+    """Tests for formula validation (ERR-003)."""
+
+    def test_validate_formula_syntax_valid(self):
+        """Valid formula syntax should pass validation."""
+        from game.simulation.formula_system import validate_formula
+
+        valid_formulas = [
+            'x + 1',
+            'sqrt(x)',
+            'x * 2 + y',
+            '1.0 / x',
+            '(x - 1) * 0.5',
+        ]
+        for formula in valid_formulas:
+            errors = validate_formula(formula, ['x', 'y'])
+            assert errors == [], f"Valid formula '{formula}' should have no errors, got {errors}"
+
+    def test_validate_formula_syntax_error(self):
+        """Formula with syntax error should be detected."""
+        from game.simulation.formula_system import validate_formula
+
+        invalid_formulas = [
+            '((( malformed',
+            'x +* 2',
+            '* x',
+            'x +',
+        ]
+        for formula in invalid_formulas:
+            errors = validate_formula(formula, ['x'])
+            assert len(errors) > 0, f"Invalid formula '{formula}' should have errors"
+
+    def test_validate_formula_undefined_variable(self):
+        """Formula with undefined variable should be detected."""
+        from game.simulation.formula_system import validate_formula
+
+        errors = validate_formula('undefined_var + x', ['x'])
+        assert len(errors) > 0, "Formula with undefined variable should have errors"
+        assert any('undefined_var' in str(e) for e in errors)
+
+    def test_validate_formula_allows_math_functions(self):
+        """Math functions should be allowed."""
+        from game.simulation.formula_system import validate_formula
+
+        formulas = [
+            'sqrt(x)',
+            'sin(x)',
+            'cos(x)',
+            'log(x + 1)',
+            'floor(x)',
+            'ceil(x)',
+            'abs(x)',
+        ]
+        for formula in formulas:
+            errors = validate_formula(formula, ['x'])
+            assert errors == [], f"Math formula '{formula}' should be valid, got {errors}"
+
+    def test_validate_formula_blocks_dangerous_functions(self):
+        """Dangerous functions should be blocked."""
+        from game.simulation.formula_system import validate_formula
+
+        dangerous = [
+            'eval("1+1")',
+            'exec("x=1")',
+            'open("file")',
+            '__import__("os")',
+            'compile("1", "", "eval")',
+        ]
+        for formula in dangerous:
+            errors = validate_formula(formula, [])
+            assert len(errors) > 0, f"Dangerous formula '{formula}' should have errors"
+
+    def test_validate_logs_on_dangerous_attempt(self, caplog):
+        """Attempting to use dangerous functions should log a warning."""
+        import logging
+        from game.simulation.formula_system import validate_formula
+
+        with caplog.at_level(logging.WARNING):
+            errors = validate_formula('__import__("os")', [])
+
+        assert len(errors) > 0
+        # Should log a warning about the dangerous attempt
+        assert len(caplog.records) > 0, "Should log warning for dangerous formula"

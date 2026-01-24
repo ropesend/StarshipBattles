@@ -210,3 +210,52 @@ class TestAbilities:
         }
         comp2 = Component(data2)
         assert comp2.has_pdc_ability() is False
+
+
+class TestAbilityFactoryErrorLogging:
+    """Tests for ability factory error logging (ERR-014)."""
+
+    def test_create_ability_failure_logs_warning(self, mock_component, caplog):
+        """Ability creation failure should log warning with ability name (ERR-014)."""
+        import logging
+        from unittest.mock import patch
+
+        # Force an exception during ability construction
+        with patch.dict('game.simulation.components.abilities.ABILITY_REGISTRY',
+                       {'TestBrokenAbility': MagicMock(side_effect=ValueError("Test error"))}):
+            with caplog.at_level(logging.WARNING):
+                result = create_ability("TestBrokenAbility", mock_component, {"data": "test"})
+
+            assert result is None
+            # Should have logged a warning
+            warning_logs = [r for r in caplog.records if r.levelno >= logging.WARNING]
+            assert len(warning_logs) > 0, "Should log warning when ability creation fails"
+            warning_text = ' '.join(r.message for r in warning_logs)
+            assert 'TestBrokenAbility' in warning_text, \
+                f"Warning should include ability name. Got: {warning_text}"
+
+    def test_create_ability_success_no_warning(self, mock_component, caplog):
+        """Successful ability creation should not produce warnings."""
+        import logging
+
+        with caplog.at_level(logging.WARNING):
+            result = create_ability("CombatPropulsion", mock_component, 1000)
+
+        assert result is not None
+        # Should NOT log warnings for successful creation
+        ability_warnings = [r for r in caplog.records
+                          if 'CombatPropulsion' in r.message or 'ability' in r.message.lower()]
+        assert len(ability_warnings) == 0, "Successful creation should not log warnings"
+
+    def test_unknown_ability_returns_none_silently(self, mock_component, caplog):
+        """Unknown ability name should return None without warning (expected behavior)."""
+        import logging
+
+        with caplog.at_level(logging.WARNING):
+            result = create_ability("NonexistentAbility", mock_component, {})
+
+        assert result is None
+        # Should NOT log warnings for unknown abilities (that's expected)
+        ability_warnings = [r for r in caplog.records
+                          if 'NonexistentAbility' in r.message]
+        assert len(ability_warnings) == 0, "Unknown ability should not log warning"

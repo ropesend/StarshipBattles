@@ -362,3 +362,154 @@ class TestSaveGameServiceNoDesignMigration:
 
         design_files = [f for f in os.listdir(empire_designs) if f.endswith('.json')]
         assert len(design_files) == 0, f"New game should have NO designs, but found: {design_files}"
+
+
+class TestSaveGameServiceErrorLogging:
+    """Tests for error logging in SaveGameService (ERR-004)."""
+
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests."""
+        tmpdir = tempfile.mkdtemp()
+        original_cwd = os.getcwd()
+        os.chdir(tmpdir)
+        yield tmpdir
+        os.chdir(original_cwd)
+        shutil.rmtree(tmpdir)
+
+    def test_save_error_logs_with_traceback(self, caplog):
+        """Save errors should log full traceback, not print to stdout."""
+        import logging
+
+        session = MockGameSession()
+
+        # Mock to_dict to raise an exception
+        def raise_error():
+            raise ValueError("Test save error")
+
+        session.to_dict = raise_error
+
+        with caplog.at_level(logging.ERROR):
+            success, message, save_path = SaveGameService.save_game(session, "TestGame")
+
+        assert not success
+        assert "Test save error" in message
+
+        # Should have logged an error
+        error_logs = [r for r in caplog.records if r.levelno >= logging.ERROR]
+        assert len(error_logs) > 0, "Should log error on save failure"
+
+    def test_load_error_logs_with_context(self, caplog, setup_tmpdir):
+        """Load errors should log with save path context."""
+        import logging
+        import json
+
+        tmpdir = setup_tmpdir
+
+        # Create a save with valid metadata but corrupted turn file
+        save_path = os.path.join(tmpdir, "saves", "BadSave")
+        os.makedirs(os.path.join(save_path, "turns"), exist_ok=True)
+        with open(os.path.join(save_path, "turns", "turn_1.json"), "w") as f:
+            f.write("{ invalid json }")  # Corrupted JSON
+
+        metadata = {
+            "version": "2.0.0",  # Must match SaveGameService.SAVE_VERSION
+            "timestamp": "2026-01-24T12:00:00",
+            "player_name": "Test",
+            "latest_turn_number": 1
+        }
+        with open(os.path.join(save_path, "save_metadata.json"), "w") as f:
+            json.dump(metadata, f)
+
+        with caplog.at_level(logging.ERROR):
+            result, message = SaveGameService.load_game(save_path)
+
+        assert result is None
+        assert "corrupted" in message.lower() or "cannot read" in message.lower()
+        # Should have logged an error with context
+        error_logs = [r for r in caplog.records if r.levelno >= logging.ERROR]
+        assert len(error_logs) > 0, "Should log error on load failure"
+
+
+class TestSaveGameServiceUserFriendlyErrors:
+    """Tests for user-friendly error messages in SaveGameService (ERR-019)."""
+
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests."""
+        tmpdir = tempfile.mkdtemp()
+        original_cwd = os.getcwd()
+        os.chdir(tmpdir)
+        yield tmpdir
+        os.chdir(original_cwd)
+        shutil.rmtree(tmpdir)
+
+    def test_load_error_message_is_user_friendly(self, setup_tmpdir):
+        """Load error messages should be user-friendly, not expose raw exceptions (ERR-019)."""
+        tmpdir = setup_tmpdir
+
+        # Create save with valid metadata but missing required game state fields
+        save_path = os.path.join(tmpdir, "saves", "IncompleteSave")
+        os.makedirs(os.path.join(save_path, "turns"), exist_ok=True)
+
+        metadata = {
+            "version": "2.0.0",
+            "timestamp": "2026-01-24T12:00:00",
+            "player_name": "Test",
+            "latest_turn_number": 1
+        }
+        save_json(os.path.join(save_path, "save_metadata.json"), metadata)
+
+        # Game state with missing required fields (will cause KeyError during reconstruction)
+        game_state = {
+            "turn_number": 1,
+            # Missing: config, galaxy, empires
+        }
+        save_json(os.path.join(save_path, "turns", "turn_1.json"), game_state)
+
+        result, message = SaveGameService.load_game(save_path)
+
+        assert result is None
+        # Message should be user-friendly, not raw exception
+        assert "Save file" in message or "corrupted" in message.lower()
+        # Should NOT expose raw Python exception class names in user message
+        assert "KeyError" not in message, f"Should not expose KeyError to user: {message}"
+        assert "Traceback" not in message, f"Should not expose traceback to user: {message}"
+
+    def test_unexpected_load_error_message_is_user_friendly(self, setup_tmpdir):
+        """Unexpected errors during load should have user-friendly messages (ERR-019)."""
+        tmpdir = setup_tmpdir
+
+        # Create valid-looking save
+        save_path = os.path.join(tmpdir, "saves", "TestSave")
+        os.makedirs(os.path.join(save_path, "turns"), exist_ok=True)
+
+        metadata = {
+            "version": "2.0.0",
+            "timestamp": "2026-01-24T12:00:00",
+            "player_name": "Test",
+            "latest_turn_number": 1
+        }
+        save_json(os.path.join(save_path, "save_metadata.json"), metadata)
+
+        game_state = {
+            "turn_number": 1,
+            "config": GameConfig().to_dict(),
+            "galaxy": {"systems": {}, "warp_lanes": [], "radius": 4000},
+            "empires": [],
+            "human_player_ids": [0]
+        }
+        save_json(os.path.join(save_path, "turns", "turn_1.json"), game_state)
+
+        # Mock GameSession.from_dict to raise unexpected exception
+        # Need to patch at module level since import happens inside function
+        with patch('game.strategy.engine.game_session.GameSession.from_dict',
+                   side_effect=RuntimeError("Internal processing error")):
+            result, message = SaveGameService.load_game(save_path)
+
+        assert result is None
+        # Message should be user-friendly
+        assert "unexpected error" in message.lower() or "failed" in message.lower() or "corrupted" in message.lower()
+        # Should NOT expose raw exception details
+        assert "RuntimeError" not in message, f"Should not expose exception type: {message}"
+        assert "Internal processing error" not in message, f"Should not expose internal error details: {message}"

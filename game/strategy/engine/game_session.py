@@ -327,6 +327,10 @@ class GameSession:
 
         Returns:
             Reconstructed GameSession with all state restored
+
+        Raises:
+            KeyError: If required fields (config, galaxy, empires) are missing.
+            TypeError: If data structures are invalid.
         """
         from game.strategy.data.galaxy import Galaxy
         from game.strategy.data.empire import Empire

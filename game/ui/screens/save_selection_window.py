@@ -9,7 +9,7 @@ Supports:
 """
 import pygame
 import pygame_gui
-from game.core.logger import log_debug, log_info
+from game.core.logger import log_debug, log_info, log_warning
 
 
 class SaveSelectionWindow(pygame_gui.elements.UIWindow):
@@ -145,7 +145,8 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
                 from datetime import datetime
                 dt = datetime.fromisoformat(timestamp)
                 time_str = dt.strftime("%Y-%m-%d %H:%M")
-            except:
+            except ValueError as e:
+                log_warning(f"Failed to parse save timestamp '{timestamp}': {e}")
                 time_str = timestamp[:16] if len(timestamp) >= 16 else timestamp
 
             # Show empire count if > 1
@@ -168,7 +169,8 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
                         from datetime import datetime
                         dt = datetime.fromisoformat(turn_time)
                         turn_time_str = dt.strftime("%m-%d %H:%M")
-                    except:
+                    except ValueError as e:
+                        log_warning(f"Failed to parse turn timestamp '{turn_time}': {e}")
                         turn_time_str = ""
 
                     # Indent turn entries
