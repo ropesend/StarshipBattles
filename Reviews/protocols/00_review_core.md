@@ -309,22 +309,55 @@ Format: `YYYY-MM-DD_[review-type]_[brief-description]/`
 
 ---
 
-## Optional Project Handoff
+## Project Handoff (Review → Project)
 
 ### When to Consider a Project
 - Critical or Major findings that need systematic remediation
 - User expresses intent to address findings
 - Findings reveal a larger systemic issue
 
-### Handoff Process
-1. **User Decides** - User indicates which findings to address
-2. **Refine Scope** - Use AskUserQuestion to clarify project goals
-3. **Generate Handoff Document**
-   ```bash
-   python Reviews/scripts/review_to_project.py <review_folder> --findings ID1,ID2,ID3
-   ```
-4. **Create Project** - User runs "Start Project" prompt with review context
-5. **Protocol 01 Integration** - Review findings pre-populate exploration phase
+### Automated Project Creation (Recommended)
+
+The `review_to_project.py` script now automatically creates the full project structure:
+
+```bash
+# Create project with all Critical and Major findings (default)
+python Reviews/scripts/review_to_project.py <review_folder>
+
+# Create project with custom title
+python Reviews/scripts/review_to_project.py <review_folder> --title "Security Fixes"
+
+# Create project with specific findings only
+python Reviews/scripts/review_to_project.py <review_folder> --findings SEC-01,SEC-02,IV-01
+```
+
+**What this creates:**
+- `Projects/active_projects/PROJ-XX/` directory
+- `plan.md` - Main project document with overview, goals, scope
+- `design.md` - Pre-populated with review findings summary
+- `decisions.md` - Initialized with project creation decision
+- `phase_N_checklist.md` - One per severity level (Critical → Phase 1, Major → Phase 2, etc.)
+- `findings/` - Directory for additional agent reports
+- Updates `projects_index.md` automatically
+
+### Legacy Handoff-Only Mode
+
+To generate a handoff document without creating the project (for manual review first):
+
+```bash
+python Reviews/scripts/review_to_project.py <review_folder> --no-create-project
+```
+
+This creates `project_handoff.md` in the review folder, which can then be used with
+the "Start Project" prompt.
+
+### Handoff Workflow
+
+1. **Review Completes** - `report.md` generated with findings
+2. **User Decides** - Which findings to address (default: all Critical + Major)
+3. **Run Script** - `review_to_project.py` creates project structure
+4. **Refine Plan** - User/agent reviews generated plan, adds detail to tasks
+5. **Continue** - Use "Continue Project" prompt to begin implementation
 
 ### Not All Reviews Become Projects
 - General health checks may be informational only
@@ -351,7 +384,7 @@ Format: `YYYY-MM-DD_[review-type]_[brief-description]/`
 | `create_review.py` | Initialize review folder and index |
 | `calculate_agents.py` | Recommend agent count for scope |
 | `compile_findings.py` | Aggregate agent reports into final report |
-| `review_to_project.py` | Generate project handoff from findings |
+| `review_to_project.py` | **Create full project structure from findings** (or handoff doc with `--no-create-project`) |
 
 ### Key Files Per Review
 | File | Purpose |
