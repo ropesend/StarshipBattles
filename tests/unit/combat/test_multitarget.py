@@ -1,5 +1,5 @@
-import unittest
-import unittest.mock
+import pytest
+from unittest.mock import MagicMock, patch
 import pygame
 import math
 
@@ -11,108 +11,126 @@ from game.engine.spatial import SpatialGrid
 from game.simulation.entities.projectile import Projectile
 from game.core.constants import AttackType
 
-class TestMultitarget(unittest.TestCase):
-    def setUp(self):
-        # Initialize pygame for vectors
-        pygame.init()
-        initialize_ship_data()
-        load_components()
-        self.grid = SpatialGrid(2000)
-        self.ship = Ship("TestShip", 1000, 1000, (255, 0, 0), team_id=0, ship_class="Cruiser")
-        self.ai = AIController(self.ship, self.grid, enemy_team_id=1)
-        self.ship.ai_controller = self.ai
-        
-        # Add Infrastructure to avoid derelict status and allow components to work
-        # 1. Bridge (required for non-derelict)
-        comps = RegistryManager.instance().components
-        if 'bridge' in comps:
-            bridge = comps['bridge'].clone()
-            self.ship.add_component(bridge, LayerType.CORE)
-        
-        # 2. Engine (required for non-derelict on Ships)
-        if 'standard_engine' in comps:
-            engine = comps['standard_engine'].clone()
-            self.ship.add_component(engine, LayerType.INNER)
-            
-        # 3. Generator
-        if 'generator' in comps:
-            gen = comps['generator'].clone()
-            self.ship.add_component(gen, LayerType.CORE)
-        
-        # 4. Battery (for energy storage - required for beam weapons)
-        if 'battery' in comps:
-            bat = comps['battery'].clone()
-            self.ship.add_component(bat, LayerType.INNER)
-            
-        # 4. Crew Quarters (Need enough for Multi-tracker + weapons + bridge)
-        if 'crew_quarters' in comps:
-            cq1 = comps['crew_quarters'].clone()
-            self.ship.add_component(cq1, LayerType.INNER)
-            cq2 = comps['crew_quarters'].clone()
-            self.ship.add_component(cq2, LayerType.INNER)
-            cq3 = comps['crew_quarters'].clone()
-            self.ship.add_component(cq3, LayerType.INNER)
-        
-        # 5. Life Support
-        if 'life_support' in comps:
-            ls = comps['life_support'].clone()
-            self.ship.add_component(ls, LayerType.INNER)
-            ls2 = comps['life_support'].clone()
-            self.ship.add_component(ls2, LayerType.INNER)
-        
-        self.ship.recalculate_stats()
-        
-    def test_multiplex_tracking_stats(self):
+
+@pytest.fixture(autouse=True)
+def setup_game_data():
+    """Initialize pygame and game data before each test."""
+    pygame.init()
+    initialize_ship_data()
+    load_components()
+
+
+@pytest.fixture
+def grid():
+    """Create a spatial grid for tests."""
+    return SpatialGrid(2000)
+
+
+@pytest.fixture
+def base_ship(grid):
+    """Create a fully equipped base ship for testing."""
+    ship = Ship("TestShip", 1000, 1000, (255, 0, 0), team_id=0, ship_class="Cruiser")
+    ai = AIController(ship, grid, enemy_team_id=1)
+    ship.ai_controller = ai
+
+    # Add Infrastructure to avoid derelict status and allow components to work
+    comps = RegistryManager.instance().components
+
+    # 1. Bridge (required for non-derelict)
+    if 'bridge' in comps:
+        bridge = comps['bridge'].clone()
+        ship.add_component(bridge, LayerType.CORE)
+
+    # 2. Engine (required for non-derelict on Ships)
+    if 'standard_engine' in comps:
+        engine = comps['standard_engine'].clone()
+        ship.add_component(engine, LayerType.INNER)
+
+    # 3. Generator
+    if 'generator' in comps:
+        gen = comps['generator'].clone()
+        ship.add_component(gen, LayerType.CORE)
+
+    # 4. Battery (for energy storage - required for beam weapons)
+    if 'battery' in comps:
+        bat = comps['battery'].clone()
+        ship.add_component(bat, LayerType.INNER)
+
+    # 5. Crew Quarters (Need enough for Multi-tracker + weapons + bridge)
+    if 'crew_quarters' in comps:
+        cq1 = comps['crew_quarters'].clone()
+        ship.add_component(cq1, LayerType.INNER)
+        cq2 = comps['crew_quarters'].clone()
+        ship.add_component(cq2, LayerType.INNER)
+        cq3 = comps['crew_quarters'].clone()
+        ship.add_component(cq3, LayerType.INNER)
+
+    # 6. Life Support
+    if 'life_support' in comps:
+        ls = comps['life_support'].clone()
+        ship.add_component(ls, LayerType.INNER)
+        ls2 = comps['life_support'].clone()
+        ship.add_component(ls2, LayerType.INNER)
+
+    ship.recalculate_stats()
+    return ship
+
+
+class TestMultitarget:
+
+    def test_multiplex_tracking_stats(self, base_ship):
+        ship = base_ship
         # Add Multiplex Tracking
         comps = RegistryManager.instance().components
         if 'multiplex_tracking' not in comps:
-            return # Skip if not defined
-            
-        comp = comps['multiplex_tracking'].clone()
-        self.ship.add_component(comp, LayerType.OUTER)
-        self.ship.recalculate_stats()
-        
-        self.assertEqual(self.ship.max_targets, 10)
-        
-    def test_secondary_target_acquisition(self):
-        # Add Multiplex
-        comps = RegistryManager.instance().components
-        if 'multiplex_tracking' not in comps:
-            return
+            pytest.skip("multiplex_tracking component not defined")
 
         comp = comps['multiplex_tracking'].clone()
-        self.ship.add_component(comp, LayerType.OUTER)
-        self.ship.recalculate_stats()
-        
-        # Create Enemies
-        e1 = Ship("Enemy1", 1100, 1000, (255, 0, 0), team_id=1) # Dist 100
-        e2 = Ship("Enemy2", 1200, 1000, (255, 0, 0), team_id=1) # Dist 200
-        e3 = Ship("Enemy3", 1300, 1000, (255, 0, 0), team_id=1) # Dist 300
-        
-        self.grid.insert(e1)
-        self.grid.insert(e2)
-        self.grid.insert(e3)
-        
-        # Update AI
-        self.ai.update()
-        
-        # Depending on strategy (default 'nearest'), closest should be primary
-        self.assertEqual(self.ship.current_target, e1)
-        self.assertIn(e2, self.ship.secondary_targets)
-        self.assertIn(e3, self.ship.secondary_targets)
-        
-    def test_pdc_missile_logic(self):
+        ship.add_component(comp, LayerType.OUTER)
+        ship.recalculate_stats()
+
+        assert ship.max_targets == 10
+
+    def test_secondary_target_acquisition(self, base_ship, grid):
+        ship = base_ship
+        # Add Multiplex
         comps = RegistryManager.instance().components
         if 'multiplex_tracking' not in comps:
-            return
-            
+            pytest.skip("multiplex_tracking component not defined")
+
+        comp = comps['multiplex_tracking'].clone()
+        ship.add_component(comp, LayerType.OUTER)
+        ship.recalculate_stats()
+
+        # Create Enemies
+        e1 = Ship("Enemy1", 1100, 1000, (255, 0, 0), team_id=1)  # Dist 100
+        e2 = Ship("Enemy2", 1200, 1000, (255, 0, 0), team_id=1)  # Dist 200
+        e3 = Ship("Enemy3", 1300, 1000, (255, 0, 0), team_id=1)  # Dist 300
+
+        grid.insert(e1)
+        grid.insert(e2)
+        grid.insert(e3)
+
+        # Update AI
+        ship.ai_controller.update()
+
+        # Depending on strategy (default 'nearest'), closest should be primary
+        assert ship.current_target == e1
+        assert e2 in ship.secondary_targets
+        assert e3 in ship.secondary_targets
+
+    def test_pdc_missile_logic(self, base_ship, grid):
+        ship = base_ship
+        comps = RegistryManager.instance().components
+        if 'multiplex_tracking' not in comps:
+            pytest.skip("multiplex_tracking component not defined")
+
         # Add Multiplex
         comp = comps['multiplex_tracking'].clone()
-        res = self.ship.add_component(comp, LayerType.OUTER)
-        # self.assertTrue(res.is_valid if hasattr(res, 'is_valid') else res) # Handle boolean return
+        res = ship.add_component(comp, LayerType.OUTER)
         if not res:
-            self.fail("Multiplex add failed")
-        
+            pytest.fail("Multiplex add failed")
+
         # Add PDC: Facing 0 (Right), Arc 45
         pdc = comps['point_defence_cannon'].clone()
         pdc.facing_angle = 0
@@ -120,26 +138,26 @@ class TestMultitarget(unittest.TestCase):
         if limit_ab:
             limit_ab.firing_arc = 45
             limit_ab.range = 800
-        res = self.ship.add_component(pdc, LayerType.OUTER)
+        res = ship.add_component(pdc, LayerType.OUTER)
         if not res:
-            self.fail("PDC add failed")
-        
-        self.ship.recalculate_stats()
-        
+            pytest.fail("PDC add failed")
+
+        ship.recalculate_stats()
+
         # Scenario 1: Missile in Front (In Arc)
         # 1200, 1000 is 200 units to RIGHT of 1000,1000. Angle 0.
         m1 = Projectile(None, pygame.math.Vector2(1200, 1000), pygame.math.Vector2(0,0), 10, 1000, 5, AttackType.MISSILE)
         m1.team_id = 1
-        
+
         # Scenario 2: Missile Behind (Out of Arc)
         # 800, 1000 is 200 units to LEFT of 1000,1000. Angle 180.
         m2 = Projectile(None, pygame.math.Vector2(800, 1000), pygame.math.Vector2(0,0), 10, 1000, 5, AttackType.MISSILE)
         m2.team_id = 1
-        
+
         # Add to grid so AI can find them
-        self.grid.insert(m1)
-        self.grid.insert(m2)
-        
+        grid.insert(m1)
+        grid.insert(m2)
+
         # Inject Strategy into StrategyManager (new data-driven system)
         from game.ai.controller import StrategyManager
         manager = StrategyManager.instance()
@@ -160,39 +178,36 @@ class TestMultitarget(unittest.TestCase):
             'targeting_policy': 'test_pdc_target',
             'movement_policy': 'kite_max'
         }
-        
-        self.ship.ai_strategy = 'test_strat'
-        
+
+        ship.ai_strategy = 'test_strat'
+
         # Force AI update to use this strategy
-        sec = self.ai.find_secondary_targets()
-        
+        sec = ship.ai_controller.find_secondary_targets()
+
         # M1 should be prioritized because it is in PDC arc
-        self.assertIn(m1, sec)
+        assert m1 in sec
         # M2 should NOT be in list (hard filter via required=True)
-        self.assertNotIn(m2, sec)
-        
+        assert m2 not in sec
+
         # Verify Firing
         # Manually set secondary targets as AI update would
-        self.ship.secondary_targets = sec
+        ship.secondary_targets = sec
         context = {'projectiles': [m1, m2]}
-        
+
         # Ensure ship has resources to fire
-        max_energy = self.ship.resources.get_max_value("energy")
-        self.ship.resources.set_value("energy", max_energy)
-        
+        max_energy = ship.resources.get_max_value("energy")
+        ship.resources.set_value("energy", max_energy)
+
         # Ensure PDC is not on cooldown
         pdc.cooldown_timer = 0
-        
-        fired = self.ship.fire_weapons(context)
-        
+
+        fired = ship.fire_weapons(context)
+
         # Should fire 1 shot
-        self.assertTrue(len(fired) > 0, "PDC should have fired at missile")
-        
+        assert len(fired) > 0, "PDC should have fired at missile"
+
         # Check target of first shot
         shot = fired[0]
         # Handle dict or object return
         target = shot.target if hasattr(shot, 'target') else shot.get('target')
-        self.assertEqual(target, m1)
-
-if __name__ == '__main__':
-    unittest.main()
+        assert target == m1

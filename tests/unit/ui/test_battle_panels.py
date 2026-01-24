@@ -1,4 +1,4 @@
-import unittest
+import pytest
 from unittest.mock import MagicMock, patch
 import sys
 import os
@@ -23,30 +23,29 @@ class MockRect:
         else:
             px, py = args
         return self.x <= px < self.x + self.width and self.y <= py < self.y + self.height
-    
+
     def inflate(self, *args):
         return self
 
-class TestBattlePanels(unittest.TestCase):
 
+class TestBattlePanels:
 
-    def setUp(self):
-        self.mock_pygame = MagicMock()
-        self.mock_pygame.K_LSHIFT = 1
-        self.mock_pygame.K_RSHIFT = 2
-        self.mock_pygame.SRCALPHA = 0
-        self.mock_pygame.Rect = MockRect
-        
+    @pytest.fixture(autouse=True)
+    def setup_mocks(self):
+        """Set up mocks and patch pygame."""
+        mock_pygame = MagicMock()
+        mock_pygame.K_LSHIFT = 1
+        mock_pygame.K_RSHIFT = 2
+        mock_pygame.SRCALPHA = 0
+        mock_pygame.Rect = MockRect
+
         # Patch sys.modules
-        self.modules_patcher = patch.dict(sys.modules, {'pygame': self.mock_pygame})
-        self.modules_patcher.start()
-        
+        modules_patcher = patch.dict(sys.modules, {'pygame': mock_pygame})
+        modules_patcher.start()
+
         # Prepare sys.path
-        self._orig_path = list(sys.path)
-        
-        
-        # Import module under test
-        # Handle reload if needed
+        orig_path = list(sys.path)
+
         # Import module under test
         # Handle reload if needed
         from game.ui.panels import battle_panels
@@ -55,15 +54,18 @@ class TestBattlePanels(unittest.TestCase):
         self.module = battle_panels
         self.mock_scene = MagicMock()
         self.mock_scene.ships = []
-        
-        # Default key state: Not pressing shift
-        self.mock_keys = {self.mock_pygame.K_LSHIFT: False, self.mock_pygame.K_RSHIFT: False}
-        self.mock_pygame.key.get_pressed.return_value = self.mock_keys
 
-    def tearDown(self):
-        """Restore modules and path."""
-        self.modules_patcher.stop()
-        sys.path = self._orig_path
+        # Default key state: Not pressing shift
+        mock_keys = {mock_pygame.K_LSHIFT: False, mock_pygame.K_RSHIFT: False}
+        mock_pygame.key.get_pressed.return_value = mock_keys
+
+        self.mock_pygame = mock_pygame
+
+        yield
+
+        # Restore modules and path
+        modules_patcher.stop()
+        sys.path = orig_path
 
     def create_mock_ship(self, team_id, name="Ship"):
         ship = MagicMock()
@@ -73,9 +75,9 @@ class TestBattlePanels(unittest.TestCase):
         ship.is_derelict = False
         ship.max_shields = 100
         ship.layers = {
-            'outer': {'components': []}, 
-            'inner': {'components': []}, 
-            'core': {'components': []}, 
+            'outer': {'components': []},
+            'inner': {'components': []},
+            'core': {'components': []},
             'armor': {'components': []}
         }
         # Needed for height calc
@@ -92,47 +94,47 @@ class TestBattlePanels(unittest.TestCase):
     def test_stats_panel_expansion(self):
         """Test toggling ship expansion in stats panel."""
         panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
-        
+
         ship1 = self.create_mock_ship(0, "Hero")
         self.mock_scene.ships = [ship1]
-        
+
         # Calculate where the click should be
         # y starts at 10 - scroll(0)
         # Title "Team 1": y=10. Draws text. y+=30 -> 40.
         # Ship 1: drawn at 40. Height 25. Range [40, 65).
-        
+
         # Test 1: Expand
         handled = panel.handle_click(10, 50)
-        self.assertTrue(handled)
-        self.assertIn(ship1, panel.expanded_ships)
-        
+        assert handled is True
+        assert ship1 in panel.expanded_ships
+
         # Test 2: Collapse
         handled = panel.handle_click(10, 50)
-        self.assertTrue(handled)
-        self.assertNotIn(ship1, panel.expanded_ships)
+        assert handled is True
+        assert ship1 not in panel.expanded_ships
 
     def test_stats_panel_scroll_offset(self):
         """Test that scroll offset shifts the click targets."""
         panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
         ship1 = self.create_mock_ship(0, "Hero")
-        
+
         # Add a second ship to Team 2 to ensure we test deep list items
         ship2 = self.create_mock_ship(1, "Villain")
         self.mock_scene.ships = [ship1, ship2]
-        
+
         # Initial Logic:
         # Team 1 Header: 10
         # Ship 1: 40 [40, 65)
         # Spacer: 65 -> +45 = 110
         # Team 2 ships loop logic in handle_click starts at 110.
         # Ship 2: 110 [110, 135)
-        
+
         # Test clicking Ship 2 WITHOUT scroll
-        handled = panel.handle_click(10, 120) 
-        self.assertTrue(handled)
-        self.assertIn(ship2, panel.expanded_ships)
+        handled = panel.handle_click(10, 120)
+        assert handled is True
+        assert ship2 in panel.expanded_ships
         panel.expanded_ships.clear()
-        
+
         # Test clicking Ship 2 WITH scroll
         # Set Scroll Offset = 50.
         # This effectively "moves the view down", so top items move up (negative y).
@@ -140,91 +142,88 @@ class TestBattlePanels(unittest.TestCase):
         # So clicking at screen Y=70 should map to Virtual Y=120?
         # rel_y = 70 + 50 = 120.
         # This matches the interval [110, 135).
-        
+
         panel.scroll_offset = 50
         handled = panel.handle_click(10, 70)
-        self.assertTrue(handled, "Click at 70 with scroll 50 should map to 120 and hit ship2")
-        self.assertIn(ship2, panel.expanded_ships)
-        
+        assert handled is True, "Click at 70 with scroll 50 should map to 120 and hit ship2"
+        assert ship2 in panel.expanded_ships
+
         # Verify clicking original screen spot (120) now maps to 170 -> miss
         panel.expanded_ships.clear()
-        handled = panel.handle_click(10, 120) # rel_y = 170
-        self.assertFalse(handled)
+        handled = panel.handle_click(10, 120)  # rel_y = 170
+        assert handled is False
 
     def test_seeker_monitor_state(self):
         """Test seeker add and clear inactive logic."""
         panel = self.module.SeekerMonitorPanel(self.mock_scene, 0, 0, 300, 600)
-        
+
         # Mock seekers
         s1 = MagicMock()
         s1.status = 'active'
         s2 = MagicMock()
-        s2.status = 'hit' # Inactive
+        s2.status = 'hit'  # Inactive
         s3 = MagicMock()
-        s3.status = 'miss' # Inactive
-        
+        s3.status = 'miss'  # Inactive
+
         panel.add_seeker(s1)
         panel.add_seeker(s2)
         panel.add_seeker(s3)
-        
-        self.assertEqual(len(panel.tracked_seekers), 3)
-        
+
+        assert len(panel.tracked_seekers) == 3
+
         panel.clear_inactive()
-        self.assertEqual(len(panel.tracked_seekers), 1)
-        self.assertEqual(panel.tracked_seekers[0], s1)
+        assert len(panel.tracked_seekers) == 1
+        assert panel.tracked_seekers[0] == s1
 
     def test_seeker_panel_coordinate_logic(self):
         """Test relative coordinate logic in Seeker Panel."""
         # Panel at x=100, y=100.
         panel = self.module.SeekerMonitorPanel(self.mock_scene, 100, 100, 300, 600)
-        
+
         s1 = MagicMock()
         s1.status = 'active'
         s1.velocity = MagicMock()
         s1.velocity.length.return_value = 0
         panel.add_seeker(s1)
-        
+
         # handle_click(mx, my) where mx, my are Absolute.
         # Logic: rel_x = mx - rect.x = mx - 100
         #        rel_y = my - rect.y + scroll = my - 100 + 0
-        
+
         # Item 1 is at y_pos = 10 + 30 = 40. Range [40, 62).
-        
+
         # To hit Item 1:
         # rel_y in [40, 62).
         # my - 100 = 40 => my = 140.
         # mx needs to be inside panel? Panel X [100, 400).
         # Let's say mx = 150.
-        
+
         handled = panel.handle_click(150, 140)
-        self.assertTrue(handled)
-        self.assertIn(s1, panel.expanded_seekers)
-        
+        assert handled is True
+        assert s1 in panel.expanded_seekers
+
         # Test clicking X button (Inactive seeker)
         s1.status = 'hit'
         # X button is at rel_x in [panel_w-25, panel_w-5]. panel_w=300. [275, 295].
         # Abs mx = 100 + 280 = 380.
-        
+
         handled = panel.handle_click(380, 140)
-        self.assertTrue(handled)
-        self.assertNotIn(s1, panel.tracked_seekers)
+        assert handled is True
+        assert s1 not in panel.tracked_seekers
 
     def test_battle_end_control(self):
         """Test BattleControlPanel end battle button."""
         panel = self.module.BattleControlPanel(self.mock_scene, 0, 0, 800, 600)
-        
+
         # Manually set rects as if draw() was called, or just test logic if rects exist
         # draw() sets self.end_battle_early_rect
         btn_rect = self.mock_pygame.Rect(10, 70, 120, 30)
         panel.end_battle_early_rect = btn_rect
-        
+
         # Click inside
-        res = panel.handle_click(15, 75) # 10 < 15 < 130, 70 < 75 < 100
-        self.assertEqual(res, "end_battle")
-        
+        res = panel.handle_click(15, 75)  # 10 < 15 < 130, 70 < 75 < 100
+        assert res == "end_battle"
+
         # Click outside
         res = panel.handle_click(200, 200)
-        self.assertFalse(res)
-
-if __name__ == '__main__':
-    unittest.main()
+        assert res is False

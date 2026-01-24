@@ -1,7 +1,7 @@
 """
 Tests for NewGameSetupScreen - new game configuration UI.
 """
-import unittest
+import pytest
 import tempfile
 import shutil
 import os
@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 import re
 
 
-class TestNewGameSetupValidation(unittest.TestCase):
+class TestNewGameSetupValidation:
     """Tests for save name validation logic."""
 
     def test_save_name_not_empty_validation(self):
@@ -18,16 +18,16 @@ class TestNewGameSetupValidation(unittest.TestCase):
 
         # Test the static validation method
         is_valid, error = NewGameSetupScreen.validate_save_name("")
-        self.assertFalse(is_valid)
-        self.assertIn("empty", error.lower())
+        assert not is_valid
+        assert "empty" in error.lower()
 
     def test_save_name_whitespace_only_rejected(self):
         """Whitespace-only save name rejected."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
         is_valid, error = NewGameSetupScreen.validate_save_name("   ")
-        self.assertFalse(is_valid)
-        self.assertIn("empty", error.lower())
+        assert not is_valid
+        assert "empty" in error.lower()
 
     def test_save_name_valid_characters(self):
         """Valid save names with alphanumeric and spaces accepted."""
@@ -36,7 +36,7 @@ class TestNewGameSetupValidation(unittest.TestCase):
         valid_names = ["MyGame", "Game 1", "Test_Game", "Campaign-2026"]
         for name in valid_names:
             is_valid, error = NewGameSetupScreen.validate_save_name(name)
-            self.assertTrue(is_valid, f"'{name}' should be valid: {error}")
+            assert is_valid, f"'{name}' should be valid: {error}"
 
     def test_save_name_invalid_characters_rejected(self):
         """Special characters in save name rejected."""
@@ -45,13 +45,13 @@ class TestNewGameSetupValidation(unittest.TestCase):
         invalid_names = ["Game/1", "Test\\Game", "My:Game", "Game?Name", "Test*Game", "Game<>"]
         for name in invalid_names:
             is_valid, error = NewGameSetupScreen.validate_save_name(name)
-            self.assertFalse(is_valid, f"'{name}' should be invalid")
+            assert not is_valid, f"'{name}' should be invalid"
 
 
-class TestNewGameSetupValidationUniqueness(unittest.TestCase):
+class TestNewGameSetupValidationUniqueness:
     """Tests for save name uniqueness checking."""
 
-    def setUp(self):
+    def setup_method(self):
         """Create temporary directory for tests."""
         self.tmpdir = tempfile.mkdtemp()
         self.original_cwd = os.getcwd()
@@ -62,7 +62,7 @@ class TestNewGameSetupValidationUniqueness(unittest.TestCase):
         os.makedirs(self.saves_folder)
         os.makedirs(os.path.join(self.saves_folder, "ExistingGame"))
 
-    def tearDown(self):
+    def teardown_method(self):
         """Clean up temporary directory."""
         os.chdir(self.original_cwd)
         shutil.rmtree(self.tmpdir)
@@ -72,18 +72,18 @@ class TestNewGameSetupValidationUniqueness(unittest.TestCase):
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
         is_valid, error = NewGameSetupScreen.validate_save_name("NewUniqueName", self.saves_folder)
-        self.assertTrue(is_valid)
+        assert is_valid
 
     def test_save_name_duplicate_rejected(self):
         """Duplicate save name rejected."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
         is_valid, error = NewGameSetupScreen.validate_save_name("ExistingGame", self.saves_folder)
-        self.assertFalse(is_valid)
-        self.assertIn("exists", error.lower())
+        assert not is_valid
+        assert "exists" in error.lower()
 
 
-class TestNewGameSetupConfigBuilding(unittest.TestCase):
+class TestNewGameSetupConfigBuilding:
     """Tests for GameConfig construction from setup screen."""
 
     def test_setup_builds_correct_config_1_player(self):
@@ -97,10 +97,10 @@ class TestNewGameSetupConfigBuilding(unittest.TestCase):
             empire_names=["Solo Empire"]
         )
 
-        self.assertIsInstance(config, GameConfig)
-        self.assertEqual(config.save_name, "TestGame")
-        self.assertEqual(len(config.players), 1)
-        self.assertEqual(config.players[0].name, "Solo Empire")
+        assert isinstance(config, GameConfig)
+        assert config.save_name == "TestGame"
+        assert len(config.players) == 1
+        assert config.players[0].name == "Solo Empire"
 
     def test_setup_builds_correct_config_4_players(self):
         """Setup produces valid GameConfig for 4 players."""
@@ -112,9 +112,9 @@ class TestNewGameSetupConfigBuilding(unittest.TestCase):
             empire_names=["Empire A", "Empire B", "Empire C", "Empire D"]
         )
 
-        self.assertEqual(len(config.players), 4)
-        self.assertEqual(config.players[0].name, "Empire A")
-        self.assertEqual(config.players[3].name, "Empire D")
+        assert len(config.players) == 4
+        assert config.players[0].name == "Empire A"
+        assert config.players[3].name == "Empire D"
 
     def test_setup_auto_assigns_themes(self):
         """Themes assigned based on player number."""
@@ -128,10 +128,10 @@ class TestNewGameSetupConfigBuilding(unittest.TestCase):
         )
 
         # Verify themes match THEME_DEFAULTS
-        self.assertEqual(config.players[0].theme, THEME_DEFAULTS[0][0])  # Federation
-        self.assertEqual(config.players[1].theme, THEME_DEFAULTS[1][0])  # Atlantians
-        self.assertEqual(config.players[2].theme, THEME_DEFAULTS[2][0])  # Romulans
-        self.assertEqual(config.players[3].theme, THEME_DEFAULTS[3][0])  # Klingons
+        assert config.players[0].theme == THEME_DEFAULTS[0][0]  # Federation
+        assert config.players[1].theme == THEME_DEFAULTS[1][0]  # Atlantians
+        assert config.players[2].theme == THEME_DEFAULTS[2][0]  # Romulans
+        assert config.players[3].theme == THEME_DEFAULTS[3][0]  # Klingons
 
     def test_setup_auto_assigns_colors(self):
         """Colors assigned based on player number."""
@@ -145,8 +145,8 @@ class TestNewGameSetupConfigBuilding(unittest.TestCase):
         )
 
         # Verify colors match THEME_DEFAULTS
-        self.assertEqual(config.players[0].color, THEME_DEFAULTS[0][1])
-        self.assertEqual(config.players[1].color, THEME_DEFAULTS[1][1])
+        assert config.players[0].color == THEME_DEFAULTS[0][1]
+        assert config.players[1].color == THEME_DEFAULTS[1][1]
 
     def test_setup_uses_default_names_if_empty(self):
         """Default empire names used if not provided."""
@@ -159,11 +159,11 @@ class TestNewGameSetupConfigBuilding(unittest.TestCase):
         )
 
         # Should use default names
-        self.assertTrue(len(config.players[0].name) > 0)
-        self.assertTrue(len(config.players[1].name) > 0)
+        assert len(config.players[0].name) > 0
+        assert len(config.players[1].name) > 0
 
 
-class TestNewGameSetupPlayerCount(unittest.TestCase):
+class TestNewGameSetupPlayerCount:
     """Tests for player count handling."""
 
     def test_player_count_options_1_to_4(self):
@@ -172,26 +172,22 @@ class TestNewGameSetupPlayerCount(unittest.TestCase):
 
         options = NewGameSetupScreen.get_player_count_options()
 
-        self.assertEqual(options, [1, 2, 3, 4])
+        assert options == [1, 2, 3, 4]
 
     def test_build_config_rejects_invalid_count(self):
         """Building config with invalid player count raises error."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             NewGameSetupScreen.build_game_config(
                 save_name="Test",
                 player_count=5,  # Invalid
                 empire_names=["E1", "E2", "E3", "E4", "E5"]
             )
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             NewGameSetupScreen.build_game_config(
                 save_name="Test",
                 player_count=0,  # Invalid
                 empire_names=[]
             )
-
-
-if __name__ == '__main__':
-    unittest.main()

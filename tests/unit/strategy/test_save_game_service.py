@@ -1,7 +1,7 @@
 """
 Tests for SaveGameService with turn-based saves and per-empire design folders
 """
-import unittest
+import pytest
 import tempfile
 import shutil
 import os
@@ -42,19 +42,18 @@ class MockGameSession:
         }
 
 
-class TestSaveGameServiceFolderStructure(unittest.TestCase):
+class TestSaveGameServiceFolderStructure:
     """Tests for save folder structure creation."""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
         """Create temporary directory for tests."""
-        self.tmpdir = tempfile.mkdtemp()
-        self.original_cwd = os.getcwd()
-        os.chdir(self.tmpdir)
-
-    def tearDown(self):
-        """Clean up temporary directory."""
-        os.chdir(self.original_cwd)
-        shutil.rmtree(self.tmpdir)
+        tmpdir = tempfile.mkdtemp()
+        original_cwd = os.getcwd()
+        os.chdir(tmpdir)
+        yield tmpdir
+        os.chdir(original_cwd)
+        shutil.rmtree(tmpdir)
 
     def test_save_creates_turns_folder(self):
         """First save creates turns/ subfolder"""
@@ -62,9 +61,9 @@ class TestSaveGameServiceFolderStructure(unittest.TestCase):
 
         success, message, save_path = SaveGameService.save_game(session, "TestGame")
 
-        self.assertTrue(success)
+        assert success
         turns_folder = os.path.join(save_path, "turns")
-        self.assertTrue(os.path.exists(turns_folder), "turns/ folder should be created")
+        assert os.path.exists(turns_folder), "turns/ folder should be created"
 
     def test_save_creates_per_empire_design_folders(self):
         """Save creates designs/empire_N/ for each empire"""
@@ -79,15 +78,14 @@ class TestSaveGameServiceFolderStructure(unittest.TestCase):
 
         success, message, save_path = SaveGameService.save_game(session, "TestGame")
 
-        self.assertTrue(success)
+        assert success
         designs_folder = os.path.join(save_path, "designs")
-        self.assertTrue(os.path.exists(designs_folder))
+        assert os.path.exists(designs_folder)
 
         # Check per-empire folders
         for i in range(3):
             empire_folder = os.path.join(designs_folder, f"empire_{i}")
-            self.assertTrue(os.path.exists(empire_folder),
-                            f"designs/empire_{i}/ folder should be created")
+            assert os.path.exists(empire_folder), f"designs/empire_{i}/ folder should be created"
 
     def test_save_writes_turn_file(self):
         """Save writes to turns/turn_N.json"""
@@ -95,10 +93,9 @@ class TestSaveGameServiceFolderStructure(unittest.TestCase):
 
         success, message, save_path = SaveGameService.save_game(session, "TestGame")
 
-        self.assertTrue(success)
+        assert success
         turn_file = os.path.join(save_path, "turns", "turn_5.json")
-        self.assertTrue(os.path.exists(turn_file),
-                        f"Turn file should exist at turns/turn_5.json")
+        assert os.path.exists(turn_file), f"Turn file should exist at turns/turn_5.json"
 
     def test_save_updates_metadata_latest_turn(self):
         """Metadata tracks latest_turn_number"""
@@ -106,11 +103,11 @@ class TestSaveGameServiceFolderStructure(unittest.TestCase):
 
         success, message, save_path = SaveGameService.save_game(session, "TestGame")
 
-        self.assertTrue(success)
+        assert success
         metadata_path = os.path.join(save_path, "save_metadata.json")
         metadata = load_json(metadata_path)
 
-        self.assertEqual(metadata['latest_turn_number'], 3)
+        assert metadata['latest_turn_number'] == 3
 
     def test_save_increment_turn_creates_new_file(self):
         """Second save creates turn_2.json, keeps turn_1.json"""
@@ -118,51 +115,53 @@ class TestSaveGameServiceFolderStructure(unittest.TestCase):
 
         # First save
         success1, _, save_path = SaveGameService.save_game(session, "TestGame")
-        self.assertTrue(success1)
+        assert success1
 
         # Increment turn and save again
         session.turn_number = 2
         session.save_path = save_path
         success2, _, _ = SaveGameService.save_game(session)
 
-        self.assertTrue(success2)
+        assert success2
 
         # Both turn files should exist
         turn1_file = os.path.join(save_path, "turns", "turn_1.json")
         turn2_file = os.path.join(save_path, "turns", "turn_2.json")
 
-        self.assertTrue(os.path.exists(turn1_file), "turn_1.json should still exist")
-        self.assertTrue(os.path.exists(turn2_file), "turn_2.json should be created")
+        assert os.path.exists(turn1_file), "turn_1.json should still exist"
+        assert os.path.exists(turn2_file), "turn_2.json should be created"
 
 
-class TestSaveGameServiceVersion(unittest.TestCase):
+class TestSaveGameServiceVersion:
     """Tests for save version handling."""
 
-    def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
-        self.original_cwd = os.getcwd()
-        os.chdir(self.tmpdir)
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests."""
+        tmpdir = tempfile.mkdtemp()
+        original_cwd = os.getcwd()
+        os.chdir(tmpdir)
+        yield tmpdir
+        os.chdir(original_cwd)
+        shutil.rmtree(tmpdir)
 
-    def tearDown(self):
-        os.chdir(self.original_cwd)
-        shutil.rmtree(self.tmpdir)
-
-    def test_save_version_is_2_0_0(self):
+    def test_save_version_is_2_0_0(self, setup_tmpdir):
         """New saves use version 2.0.0"""
         session = MockGameSession()
 
         success, _, save_path = SaveGameService.save_game(session, "TestGame")
 
-        self.assertTrue(success)
+        assert success
         metadata_path = os.path.join(save_path, "save_metadata.json")
         metadata = load_json(metadata_path)
 
-        self.assertEqual(metadata['version'], "2.0.0")
+        assert metadata['version'] == "2.0.0"
 
-    def test_load_rejects_old_version(self):
+    def test_load_rejects_old_version(self, setup_tmpdir):
         """Loading incompatible version save returns error"""
+        tmpdir = setup_tmpdir
         # Create save with valid structure but incompatible version
-        save_folder = os.path.join(self.tmpdir, "saves", "OldSave")
+        save_folder = os.path.join(tmpdir, "saves", "OldSave")
         turns_folder = os.path.join(save_folder, "turns")
         os.makedirs(turns_folder)
 
@@ -189,21 +188,22 @@ class TestSaveGameServiceVersion(unittest.TestCase):
         # Attempt to load
         result, message = SaveGameService.load_game(save_folder)
 
-        self.assertIsNone(result)
-        self.assertIn("version", message.lower())
+        assert result is None
+        assert "version" in message.lower()
 
 
-class TestSaveGameServiceLoad(unittest.TestCase):
+class TestSaveGameServiceLoad:
     """Tests for loading saves."""
 
-    def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
-        self.original_cwd = os.getcwd()
-        os.chdir(self.tmpdir)
-
-    def tearDown(self):
-        os.chdir(self.original_cwd)
-        shutil.rmtree(self.tmpdir)
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests."""
+        tmpdir = tempfile.mkdtemp()
+        original_cwd = os.getcwd()
+        os.chdir(tmpdir)
+        yield tmpdir
+        os.chdir(original_cwd)
+        shutil.rmtree(tmpdir)
 
     def test_load_defaults_to_latest_turn(self):
         """load_game() loads highest turn number by default"""
@@ -222,8 +222,8 @@ class TestSaveGameServiceLoad(unittest.TestCase):
         # Load without specifying turn
         loaded, message = SaveGameService.load_game(save_path)
 
-        self.assertIsNotNone(loaded)
-        self.assertEqual(loaded.turn_number, 3)
+        assert loaded is not None
+        assert loaded.turn_number == 3
 
     def test_load_specific_turn(self):
         """load_game(path, turn_number=N) loads specific turn"""
@@ -242,8 +242,8 @@ class TestSaveGameServiceLoad(unittest.TestCase):
         # Load specific turn
         loaded, message = SaveGameService.load_game(save_path, turn_number=2)
 
-        self.assertIsNotNone(loaded)
-        self.assertEqual(loaded.turn_number, 2)
+        assert loaded is not None
+        assert loaded.turn_number == 2
 
     def test_list_turns_returns_all_turns(self):
         """list_turns() returns metadata for each turn file"""
@@ -261,24 +261,25 @@ class TestSaveGameServiceLoad(unittest.TestCase):
         # List turns
         turns = SaveGameService.list_turns(save_path)
 
-        self.assertEqual(len(turns), 3)
+        assert len(turns) == 3
         turn_numbers = [t['turn_number'] for t in turns]
-        self.assertIn(1, turn_numbers)
-        self.assertIn(2, turn_numbers)
-        self.assertIn(3, turn_numbers)
+        assert 1 in turn_numbers
+        assert 2 in turn_numbers
+        assert 3 in turn_numbers
 
 
-class TestSaveGameServiceMetadata(unittest.TestCase):
+class TestSaveGameServiceMetadata:
     """Tests for save metadata."""
 
-    def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
-        self.original_cwd = os.getcwd()
-        os.chdir(self.tmpdir)
-
-    def tearDown(self):
-        os.chdir(self.original_cwd)
-        shutil.rmtree(self.tmpdir)
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests."""
+        tmpdir = tempfile.mkdtemp()
+        original_cwd = os.getcwd()
+        os.chdir(tmpdir)
+        yield tmpdir
+        os.chdir(original_cwd)
+        shutil.rmtree(tmpdir)
 
     def test_metadata_includes_empire_count(self):
         """Metadata includes number of empires"""
@@ -296,7 +297,7 @@ class TestSaveGameServiceMetadata(unittest.TestCase):
         metadata_path = os.path.join(save_path, "save_metadata.json")
         metadata = load_json(metadata_path)
 
-        self.assertEqual(metadata['empire_count'], 3)
+        assert metadata['empire_count'] == 3
 
     def test_metadata_includes_empire_names(self):
         """Metadata includes list of empire names"""
@@ -309,21 +310,23 @@ class TestSaveGameServiceMetadata(unittest.TestCase):
         metadata_path = os.path.join(save_path, "save_metadata.json")
         metadata = load_json(metadata_path)
 
-        self.assertIn("Alpha Empire", metadata['empire_names'])
-        self.assertIn("Beta Empire", metadata['empire_names'])
+        assert "Alpha Empire" in metadata['empire_names']
+        assert "Beta Empire" in metadata['empire_names']
 
 
-class TestSaveGameServiceNoDesignMigration(unittest.TestCase):
+class TestSaveGameServiceNoDesignMigration:
     """Tests for BUG-29: New games should not inherit designs from temp folder."""
 
-    def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
-        self.original_cwd = os.getcwd()
-        os.chdir(self.tmpdir)
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests."""
+        tmpdir = tempfile.mkdtemp()
+        original_cwd = os.getcwd()
+        os.chdir(tmpdir)
 
         # Create temp designs folder with some designs (simulating previous game sessions)
-        self.temp_designs = os.path.join(tempfile.gettempdir(), "starship_battles_temp_designs", "empire_0")
-        os.makedirs(self.temp_designs, exist_ok=True)
+        temp_designs = os.path.join(tempfile.gettempdir(), "starship_battles_temp_designs", "empire_0")
+        os.makedirs(temp_designs, exist_ok=True)
 
         # Create a test design in temp folder
         test_design = {
@@ -333,32 +336,29 @@ class TestSaveGameServiceNoDesignMigration(unittest.TestCase):
             "mass": 1000.0,
             "layers": {}
         }
-        save_json(os.path.join(self.temp_designs, "old_design.json"), test_design)
+        save_json(os.path.join(temp_designs, "old_design.json"), test_design)
 
-    def tearDown(self):
-        os.chdir(self.original_cwd)
-        shutil.rmtree(self.tmpdir)
+        yield tmpdir, temp_designs
+
+        os.chdir(original_cwd)
+        shutil.rmtree(tmpdir)
         # Clean up temp design we created
-        temp_design_file = os.path.join(self.temp_designs, "old_design.json")
+        temp_design_file = os.path.join(temp_designs, "old_design.json")
         if os.path.exists(temp_design_file):
             os.remove(temp_design_file)
 
-    def test_new_game_does_not_migrate_temp_designs(self):
+    def test_new_game_does_not_migrate_temp_designs(self, setup_tmpdir):
         """BUG-29: New game save should NOT copy designs from temp folder"""
+        tmpdir, temp_designs = setup_tmpdir
         session = MockGameSession()
 
         success, message, save_path = SaveGameService.save_game(session, "NewGame")
 
-        self.assertTrue(success)
+        assert success
 
         # Check that the designs folder for empire 0 is EMPTY
         empire_designs = os.path.join(save_path, "designs", "empire_0")
-        self.assertTrue(os.path.exists(empire_designs), "Empire designs folder should exist")
+        assert os.path.exists(empire_designs), "Empire designs folder should exist"
 
         design_files = [f for f in os.listdir(empire_designs) if f.endswith('.json')]
-        self.assertEqual(len(design_files), 0,
-            f"New game should have NO designs, but found: {design_files}")
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert len(design_files) == 0, f"New game should have NO designs, but found: {design_files}"

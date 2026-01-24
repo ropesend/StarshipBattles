@@ -1,5 +1,5 @@
 """Tests for ship combat damage mechanics."""
-import unittest
+import pytest
 import pygame
 import random
 
@@ -8,22 +8,22 @@ from game.simulation.components.component import create_component  # Phase 7: Re
 from unittest.mock import MagicMock
 
 
-
-class TestDamageLayerLogic(unittest.TestCase):
+class TestDamageLayerLogic:
     """Test damage distribution through ship layers."""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         # Save random state and set deterministic seed for reproducible tests
-        # State is restored in tearDown to prevent pollution of other tests
-        self._saved_random_state = random.getstate()
+        # State is restored after test to prevent pollution of other tests
+        saved_random_state = random.getstate()
         random.seed(42)
-        
+
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255))
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship.add_component(create_component('life_support'), LayerType.CORE)
         self.ship.add_component(create_component('armor_plate'), LayerType.ARMOR)
-        
+
         # Ensure TestShip class exists in RegistryManager with correct layers
         # Note: Post-Phase 5, hull_mass is removed; Hull component provides mass
         from game.core.registry import RegistryManager
@@ -40,60 +40,61 @@ class TestDamageLayerLogic(unittest.TestCase):
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
         self.ship.add_component(create_component('life_support'), LayerType.CORE)
         self.ship.add_component(create_component('armor_plate'), LayerType.ARMOR)
-        
+
         self.ship.recalculate_stats()
 
-    def tearDown(self):
+        yield
+
         # Restore random state to prevent pollution of other tests
-        random.setstate(self._saved_random_state)
+        random.setstate(saved_random_state)
 
     def test_armor_absorbs_damage_first(self):
         """Damage should be absorbed by armor layer first."""
         armor = self.ship.layers[LayerType.ARMOR]['components'][0]
         initial_armor_hp = armor.current_hp
-        
+
         # Deal damage less than armor HP
         self.ship.take_damage(50)
-        
-        self.assertLess(armor.current_hp, initial_armor_hp)
+
+        assert armor.current_hp < initial_armor_hp
         # Core components should be untouched
         core_damage = sum(c.max_hp - c.current_hp for c in self.ship.layers[LayerType.CORE]['components'])
-        self.assertEqual(core_damage, 0)
-    
+        assert core_damage == 0
+
     def test_damage_overflows_to_next_layer(self):
         """Excess damage should overflow to inner layers."""
         armor = self.ship.layers[LayerType.ARMOR]['components'][0]
         armor_hp = armor.current_hp
-        
+
         # Deal more damage than armor can absorb
         overflow_damage = 50
         self.ship.take_damage(armor_hp + overflow_damage)
-        
+
         # Armor should be destroyed
-        self.assertEqual(armor.current_hp, 0)
-        
+        assert armor.current_hp == 0
+
         # CORE (skipping empty OUTER/INNER) should have taken overflow
         core_damage = sum(c.max_hp - c.current_hp for c in self.ship.layers[LayerType.CORE]['components'])
-        self.assertGreater(core_damage, 0)
-    
+        assert core_damage > 0
+
     def test_shield_absorbs_before_armor(self):
         """Shield should absorb damage before armor."""
         # Add shield (correct component ID is 'shield_generator')
         self.ship.add_component(create_component('shield_generator'), LayerType.CORE)
         self.ship.recalculate_stats()
-        
+
         initial_shields = self.ship.current_shields
         armor = self.ship.layers[LayerType.ARMOR]['components'][0]
         initial_armor_hp = armor.current_hp
-        
+
         # Deal damage less than shields
         damage = min(initial_shields - 10, 50)
         if damage > 0:
             self.ship.take_damage(damage)
-            
-            self.assertLess(self.ship.current_shields, initial_shields)
-            self.assertEqual(armor.current_hp, initial_armor_hp)
-    
+
+            assert self.ship.current_shields < initial_shields
+            assert armor.current_hp == initial_armor_hp
+
     def test_bridge_destruction_kills_ship(self):
         """Destroying the bridge SHOULD make the ship derelict (ability-based detection).
 
@@ -126,12 +127,12 @@ class TestDamageLayerLogic(unittest.TestCase):
                 bridge = c
                 break
 
-        self.assertIsNotNone(bridge)
-        self.assertTrue(self.ship.is_alive)
+        assert bridge is not None
+        assert self.ship.is_alive
 
         # Update derelict status - should NOT be derelict initially (has bridge)
         self.ship.update_derelict_status()
-        self.assertFalse(self.ship.is_derelict, "Ship should not be derelict with operational bridge")
+        assert not self.ship.is_derelict, "Ship should not be derelict with operational bridge"
 
         # Directly destroy the bridge instead of using take_damage
         # take_damage might hit other components first due to random distribution
@@ -139,16 +140,16 @@ class TestDamageLayerLogic(unittest.TestCase):
         bridge.is_active = False
 
         # Bridge should be destroyed
-        self.assertFalse(bridge.is_active)
+        assert not bridge.is_active
 
         # Update derelict status - should BE derelict now (no CommandAndControl)
         self.ship.update_derelict_status()
-        self.assertTrue(self.ship.is_derelict, "Ship should be derelict after bridge destruction")
-        self.assertTrue(self.ship.bridge_destroyed, "bridge_destroyed flag should be set")
+        assert self.ship.is_derelict, "Ship should be derelict after bridge destruction"
+        assert self.ship.bridge_destroyed, "bridge_destroyed flag should be set"
 
     def test_bridge_requirement_kills_ship(self):
         """Test is obsolete post-Phase 5. Merged into test_bridge_destruction_kills_ship.
-        
+
         Post-Phase 5: All ships with CommandAndControl components will become derelict
         when those components are destroyed. The 'requirements' JSON field no longer exists.
         """
@@ -156,10 +157,11 @@ class TestDamageLayerLogic(unittest.TestCase):
         pass
 
 
-class TestEnergyRegeneration(unittest.TestCase):
+class TestEnergyRegeneration:
     """Test energy and shield regeneration mechanics."""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
@@ -167,43 +169,44 @@ class TestEnergyRegeneration(unittest.TestCase):
         self.ship.add_component(create_component('battery'), LayerType.INNER)
         self.ship.add_component(create_component('generator'), LayerType.INNER)
         self.ship.recalculate_stats()
-    
+
     def test_energy_regenerates_per_tick(self):
         """Energy should regenerate each combat tick."""
         # Drain energy first, then check if it regenerates
         self.ship.resources.get_resource("energy").current_value = self.ship.resources.get_max_value("energy") / 2
         initial_energy = self.ship.resources.get_value("energy")
-        
+
         # Energy regeneration happens in Ship.update() via ResourceRegistry (tick-based)
         self.ship.update()
-        
-        self.assertGreater(self.ship.resources.get_value("energy"), initial_energy)
-    
+
+        assert self.ship.resources.get_value("energy") > initial_energy
+
     def test_energy_capped_at_max(self):
         """Energy should not exceed max_energy."""
         self.ship.resources.get_resource("energy").current_value = self.ship.resources.get_max_value("energy") - 1
-        
+
         # Regen creates overflow
         # Manually boost regen rate to ensure overflow (tick is 0.01s, need >1.0 change)
         self.ship.resources.get_resource("energy").regen_rate = 200
         self.ship.update()
-        
-        self.assertEqual(self.ship.resources.get_value("energy"), self.ship.resources.get_max_value("energy"))
-    
+
+        assert self.ship.resources.get_value("energy") == self.ship.resources.get_max_value("energy")
+
     def test_dead_ship_no_regen(self):
         """Dead ship should not regenerate energy."""
         self.ship.is_alive = False
         self.ship.resources.get_resource("energy").current_value = 0
-        
+
         self.ship.update()
-        
-        self.assertEqual(self.ship.resources.get_value("energy"), 0)
+
+        assert self.ship.resources.get_value("energy") == 0
 
 
-class TestWeaponCooldowns(unittest.TestCase):
+class TestWeaponCooldowns:
     """Test weapon cooldown mechanics."""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         self.ship = Ship("TestShip", 0, 0, (255, 255, 255))
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
@@ -211,36 +214,36 @@ class TestWeaponCooldowns(unittest.TestCase):
         # Use laser_cannon which is a BeamWeapon that can go in OUTER
         self.ship.add_component(create_component('laser_cannon'), LayerType.OUTER)
         self.ship.recalculate_stats()
-    
+
     def test_weapon_cooldown_decreases(self):
         """Weapon cooldown should decrease each tick."""
         # Phase 7: Use ability-based weapon detection
-        
+
         weapon = None
         for c in self.ship.layers[LayerType.OUTER]['components']:
             if c.has_ability('WeaponAbility') and c.is_active:
                 weapon = c
                 break
-        
-        self.assertIsNotNone(weapon, "No active weapon found in OUTER layer")
-        
+
+        assert weapon is not None, "No active weapon found in OUTER layer"
+
         # Phase 7: Use ability-based access for weapon methods
         weapon_ab = weapon.get_ability('WeaponAbility') or weapon.get_ability('ProjectileWeaponAbility')
-        self.assertIsNotNone(weapon_ab)
-        
+        assert weapon_ab is not None
+
         # Fire to start cooldown
         weapon_ab.fire(target=None)
         initial_cooldown = weapon_ab.cooldown_timer
-        self.assertGreater(initial_cooldown, 0, "Weapon should have cooldown after firing")
-        
+        assert initial_cooldown > 0, "Weapon should have cooldown after firing"
+
         # Weapon cooldowns are updated in Ship.update() via Component.update() (tick-based)
         self.ship.update()
-        
-        self.assertLess(weapon_ab.cooldown_timer, initial_cooldown)
+
+        assert weapon_ab.cooldown_timer < initial_cooldown
 
 
 
-class TestCombatFlow(unittest.TestCase):
+class TestCombatFlow:
     """Refactored Tests for Combat Flow (Firing and Damage)."""
 
     def test_firing_solution_lead(self):
@@ -249,40 +252,40 @@ class TestCombatFlow(unittest.TestCase):
         from game.simulation.entities.ship_combat import ShipCombatMixin
         class MockCombatShip(ShipCombatMixin):
             pass
-            
+
         ship = MockCombatShip()
         ship.position = pygame.math.Vector2(0,0)
         ship.velocity = pygame.math.Vector2(0,0)
-        
+
         # Target moving right at 10 u/s at (100, 0)
         target_pos = pygame.math.Vector2(100, 0)
         target_vel = pygame.math.Vector2(10, 0)
-        proj_speed = 20.0 
-        
+        proj_speed = 20.0
+
         # Expected collision:
         # P = Vp * t = 20t
         # T = P0 + Vt * t = 100 + 10t
         # Intercept when distance covered matches
         # (20t)^2 = (100 + 10t)^2
         # ... t = 10.0 (See calculation logic)
-        
+
         # ship.solve_lead(pos, vel, t_pos, t_vel, p_speed)
         t = ship.solve_lead(ship.position, ship.velocity, target_pos, target_vel, proj_speed)
-        self.assertAlmostEqual(t, 10.0, delta=0.1)
+        assert abs(t - 10.0) < 0.1
 
     def test_fire_weapons_creates_projectiles(self):
         """Test that fire_weapons returns correct projectile objects."""
         from game.simulation.entities.ship import Ship, LayerType
         from game.simulation.components.component import Component
         from game.core.constants import AttackType
-        
+
         ship = Ship("Shooter", 0,0, (255,255,255))
-        
+
         # Add a weapon component manually to ensure it has no cost issues
         # Component needs to be 'active'
         weapon = Component({
             "id": "test_gun",
-            "name": "Gun", 
+            "name": "Gun",
             "type": "Weapon",
             "mass": 10,
             "hp": 50,
@@ -293,7 +296,7 @@ class TestCombatFlow(unittest.TestCase):
         })
         ship.add_component(weapon, LayerType.OUTER)
         ship.recalculate_stats() # Activate component
-        
+
         # Setup Target
         target = MagicMock()
         target.position = pygame.math.Vector2(100, 0)
@@ -301,66 +304,66 @@ class TestCombatFlow(unittest.TestCase):
         target.is_alive = True
         target.team_id = 1
         target.type = 'ship'
-        
+
         ship.team_id = 0
         ship.current_target = target
-        
+
         # Fire
         attacks = ship.fire_weapons()
-        
-        self.assertEqual(len(attacks), 1)
-        self.assertEqual(attacks[0].damage, 10)
-        self.assertEqual(attacks[0].type, AttackType.PROJECTILE) # proj_type -> type
-        self.assertEqual(attacks[0].owner, ship)
+
+        assert len(attacks) == 1
+        assert attacks[0].damage == 10
+        assert attacks[0].type == AttackType.PROJECTILE  # proj_type -> type
+        assert attacks[0].owner == ship
 
     def test_special_armor_interactions(self):
         """Test Emissive and Crystalline Armor logic."""
         from game.simulation.entities.ship import Ship
         ship = Ship("Tank", 0,0, (255,255,255))
-        
+
         # 1. Emissive Armor (Flat Reduction)
         ship.emissive_armor = 5
         ship.is_alive = True
-        
+
         # Add a dummy component to take damage
         c = create_component('bridge')
         ship.add_component(c, LayerType.CORE)
-        ship.recalculate_stats() 
+        ship.recalculate_stats()
         ship.emissive_armor = 5
-        
+
         # Find the bridge component (Hull is auto-equipped first now)
         bridge = None
         for comp in ship.layers[LayerType.CORE]['components']:
             if comp.type_str == 'Bridge':
                 bridge = comp
                 break
-        self.assertIsNotNone(bridge, "Bridge component should be in CORE layer")
+        assert bridge is not None, "Bridge component should be in CORE layer"
         c = bridge
-        
+
         c.is_active = True
         c.current_hp = 100
         initial_hp = c.current_hp
-        
+
         # Clear other components except the bridge for this test
         ship.layers[LayerType.CORE]['components'] = [c]
-        
+
         # Take 10 damage -> Reduced by 5 -> 5 damage
         ship.take_damage(10)
-        self.assertEqual(c.current_hp, initial_hp - 5)
-        
+        assert c.current_hp == initial_hp - 5
+
         ship.emissive_armor = 5
-        
+
         # Take 4 damage -> Reduced by 5 -> 0 damage
         prev_hp = c.current_hp
         ship.take_damage(4)
-        self.assertEqual(c.current_hp, prev_hp)
-        
+        assert c.current_hp == prev_hp
+
         # 2. Crystalline Armor (Absorb + Shield Recharge)
         ship.emissive_armor = 0
         ship.crystalline_armor = 10
         ship.max_shields = 100
         ship.current_shields = 50
-        
+
         # Take 20 damage
         # Absorb min(10, 20) = 10
         # Shields += 10 -> 60
@@ -369,11 +372,9 @@ class TestCombatFlow(unittest.TestCase):
         # Shields -= 10 -> 50
         # Remaining Damage = 0
         # Component HP untouched
-        
+
         prev_hp = c.current_hp
         ship.take_damage(20)
-        
-        self.assertEqual(ship.current_shields, 50)
-        self.assertEqual(c.current_hp, prev_hp)
 
-
+        assert ship.current_shields == 50
+        assert c.current_hp == prev_hp

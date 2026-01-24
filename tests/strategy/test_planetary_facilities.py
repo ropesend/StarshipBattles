@@ -1,33 +1,36 @@
-import unittest
+import pytest
 from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
 from game.strategy.data.hex_math import HexCoord
 
 
-class TestPlanetaryFacilities(unittest.TestCase):
+@pytest.fixture
+def test_planet():
+    """Create a test planet."""
+    planet = Planet(
+        name="Test Colony",
+        location=HexCoord(0, 0),
+        orbit_distance=3,
+        mass=5.97e24,
+        radius=6371000,
+        surface_area=5.1e14,
+        density=5515,
+        surface_gravity=9.81,
+        surface_pressure=101325,
+        surface_temperature=288,
+        surface_water=0.7,
+        tectonic_activity=0.1,
+        magnetic_field=1.0,
+        atmosphere={'N2': 78000.0, 'O2': 21000.0},
+        planet_type=PlanetType.TERRESTRIAL
+    )
+    planet.owner_id = 0
+    return planet
+
+
+class TestPlanetaryFacilities:
     """Test planetary facility system."""
 
-    def setUp(self):
-        """Create a test planet."""
-        self.planet = Planet(
-            name="Test Colony",
-            location=HexCoord(0, 0),
-            orbit_distance=3,
-            mass=5.97e24,
-            radius=6371000,
-            surface_area=5.1e14,
-            density=5515,
-            surface_gravity=9.81,
-            surface_pressure=101325,
-            surface_temperature=288,
-            surface_water=0.7,
-            tectonic_activity=0.1,
-            magnetic_field=1.0,
-            atmosphere={'N2': 78000.0, 'O2': 21000.0},
-            planet_type=PlanetType.TERRESTRIAL
-        )
-        self.planet.owner_id = 0
-
-    def test_add_facility_to_planet(self):
+    def test_add_facility_to_planet(self, test_planet):
         """Verify adding a PlanetaryFacility to planet.facilities list."""
         facility = PlanetaryFacility(
             instance_id="test-123",
@@ -36,13 +39,13 @@ class TestPlanetaryFacilities(unittest.TestCase):
             design_data={"name": "Mining Complex", "layers": {}}
         )
 
-        self.planet.facilities.append(facility)
+        test_planet.facilities.append(facility)
 
-        self.assertEqual(len(self.planet.facilities), 1)
-        self.assertEqual(self.planet.facilities[0].instance_id, "test-123")
-        self.assertEqual(self.planet.facilities[0].name, "Mining Complex")
+        assert len(test_planet.facilities) == 1
+        assert test_planet.facilities[0].instance_id == "test-123"
+        assert test_planet.facilities[0].name == "Mining Complex"
 
-    def test_facility_has_design_data(self):
+    def test_facility_has_design_data(self, test_planet):
         """Verify facility stores full design JSON."""
         design_data = {
             "name": "Resource Harvester",
@@ -71,14 +74,14 @@ class TestPlanetaryFacilities(unittest.TestCase):
             design_data=design_data
         )
 
-        self.planet.facilities.append(facility)
+        test_planet.facilities.append(facility)
 
-        stored_data = self.planet.facilities[0].design_data
-        self.assertEqual(stored_data["name"], "Resource Harvester")
-        self.assertIn("layers", stored_data)
-        self.assertIn("outer", stored_data["layers"])
+        stored_data = test_planet.facilities[0].design_data
+        assert stored_data["name"] == "Resource Harvester"
+        assert "layers" in stored_data
+        assert "outer" in stored_data["layers"]
 
-    def test_has_space_shipyard_property(self):
+    def test_has_space_shipyard_property(self, test_planet):
         """Verify has_space_shipyard detects shipyard in facilities."""
         shipyard_data = {
             "name": "Orbital Shipyard",
@@ -107,11 +110,11 @@ class TestPlanetaryFacilities(unittest.TestCase):
             is_operational=True
         )
 
-        self.planet.facilities.append(facility)
+        test_planet.facilities.append(facility)
 
-        self.assertTrue(self.planet.has_space_shipyard)
+        assert test_planet.has_space_shipyard is True
 
-    def test_has_space_shipyard_false_when_none(self):
+    def test_has_space_shipyard_false_when_none(self, test_planet):
         """Verify has_space_shipyard returns False when no shipyard exists."""
         # Add a non-shipyard facility
         harvester_data = {
@@ -139,11 +142,11 @@ class TestPlanetaryFacilities(unittest.TestCase):
             design_data=harvester_data
         )
 
-        self.planet.facilities.append(facility)
+        test_planet.facilities.append(facility)
 
-        self.assertFalse(self.planet.has_space_shipyard)
+        assert test_planet.has_space_shipyard is False
 
-    def test_has_space_shipyard_false_when_not_operational(self):
+    def test_has_space_shipyard_false_when_not_operational(self, test_planet):
         """Verify damaged shipyard doesn't count."""
         shipyard_data = {
             "name": "Damaged Shipyard",
@@ -171,11 +174,11 @@ class TestPlanetaryFacilities(unittest.TestCase):
             is_operational=False  # Damaged!
         )
 
-        self.planet.facilities.append(facility)
+        test_planet.facilities.append(facility)
 
-        self.assertFalse(self.planet.has_space_shipyard)
+        assert test_planet.has_space_shipyard is False
 
-    def test_multiple_facilities(self):
+    def test_multiple_facilities(self, test_planet):
         """Verify multiple facilities can exist on one planet."""
         for i in range(3):
             facility = PlanetaryFacility(
@@ -184,9 +187,9 @@ class TestPlanetaryFacilities(unittest.TestCase):
                 name=f"Complex {i}",
                 design_data={"name": f"Complex {i}"}
             )
-            self.planet.facilities.append(facility)
+            test_planet.facilities.append(facility)
 
-        self.assertEqual(len(self.planet.facilities), 3)
+        assert len(test_planet.facilities) == 3
 
     def test_facility_defaults(self):
         """Verify PlanetaryFacility defaults are correct."""
@@ -198,8 +201,4 @@ class TestPlanetaryFacilities(unittest.TestCase):
         )
 
         # Default is_operational should be True
-        self.assertTrue(facility.is_operational)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert facility.is_operational is True

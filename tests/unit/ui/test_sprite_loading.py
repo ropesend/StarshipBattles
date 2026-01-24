@@ -1,11 +1,14 @@
-import unittest
+import pytest
 from unittest.mock import MagicMock, patch
 import os
 import pygame
 from game.ui.renderer.sprites import SpriteManager
 
-class TestSpriteLoading(unittest.TestCase):
-    def setUp(self):
+
+class TestSpriteLoading:
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
         # Reset singleton
         SpriteManager.reset()
         self.mgr = SpriteManager.get_instance()
@@ -30,22 +33,22 @@ class TestSpriteLoading(unittest.TestCase):
         mock_surface.convert.return_value = mock_surface
         mock_surface.set_colorkey = MagicMock()  # Mock set_colorkey to prevent errors
         mock_load.return_value = mock_surface
-        
+
         # Execute
         base_path = "c:\\fake\\path"
         self.mgr.load_sprites(base_path)
-        
+
         # Verify
         # Index 0 should be filled (Comp_001)
-        self.assertIsNotNone(self.mgr.get_sprite(0))
+        assert self.mgr.get_sprite(0) is not None
         # Index 4 should be filled (Comp_005)
-        self.assertIsNotNone(self.mgr.get_sprite(4))
+        assert self.mgr.get_sprite(4) is not None
         # Index 9 should be filled (Comp_010)
-        self.assertIsNotNone(self.mgr.get_sprite(9))
-        
+        assert self.mgr.get_sprite(9) is not None
+
         # Index 1 should be None (not in files)
-        self.assertIsNone(self.mgr.get_sprite(1))
-        
+        assert self.mgr.get_sprite(1) is None
+
         # Verify image load calls
         expected_path_1 = os.path.join(base_path, "assets", "Images", "Components", "Tiles", "Comp_001.bmp")
         mock_load.assert_any_call(expected_path_1)
@@ -54,16 +57,13 @@ class TestSpriteLoading(unittest.TestCase):
     def test_directory_not_found_fallback(self, mock_exists):
         # Setup to return False for directory check
         mock_exists.return_value = False
-        
-        # We expect it might try to load atlas or just print error, 
-        # but for this specific test regarding the NEW functionality, 
+
+        # We expect it might try to load atlas or just print error,
+        # but for this specific test regarding the NEW functionality,
         # we check it returns gracefully or handles it.
         # Since we haven't implemented fallback yet, let's just ensure it checks the path.
-        
+
         base_path = "c:\\fake\\path"
         self.mgr.load_sprites(base_path)
-        
-        mock_exists.assert_called()
 
-if __name__ == '__main__':
-    unittest.main()
+        mock_exists.assert_called()

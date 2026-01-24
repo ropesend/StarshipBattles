@@ -1,17 +1,10 @@
-
-import unittest
 from unittest.mock import patch, MagicMock
 from game.ui.screens import builder_screen
 from game.ui.screens.builder_screen import BuilderSceneGUI
 from game.ui.screens.workshop_context import WorkshopMode
 
-class TestBuilderIOIntegration(unittest.TestCase):
 
-    def setUp(self):
-        # We can't easily instantiate BuilderSceneGUI because of its heavy __init__
-        # So we will patch the class methods we want to test onto a Mock object
-        # or just invoke the method with a 'self' mock.
-        pass
+class TestBuilderIOIntegration:
 
     def _create_gui_mock_standalone(self):
         """Create a gui mock configured for standalone mode"""
@@ -71,8 +64,8 @@ class TestBuilderIOIntegration(unittest.TestCase):
         # Verify _apply_loaded_ship was called with the loaded ship
         gui_mock._apply_loaded_ship.assert_called_once()
         call_args = gui_mock._apply_loaded_ship.call_args
-        self.assertEqual(call_args[0][0], mock_new_ship)  # First arg is the ship
-        self.assertEqual(call_args[0][1], "Loaded successfully")  # Second arg is message
+        assert call_args[0][0] == mock_new_ship  # First arg is the ship
+        assert call_args[0][1] == "Loaded successfully"  # Second arg is message
 
         # Verify no error
         gui_mock.show_error.assert_not_called()
@@ -100,6 +93,3 @@ class TestBuilderIOIntegration(unittest.TestCase):
         # but 'self.ship = new_ship' would set it.
         # Let's ensure 'right_panel.refresh_controls' etc not called of course
         gui_mock.right_panel.refresh_controls.assert_not_called()
-
-if __name__ == '__main__':
-    unittest.main()

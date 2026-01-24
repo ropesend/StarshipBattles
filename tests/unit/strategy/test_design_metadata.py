@@ -1,16 +1,14 @@
 """
 Tests for DesignMetadata
 """
-import unittest
 import tempfile
 import os
-from datetime import datetime
 from unittest.mock import MagicMock
 from game.strategy.data.design_metadata import DesignMetadata
 from game.core.json_utils import save_json
 
 
-class TestDesignMetadata(unittest.TestCase):
+class TestDesignMetadata:
     """Tests for DesignMetadata class"""
 
     def test_create_metadata_from_dict(self):
@@ -32,15 +30,15 @@ class TestDesignMetadata(unittest.TestCase):
 
         metadata = DesignMetadata.from_dict(data)
 
-        self.assertEqual(metadata.design_id, "test_ship")
-        self.assertEqual(metadata.name, "Test Ship")
-        self.assertEqual(metadata.ship_class, "Escort")
-        self.assertEqual(metadata.vehicle_type, "Ship")
-        self.assertEqual(metadata.mass, 1000.0)
-        self.assertEqual(metadata.combat_power, 500.0)
-        self.assertEqual(metadata.resource_cost, {"metal": 100, "energy": 50})
-        self.assertEqual(metadata.times_built, 3)
-        self.assertFalse(metadata.is_obsolete)
+        assert metadata.design_id == "test_ship"
+        assert metadata.name == "Test Ship"
+        assert metadata.ship_class == "Escort"
+        assert metadata.vehicle_type == "Ship"
+        assert metadata.mass == 1000.0
+        assert metadata.combat_power == 500.0
+        assert metadata.resource_cost == {"metal": 100, "energy": 50}
+        assert metadata.times_built == 3
+        assert metadata.is_obsolete is False
 
     def test_to_dict_serialization(self):
         """Can serialize metadata to dictionary"""
@@ -61,11 +59,11 @@ class TestDesignMetadata(unittest.TestCase):
 
         data = metadata.to_dict()
 
-        self.assertEqual(data["design_id"], "cruiser_mk2")
-        self.assertEqual(data["name"], "Cruiser Mk II")
-        self.assertEqual(data["ship_class"], "Cruiser")
-        self.assertEqual(data["times_built"], 5)
-        self.assertTrue(data["is_obsolete"])
+        assert data["design_id"] == "cruiser_mk2"
+        assert data["name"] == "Cruiser Mk II"
+        assert data["ship_class"] == "Cruiser"
+        assert data["times_built"] == 5
+        assert data["is_obsolete"] is True
 
     def test_from_design_file(self):
         """Can load metadata from design file"""
@@ -103,15 +101,15 @@ class TestDesignMetadata(unittest.TestCase):
             # Load metadata
             metadata = DesignMetadata.from_design_file(filepath, "test_design")
 
-            self.assertEqual(metadata.design_id, "test_design")
-            self.assertEqual(metadata.name, "Test Fighter")
-            self.assertEqual(metadata.ship_class, "Fighter")
-            self.assertEqual(metadata.vehicle_type, "Fighter")
-            self.assertEqual(metadata.mass, 50.0)
-            self.assertEqual(metadata.times_built, 2)
-            self.assertFalse(metadata.is_obsolete)
+            assert metadata.design_id == "test_design"
+            assert metadata.name == "Test Fighter"
+            assert metadata.ship_class == "Fighter"
+            assert metadata.vehicle_type == "Fighter"
+            assert metadata.mass == 50.0
+            assert metadata.times_built == 2
+            assert metadata.is_obsolete is False
             # Combat power should be calculated from weapon
-            self.assertGreater(metadata.combat_power, 0)
+            assert metadata.combat_power > 0
 
     def test_from_ship_instance(self):
         """Can create metadata from Ship instance"""
@@ -144,17 +142,17 @@ class TestDesignMetadata(unittest.TestCase):
         # Create metadata
         metadata = DesignMetadata.from_ship(ship, "destroyer_x")
 
-        self.assertEqual(metadata.design_id, "destroyer_x")
-        self.assertEqual(metadata.name, "Destroyer X")
-        self.assertEqual(metadata.ship_class, "Destroyer")
-        self.assertEqual(metadata.mass, 3000.0)
-        self.assertEqual(metadata.times_built, 0)  # New design
-        self.assertFalse(metadata.is_obsolete)
+        assert metadata.design_id == "destroyer_x"
+        assert metadata.name == "Destroyer X"
+        assert metadata.ship_class == "Destroyer"
+        assert metadata.mass == 3000.0
+        assert metadata.times_built == 0  # New design
+        assert metadata.is_obsolete is False
         # Check resource costs calculated
-        self.assertEqual(metadata.resource_cost["metal"], 150)
-        self.assertEqual(metadata.resource_cost["energy"], 25)
+        assert metadata.resource_cost["metal"] == 150
+        assert metadata.resource_cost["energy"] == 25
         # Combat power calculated
-        self.assertGreater(metadata.combat_power, 0)
+        assert metadata.combat_power > 0
 
     def test_combat_power_calculation(self):
         """Combat power is calculated correctly"""
@@ -179,7 +177,7 @@ class TestDesignMetadata(unittest.TestCase):
         power = DesignMetadata._calculate_combat_power(design_data)
 
         # Expected: (100 * 10) + (2 * 5) + (500 * 0.5) = 1000 + 10 + 250 = 1260
-        self.assertEqual(power, 1260.0)
+        assert power == 1260.0
 
     def test_resource_cost_calculation(self):
         """Resource costs are summed correctly"""
@@ -197,9 +195,9 @@ class TestDesignMetadata(unittest.TestCase):
 
         costs = DesignMetadata._calculate_resource_cost(design_data)
 
-        self.assertEqual(costs["metal"], 30)
-        self.assertEqual(costs["energy"], 15)
-        self.assertEqual(costs["crystals"], 5)
+        assert costs["metal"] == 30
+        assert costs["energy"] == 15
+        assert costs["crystals"] == 5
 
     def test_embed_metadata_in_ship_data(self):
         """Can embed metadata into ship data dict"""
@@ -219,10 +217,6 @@ class TestDesignMetadata(unittest.TestCase):
         ship_data = {"name": "Test", "ship_class": "Escort"}
         result = metadata.embed_in_ship_data(ship_data)
 
-        self.assertIn("_metadata", result)
-        self.assertTrue(result["_metadata"]["is_obsolete"])
-        self.assertEqual(result["_metadata"]["times_built"], 10)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert "_metadata" in result
+        assert result["_metadata"]["is_obsolete"] is True
+        assert result["_metadata"]["times_built"] == 10

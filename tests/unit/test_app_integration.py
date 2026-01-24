@@ -1,14 +1,14 @@
 """
 Tests for App integration with new game setup flow.
 """
-import unittest
+import pytest
 import tempfile
 import shutil
 import os
 from unittest.mock import MagicMock, patch, PropertyMock
 
 
-class TestAppNewGameFlow(unittest.TestCase):
+class TestAppNewGameFlow:
     """Tests for new game flow integration in App."""
 
     def test_on_new_game_start_creates_session_and_save(self):
@@ -39,17 +39,17 @@ class TestAppNewGameFlow(unittest.TestCase):
             # Save initial state
             success, message, save_path = SaveGameService.save_game(session, config.save_name)
 
-            self.assertTrue(success)
-            self.assertIsNotNone(save_path)
+            assert success is True
+            assert save_path is not None
             session.save_path = save_path
 
             # Verify save structure
-            self.assertTrue(os.path.exists(save_path))
-            self.assertTrue(os.path.exists(os.path.join(save_path, "turns")))
-            self.assertTrue(os.path.exists(os.path.join(save_path, "turns", "turn_1.json")))
-            self.assertTrue(os.path.exists(os.path.join(save_path, "designs")))
-            self.assertTrue(os.path.exists(os.path.join(save_path, "designs", "empire_0")))
-            self.assertTrue(os.path.exists(os.path.join(save_path, "designs", "empire_1")))
+            assert os.path.exists(save_path)
+            assert os.path.exists(os.path.join(save_path, "turns"))
+            assert os.path.exists(os.path.join(save_path, "turns", "turn_1.json"))
+            assert os.path.exists(os.path.join(save_path, "designs"))
+            assert os.path.exists(os.path.join(save_path, "designs", "empire_0"))
+            assert os.path.exists(os.path.join(save_path, "designs", "empire_1"))
 
         finally:
             os.chdir(original_cwd)
@@ -73,17 +73,17 @@ class TestAppNewGameFlow(unittest.TestCase):
         session = GameSession(config=config)
 
         # Verify session has correct number of empires
-        self.assertEqual(len(session.empires), 3)
+        assert len(session.empires) == 3
 
         # Verify empire names
-        self.assertEqual(session.empires[0].name, "Alpha")
-        self.assertEqual(session.empires[1].name, "Beta")
-        self.assertEqual(session.empires[2].name, "Gamma")
+        assert session.empires[0].name == "Alpha"
+        assert session.empires[1].name == "Beta"
+        assert session.empires[2].name == "Gamma"
 
         # Verify themes
-        self.assertEqual(session.empires[0].empire_theme_id, "Federation")
-        self.assertEqual(session.empires[1].empire_theme_id, "Atlantians")
-        self.assertEqual(session.empires[2].empire_theme_id, "Romulans")
+        assert session.empires[0].empire_theme_id == "Federation"
+        assert session.empires[1].empire_theme_id == "Atlantians"
+        assert session.empires[2].empire_theme_id == "Romulans"
 
     def test_load_game_restores_full_session(self):
         """Loading a saved game restores complete session state."""
@@ -109,22 +109,22 @@ class TestAppNewGameFlow(unittest.TestCase):
             original_session.turn_number = 3  # Simulate some turns passed
 
             success, _, save_path = SaveGameService.save_game(original_session, config.save_name)
-            self.assertTrue(success)
+            assert success is True
 
             # Load the session
             loaded_session, message = SaveGameService.load_game(save_path)
 
-            self.assertIsNotNone(loaded_session)
-            self.assertEqual(loaded_session.turn_number, 3)
-            self.assertEqual(len(loaded_session.empires), 1)
-            self.assertEqual(loaded_session.empires[0].name, "Saved Empire")
+            assert loaded_session is not None
+            assert loaded_session.turn_number == 3
+            assert len(loaded_session.empires) == 1
+            assert loaded_session.empires[0].name == "Saved Empire"
 
         finally:
             os.chdir(original_cwd)
             shutil.rmtree(tmpdir)
 
 
-class TestAppUIManagerSetup(unittest.TestCase):
+class TestAppUIManagerSetup:
     """Tests for UI manager handling in App."""
 
     def test_menu_ui_manager_created_on_demand(self):
@@ -144,8 +144,4 @@ class TestAppUIManagerSetup(unittest.TestCase):
         else:
             created = False
 
-        self.assertTrue(created)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert created is True

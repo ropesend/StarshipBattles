@@ -1,122 +1,126 @@
-
-import unittest
+import pytest
 from unittest.mock import MagicMock
 from game.simulation.components.abilities import (
-    create_ability, 
-    Ability, 
-    ResourceConsumption, 
-    ResourceStorage, 
-    CombatPropulsion, 
-    ManeuveringThruster, 
-    WeaponAbility, 
+    create_ability,
+    Ability,
+    ResourceConsumption,
+    ResourceStorage,
+    CombatPropulsion,
+    ManeuveringThruster,
+    WeaponAbility,
     ProjectileWeaponAbility,
     VehicleLaunchAbility
 )
 
-class TestAbilities(unittest.TestCase):
-    def setUp(self):
-        self.mock_component = MagicMock()
-        self.mock_ship = MagicMock()
-        self.mock_component.ship = self.mock_ship
-        self.mock_resources = MagicMock()
-        self.mock_ship.resources = self.mock_resources
 
-    def test_create_ability_primitives(self):
+@pytest.fixture
+def mock_component():
+    """Create a mock component with ship and resources."""
+    mock_comp = MagicMock()
+    mock_ship = MagicMock()
+    mock_comp.ship = mock_ship
+    mock_resources = MagicMock()
+    mock_ship.resources = mock_resources
+    return mock_comp
+
+
+class TestAbilities:
+    def test_create_ability_primitives(self, mock_component):
         # Test creation from primitive shortcuts
-        ab = create_ability("CombatPropulsion", self.mock_component, 1500)
-        self.assertIsInstance(ab, CombatPropulsion)
-        self.assertEqual(ab.thrust_force, 1500)
+        ab = create_ability("CombatPropulsion", mock_component, 1500)
+        assert isinstance(ab, CombatPropulsion)
+        assert ab.thrust_force == 1500
 
-        ab = create_ability("FuelStorage", self.mock_component, 2000)
-        self.assertIsInstance(ab, ResourceStorage)
-        self.assertEqual(ab.resource_type, "fuel")
-        self.assertEqual(ab.max_amount, 2000)
+        ab = create_ability("FuelStorage", mock_component, 2000)
+        assert isinstance(ab, ResourceStorage)
+        assert ab.resource_type == "fuel"
+        assert ab.max_amount == 2000
 
-    def test_create_ability_dict(self):
+    def test_create_ability_dict(self, mock_component):
         # Test creation from dict
         data = {"value": 50, "tags": ["test"]}
-        ab = create_ability("ManeuveringThruster", self.mock_component, data)
-        self.assertIsInstance(ab, ManeuveringThruster)
-        self.assertEqual(ab.turn_rate, 50)
-        self.assertIn("test", ab.tags)
+        ab = create_ability("ManeuveringThruster", mock_component, data)
+        assert isinstance(ab, ManeuveringThruster)
+        assert ab.turn_rate == 50
+        assert "test" in ab.tags
 
-    def test_resource_consumption_constant(self):
+    def test_resource_consumption_constant(self, mock_component):
         # Test constant consumption update
         data = {"resource": "fuel", "amount": 10, "trigger": "constant"}
-        ab = ResourceConsumption(self.mock_component, data)
-        
+        ab = ResourceConsumption(mock_component, data)
+
         # Setup mock resource
         mock_fuel = MagicMock()
         mock_fuel.consume.return_value = True
-        self.mock_resources.get_resource.return_value = mock_fuel
-        
+        mock_component.ship.resources.get_resource.return_value = mock_fuel
+
         # Update (tick)
         result = ab.update()
-        self.assertTrue(result)
+        assert result is True
         # Should consume amount * 0.01
-        mock_fuel.consume.assert_called_with(0.1) 
+        mock_fuel.consume.assert_called_with(0.1)
 
-    def test_resource_consumption_activation(self):
+    def test_resource_consumption_activation(self, mock_component):
         # Test activation trigger
         data = {"resource": "energy", "amount": 5, "trigger": "activation"}
-        ab = ResourceConsumption(self.mock_component, data)
-        
+        ab = ResourceConsumption(mock_component, data)
+
         # Update shouldn't consume
         ab.update()
-        self.mock_resources.get_resource.assert_not_called()
-        
+        mock_component.ship.resources.get_resource.assert_not_called()
+
         # Manual consumption
         mock_energy = MagicMock()
         mock_energy.consume.return_value = True
-        self.mock_resources.get_resource.return_value = mock_energy
-        
+        mock_component.ship.resources.get_resource.return_value = mock_energy
+
         success = ab.check_and_consume()
-        self.assertTrue(success)
+        assert success is True
         mock_energy.consume.assert_called_with(5)
 
-    def test_weapon_ability(self):
+    def test_weapon_ability(self, mock_component):
         data = {
             "damage": 50,
             "range": 1000,
-            "cooldown": 2.0, # Not used, uses reload usually or similar
+            "cooldown": 2.0,  # Not used, uses reload usually or similar
             "reload": 1.5,
             "projectile_speed": 800
         }
-        ab = create_ability("ProjectileWeaponAbility", self.mock_component, data)
-        self.assertIsInstance(ab, ProjectileWeaponAbility)
-        self.assertEqual(ab.damage, 50)
-        self.assertIsInstance(ab, WeaponAbility)
-        self.assertEqual(ab.projectile_speed, 800)
-        
-        # Cooldown Logic
-        self.assertTrue(ab.can_fire())
-        ab.fire(target=None)
-        self.assertFalse(ab.can_fire())
-        self.assertEqual(ab.cooldown_timer, 1.5)
-        
-        # Update decrements
-        ab.update() # -0.01
-        self.assertAlmostEqual(ab.cooldown_timer, 1.49)
+        ab = create_ability("ProjectileWeaponAbility", mock_component, data)
+        assert isinstance(ab, ProjectileWeaponAbility)
+        assert ab.damage == 50
+        assert isinstance(ab, WeaponAbility)
+        assert ab.projectile_speed == 800
 
-    def test_vehicle_launch(self):
+        # Cooldown Logic
+        assert ab.can_fire() is True
+        ab.fire(target=None)
+        assert ab.can_fire() is False
+        assert ab.cooldown_timer == 1.5
+
+        # Update decrements
+        ab.update()  # -0.01
+        assert ab.cooldown_timer == pytest.approx(1.49)
+
+    def test_vehicle_launch(self, mock_component):
         data = {"fighter_class": "Ace Fighter", "cycle_time": 2.0}
-        ab = VehicleLaunchAbility(self.mock_component, data)
-        
-        self.assertTrue(ab.try_launch())
-        self.assertFalse(ab.try_launch()) # Cooldown active
-        
+        ab = VehicleLaunchAbility(mock_component, data)
+
+        assert ab.try_launch() is True
+        assert ab.try_launch() is False  # Cooldown active
+
         # fast forward
         ab.cooldown = 0
-        self.assertTrue(ab.try_launch())
+        assert ab.try_launch() is True
 
-    def test_ui_rows(self):
-        ab = CombatPropulsion(self.mock_component, 100)
+    def test_ui_rows(self, mock_component):
+        ab = CombatPropulsion(mock_component, 100)
         rows = ab.get_ui_rows()
-        self.assertEqual(rows[0]['label'], 'Thrust')
-        self.assertEqual(rows[0]['value'], '100 N')
-        self.assertEqual(rows[0]['color_hint'], '#64FF64')
+        assert rows[0]['label'] == 'Thrust'
+        assert rows[0]['value'] == '100 N'
+        assert rows[0]['color_hint'] == '#64FF64'
 
-    def test_beam_weapon_ability(self):
+    def test_beam_weapon_ability(self, mock_component):
         from game.simulation.components.abilities import BeamWeaponAbility
         data = {
             "damage": 30,
@@ -125,14 +129,14 @@ class TestAbilities(unittest.TestCase):
             "accuracy_falloff": 0.002,
             "base_accuracy": 2.0
         }
-        ab = create_ability("BeamWeaponAbility", self.mock_component, data)
-        self.assertIsInstance(ab, BeamWeaponAbility)
-        self.assertIsInstance(ab, WeaponAbility)  # Polymorphism check
-        self.assertEqual(ab.damage, 30)
-        self.assertEqual(ab.accuracy_falloff, 0.002)
-        self.assertEqual(ab.base_accuracy, 2.0)
+        ab = create_ability("BeamWeaponAbility", mock_component, data)
+        assert isinstance(ab, BeamWeaponAbility)
+        assert isinstance(ab, WeaponAbility)  # Polymorphism check
+        assert ab.damage == 30
+        assert ab.accuracy_falloff == 0.002
+        assert ab.base_accuracy == 2.0
 
-    def test_seeker_weapon_ability(self):
+    def test_seeker_weapon_ability(self, mock_component):
         from game.simulation.components.abilities import SeekerWeaponAbility
         data = {
             "damage": 100,
@@ -142,15 +146,15 @@ class TestAbilities(unittest.TestCase):
             "turn_rate": 45.0,
             "to_hit_defense": 1.5
         }
-        ab = create_ability("SeekerWeaponAbility", self.mock_component, data)
-        self.assertIsInstance(ab, SeekerWeaponAbility)
-        self.assertIsInstance(ab, WeaponAbility)  # Polymorphism check
-        self.assertEqual(ab.projectile_speed, 500)
-        self.assertEqual(ab.endurance, 10.0)
-        self.assertEqual(ab.turn_rate, 45.0)
-        self.assertEqual(ab.to_hit_defense, 1.5)
+        ab = create_ability("SeekerWeaponAbility", mock_component, data)
+        assert isinstance(ab, SeekerWeaponAbility)
+        assert isinstance(ab, WeaponAbility)  # Polymorphism check
+        assert ab.projectile_speed == 500
+        assert ab.endurance == 10.0
+        assert ab.turn_rate == 45.0
+        assert ab.to_hit_defense == 1.5
         # Range should be auto-calculated: speed * endurance * 0.8 (maneuvering efficiency)
-        self.assertEqual(ab.range, 4000)  # 500 * 10 * 0.8
+        assert ab.range == 4000  # 500 * 10 * 0.8
 
     def test_get_abilities_polymorphism(self):
         """Test that get_abilities() finds abilities by parent class."""
@@ -166,15 +170,15 @@ class TestAbilities(unittest.TestCase):
             }
         }
         comp = Component(data)
-        
+
         # Should find via polymorphic lookup (BeamWeaponAbility IS-A WeaponAbility)
         weapons = comp.get_abilities("WeaponAbility")
-        self.assertEqual(len(weapons), 1)
-        
+        assert len(weapons) == 1
+
         # Should also find via exact match
         beams = comp.get_abilities("BeamWeaponAbility")
-        self.assertEqual(len(beams), 1)
-        self.assertEqual(weapons[0], beams[0])
+        assert len(beams) == 1
+        assert weapons[0] == beams[0]
 
     def test_has_pdc_ability(self):
         """Test has_pdc_ability() with tag-based detection."""
@@ -191,8 +195,8 @@ class TestAbilities(unittest.TestCase):
             }
         }
         comp = Component(data)
-        self.assertTrue(comp.has_pdc_ability())
-        
+        assert comp.has_pdc_ability() is True
+
         # Component without 'pdc' tag
         data2 = {
             "id": "regular_test",
@@ -205,7 +209,4 @@ class TestAbilities(unittest.TestCase):
             }
         }
         comp2 = Component(data2)
-        self.assertFalse(comp2.has_pdc_ability())
-
-if __name__ == '__main__':
-    unittest.main()
+        assert comp2.has_pdc_ability() is False

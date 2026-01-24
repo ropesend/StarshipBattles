@@ -1,25 +1,28 @@
-import unittest
+import pytest
 
 from game.simulation.components.component import load_components, load_modifiers, create_component
 from game.core.registry import RegistryManager
 from ui.builder.modifier_logic import ModifierLogic
 
-class TestModifierDefaultsRobustness(unittest.TestCase):
-    def setUp(self):
+
+class TestModifierDefaultsRobustness:
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
         load_modifiers()
         load_components()
 
     def test_railgun_defaults_robustness(self):
         """
-        Verify that get_initial_value returns the BASE firing arc (1.0) 
+        Verify that get_initial_value returns the BASE firing arc (1.0)
         even if the component's runtime firing_arc has been modified/corrupted.
         """
         # 1. Get a Railgun
         if 'railgun' not in RegistryManager.instance().components:
-            self.skipTest("Railgun not found in registry")
-            
+            pytest.skip("Railgun not found in registry")
+
         comp = create_component('railgun')
-        
+
         # Base value check - Phase 6: firing_arc now in ability dict
         base_arc = comp.data.get('firing_arc')
         if base_arc is None:
@@ -29,26 +32,26 @@ class TestModifierDefaultsRobustness(unittest.TestCase):
                 if isinstance(ab_data, dict) and 'firing_arc' in ab_data:
                     base_arc = ab_data['firing_arc']
                     break
-        self.assertEqual(base_arc, 1, "Base JSON firing_arc should be 1")
-        
+        assert base_arc == 1, "Base JSON firing_arc should be 1"
+
         # 2. Simulate the 'corruption' or modification
         # e.g. a previous modifier calc set it to 22.5 or 45
         comp.firing_arc = 22.5
-        
+
         # 3. Ask Logic for initial value for Turret Mount
         # It should ignore the current 22.5 and return 1.0 from data
         initial_val = ModifierLogic.get_initial_value('turret_mount', comp)
-        self.assertEqual(initial_val, 1.0, f"Expected 1.0 default, got {initial_val}")
-        
+        assert initial_val == 1.0, f"Expected 1.0 default, got {initial_val}"
+
     def test_pdc_defaults_robustness(self):
         """
         Verify PDC defaults (180) are robust against runtime changes.
         """
         if 'point_defence_cannon' not in RegistryManager.instance().components:
-            self.skipTest("PDC not found")
-            
+            pytest.skip("PDC not found")
+
         comp = create_component('point_defence_cannon')
-        
+
         # Phase 6: firing_arc now in ability dict
         base_arc = comp.data.get('firing_arc')
         if base_arc is None:
@@ -58,25 +61,22 @@ class TestModifierDefaultsRobustness(unittest.TestCase):
                 if isinstance(ab_data, dict) and 'firing_arc' in ab_data:
                     base_arc = ab_data['firing_arc']
                     break
-        self.assertEqual(base_arc, 180, "Base JSON firing_arc should be 180")
-        
+        assert base_arc == 180, "Base JSON firing_arc should be 180"
+
         # Simulate corruption
         comp.firing_arc = 90
-        
+
         initial_val = ModifierLogic.get_initial_value('turret_mount', comp)
-        self.assertEqual(initial_val, 180.0, f"Expected 180.0 default, got {initial_val}")
-        
+        assert initial_val == 180.0, f"Expected 180.0 default, got {initial_val}"
+
     def test_pdc_min_constraint_robustness(self):
         """
         Verify PDC minimum constraint respects the base hull limit (180).
         """
         comp = create_component('point_defence_cannon')
-        
+
         # Simulate corruption
         comp.firing_arc = 90
-        
-        min_val, max_val = ModifierLogic.get_local_min_max('turret_mount', comp)
-        self.assertEqual(min_val, 180.0, f"Expected min constraint 180.0, got {min_val}")
 
-if __name__ == "__main__":
-    unittest.main()
+        min_val, max_val = ModifierLogic.get_local_min_max('turret_mount', comp)
+        assert min_val == 180.0, f"Expected min constraint 180.0, got {min_val}"

@@ -1,0 +1,13 @@
+{
+  "tests/unit/core/test_registry.py::TestSingletonBehavior": true,
+  "tests/unit/core/test_registry.py::TestThreadSafety": true,
+  "tests/unit/core/test_registry.py::TestRegistrationLookup": true,
+  "tests/unit/core/test_registry.py::TestClearMethod": true,
+  "tests/unit/core/test_registry.py::TestFreezeFunctionality": true,
+  "tests/unit/core/test_registry.py::TestHydrateMethod": true,
+  "tests/unit/core/test_registry.py::TestUtilityFunctions": true,
+  "tests/unit/core/test_registry.py::TestIsolation": true,
+  "tests/unit/core/test_registry.py::TestValidator": true,
+  "tests/unit/core/test_registry.py::TestInitialization": true,
+  "tests/unit/core/test_registry.py::TestEdgeCases": true
+}

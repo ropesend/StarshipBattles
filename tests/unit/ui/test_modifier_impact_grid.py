@@ -1,14 +1,13 @@
 """Tests for ModifierImpactGrid widget."""
-import unittest
 import pygame
 import pygame_gui
 from unittest.mock import MagicMock, patch
 
 
-class TestModifierImpactGrid(unittest.TestCase):
+class TestModifierImpactGrid:
     """Test the ModifierImpactGrid widget for displaying modifier effects."""
 
-    def setUp(self):
+    def setup_method(self):
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
         self.manager = pygame_gui.UIManager((800, 600))
@@ -16,7 +15,7 @@ class TestModifierImpactGrid(unittest.TestCase):
             pygame.Rect(0, 0, 500, 400), manager=self.manager
         )
 
-    def tearDown(self):
+    def teardown_method(self):
         pass  # Don't quit pygame for session isolation
 
     def test_init_creates_panel(self):
@@ -26,8 +25,8 @@ class TestModifierImpactGrid(unittest.TestCase):
         rect = pygame.Rect(10, 10, 400, 300)
         grid = ModifierImpactGrid(self.manager, self.container, rect)
 
-        self.assertIsNotNone(grid.panel)
-        self.assertEqual(grid.rect, rect)
+        assert grid.panel is not None
+        assert grid.rect == rect
 
     def test_update_with_no_component(self):
         """Test update with None component shows placeholder."""
@@ -38,7 +37,7 @@ class TestModifierImpactGrid(unittest.TestCase):
 
         # Should not raise
         grid.update(None)
-        self.assertIsNone(grid.current_component)
+        assert grid.current_component is None
 
     def test_update_with_component_no_modifiers(self):
         """Test update with component that has no modifiers."""
@@ -54,7 +53,7 @@ class TestModifierImpactGrid(unittest.TestCase):
 
         grid.update(mock_component)
 
-        self.assertEqual(grid.current_component, mock_component)
+        assert grid.current_component == mock_component
 
     def test_update_with_component_with_modifiers(self):
         """Test update with component that has modifiers."""
@@ -100,9 +99,9 @@ class TestModifierImpactGrid(unittest.TestCase):
 
         grid.update(mock_component)
 
-        self.assertEqual(grid.current_component, mock_component)
+        assert grid.current_component == mock_component
         # Grid should have identified stats to display
-        self.assertGreater(len(grid.stat_columns), 0)
+        assert len(grid.stat_columns) > 0
 
     def test_get_affected_stats(self):
         """Test that get_affected_stats returns only modified stats."""
@@ -121,10 +120,10 @@ class TestModifierImpactGrid(unittest.TestCase):
         affected = grid._get_affected_stats(summary)
 
         # Should only return stats that differ from default
-        self.assertIn('mass_mult', affected)
-        self.assertIn('damage_mult', affected)
-        self.assertNotIn('hp_mult', affected)  # 1.0 is default for multiply
-        self.assertNotIn('arc_add', affected)  # 0.0 is default for add
+        assert 'mass_mult' in affected
+        assert 'damage_mult' in affected
+        assert 'hp_mult' not in affected  # 1.0 is default for multiply
+        assert 'arc_add' not in affected  # 0.0 is default for add
 
     def test_format_stat_name(self):
         """Test stat name formatting for display."""
@@ -133,10 +132,10 @@ class TestModifierImpactGrid(unittest.TestCase):
         rect = pygame.Rect(10, 10, 400, 300)
         grid = ModifierImpactGrid(self.manager, self.container, rect)
 
-        self.assertEqual(grid._format_stat_name('mass_mult'), 'Mass')
-        self.assertEqual(grid._format_stat_name('hp_mult'), 'HP')
-        self.assertEqual(grid._format_stat_name('damage_mult'), 'Damage')
-        self.assertEqual(grid._format_stat_name('arc_add'), 'Arc')
+        assert grid._format_stat_name('mass_mult') == 'Mass'
+        assert grid._format_stat_name('hp_mult') == 'HP'
+        assert grid._format_stat_name('damage_mult') == 'Damage'
+        assert grid._format_stat_name('arc_add') == 'Arc'
 
     def test_format_value_multiply(self):
         """Test value formatting for multiply operations."""
@@ -145,12 +144,12 @@ class TestModifierImpactGrid(unittest.TestCase):
         rect = pygame.Rect(10, 10, 400, 300)
         grid = ModifierImpactGrid(self.manager, self.container, rect)
 
-        self.assertEqual(grid._format_value(2.0, 'multiply'), 'x2.000')
-        self.assertEqual(grid._format_value(0.5, 'multiply'), 'x0.500')
+        assert grid._format_value(2.0, 'multiply') == 'x2.000'
+        assert grid._format_value(0.5, 'multiply') == 'x0.500'
         # 4 significant digits tests
-        self.assertEqual(grid._format_value(73.73, 'multiply'), 'x73.73')  # 2 decimals for 10-99
-        self.assertEqual(grid._format_value(1000.73, 'multiply'), 'x1001')  # No decimals for >=1000
-        self.assertEqual(grid._format_value(350.76, 'multiply'), 'x350.8')  # 1 decimal for 100-999
+        assert grid._format_value(73.73, 'multiply') == 'x73.73'  # 2 decimals for 10-99
+        assert grid._format_value(1000.73, 'multiply') == 'x1001'  # No decimals for >=1000
+        assert grid._format_value(350.76, 'multiply') == 'x350.8'  # 1 decimal for 100-999
 
     def test_format_value_add(self):
         """Test value formatting for add operations."""
@@ -159,8 +158,8 @@ class TestModifierImpactGrid(unittest.TestCase):
         rect = pygame.Rect(10, 10, 400, 300)
         grid = ModifierImpactGrid(self.manager, self.container, rect)
 
-        self.assertEqual(grid._format_value(90.0, 'add'), '+90.00')
-        self.assertEqual(grid._format_value(-10.0, 'add'), '-10.00')
+        assert grid._format_value(90.0, 'add') == '+90.00'
+        assert grid._format_value(-10.0, 'add') == '-10.00'
 
     def test_kill_cleans_up_elements(self):
         """Test that kill() properly cleans up UI elements."""
@@ -180,8 +179,4 @@ class TestModifierImpactGrid(unittest.TestCase):
         grid.kill()
 
         # Panel should be killed
-        self.assertFalse(grid.panel.alive())
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert not grid.panel.alive()

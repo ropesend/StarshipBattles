@@ -1,4 +1,4 @@
-import unittest
+import pytest
 import pygame
 import pygame_gui
 from unittest.mock import MagicMock, patch
@@ -7,47 +7,52 @@ from game.ui.screens.builder_screen import BuilderSceneGUI
 from game.simulation.entities.ship import Ship
 from game.core.registry import RegistryManager
 
-class TestBuilderImprovements(unittest.TestCase):
-    def setUp(self):
-        pygame.init()
-        # Create a hidden window for UI Manager
-        self.window = pygame.display.set_mode((1200, 800), flags=pygame.HIDDEN)
-        
-        # Ensure vehicle_classes populated
-        if not RegistryManager.instance().vehicle_classes:
-             RegistryManager.instance().vehicle_classes.update({"Escort": {"max_mass": 1000, "type": "Ship"}})
 
-    def tearDown(self):
-        # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
-        patch.stopall()
-        
-        pygame.quit()
-        RegistryManager.instance().clear()
+@pytest.fixture
+def pygame_window():
+    pygame.init()
+    # Create a hidden window for UI Manager
+    window = pygame.display.set_mode((1200, 800), flags=pygame.HIDDEN)
 
-    def test_image_scale_factor(self):
+    # Ensure vehicle_classes populated
+    if not RegistryManager.instance().vehicle_classes:
+        RegistryManager.instance().vehicle_classes.update({"Escort": {"max_mass": 1000, "type": "Ship"}})
+
+    yield window
+
+    # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
+    patch.stopall()
+
+    pygame.quit()
+    RegistryManager.instance().clear()
+
+
+class TestBuilderImprovements:
+    def test_image_scale_factor(self, pygame_window):
         """
         Verify that the image scaling logic uses the 2.5x factor.
         """
+        window = pygame_window
         # We can't easily inspect local variables inside _draw_schematic without inspecting the Draw calls.
         # But we can verify it doesn't crash.
-        
+
         # Real Builder with Real UI Manager
         builder = BuilderSceneGUI(1200, 800, None)
         builder._create_ui()
-        
+
         # Test Draw
         try:
-            builder.draw(self.window)
+            builder.draw(window)
         except Exception as e:
-            self.fail(f"draw crashed: {e}")
+            pytest.fail(f"draw crashed: {e}")
 
-    def test_loading_sync(self):
+    def test_loading_sync(self, pygame_window):
         """
         Test that loading a ship updates the dropdowns.
         """
         builder = BuilderSceneGUI(1200, 800, None)
         builder._create_ui()
-        
+
         # Create a mock ship to load
         mock_ship = MagicMock(spec=Ship)
         mock_ship.name = "LoadedShip"
@@ -72,7 +77,7 @@ class TestBuilderImprovements(unittest.TestCase):
         mock_ship.acceleration_rate = 10
         mock_ship.total_thrust = 1000
         mock_ship.energy_gen_rate = 10
-        mock_ship.resources = MagicMock() # spec=Ship doesn't see instance vars automatically
+        mock_ship.resources = MagicMock()  # spec=Ship doesn't see instance vars automatically
         mock_ship.resources.set_max_value('fuel', 1000)
         mock_ship.resources.set_max_value('ammo', 100)
         mock_ship.resources.set_max_value('energy', 1000)
@@ -83,24 +88,19 @@ class TestBuilderImprovements(unittest.TestCase):
         mock_ship.get_ability_total.return_value = 100
         mock_ship.to_hit_profile = 1.0
         mock_ship.baseline_to_hit_offense = 1.0
-        
+
         # Mock ShipIO
         with patch('game.ui.screens.builder_screen.ShipIO.load_ship', return_value=(mock_ship, "Success")):
             builder._load_ship()
-            
+
         # Verification
-        self.assertEqual(builder.ship, mock_ship)
-        
+        assert builder.ship == mock_ship
+
         # Check UI Elements (Real UISelectionLists in Dropdowns)
         # Dropdown.selected_option might be (label, value) or value in some versions
         selected = builder.right_panel.class_dropdown.selected_option
         if isinstance(selected, tuple):
-            self.assertEqual(selected[0], "Escort")
+            assert selected[0] == "Escort"
         else:
-            self.assertEqual(selected, "Escort")
+            assert selected == "Escort"
         # Theme might vary depending on what theme manager finds on disk
-
-
-
-if __name__ == '__main__':
-    unittest.main()

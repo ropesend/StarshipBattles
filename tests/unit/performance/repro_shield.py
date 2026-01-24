@@ -1,4 +1,4 @@
-import unittest
+import pytest
 import pygame
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
@@ -8,24 +8,31 @@ from game.core.registry import RegistryManager
 from game.core.constants import COMPONENTS_FILE
 from tests.fixtures.paths import get_project_root
 
-class TestShieldRepro(unittest.TestCase):
 
-    def setUp(self):
-        pygame.init()
-        # Ensure clean state
-        RegistryManager.instance().clear()
+@pytest.fixture
+def ship_with_bridge():
+    """Set up pygame and create a ship with bridge for testing."""
+    pygame.init()
+    # Ensure clean state
+    RegistryManager.instance().clear()
 
-        initialize_ship_data(str(get_project_root()))
-        load_components(COMPONENTS_FILE)
-        self.ship = Ship("ShieldRepro", 0, 0, (255, 255, 255), ship_class="Cruiser")
-        self.ship.add_component(create_component('bridge'), LayerType.CORE)
-        self.calculator = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)
+    initialize_ship_data(str(get_project_root()))
+    load_components(COMPONENTS_FILE)
+    ship = Ship("ShieldRepro", 0, 0, (255, 255, 255), ship_class="Cruiser")
+    ship.add_component(create_component('bridge'), LayerType.CORE)
+    calculator = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)
 
-    def tearDown(self):
-        pygame.quit()
-        RegistryManager.instance().clear()
+    yield ship, calculator
 
-    def test_shield_regen_cost(self):
+    pygame.quit()
+    RegistryManager.instance().clear()
+
+
+class TestShieldRepro:
+
+    def test_shield_regen_cost(self, ship_with_bridge):
+        ship, calculator = ship_with_bridge
+
         # 1. create ShieldRegen
         regen = create_component('shield_regen')
         # Expect 2.0 from json
@@ -33,15 +40,12 @@ class TestShieldRepro(unittest.TestCase):
         cons = regen.get_ability('ResourceConsumption')
         val = cons.amount if cons else 'MISSING'
         print(f"DEBUG: Initial Energy Cost: {val}")
-        
-        self.ship.add_component(regen, LayerType.INNER)
-        self.ship.recalculate_stats()
-        
+
+        ship.add_component(regen, LayerType.INNER)
+        ship.recalculate_stats()
+
         cons = regen.get_ability('ResourceConsumption')
         val = cons.amount if cons else 'MISSING'
         print(f"DEBUG: Post-Recalc Energy Cost: {val}")
-        
-        self.assertEqual(val, 2.0, "Energy cost should persist as 2.0")
 
-if __name__ == '__main__':
-    unittest.main()
+        assert val == 2.0, "Energy cost should persist as 2.0"
