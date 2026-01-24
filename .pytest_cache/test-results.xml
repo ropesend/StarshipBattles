@@ -1,1 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="0" time="1.017" timestamp="2026-01-24T03:33:13.762484-08:00" hostname="9950X3D" /></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="3.853" timestamp="2026-01-24T04:34:18.427591-08:00" hostname="DESKTOP-KU1VCKN"><testcase classname="" name="Debugging.Marked_for_Deletion_2026-01-20.test_validation_final" time="0.000"><error message="collection failure">Debugging\Marked_for_Deletion_2026-01-20\test_validation_final.py:22: in &lt;module&gt;
+    metadata = scenario_info['metadata']
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable</error></testcase></testsuite></testsuites>
