@@ -19,13 +19,33 @@ import pygame
 # Mock pygame_gui before importing the module
 @pytest.fixture(autouse=True)
 def mock_pygame_gui():
-    """Mock pygame_gui elements for testing."""
+    """Mock pygame_gui elements for testing.
+
+    Note: We must clean up stale package attributes after the test
+    because patch.dict removes entries from sys.modules but does NOT
+    remove the corresponding attributes from parent packages. This
+    leaves an inconsistent state that breaks subsequent imports via
+    unittest.mock.patch().
+    """
+    import sys
+
     with patch.dict('sys.modules', {'pygame_gui': MagicMock()}):
         # Re-import with mocks
         import importlib
         import game.research.ui.research_controls as rc
         importlib.reload(rc)
         yield rc
+
+    # After patch.dict exits, the modules that were imported during the context
+    # have corrupted pygame_gui references (they're bound to the MagicMock that
+    # was in sys.modules during import). If research_scene was imported (via the
+    # game.research.ui __init__.py), it now has a stale pygame_gui reference.
+    #
+    # Fix: Reload the research_scene module to rebind pygame_gui to the real module.
+    if 'game.research.ui.research_scene' in sys.modules:
+        import importlib
+        import game.research.ui.research_scene
+        importlib.reload(game.research.ui.research_scene)
 
 
 @pytest.fixture
