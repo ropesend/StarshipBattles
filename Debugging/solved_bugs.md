@@ -491,3 +491,166 @@
 - 2026-01-23: Diagnostic logging added at key decision points
 
 ---
+
+## [BUG-35] - Strategy view smaller planets too compacted in multi-planet sectors
+* **Date Solved:** 2026-01-24 07:48
+* **Original Issue:** In the strategy view, with multiple planets in a sector, we can slightly increase the angle between the smaller planets to spread them out a little. They are too compacted and there is extra space.
+* **Solution Implemented:**
+- 2026-01-23: Ticket created.
+- 2026-01-23: Fixed. Modified `_draw_system_details()` in `game/ui/screens/strategy_renderer.py` to increase angular spread between smaller planets:
+  - 2 planets: 35° apart (was 30°)
+  - 3 planets: 40° spread (was asymmetric 15°/0°/-45°)
+  - 4 planets: new explicit angles [50°, 20°, -20°, -50°]
+  - 5 planets: new explicit angles [55°, 27°, 0°, -27°, -55°]
+  - 6+ planets: spread from 60° to -70° (130° arc, was 105°)
+
+  This provides better spacing and uses more of the available hex area.
+
+---
+### ❌ Fix Rejected [2026-01-24 10:30]
+**Reason:** Planets are still too tight together, try to increase the angle between the smaller planets by about 15%
+**New Constraints:** Increase angular spread by approximately 15% from current values
+---
+
+- 2026-01-24: Rev 5 fix applied. Increased all angular spreads by 15%:
+  - 2 planets: 40° (was 35°)
+  - 3 planets: 46° (was 40°)
+  - 4 planets: [58°, 23°, -23°, -58°] (was [50°, 20°, -20°, -50°])
+  - 5 planets: [63°, 31°, 0°, -31°, -63°] (was [55°, 27°, 0°, -27°, -55°])
+  - 6+ planets: 150° arc from 70° to -80° (was 130° arc from 60° to -70°)
+  File modified: `game/ui/screens/strategy_renderer.py:356-371`
+
+---
+
+## [BUG-37] - Load Design Screen obsolete filter not working correctly
+* **Date Solved:** 2026-01-24 07:48
+* **Original Issue:** In the Design Workshop, the Load Design Screen does not appear to let you make ships as obsolete, or filter the obsolete ships. When clicking "filter obsolete", the Select button keeps moving further to the left.
+* **Solution Implemented:**
+- 2026-01-23: Ticket created from user report.
+- 2026-01-23: Fixed Select button drift issue. Root cause: `_rebuild_design_list()` was calculating `row_width` from `list_container.get_container().get_rect().width - 20`, then setting `set_scrollable_area_dimensions(row_width, ...)`. Each refresh would read the previously-shrunk width and subtract 20 again, causing cumulative shrinkage. Fixed by using `main_panel.get_container().get_rect().width - 30` as a stable reference.
+- 2026-01-23: Note: "Cannot mark ships obsolete" - the Load Design Screen is a read-only selector window. Marking obsolete would be a feature for the Design Workshop editor. Consider creating separate feature ticket if needed.
+
+---
+### ❌ Fix Rejected [2026-01-24 10:35]
+**Reason:** Either designs are not being correctly identified as obsolete, or they are not getting set as obsolete, I can't really tell.
+The load window in the Design Workshop needs to give the option to make a ship obsolete - this can be a button just to the left of the select button. - when pressed the design needs to be updated as obsolete and the file saved. The window should not close.
+There needs to be a visible indicator on the line that indicates if the ship is obsolete, right now nothing indicates this.
+**New Constraints:**
+- Add "Mark Obsolete" button to the left of the Select button in the Load Design window
+- When pressed, update the design as obsolete and save the file (window stays open)
+- Add visible indicator on each row showing whether the ship is obsolete
+---
+
+- 2026-01-24: Implemented obsolete toggle functionality:
+  - Added "[OBS]" visual indicator on left side of row when design is obsolete
+  - Added "Obsolete"/"Restore" toggle button to the left of Select button
+  - Button calls `design_library.mark_obsolete()` to update and save the design file
+  - Window stays open and list refreshes after toggling obsolete status
+  File modified: `game/ui/screens/design_selector_window.py:295-399`
+
+---
+
+## [BUG-38] - Load Design Screen should show portrait and top-down views
+* **Date Solved:** 2026-01-24 07:48
+* **Original Issue:** In the Design Workshop, the Load Design Screen should show a portrait and top down view of the designs in the list.
+* **Solution Implemented:**
+- 2026-01-23: Ticket created from user report.
+- 2026-01-23: Implemented portrait thumbnails in design rows. Added `_load_portrait_thumbnail()` method that loads portrait from `assets/ShipThemes/{theme}/Portraits/{class}_Portrait.jpg` and falls back to a gradient placeholder with class initial. Replaced emoji placeholder with `UIImage` widget displaying the portrait. Files modified: `game/ui/screens/design_selector_window.py`.
+
+---
+### ❌ Fix Rejected [2026-01-24 10:40]
+**Reason:** There is a nice portrait view but not top down view - the topdown view should be from the Skins directory of the ship's theme directory. Note that the skins may have a large transparent area, they should be sized based on the visible portion of the image, and this should be the same height as the portrait view.
+**New Constraints:**
+- Add top-down view in addition to portrait view
+- Top-down image source: `assets/ShipThemes/{theme}/Skins/` directory
+- Size based on visible (non-transparent) portion of the image
+- Top-down view height should match portrait view height
+---
+
+- 2026-01-24: Implemented top-down view:
+  - Added `_load_topdown_thumbnail()` method that loads from `assets/ShipThemes/{theme}/Skins/{class}.png`
+  - Added `_get_visible_bounding_box()` helper to find non-transparent area of PNG
+  - Top-down image is scaled so visible portion height matches portrait height (50px)
+  - Top-down view displays alongside portrait in each design row
+  - Handles multiple class name variations (spaces, underscores, case)
+  File modified: `game/ui/screens/design_selector_window.py`
+
+---
+
+## [BUG-42] - Design Workshop remnants visible after exit
+* **Date Solved:** 2026-01-24 07:48
+* **Original Issue:** When I exit the Design Workshop, and the main strategy layer view is visible, there are portions of the Design Workshop that are still visible.
+* **Solution Implemented:**
+- 2026-01-23: Ticket created
+- 2026-01-23: Fixed. Added cleanup method to clear pygame_gui elements on exit:
+  - Added `cleanup()` method to `DesignWorkshopGUI` that calls `ui_manager.clear_and_reset()`
+  - Updated `on_builder_return()` in `app.py` to call `builder_scene.cleanup()` before state transition
+  - Files modified: `game/ui/screens/workshop_screen.py`, `game/app.py`
+  - Tests pass: workshop tests (37 items)
+
+---
+### ❌ Fix Rejected [2026-01-24 10:50]
+**Reason:** There are still Design Workshop Remnants - A simple solution is Blank the screen and re-draw the whole UI when you go back to the strategy layer, this is also a problem with the fleet report, it leaves a lot of remnants behind as well
+**New Constraints:**
+- Blank the screen and re-draw the whole UI when returning to strategy layer
+- This issue also affects the Fleet Report (leaves remnants behind) - same fix needed
+---
+
+- 2026-01-24: Fixed by adding full screen fill at start of `StrategyScene.draw()`:
+  - Added `screen.fill((10, 10, 20))` as first line of draw method
+  - This clears the entire screen before drawing, preventing remnants from any previous screen
+  - Fixes both Design Workshop and Fleet Report remnant issues
+  File modified: `game/ui/screens/strategy_scene.py:144-147`
+
+---
+
+## [BUG-47] - Component Modifiers Section and Grid Not Acting Appropriately
+* **Date Solved:** 2026-01-24 07:48
+* **Original Issue:** The Component modifiers section and the component modifier Grid are not acting appropriately.
+* **Solution Implemented:**
+| Date | Phase | Notes |
+|------|-------|-------|
+| 2026-01-24 | Ingested | Ticket created from user report |
+| 2026-01-24 | Fixed | Root causes identified and fixed |
+
+### Fix Details (2026-01-24)
+
+**Issue 1: Modifier panel shows different modifiers depending on previous selection**
+- **Root Cause:** In `ModifierEditorPanel.layout()`, when selecting a new component, the scroll container was killed but `self.modifier_rows` (containing `ModifierControlRow` objects) was not cleared. The row objects persisted with dead UI element references. Since `build_ui()` was only called when the y-position changed, rows at the same position never got their UI rebuilt.
+- **Fix:** Modified `_clear_scroll_container()` in `builder_widgets.py` to also call `_clear_all_rows()`. This ensures all modifier rows are rebuilt with fresh UI elements when a new component is selected.
+- **File:** `game/ui/panels/builder_widgets.py:155-166`
+
+**Issue 2: Grid not showing all modifier effects (e.g., Size Mount not shown for Bridge)**
+- **Root Cause:** `ModifierImpactGrid.update()` filtered stat columns to only show stats that the component's abilities consume. For example, the Bridge might only consume `crew_req`, but Size Mount affects `mass_mult`. Since `mass_mult` wasn't in the Bridge's consumed stats, the column wasn't displayed, making Size Mount's row appear empty.
+- **Fix:** Removed the stat filtering so ALL stats affected by any modifier are shown as columns. Changed `self.stat_columns = self._get_affected_stats(summary, component_stats)` to `self.stat_columns = self._get_affected_stats(summary, None)`.
+- **File:** `game/ui/panels/modifier_impact_grid.py:105-111`
+
+---
+
+## [BUG-48] - Core Layer Components Display as Blank and Deletion Issues
+* **Date Solved:** 2026-01-24 07:48
+* **Original Issue:** When I add a second generator to a design and place it in the core level it shows up as a blank space: C:\Developer\StarshipBattles\screenshots\screenshot_20260124_061019_198733_mouse_focus.png then when I delete the 1st generator that I placed in the outer layer, instead the one that was placed in the core is deleted.
+* **Solution Implemented:**
+| Date | Phase | Notes |
+|------|-------|-------|
+| 2026-01-24 | Ingested | Ticket created from user report |
+| 2026-01-24 | Fixed | Root causes identified and fixed |
+
+### Fix Details (2026-01-24)
+
+**Issue 1: Components showing as blank in Core layer**
+- **Root Cause:** In `LayerPanel.rebuild()`, the UI cache key was `("group", group_key)` which didn't include the layer type. When the same component type (e.g., Generator) existed in both CORE and OUTER layers with identical modifiers, they had the same cache key. The second component's UI overwrote the first in the cache, causing the first to display blank or with wrong data.
+- **Fix:** Changed the cache key to `("group", l_type, group_key)` to include the layer type, ensuring unique cache entries for each layer.
+- **File:** `ui/builder/layer_panel.py:213`
+
+**Issue 2: Deletion targeting wrong component (wrong layer)**
+- **Root Cause:** The `LayerComponentItem` only passed `group_key` to the delete handler. The handler then searched ALL layers for a matching component, finding the first match which could be in the wrong layer (typically the last layer searched in backwards iteration).
+- **Fix:**
+  1. Added `layer_type` parameter to `LayerComponentItem.__init__` and stored it
+  2. Changed the delete action payload from `group_key` to `(group_key, layer_type)` tuple
+  3. Updated `_handle_remove_group()` in event router to unpack the layer type and only search the target layer
+- **Files:**
+  - `ui/builder/structure_list_items.py:258,260,419`
+  - `game/ui/screens/workshop_event_router.py:190-235`
+
+---

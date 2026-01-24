@@ -321,16 +321,21 @@ class InputHandler:
                 largest_diameter = largest_draw_r * 2
                 group_offset_x = -largest_diameter * 0.20
 
-                # Angles for smaller planets (same as renderer)
+                # Angles for smaller planets (must match strategy_renderer.py Rev 5 values)
                 smaller_count = len(planets_sorted) - 1
                 if smaller_count == 1:
-                    smaller_angles = [0]
+                    smaller_angles = [0]  # Right of largest
                 elif smaller_count == 2:
-                    smaller_angles = [30, -30]
+                    smaller_angles = [40, -40]  # 40° above and below horizontal
                 elif smaller_count == 3:
-                    smaller_angles = [15, 0, -45]
+                    smaller_angles = [46, 0, -46]  # 46° up, horizontal, 46° down
+                elif smaller_count == 4:
+                    smaller_angles = [58, 23, -23, -58]  # Even spread
+                elif smaller_count == 5:
+                    smaller_angles = [63, 31, 0, -31, -63]  # Even spread
                 else:
-                    smaller_angles = [45 - i * (105 / max(1, smaller_count - 1)) for i in range(smaller_count)]
+                    # 6+ planets: spread evenly from 70° to -80° (150° arc)
+                    smaller_angles = [70 - i * (150 / max(1, smaller_count - 1)) for i in range(smaller_count)]
 
                 for i, p in enumerate(planets_sorted):
                     rel_scale = p.radius / largest.radius

@@ -281,8 +281,9 @@ class DesignSelectorWindow(UIWindow):
 
         # Create rows for each design
         y_offset = 10
-        # Use main_panel width as stable reference (not scrolling container which shrinks)
-        row_width = self.main_panel.get_container().get_rect().width - 30
+        # Use list container width minus scrollbar width (20px) and margins
+        # This ensures rows don't get clipped by the scrollbar
+        row_width = self.list_container.get_container().get_rect().width - 25
 
         for design in self.filtered_designs:
             row = self._create_design_row(design, y_offset, row_width)
@@ -312,22 +313,46 @@ class DesignSelectorWindow(UIWindow):
             object_id=f"#design_row_{design.design_id}"
         )
 
+        # Obsolete indicator (visual marker on left side)
+        current_x = 5
+        if design.is_obsolete:
+            UILabel(
+                relative_rect=pygame.Rect(current_x, 5, 40, 50),
+                text="[OBS]",
+                manager=self.ui_manager,
+                container=row,
+                object_id="#obsolete_indicator"
+            )
+            current_x += 45
+
         # Portrait thumbnail
         portrait_surface = self._load_portrait_thumbnail(design, 50)
         UIImage(
-            relative_rect=pygame.Rect(5, 5, 50, 50),
+            relative_rect=pygame.Rect(current_x, 5, 50, 50),
             image_surface=portrait_surface,
             manager=self.ui_manager,
             container=row
         )
+        current_x += 55
+
+        # Top-down thumbnail (sized to match portrait height)
+        topdown_surface = self._load_topdown_thumbnail(design, 50)
+        if topdown_surface:
+            topdown_width = topdown_surface.get_width()
+            UIImage(
+                relative_rect=pygame.Rect(current_x, 5, topdown_width, 50),
+                image_surface=topdown_surface,
+                manager=self.ui_manager,
+                container=row
+            )
+            current_x += topdown_width + 5
 
         # Design name
+        name_x = current_x
         name_text = design.name
-        if design.is_obsolete:
-            name_text += " [OBSOLETE]"
 
         UILabel(
-            relative_rect=pygame.Rect(65, 5, 200, 25),
+            relative_rect=pygame.Rect(name_x, 5, 200, 25),
             text=name_text,
             manager=self.ui_manager,
             container=row
@@ -335,7 +360,7 @@ class DesignSelectorWindow(UIWindow):
 
         # Ship class
         UILabel(
-            relative_rect=pygame.Rect(65, 30, 150, 20),
+            relative_rect=pygame.Rect(name_x, 30, 150, 20),
             text=f"Class: {design.ship_class}",
             manager=self.ui_manager,
             container=row
@@ -343,7 +368,7 @@ class DesignSelectorWindow(UIWindow):
 
         # Vehicle type
         UILabel(
-            relative_rect=pygame.Rect(220, 30, 150, 20),
+            relative_rect=pygame.Rect(name_x + 155, 30, 150, 20),
             text=f"Type: {design.vehicle_type}",
             manager=self.ui_manager,
             container=row
@@ -351,11 +376,24 @@ class DesignSelectorWindow(UIWindow):
 
         # Mass
         UILabel(
-            relative_rect=pygame.Rect(380, 30, 100, 20),
+            relative_rect=pygame.Rect(name_x + 315, 30, 100, 20),
             text=f"Mass: {design.mass:.0f}",
             manager=self.ui_manager,
             container=row
         )
+
+        # Mark Obsolete button (to the left of Select button)
+        obsolete_text = "Restore" if design.is_obsolete else "Obsolete"
+        obsolete_btn = UIButton(
+            relative_rect=pygame.Rect(width - 180, 15, 80, 30),
+            text=obsolete_text,
+            manager=self.ui_manager,
+            container=row,
+            object_id=f"#obsolete_{design.design_id}"
+        )
+        obsolete_btn.design_id = design.design_id
+        obsolete_btn.is_obsolete_button = True
+        obsolete_btn.current_obsolete_state = design.is_obsolete
 
         # Select button
         select_btn = UIButton(
@@ -434,6 +472,113 @@ class DesignSelectorWindow(UIWindow):
 
         return surface
 
+    def _load_topdown_thumbnail(self, design: DesignMetadata, target_height: int = 50) -> Optional[pygame.Surface]:
+        """
+        Load a top-down (skin) thumbnail for the design.
+
+        The image is sized based on its visible (non-transparent) portion,
+        scaled so the visible height matches target_height.
+
+        Args:
+            design: Design metadata
+            target_height: Target height for the visible portion
+
+        Returns:
+            pygame.Surface with the top-down view, or None if not found
+        """
+        theme = design.theme_id or "Federation"
+        ship_class = design.ship_class or "Unknown"
+
+        # Normalize class name for filename - try multiple variations
+        class_variations = [
+            ship_class,
+            ship_class.lower(),
+            ship_class.replace(" ", "_"),
+            ship_class.replace(" ", ""),
+            ship_class.lower().replace(" ", "_"),
+            ship_class.lower().replace(" ", " "),
+        ]
+
+        # Try to find the skin file
+        skin_paths = []
+        for class_name in class_variations:
+            skin_paths.append(os.path.join("assets", "ShipThemes", theme, "Skins", f"{class_name}.png"))
+
+        loaded_img = None
+        for path in skin_paths:
+            if os.path.exists(path):
+                try:
+                    loaded_img = pygame.image.load(path).convert_alpha()
+                    break
+                except Exception:
+                    continue
+
+        if loaded_img is None:
+            return None
+
+        # Find the visible bounding box (non-transparent area)
+        bbox = self._get_visible_bounding_box(loaded_img)
+        if bbox is None:
+            return None
+
+        min_x, min_y, max_x, max_y = bbox
+        visible_width = max_x - min_x
+        visible_height = max_y - min_y
+
+        if visible_height <= 0 or visible_width <= 0:
+            return None
+
+        # Calculate scale to make visible height match target_height
+        scale = target_height / visible_height
+        new_width = int(loaded_img.get_width() * scale)
+        new_height = int(loaded_img.get_height() * scale)
+
+        # Scale the full image
+        scaled_img = pygame.transform.smoothscale(loaded_img, (new_width, new_height))
+
+        # Crop to the visible area (scaled)
+        scaled_min_x = int(min_x * scale)
+        scaled_min_y = int(min_y * scale)
+        scaled_visible_w = int(visible_width * scale)
+        scaled_visible_h = int(visible_height * scale)
+
+        # Create final surface with just the visible portion
+        final_surface = pygame.Surface((scaled_visible_w, scaled_visible_h), pygame.SRCALPHA)
+        final_surface.blit(scaled_img, (0, 0), (scaled_min_x, scaled_min_y, scaled_visible_w, scaled_visible_h))
+
+        return final_surface
+
+    def _get_visible_bounding_box(self, surface: pygame.Surface) -> Optional[tuple]:
+        """
+        Find the bounding box of the visible (non-transparent) area of a surface.
+
+        Args:
+            surface: pygame.Surface with alpha channel
+
+        Returns:
+            Tuple (min_x, min_y, max_x, max_y) or None if fully transparent
+        """
+        width = surface.get_width()
+        height = surface.get_height()
+
+        min_x, min_y = width, height
+        max_x, max_y = 0, 0
+
+        # Check each pixel for non-transparent content
+        for y in range(height):
+            for x in range(width):
+                pixel = surface.get_at((x, y))
+                if pixel[3] > 10:  # Alpha > 10 (not fully transparent)
+                    min_x = min(min_x, x)
+                    min_y = min(min_y, y)
+                    max_x = max(max_x, x)
+                    max_y = max(max_y, y)
+
+        if max_x <= min_x or max_y <= min_y:
+            return None
+
+        return (min_x, min_y, max_x + 1, max_y + 1)
+
     def process_event(self, event: pygame.event.Event) -> bool:
         """
         Process pygame events.
@@ -461,6 +606,11 @@ class DesignSelectorWindow(UIWindow):
 
             elif event.ui_element == self.cancel_button:
                 self.kill()
+                return True
+
+            # Check if it's an obsolete toggle button
+            elif hasattr(event.ui_element, 'is_obsolete_button') and event.ui_element.is_obsolete_button:
+                self._on_toggle_obsolete(event.ui_element.design_id, event.ui_element.current_obsolete_state)
                 return True
 
             # Check if it's a design row select button
@@ -495,6 +645,26 @@ class DesignSelectorWindow(UIWindow):
         self.obsolete_button.set_text(f"{checkbox} Show Obsolete")
 
         self._refresh_designs()
+
+    def _on_toggle_obsolete(self, design_id: str, current_state: bool):
+        """
+        Handle obsolete toggle button click.
+
+        Args:
+            design_id: ID of design to toggle
+            current_state: Current obsolete state (True = obsolete)
+        """
+        from game.core.logger import log_info
+        new_state = not current_state
+        log_info(f"DesignSelector: Toggling obsolete for {design_id}: {current_state} -> {new_state}")
+
+        # Call design library to mark obsolete
+        success, message = self.design_library.mark_obsolete(design_id, new_state)
+        log_info(f"DesignSelector: mark_obsolete result: {success}, {message}")
+
+        if success:
+            # Refresh the list to show updated state
+            self._refresh_designs()
 
     def _on_design_selected(self, design_id: str):
         """

@@ -159,13 +159,23 @@ def test_reorder_queue(build_queue_screen):
     # Find panel for item B
     panel_B = build_queue_screen.queue_items[1]
     
-    # 1. Pick up B
+    # 1. Pick up B - start with mouse down
     event_down = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {
         'button': 1,
         'pos': panel_B.get_abs_rect().center
     })
     build_queue_screen.handle_event(event_down)
-    
+
+    # Simulate mouse motion to exceed drag threshold (10 pixels)
+    motion_pos = (panel_B.get_abs_rect().centerx + 15,
+                  panel_B.get_abs_rect().centery + 15)
+    event_motion = pygame.event.Event(pygame.MOUSEMOTION, {
+        'pos': motion_pos,
+        'rel': (15, 15),
+        'buttons': (1, 0, 0)  # Left button held down
+    })
+    build_queue_screen.handle_event(event_motion)
+
     assert build_queue_screen.dragged_item['design_id'] == "item_B"
     assert len(build_queue_screen.planet.construction_queue) == 1 # A is left
     
@@ -196,13 +206,26 @@ def test_remove_from_queue(build_queue_screen):
     
     panel = build_queue_screen.queue_items[0]
     
-    # 1. Pick up
+    # 1. Pick up - start with mouse down
     event_down = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {
         'button': 1,
         'pos': panel.get_abs_rect().center
     })
     build_queue_screen.handle_event(event_down)
-    
+
+    # Simulate mouse motion to exceed drag threshold (10 pixels)
+    motion_pos = (panel.get_abs_rect().centerx + 15,
+                  panel.get_abs_rect().centery + 15)
+    event_motion = pygame.event.Event(pygame.MOUSEMOTION, {
+        'pos': motion_pos,
+        'rel': (15, 15),
+        'buttons': (1, 0, 0)  # Left button held down
+    })
+    build_queue_screen.handle_event(event_motion)
+
+    # Verify drag started
+    assert build_queue_screen.dragged_item is not None
+
     # 2. Drop outside (e.g. (0,0))
     event_up = pygame.event.Event(pygame.MOUSEBUTTONUP, {
         'button': 1,

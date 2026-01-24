@@ -177,8 +177,8 @@ class DesignWorkshopGUI:
             
             self.right_panel = BuilderRightPanel(
                 self, self.ui_manager,
-                pygame.Rect(self.width - self.right_panel_width, 0, 
-                            self.right_panel_width, self.height - self.bottom_bar_height - self.weapons_report_height),
+                pygame.Rect(self.width - self.right_panel_width, 0,
+                            self.right_panel_width, self.height - self.bottom_bar_height),
                 event_bus=self.event_bus,
                 viewmodel=self.viewmodel
             )
@@ -512,8 +512,15 @@ class DesignWorkshopGUI:
         # Layer panel drawing removed (it's handled by UI manager + overlay highlights handled by panel.draw if any)
         self.layer_panel.draw(screen)  # Draw selection highlights AFTER UI manager
         self.weapons_report_panel.draw(screen)
-        self.component_modifier_grid_panel.draw(screen)  # Draw modifier impact grid
-        self.detail_panel.draw(screen)
+
+        # Skip custom drawing when modal windows are open to avoid z-order issues
+        has_open_window = any(
+            isinstance(el, UIWindow) and el.visible
+            for el in self.ui_manager.get_root_container().elements
+        )
+        if not has_open_window:
+            self.component_modifier_grid_panel.draw(screen)  # Draw modifier impact grid
+            self.detail_panel.draw(screen)
         
         if hovered and not self.controller.dragged_item:
             # Tooltip removed

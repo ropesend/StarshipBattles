@@ -153,10 +153,18 @@ class ModifierEditorPanel:
             self.extra_ui_elements.append(hint_label)
 
     def _clear_scroll_container(self):
-        """Clear the scroll container."""
+        """Clear the scroll container and all modifier rows.
+
+        When the scroll container is killed, all UI elements inside it are also killed.
+        We must clear self.modifier_rows to ensure rows are rebuilt with fresh UI
+        when a new scroll container is created.
+        """
         if self.scroll_container:
             self.scroll_container.kill()
             self.scroll_container = None
+        # Clear modifier rows - their UI elements were killed with the scroll container
+        # This ensures build_ui() is called for all rows when layout() runs
+        self._clear_all_rows()
 
     def _clear_all_rows(self):
         """Clear all modifier rows."""

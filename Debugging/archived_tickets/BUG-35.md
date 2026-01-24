@@ -28,3 +28,11 @@ Awaiting Confirmation
 **Reason:** Planets are still too tight together, try to increase the angle between the smaller planets by about 15%
 **New Constraints:** Increase angular spread by approximately 15% from current values
 ---
+
+- 2026-01-24: Rev 5 fix applied. Increased all angular spreads by 15%:
+  - 2 planets: 40° (was 35°)
+  - 3 planets: 46° (was 40°)
+  - 4 planets: [58°, 23°, -23°, -58°] (was [50°, 20°, -20°, -50°])
+  - 5 planets: [63°, 31°, 0°, -31°, -63°] (was [55°, 27°, 0°, -27°, -55°])
+  - 6+ planets: 150° arc from 70° to -80° (was 130° arc from 60° to -70°)
+  File modified: `game/ui/screens/strategy_renderer.py:356-371`

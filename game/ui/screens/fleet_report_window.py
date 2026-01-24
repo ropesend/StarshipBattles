@@ -604,29 +604,38 @@ class FleetReportWindow(UIWindow):
         # Get image from theme manager
         theme_mgr = ShipThemeManager.instance()
 
+        target_height = self.row_height - 4  # Match portrait height
+
         if image_type == 'portrait':
-            target_size = (40, self.row_height - 4)  # Standard portrait size
+            target_size = (40, target_height)  # Standard portrait size
             raw_surf = theme_mgr.get_portrait_image(theme_id, ship_class)
+            use_visible_sizing = False
         elif image_type == 'topdown':
-            target_size = (56, self.row_height - 4)  # Larger for top-down view
+            target_size = (80, target_height)  # Wider for top-down view
             raw_surf = theme_mgr.get_image(theme_id, ship_class)
+            use_visible_sizing = True  # Size based on visible portion
         else:
-            target_size = (40, self.row_height - 4)
+            target_size = (40, target_height)
             raw_surf = None
+            use_visible_sizing = False
 
         if raw_surf:
-            # Scale to fit while preserving aspect ratio
-            w, h = raw_surf.get_size()
-            scale = min(target_size[0] / w, target_size[1] / h)
-            new_w, new_h = int(w * scale), int(h * scale)
-            scaled = pygame.transform.smoothscale(raw_surf, (new_w, new_h))
+            if use_visible_sizing:
+                # For top-down images, size based on visible (non-transparent) portion
+                result = self._scale_by_visible_portion(raw_surf, target_height)
+            else:
+                # For portraits, scale normally
+                w, h = raw_surf.get_size()
+                scale = min(target_size[0] / w, target_size[1] / h)
+                new_w, new_h = int(w * scale), int(h * scale)
+                scaled = pygame.transform.smoothscale(raw_surf, (new_w, new_h))
 
-            # Center on target surface
-            result = pygame.Surface(target_size, pygame.SRCALPHA)
-            result.fill((30, 30, 30))
-            x_off = (target_size[0] - new_w) // 2
-            y_off = (target_size[1] - new_h) // 2
-            result.blit(scaled, (x_off, y_off))
+                # Center on target surface
+                result = pygame.Surface(target_size, pygame.SRCALPHA)
+                result.fill((30, 30, 30))
+                x_off = (target_size[0] - new_w) // 2
+                y_off = (target_size[1] - new_h) // 2
+                result.blit(scaled, (x_off, y_off))
         else:
             # Create placeholder
             result = pygame.Surface(target_size)
@@ -637,6 +646,78 @@ class FleetReportWindow(UIWindow):
         # Cache the result
         self._image_cache[cache_key] = result
         return result
+
+    def _scale_by_visible_portion(self, surface: pygame.Surface, target_height: int) -> pygame.Surface:
+        """
+        Scale an image based on its visible (non-transparent) portion.
+
+        The visible height will match target_height, and the entire image scales
+        proportionally to maintain the original aspect ratio.
+
+        Args:
+            surface: Source surface with alpha channel
+            target_height: Target height for the visible portion
+
+        Returns:
+            Scaled surface maintaining original aspect ratio
+        """
+        # Find visible bounding box
+        bbox = self._get_visible_bounding_box(surface)
+        if bbox is None:
+            # Fully transparent - return placeholder
+            placeholder = pygame.Surface((40, target_height), pygame.SRCALPHA)
+            placeholder.fill((50, 50, 50))
+            return placeholder
+
+        min_x, min_y, max_x, max_y = bbox
+        visible_width = max_x - min_x
+        visible_height = max_y - min_y
+
+        if visible_height <= 0 or visible_width <= 0:
+            placeholder = pygame.Surface((40, target_height), pygame.SRCALPHA)
+            placeholder.fill((50, 50, 50))
+            return placeholder
+
+        # Calculate scale to make visible height match target_height
+        scale = target_height / visible_height
+        new_width = int(surface.get_width() * scale)
+        new_height = int(surface.get_height() * scale)
+
+        # Scale the full image (maintains original aspect ratio)
+        scaled_img = pygame.transform.smoothscale(surface, (new_width, new_height))
+
+        return scaled_img
+
+    def _get_visible_bounding_box(self, surface: pygame.Surface):
+        """
+        Find the bounding box of the visible (non-transparent) area of a surface.
+
+        Args:
+            surface: pygame.Surface with alpha channel
+
+        Returns:
+            Tuple (min_x, min_y, max_x, max_y) or None if fully transparent
+        """
+        width = surface.get_width()
+        height = surface.get_height()
+
+        min_x, min_y = width, height
+        max_x, max_y = 0, 0
+
+        # Check each pixel for non-transparent content
+        for y in range(height):
+            for x in range(width):
+                pixel = surface.get_at((x, y))
+                if pixel[3] > 10:  # Alpha > 10 (not fully transparent)
+                    min_x = min(min_x, x)
+                    min_y = min(min_y, y)
+                    max_x = max(max_x, x)
+                    max_y = max(max_y, y)
+
+        if max_x <= min_x or max_y <= min_y:
+            return None
+
+        return (min_x, min_y, max_x + 1, max_y + 1)
 
     def _get_column_value(self, ship, col):
         """Get the display value for a column."""

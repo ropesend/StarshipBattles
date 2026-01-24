@@ -254,9 +254,10 @@ class IndividualComponentItem:
 
 class LayerComponentItem:
     """Row representing a component group."""
-    def __init__(self, manager, container, component, count, total_mass, total_pct, is_expanded, 
-                 group_key, is_selected, y_pos, width, sprite_mgr, event_handler, config=StructurePanelLayoutConfig(), is_readonly=False):
+    def __init__(self, manager, container, component, count, total_mass, total_pct, is_expanded,
+                 group_key, is_selected, y_pos, width, sprite_mgr, event_handler, config=StructurePanelLayoutConfig(), is_readonly=False, layer_type=None):
         self.group_key = group_key
+        self.layer_type = layer_type  # Store layer type for delete targeting
         self.event_handler = event_handler
         self.count = count
         self.is_selected = is_selected
@@ -416,7 +417,8 @@ class LayerComponentItem:
                 self.event_handler.handle_item_action(ACTION_TOGGLE_GROUP, self.group_key)
                 return ('refresh_ui', None)
             elif event.ui_element == self.remove_button:
-                return self.event_handler.handle_item_action(ACTION_REMOVE_GROUP, self.group_key)
+                # Pass layer type with group_key for targeted deletion
+                return self.event_handler.handle_item_action(ACTION_REMOVE_GROUP, (self.group_key, self.layer_type))
             elif event.ui_element == self.add_button:
                 return self.event_handler.handle_item_action(ACTION_ADD_GROUP, self.group_key)
             elif event.ui_element == self.select_button:

@@ -29,3 +29,9 @@ Awaiting Confirmation
 - Blank the screen and re-draw the whole UI when returning to strategy layer
 - This issue also affects the Fleet Report (leaves remnants behind) - same fix needed
 ---
+
+- 2026-01-24: Fixed by adding full screen fill at start of `StrategyScene.draw()`:
+  - Added `screen.fill((10, 10, 20))` as first line of draw method
+  - This clears the entire screen before drawing, preventing remnants from any previous screen
+  - Fixes both Design Workshop and Fleet Report remnant issues
+  File modified: `game/ui/screens/strategy_scene.py:144-147`

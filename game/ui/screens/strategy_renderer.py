@@ -353,22 +353,23 @@ class StrategyRenderer:
 
                 draw_order = planets[1:] + [planets[0]]
 
-                # Rev 4: Define angles for smaller planets based on count
+                # Rev 5: Define angles for smaller planets based on count
                 # Polar coordinates centered on largest planet
+                # Angular spread increased by 15% from Rev 4 values
                 smaller_count = len(planets) - 1
                 if smaller_count == 1:
                     smaller_angles = [0]  # Right of largest
                 elif smaller_count == 2:
-                    smaller_angles = [35, -35]  # 35° above and below horizontal
+                    smaller_angles = [40, -40]  # 40° above and below horizontal (was 35°)
                 elif smaller_count == 3:
-                    smaller_angles = [40, 0, -40]  # 40° up, horizontal, 40° down
+                    smaller_angles = [46, 0, -46]  # 46° up, horizontal, 46° down (was 40°)
                 elif smaller_count == 4:
-                    smaller_angles = [50, 20, -20, -50]  # Even spread
+                    smaller_angles = [58, 23, -23, -58]  # Even spread (was 50, 20, -20, -50)
                 elif smaller_count == 5:
-                    smaller_angles = [55, 27, 0, -27, -55]  # Even spread
+                    smaller_angles = [63, 31, 0, -31, -63]  # Even spread (was 55, 27, 0, -27, -55)
                 else:
-                    # 6+ planets: spread evenly from 60° to -70° (130° arc)
-                    smaller_angles = [60 - i * (130 / max(1, smaller_count - 1)) for i in range(smaller_count)]
+                    # 6+ planets: spread evenly from 70° to -80° (150° arc, was 130°)
+                    smaller_angles = [70 - i * (150 / max(1, smaller_count - 1)) for i in range(smaller_count)]
 
                 for i, p in enumerate(planets):
                     rel_scale = p.radius / largest.radius

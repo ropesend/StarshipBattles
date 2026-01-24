@@ -208,11 +208,13 @@ class LayerPanel(DropTarget):
                                  is_selected_group = True
                                  
                         comp_template = comp_list[0]
-                        
+
                         # --- GROUP ITEM ---
-                        item_key = ("group", group_key)
+                        # Include layer type in cache key to prevent collisions
+                        # when same component type exists in different layers
+                        item_key = ("group", l_type, group_key)
                         visited_keys.add(item_key)
-                        
+
                         item = self.ui_cache.get(item_key)
                         if item:
                             item.update(count, mass_total, pct_val, is_expanded, is_selected_group, comp_template.name)
@@ -233,7 +235,8 @@ class LayerPanel(DropTarget):
                                 self.builder.sprite_mgr,
                                 self,
                                 self.config,
-                                is_readonly=is_readonly
+                                is_readonly=is_readonly,
+                                layer_type=l_type
                             )
                             self.ui_cache[item_key] = item
                             

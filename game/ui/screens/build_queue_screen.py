@@ -39,6 +39,9 @@ class BuildQueueScreen:
         self.queue_items = []  # List of UI elements for queue display
         self.dragged_item = None  # Storage for item being dragged
         self.drag_preview = None  # Preview element following cursor
+        self.selected_queue_index = None  # Currently selected item in queue
+        self.drag_start_pos = None  # Track mouse position for drag threshold
+        self.drag_threshold = 10  # Pixels to move before starting drag
 
         # Load design library
         from game.core.logger import log_debug, log_info
@@ -474,14 +477,19 @@ class BuildQueueScreen:
                 turns = item[1]
                 item_type = "ship"
 
-            # Queue item panel
+            # Queue item panel - highlight if selected
+            is_selected = (idx == self.selected_queue_index)
+            panel_object_id = "#queue_item_selected" if is_selected else "#queue_item"
+
             item_panel = ui.UIPanel(
                 relative_rect=pygame.Rect(0, y_offset, self.queue_scrollable.get_container().get_size()[0] - 20, 60),
                 manager=self.manager,
-                container=self.queue_scrollable
+                container=self.queue_scrollable,
+                object_id=panel_object_id
             )
             item_panel.queue_index = idx  # Tag for reordering
             item_panel.item_data = item   # Store original data
+            item_panel.is_selected = is_selected  # Track selection state
 
             # Load and display portrait icon
             portrait_surface = self._load_queue_item_portrait(design_id, item_type, icon_size)
@@ -679,7 +687,18 @@ class BuildQueueScreen:
             elif event.ui_element == self.btn_add_to_queue:
                 if self.selected_design:
                     self._add_to_queue(self.selected_design, turns=1)
-# Design selection and drag handled in MOUSEBUTTONDOWN/UP below
+
+            # Remove selected from queue button
+            elif event.ui_element == self.btn_remove_from_queue:
+                if self.selected_queue_index is not None and self.selected_queue_index < len(self.planet.construction_queue):
+                    removed_item = self.planet.construction_queue.pop(self.selected_queue_index)
+                    design_id = removed_item.get('design_id') if isinstance(removed_item, dict) else removed_item[0]
+                    log_info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
+                    self.selected_queue_index = None
+                    self._refresh_queue_display()
+                else:
+                    log_warning("No queue item selected to remove")
+        # Design selection and drag handled in MOUSEBUTTONDOWN/UP below
 
         # Handle Drag Start (on mouse down for immediate dragging)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -710,12 +729,26 @@ class BuildQueueScreen:
                         log_info(f"Started drag from mouse down: {self.selected_design}")
                         break
                 
-            # Check if mouse is over a queue item panel
+            # Check if mouse is over a queue item panel - track for potential drag
             for element in self.queue_items:
                 if element.get_abs_rect().collidepoint(event.pos):
-                    # Pick up from queue
                     idx = getattr(element, 'queue_index', -1)
                     if idx != -1:
+                        # Store start position for drag threshold check
+                        self.drag_start_pos = event.pos
+                        self._pending_queue_index = idx  # Track which item might be dragged
+                    break
+
+        # Handle Mouse Motion for drag threshold check
+        if event.type == pygame.MOUSEMOTION and event.buttons[0]:
+            if self.drag_start_pos and hasattr(self, '_pending_queue_index') and self._pending_queue_index is not None:
+                # Check if we've moved past drag threshold
+                dx = abs(event.pos[0] - self.drag_start_pos[0])
+                dy = abs(event.pos[1] - self.drag_start_pos[1])
+                if dx > self.drag_threshold or dy > self.drag_threshold:
+                    # Start actual drag - pick up from queue
+                    idx = self._pending_queue_index
+                    if idx < len(self.planet.construction_queue):
                         item = self.planet.construction_queue.pop(idx)
                         design_id = item.get('design_id') if isinstance(item, dict) else item[0]
                         item_type = item.get('type') if isinstance(item, dict) else 'ship'
@@ -733,10 +766,23 @@ class BuildQueueScreen:
                         }
                         log_info(f"Picked up {self.dragged_item['design_id']} from queue at pos {idx}")
                         self._refresh_queue_display()
-                    break
+                    # Clear pending state
+                    self._pending_queue_index = None
+                    self.drag_start_pos = None
 
-        # Handle Drag End
+        # Handle Drag End / Click Selection
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            # Check if this was a click (not a drag) on a queue item - select it
+            if hasattr(self, '_pending_queue_index') and self._pending_queue_index is not None and not self.dragged_item:
+                # This was a click without dragging - select the item
+                self.selected_queue_index = self._pending_queue_index
+                log_info(f"Selected queue item at index {self.selected_queue_index}")
+                self._refresh_queue_display()  # Refresh to show selection highlight
+
+            # Clear pending drag state
+            self._pending_queue_index = None
+            self.drag_start_pos = None
+
             if self.dragged_item:
                 # Track if we need to refresh (item came from queue)
                 came_from_queue = self.dragged_item.get('source') == 'queue'
@@ -819,6 +865,15 @@ class BuildQueueScreen:
             screen: pygame surface to draw on
         """
         self.manager.draw_ui(screen)
+
+        # Draw selection highlight on selected queue item
+        if self.selected_queue_index is not None:
+            for item_panel in self.queue_items:
+                if getattr(item_panel, 'queue_index', -1) == self.selected_queue_index:
+                    # Draw bright border around selected item
+                    abs_rect = item_panel.get_abs_rect()
+                    pygame.draw.rect(screen, (100, 180, 255), abs_rect, 3)  # Blue highlight border
+                    break
 
         # Draw drag preview - using portrait icon attached to cursor
         if self.dragged_item:

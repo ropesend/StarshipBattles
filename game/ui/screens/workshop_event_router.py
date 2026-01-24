@@ -188,26 +188,50 @@ class WorkshopEventRouter:
             gui.layer_panel.rebuild()
     
     def _handle_remove_group(self, data):
-        """Handle removing one component from a group."""
+        """Handle removing one component from a group.
+
+        Args:
+            data: Tuple of (group_key, layer_type) for targeted deletion
+        """
         gui = self.gui
         from ui.builder.grouping_strategies import get_component_group_key
-        
+
+        # Unpack data - now includes layer type for targeted deletion
+        if isinstance(data, tuple) and len(data) == 2 and not isinstance(data[0], str):
+            # New format: (group_key, layer_type)
+            group_key, target_layer = data
+        else:
+            # Backwards compatibility: data is just group_key
+            group_key = data
+            target_layer = None
+
         # Find Last Component in this group to remove
         found_layer = None
         found_idx = -1
-        
-        # Iterate backwards to find one instance
-        for l_type, layers in gui.ship.layers.items():
-            comps = layers['components']
-            for idx in range(len(comps) - 1, -1, -1):
-                c = comps[idx]
-                if get_component_group_key(c) == data:
-                    found_layer = l_type
-                    found_idx = idx
+
+        # If we have a target layer, only search in that layer
+        if target_layer is not None:
+            if target_layer in gui.ship.layers:
+                comps = gui.ship.layers[target_layer]['components']
+                for idx in range(len(comps) - 1, -1, -1):
+                    c = comps[idx]
+                    if get_component_group_key(c) == group_key:
+                        found_layer = target_layer
+                        found_idx = idx
+                        break
+        else:
+            # Fallback: search all layers (backwards compat)
+            for l_type, layers in gui.ship.layers.items():
+                comps = layers['components']
+                for idx in range(len(comps) - 1, -1, -1):
+                    c = comps[idx]
+                    if get_component_group_key(c) == group_key:
+                        found_layer = l_type
+                        found_idx = idx
+                        break
+                if found_layer:
                     break
-            if found_layer:
-                break
-        
+
         if found_layer:
             gui.viewmodel.remove_component(found_layer, found_idx)
             gui.update_stats()

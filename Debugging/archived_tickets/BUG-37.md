@@ -24,3 +24,10 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 - When pressed, update the design as obsolete and save the file (window stays open)
 - Add visible indicator on each row showing whether the ship is obsolete
 ---
+
+- 2026-01-24: Implemented obsolete toggle functionality:
+  - Added "[OBS]" visual indicator on left side of row when design is obsolete
+  - Added "Obsolete"/"Restore" toggle button to the left of Select button
+  - Button calls `design_library.mark_obsolete()` to update and save the design file
+  - Window stays open and list refreshes after toggling obsolete status
+  File modified: `game/ui/screens/design_selector_window.py:295-399`

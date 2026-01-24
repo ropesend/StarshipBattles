@@ -143,6 +143,9 @@ class StrategyScene:
 
     def draw(self, screen):
         """Render the scene."""
+        # Always fill entire screen first to prevent remnants from other screens
+        screen.fill((10, 10, 20))
+
         self._renderer.draw(screen)
 
         if self.turn_processing:

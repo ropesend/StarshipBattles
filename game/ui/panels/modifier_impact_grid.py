@@ -105,11 +105,10 @@ class ModifierImpactGrid:
         # Get modifier stat summary from component
         summary = component.get_modifier_stat_summary()
 
-        # Get stats this component's abilities actually consume
-        component_stats = self._get_component_consumed_stats(component)
-
-        # Filter to only affected stats that the component actually uses
-        self.stat_columns = self._get_affected_stats(summary, component_stats)
+        # Filter to only show stats that the component's abilities actually consume
+        # This hides irrelevant columns (e.g., thrust_mult for a Bridge component)
+        consumed_stats = self._get_component_consumed_stats(component)
+        self.stat_columns = self._get_affected_stats(summary, consumed_stats)
 
         # Build row data for each modifier
         self.modifier_rows = []
@@ -142,32 +141,39 @@ class ModifierImpactGrid:
         # Build the UI
         self._build_ui()
 
+    # Universal stats that apply to ALL components (mass, hp, cost)
+    UNIVERSAL_STATS = {'mass_mult', 'hp_mult', 'cost_mult', 'mass_add', 'hp_add', 'cost_add'}
+
     def _get_component_consumed_stats(self, component: 'Component') -> Optional[set]:
         """
-        Get all stat keys that this component's abilities actually consume.
+        Get all stat keys that this component's abilities and base attributes consume.
 
         This filters the grid to only show stats the component can be affected by.
         For example, weapons consume damage_mult/range_mult but not thrust_mult.
+        Universal stats (mass, hp, cost) are always included since all components have them.
 
         Args:
             component: The component to check
 
         Returns:
-            Set of stat_key strings that the component's abilities use,
+            Set of stat_key strings that the component uses,
             or None if the component has no ability_instances (show all stats)
         """
-        if not hasattr(component, 'ability_instances') or not component.ability_instances:
-            return None  # No filtering - show all affected stats
+        # Start with universal stats that all components have
+        stat_keys = set(self.UNIVERSAL_STATS)
 
-        stat_keys = set()
+        if not hasattr(component, 'ability_instances') or not component.ability_instances:
+            # Component has no abilities - only show universal stats if affected
+            return stat_keys
+
+        # Add ability-specific stats from STAT_BINDINGS
         for ability in component.ability_instances:
             ability_class = ability.__class__
-            # Get stat keys from STAT_BINDINGS
             if hasattr(ability_class, 'STAT_BINDINGS'):
                 for binding in ability_class.STAT_BINDINGS:
                     stat_keys.add(binding.stat_key.value)
 
-        return stat_keys if stat_keys else None
+        return stat_keys
 
     def _get_affected_stats(self, summary: Dict[str, Dict], filter_stats: Optional[set] = None) -> List[str]:
         """

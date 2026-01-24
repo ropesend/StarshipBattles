@@ -22,3 +22,11 @@ Awaiting Confirmation
 - Size based on visible (non-transparent) portion of the image
 - Top-down view height should match portrait view height
 ---
+
+- 2026-01-24: Implemented top-down view:
+  - Added `_load_topdown_thumbnail()` method that loads from `assets/ShipThemes/{theme}/Skins/{class}.png`
+  - Added `_get_visible_bounding_box()` helper to find non-transparent area of PNG
+  - Top-down image is scaled so visible portion height matches portrait height (50px)
+  - Top-down view displays alongside portrait in each design row
+  - Handles multiple class name variations (spaces, underscores, case)
+  File modified: `game/ui/screens/design_selector_window.py`
