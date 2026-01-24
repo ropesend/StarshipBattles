@@ -328,3 +328,166 @@
 * **Solution Implemented:** Fixed `_handle_selection_change()` in `save_selection_window.py` to use `item["text"]` dictionary access instead of `item.text` dot notation, since `UISelectionList.item_list` returns dictionaries.
 * **Test Case:** `tests/unit/ui/test_save_selection.py`
 * **Notes:** The `hasattr(item, 'text')` check returned False for dicts, causing `str(item)` to convert the entire dictionary to a string which never matched.
+
+## [BUG-31] - Planet Selection in Zoomed Strategy Layer
+* **Date Solved:** 2026-01-24 05:29
+* **Original Issue:** In the strategy Layer, when you zoom in on a sector containing multiple planets, you should be able to select the planet on the screen by left clicking on it, they are separated out in their sector.
+* **Solution Implemented:**
+### 2026-01-23 - Fix Implemented
+**Root Cause:** When zoomed in (>= 1.5x), the renderer visually spreads planets within a hex (largest planet left, smaller planets arranged around it using polar coordinates). However, the picking logic only checked which hex was clicked using `pixel_to_hex()` - it didn't account for the visual positions of individual planets.
+
+**Solution:** Added `_hit_test_planets()` method to `strategy_input_handler.py` that:
+1. Computes the same expanded planet positions as the renderer (using identical layout algorithm)
+2. Performs hit-testing against each planet's screen position and drawn radius
+3. Returns the specific planet clicked, which is then prioritized in selection
+
+**Files Modified:**
+- `game/ui/screens/strategy_input_handler.py`:
+  - Added `_hit_test_planets()` method (lines 276-367)
+  - Modified `_handle_picking()` to call hit-test when zoomed >= 1.5x
+
+**Testing:** All unit tests pass. Manual testing required to confirm planets can be clicked individually when zoomed in.
+
+---
+
+## [BUG-32] - Planet Filter Sliders Should Have Dynamic Min/Max Values
+* **Date Solved:** 2026-01-24 05:29
+* **Original Issue:** In the planets window - All of the sliders for filtering planets should have minimums and maximums based on the values of the planets, if the hottest planet is 576 kelvin and the coldest it 33 then the slider should go from 33 to 576. All of the sliders should be like that (mass, Gravity, and any new ones that get added).
+* **Solution Implemented:**
+### 2026-01-23 - Fix Implemented
+**Root Cause:** The planet list filter sliders (Gravity, Temperature, Mass) were created with hardcoded min/max limits (e.g., 0-10g, 0-2000K, 0-500 Earth masses) instead of calculating ranges from actual planet data in the galaxy.
+
+**Solution:**
+1. Added `_compute_planet_ranges()` method that iterates through all planets and calculates actual min/max values for gravity, temperature, and mass
+2. Ranges include 5% padding for better usability
+3. Updated `filter_ranges` initialization to use computed values
+4. Updated slider creation to use dynamic ranges from `_planet_ranges`
+
+**Files Modified:**
+- `game/ui/screens/planet_list_window.py`:
+  - Added `_compute_planet_ranges()` method (lines 183-232)
+  - Modified `filter_ranges` initialization to use computed ranges (lines 38-44)
+  - Updated slider creation to use dynamic ranges (lines 375-381)
+
+**Testing:** All planet list tests pass. Manual testing required to confirm sliders show appropriate ranges based on galaxy data.
+
+---
+
+## [BUG-33] - Planet Graphics Don't Move With Column Reorder
+* **Date Solved:** 2026-01-24 05:29
+* **Original Issue:** In the Planet List window, When you try to move the column containing the graphic of the planet, the header moves to the right, but the actual planet graphic stays in the left hand column. The graphics need to move with the columns.
+* **Solution Implemented:**
+### 2026-01-23 - Fix Implemented
+**Root Cause:** In `_rebuild_row_pool()`, the icon column widget was created with hardcoded position `(5, 5)` instead of using the calculated `x_off` offset like text columns. When columns are reordered, `_rebuild_row_pool()` recreates widgets in the new order, but the icon always appeared at position (5, 5) regardless of its column position.
+
+**Solution:** Changed the icon widget creation to use `x_off + 5` for the x-coordinate instead of hardcoded `5`, matching how text columns are positioned.
+
+**Files Modified:**
+- `game/ui/screens/planet_list_window.py` (line 568):
+  - Changed `pygame.Rect(5, 5, 40, 40)` to `pygame.Rect(x_off + 5, 5, 40, 40)`
+
+**Testing:** All planet-related unit tests pass. Manual testing required to confirm planet graphics move correctly with column reordering.
+
+---
+
+## [BUG-34] - Fleet Report Window shows incorrect warp capability
+* **Date Solved:** 2026-01-24 05:29
+* **Original Issue:** In the Fleet Report Window, a vehicle that has a warp drive but doesn't have the resource capacity to run it, should not be listed as having warp capability.
+* **Solution Implemented:**
+- 2026-01-23: Ticket created.
+- 2026-01-23: Fixed. Modified `has_warp_capability()` in `game/ui/screens/fleet_report_filters.py` to check resource storage capacity in addition to warp drive tonnage. A ship is now only considered warp-capable if:
+  1. It has a warp drive with sufficient tonnage for its mass
+  2. The warp drive is undamaged
+  3. It has enough energy storage capacity (`max_energy >= warp_energy_cost`)
+  4. It has enough fuel storage capacity (`max_fuel >= warp_fuel_cost`)
+
+  All existing tests pass.
+
+---
+
+## [BUG-36] - Load Design Screen shows formatting tags
+* **Date Solved:** 2026-01-24 05:29
+* **Original Issue:** In the Design Workshop, the Load Screen Design shows some of the formatting tags. Filters, and the design names both have formatting tags instead of the formatting.
+* **Solution Implemented:**
+- 2026-01-23: Ticket created from user report.
+- 2026-01-23: Root cause identified - UILabel was using `text=` parameter with HTML tags instead of `html_text=` parameter. Fixed by changing `text="<b>Filters</b>"` to `html_text="<b>Filters</b>"` on line 85, and similarly for design names on line 328 in `game/ui/screens/design_selector_window.py`.
+
+---
+
+## [BUG-39] - Load Design Screen incorrectly calculates mass
+* **Date Solved:** 2026-01-24 05:29
+* **Original Issue:** In the Design Workshop, the Load Design Screen does not correctly calculate the mass of the design.
+* **Solution Implemented:**
+- 2026-01-23: Ticket created from user report.
+- 2026-01-23: Root cause identified - `DesignMetadata.from_design_file()` was looking for `mass` at the top level of the JSON, but ship designs store mass inside `expected_stats.mass`. Fixed by checking `expected_stats.mass` first, then falling back to top-level `mass`. File modified: `game/strategy/data/design_metadata.py`.
+
+---
+
+## [BUG-40] - Component Modifier Grid should be persistent panel
+* **Date Solved:** 2026-01-24 05:29
+* **Original Issue:** In the design workshop the Component Modifier Grid should be a persistent panel, and when there is no component selected, it is fine to say: "no modifier effects to display"
+* **Solution Implemented:**
+- 2026-01-23: Ticket created
+- 2026-01-23: Fixed. Changed `ComponentModifierGridPanel` to be persistent:
+  - Removed `self.panel.hide()` on init (line 79-80)
+  - Modified `update_component()` to not hide panel when no component selected
+  - Modified `draw()` to always draw when panel visible (not just when component exists)
+  - The `ModifierImpactGrid` already displays "No modifier effects to display" when empty
+  - Files modified: `game/ui/panels/component_modifier_grid_panel.py`
+  - Tests pass: `tests/unit/ui/test_modifier_impact_grid.py` (9 passed)
+
+---
+
+## [BUG-41] - Ship Structure section needs wider layout
+* **Date Solved:** 2026-01-24 05:29
+* **Original Issue:** In the design workshop, the Ship Structure section could be 25% wider, so that the cost doesn't overlap with the other information
+* **Solution Implemented:**
+- 2026-01-23: Ticket created
+- 2026-01-23: Fixed. Made Ship Structure panel 25% wider:
+  - Updated `PanelWidths.layer_panel` from 400 to 500
+  - Updated `calculate_dynamic_layer_width()` to use 0.375 ratio (was 0.3) with bounds 375-625px (was 300-500px)
+  - Files modified: `game/ui/screens/builder_utils.py`
+  - Tests pass: builder tests (106 items)
+
+---
+
+## [BUG-43] - Colony view flags have white frame and wrong aspect ratio
+* **Date Solved:** 2026-01-24 05:29
+* **Original Issue:** In the strategy view the flags on the colony view should not have the white frame, and they appear to be vertically compressed, they should be the same aspect ratio as the original image.
+* **Solution Implemented:**
+- 2026-01-23: Ticket created
+- 2026-01-23: Fixed. Updated colony flag rendering:
+  - Removed white frame border (`pygame.draw.rect` call)
+  - Changed aspect ratio calculation to preserve original image proportions
+  - Files modified: `game/ui/screens/strategy_renderer.py`
+
+---
+
+## [BUG-44] - Fleet Report columns need reorder arrows
+* **Date Solved:** 2026-01-24 05:29
+* **Original Issue:** In the Fleet Report, the columns should be able to be re-ordered with arrows on either side like the planet list.
+* **Solution Implemented:**
+- 2026-01-23: Ticket created
+- 2026-01-23: Fixed. Added column reorder arrows to Fleet Report:
+  - Modified `_rebuild_headers()` to create left/right arrow buttons on each column header
+  - Added `_swap_columns()` method to swap column positions
+  - Updated `update()` method to handle arrow button clicks
+  - Pattern matches planet list window implementation
+  - Files modified: `game/ui/screens/fleet_report_window.py`
+
+---
+
+## [BUG-45] - Warp navigation logic issues for non-warp-capable fleets
+* **Date Solved:** 2026-01-24 05:29
+* **Original Issue:** - A fleet with a warp drive but no battery is correctly prevented from jumping through a warp point, but the navigation still try's to use the warp points, If a fleet is not war capable it should not try to warp, it should just try to travel via regular hex path travel.
+* **Solution Implemented:**
+- 2026-01-23: Ticket created
+- 2026-01-23: Deep Investigation initiated - Agent swarm deployed
+- 2026-01-23: Root cause identified - 3 bugs found (missing fleet parameter + missing capability check)
+- 2026-01-23: Fixes applied:
+  - game_session.py:138 - Added `fleet=fleet` to `find_hybrid_path()` call
+  - turn_engine.py:298-303 - Added `can_use_warp()` check before warp execution
+  - pathfinding.py:289,334 - Added `fleet=chaser_fleet` to intercept calculations
+- 2026-01-23: Diagnostic logging added at key decision points
+
+---
