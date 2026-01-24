@@ -1387,7 +1387,7 @@ class TestEdgeCases:
     """Tests for edge cases and error handling."""
 
     def test_consume_resource_negative_amount(self, make_design_data_with_stats):
-        """consume_resource with negative amount behaves correctly."""
+        """consume_resource with negative amount should return False without modifying resources."""
         design_data = make_design_data_with_stats(expected_stats={
             'resource_storage': {'fuel': 5000}
         })
@@ -1400,14 +1400,12 @@ class TestEdgeCases:
         )
         ship.resource_levels['fuel'] = 3000
 
-        # Negative amount - behavior depends on implementation
-        # Current implementation: current (3000) < amount (-100) is False
-        # So it should succeed and add fuel (3000 - (-100) = 3100)
+        # Negative amount should be rejected - cannot "consume" a negative amount
         result = ship.consume_resource('fuel', -100)
 
-        # Verify the behavior matches implementation
-        assert result is True
-        assert ship.resource_levels['fuel'] == 3100
+        # Should return False and leave resource unchanged
+        assert result is False
+        assert ship.resource_levels['fuel'] == 3000
 
     def test_get_resource_capacity_empty_stats(self, make_design_data_with_stats):
         """get_resource_capacity handles empty expected_stats."""

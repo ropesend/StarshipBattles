@@ -7,6 +7,21 @@
 
 ---
 
+## REQUIRED: Pre-Audit Validation
+
+**BEFORE STARTING AUDIT, run this script:**
+```bash
+python Projects/scripts/validate_audit_ready.py PROJ-XX
+```
+
+If this returns **FAILED**, do NOT proceed with audit. Instead:
+- Report the validation failures to the user
+- Return the project to implementation phase to fix issues
+
+Only proceed with audit if validation **PASSED**.
+
+---
+
 ## Audit Process Overview
 
 ```

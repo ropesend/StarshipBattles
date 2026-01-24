@@ -5,6 +5,23 @@
 
 ---
 
+## USE THE ARCHIVE SCRIPT
+
+**Instead of manually moving files, use the archive script:**
+```bash
+python Projects/scripts/archive_project.py PROJ-XX
+```
+
+This script will:
+1. Validate the project is ready for closure
+2. Create a backup
+3. Move the project (file or directory) to `archived_projects/`
+4. Update `projects_index.md` automatically
+
+If validation fails, fix the issues before archiving.
+
+---
+
 ## Prerequisites
 
 Before closing a project, verify:
@@ -12,25 +29,40 @@ Before closing a project, verify:
 - [ ] Audit has passed (check Audit Log)
 - [ ] User has verified completion
 
+**Run validation to check:**
+```bash
+python Projects/scripts/validate_close_ready.py PROJ-XX
+```
+
 ---
 
 ## Procedure
 
-### 1. Verify Completion Checklist
+### 1. Verify Completion (Run Script)
 
-Open the project plan and check `## Completion Checklist`:
-```markdown
-## Completion Checklist
-- [x] All tasks checked off
-- [x] All tests passing
-- [x] Regression tests passing
-- [x] Audit passed (no significant issues)
-- [x] User verified  ← This must be checked
+```bash
+python Projects/scripts/validate_close_ready.py PROJ-XX
 ```
 
-If `User verified` is not checked, **STOP** and inform user they need to verify first.
+If validation **FAILS**, **STOP** and inform user they need to fix the issues first.
 
-### 2. Final State Update
+### 2. Archive Using Script
+
+```bash
+python Projects/scripts/archive_project.py PROJ-XX
+```
+
+The script handles:
+- Final Current State update
+- Moving the project to `archived_projects/`
+- Updating `projects_index.md`
+- Creating a backup
+
+### 3. If Manual Archive Needed (Script Failure)
+
+Only if the script fails, do these steps manually:
+
+#### 3a. Final State Update
 
 Update `## Current State` one last time:
 ```markdown
@@ -42,15 +74,17 @@ Update `## Current State` one last time:
 **Context for Next Agent:** N/A - See archived plan for historical reference
 ```
 
-### 3. Archive the Plan
+#### 3b. Archive the Project
 
-1. **Move** the plan file:
-   - FROM: `Projects/active_projects/PROJ-XX.md`
-   - TO: `Projects/archived_projects/PROJ-XX.md`
+**For new directory structure:**
+- FROM: `Projects/active_projects/PROJ-XX/` (entire directory)
+- TO: `Projects/archived_projects/PROJ-XX/`
 
-2. **Do NOT modify** the plan content (preserve the full history)
+**For old flat file structure:**
+- FROM: `Projects/active_projects/PROJ-XX.md`
+- TO: `Projects/archived_projects/PROJ-XX.md`
 
-### 4. Update Projects Index
+#### 3c. Update Projects Index
 
 Open `Projects/projects_index.md` and update the project entry:
 
