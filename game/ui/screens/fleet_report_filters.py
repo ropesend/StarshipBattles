@@ -2,20 +2,23 @@
 Fleet Report filtering and stats calculation.
 
 PROJ-03: Fleet Report Window feature implementation.
+PROJ-11: has_warp_capability moved to strategy layer (ShipStatsService).
 """
 from typing import Dict, Any, List
 
 from game.strategy.data.ship_instance import ShipInstance
 
+# PROJ-11: Import has_warp_capability from strategy services (canonical location)
+# Re-exported here for backward compatibility with existing code
+from game.strategy.services.ship_stats_service import ShipStatsService
 
+# Re-export for backward compatibility
 def has_warp_capability(ship: ShipInstance) -> bool:
     """
     Check if a ship has functional warp capability.
 
-    A ship is warp-capable if:
-    1. It has a WarpJump ability component with max_tonnage >= ship's mass
-    2. The warp drive is undamaged
-    3. The ship has enough resource storage capacity for at least one warp jump
+    PROJ-11: This is a thin wrapper around ShipStatsService.has_warp_capability().
+    New code should import from game.strategy.services.ship_stats_service directly.
 
     Args:
         ship: ShipInstance to check
@@ -23,34 +26,7 @@ def has_warp_capability(ship: ShipInstance) -> bool:
     Returns:
         True if ship can use warp points, False otherwise
     """
-    # Use calculated stats which respect component damage
-    calculated_stats = ship.get_calculated_stats()
-
-    # Get ship mass
-    ship_mass = calculated_stats.get('mass', 0)
-    if ship_mass <= 0:
-        return False
-
-    # Check warp_max_tonnage - will be 0 if warp drive is damaged
-    warp_max_tonnage = calculated_stats.get('warp_max_tonnage', 0)
-    if warp_max_tonnage < ship_mass:
-        return False
-
-    # Check if ship has resource capacity for warp
-    # A ship with a warp drive but insufficient storage cannot warp
-    warp_energy_cost = calculated_stats.get('warp_energy_cost', 0)
-    if warp_energy_cost > 0:
-        max_energy = calculated_stats.get('max_energy', 0)
-        if max_energy < warp_energy_cost:
-            return False
-
-    warp_fuel_cost = calculated_stats.get('warp_fuel_cost', 0)
-    if warp_fuel_cost > 0:
-        max_fuel = calculated_stats.get('max_fuel', 0)
-        if max_fuel < warp_fuel_cost:
-            return False
-
-    return True
+    return ShipStatsService.has_warp_capability(ship)
 
 
 def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:

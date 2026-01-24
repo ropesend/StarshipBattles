@@ -1,4 +1,3 @@
-import pygame
 from game.engine.physics import PhysicsBody
 from game.simulation.physics_constants import K_SPEED, K_THRUST
 # Engine, Thruster imports removed - using ability-based checks (Phase 3)

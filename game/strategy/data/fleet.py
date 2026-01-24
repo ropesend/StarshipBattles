@@ -137,14 +137,14 @@ class Fleet:
             True if all combat-capable ships are warp-capable, False otherwise.
             Returns False if fleet has no combat-capable ships.
         """
-        from game.ui.screens.fleet_report_filters import has_warp_capability
+        from game.strategy.services.ship_stats_service import ShipStatsService
 
         combat_ships = self.get_combat_capable_ships()
         if not combat_ships:
             return False
 
         for ship in combat_ships:
-            if not has_warp_capability(ship):
+            if not ShipStatsService.has_warp_capability(ship):
                 return False
         return True
 
@@ -155,10 +155,10 @@ class Fleet:
         Returns:
             The first ship without warp capability, or None if all ships are warp-capable.
         """
-        from game.ui.screens.fleet_report_filters import has_warp_capability
+        from game.strategy.services.ship_stats_service import ShipStatsService
 
         for ship in self.get_combat_capable_ships():
-            if not has_warp_capability(ship):
+            if not ShipStatsService.has_warp_capability(ship):
                 return ship
         return None
 

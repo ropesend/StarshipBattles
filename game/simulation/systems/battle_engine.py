@@ -2,8 +2,8 @@ import math
 import random
 import time
 from typing import List, Optional, Tuple, Dict, Any
-import pygame
 
+from game.core.math import Vector2
 from game.core.logger import log_warning, log_info
 from game.ai.controller import AIController
 from game.engine.spatial import SpatialGrid
@@ -272,7 +272,7 @@ class BattleEngine:
                 source_ship = attack.get('source')
                 hangar = attack.get('hangar')
                 fighter_class = attack.get('fighter_class', 'Fighter (Small)')
-                origin = attack.get('origin', pygame.math.Vector2(0,0))
+                origin = attack.get('origin', Vector2(0,0))
                 
                 # Create the new ship
                 # We need a unique name
@@ -280,7 +280,7 @@ class BattleEngine:
                 new_name = f"{source_ship.name} Wing {count+1}"
                 
                 # Offset position slightly
-                offset = pygame.math.Vector2(random.uniform(-10, 10), random.uniform(-10, 10))
+                offset = Vector2(random.uniform(-10, 10), random.uniform(-10, 10))
                 spawn_pos = origin + offset
                 
                 new_ship = Ship(
@@ -294,9 +294,9 @@ class BattleEngine:
                 )
                 
                 # Inherit some properties or init velocity
-                new_ship.velocity = pygame.math.Vector2(source_ship.velocity)
+                new_ship.velocity = Vector2(source_ship.velocity)
                 # Maybe boost it forward?
-                launch_dir = pygame.math.Vector2(1, 0).rotate(source_ship.angle)
+                launch_dir = Vector2(1, 0).rotate(source_ship.angle)
                 # TODO: Replace magic number with BattleConfig.FIGHTER_LAUNCH_SPEED once added to config
                 new_ship.velocity += launch_dir * 100  # Initial push
                 new_ship.angle = source_ship.angle

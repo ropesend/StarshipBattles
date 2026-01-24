@@ -232,7 +232,7 @@ class ShipState:
         """
         from game.simulation.entities.ship import Ship
         from game.core.registry import get_component_registry, get_modifier_registry
-        import pygame
+        from game.core.math import Vector2
 
         # Create base ship
         ship = Ship(
@@ -246,7 +246,7 @@ class ShipState:
         )
         ship.ai_strategy = self.ai_strategy
         ship.angle = self.angle
-        ship.velocity = pygame.math.Vector2(self.velocity[0], self.velocity[1])
+        ship.velocity = Vector2(self.velocity[0], self.velocity[1])
 
         # Add components with proper state
         comp_registry = get_component_registry()

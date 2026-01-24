@@ -6,6 +6,7 @@ from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.simulation.battle_state import BattleResults
+    from game.strategy.interfaces.battle_resolver import IBattleResolver
 
 
 @dataclass
@@ -16,9 +17,30 @@ class ValidationResult:
 
 
 class TurnEngine:
-    def __init__(self):
+    """
+    Engine for processing strategy turns.
+
+    PROJ-11 Phase 4: Supports dependency injection of IBattleResolver
+    for clean separation between strategy and simulation layers.
+    """
+
+    def __init__(self, battle_resolver: Optional['IBattleResolver'] = None):
+        """
+        Initialize the turn engine.
+
+        Args:
+            battle_resolver: Optional battle resolver implementation.
+                           If None, defaults to SimulationBattleResolver.
+        """
         # Battle seed counter for deterministic battles
         self._battle_seed_counter = 0
+
+        # PROJ-11: Inject battle resolver for clean layer separation
+        if battle_resolver is None:
+            from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+            self._battle_resolver = SimulationBattleResolver()
+        else:
+            self._battle_resolver = battle_resolver
 
     def _generate_battle_seed(self) -> int:
         """Generate a deterministic seed for battles."""
@@ -558,9 +580,10 @@ class TurnEngine:
 
     def _resolve_combat_simulated(self, f1: Fleet, f2: Fleet) -> Fleet:
         """
-        Resolve combat using the full battle simulation.
+        Resolve combat using the injected battle resolver.
 
-        Runs a headless battle and updates fleet ship states based on results.
+        PROJ-11 Phase 4: Uses IBattleResolver interface for clean
+        separation between strategy and simulation layers.
 
         Args:
             f1: First fleet (team 0)
@@ -569,65 +592,22 @@ class TurnEngine:
         Returns:
             The winning fleet
         """
-        from game.simulation.battle_controller import (
-            BattleController, BattleConfig, BattleMode
-        )
-        from game.simulation.services.battle_service import BattleService
+        # Use the injected battle resolver
+        seed = self._generate_battle_seed()
+        result = self._battle_resolver.resolve_battle(f1, f2, seed=seed)
 
-        log_info(f"Simulating battle: Fleet {f1.id} vs Fleet {f2.id}")
-
-        # Create controller for strategy battle
-        controller = BattleController(BattleService())
-
-        config = BattleConfig(
-            mode=BattleMode.STRATEGY,
-            seed=self._generate_battle_seed(),
-            headless=True,
-            allow_retreat=True,
-            source_fleets=(f1, f2),
-        )
-
-        controller.configure(config)
-
-        # Convert fleet ships to simulation ships
-        team1_ships = f1.to_battle_ships(team_id=0)
-        team2_ships = f2.to_battle_ships(team_id=1)
-
-        if not team1_ships or not team2_ships:
-            log_warning("One or both fleets have no combat-capable ships")
-            # Return the fleet with ships, or random if both empty
-            if team1_ships and not team2_ships:
-                return f1
-            elif team2_ships and not team1_ships:
-                return f2
-            else:
-                return f1 if random.random() > 0.5 else f2
-
-        controller.add_ships(team1_ships, 0)
-        controller.add_ships(team2_ships, 1)
-        controller.start()
-
-        # Run headless battle
-        results = controller.run_headless()
-
-        log_info(f"Battle complete: winner={results.winner}, ticks={results.tick_count}")
-        log_info(f"  Team 0 survivors: {len([s for s in results.surviving_ships if s.team_id == 0])}")
-        log_info(f"  Team 1 survivors: {len([s for s in results.surviving_ships if s.team_id == 1])}")
-
-        # Update fleet ship states from results
-        self._apply_battle_results(f1, f2, results)
+        # Apply results to fleets
+        f1.update_from_battle_results(result.team0_survivors)
+        f2.update_from_battle_results(result.team1_survivors)
 
         # Determine winner
-        if results.winner == 0:
+        if result.winner == 0:
             return f1
-        elif results.winner == 1:
+        elif result.winner == 1:
             return f2
         else:
-            # Draw - both fleets survive but are damaged
-            # Return the one with more survivors
-            team0_count = len([s for s in results.surviving_ships if s.team_id == 0])
-            team1_count = len([s for s in results.surviving_ships if s.team_id == 1])
-            return f1 if team0_count >= team1_count else f2
+            # Draw - return fleet with more survivors
+            return f1 if len(result.team0_survivors) >= len(result.team1_survivors) else f2
 
     def _apply_battle_results(
         self,

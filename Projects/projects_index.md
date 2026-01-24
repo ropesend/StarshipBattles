@@ -4,8 +4,6 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-10 | Error Handling & Logging Remediation | Awaiting Verification | 2026-01-24 | 2026-01-24 |
-| PROJ-11 | Architecture Layer Separation | Planning | 2026-01-24 | 2026-01-24 |
 | PROJ-12 | God Class Decomposition | Planning | 2026-01-24 | 2026-01-24 |
 | PROJ-13 | Code Quality & Documentation | Planning | 2026-01-24 | 2026-01-24 |
 
@@ -13,6 +11,8 @@
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-11 | Architecture Layer Separation | Archived | 2026-01-24 | 2026-01-24 |
+| PROJ-10 | Error Handling & Logging Remediation | Archived | 2026-01-24 | 2026-01-24 |
 | PROJ-09 | Test Coverage Remediation | Archived | 2026-01-23 | 2026-01-24 |
 | PROJ-08 | Data-Driven Resource System | Archived | 2026-01-21 | 2026-01-24 |
 | PROJ-07 | Strategy Layer Stats Refactor | Archived | 2026-01-21 | 2026-01-23 |
@@ -69,11 +69,11 @@
 ## Recommended Execution Order
 
 ```
-PROJ-10 (Error Handling) ──────────────────────────────────┐
+PROJ-10 (Error Handling) ✅ COMPLETE ──────────────────────┐
                                                            │
 PROJ-13 Phase 1 (Dead Code) ───────────────────────────────┤
                                                            │
-                    PROJ-11 (Architecture) ────────────────┤
+                    PROJ-11 (Architecture) ✅ COMPLETE ────┤
                               │                            │
                               ▼                            │
                     PROJ-12 (God Classes) ─────────────────┤

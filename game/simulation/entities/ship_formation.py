@@ -5,7 +5,7 @@ Extracted from Ship class as part of Ship God Object decomposition.
 Uses composition pattern: ship.formation = ShipFormation(self)
 """
 from typing import Optional, List, TYPE_CHECKING
-import pygame
+from game.core.math import Vector2
 
 if TYPE_CHECKING:
     from .ship import Ship
@@ -32,7 +32,7 @@ class ShipFormation:
     def __init__(self, ship: 'Ship'):
         self.ship = ship
         self.master: Optional['Ship'] = None
-        self.offset: Optional[pygame.math.Vector2] = None
+        self.offset: Optional[Vector2] = None
         self.rotation_mode: str = 'relative'
         self.members: List['Ship'] = []
         self.active: bool = True
@@ -47,7 +47,7 @@ class ShipFormation:
         """Returns True if this ship is following a master."""
         return self.master is not None
     
-    def join(self, master: 'Ship', offset: pygame.math.Vector2) -> None:
+    def join(self, master: 'Ship', offset: Vector2) -> None:
         """
         Join a formation as a follower.
         
@@ -76,7 +76,7 @@ class ShipFormation:
         self.master = None
         self.active = False
     
-    def add_member(self, ship: 'Ship', offset: pygame.math.Vector2) -> None:
+    def add_member(self, ship: 'Ship', offset: Vector2) -> None:
         """
         Add a follower to this ship's formation.
         

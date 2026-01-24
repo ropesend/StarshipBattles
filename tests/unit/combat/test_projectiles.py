@@ -36,7 +36,7 @@ class TestProjectileBasics:
         assert proj.damage == 50
         assert proj.max_range == 1000
         assert proj.endurance == 5.0
-        from game.simulation.entities.ship_combat import AttackType
+        from game.core.constants import AttackType
         assert proj.type == AttackType.PROJECTILE
         assert proj.team_id == 0
         assert proj.is_alive

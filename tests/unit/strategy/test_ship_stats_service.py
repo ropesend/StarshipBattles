@@ -1282,3 +1282,225 @@ class TestIntegrationProj08:
         assert stats['warp_resource_costs']['exotic'] == 10
         assert stats['strategic_movement'] == 120
         assert stats['warp_max_tonnage'] == 6000
+
+
+# =============================================================================
+# PROJ-11: has_warp_capability Tests (Phase 3 - Strategy-UI Separation)
+# =============================================================================
+
+
+class TestHasWarpCapability:
+    """
+    Tests for has_warp_capability function in ShipStatsService.
+
+    PROJ-11 Phase 3: This function was moved from game.ui.screens.fleet_report_filters
+    to game.strategy.services.ship_stats_service to eliminate strategy->UI dependency.
+
+    A ship is warp-capable if:
+    1. warp_max_tonnage >= ship's mass
+    2. warp drive is undamaged (100% HP)
+    3. Ship has enough resource storage capacity for at least one warp jump
+    """
+
+    def test_ship_without_warp_drive_not_capable(self):
+        """Ship without warp drive should not be warp capable."""
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        ship = MagicMock()
+        ship.get_calculated_stats.return_value = {
+            'mass': 1000,
+            'warp_max_tonnage': 0,  # No warp drive
+            'warp_energy_cost': 0,
+            'warp_fuel_cost': 0,
+            'max_energy': 500,
+            'max_fuel': 5000,
+        }
+
+        result = ShipStatsService.has_warp_capability(ship)
+        assert result is False
+
+    def test_ship_with_sufficient_warp_drive_capable(self):
+        """Ship with warp drive exceeding mass should be warp capable."""
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        ship = MagicMock()
+        ship.get_calculated_stats.return_value = {
+            'mass': 1000,
+            'warp_max_tonnage': 1500,  # Exceeds mass
+            'warp_energy_cost': 500,
+            'warp_fuel_cost': 0,
+            'max_energy': 1000,  # Enough for warp
+            'max_fuel': 5000,
+        }
+
+        result = ShipStatsService.has_warp_capability(ship)
+        assert result is True
+
+    def test_ship_with_equal_warp_tonnage_capable(self):
+        """Ship with warp tonnage equal to mass should be warp capable."""
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        ship = MagicMock()
+        ship.get_calculated_stats.return_value = {
+            'mass': 1000,
+            'warp_max_tonnage': 1000,  # Exactly equal
+            'warp_energy_cost': 500,
+            'warp_fuel_cost': 0,
+            'max_energy': 1000,
+            'max_fuel': 5000,
+        }
+
+        result = ShipStatsService.has_warp_capability(ship)
+        assert result is True
+
+    def test_ship_with_insufficient_warp_tonnage_not_capable(self):
+        """Ship with warp tonnage less than mass should not be warp capable."""
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        ship = MagicMock()
+        ship.get_calculated_stats.return_value = {
+            'mass': 1000,
+            'warp_max_tonnage': 500,  # Less than mass
+            'warp_energy_cost': 500,
+            'warp_fuel_cost': 0,
+            'max_energy': 1000,
+            'max_fuel': 5000,
+        }
+
+        result = ShipStatsService.has_warp_capability(ship)
+        assert result is False
+
+    def test_ship_with_zero_mass_not_capable(self):
+        """Ship with zero mass should not be warp capable (edge case)."""
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        ship = MagicMock()
+        ship.get_calculated_stats.return_value = {
+            'mass': 0,  # Zero mass
+            'warp_max_tonnage': 1000,
+            'warp_energy_cost': 500,
+            'warp_fuel_cost': 0,
+            'max_energy': 1000,
+            'max_fuel': 5000,
+        }
+
+        result = ShipStatsService.has_warp_capability(ship)
+        assert result is False
+
+    def test_insufficient_energy_storage_not_capable(self):
+        """Ship with insufficient energy storage for warp should not be capable."""
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        ship = MagicMock()
+        ship.get_calculated_stats.return_value = {
+            'mass': 1000,
+            'warp_max_tonnage': 1500,
+            'warp_energy_cost': 500,  # Needs 500 energy
+            'warp_fuel_cost': 0,
+            'max_energy': 300,  # Only has 300 energy capacity
+            'max_fuel': 5000,
+        }
+
+        result = ShipStatsService.has_warp_capability(ship)
+        assert result is False
+
+    def test_insufficient_fuel_storage_not_capable(self):
+        """Ship with insufficient fuel storage for warp should not be capable."""
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        ship = MagicMock()
+        ship.get_calculated_stats.return_value = {
+            'mass': 1000,
+            'warp_max_tonnage': 1500,
+            'warp_energy_cost': 0,
+            'warp_fuel_cost': 1000,  # Needs 1000 fuel
+            'max_energy': 500,
+            'max_fuel': 500,  # Only has 500 fuel capacity
+        }
+
+        result = ShipStatsService.has_warp_capability(ship)
+        assert result is False
+
+    def test_exactly_sufficient_storage_capable(self):
+        """Ship with exactly enough storage for warp should be capable."""
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        ship = MagicMock()
+        ship.get_calculated_stats.return_value = {
+            'mass': 1000,
+            'warp_max_tonnage': 1500,
+            'warp_energy_cost': 500,
+            'warp_fuel_cost': 200,
+            'max_energy': 500,  # Exactly enough
+            'max_fuel': 200,  # Exactly enough
+        }
+
+        result = ShipStatsService.has_warp_capability(ship)
+        assert result is True
+
+    def test_no_warp_cost_no_storage_check(self):
+        """If warp has no resource cost, storage check should pass."""
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        ship = MagicMock()
+        ship.get_calculated_stats.return_value = {
+            'mass': 1000,
+            'warp_max_tonnage': 1500,
+            'warp_energy_cost': 0,  # No energy cost
+            'warp_fuel_cost': 0,  # No fuel cost
+            'max_energy': 0,  # No energy storage
+            'max_fuel': 0,  # No fuel storage
+        }
+
+        result = ShipStatsService.has_warp_capability(ship)
+        assert result is True
+
+    def test_damaged_warp_drive_returns_zero_tonnage(self):
+        """
+        When warp drive is damaged, warp_max_tonnage from get_calculated_stats
+        should already be 0 (handled by ShipStatsService.calculate_stats).
+        """
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        ship = MagicMock()
+        ship.get_calculated_stats.return_value = {
+            'mass': 1000,
+            'warp_max_tonnage': 0,  # Damaged warp drive = 0 tonnage
+            'warp_energy_cost': 0,
+            'warp_fuel_cost': 0,
+            'max_energy': 1000,
+            'max_fuel': 5000,
+        }
+
+        result = ShipStatsService.has_warp_capability(ship)
+        assert result is False
+
+    def test_multiple_resource_requirements_all_must_be_met(self):
+        """If warp costs both energy and fuel, ship must have enough of both."""
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        ship = MagicMock()
+        ship.get_calculated_stats.return_value = {
+            'mass': 1000,
+            'warp_max_tonnage': 1500,
+            'warp_energy_cost': 500,
+            'warp_fuel_cost': 1000,
+            'max_energy': 600,  # Enough energy
+            'max_fuel': 500,  # NOT enough fuel
+        }
+
+        result = ShipStatsService.has_warp_capability(ship)
+        assert result is False
+
+    def test_missing_stats_default_to_zero(self):
+        """Missing stats should default to zero without crashing."""
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        ship = MagicMock()
+        ship.get_calculated_stats.return_value = {
+            'mass': 1000,
+            # Missing warp_max_tonnage - should default to 0
+        }
+
+        result = ShipStatsService.has_warp_capability(ship)
+        assert result is False  # No warp capability without warp_max_tonnage

@@ -1,7 +1,7 @@
 import os
 import tkinter
 from tkinter import filedialog
-import pygame
+from game.core.math import Vector2
 from game.simulation.entities.ship import Ship
 from game.core.json_utils import load_json_required, save_json
 from game.core.logger import log_warning
@@ -73,7 +73,7 @@ class ShipIO:
             if filename:
                 data = load_json_required(filename)
                 new_ship = Ship.from_dict(data)
-                new_ship.position = pygame.math.Vector2(screen_width // 2, screen_height // 2)
+                new_ship.position = Vector2(screen_width // 2, screen_height // 2)
                 new_ship.recalculate_stats()
                 
                 msg = f"Loaded ship from {os.path.basename(filename)}"

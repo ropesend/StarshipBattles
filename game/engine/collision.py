@@ -1,7 +1,6 @@
 import math
 import random
 from typing import List, Dict, Any, TYPE_CHECKING
-import pygame
 
 from game.core.config import BattleConfig
 

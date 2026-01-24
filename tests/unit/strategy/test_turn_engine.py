@@ -897,3 +897,205 @@ class TestTurnEngineEdgeCases:
             turn_engine.process_turn([mock_empire], mock_galaxy, save_path="/test/path")
 
             mock_prod.assert_called_with([mock_empire], mock_galaxy, "/test/path")
+
+
+# =============================================================================
+# PROJ-11 Phase 4: IBattleResolver Dependency Injection Tests
+# =============================================================================
+
+
+class TestBattleResolverInjection:
+    """
+    Tests for TurnEngine battle resolver dependency injection.
+
+    PROJ-11 Phase 4: TurnEngine now accepts an optional IBattleResolver
+    parameter for clean separation between strategy and simulation layers.
+    """
+
+    def test_turn_engine_accepts_battle_resolver(self):
+        """TurnEngine constructor should accept battle_resolver parameter."""
+        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+        class MockResolver(IBattleResolver):
+            def resolve_battle(self, fleet1, fleet2, seed=None):
+                return BattleResult(winner=0, tick_count=0, team0_survivors=[], team1_survivors=[])
+
+        resolver = MockResolver()
+        engine = TurnEngine(battle_resolver=resolver)
+
+        assert engine._battle_resolver is resolver
+
+    def test_turn_engine_defaults_to_simulation_resolver(self):
+        """TurnEngine should default to SimulationBattleResolver."""
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        engine = TurnEngine()
+
+        assert isinstance(engine._battle_resolver, SimulationBattleResolver)
+
+    def test_resolve_combat_simulated_uses_injected_resolver(self):
+        """_resolve_combat_simulated should use injected resolver."""
+        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+        call_count = 0
+        last_fleets = []
+
+        class TrackingResolver(IBattleResolver):
+            def resolve_battle(self, fleet1, fleet2, seed=None):
+                nonlocal call_count, last_fleets
+                call_count += 1
+                last_fleets = [fleet1, fleet2]
+                return BattleResult(
+                    winner=0,
+                    tick_count=100,
+                    team0_survivors=[],
+                    team1_survivors=[]
+                )
+
+        resolver = TrackingResolver()
+        engine = TurnEngine(battle_resolver=resolver)
+
+        fleet1 = MagicMock()
+        fleet1.id = 1
+        fleet1.has_ship_instances.return_value = True
+
+        fleet2 = MagicMock()
+        fleet2.id = 2
+        fleet2.has_ship_instances.return_value = True
+
+        result = engine._resolve_combat_simulated(fleet1, fleet2)
+
+        assert call_count == 1
+        assert fleet1 in last_fleets
+        assert fleet2 in last_fleets
+        assert result == fleet1  # Winner was team 0 (fleet1)
+
+    def test_mock_resolver_enables_unit_testing(self):
+        """Mock resolver allows unit testing without simulation."""
+        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+        class AlwaysFleet1WinsResolver(IBattleResolver):
+            def resolve_battle(self, fleet1, fleet2, seed=None):
+                return BattleResult(
+                    winner=0,  # Team 0 (fleet1) wins
+                    tick_count=50,
+                    team0_survivors=[MagicMock()],
+                    team1_survivors=[]
+                )
+
+        engine = TurnEngine(battle_resolver=AlwaysFleet1WinsResolver())
+
+        fleet1 = MagicMock()
+        fleet1.id = 1
+        fleet1.has_ship_instances.return_value = True
+        fleet1.get_ship_instances.return_value = [MagicMock()]
+        fleet1.ships = [MagicMock()]
+        fleet1.update_from_battle_results = MagicMock()
+
+        fleet2 = MagicMock()
+        fleet2.id = 2
+        fleet2.has_ship_instances.return_value = True
+        fleet2.get_ship_instances.return_value = [MagicMock()]
+        fleet2.ships = [MagicMock()]
+        fleet2.update_from_battle_results = MagicMock()
+
+        winner = engine._resolve_combat_simulated(fleet1, fleet2)
+
+        assert winner == fleet1
+
+    def test_draw_result_handled(self):
+        """Draw (winner=None) should be handled correctly."""
+        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+        class DrawResolver(IBattleResolver):
+            def resolve_battle(self, fleet1, fleet2, seed=None):
+                return BattleResult(
+                    winner=None,  # Draw
+                    tick_count=1000,
+                    team0_survivors=[MagicMock(), MagicMock()],  # 2 survivors
+                    team1_survivors=[MagicMock()]  # 1 survivor
+                )
+
+        engine = TurnEngine(battle_resolver=DrawResolver())
+
+        fleet1 = MagicMock()
+        fleet1.id = 1
+        fleet1.has_ship_instances.return_value = True
+        fleet1.update_from_battle_results = MagicMock()
+
+        fleet2 = MagicMock()
+        fleet2.id = 2
+        fleet2.has_ship_instances.return_value = True
+        fleet2.update_from_battle_results = MagicMock()
+
+        winner = engine._resolve_combat_simulated(fleet1, fleet2)
+
+        # Fleet with more survivors wins on draw
+        assert winner == fleet1
+
+    def test_seed_passed_to_resolver(self):
+        """Battle seed should be passed to resolver."""
+        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+        received_seed = None
+
+        class SeedCapturingResolver(IBattleResolver):
+            def resolve_battle(self, fleet1, fleet2, seed=None):
+                nonlocal received_seed
+                received_seed = seed
+                return BattleResult(
+                    winner=0,
+                    tick_count=0,
+                    team0_survivors=[],
+                    team1_survivors=[]
+                )
+
+        engine = TurnEngine(battle_resolver=SeedCapturingResolver())
+
+        fleet1 = MagicMock()
+        fleet1.id = 1
+        fleet1.has_ship_instances.return_value = True
+
+        fleet2 = MagicMock()
+        fleet2.id = 2
+        fleet2.has_ship_instances.return_value = True
+
+        engine._resolve_combat_simulated(fleet1, fleet2)
+
+        # The engine uses _generate_battle_seed() internally
+        assert received_seed is not None
+        assert isinstance(received_seed, int)
+
+    def test_battle_results_applied_to_fleets(self):
+        """Battle results should be applied to fleet ship states."""
+        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+        survivor0 = MagicMock()
+        survivor1 = MagicMock()
+
+        class ResultResolver(IBattleResolver):
+            def resolve_battle(self, fleet1, fleet2, seed=None):
+                return BattleResult(
+                    winner=0,
+                    tick_count=100,
+                    team0_survivors=[survivor0],
+                    team1_survivors=[survivor1]
+                )
+
+        engine = TurnEngine(battle_resolver=ResultResolver())
+
+        fleet1 = MagicMock()
+        fleet1.id = 1
+        fleet1.has_ship_instances.return_value = True
+        fleet1.update_from_battle_results = MagicMock()
+
+        fleet2 = MagicMock()
+        fleet2.id = 2
+        fleet2.has_ship_instances.return_value = True
+        fleet2.update_from_battle_results = MagicMock()
+
+        engine._resolve_combat_simulated(fleet1, fleet2)
+
+        # Verify fleet.update_from_battle_results was called with survivors
+        fleet1.update_from_battle_results.assert_called_once_with([survivor0])
+        fleet2.update_from_battle_results.assert_called_once_with([survivor1])

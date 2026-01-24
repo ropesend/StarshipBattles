@@ -1,4 +1,4 @@
-import pygame
+from game.core.math import Vector2
 from game.engine.physics import PhysicsBody
 from game.core.logger import log_debug, log_event
 from game.core.constants import AttackType
@@ -115,7 +115,7 @@ class Projectile(PhysicsBody):
             # Let's try to use the owner's solver if available, else direct
             t = 0
             if hasattr(self.owner, 'solve_lead'):
-                 t = self.owner.solve_lead(p_pos, pygame.math.Vector2(0,0), target.position, target.velocity, self.max_speed)
+                 t = self.owner.solve_lead(p_pos, Vector2(0,0), target.position, target.velocity, self.max_speed)
             
             aim_pos = target.position
             if t > 0:
@@ -124,7 +124,7 @@ class Projectile(PhysicsBody):
             desired_vec = aim_pos - p_pos
             if desired_vec.length_squared() > 0:
                 desired_dir = desired_vec.normalize()
-                current_dir = p_vel.normalize() if p_vel.length() > 0 else pygame.math.Vector2(1, 0)
+                current_dir = p_vel.normalize() if p_vel.length() > 0 else Vector2(1, 0)
                 
                 angle_diff = current_dir.angle_to(desired_dir)
                 

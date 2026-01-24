@@ -40,7 +40,7 @@ class ShipStatsCalculator:
 
         # Resource Costs Aggregation
         ship.construction_cost = {}
-        from game.strategy.data.planet import PLANET_RESOURCES
+        from game.core.constants import PLANET_RESOURCES
         for res in PLANET_RESOURCES:
             ship.construction_cost[res] = 0
             

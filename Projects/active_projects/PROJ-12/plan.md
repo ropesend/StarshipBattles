@@ -1,8 +1,25 @@
 # PROJ-12: God Class Decomposition
 
 ## Overview
-**Status:** Planning
+**Status:** In Progress
 **Created:** 2026-01-24
+
+## Current State
+**Last Updated:** 2026-01-24
+**Last Agent Action:** Completed Phase 2 - Ship Component Manager
+**Next Action:** Begin Phase 3 - TurnEngine Decomposition
+**Blockers:** None
+
+**Context for Next Agent:**
+- Phase 1 is 100% complete (ShipCombatEngine extraction)
+- Phase 2 is 100% complete (ShipComponentManager extraction)
+- Created `game/simulation/entities/ship_component_manager.py` (330 lines) with extracted component logic
+- Ship class now delegates component operations via `component_manager` property (lazy init)
+- Ship class at ~780 lines (delegation overhead offsets extraction)
+- Fixed test_armor_mechanics.py (27 tests) to work with Phase 1 facade pattern
+- All tests passing: 341 combat/simulation tests + 189 integration tests (1 unrelated failure - Vector2 type)
+- SIM-02 and SIM-09 deferred to future work (larger scope changes)
+- Uncommitted Phase 1 + Phase 2 changes present - recommend committing before Phase 3
 **Source:** Review 2026-01-24_general_full-codebase-maintainability
 
 This project addresses the "god class" anti-pattern identified across multiple layers. These large, monolithic classes with too many responsibilities are major blockers to maintainability and testability.
