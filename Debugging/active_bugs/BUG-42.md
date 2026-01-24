@@ -21,3 +21,11 @@ Awaiting Confirmation
   - Updated `on_builder_return()` in `app.py` to call `builder_scene.cleanup()` before state transition
   - Files modified: `game/ui/screens/workshop_screen.py`, `game/app.py`
   - Tests pass: workshop tests (37 items)
+
+---
+### ❌ Fix Rejected [2026-01-24 10:50]
+**Reason:** There are still Design Workshop Remnants - A simple solution is Blank the screen and re-draw the whole UI when you go back to the strategy layer, this is also a problem with the fleet report, it leaves a lot of remnants behind as well
+**New Constraints:**
+- Blank the screen and re-draw the whole UI when returning to strategy layer
+- This issue also affects the Fleet Report (leaves remnants behind) - same fix needed
+---

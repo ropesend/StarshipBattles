@@ -18,3 +18,11 @@ Awaiting Confirmation
   - Increased 'topdown' column width from 44 to 60 pixels
   - Increased target size for topdown images from (40, row_height-4) to (56, row_height-4)
   - Files modified: `game/ui/screens/fleet_report_window.py`
+
+---
+### ❌ Fix Rejected [2026-01-24 10:45]
+**Reason:** Top down images are still too small, the image has a large transparent background. I want it sized based on its visible component. The visible component should be about as tall as the portrait view picture.
+**New Constraints:**
+- Size the top-down image based on its visible (non-transparent) portion, not the full image dimensions
+- The visible component height should match the portrait view height
+---

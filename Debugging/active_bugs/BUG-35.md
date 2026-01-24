@@ -22,3 +22,9 @@ Awaiting Confirmation
   - 6+ planets: spread from 60° to -70° (130° arc, was 105°)
 
   This provides better spacing and uses more of the available hex area.
+
+---
+### ❌ Fix Rejected [2026-01-24 10:30]
+**Reason:** Planets are still too tight together, try to increase the angle between the smaller planets by about 15%
+**New Constraints:** Increase angular spread by approximately 15% from current values
+---
