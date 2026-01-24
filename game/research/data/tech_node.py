@@ -13,10 +13,12 @@ class TechRequirement:
     A single AND-condition requirement for a tech node.
 
     Uses fuzzy level_range that gets resolved to a fixed integer at session start.
+    Supports negation for mutually exclusive tech paths.
     """
     node_id: str
     level_range: Tuple[int, int]  # [min, max] for fuzzy resolution
     resolved_level: Optional[int] = None  # Set at session start
+    negate: bool = False  # If True, requirement is "must be BELOW this level"
 
     def resolve(self, rng: random.Random) -> int:
         """
@@ -43,7 +45,9 @@ class TechRequirement:
         """
         current = tech_levels.get(self.node_id, 0)
         target = self.resolved_level if self.resolved_level is not None else self.level_range[0]
-        return current >= target
+        if self.negate:
+            return current < target  # Must be BELOW target level
+        return current >= target  # Must be AT OR ABOVE target level
 
     def get_required_level(self) -> int:
         """Get the required level (resolved or minimum of range)."""

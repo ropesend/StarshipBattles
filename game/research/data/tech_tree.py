@@ -71,7 +71,8 @@ class TechTree:
 
                     and_conditions.append(TechRequirement(
                         node_id=req["node_id"],
-                        level_range=level_range
+                        level_range=level_range,
+                        negate=req.get("negate", False)
                     ))
                 if and_conditions:
                     requirements.append(and_conditions)
@@ -207,4 +208,61 @@ class TechTree:
                         errors.append(
                             f"Node '{node.id}' references unknown node '{req.node_id}'"
                         )
+        return errors
+
+    def detect_cycles(self) -> List[str]:
+        """
+        Detect circular dependencies in the tech tree.
+
+        Uses DFS with recursion stack to find cycles.
+        Only follows positive (non-negated) dependencies since
+        negative requirements don't create true dependencies.
+
+        Returns:
+            List of error messages describing cycles found
+        """
+        errors = []
+        visited = set()
+        rec_stack = set()  # Nodes in current recursion path
+
+        def dfs(node_id: str, path: List[str]) -> None:
+            if node_id in rec_stack:
+                # Found a cycle - extract the cycle portion
+                cycle_start = path.index(node_id)
+                cycle = " -> ".join(path[cycle_start:] + [node_id])
+                errors.append(f"Cycle detected: {cycle}")
+                return
+            if node_id in visited:
+                return
+
+            visited.add(node_id)
+            rec_stack.add(node_id)
+            path.append(node_id)
+
+            node = self.nodes.get(node_id)
+            if node:
+                for or_group in node.requirements:
+                    for req in or_group:
+                        # Only follow positive dependencies (not negated)
+                        if not req.negate and req.node_id in self.nodes:
+                            dfs(req.node_id, path)
+
+            path.pop()
+            rec_stack.remove(node_id)
+
+        for node_id in self.nodes:
+            if node_id not in visited:
+                dfs(node_id, [])
+
+        return errors
+
+    def validate(self) -> List[str]:
+        """
+        Run all validations (missing refs + cycles).
+
+        Returns:
+            List of all error messages (empty if valid)
+        """
+        errors = self.validate_requirements()
+        errors.extend(self.detect_cycles())
         return errors
