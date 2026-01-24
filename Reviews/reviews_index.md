@@ -21,12 +21,17 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Completed Reviews
 | Date | Type | Description | Key Findings | Link |
 |------|------|-------------|--------------|------|
+| 2026-01-24 | General Review | full-codebase-maintainability | 161 findings → **PROJ-10, 11, 12, 13** | [2026-01-24_general_full-codebase-maintainability](results/2026-01-24_general_full-codebase-maintainability/) |
 
 ---
 
 ## Reviews Leading to Projects
 | Review | Project | Description |
 |--------|---------|-------------|
+| 2026-01-24_general_full-codebase-maintainability | PROJ-10 | Error Handling & Logging Remediation (47 findings) |
+| 2026-01-24_general_full-codebase-maintainability | PROJ-11 | Architecture Layer Separation (13+ findings) |
+| 2026-01-24_general_full-codebase-maintainability | PROJ-12 | God Class Decomposition (Ship, TurnEngine, RaceSetupScreen) |
+| 2026-01-24_general_full-codebase-maintainability | PROJ-13 | Code Quality & Documentation (remaining findings) |
 
 ---
 

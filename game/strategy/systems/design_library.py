@@ -51,7 +51,7 @@ class DesignLibrary:
             os.makedirs(self.designs_folder, exist_ok=True)
             log_debug(f"DesignLibrary: Ensured designs folder exists: {self.designs_folder}")
         except Exception as e:
-            log_error(f"Failed to create designs folder: {e}")
+            log_error(f"Failed to create designs folder '{self.designs_folder}' for empire_{empire_id}: {e}")
             # Fallback to temp directory
             import tempfile
             temp_base = os.path.join(tempfile.gettempdir(), "starship_battles_temp_designs")
@@ -229,7 +229,9 @@ class DesignLibrary:
 
         try:
             return load_json_required(filepath)
-        except Exception:
+        except Exception as e:
+            from game.core.logger import log_warning
+            log_warning(f"DesignLibrary: Failed to load design '{design_id}' from '{filepath}': {e}")
             return None
 
     def mark_obsolete(self, design_id: str, is_obsolete: bool) -> Tuple[bool, str]:
@@ -297,7 +299,9 @@ class DesignLibrary:
 
             return True
 
-        except Exception:
+        except Exception as e:
+            from game.core.logger import log_warning
+            log_warning(f"DesignLibrary: Failed to increment built count for '{design_id}': {e}")
             return False
 
     def filter_designs(self,

@@ -127,7 +127,8 @@ class ScreenshotManager:
             r.clipboard_append(text)
             r.update() # Required to finalize clipboard
             r.destroy()
-        except Exception:
+        except Exception as e:
+            log_warning(f"Clipboard copy failed (Tkinter): {e}")
             # Fallback to Windows clip
             if os.name == 'nt':
                 os.system(f'echo {text.strip()}| clip')

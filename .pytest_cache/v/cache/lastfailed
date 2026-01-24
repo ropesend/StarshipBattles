@@ -1,6 +1,10 @@
 {
+<<<<<<< HEAD
   "Debugging/Marked_for_Deletion_2026-01-20/test_validation_final.py": true,
   "tests/strategy/test_turn_engine_strategy.py::TestMovementGating::test_warp_uses_generic_methods": true,
   "tests/unit/test_advanced_fleet_orders.py::TestAdvancedFleetOrders::test_calculate_intercept_algorithm": true,
   "tests/unit/test_advanced_fleet_orders.py::TestAdvancedFleetOrders::test_intercept_picks_earliest_chaser_arrival": true
+=======
+  "Debugging/Marked_for_Deletion_2026-01-20/test_validation_final.py": true
+>>>>>>> eee154138439fefbf64d42e4f3b626a85753374a
 }

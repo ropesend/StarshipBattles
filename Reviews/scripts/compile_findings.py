@@ -86,6 +86,37 @@ def parse_finding(content: str) -> list:
     return findings
 
 
+def verify_agent_outputs(findings_dir: Path, min_content_size: int = 100) -> tuple:
+    """Verify that agent output files exist and have content.
+
+    Returns tuple of (found_agents, empty_agents, missing_count).
+    """
+    found_agents = []
+    empty_agents = []
+
+    if not findings_dir.exists():
+        return [], [], 0
+
+    for finding_file in findings_dir.glob("*.md"):
+        agent_name = finding_file.stem.replace("_report", "").replace("_", " ").title()
+        file_size = finding_file.stat().st_size
+
+        if file_size < min_content_size:
+            empty_agents.append({
+                'name': agent_name,
+                'file': finding_file.name,
+                'size': file_size
+            })
+        else:
+            found_agents.append({
+                'name': agent_name,
+                'file': finding_file.name,
+                'size': file_size
+            })
+
+    return found_agents, empty_agents, 0
+
+
 def compile_findings(review_folder: Path) -> dict:
     """Compile all findings from a review folder.
 
@@ -101,16 +132,35 @@ def compile_findings(review_folder: Path) -> dict:
         print(f"ERROR: Findings directory not found: {findings_dir}")
         sys.exit(1)
 
+    # Verify agent outputs first
+    found_agents, empty_agents, _ = verify_agent_outputs(findings_dir)
+
+    if empty_agents:
+        print(f"\n[WARNING] {len(empty_agents)} agent(s) produced empty or minimal output:")
+        for agent in empty_agents:
+            print(f"  - {agent['name']}: {agent['file']} ({agent['size']} bytes)")
+        print("")
+
+    if not found_agents:
+        print(f"ERROR: No valid agent output files found in {findings_dir}")
+        print("       Agents may have failed to write their reports.")
+        print("       Check that agents completed successfully before compiling.")
+        sys.exit(1)
+
     all_findings = []
     by_agent = defaultdict(list)
     by_severity = defaultdict(list)
 
-    # Read all finding files
-    for finding_file in findings_dir.glob("*.md"):
-        agent_name = finding_file.stem.replace("_report", "").replace("_", " ").title()
+    # Read all finding files (only those with content)
+    for agent in found_agents:
+        finding_file = findings_dir / agent['file']
+        agent_name = agent['name']
         content = finding_file.read_text(encoding='utf-8')
 
         findings = parse_finding(content)
+        if not findings:
+            print(f"  [INFO] {agent_name}: No findings parsed (file may use unexpected format)")
+
         for f in findings:
             f['agent'] = agent_name
             all_findings.append(f)
@@ -125,6 +175,8 @@ def compile_findings(review_folder: Path) -> dict:
         'minor': len(by_severity.get('Minor', [])),
         'info': len(by_severity.get('Info', [])),
         'agents': len(by_agent),
+        'agents_with_findings': len([a for a in by_agent if by_agent[a]]),
+        'empty_agents': len(empty_agents),
     }
 
     return {

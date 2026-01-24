@@ -175,7 +175,7 @@ class TestAdvancedFleetOrders:
         # Path to (5,0) = 5 steps. Time = 2.5 turns. Target at T=1. 2.5 < 2? FAIL.
         # Path to (6,0) = 6 steps. Time = 3.0 turns. Target at T=2. 3.0 < 3? FAIL.
         # Path to (7,0) = 7 steps. Time = 3.5 turns. Target at T=3. 3.5 < 4? SUCCESS!
-        def path_mock(galaxy, start, end):
+        def path_mock(galaxy, start, end, fleet=None):
             # Return a list including start hex (like real pathfinding)
             dist = abs(end.q - start.q) + abs(end.r - start.r)  # Simplified hex dist
             return [HexCoord(i, 0) for i in range(dist + 1)]  # +1 to include start
@@ -291,7 +291,7 @@ class TestAdvancedFleetOrders:
         ]
 
         # Mock pathfinding to return paths of correct length (includes start hex)
-        def path_mock(galaxy, start, end):
+        def path_mock(galaxy, start, end, fleet=None):
             dist = abs(end.q - start.q)  # Simple distance for 1D case
             return [HexCoord(i, 0) for i in range(dist + 1)]  # +1 to include start
 

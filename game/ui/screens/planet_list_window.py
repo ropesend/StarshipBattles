@@ -5,7 +5,7 @@ from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollin
 from pygame_gui import UI_TEXT_ENTRY_FINISHED
 
 from game.core.config import UIConfig
-from game.core.logger import log_info
+from game.core.logger import log_info, log_warning
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.screens.planet_list_filters import gather_planets, filter_planets, sort_planets, get_column_value
 from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
@@ -953,8 +953,8 @@ class PlanetListWindow(UIWindow):
                 manager=self.ui_manager,
                 window_title="Screenshot"
             )
-        except Exception:
-            pass
+        except Exception as e:
+            log_warning(f"Failed to show screenshot toast: {e}")
 
     def kill(self):
         if self.on_close_callback:

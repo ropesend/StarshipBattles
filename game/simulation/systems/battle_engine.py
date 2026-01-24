@@ -55,8 +55,8 @@ class BattleLogger:
             try:
                 self.file.write(f"{message}\n")
 
-            except IOError:
-                pass  # Silently ignore write errors
+            except IOError as e:
+                log_warning(f"BattleLogger: Failed to write to '{self.filename}': {e}")
     
     def close(self):
         """Close the log file."""
@@ -64,8 +64,8 @@ class BattleLogger:
             try:
                 self.log("=== BATTLE LOG ENDED ===")
                 self.file.close()
-            except IOError:
-                pass  # Silently ignore close errors
+            except IOError as e:
+                log_warning(f"BattleLogger: Failed to close '{self.filename}': {e}")
             finally:
                 self.file = None
 

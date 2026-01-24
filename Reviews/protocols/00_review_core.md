@@ -57,6 +57,11 @@
    - Launch all selected agents in parallel (single message, multiple tool calls)
    - Each agent writes findings to `findings/<agent_role>_report.md`
 
+**IMPORTANT - Agent Launch Recommendations:**
+- **Synchronous launches (default):** For reviews with < 6 agents, launch synchronously (without `run_in_background`) to ensure outputs are captured reliably.
+- **Background launches:** Only use `run_in_background=true` for large reviews (8+ agents) when parallel execution is critical. Always verify outputs afterward.
+- **Verification:** After agents complete, check that all output files exist and contain content before proceeding to Phase D.
+
 2. **Agent Prompt Template**
    Each agent receives:
    ```markdown
@@ -102,7 +107,18 @@
 ### Phase D: Findings Compilation
 **Goal:** Aggregate agent reports into unified review document
 
-1. **Compile Findings**
+1. **Verify Agent Outputs (Critical Step)**
+   Before compiling, verify all expected agent outputs exist:
+   - Check that each expected agent has a file in `findings/`
+   - Verify files are non-empty (> 100 bytes minimum)
+   - The compile script now warns about empty/missing outputs automatically
+
+   **If agents produced empty outputs:**
+   - This typically means agents launched with `run_in_background=true` failed to persist their work
+   - Re-run the affected agents synchronously (without background flag)
+   - Wait for agents to complete before proceeding
+
+2. **Compile Findings**
    ```bash
    python Reviews/scripts/compile_findings.py Reviews/results/<review_folder>
    ```
@@ -111,8 +127,9 @@
    - De-duplicates by location
    - Calculates aggregate statistics
    - Generates `report.md`
+   - **New:** Warns about empty or missing agent files
 
-2. **Manual Review**
+3. **Manual Review**
    - Review compiled report for accuracy
    - Merge any duplicate findings
    - Verify severity classifications
@@ -321,6 +338,9 @@ Format: `YYYY-MM-DD_[review-type]_[brief-description]/`
 The `review_to_project.py` script now automatically creates the full project structure:
 
 ```bash
+# Verify parsing before creating (recommended first step)
+python Reviews/scripts/review_to_project.py <review_folder> --dry-run
+
 # Create project with all Critical and Major findings (default)
 python Reviews/scripts/review_to_project.py <review_folder>
 
@@ -330,6 +350,12 @@ python Reviews/scripts/review_to_project.py <review_folder> --title "Security Fi
 # Create project with specific findings only
 python Reviews/scripts/review_to_project.py <review_folder> --findings SEC-01,SEC-02,IV-01
 ```
+
+**IMPORTANT - Always use `--dry-run` first:**
+The `--dry-run` flag shows what would be parsed without creating files. This helps verify:
+- All expected findings are being parsed
+- Severities are correctly assigned
+- The right number of findings will be included
 
 **What this creates:**
 - `Projects/active_projects/PROJ-XX/` directory

@@ -132,3 +132,77 @@ class TestModifierRow:
 
         assert result
         callback.assert_called_once_with('value_change', 'test_mod', 75.0)
+
+
+class TestModifierRowErrorLogging:
+    """Tests for error logging in modifier row (ERR-012)."""
+
+    def setup_method(self):
+        pygame.init()
+        pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        self.manager = pygame_gui.UIManager((800, 600))
+        self.container = pygame_gui.elements.UIPanel(pygame.Rect(0, 0, 400, 200), manager=self.manager)
+
+    def test_tooltip_generation_failure_logs_warning(self, caplog):
+        """Tooltip generation failure should log warning with modifier details (ERR-012)."""
+        import logging
+        from ui.builder.modifier_row import ModifierControlRow
+        from game.simulation.components.component import Modifier
+        from unittest.mock import patch
+
+        # Need to include effects so the code path that calls evaluate_modifier is reached
+        mod_def = Modifier({
+            'id': 'test_mod',
+            'name': 'Test Mod',
+            'type': 'linear',
+            'min_val': 0,
+            'max_val': 100,
+            'effects': [{'stat': 'mass', 'operation': 'add', 'value': '@param'}]
+        })
+        config = {'control_type': 'linear'}
+
+        row = ModifierControlRow(self.manager, self.container, 300, 'test_mod', mod_def, config, MagicMock())
+
+        # Mock ModifierEffectEvaluator.evaluate_modifier to raise during tooltip generation
+        with patch('ui.builder.modifier_row.ModifierEffectEvaluator.evaluate_modifier',
+                   side_effect=Exception("Test error")):
+            with caplog.at_level(logging.WARNING):
+                tooltip_text = row._generate_tooltip()
+
+            # Should still return fallback tooltip
+            assert tooltip_text is not None
+            assert len(tooltip_text) > 0
+
+            # Should have logged a warning about the failure
+            warning_logs = [r for r in caplog.records if r.levelno >= logging.WARNING]
+            assert len(warning_logs) > 0, "Should log warning when tooltip generation fails"
+            warning_text = ' '.join(r.message for r in warning_logs)
+            assert 'test_mod' in warning_text or 'tooltip' in warning_text.lower(), \
+                f"Warning should include modifier info. Got: {warning_text}"
+
+    def test_tooltip_generation_success_no_warning(self, caplog):
+        """Successful tooltip generation should not produce warnings."""
+        import logging
+        from ui.builder.modifier_row import ModifierControlRow
+        from game.simulation.components.component import Modifier
+
+        mod_def = Modifier({
+            'id': 'working_mod',
+            'name': 'Working Mod',
+            'type': 'linear',
+            'min_val': 0,
+            'max_val': 100,
+            'description': 'A working modifier'
+        })
+        config = {'control_type': 'linear'}
+
+        row = ModifierControlRow(self.manager, self.container, 300, 'working_mod', mod_def, config, MagicMock())
+
+        with caplog.at_level(logging.WARNING):
+            tooltip_text = row._generate_tooltip()
+
+        assert tooltip_text is not None
+        # Should NOT log warnings for successful tooltip generation
+        tooltip_warnings = [r for r in caplog.records
+                           if 'working_mod' in r.message.lower() or 'tooltip' in r.message.lower()]
+        assert len(tooltip_warnings) == 0, "Successful tooltip should not log warnings"

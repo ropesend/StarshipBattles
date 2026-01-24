@@ -402,7 +402,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         
         # Update Class
         self.ship_class = new_class
-        class_def = get_vehicle_classes()[self.ship_class]
+        class_def = get_vehicle_classes().get(self.ship_class)
+        if class_def is None:
+            from game.core.logger import log_error
+            log_error(f"Ship.change_class: Unknown vehicle class '{self.ship_class}', using defaults")
+            class_def = {}
         self.base_mass = 0.0  # Hull component provides mass via ShipStatsCalculator
         self.vehicle_type = class_def.get('type', "Ship")
         self.max_mass_budget = class_def.get('max_mass', 1000)
@@ -745,13 +749,34 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         return d
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serialize ship to dictionary."""
+        """Serialize ship to dictionary.
+
+        Returns:
+            Dictionary representation of the ship including all layers,
+            components, modifiers, and metadata.
+
+        Raises:
+            TypeError: If component data cannot be serialized to JSON-compatible types.
+        """
         from .ship_serialization import ShipSerializer
         return ShipSerializer.to_dict(self)
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> 'Ship':
-        """Create ship from dictionary."""
+        """Create ship from dictionary.
+
+        Args:
+            data: Dictionary containing serialized ship data including name,
+                  ship_class, theme_id, layers, and component definitions.
+
+        Returns:
+            Reconstructed Ship instance with all components and stats.
+
+        Raises:
+            KeyError: If required fields (name, ship_class, color) are missing.
+            TypeError: If data types are invalid or incompatible.
+            ValueError: If component or modifier IDs are invalid.
+        """
         from .ship_serialization import ShipSerializer
         return ShipSerializer.from_dict(data)
 

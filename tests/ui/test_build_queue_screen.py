@@ -352,3 +352,128 @@ def test_add_ship_fails_without_shipyard(build_queue_screen):
     # Verify ship was NOT added
     assert len(build_queue_screen.planet.construction_queue) == initial_queue_len, \
         "Ship should NOT be added without a shipyard"
+
+
+class TestBuildQueuePortraitLogging:
+    """Tests for portrait loading error logging (ERR-011)."""
+
+    def test_portrait_load_failure_logs_warning(self, caplog):
+        """Portrait loading failure should log warning with path context."""
+        import logging
+        import os
+        pygame.init()
+        screen = pygame.display.set_mode((1024, 768))
+        manager = pygame_gui.UIManager((1024, 768))
+
+        # Create test planet
+        planet = Planet(
+            name="Test Colony",
+            location=HexCoord(5, 5),
+            orbit_distance=3,
+            mass=5.97e24,
+            radius=6371000,
+            surface_area=5.1e14,
+            density=5515,
+            surface_gravity=9.81,
+            surface_pressure=101325,
+            surface_temperature=288,
+            surface_water=0.7,
+            tectonic_activity=0.1,
+            magnetic_field=1.0,
+            planet_type=PlanetType.TERRESTRIAL
+        )
+        planet.owner_id = 1
+        planet.id = 100
+
+        session = MockSession()
+        on_close = MagicMock()
+
+        with patch('game.ui.screens.build_queue_screen.DesignLibrary') as mock_lib:
+            mock_lib.return_value = MagicMock()
+            mock_lib.return_value.scan_designs.return_value = []
+
+            from game.ui.screens.build_queue_screen import BuildQueueScreen
+            bq_screen = BuildQueueScreen(manager, planet, session, on_close)
+
+            # Create mock design
+            mock_design = MagicMock()
+            mock_design.ship_class = "TestClass"
+            mock_design.vehicle_type = "Ship"
+
+            # Simulate file exists but loading fails
+            # Make os.path.exists return True for the first portrait path
+            with patch('os.path.exists', return_value=True):
+                # Make pygame.image.load always raise an exception
+                with patch('pygame.image.load', side_effect=pygame.error("Cannot identify image file")):
+                    with caplog.at_level(logging.WARNING):
+                        result = bq_screen._load_design_portrait(mock_design, 64)
+
+            # Should have returned placeholder (since all paths failed)
+            assert result is not None  # Placeholder surface
+
+            # Should have logged a warning about the failed load
+            warning_logs = [r for r in caplog.records if r.levelno >= logging.WARNING]
+            assert len(warning_logs) > 0, "Should log warning when portrait load fails"
+            warning_text = ' '.join(r.message for r in warning_logs)
+            # Warning should include the path
+            assert 'portrait' in warning_text.lower() or 'load' in warning_text.lower(), \
+                f"Warning should mention portrait load failure. Got: {warning_text}"
+
+        pygame.quit()
+
+    def test_portrait_placeholder_fallback_no_spam(self, caplog):
+        """When no portrait exists, fallback to placeholder without log spam."""
+        import logging
+        pygame.init()
+        screen = pygame.display.set_mode((1024, 768))
+        manager = pygame_gui.UIManager((1024, 768))
+
+        planet = Planet(
+            name="Test Colony",
+            location=HexCoord(5, 5),
+            orbit_distance=3,
+            mass=5.97e24,
+            radius=6371000,
+            surface_area=5.1e14,
+            density=5515,
+            surface_gravity=9.81,
+            surface_pressure=101325,
+            surface_temperature=288,
+            surface_water=0.7,
+            tectonic_activity=0.1,
+            magnetic_field=1.0,
+            planet_type=PlanetType.TERRESTRIAL
+        )
+        planet.owner_id = 1
+        planet.id = 100
+
+        session = MockSession()
+
+        with patch('game.ui.screens.build_queue_screen.DesignLibrary') as mock_lib:
+            mock_lib.return_value = MagicMock()
+            mock_lib.return_value.scan_designs.return_value = []
+
+            from game.ui.screens.build_queue_screen import BuildQueueScreen
+            bq_screen = BuildQueueScreen(manager, planet, session, lambda: None)
+
+            mock_design = MagicMock()
+            mock_design.ship_class = "NonexistentClass"
+            mock_design.vehicle_type = "Ship"
+
+            # No paths exist - should silently fall through to placeholder
+            with patch('os.path.exists', return_value=False):
+                with caplog.at_level(logging.WARNING):
+                    result = bq_screen._load_design_portrait(mock_design, 64)
+
+            # Should return placeholder surface
+            assert result is not None
+            assert isinstance(result, pygame.Surface)
+
+            # Should NOT log warnings when files simply don't exist
+            # (that's expected behavior, not an error)
+            portrait_warnings = [r for r in caplog.records
+                                if 'portrait' in r.message.lower() or 'load' in r.message.lower()]
+            assert len(portrait_warnings) == 0, \
+                "Should not spam warnings when portraits simply don't exist"
+
+        pygame.quit()

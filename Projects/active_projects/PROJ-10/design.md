@@ -1,62 +1,94 @@
 # PROJ-10: Design Document
 
-> **THIS IS A REFERENCE DOCUMENT**
-> Do not modify during implementation. Refer to this for architecture decisions.
-> If you discover something that contradicts this document, add a note to decisions.md.
+## Error Handling Standards
 
-## Source Review
-- **Review:** [2026-01-24_general_maintainability-extensibility-health](../../Reviews/results/2026-01-24_general_maintainability-extensibility-health/)
-- **Type:** General Review (Comprehensive)
-- **Date:** 2026-01-24
-- **Report:** [View Full Report](../../Reviews/results/2026-01-24_general_maintainability-extensibility-health/report.md)
+### Pattern 1: Replace Bare Except Clauses
+**Before:**
+```python
+try:
+    do_something()
+except:
+    pass
+```
 
-## Initial Analysis
-Findings from review - 6 total findings identified.
-- **Critical:** 4
-- **Major:** 2
-- **Selected for remediation:** 6
+**After:**
+```python
+try:
+    do_something()
+except (ValueError, KeyError) as e:
+    log_warning(f"Operation failed: {e}")
+```
 
-## Selected Findings Summary
+### Pattern 2: Add Logging to Silent Handlers
+**Before:**
+```python
+try:
+    result = parse_data(data)
+except Exception:
+    result = default_value
+```
 
-### REC-01: Delete marked directories
-- **Severity:** Critical
-- **Location:** `[See report - `git rm -r Marked_For_Deletion_*` (5 min)]`
-- **Effort:** Complex
+**After:**
+```python
+try:
+    result = parse_data(data)
+except Exception as e:
+    log_warning(f"Failed to parse data, using default: {e}")
+    result = default_value
+```
 
-### REC-02: Delete backup file
-- **Severity:** Critical
-- **Location:** `[See report - `git rm ui/test_lab_scene.py.backup` (1 min)]`
-- **Effort:** Complex
+### Pattern 3: Include Context in Error Messages
+**Before:**
+```python
+log_error("Failed to load design")
+return None
+```
 
-### REC-03: Fix spatial grid clear
-- **Severity:** Critical
-- **Location:** `[See report - Use `self.buckets.clear()` instead of `self.bucket...]`
-- **Effort:** Complex
+**After:**
+```python
+log_error(f"Failed to load design '{design_id}' from '{filepath}': {e}")
+return None
+```
 
-### REC-04: Fix shell injection
-- **Severity:** Critical
-- **Location:** `[See report - Use subprocess.run() in screenshot_manager.py (15 ...]`
-- **Effort:** Complex
+### Pattern 4: Replace print_exc() with Logger
+**Before:**
+```python
+except Exception:
+    traceback.print_exc()
+```
 
-### REC-05: Remove commented debug code
-- **Severity:** Major
-- **Location:** `[See report - 5 locations across profiling.py, logger.py, projec...]`
-- **Effort:** Medium
+**After:**
+```python
+except Exception as e:
+    log_error(f"Unexpected error: {e}\n{traceback.format_exc()}")
+```
 
-### REC-06: Add return type hints
-- **Severity:** Major
-- **Location:** `[See report - Start with critical public APIs (30 min)]`
-- **Effort:** Medium
+## Files to Modify
 
+### Critical Priority
+| File | Issue IDs | Changes |
+|------|-----------|---------|
+| `game/simulation/formula_system.py` | ERR-002, ERR-003 | Add logging, whitelist validation |
+| `game/ui/screens/save_selection_window.py` | ERR-001, ERR-009 | Replace bare except, add context |
+| `game/strategy/systems/save_game_service.py` | ERR-004 | Replace print_exc with log_error |
+| `game/strategy/systems/design_library.py` | ERR-005, ERR-010 | Add logging with context |
+| `game/simulation/systems/persistence.py` | ERR-006 | Add logging, fail fast |
+| `game/ui/screens/strategy_input_handler.py` | ERR-007 | Log and re-raise |
+| `game/core/screenshot_manager.py` | ERR-008 | Add warning log |
 
-## Architecture
-[Key architecture points relevant to implementation - to be filled during planning]
+### Major Priority
+| File | Issue IDs | Changes |
+|------|-----------|---------|
+| `ui/builder/modifier_row.py` | ERR-012 | Add warning before fallback |
+| `game/core/json_utils.py` | ERR-013 | Distinguish error types |
+| `game/simulation/components/abilities/__init__.py` | ERR-014 | Log ability creation failures |
+| `game/ui/screens/setup_data_io.py` | ERR-015 | Log skipped files |
+| `game/simulation/systems/battle_engine.py` | ERR-016 | Log IOError, ensure cleanup |
+| `game/core/registry.py` | ERR-017 | Validate inputs |
+| `game/ui/screens/build_queue_screen.py` | ERR-011 | Track failed designs |
 
-## Key Patterns to Reuse
-- **[Pattern Name]**: `file:lines` - description
-
-## Dependencies & Risks
-1. **[Risk/Dependency]** - mitigation approach
-
-## Design Decisions
-See [decisions.md](decisions.md) for the full log with rationale.
+## Testing Strategy
+1. Unit tests for each modified exception handler
+2. Integration tests for save/load with corrupted data
+3. Manual testing of formula evaluation with invalid formulas
+4. Verify log output contains expected context

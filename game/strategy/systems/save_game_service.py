@@ -12,6 +12,7 @@ Save Format Version 2.0.0:
 import os
 import shutil
 import tempfile
+import traceback
 from datetime import datetime
 from typing import Optional, Tuple, List
 from game.core.json_utils import save_json, load_json_required, load_json
@@ -107,9 +108,7 @@ class SaveGameService:
             return True, f"Game saved: Turn {game_session.turn_number}", save_path
 
         except Exception as e:
-            log_error(f"SaveGameService: Save failed - {e}")
-            import traceback
-            traceback.print_exc()
+            log_error(f"SaveGameService: Save failed - {e}\n{traceback.format_exc()}")
             return False, f"Save failed: {str(e)}", None
 
     @staticmethod
@@ -234,9 +233,7 @@ class SaveGameService:
             return game_session, f"Game loaded: Turn {turn_number}"
 
         except Exception as e:
-            log_error(f"SaveGameService: Unexpected load error - {e}")
-            import traceback
-            traceback.print_exc()
+            log_error(f"SaveGameService: Unexpected load error - {e}\n{traceback.format_exc()}")
             return None, f"Unexpected error while loading save: {str(e)}"
 
     @staticmethod

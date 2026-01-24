@@ -46,6 +46,12 @@ class BuildQueueScreen:
         # Load design library
         from game.core.logger import log_debug, log_info
 
+        # Validate required attributes
+        if not hasattr(planet, 'owner_id'):
+            raise ValueError(f"BuildQueueScreen: planet '{getattr(planet, 'name', 'unknown')}' missing required 'owner_id' attribute")
+        if not hasattr(planet, 'name'):
+            log_warning("BuildQueueScreen: planet missing 'name' attribute")
+
         savegame_path = getattr(session, 'save_path', None)  # FIXED: was 'savegame_path', should be 'save_path'
 
         # FIXED: Use planet's owner_id to determine which empire's designs to load
@@ -434,7 +440,8 @@ class BuildQueueScreen:
                 try:
                     loaded_img = pygame.image.load(path)
                     return pygame.transform.smoothscale(loaded_img, (size, size))
-                except Exception:
+                except Exception as e:
+                    log_warning(f"Failed to load portrait from '{path}': {e}")
                     continue
 
         # Fallback: Create a colored placeholder based on vehicle type

@@ -835,6 +835,7 @@ class TestMovementGating:
         fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(10, 0)))
 
         fleet.has_resources_for_movement = MagicMock(return_value=True)
+        fleet.can_use_warp = MagicMock(return_value=True)
         fleet.has_resources_for_warp = MagicMock(return_value=True)
         fleet.consume_movement_resources = MagicMock(return_value=True)
         fleet.consume_warp_resources = MagicMock(return_value=True)
