@@ -5,6 +5,47 @@
 
 ---
 
+## Project Structure
+
+Projects can be stored in two formats:
+
+### New Directory Structure (Preferred)
+```
+Projects/active_projects/PROJ-XX/
+├── plan.md                  # Main plan with status dashboard
+├── design.md                # Architecture and design rationale
+├── decisions.md             # Full decisions history
+├── phase_1_checklist.md     # Phase 1 tasks
+├── phase_2_checklist.md     # Phase 2 tasks
+└── findings/                # Swarm agent analysis reports
+```
+
+### Old Flat File Structure (Legacy)
+```
+Projects/active_projects/PROJ-XX.md   # Single file with everything
+```
+
+---
+
+## Useful Scripts
+
+Use these scripts to get quick information:
+```bash
+# Show project status and progress
+python Projects/scripts/project_status.py PROJ-XX
+
+# Show exactly what task to work on next
+python Projects/scripts/current_task.py PROJ-XX
+
+# List all incomplete tasks
+python Projects/scripts/list_incomplete.py PROJ-XX
+
+# Validate phase before marking complete
+python Projects/scripts/validate_phase.py PROJ-XX [phase_num]
+```
+
+---
+
 ## Understanding the Plan Document
 
 ### Key Sections
@@ -150,8 +191,14 @@ Update the phase status line as you work:
 ### Completing a Phase
 
 When all tasks in a phase are checked off:
-1. Update phase status to `Complete`
-2. Update `## Current State` to point to next phase
+1. **Run validation first:**
+   ```bash
+   python Projects/scripts/validate_phase.py PROJ-XX [phase_num]
+   ```
+2. Only if validation PASSES:
+   - Update phase status to `Complete`
+   - Update `## Current State` to point to next phase
+   - For new directory structure: Also update `plan.md` phase table
 3. Run all tests for the phase
 4. Note any issues in the task notes
 
@@ -210,3 +257,5 @@ When all tasks in a phase are checked off:
 - Log decisions in Decisions Log
 - Don't skip subtasks
 - Note any complexity surprises
+- Run `validate_phase.py` before marking phases complete
+- Check off tasks IMMEDIATELY when done (don't batch)

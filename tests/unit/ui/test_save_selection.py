@@ -1,7 +1,7 @@
 """
 Tests for SaveSelectionWindow with turn list feature.
 """
-import unittest
+import pytest
 import tempfile
 import shutil
 import os
@@ -40,16 +40,16 @@ class MockGameSession:
         }
 
 
-class TestSaveSelectionTurnList(unittest.TestCase):
+class TestSaveSelectionTurnList:
     """Tests for turn list functionality in save selection."""
 
-    def setUp(self):
+    def setup_method(self):
         """Create temporary directory for tests."""
         self.tmpdir = tempfile.mkdtemp()
         self.original_cwd = os.getcwd()
         os.chdir(self.tmpdir)
 
-    def tearDown(self):
+    def teardown_method(self):
         """Clean up temporary directory."""
         os.chdir(self.original_cwd)
         shutil.rmtree(self.tmpdir)
@@ -71,9 +71,9 @@ class TestSaveSelectionTurnList(unittest.TestCase):
         # List turns
         turns = SaveGameService.list_turns(save_path)
 
-        self.assertEqual(len(turns), 3)
+        assert len(turns) == 3
         turn_numbers = [t['turn_number'] for t in turns]
-        self.assertEqual(turn_numbers, [1, 2, 3])
+        assert turn_numbers == [1, 2, 3]
 
     def test_list_turns_includes_metadata(self):
         """Each turn entry includes filename, timestamp, and size."""
@@ -82,17 +82,17 @@ class TestSaveSelectionTurnList(unittest.TestCase):
 
         turns = SaveGameService.list_turns(save_path)
 
-        self.assertEqual(len(turns), 1)
+        assert len(turns) == 1
         turn = turns[0]
 
-        self.assertIn('turn_number', turn)
-        self.assertIn('filename', turn)
-        self.assertIn('timestamp', turn)
-        self.assertIn('size', turn)
-        self.assertIn('path', turn)
+        assert 'turn_number' in turn
+        assert 'filename' in turn
+        assert 'timestamp' in turn
+        assert 'size' in turn
+        assert 'path' in turn
 
-        self.assertEqual(turn['turn_number'], 1)
-        self.assertEqual(turn['filename'], 'turn_1.json')
+        assert turn['turn_number'] == 1
+        assert turn['filename'] == 'turn_1.json'
 
     def test_loading_save_defaults_to_latest(self):
         """Loading without turn_number loads latest turn."""
@@ -109,8 +109,8 @@ class TestSaveSelectionTurnList(unittest.TestCase):
         # Load without specifying turn
         loaded, message = SaveGameService.load_game(save_path)
 
-        self.assertIsNotNone(loaded)
-        self.assertEqual(loaded.turn_number, 5)
+        assert loaded is not None
+        assert loaded.turn_number == 5
 
     def test_loading_specific_turn(self):
         """load_game(path, turn_number=N) loads specific turn state."""
@@ -127,8 +127,8 @@ class TestSaveSelectionTurnList(unittest.TestCase):
         # Load specific turn
         loaded, message = SaveGameService.load_game(save_path, turn_number=2)
 
-        self.assertIsNotNone(loaded)
-        self.assertEqual(loaded.turn_number, 2)
+        assert loaded is not None
+        assert loaded.turn_number == 2
 
     def test_loading_nonexistent_turn_fails(self):
         """Loading turn that doesn't exist returns error."""
@@ -138,20 +138,20 @@ class TestSaveSelectionTurnList(unittest.TestCase):
         # Try to load turn 5 when only turn 1 exists
         loaded, message = SaveGameService.load_game(save_path, turn_number=5)
 
-        self.assertIsNone(loaded)
-        self.assertIn("5", message)
+        assert loaded is None
+        assert "5" in message
 
 
-class TestSaveSelectionListSaves(unittest.TestCase):
+class TestSaveSelectionListSaves:
     """Tests for save listing functionality."""
 
-    def setUp(self):
+    def setup_method(self):
         """Create temporary directory for tests."""
         self.tmpdir = tempfile.mkdtemp()
         self.original_cwd = os.getcwd()
         os.chdir(self.tmpdir)
 
-    def tearDown(self):
+    def teardown_method(self):
         """Clean up temporary directory."""
         os.chdir(self.original_cwd)
         shutil.rmtree(self.tmpdir)
@@ -169,11 +169,11 @@ class TestSaveSelectionListSaves(unittest.TestCase):
 
         saves = SaveGameService.list_saves()
 
-        self.assertEqual(len(saves), 3)
+        assert len(saves) == 3
         save_names = [s['save_name'] for s in saves]
-        self.assertIn("Save1", save_names)
-        self.assertIn("Save2", save_names)
-        self.assertIn("Save3", save_names)
+        assert "Save1" in save_names
+        assert "Save2" in save_names
+        assert "Save3" in save_names
 
     def test_list_saves_includes_metadata(self):
         """Each save includes relevant metadata for display."""
@@ -184,14 +184,14 @@ class TestSaveSelectionListSaves(unittest.TestCase):
 
         saves = SaveGameService.list_saves()
 
-        self.assertEqual(len(saves), 1)
+        assert len(saves) == 1
         save = saves[0]
 
-        self.assertIn('save_name', save)
-        self.assertIn('save_path', save)
-        self.assertIn('player_name', save)
-        self.assertIn('turn_number', save)
-        self.assertIn('timestamp', save)
+        assert 'save_name' in save
+        assert 'save_path' in save
+        assert 'player_name' in save
+        assert 'turn_number' in save
+        assert 'timestamp' in save
 
     def test_list_saves_sorted_by_timestamp(self):
         """Saves are sorted by timestamp (newest first)."""
@@ -208,20 +208,20 @@ class TestSaveSelectionListSaves(unittest.TestCase):
         saves = SaveGameService.list_saves()
 
         # Newest first
-        self.assertEqual(saves[0]['save_name'], "NewSave")
-        self.assertEqual(saves[1]['save_name'], "OldSave")
+        assert saves[0]['save_name'] == "NewSave"
+        assert saves[1]['save_name'] == "OldSave"
 
 
-class TestSaveSelectionEmpireInfo(unittest.TestCase):
+class TestSaveSelectionEmpireInfo:
     """Tests for empire information in save metadata."""
 
-    def setUp(self):
+    def setup_method(self):
         """Create temporary directory for tests."""
         self.tmpdir = tempfile.mkdtemp()
         self.original_cwd = os.getcwd()
         os.chdir(self.tmpdir)
 
-    def tearDown(self):
+    def teardown_method(self):
         """Clean up temporary directory."""
         os.chdir(self.original_cwd)
         shutil.rmtree(self.tmpdir)
@@ -233,7 +233,7 @@ class TestSaveSelectionEmpireInfo(unittest.TestCase):
 
         info = SaveGameService.get_save_info(save_path)
 
-        self.assertEqual(info['empire_count'], 3)
+        assert info['empire_count'] == 3
 
     def test_save_metadata_includes_empire_names(self):
         """Metadata includes list of empire names."""
@@ -245,14 +245,14 @@ class TestSaveSelectionEmpireInfo(unittest.TestCase):
 
         info = SaveGameService.get_save_info(save_path)
 
-        self.assertIn("Federation", info['empire_names'])
-        self.assertIn("Romulans", info['empire_names'])
+        assert "Federation" in info['empire_names']
+        assert "Romulans" in info['empire_names']
 
 
-class TestSaveSelectionWindowButtons(unittest.TestCase):
+class TestSaveSelectionWindowButtons:
     """Tests for SaveSelectionWindow button enable/disable behavior (BUG-30)."""
 
-    def setUp(self):
+    def setup_method(self):
         """Create temporary directory and set up pygame for UI testing."""
         self.tmpdir = tempfile.mkdtemp()
         self.original_cwd = os.getcwd()
@@ -268,7 +268,7 @@ class TestSaveSelectionWindowButtons(unittest.TestCase):
 
         self.manager = pygame_gui.UIManager((1440, 900))
 
-    def tearDown(self):
+    def teardown_method(self):
         """Clean up temporary directory."""
         os.chdir(self.original_cwd)
         shutil.rmtree(self.tmpdir)
@@ -282,7 +282,7 @@ class TestSaveSelectionWindowButtons(unittest.TestCase):
         # Create a save first
         session = MockGameSession(turn_number=1)
         success, _, save_path = SaveGameService.save_game(session, "TestSave")
-        self.assertTrue(success)
+        assert success
 
         # Create window
         load_callback = MagicMock()
@@ -296,23 +296,23 @@ class TestSaveSelectionWindowButtons(unittest.TestCase):
         )
 
         # Verify buttons start disabled
-        self.assertFalse(window.btn_load.is_enabled)
-        self.assertFalse(window.btn_expand.is_enabled)
-        self.assertFalse(window.btn_delete.is_enabled)
+        assert not window.btn_load.is_enabled
+        assert not window.btn_expand.is_enabled
+        assert not window.btn_delete.is_enabled
 
         # Verify save is in the list
-        self.assertEqual(len(window.saves_list), 1)
-        self.assertEqual(len(window.list_item_mapping), 1)
+        assert len(window.saves_list) == 1
+        assert len(window.list_item_mapping) == 1
 
         # Simulate selecting the first save
         # UISelectionList.item_list returns dicts with "text", "selected", etc.
         items = window.saves_listbox.item_list
-        self.assertTrue(len(items) > 0, "No items in saves list")
+        assert len(items) > 0, "No items in saves list"
 
         # Get the first item - it's a dict with "text" key
         first_item = items[0]
-        self.assertIsInstance(first_item, dict)
-        self.assertIn("text", first_item)
+        assert isinstance(first_item, dict)
+        assert "text" in first_item
 
         # Simulate selection by marking the item as selected in the internal list
         first_item["selected"] = True
@@ -321,22 +321,9 @@ class TestSaveSelectionWindowButtons(unittest.TestCase):
         window._handle_selection_change()
 
         # BUG-30: After selection, buttons should be enabled
-        self.assertTrue(
-            window.btn_load.is_enabled,
-            "Load button should be enabled after selecting a save"
-        )
-        self.assertTrue(
-            window.btn_expand.is_enabled,
-            "Show Turns button should be enabled after selecting a save"
-        )
-        self.assertTrue(
-            window.btn_delete.is_enabled,
-            "Delete button should be enabled after selecting a save"
-        )
+        assert window.btn_load.is_enabled, "Load button should be enabled after selecting a save"
+        assert window.btn_expand.is_enabled, "Show Turns button should be enabled after selecting a save"
+        assert window.btn_delete.is_enabled, "Delete button should be enabled after selecting a save"
 
         # Clean up
         window.kill()
-
-
-if __name__ == '__main__':
-    unittest.main()

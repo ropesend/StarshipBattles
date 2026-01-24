@@ -1,63 +1,63 @@
 """Tests for the EventBus class."""
-import unittest
+import pytest
 from unittest.mock import patch, MagicMock
 from ui.builder.event_bus import EventBus
 
 
-class TestEventBus(unittest.TestCase):
+class TestEventBus:
     """Core event bus functionality tests."""
 
     def test_subprocess_communication(self):
         """Basic subscribe and emit works."""
         bus = EventBus()
-        self.received = None
+        received = []
 
         def handler(data):
-            self.received = data
+            received.append(data)
 
         bus.subscribe("TEST_EVENT", handler)
         bus.emit("TEST_EVENT", "Hello")
 
-        self.assertEqual(self.received, "Hello")
+        assert received == ["Hello"]
 
     def test_unsubscribe(self):
         """Unsubscribe prevents future callbacks."""
         bus = EventBus()
-        self.counter = 0
+        counter = [0]
 
         def handler(data):
-            self.counter += 1
+            counter[0] += 1
 
         bus.subscribe("PING", handler)
         bus.emit("PING")
-        self.assertEqual(self.counter, 1)
+        assert counter[0] == 1
 
         bus.unsubscribe("PING", handler)
         bus.emit("PING")
-        self.assertEqual(self.counter, 1)  # Should not increment
+        assert counter[0] == 1  # Should not increment
 
 
-class TestEventBusValidation(unittest.TestCase):
+class TestEventBusValidation:
     """Tests for callback validation."""
 
     def test_subscribe_non_callable_raises_type_error(self):
         """Subscribing with non-callable raises TypeError."""
         bus = EventBus()
-        with self.assertRaises(TypeError) as ctx:
+        with pytest.raises(TypeError) as exc_info:
             bus.subscribe("TEST", "not a callback")
-        self.assertIn("callable", str(ctx.exception))
-        self.assertIn("str", str(ctx.exception))
+        assert "callable" in str(exc_info.value)
+        assert "str" in str(exc_info.value)
 
     def test_subscribe_none_raises_type_error(self):
         """Subscribing with None raises TypeError."""
         bus = EventBus()
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             bus.subscribe("TEST", None)
 
     def test_subscribe_integer_raises_type_error(self):
         """Subscribing with integer raises TypeError."""
         bus = EventBus()
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             bus.subscribe("TEST", 42)
 
     def test_subscribe_callable_class_instance_works(self):
@@ -73,7 +73,7 @@ class TestEventBusValidation(unittest.TestCase):
         handler = Handler()
         bus.subscribe("TEST", handler)
         bus.emit("TEST", "data")
-        self.assertTrue(handler.called)
+        assert handler.called
 
     def test_subscribe_lambda_works(self):
         """Subscribing with lambda works."""
@@ -81,7 +81,7 @@ class TestEventBusValidation(unittest.TestCase):
         results = []
         bus.subscribe("TEST", lambda d: results.append(d))
         bus.emit("TEST", "value")
-        self.assertEqual(results, ["value"])
+        assert results == ["value"]
 
     def test_subscribe_method_works(self):
         """Subscribing with bound method works."""
@@ -96,10 +96,10 @@ class TestEventBusValidation(unittest.TestCase):
         receiver = Receiver()
         bus.subscribe("TEST", receiver.handle)
         bus.emit("TEST", "method_data")
-        self.assertEqual(receiver.received, "method_data")
+        assert receiver.received == "method_data"
 
 
-class TestEventBusMultipleSubscribers(unittest.TestCase):
+class TestEventBusMultipleSubscribers:
     """Tests for multiple subscriber handling."""
 
     def test_multiple_subscribers_receive_events(self):
@@ -117,9 +117,9 @@ class TestEventBusMultipleSubscribers(unittest.TestCase):
         bus.subscribe("MULTI", handler2)
         bus.emit("MULTI", "test")
 
-        self.assertEqual(len(results), 2)
-        self.assertIn("h1:test", results)
-        self.assertIn("h2:test", results)
+        assert len(results) == 2
+        assert "h1:test" in results
+        assert "h2:test" in results
 
     def test_emit_no_subscribers_no_error(self):
         """Emitting to nonexistent event type doesn't error."""
@@ -128,21 +128,21 @@ class TestEventBusMultipleSubscribers(unittest.TestCase):
         bus.emit("NONEXISTENT_EVENT", {"data": 123})
 
 
-class TestEventBusErrorHandling(unittest.TestCase):
+class TestEventBusErrorHandling:
     """Tests for error handling in event handlers."""
 
     @patch('ui.builder.event_bus.log_error')
     def test_error_in_handler_uses_logger(self, mock_log_error):
         """Handler exceptions are logged, not printed."""
         bus = EventBus()
+        received = []
 
         def bad_handler(data):
             raise ValueError("Test error")
 
         def good_handler(data):
-            self.received = data
+            received.append(data)
 
-        self.received = None
         bus.subscribe("ERROR_TEST", bad_handler)
         bus.subscribe("ERROR_TEST", good_handler)
 
@@ -152,11 +152,11 @@ class TestEventBusErrorHandling(unittest.TestCase):
         # Bad handler logged error
         mock_log_error.assert_called_once()
         call_args = mock_log_error.call_args[0][0]
-        self.assertIn("ERROR_TEST", call_args)
-        self.assertIn("Test error", call_args)
+        assert "ERROR_TEST" in call_args
+        assert "Test error" in call_args
 
         # Good handler still received the event
-        self.assertEqual(self.received, "payload")
+        assert received == ["payload"]
 
     def test_handler_exception_does_not_stop_others(self):
         """One failing handler doesn't prevent others from running."""
@@ -175,10 +175,10 @@ class TestEventBusErrorHandling(unittest.TestCase):
         with patch('ui.builder.event_bus.log_error'):
             bus.emit("CONTINUE", "value")
 
-        self.assertEqual(results, ["value"])
+        assert results == ["value"]
 
 
-class TestEventBusDefensiveCopy(unittest.TestCase):
+class TestEventBusDefensiveCopy:
     """Tests for defensive copy during emit."""
 
     def test_unsubscribe_during_emit_safe(self):
@@ -199,7 +199,7 @@ class TestEventBusDefensiveCopy(unittest.TestCase):
         # Should not raise RuntimeError about dict changing size
         bus.emit("MODIFY", None)
 
-        self.assertIn("normal", results)
+        assert "normal" in results
 
     def test_subscribe_during_emit_safe(self):
         """Subscribing during emit doesn't cause iteration errors."""
@@ -217,47 +217,43 @@ class TestEventBusDefensiveCopy(unittest.TestCase):
 
         # First emit
         bus.emit("MODIFY2", None)
-        self.assertEqual(results, ["orig"])
+        assert results == ["orig"]
 
         # Second emit should include new handler
         results.clear()
         bus.emit("MODIFY2", None)
-        self.assertIn("orig", results)
-        self.assertIn("new", results)
+        assert "orig" in results
+        assert "new" in results
 
 
-class TestEventBusNoneData(unittest.TestCase):
+class TestEventBusNoneData:
     """Tests for None data handling."""
 
     def test_emit_with_none_data(self):
         """Emit with None data works correctly."""
         bus = EventBus()
-        self.called = False
-        self.data_received = "NOT_SET"
+        called = [False]
+        data_received = ["NOT_SET"]
 
         def handler(data):
-            self.called = True
-            self.data_received = data
+            called[0] = True
+            data_received[0] = data
 
         bus.subscribe("NONE_TEST", handler)
         bus.emit("NONE_TEST", None)
 
-        self.assertTrue(self.called)
-        self.assertIsNone(self.data_received)
+        assert called[0]
+        assert data_received[0] is None
 
     def test_emit_without_data_argument(self):
         """Emit without data argument passes None."""
         bus = EventBus()
-        self.data_received = "NOT_SET"
+        data_received = ["NOT_SET"]
 
         def handler(data):
-            self.data_received = data
+            data_received[0] = data
 
         bus.subscribe("NO_DATA", handler)
         bus.emit("NO_DATA")
 
-        self.assertIsNone(self.data_received)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert data_received[0] is None

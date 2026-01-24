@@ -44,9 +44,28 @@ This means:
    - Parse the project description from the prompt
    - Identify: What is being added/refactored? Why?
 
-2. **Assign Project ID**
-   - Read `Projects/projects_index.md` to get next sequential ID (PROJ-XX)
-   - Create project file: `Projects/active_projects/PROJ-XX.md`
+2. **Create Project Structure Using Script** ⚠️ MANDATORY
+   > **DO NOT create project files manually.** Always use the helper script to ensure
+   > the proper directory structure is created.
+
+   ```bash
+   python Projects/scripts/create_project.py "Your Project Title"
+   ```
+
+   This creates:
+   - `Projects/active_projects/PROJ-XX/` directory
+   - `plan.md` - Main project document
+   - `design.md` - Architecture and design rationale
+   - `decisions.md` - Decisions log
+   - `phase_1_checklist.md` - Initial phase checklist
+   - `findings/` - Directory for swarm agent reports
+   - Updates `projects_index.md` automatically
+
+   > **If creating from a Review:** Use `review_to_project.py` instead, which creates
+   > the full structure pre-populated with review findings:
+   > ```bash
+   > python Reviews/scripts/review_to_project.py <review_folder>
+   > ```
 
 3. **Deep Code Review**
    - Launch 2-3 Explore agents to understand current architecture:

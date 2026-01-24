@@ -1,5 +1,5 @@
 """Tests for Component cache thread safety."""
-import unittest
+import pytest
 import threading
 
 from game.simulation.components.component import (
@@ -8,39 +8,42 @@ from game.simulation.components.component import (
 )
 
 
-class TestComponentCacheManager(unittest.TestCase):
-    """Test ComponentCacheManager singleton and thread safety."""
+@pytest.fixture(autouse=True)
+def reset_cache_after_test():
+    """Reset cache after each test."""
+    yield
+    if hasattr(ComponentCacheManager, 'reset'):
+        ComponentCacheManager.reset()
 
-    def tearDown(self):
-        """Reset cache after each test."""
-        if hasattr(ComponentCacheManager, 'reset'):
-            ComponentCacheManager.reset()
+
+class TestComponentCacheManager:
+    """Test ComponentCacheManager singleton and thread safety."""
 
     def test_cache_manager_singleton(self):
         """ComponentCacheManager.instance() should return same instance."""
         manager1 = ComponentCacheManager.instance()
         manager2 = ComponentCacheManager.instance()
 
-        self.assertIs(manager1, manager2)
+        assert manager1 is manager2
 
     def test_cache_manager_has_lock(self):
         """ComponentCacheManager class should have a lock for thread safety."""
-        self.assertTrue(hasattr(ComponentCacheManager, '_lock'))
+        assert hasattr(ComponentCacheManager, '_lock')
 
     def test_cache_manager_has_reset(self):
         """ComponentCacheManager should have a reset classmethod."""
-        self.assertTrue(hasattr(ComponentCacheManager, 'reset'))
-        self.assertTrue(callable(ComponentCacheManager.reset))
+        assert hasattr(ComponentCacheManager, 'reset')
+        assert callable(ComponentCacheManager.reset)
 
     def test_cache_manager_initial_state(self):
         """ComponentCacheManager should start with None caches."""
         ComponentCacheManager.reset()
         manager = ComponentCacheManager.instance()
 
-        self.assertIsNone(manager.component_cache)
-        self.assertIsNone(manager.modifier_cache)
-        self.assertIsNone(manager.last_component_file)
-        self.assertIsNone(manager.last_modifier_file)
+        assert manager.component_cache is None
+        assert manager.modifier_cache is None
+        assert manager.last_component_file is None
+        assert manager.last_modifier_file is None
 
     def test_reset_clears_caches(self):
         """reset() should clear all cache values."""
@@ -51,8 +54,8 @@ class TestComponentCacheManager(unittest.TestCase):
         ComponentCacheManager.reset()
         manager = ComponentCacheManager.instance()
 
-        self.assertIsNone(manager.component_cache)
-        self.assertIsNone(manager.modifier_cache)
+        assert manager.component_cache is None
+        assert manager.modifier_cache is None
 
     def test_concurrent_cache_access(self):
         """Multiple threads accessing cache should not cause race conditions."""
@@ -80,16 +83,16 @@ class TestComponentCacheManager(unittest.TestCase):
             t.join()
 
         # All should have succeeded
-        self.assertEqual(len(errors), 0, f"Errors occurred: {errors}")
-        self.assertEqual(len(results), 10)
+        assert len(errors) == 0, f"Errors occurred: {errors}"
+        assert len(results) == 10
 
         # All should be the same instance (singleton)
         first = results[0]
         for manager in results[1:]:
-            self.assertIs(manager, first)
+            assert manager is first
 
 
-class TestResetComponentCachesFunction(unittest.TestCase):
+class TestResetComponentCachesFunction:
     """Test the reset_component_caches convenience function."""
 
     def test_reset_component_caches_calls_manager_reset(self):
@@ -100,8 +103,4 @@ class TestResetComponentCachesFunction(unittest.TestCase):
         reset_component_caches()
 
         manager = ComponentCacheManager.instance()
-        self.assertIsNone(manager.component_cache)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert manager.component_cache is None

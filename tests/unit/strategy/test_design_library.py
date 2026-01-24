@@ -1,48 +1,50 @@
 """
 Tests for DesignLibrary
 """
-import unittest
+import pytest
 import tempfile
+import shutil
 import os
 from unittest.mock import MagicMock, patch
 from game.strategy.systems.design_library import DesignLibrary
 from game.core.json_utils import save_json
 
 
-class TestDesignLibrary(unittest.TestCase):
+class TestDesignLibrary:
     """Tests for DesignLibrary class"""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_library(self):
         """Create temporary directory for test designs"""
-        self.tmpdir = tempfile.mkdtemp()
+        tmpdir = tempfile.mkdtemp()
         # Create per-empire folder structure (empire_id=1)
-        self.designs_folder = os.path.join(self.tmpdir, "designs", "empire_1")
-        os.makedirs(self.designs_folder)
+        designs_folder = os.path.join(tmpdir, "designs", "empire_1")
+        os.makedirs(designs_folder)
 
-        self.library = DesignLibrary(self.tmpdir, empire_id=1)
+        library = DesignLibrary(tmpdir, empire_id=1)
 
-    def tearDown(self):
-        """Clean up temporary directory"""
-        import shutil
-        shutil.rmtree(self.tmpdir)
+        yield tmpdir, designs_folder, library
+
+        shutil.rmtree(tmpdir)
 
     def test_initialization_creates_folder(self):
         """Initialization creates designs folder if missing"""
         new_tmpdir = tempfile.mkdtemp()
         try:
             library = DesignLibrary(new_tmpdir, empire_id=1)
-            self.assertTrue(os.path.exists(library.designs_folder))
+            assert os.path.exists(library.designs_folder)
         finally:
-            import shutil
             shutil.rmtree(new_tmpdir)
 
-    def test_scan_designs_empty(self):
+    def test_scan_designs_empty(self, setup_library):
         """Scanning empty library returns empty list"""
-        designs = self.library.scan_designs()
-        self.assertEqual(len(designs), 0)
+        tmpdir, designs_folder, library = setup_library
+        designs = library.scan_designs()
+        assert len(designs) == 0
 
-    def test_scan_designs_with_files(self):
+    def test_scan_designs_with_files(self, setup_library):
         """Scanning library with files returns metadata list"""
+        tmpdir, designs_folder, library = setup_library
         # Create test design files
         design1 = {
             "name": "Fighter A",
@@ -59,18 +61,19 @@ class TestDesignLibrary(unittest.TestCase):
             "layers": {}
         }
 
-        save_json(os.path.join(self.designs_folder, "fighter_a.json"), design1)
-        save_json(os.path.join(self.designs_folder, "cruiser_b.json"), design2)
+        save_json(os.path.join(designs_folder, "fighter_a.json"), design1)
+        save_json(os.path.join(designs_folder, "cruiser_b.json"), design2)
 
-        designs = self.library.scan_designs()
+        designs = library.scan_designs()
 
-        self.assertEqual(len(designs), 2)
+        assert len(designs) == 2
         names = [d.name for d in designs]
-        self.assertIn("Fighter A", names)
-        self.assertIn("Cruiser B", names)
+        assert "Fighter A" in names
+        assert "Cruiser B" in names
 
-    def test_save_design_new(self):
+    def test_save_design_new(self, setup_library):
         """Can save a new design"""
+        tmpdir, designs_folder, library = setup_library
         ship = MagicMock()
         ship.name = "Test Ship"
         ship.ship_class = "Escort"
@@ -86,15 +89,16 @@ class TestDesignLibrary(unittest.TestCase):
             "layers": {}
         }
 
-        success, message = self.library.save_design(ship, "Test Ship", set())
+        success, message = library.save_design(ship, "Test Ship", set())
 
-        self.assertTrue(success)
-        self.assertIn("Saved", message)
+        assert success
+        assert "Saved" in message
         # Check file was created
-        self.assertTrue(os.path.exists(os.path.join(self.designs_folder, "Test_Ship.json")))
+        assert os.path.exists(os.path.join(designs_folder, "Test_Ship.json"))
 
-    def test_save_design_prevents_overwrite_built(self):
+    def test_save_design_prevents_overwrite_built(self, setup_library):
         """Cannot overwrite a design that has been built"""
+        tmpdir, designs_folder, library = setup_library
         ship = MagicMock()
         ship.name = "Built Ship"
         ship.ship_class = "Escort"
@@ -109,16 +113,17 @@ class TestDesignLibrary(unittest.TestCase):
         }
 
         # First save
-        self.library.save_design(ship, "Built Ship", set())
+        library.save_design(ship, "Built Ship", set())
 
         # Try to save again with design marked as built
-        success, message = self.library.save_design(ship, "Built Ship", {"Built_Ship"})
+        success, message = library.save_design(ship, "Built Ship", {"Built_Ship"})
 
-        self.assertFalse(success)
-        self.assertIn("built", message.lower())
+        assert not success
+        assert "built" in message.lower()
 
-    def test_save_design_can_update_unbuilt(self):
+    def test_save_design_can_update_unbuilt(self, setup_library):
         """Can update a design that hasn't been built"""
+        tmpdir, designs_folder, library = setup_library
         ship = MagicMock()
         ship.name = "Unbuilt Ship"
         ship.ship_class = "Escort"
@@ -133,15 +138,16 @@ class TestDesignLibrary(unittest.TestCase):
         }
 
         # First save
-        self.library.save_design(ship, "Unbuilt Ship", set())
+        library.save_design(ship, "Unbuilt Ship", set())
 
         # Update (not in built set)
-        success, message = self.library.save_design(ship, "Unbuilt Ship", set())
+        success, message = library.save_design(ship, "Unbuilt Ship", set())
 
-        self.assertTrue(success)
+        assert success
 
-    def test_load_design(self):
+    def test_load_design(self, setup_library):
         """Can load a design by ID"""
+        tmpdir, designs_folder, library = setup_library
         # Create design file
         design_data = {
             "name": "Loadable Ship",
@@ -150,7 +156,7 @@ class TestDesignLibrary(unittest.TestCase):
             "mass": 2000.0,
             "layers": {}
         }
-        save_json(os.path.join(self.designs_folder, "loadable.json"), design_data)
+        save_json(os.path.join(designs_folder, "loadable.json"), design_data)
 
         # Mock Ship.from_dict
         with patch('game.strategy.systems.design_library.Ship') as MockShip:
@@ -158,21 +164,23 @@ class TestDesignLibrary(unittest.TestCase):
             mock_ship.name = "Loadable Ship"
             MockShip.from_dict.return_value = mock_ship
 
-            ship, message = self.library.load_design("loadable", 1920, 1080)
+            ship, message = library.load_design("loadable", 1920, 1080)
 
-            self.assertIsNotNone(ship)
-            self.assertIn("Loaded", message)
+            assert ship is not None
+            assert "Loaded" in message
             MockShip.from_dict.assert_called_once()
 
-    def test_load_design_not_found(self):
+    def test_load_design_not_found(self, setup_library):
         """Loading nonexistent design returns None"""
-        ship, message = self.library.load_design("nonexistent", 1920, 1080)
+        tmpdir, designs_folder, library = setup_library
+        ship, message = library.load_design("nonexistent", 1920, 1080)
 
-        self.assertIsNone(ship)
-        self.assertIn("not found", message.lower())
+        assert ship is None
+        assert "not found" in message.lower()
 
-    def test_mark_obsolete(self):
+    def test_mark_obsolete(self, setup_library):
         """Can mark design as obsolete"""
+        tmpdir, designs_folder, library = setup_library
         # Create design file
         design_data = {
             "name": "Old Design",
@@ -180,20 +188,21 @@ class TestDesignLibrary(unittest.TestCase):
             "layers": {},
             "_metadata": {"is_obsolete": False}
         }
-        save_json(os.path.join(self.designs_folder, "old.json"), design_data)
+        save_json(os.path.join(designs_folder, "old.json"), design_data)
 
         # Mark obsolete
-        success, message = self.library.mark_obsolete("old", True)
+        success, message = library.mark_obsolete("old", True)
 
-        self.assertTrue(success)
+        assert success
 
         # Verify file updated
         from game.core.json_utils import load_json_required
-        updated = load_json_required(os.path.join(self.designs_folder, "old.json"))
-        self.assertTrue(updated["_metadata"]["is_obsolete"])
+        updated = load_json_required(os.path.join(designs_folder, "old.json"))
+        assert updated["_metadata"]["is_obsolete"]
 
-    def test_filter_designs_by_class(self):
+    def test_filter_designs_by_class(self, setup_library):
         """Can filter designs by ship class"""
+        tmpdir, designs_folder, library = setup_library
         # Create test designs
         for i, ship_class in enumerate(["Fighter", "Cruiser", "Fighter"]):
             design = {
@@ -203,17 +212,18 @@ class TestDesignLibrary(unittest.TestCase):
                 "mass": 1000.0,
                 "layers": {}
             }
-            save_json(os.path.join(self.designs_folder, f"ship_{i}.json"), design)
+            save_json(os.path.join(designs_folder, f"ship_{i}.json"), design)
 
         # Filter for Fighters
-        designs = self.library.filter_designs(ship_class="Fighter")
+        designs = library.filter_designs(ship_class="Fighter")
 
-        self.assertEqual(len(designs), 2)
+        assert len(designs) == 2
         for design in designs:
-            self.assertEqual(design.ship_class, "Fighter")
+            assert design.ship_class == "Fighter"
 
-    def test_filter_designs_by_vehicle_type(self):
+    def test_filter_designs_by_vehicle_type(self, setup_library):
         """Can filter designs by vehicle type"""
+        tmpdir, designs_folder, library = setup_library
         # Create mixed types
         types = ["Ship", "Fighter", "Satellite"]
         for i, vtype in enumerate(types):
@@ -224,16 +234,17 @@ class TestDesignLibrary(unittest.TestCase):
                 "mass": 1000.0,
                 "layers": {}
             }
-            save_json(os.path.join(self.designs_folder, f"vehicle_{i}.json"), design)
+            save_json(os.path.join(designs_folder, f"vehicle_{i}.json"), design)
 
         # Filter for Fighters
-        designs = self.library.filter_designs(vehicle_type="Fighter")
+        designs = library.filter_designs(vehicle_type="Fighter")
 
-        self.assertEqual(len(designs), 1)
-        self.assertEqual(designs[0].vehicle_type, "Fighter")
+        assert len(designs) == 1
+        assert designs[0].vehicle_type == "Fighter"
 
-    def test_filter_designs_obsolete(self):
+    def test_filter_designs_obsolete(self, setup_library):
         """Can filter out obsolete designs"""
+        tmpdir, designs_folder, library = setup_library
         # Create designs with mixed obsolete status
         for i in range(3):
             design = {
@@ -244,22 +255,23 @@ class TestDesignLibrary(unittest.TestCase):
                 "layers": {},
                 "_metadata": {"is_obsolete": i == 1}  # Middle one obsolete
             }
-            save_json(os.path.join(self.designs_folder, f"design_{i}.json"), design)
+            save_json(os.path.join(designs_folder, f"design_{i}.json"), design)
 
         # Filter without obsolete
-        designs = self.library.filter_designs(show_obsolete=False)
+        designs = library.filter_designs(show_obsolete=False)
 
-        self.assertEqual(len(designs), 2)
+        assert len(designs) == 2
         for design in designs:
-            self.assertFalse(design.is_obsolete)
+            assert not design.is_obsolete
 
         # Include obsolete
-        designs = self.library.filter_designs(show_obsolete=True)
+        designs = library.filter_designs(show_obsolete=True)
 
-        self.assertEqual(len(designs), 3)
+        assert len(designs) == 3
 
-    def test_search_designs_by_name(self):
+    def test_search_designs_by_name(self, setup_library):
         """Can search designs by name"""
+        tmpdir, designs_folder, library = setup_library
         # Create designs
         names = ["Alpha Fighter", "Beta Cruiser", "Alpha Destroyer"]
         for i, name in enumerate(names):
@@ -270,49 +282,39 @@ class TestDesignLibrary(unittest.TestCase):
                 "mass": 1000.0,
                 "layers": {}
             }
-            save_json(os.path.join(self.designs_folder, f"ship_{i}.json"), design)
+            save_json(os.path.join(designs_folder, f"ship_{i}.json"), design)
 
         # Search for "Alpha"
-        designs = self.library.search_designs("Alpha")
+        designs = library.search_designs("Alpha")
 
-        self.assertEqual(len(designs), 2)
+        assert len(designs) == 2
         for design in designs:
-            self.assertIn("Alpha", design.name)
+            assert "Alpha" in design.name
 
     def test_sanitize_design_id(self):
         """Design ID sanitization works correctly"""
-        self.assertEqual(
-            DesignLibrary._sanitize_design_id("Simple Name"),
-            "Simple_Name"
-        )
-        self.assertEqual(
-            DesignLibrary._sanitize_design_id("Name!@#$%With^&*()Special"),
-            "NameWithSpecial"
-        )
-        self.assertEqual(
-            DesignLibrary._sanitize_design_id("   Spaces   "),
-            "Spaces"
-        )
-        self.assertEqual(
-            DesignLibrary._sanitize_design_id(""),
-            "unnamed_design"
-        )
+        assert DesignLibrary._sanitize_design_id("Simple Name") == "Simple_Name"
+        assert DesignLibrary._sanitize_design_id("Name!@#$%With^&*()Special") == "NameWithSpecial"
+        assert DesignLibrary._sanitize_design_id("   Spaces   ") == "Spaces"
+        assert DesignLibrary._sanitize_design_id("") == "unnamed_design"
 
-    def test_design_exists(self):
+    def test_design_exists(self, setup_library):
         """Can check if design exists"""
+        tmpdir, designs_folder, library = setup_library
         # Create a design
         design = {
             "name": "Existing",
             "ship_class": "Escort",
             "layers": {}
         }
-        save_json(os.path.join(self.designs_folder, "existing.json"), design)
+        save_json(os.path.join(designs_folder, "existing.json"), design)
 
-        self.assertTrue(self.library.design_exists("existing"))
-        self.assertFalse(self.library.design_exists("nonexistent"))
+        assert library.design_exists("existing")
+        assert not library.design_exists("nonexistent")
 
-    def test_increment_built_count(self):
+    def test_increment_built_count(self, setup_library):
         """Can increment built count"""
+        tmpdir, designs_folder, library = setup_library
         # Create design
         design = {
             "name": "Buildable",
@@ -320,44 +322,44 @@ class TestDesignLibrary(unittest.TestCase):
             "layers": {},
             "_metadata": {"times_built": 0}
         }
-        save_json(os.path.join(self.designs_folder, "buildable.json"), design)
+        save_json(os.path.join(designs_folder, "buildable.json"), design)
 
         # Increment
-        success = self.library.increment_built_count("buildable")
+        success = library.increment_built_count("buildable")
 
-        self.assertTrue(success)
+        assert success
 
         # Verify
         from game.core.json_utils import load_json_required
-        updated = load_json_required(os.path.join(self.designs_folder, "buildable.json"))
-        self.assertEqual(updated["_metadata"]["times_built"], 1)
+        updated = load_json_required(os.path.join(designs_folder, "buildable.json"))
+        assert updated["_metadata"]["times_built"] == 1
 
 
-class TestDesignLibraryPerEmpire(unittest.TestCase):
+class TestDesignLibraryPerEmpire:
     """Tests for per-empire design folder structure"""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
         """Create temporary directory for test designs"""
-        self.tmpdir = tempfile.mkdtemp()
+        tmpdir = tempfile.mkdtemp()
+        yield tmpdir
+        shutil.rmtree(tmpdir)
 
-    def tearDown(self):
-        """Clean up temporary directory"""
-        import shutil
-        shutil.rmtree(self.tmpdir)
-
-    def test_design_library_uses_empire_subfolder(self):
+    def test_design_library_uses_empire_subfolder(self, setup_tmpdir):
         """DesignLibrary stores designs in empire_N subfolder"""
+        tmpdir = setup_tmpdir
         # Create library for empire 0
-        library = DesignLibrary(self.tmpdir, empire_id=0)
+        library = DesignLibrary(tmpdir, empire_id=0)
 
         # Designs folder should include empire_0
-        self.assertIn("empire_0", library.designs_folder)
-        self.assertTrue(library.designs_folder.endswith(os.path.join("designs", "empire_0")))
+        assert "empire_0" in library.designs_folder
+        assert library.designs_folder.endswith(os.path.join("designs", "empire_0"))
 
-    def test_design_library_isolates_empires(self):
+    def test_design_library_isolates_empires(self, setup_tmpdir):
         """Empire 0 designs not visible to Empire 1 library"""
+        tmpdir = setup_tmpdir
         # Create per-empire design folders
-        designs_base = os.path.join(self.tmpdir, "designs")
+        designs_base = os.path.join(tmpdir, "designs")
         empire0_folder = os.path.join(designs_base, "empire_0")
         empire1_folder = os.path.join(designs_base, "empire_1")
         os.makedirs(empire0_folder)
@@ -374,31 +376,33 @@ class TestDesignLibraryPerEmpire(unittest.TestCase):
         save_json(os.path.join(empire0_folder, "e0_ship.json"), design)
 
         # Create libraries for each empire
-        lib0 = DesignLibrary(self.tmpdir, empire_id=0)
-        lib1 = DesignLibrary(self.tmpdir, empire_id=1)
+        lib0 = DesignLibrary(tmpdir, empire_id=0)
+        lib1 = DesignLibrary(tmpdir, empire_id=1)
 
         # Empire 0 should see the design
         designs0 = lib0.scan_designs()
-        self.assertEqual(len(designs0), 1)
-        self.assertEqual(designs0[0].name, "Empire0 Ship")
+        assert len(designs0) == 1
+        assert designs0[0].name == "Empire0 Ship"
 
         # Empire 1 should NOT see it
         designs1 = lib1.scan_designs()
-        self.assertEqual(len(designs1), 0)
+        assert len(designs1) == 0
 
-    def test_design_library_creates_empire_folder(self):
+    def test_design_library_creates_empire_folder(self, setup_tmpdir):
         """DesignLibrary creates empire folder if missing"""
+        tmpdir = setup_tmpdir
         # Don't pre-create any folders
-        library = DesignLibrary(self.tmpdir, empire_id=2)
+        library = DesignLibrary(tmpdir, empire_id=2)
 
         # Empire folder should exist now
-        expected_path = os.path.join(self.tmpdir, "designs", "empire_2")
-        self.assertTrue(os.path.exists(expected_path))
-        self.assertEqual(library.designs_folder, expected_path)
+        expected_path = os.path.join(tmpdir, "designs", "empire_2")
+        assert os.path.exists(expected_path)
+        assert library.designs_folder == expected_path
 
-    def test_design_library_saves_to_empire_folder(self):
+    def test_design_library_saves_to_empire_folder(self, setup_tmpdir):
         """Saving design goes to correct empire folder"""
-        library = DesignLibrary(self.tmpdir, empire_id=1)
+        tmpdir = setup_tmpdir
+        library = DesignLibrary(tmpdir, empire_id=1)
 
         # Create mock ship
         ship = MagicMock()
@@ -419,12 +423,8 @@ class TestDesignLibraryPerEmpire(unittest.TestCase):
         # Save design
         success, message = library.save_design(ship, "Test Ship", set())
 
-        self.assertTrue(success)
+        assert success
 
         # Verify file is in empire_1 folder
-        expected_file = os.path.join(self.tmpdir, "designs", "empire_1", "Test_Ship.json")
-        self.assertTrue(os.path.exists(expected_file))
-
-
-if __name__ == '__main__':
-    unittest.main()
+        expected_file = os.path.join(tmpdir, "designs", "empire_1", "Test_Ship.json")
+        assert os.path.exists(expected_file)

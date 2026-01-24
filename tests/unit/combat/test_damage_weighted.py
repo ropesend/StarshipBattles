@@ -1,10 +1,8 @@
-
-import unittest
 from unittest.mock import MagicMock, patch
 import pygame
-import random
 from game.simulation.entities.ship_combat import ShipCombatMixin
 from game.simulation.components.component import Component, LayerType  # Phase 7: Removed Bridge import
+
 
 class MockComponent(Component):
     def __init__(self, name, hp, max_hp):
@@ -24,11 +22,13 @@ class MockComponent(Component):
             self.current_hp = 0
             self.is_active = False
 
+
 class MockBridge(MockComponent):  # Phase 7: Changed from Bridge to MockComponent
     def __init__(self, name, hp, max_hp):
         super().__init__(name, hp, max_hp)
         self.id = "bridge"
         self.type_str = "Bridge"  # Set type_str for detection
+
 
 class MockShip(ShipCombatMixin):
     def __init__(self):
@@ -56,51 +56,49 @@ class MockShip(ShipCombatMixin):
         # Stub for testing
         pass
 
-class TestDamageWeighted(unittest.TestCase):
-    def setUp(self):
-        self.ship = MockShip()
-    
+
+class TestDamageWeighted:
     @patch('random.choices')
     def test_damage_distribution_flow(self, mock_choices):
         """Verify that damage sticks to the layer and iterates through components."""
+        ship = MockShip()
         c1 = MockComponent("Armor1", 10, 10)
         c2 = MockComponent("Armor2", 10, 10)
-        self.ship.layers[LayerType.ARMOR]['components'] = [c1, c2]
-        
+        ship.layers[LayerType.ARMOR]['components'] = [c1, c2]
+
         bridge = MockBridge("Bridge", 100, 100)
-        self.ship.layers[LayerType.CORE]['components'] = [bridge]
-        
+        ship.layers[LayerType.CORE]['components'] = [bridge]
+
         # Mock choices to return [c1] then [c2] then [bridge]
         mock_choices.side_effect = [[c1], [c2], [bridge]]
-        
+
         # 50 damage: 10 to C1, 10 to C2, 30 to Bridge
-        self.ship.take_damage(50)
-        
-        self.assertEqual(c1.current_hp, 0)
-        self.assertEqual(c2.current_hp, 0)
-        self.assertEqual(bridge.current_hp, 70)
+        ship.take_damage(50)
+
+        assert c1.current_hp == 0
+        assert c2.current_hp == 0
+        assert bridge.current_hp == 70
 
     def test_weighted_probability_exclusion(self):
         """Verify that components with 0 HP are excluded from target list."""
+        ship = MockShip()
         c1 = MockComponent("Broken", 0, 10)
         c2 = MockComponent("Healthy", 10, 10)
-        self.ship.layers[LayerType.ARMOR]['components'] = [c1, c2]
-        
-        self.ship.take_damage(5)
-        self.assertEqual(c1.current_hp, 0)
-        self.assertEqual(c2.current_hp, 5)
+        ship.layers[LayerType.ARMOR]['components'] = [c1, c2]
+
+        ship.take_damage(5)
+        assert c1.current_hp == 0
+        assert c2.current_hp == 5
 
     def test_bridge_destruction_kills_ship(self):
         """Verify that ship dies when bridge HP reaches 0."""
+        ship = MockShip()
         bridge = MockBridge("Bridge", 50, 50)
-        self.ship.layers[LayerType.CORE]['components'] = [bridge]
-        
-        # 100 damage: all to bridge
-        self.ship.take_damage(100)
-        
-        self.assertEqual(bridge.current_hp, 0)
-        self.assertEqual(bridge.current_hp, 0)
-        self.assertTrue(self.ship.is_alive) # Should be alive now (hardcoded logic removed)
+        ship.layers[LayerType.CORE]['components'] = [bridge]
 
-if __name__ == '__main__':
-    unittest.main()
+        # 100 damage: all to bridge
+        ship.take_damage(100)
+
+        assert bridge.current_hp == 0
+        assert bridge.current_hp == 0
+        assert ship.is_alive is True  # Should be alive now (hardcoded logic removed)

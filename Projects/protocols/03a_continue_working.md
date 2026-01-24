@@ -9,6 +9,23 @@
 
 ---
 
+## REQUIRED: Run Scripts Before and After
+
+**BEFORE STARTING WORK:**
+```bash
+python Projects/scripts/project_status.py PROJ-XX
+python Projects/scripts/current_task.py PROJ-XX
+```
+This tells you exactly where to start.
+
+**BEFORE STOPPING WORK:**
+```bash
+python Projects/scripts/validate_phase.py PROJ-XX [current_phase]
+```
+Only update Current State if validation PASSES. If it FAILS, fix the issues first.
+
+---
+
 ## Autonomous Loop
 
 ```
@@ -140,3 +157,5 @@ Avoid stopping:
 3. **Comprehensive handoff** - Current State must enable seamless continuation
 4. **Stop cleanly** - Better to stop early than corrupt the plan
 5. **No placeholders** - Don't leave TODO comments or incomplete code
+6. **Run validation** - Always run `validate_phase.py` before stopping
+7. **Check off tasks** - Mark subtasks complete AS you finish them, not in batches

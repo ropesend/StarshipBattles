@@ -1,5 +1,5 @@
 """Tests for SpriteManager class."""
-import unittest
+import pytest
 import sys
 import os
 import pygame
@@ -7,10 +7,11 @@ import pygame
 from game.ui.renderer.sprites import SpriteManager
 from tests.fixtures.paths import get_project_root, get_assets_dir
 
-class TestSprites(unittest.TestCase):
 
+class TestSprites:
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         # Initialize display for convert() calls
@@ -22,30 +23,27 @@ class TestSprites(unittest.TestCase):
         """Test loading sprites using the new directory method."""
         components_dir = str(get_assets_dir() / "Images" / "Components")
         if not os.path.exists(components_dir):
-            self.skipTest(f"Components directory not found at {components_dir}")
-            
+            pytest.skip(f"Components directory not found at {components_dir}")
+
         mgr = SpriteManager()
         # Initialize display for convert() calls in load_sprites
         if pygame.display.get_surface() is None:
              pygame.display.set_mode((1, 1), pygame.NOFRAME)
 
         mgr.load_sprites(self.base_path)
-        
+
         # Check that we loaded some sprites
         # In the real directory we saw 467 files, indices up to 234 approx?
         # Let's just check we have something at index 0
-        self.assertIsNotNone(mgr.get_sprite(0), "Should have loaded Bridge sprite at index 0")
-        self.assertIsNotNone(mgr.get_sprite(18), "Should have loaded Railgun sprite at index 18")
-        
+        assert mgr.get_sprite(0) is not None, "Should have loaded Bridge sprite at index 0"
+        assert mgr.get_sprite(18) is not None, "Should have loaded Railgun sprite at index 18"
+
         # Ensure we have a decent number of sprites
         count = sum(1 for s in mgr.sprites if s is not None)
-        self.assertGreater(count, 10, "Should have loaded multiple sprites")
+        assert count > 10, "Should have loaded multiple sprites"
 
     def test_atlas_fallback_logic(self):
         """Test that we can still conceptually load an atlas if we wanted to (via private method maybe? or just skip)."""
         # Since load_atlas is deprecated/empty, this test is less relevant unless we test the fallback path explicitly.
         # But we tested fallback logic with mocks in test_sprite_loading.py.
         pass
-
-if __name__ == '__main__':
-    unittest.main()

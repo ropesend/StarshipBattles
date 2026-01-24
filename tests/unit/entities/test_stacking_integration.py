@@ -3,16 +3,17 @@ Integration tests for modifier stacking behavior.
 Ensures identical components do NOT stack (MAX within stack_group),
 but dissimilar components DO stack (MULTIPLY across stack_groups).
 """
-import unittest
+import pytest
 
 from game.simulation.components.component import Component, LayerType
 from game.simulation.entities.ship import Ship
 
 
-class TestStackingIntegration(unittest.TestCase):
+class TestStackingIntegration:
     """Test that ship helper methods correctly use stack_group rules."""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser")
         # Mock layers
         self.ship.layers[LayerType.OUTER] = {
@@ -44,7 +45,7 @@ class TestStackingIntegration(unittest.TestCase):
         self.ship.add_component(c2, LayerType.OUTER)
 
         # Should be MAX(2.0, 2.0) = 2.0, NOT 2.0 + 2.0 = 4.0
-        self.assertAlmostEqual(self.ship.get_total_sensor_score(), 2.0)
+        assert self.ship.get_total_sensor_score() == pytest.approx(2.0)
 
     def test_get_total_sensor_score_different_value_sensors_take_max(self):
         """Sensors with different values in same stack_group take MAX."""
@@ -62,7 +63,7 @@ class TestStackingIntegration(unittest.TestCase):
         self.ship.add_component(self._make_comp(sensor2), LayerType.OUTER)
 
         # MAX(3.0, 1.5) = 3.0
-        self.assertAlmostEqual(self.ship.get_total_sensor_score(), 3.0)
+        assert self.ship.get_total_sensor_score() == pytest.approx(3.0)
 
     # =========================================================================
     # ToHitDefenseModifier (ECM) Tests
@@ -81,7 +82,7 @@ class TestStackingIntegration(unittest.TestCase):
         self.ship.add_component(c2, LayerType.OUTER)
 
         # Should be MAX(1.0, 1.0) = 1.0, NOT 1.0 + 1.0 = 2.0
-        self.assertAlmostEqual(self.ship.get_total_ecm_score(), 1.0)
+        assert self.ship.get_total_ecm_score() == pytest.approx(1.0)
 
     def test_different_defense_stack_groups_multiply(self):
         """ECM (stack_group: ECM) and Scattering Armor (stack_group: Scattering) should MULTIPLY."""
@@ -99,7 +100,7 @@ class TestStackingIntegration(unittest.TestCase):
         self.ship.add_component(self._make_comp(scattering_data), LayerType.ARMOR)
 
         # Different stack_groups: 2.0 * 1.5 = 3.0
-        self.assertAlmostEqual(self.ship.get_total_ecm_score(), 3.0)
+        assert self.ship.get_total_ecm_score() == pytest.approx(3.0)
 
     # =========================================================================
     # Integration: baseline_to_hit_offense
@@ -118,8 +119,4 @@ class TestStackingIntegration(unittest.TestCase):
         self.ship.add_component(c2, LayerType.OUTER)
 
         # Should be 2.0 (MAX), not 4.0 (SUM)
-        self.assertAlmostEqual(self.ship.baseline_to_hit_offense, 2.0)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert self.ship.baseline_to_hit_offense == pytest.approx(2.0)

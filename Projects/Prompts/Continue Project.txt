@@ -6,7 +6,7 @@ Continue working on project PROJ-XX.
    - `protocols/02_plan_protocol.md` (how to use the plan)
    - `protocols/03a_continue_working.md` (autonomous work loop)
 
-2. LOAD the project plan: `Projects/active_projects/PROJ-XX.md`
+2. LOAD the project plan: `Projects/active_projects/PROJ-XX/PROJ-XX.md`
 
 3. READ `## Current State` to understand where we left off.
 

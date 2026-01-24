@@ -1146,16 +1146,11 @@ class TestBugDocumentation:
             mock_reg.return_value = {'buggy_engine': buggy_engine}
             stats = ShipStatsService.calculate_stats(design_data, {})
 
-        # Empty string key might be created - document behavior
-        # Actually, looking at code: there's no check for empty resource in consumption
-        # So it WILL create an empty string key
-        # This test documents the actual behavior
-        if '' in stats['resource_consumption_per_hex']:
-            # Current behavior - empty key created
-            assert stats['resource_consumption_per_hex'][''] == 100
-        else:
-            # If fixed - empty key not created
-            assert True
+        # Empty string key will be created (current behavior - no validation)
+        # This test documents the actual behavior and verifies the value is correct
+        assert '' in stats['resource_consumption_per_hex'], \
+            "Empty string key created for empty resource type (current behavior)"
+        assert stats['resource_consumption_per_hex'][''] == 100
 
     def test_none_resource_type_handled_safely(self):
         """None as resource type should be handled without errors."""

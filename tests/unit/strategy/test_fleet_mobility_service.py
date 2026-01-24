@@ -4,11 +4,10 @@ Tests for FleetMobilityService.
 TDD Phase 2, Step 2.3: Tests for fleet speed calculation from strategic movement abilities.
 """
 
-import unittest
 from unittest.mock import MagicMock
 
 
-class TestFleetMobilityServiceShipSpeed(unittest.TestCase):
+class TestFleetMobilityServiceShipSpeed:
     """Tests for calculate_ship_speed() method."""
 
     def test_calculate_ship_speed_formula(self):
@@ -28,7 +27,7 @@ class TestFleetMobilityServiceShipSpeed(unittest.TestCase):
         speed = FleetMobilityService.calculate_ship_speed(ship_instance)
 
         expected = int((100 * K_STRATEGIC) / 1000)  # 2
-        self.assertEqual(speed, expected)
+        assert speed == expected
 
     def test_calculate_ship_speed_higher_movement(self):
         """Higher movement points should result in higher speed."""
@@ -46,7 +45,7 @@ class TestFleetMobilityServiceShipSpeed(unittest.TestCase):
         speed = FleetMobilityService.calculate_ship_speed(ship_instance)
 
         expected = int((300 * K_STRATEGIC) / 1000)  # 7
-        self.assertEqual(speed, expected)
+        assert speed == expected
 
     def test_calculate_ship_speed_clamped_to_max(self):
         """Ship speed should be clamped to maximum of 10 hexes/turn."""
@@ -63,7 +62,7 @@ class TestFleetMobilityServiceShipSpeed(unittest.TestCase):
 
         speed = FleetMobilityService.calculate_ship_speed(ship_instance)
 
-        self.assertEqual(speed, 10)  # Capped at maximum
+        assert speed == 10  # Capped at maximum
 
     def test_calculate_ship_speed_zero_for_fighters(self):
         """Fighters should have 0 strategic movement (carrier-based)."""
@@ -80,7 +79,7 @@ class TestFleetMobilityServiceShipSpeed(unittest.TestCase):
 
         speed = FleetMobilityService.calculate_ship_speed(ship_instance)
 
-        self.assertEqual(speed, 0)
+        assert speed == 0
 
     def test_calculate_ship_speed_zero_for_complexes(self):
         """Planetary Complexes should have 0 strategic movement."""
@@ -97,7 +96,7 @@ class TestFleetMobilityServiceShipSpeed(unittest.TestCase):
 
         speed = FleetMobilityService.calculate_ship_speed(ship_instance)
 
-        self.assertEqual(speed, 0)
+        assert speed == 0
 
     def test_calculate_ship_speed_zero_for_no_movement(self):
         """Ships with no strategic movement should return 0."""
@@ -113,7 +112,7 @@ class TestFleetMobilityServiceShipSpeed(unittest.TestCase):
 
         speed = FleetMobilityService.calculate_ship_speed(ship_instance)
 
-        self.assertEqual(speed, 0)
+        assert speed == 0
 
     def test_calculate_ship_speed_handles_missing_stats(self):
         """Should handle missing expected_stats gracefully."""
@@ -129,10 +128,10 @@ class TestFleetMobilityServiceShipSpeed(unittest.TestCase):
 
         speed = FleetMobilityService.calculate_ship_speed(ship_instance)
 
-        self.assertEqual(speed, 0)
+        assert speed == 0
 
 
-class TestFleetMobilityServiceFleetSpeed(unittest.TestCase):
+class TestFleetMobilityServiceFleetSpeed:
     """Tests for calculate_fleet_speed() method."""
 
     def test_calculate_fleet_speed_uses_slowest(self):
@@ -166,7 +165,7 @@ class TestFleetMobilityServiceFleetSpeed(unittest.TestCase):
 
         # Should be the slower ship's speed
         slow_speed = FleetMobilityService.calculate_ship_speed(slow_ship)
-        self.assertEqual(speed, float(slow_speed))
+        assert speed == float(slow_speed)
 
     def test_calculate_fleet_speed_single_ship(self):
         """Fleet with one ship should use that ship's speed."""
@@ -188,7 +187,7 @@ class TestFleetMobilityServiceFleetSpeed(unittest.TestCase):
         speed = FleetMobilityService.calculate_fleet_speed(fleet)
 
         expected = FleetMobilityService.calculate_ship_speed(ship)
-        self.assertEqual(speed, float(expected))
+        assert speed == float(expected)
 
     def test_calculate_fleet_speed_empty_fleet(self):
         """Empty fleet should return 0."""
@@ -200,7 +199,7 @@ class TestFleetMobilityServiceFleetSpeed(unittest.TestCase):
 
         speed = FleetMobilityService.calculate_fleet_speed(fleet)
 
-        self.assertEqual(speed, 0.0)
+        assert speed == 0.0
 
     def test_calculate_fleet_speed_excludes_destroyed(self):
         """Should exclude destroyed/derelict ships from speed calculation."""
@@ -231,7 +230,7 @@ class TestFleetMobilityServiceFleetSpeed(unittest.TestCase):
 
         # Should only consider the working ship
         expected = FleetMobilityService.calculate_ship_speed(working_ship)
-        self.assertEqual(speed, float(expected))
+        assert speed == float(expected)
 
     def test_recalculate_fleet_speed_updates_attribute(self):
         """recalculate_fleet_speed() should update fleet.speed attribute."""
@@ -254,8 +253,4 @@ class TestFleetMobilityServiceFleetSpeed(unittest.TestCase):
 
         # Check that fleet.speed was updated
         expected = float(FleetMobilityService.calculate_ship_speed(ship))
-        self.assertEqual(fleet.speed, expected)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert fleet.speed == expected

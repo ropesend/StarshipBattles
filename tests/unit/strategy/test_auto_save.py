@@ -1,10 +1,11 @@
 """
 Tests for auto-save functionality after turn processing.
 """
-import unittest
+import pytest
 import tempfile
 import shutil
 import os
+import time
 from unittest.mock import MagicMock, patch
 
 from game.strategy.engine.game_session import GameSession
@@ -42,37 +43,36 @@ class MockGameSession:
         }
 
 
-class TestAutoSave(unittest.TestCase):
+class TestAutoSave:
     """Tests for auto-save after turn processing."""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
         """Create temporary directory for tests."""
-        self.tmpdir = tempfile.mkdtemp()
-        self.original_cwd = os.getcwd()
-        os.chdir(self.tmpdir)
-
-    def tearDown(self):
-        """Clean up temporary directory."""
-        os.chdir(self.original_cwd)
-        shutil.rmtree(self.tmpdir)
+        tmpdir = tempfile.mkdtemp()
+        original_cwd = os.getcwd()
+        os.chdir(tmpdir)
+        yield tmpdir
+        os.chdir(original_cwd)
+        shutil.rmtree(tmpdir)
 
     def test_turn_processing_triggers_auto_save(self):
         """Processing turn automatically saves new turn file."""
         # Create initial save at turn 1
         session = MockGameSession(turn_number=1)
         success, _, save_path = SaveGameService.save_game(session, "AutoSaveTest")
-        self.assertTrue(success)
+        assert success
         session.save_path = save_path
 
         # Simulate turn processing: increment turn and save
         session.turn_number = 2
         success, message, _ = SaveGameService.save_game(session)
 
-        self.assertTrue(success)
+        assert success
 
         # Verify turn_2.json was created
         turn_file = os.path.join(save_path, "turns", "turn_2.json")
-        self.assertTrue(os.path.exists(turn_file), "turn_2.json should be created after auto-save")
+        assert os.path.exists(turn_file), "turn_2.json should be created after auto-save"
 
     def test_auto_save_increments_turn_number(self):
         """Auto-save after turn N creates turn_N+1.json."""
@@ -88,7 +88,7 @@ class TestAutoSave(unittest.TestCase):
         # Verify all turn files exist
         for turn in [1, 2, 3, 4]:
             turn_file = os.path.join(save_path, "turns", f"turn_{turn}.json")
-            self.assertTrue(os.path.exists(turn_file), f"turn_{turn}.json should exist")
+            assert os.path.exists(turn_file), f"turn_{turn}.json should exist"
 
     def test_auto_save_updates_metadata_latest_turn(self):
         """Auto-save updates metadata with latest turn number."""
@@ -106,7 +106,7 @@ class TestAutoSave(unittest.TestCase):
         metadata_path = os.path.join(save_path, "save_metadata.json")
         metadata = load_json(metadata_path)
 
-        self.assertEqual(metadata['latest_turn_number'], 5)
+        assert metadata['latest_turn_number'] == 5
 
     def test_auto_save_preserves_earlier_turns(self):
         """Auto-save does not overwrite earlier turn files."""
@@ -122,7 +122,6 @@ class TestAutoSave(unittest.TestCase):
         turn1_content = load_json(turn1_path)
 
         # Wait a tiny bit to ensure different mtime
-        import time
         time.sleep(0.01)
 
         # Process multiple turns
@@ -135,8 +134,8 @@ class TestAutoSave(unittest.TestCase):
         turn1_mtime_after = os.path.getmtime(turn1_path)
         turn1_content_after = load_json(turn1_path)
 
-        self.assertEqual(turn1_mtime, turn1_mtime_after, "turn_1.json should not be modified")
-        self.assertEqual(turn1_content['turn_number'], turn1_content_after['turn_number'])
+        assert turn1_mtime == turn1_mtime_after, "turn_1.json should not be modified"
+        assert turn1_content['turn_number'] == turn1_content_after['turn_number']
 
     def test_auto_save_requires_save_path(self):
         """Auto-save creates save folder if save_path is not set."""
@@ -145,24 +144,23 @@ class TestAutoSave(unittest.TestCase):
 
         success, message, save_path = SaveGameService.save_game(session, "NewAutoSave")
 
-        self.assertTrue(success)
-        self.assertIsNotNone(save_path)
-        self.assertTrue(os.path.exists(save_path))
+        assert success
+        assert save_path is not None
+        assert os.path.exists(save_path)
 
 
-class TestAutoSaveIntegration(unittest.TestCase):
+class TestAutoSaveIntegration:
     """Integration tests for auto-save with GameSession.process_turn()."""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
         """Create temporary directory for tests."""
-        self.tmpdir = tempfile.mkdtemp()
-        self.original_cwd = os.getcwd()
-        os.chdir(self.tmpdir)
-
-    def tearDown(self):
-        """Clean up temporary directory."""
-        os.chdir(self.original_cwd)
-        shutil.rmtree(self.tmpdir)
+        tmpdir = tempfile.mkdtemp()
+        original_cwd = os.getcwd()
+        os.chdir(tmpdir)
+        yield tmpdir
+        os.chdir(original_cwd)
+        shutil.rmtree(tmpdir)
 
     def test_game_session_turn_increments_on_process(self):
         """GameSession.process_turn() increments turn_number."""
@@ -177,7 +175,7 @@ class TestAutoSaveIntegration(unittest.TestCase):
         initial_turn = session.turn_number
         session.process_turn()
 
-        self.assertEqual(session.turn_number, initial_turn + 1)
+        assert session.turn_number == initial_turn + 1
 
     def test_save_after_process_turn_captures_new_turn(self):
         """Saving after process_turn() saves the incremented turn number."""
@@ -191,7 +189,7 @@ class TestAutoSaveIntegration(unittest.TestCase):
 
         # Initial save
         success, _, save_path = SaveGameService.save_game(session, "ProcessTurnTest")
-        self.assertTrue(success)
+        assert success
         session.save_path = save_path
 
         # Process turn (increments turn_number)
@@ -202,8 +200,4 @@ class TestAutoSaveIntegration(unittest.TestCase):
 
         # Verify turn file exists for new turn
         turn_file = os.path.join(save_path, "turns", f"turn_{session.turn_number}.json")
-        self.assertTrue(os.path.exists(turn_file))
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert os.path.exists(turn_file)

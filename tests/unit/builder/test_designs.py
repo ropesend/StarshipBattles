@@ -1,5 +1,5 @@
 """Tests for ship design factory functions."""
-import unittest
+import pytest
 import pygame
 
 from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
@@ -8,94 +8,90 @@ from game.simulation.designs import create_brick, create_interceptor
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_project_root, get_data_dir
 
-class TestDesignFactories(unittest.TestCase):
+
+class TestDesignFactories:
     """Test programmatic ship creation functions."""
 
-    def tearDown(self):
-        pygame.quit()
-        RegistryManager.instance().clear()
-
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_and_teardown(self):
         pygame.init()
         initialize_ship_data(str(get_project_root()))
         load_components(str(get_data_dir() / "components.json"))
-    
-    
+        yield
+        pygame.quit()
+        RegistryManager.instance().clear()
+
     def test_create_brick_returns_ship(self):
         """create_brick should return a valid Ship object."""
         ship = create_brick(100, 200)
-        
-        self.assertIsInstance(ship, Ship)
-        self.assertEqual(ship.name, "The Brick")
-        self.assertEqual(ship.position.x, 100)
-        self.assertEqual(ship.position.y, 200)
-    
+
+        assert isinstance(ship, Ship)
+        assert ship.name == "The Brick"
+        assert ship.position.x == 100
+        assert ship.position.y == 200
+
     def test_create_brick_has_bridge(self):
         """create_brick ship should have a bridge component."""
         ship = create_brick(0, 0)
-        
+
         core_components = ship.layers[LayerType.CORE]['components']
         has_bridge = any(c.type_str == 'Bridge' for c in core_components)
-        
-        self.assertTrue(has_bridge, "Brick should have a Bridge in CORE layer")
-    
+
+        assert has_bridge, "Brick should have a Bridge in CORE layer"
+
     def test_create_brick_has_engines(self):
         """create_brick ship should have engine components."""
         ship = create_brick(0, 0)
-        
+
         all_components = ship.get_all_components()
-        
+
         has_engine = any(c.has_ability('CombatPropulsion') for c in all_components)
-        self.assertTrue(has_engine, "Brick should have engines")
-    
+        assert has_engine, "Brick should have engines"
+
     def test_create_brick_has_armor(self):
         """create_brick ship should have armor plates."""
         ship = create_brick(0, 0)
-        
+
         armor_components = ship.layers[LayerType.ARMOR]['components']
-        self.assertGreater(len(armor_components), 0, "Brick should have armor")
-    
+        assert len(armor_components) > 0, "Brick should have armor"
+
     def test_create_interceptor_returns_ship(self):
         """create_interceptor should return a valid Ship object."""
         ship = create_interceptor(300, 400)
-        
-        self.assertIsInstance(ship, Ship)
-        self.assertEqual(ship.name, "The Interceptor")
-        self.assertEqual(ship.position.x, 300)
-        self.assertEqual(ship.position.y, 400)
-    
+
+        assert isinstance(ship, Ship)
+        assert ship.name == "The Interceptor"
+        assert ship.position.x == 300
+        assert ship.position.y == 400
+
     def test_create_interceptor_has_bridge(self):
         """create_interceptor ship should have a bridge component."""
         ship = create_interceptor(0, 0)
-        
+
         core_components = ship.layers[LayerType.CORE]['components']
         has_bridge = any(c.type_str == 'Bridge' for c in core_components)
-        
-        self.assertTrue(has_bridge, "Interceptor should have a Bridge in CORE layer")
-    
+
+        assert has_bridge, "Interceptor should have a Bridge in CORE layer"
+
     def test_create_interceptor_has_weapons(self):
         """create_interceptor ship should have weapons."""
         ship = create_interceptor(0, 0)
-        
+
         outer_components = ship.layers[LayerType.OUTER]['components']
         # Should have railguns in OUTER layer
         has_weapons = any(c.has_ability('WeaponAbility') for c in outer_components)
-        
-        self.assertTrue(has_weapons, "Interceptor should have weapons")
-    
+
+        assert has_weapons, "Interceptor should have weapons"
+
     def test_designs_can_recalculate_stats(self):
         """Design ships should be able to recalculate stats without error."""
         brick = create_brick(0, 0)
         interceptor = create_interceptor(0, 0)
-        
+
         # Should not raise any exceptions
         brick.recalculate_stats()
         interceptor.recalculate_stats()
-        
+
         # Should have positive mass after recalculating
-        self.assertGreater(brick.mass, 0)
-        self.assertGreater(interceptor.mass, 0)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert brick.mass > 0
+        assert interceptor.mass > 0

@@ -1,4 +1,4 @@
-import unittest
+import pytest
 from unittest.mock import MagicMock, patch
 import pygame
 import pygame_gui
@@ -8,31 +8,128 @@ from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component, ApplicationModifier
 from game.core.registry import RegistryManager
 
-class TestBuilderStructureFeatures(unittest.TestCase):
-    def setUp(self):
-        pygame.init()
-        pygame.display.set_mode((800, 600))
-        self.manager = pygame_gui.UIManager((800, 600))
 
-        # Patch _create_ui to avoid complex UI initialization
-        self.patcher_create_ui = patch('game.ui.screens.workshop_screen.DesignWorkshopGUI._create_ui')
-        self.mock_create_ui = self.patcher_create_ui.start()
+@pytest.fixture
+def pygame_manager():
+    pygame.init()
+    pygame.display.set_mode((800, 600))
+    manager = pygame_gui.UIManager((800, 600))
+    yield manager
+    pygame.quit()
+    RegistryManager.instance().clear()
 
-        # Patch internal managers
-        self.p1 = patch('game.ui.screens.workshop_screen.SpriteManager')
-        self.p2 = patch('game.ui.screens.workshop_screen.ShipThemeManager')
-        self.p1.start(); self.p2.start()
 
-        # Mock Ship and Components
-        self.ship = MagicMock(spec=Ship)
-        self.ship.layers = {
-            'core': {
-                'components': [],
-                'max_mass': 100
-            }
+@pytest.fixture
+def builder_setup():
+    pygame.init()
+    pygame.display.set_mode((800, 600))
+    manager = pygame_gui.UIManager((800, 600))
+
+    # Patch _create_ui to avoid complex UI initialization
+    patcher_create_ui = patch('game.ui.screens.workshop_screen.DesignWorkshopGUI._create_ui')
+    mock_create_ui = patcher_create_ui.start()
+
+    # Patch internal managers
+    p1 = patch('game.ui.screens.workshop_screen.SpriteManager')
+    p2 = patch('game.ui.screens.workshop_screen.ShipThemeManager')
+    p1.start()
+    p2.start()
+
+    # Mock Ship and Components
+    ship = MagicMock(spec=Ship)
+    ship.layers = {
+        'core': {
+            'components': [],
+            'max_mass': 100
         }
+    }
 
-        self.comp_data = {
+    comp_data = {
+        "id": "test_id",
+        "name": "Test Component",
+        "type": "core",
+        "mass": 10,
+        "hp": 100,
+        "damage": 0,
+        "modifiers": []
+    }
+    component = Component(comp_data)
+    component.mass = 10
+    component.name = "Test Component"
+
+    # Populate ship
+    ship.layers['core']['components'] = [component]
+
+    # Add ship helper methods that event_router now uses
+    def get_all_components():
+        result = []
+        for layer_data in ship.layers.values():
+            result.extend(layer_data['components'])
+        return result
+
+    def iter_components():
+        for layer_type, layer_data in ship.layers.items():
+            for comp in layer_data['components']:
+                yield layer_type, comp
+
+    def has_components():
+        for layer_data in ship.layers.values():
+            if layer_data['components']:
+                return True
+        return False
+
+    ship.get_all_components = get_all_components
+    ship.iter_components = iter_components
+    ship.has_components = has_components
+
+    # Create Builder GUI (_create_ui is mocked so panels won't be created)
+    builder_gui = BuilderSceneGUI(800, 600, None)
+
+    # Manually setup the mocks that _create_ui would have created
+    builder_gui.ui_manager = MagicMock()
+    builder_gui.left_panel = MagicMock()
+    builder_gui.right_panel = MagicMock()
+    builder_gui.layer_panel = MagicMock()
+    builder_gui.modifier_panel = MagicMock()
+    builder_gui.weapons_report_panel = MagicMock()
+    builder_gui.detail_panel = MagicMock()
+
+    builder_gui.ship = ship
+
+    # Ensure panel mocks return False by default for handle_event so logic flows through
+    builder_gui.left_panel.handle_event.return_value = False
+    builder_gui.modifier_panel.handle_event.return_value = False
+    builder_gui.layer_panel.handle_event.return_value = False
+
+    yield {
+        'manager': manager,
+        'builder_gui': builder_gui,
+        'ship': ship,
+        'component': component,
+        'comp_data': comp_data,
+        'patcher_create_ui': patcher_create_ui,
+        'p1': p1,
+        'p2': p2
+    }
+
+    # Stop patches
+    patcher_create_ui.stop()
+    p1.stop()
+    p2.stop()
+
+    pygame.quit()
+    RegistryManager.instance().clear()
+
+
+class TestBuilderStructureFeatures:
+    def test_individual_item_ui_elements(self, pygame_manager):
+        """Test that IndividualComponentItem has correct buttons and label style."""
+        manager = pygame_manager
+        container = manager.get_root_container()
+        sprite_mgr = MagicMock()
+        sprite_mgr.get_sprite.return_value = pygame.Surface((32, 32))
+
+        comp_data = {
             "id": "test_id",
             "name": "Test Component",
             "type": "core",
@@ -41,77 +138,15 @@ class TestBuilderStructureFeatures(unittest.TestCase):
             "damage": 0,
             "modifiers": []
         }
-        self.component = Component(self.comp_data)
-        self.component.mass = 10
-        self.component.name = "Test Component"
-
-        # Populate ship
-        self.ship.layers['core']['components'] = [self.component]
-
-        # Add ship helper methods that event_router now uses
-        def get_all_components():
-            result = []
-            for layer_data in self.ship.layers.values():
-                result.extend(layer_data['components'])
-            return result
-
-        def iter_components():
-            for layer_type, layer_data in self.ship.layers.items():
-                for comp in layer_data['components']:
-                    yield layer_type, comp
-
-        def has_components():
-            for layer_data in self.ship.layers.values():
-                if layer_data['components']:
-                    return True
-            return False
-
-        self.ship.get_all_components = get_all_components
-        self.ship.iter_components = iter_components
-        self.ship.has_components = has_components
-
-        # Create Builder GUI (_create_ui is mocked so panels won't be created)
-        self.builder_gui = BuilderSceneGUI(800, 600, None)
-
-        # Manually setup the mocks that _create_ui would have created
-        self.builder_gui.ui_manager = MagicMock()
-        self.builder_gui.left_panel = MagicMock()
-        self.builder_gui.right_panel = MagicMock()
-        self.builder_gui.layer_panel = MagicMock()
-        self.builder_gui.modifier_panel = MagicMock()
-        self.builder_gui.weapons_report_panel = MagicMock()
-        self.builder_gui.detail_panel = MagicMock()
-
-        self.builder_gui.ship = self.ship
-
-        # Ensure panel mocks return False by default for handle_event so logic flows through
-        self.builder_gui.left_panel.handle_event.return_value = False
-        self.builder_gui.modifier_panel.handle_event.return_value = False
-        self.builder_gui.layer_panel.handle_event.return_value = False
-
-        # Re-initialize real LayerPanel for testing its items if needed
-        # But mostly we test BuilderSceneGUI logic and Item classes separately
-
-    def tearDown(self):
-        # Stop patches
-        self.patcher_create_ui.stop()
-        self.p1.stop()
-        self.p2.stop()
-
-        pygame.quit()
-        RegistryManager.instance().clear()
-
-    def test_individual_item_ui_elements(self):
-        """Test that IndividualComponentItem has correct buttons and label style."""
-        container = self.manager.get_root_container()
-        sprite_mgr = MagicMock()
-        sprite_mgr.get_sprite.return_value = pygame.Surface((32, 32))
+        component = Component(comp_data)
+        component.mass = 10
+        component.name = "Test Component"
 
         # Mock Event Handler
         event_handler = MagicMock()
 
         item = IndividualComponentItem(
-            self.manager, container, self.component, 100, 0, 200, sprite_mgr,
+            manager, container, component, 100, 0, 200, sprite_mgr,
             event_handler, False
         )
 
@@ -120,69 +155,89 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         # In pygame_gui UIPanel has a panel_container attribute which is the UIContainer
         container_obj = item.panel.panel_container
         label = [c for c in container_obj.elements if isinstance(c, pygame_gui.elements.UILabel) and c.text == "Test Component"][0]
-        self.assertIn('#left_aligned_label', label.object_ids)
+        assert '#left_aligned_label' in label.object_ids
 
         # Check Buttons
         buttons = [c for c in container_obj.elements if isinstance(c, pygame_gui.elements.UIButton)]
         button_texts = [b.text for b in buttons]
-        self.assertIn('+', button_texts)
-        self.assertIn('-', button_texts)
+        assert '+' in button_texts
+        assert '-' in button_texts
 
-    def test_layer_item_ui_elements(self):
+    def test_layer_item_ui_elements(self, pygame_manager):
         """Test that LayerComponentItem has correct buttons and label style."""
-        container = self.manager.get_root_container()
+        manager = pygame_manager
+        container = manager.get_root_container()
         sprite_mgr = MagicMock()
         sprite_mgr.get_sprite.return_value = pygame.Surface((32, 32))
+
+        comp_data = {
+            "id": "test_id",
+            "name": "Test Component",
+            "type": "core",
+            "mass": 10,
+            "hp": 100,
+            "damage": 0,
+            "modifiers": []
+        }
+        component = Component(comp_data)
+        component.mass = 10
+        component.name = "Test Component"
 
         event_handler = MagicMock()
 
         item = LayerComponentItem(
-            self.manager, container, self.component, 1, 10, 10.0, False,
+            manager, container, component, 1, 10, 10.0, False,
             "key", False, 0, 200, sprite_mgr, event_handler
         )
 
         # Check Label
         container_obj = item.panel.panel_container
         label = [c for c in container_obj.elements if isinstance(c, pygame_gui.elements.UILabel) and c.text == "Test Component"][0]
-        self.assertIn('#left_aligned_label', label.object_ids)
+        assert '#left_aligned_label' in label.object_ids
 
         # Check Buttons
         buttons = [c for c in container_obj.elements if isinstance(c, pygame_gui.elements.UIButton)]
         button_texts = [b.text for b in buttons]
-        self.assertIn('+', button_texts)
-        self.assertIn('-', button_texts)
+        assert '+' in button_texts
+        assert '-' in button_texts
 
-    def test_multi_selection_logic(self):
+    def test_multi_selection_logic(self, builder_setup):
         """Test selecting multiple components and property propagation."""
-        c1 = Component(self.comp_data)
-        c2 = Component(self.comp_data)
-        c3 = Component(self.comp_data)
-        c1.id = "test_id" # Ensure they are same type
+        builder_gui = builder_setup['builder_gui']
+        comp_data = builder_setup['comp_data']
+
+        c1 = Component(comp_data)
+        c2 = Component(comp_data)
+        c3 = Component(comp_data)
+        c1.id = "test_id"  # Ensure they are same type
         c2.id = "test_id"
         c3.id = "test_id"
 
         # Select c1
-        self.builder_gui.on_selection_changed(c1, append=False)
-        self.assertEqual(len(self.builder_gui.selected_components), 1)
-        self.assertEqual(self.builder_gui.selected_components[0][2], c1)
+        builder_gui.on_selection_changed(c1, append=False)
+        assert len(builder_gui.selected_components) == 1
+        assert builder_gui.selected_components[0][2] == c1
 
         # Add c2
-        self.builder_gui.on_selection_changed(c2, append=True)
-        self.assertEqual(len(self.builder_gui.selected_components), 2)
+        builder_gui.on_selection_changed(c2, append=True)
+        assert len(builder_gui.selected_components) == 2
 
         # Add c3
-        self.builder_gui.on_selection_changed(c3, append=True)
-        self.assertEqual(len(self.builder_gui.selected_components), 3)
+        builder_gui.on_selection_changed(c3, append=True)
+        assert len(builder_gui.selected_components) == 3
 
         # Select c1 again (should replace if append=False)
-        self.builder_gui.on_selection_changed(c1, append=False)
-        self.assertEqual(len(self.builder_gui.selected_components), 1)
-        self.assertEqual(self.builder_gui.selected_components[0][2], c1)
+        builder_gui.on_selection_changed(c1, append=False)
+        assert len(builder_gui.selected_components) == 1
+        assert builder_gui.selected_components[0][2] == c1
 
-    def test_modifier_propagation(self):
+    def test_modifier_propagation(self, builder_setup):
         """Test that changing a modifier on one selected component updates others."""
-        c1 = Component(self.comp_data)
-        c2 = Component(self.comp_data)
+        builder_gui = builder_setup['builder_gui']
+        comp_data = builder_setup['comp_data']
+
+        c1 = Component(comp_data)
+        c2 = Component(comp_data)
         c1.id = "test_id"
         c2.id = "test_id"
 
@@ -198,51 +253,52 @@ class TestBuilderStructureFeatures(unittest.TestCase):
         c2.recalculate_stats = MagicMock()
 
         # Select both (c1 last so it is primary editing target)
-        self.builder_gui.on_selection_changed([c2, c1], append=False)
+        builder_gui.on_selection_changed([c2, c1], append=False)
 
         # Simulate modifier change trigger
         # We need to manually simulate what happens when UI updates modifier
         # Usually it updates self.selected_component object directly, then calls _on_modifier_change
 
         # Verify initial
-        self.assertEqual(c2.modifiers[0].value, 5)
+        assert c2.modifiers[0].value == 5
 
         # Change c1 mod (the primary selected)
         c1.modifiers[0].value = 20
 
         # Call propagation
-        self.builder_gui._on_modifier_change()
+        builder_gui._on_modifier_change()
 
         # Check c2 updated
-        self.assertEqual(len(c2.modifiers), 1)
-        self.assertEqual(c2.modifiers[0].value, 20)
+        assert len(c2.modifiers) == 1
+        assert c2.modifiers[0].value == 20
         c2.recalculate_stats.assert_called()
 
-    def test_add_remove_actions(self):
+    def test_add_remove_actions(self, builder_setup):
         """Test that add/remove actions call appropriate viewmodel methods."""
+        builder_gui = builder_setup['builder_gui']
+        component = builder_setup['component']
+        comp_data = builder_setup['comp_data']
+
         # Setup mock viewmodel to track calls
-        self.builder_gui.viewmodel.remove_component = MagicMock(return_value=MagicMock())
-        self.builder_gui.viewmodel.add_component_instance = MagicMock(return_value=True)
+        builder_gui.viewmodel.remove_component = MagicMock(return_value=MagicMock())
+        builder_gui.viewmodel.add_component_instance = MagicMock(return_value=True)
 
         # Simulate Remove Individual
-        comp = self.component
-        self.builder_gui.ship.layers['core']['components'] = [comp]
+        comp = component
+        builder_gui.ship.layers['core']['components'] = [comp]
 
         # Let's mock layer_panel.handle_event to return the action
         event = MagicMock()
-        self.builder_gui.layer_panel.handle_event.return_value = ('remove_individual', comp)
+        builder_gui.layer_panel.handle_event.return_value = ('remove_individual', comp)
 
-        self.builder_gui.handle_event(event)
-        self.builder_gui.viewmodel.remove_component.assert_called_with('core', 0)
+        builder_gui.handle_event(event)
+        builder_gui.viewmodel.remove_component.assert_called_with('core', 0)
 
         # Simulate Add Individual
-        self.builder_gui.layer_panel.handle_event.return_value = ('add_individual', comp)
+        builder_gui.layer_panel.handle_event.return_value = ('add_individual', comp)
 
         # Need to clone component
-        comp.clone = MagicMock(return_value=Component(self.comp_data))
+        comp.clone = MagicMock(return_value=Component(comp_data))
 
-        self.builder_gui.handle_event(event)
-        self.builder_gui.viewmodel.add_component_instance.assert_called()
-
-if __name__ == '__main__':
-    unittest.main()
+        builder_gui.handle_event(event)
+        builder_gui.viewmodel.add_component_instance.assert_called()

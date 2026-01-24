@@ -1,12 +1,11 @@
 """
 Tests for GameSession with multi-empire support
 """
-import unittest
 from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS
 
 
-class TestGameSessionMultiEmpire(unittest.TestCase):
+class TestGameSessionMultiEmpire:
     """Tests for GameSession multi-empire support"""
 
     def test_game_session_creates_n_empires(self):
@@ -22,10 +21,10 @@ class TestGameSessionMultiEmpire(unittest.TestCase):
 
         session = GameSession(config=config)
 
-        self.assertEqual(len(session.empires), 3)
-        self.assertEqual(session.empires[0].name, "Empire A")
-        self.assertEqual(session.empires[1].name, "Empire B")
-        self.assertEqual(session.empires[2].name, "Empire C")
+        assert len(session.empires) == 3
+        assert session.empires[0].name == "Empire A"
+        assert session.empires[1].name == "Empire B"
+        assert session.empires[2].name == "Empire C"
 
     def test_game_session_assigns_empire_ids_sequentially(self):
         """Empire IDs are 0, 1, 2, 3 based on player order"""
@@ -40,7 +39,7 @@ class TestGameSessionMultiEmpire(unittest.TestCase):
         session = GameSession(config=config)
 
         for i, empire in enumerate(session.empires):
-            self.assertEqual(empire.id, i)
+            assert empire.id == i
 
     def test_game_session_sets_human_player_ids(self):
         """human_player_ids reflects is_human flag from PlayerConfig"""
@@ -55,10 +54,10 @@ class TestGameSessionMultiEmpire(unittest.TestCase):
 
         session = GameSession(config=config)
 
-        self.assertEqual(len(session.human_player_ids), 2)
-        self.assertIn(0, session.human_player_ids)  # Human 1
-        self.assertNotIn(1, session.human_player_ids)  # AI 1
-        self.assertIn(2, session.human_player_ids)  # Human 2
+        assert len(session.human_player_ids) == 2
+        assert 0 in session.human_player_ids  # Human 1
+        assert 1 not in session.human_player_ids  # AI 1
+        assert 2 in session.human_player_ids  # Human 2
 
     def test_game_session_initial_scenario_distributes_colonies(self):
         """Each empire gets a starting colony in different system"""
@@ -74,7 +73,7 @@ class TestGameSessionMultiEmpire(unittest.TestCase):
 
         # Each empire should have at least one colony
         for empire in session.empires:
-            self.assertGreater(len(empire.colonies), 0, f"Empire {empire.name} has no colonies")
+            assert len(empire.colonies) > 0, f"Empire {empire.name} has no colonies"
 
         # Colonies should be in different systems
         colony_systems = set()
@@ -86,7 +85,7 @@ class TestGameSessionMultiEmpire(unittest.TestCase):
                         colony_systems.add(system)
                         break
 
-        self.assertEqual(len(colony_systems), 2, "Empires should start in different systems")
+        assert len(colony_systems) == 2, "Empires should start in different systems"
 
     def test_game_session_3_player_setup(self):
         """3-player game creates exactly 3 empires with colonies"""
@@ -101,11 +100,11 @@ class TestGameSessionMultiEmpire(unittest.TestCase):
 
         session = GameSession(config=config)
 
-        self.assertEqual(len(session.empires), 3)
+        assert len(session.empires) == 3
 
         # All should have colonies
         for empire in session.empires:
-            self.assertGreater(len(empire.colonies), 0)
+            assert len(empire.colonies) > 0
 
     def test_game_session_4_player_setup(self):
         """4-player game creates exactly 4 empires with colonies"""
@@ -119,11 +118,11 @@ class TestGameSessionMultiEmpire(unittest.TestCase):
 
         session = GameSession(config=config)
 
-        self.assertEqual(len(session.empires), 4)
+        assert len(session.empires) == 4
 
         # All should have colonies
         for empire in session.empires:
-            self.assertGreater(len(empire.colonies), 0)
+            assert len(empire.colonies) > 0
 
     def test_game_session_empire_themes_match_config(self):
         """Empire themes are set from PlayerConfig"""
@@ -137,8 +136,8 @@ class TestGameSessionMultiEmpire(unittest.TestCase):
 
         session = GameSession(config=config)
 
-        self.assertEqual(session.empires[0].empire_theme_id, "Federation")
-        self.assertEqual(session.empires[1].empire_theme_id, "Atlantians")
+        assert session.empires[0].empire_theme_id == "Federation"
+        assert session.empires[1].empire_theme_id == "Atlantians"
 
     def test_game_session_empire_colors_match_config(self):
         """Empire colors are set from PlayerConfig"""
@@ -152,8 +151,8 @@ class TestGameSessionMultiEmpire(unittest.TestCase):
 
         session = GameSession(config=config)
 
-        self.assertEqual(session.empires[0].color, (255, 0, 0))
-        self.assertEqual(session.empires[1].color, (0, 255, 0))
+        assert session.empires[0].color == (255, 0, 0)
+        assert session.empires[1].color == (0, 255, 0)
 
     def test_game_session_serialization_preserves_empires(self):
         """GameSession serialization preserves all empire data"""
@@ -172,11 +171,11 @@ class TestGameSessionMultiEmpire(unittest.TestCase):
         data = original.to_dict()
         restored = GameSession.from_dict(data)
 
-        self.assertEqual(len(restored.empires), 3)
-        self.assertEqual(restored.turn_number, 5)
-        self.assertEqual(restored.empires[0].name, "Empire A")
-        self.assertEqual(restored.empires[1].name, "Empire B")
-        self.assertEqual(restored.empires[2].name, "Empire C")
+        assert len(restored.empires) == 3
+        assert restored.turn_number == 5
+        assert restored.empires[0].name == "Empire A"
+        assert restored.empires[1].name == "Empire B"
+        assert restored.empires[2].name == "Empire C"
 
     def test_game_session_1_player_setup(self):
         """1-player game creates single empire"""
@@ -189,11 +188,11 @@ class TestGameSessionMultiEmpire(unittest.TestCase):
 
         session = GameSession(config=config)
 
-        self.assertEqual(len(session.empires), 1)
-        self.assertGreater(len(session.empires[0].colonies), 0)
+        assert len(session.empires) == 1
+        assert len(session.empires[0].colonies) > 0
 
 
-class TestGameSessionCompatibility(unittest.TestCase):
+class TestGameSessionCompatibility:
     """Tests for compatibility references"""
 
     def test_player_empire_reference(self):
@@ -208,7 +207,7 @@ class TestGameSessionCompatibility(unittest.TestCase):
 
         session = GameSession(config=config)
 
-        self.assertIs(session.player_empire, session.empires[0])
+        assert session.player_empire is session.empires[0]
 
     def test_enemy_empire_reference(self):
         """enemy_empire convenience reference points to second empire"""
@@ -222,8 +221,4 @@ class TestGameSessionCompatibility(unittest.TestCase):
 
         session = GameSession(config=config)
 
-        self.assertIs(session.enemy_empire, session.empires[1])
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert session.enemy_empire is session.empires[1]

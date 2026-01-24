@@ -6,25 +6,25 @@ This test validates that the screenshot system can:
 2. Capture a specific sub-window surface
 3. Capture the full screen including all UI layers
 """
-import unittest
-from unittest.mock import MagicMock, patch, PropertyMock
+import pytest
+from unittest.mock import MagicMock, patch
 import pygame
 
 from game.core.screenshot_manager import ScreenshotManager
 
 
-class TestScreenshotStrategyLayerSupport(unittest.TestCase):
+class TestScreenshotStrategyLayerSupport:
     """Tests for screenshot system integration with strategy layer."""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         if not pygame.get_init():
             pygame.init()
         ScreenshotManager.reset()
-        self.manager = ScreenshotManager.instance()
-        self.manager.enabled = True
-        self.manager.base_dir = "test_screenshots"
-
-    def tearDown(self):
+        manager = ScreenshotManager.instance()
+        manager.enabled = True
+        manager.base_dir = "test_screenshots"
+        yield manager
         patch.stopall()
 
     # =========================================================================
@@ -32,13 +32,14 @@ class TestScreenshotStrategyLayerSupport(unittest.TestCase):
     # =========================================================================
     @patch('game.core.screenshot_manager.pygame.image.save')
     @patch('game.core.screenshot_manager.pygame.display.get_surface')
-    def test_capture_galaxy_viewport_region(self, mock_get_surface, mock_save):
+    def test_capture_galaxy_viewport_region(self, mock_get_surface, mock_save, setup):
         """
         The screenshot system should be able to capture just the galaxy viewport,
         excluding the sidebar and top bar UI elements.
 
         Expected: capture() with a viewport_rect region saves only that portion.
         """
+        manager = setup
         # Arrange: Mock a 1280x720 display
         mock_surface = MagicMock()
         mock_surface.get_rect.return_value = pygame.Rect(0, 0, 1280, 720)
@@ -54,45 +55,46 @@ class TestScreenshotStrategyLayerSupport(unittest.TestCase):
         viewport_rect = pygame.Rect(0, TOP_BAR_HEIGHT, 1280 - SIDEBAR_WIDTH, 720 - TOP_BAR_HEIGHT)
 
         # Act
-        self.manager.capture(region=viewport_rect, label="galaxy_viewport")
+        manager.capture(region=viewport_rect, label="galaxy_viewport")
 
         # Assert
         mock_surface.subsurface.assert_called()
         mock_save.assert_called_once()
         args, _ = mock_save.call_args
         saved_surface, filepath = args
-        self.assertEqual(saved_surface, mock_subsurface)
-        self.assertIn("galaxy_viewport", filepath)
+        assert saved_surface == mock_subsurface
+        assert "galaxy_viewport" in filepath
 
     # =========================================================================
     # Test 2: Capture Arbitrary Sub-Window Surface
     # =========================================================================
     @patch('game.core.screenshot_manager.pygame.image.save')
-    def test_capture_subwindow_surface(self, mock_save):
+    def test_capture_subwindow_surface(self, mock_save, setup):
         """
         The screenshot system should be able to capture a sub-window's surface
         directly when passed as a parameter.
 
         This supports capturing modal dialogs, build queue screens, etc.
         """
+        manager = setup
         # Arrange: Create a mock sub-window surface (e.g., 400x500 FleetOrdersWindow)
         subwindow_surface = MagicMock()
         subwindow_surface.get_rect.return_value = pygame.Rect(0, 0, 400, 500)
 
         # Act
-        self.manager.capture(surface=subwindow_surface, label="fleet_orders_window")
+        manager.capture(surface=subwindow_surface, label="fleet_orders_window")
 
         # Assert
         mock_save.assert_called_once()
         args, _ = mock_save.call_args
         saved_surface, filepath = args
-        self.assertEqual(saved_surface, subwindow_surface)
-        self.assertIn("fleet_orders_window", filepath)
+        assert saved_surface == subwindow_surface
+        assert "fleet_orders_window" in filepath
 
     # =========================================================================
     # Test 3: capture_strategy_layer() Method (NEW FEATURE NEEDED)
     # =========================================================================
-    def test_capture_strategy_layer_method_exists(self):
+    def test_capture_strategy_layer_method_exists(self, setup):
         """
         The ScreenshotManager should have a capture_strategy_layer() method
         that understands how to capture the strategy scene with proper layering.
@@ -102,24 +104,24 @@ class TestScreenshotStrategyLayerSupport(unittest.TestCase):
         - include_ui: Whether to include UI panels (default True)
         - include_subwindows: Whether to include modal windows (default True)
         """
+        manager = setup
         # Assert the method exists
-        self.assertTrue(
-            hasattr(self.manager, 'capture_strategy_layer'),
+        assert hasattr(manager, 'capture_strategy_layer'), \
             "ScreenshotManager should have a capture_strategy_layer() method"
-        )
 
     # =========================================================================
     # Test 4: capture_strategy_layer() Captures Correct Layers
     # =========================================================================
     @patch('game.core.screenshot_manager.pygame.image.save')
-    def test_capture_strategy_layer_renders_all_layers(self, mock_save):
+    def test_capture_strategy_layer_renders_all_layers(self, mock_save, setup):
         """
         capture_strategy_layer() should render the scene to a temporary surface
         and capture it with all requested layers.
         """
+        manager = setup
         # Skip if method doesn't exist yet (Phase 1 - this should FAIL)
-        if not hasattr(self.manager, 'capture_strategy_layer'):
-            self.skipTest("capture_strategy_layer() not implemented yet")
+        if not hasattr(manager, 'capture_strategy_layer'):
+            pytest.skip("capture_strategy_layer() not implemented yet")
 
         # Arrange: Mock a StrategyScene
         mock_scene = MagicMock()
@@ -127,26 +129,27 @@ class TestScreenshotStrategyLayerSupport(unittest.TestCase):
         mock_scene.screen_height = 720
 
         # Act
-        self.manager.capture_strategy_layer(mock_scene, label="full_strategy")
+        manager.capture_strategy_layer(mock_scene, label="full_strategy")
 
         # Assert
         mock_save.assert_called_once()
         args, _ = mock_save.call_args
         _, filepath = args
-        self.assertIn("full_strategy", filepath)
+        assert "full_strategy" in filepath
 
     # =========================================================================
     # Test 5: Viewport-Only Capture via capture_strategy_layer()
     # =========================================================================
     @patch('game.core.screenshot_manager.pygame.image.save')
-    def test_capture_strategy_layer_viewport_only(self, mock_save):
+    def test_capture_strategy_layer_viewport_only(self, mock_save, setup):
         """
         capture_strategy_layer() with include_ui=False should capture only
         the galaxy viewport without sidebar/top bar UI.
         """
+        manager = setup
         # Skip if method doesn't exist yet
-        if not hasattr(self.manager, 'capture_strategy_layer'):
-            self.skipTest("capture_strategy_layer() not implemented yet")
+        if not hasattr(manager, 'capture_strategy_layer'):
+            pytest.skip("capture_strategy_layer() not implemented yet")
 
         # Arrange
         mock_scene = MagicMock()
@@ -156,7 +159,7 @@ class TestScreenshotStrategyLayerSupport(unittest.TestCase):
         mock_scene.TOP_BAR_HEIGHT = 40
 
         # Act
-        self.manager.capture_strategy_layer(mock_scene, include_ui=False, label="viewport_only")
+        manager.capture_strategy_layer(mock_scene, include_ui=False, label="viewport_only")
 
         # Assert
         mock_save.assert_called_once()
@@ -164,10 +167,10 @@ class TestScreenshotStrategyLayerSupport(unittest.TestCase):
         saved_surface, filepath = args
 
         # The saved surface should be the viewport size, not full screen
-        self.assertIn("viewport_only", filepath)
+        assert "viewport_only" in filepath
 
 
-class TestScreenshotInputHandler(unittest.TestCase):
+class TestScreenshotInputHandler:
     """Tests for screenshot hotkeys in strategy input handler."""
 
     def test_input_handler_has_screenshot_methods(self):
@@ -186,8 +189,8 @@ class TestScreenshotInputHandler(unittest.TestCase):
         handler = InputHandler(mock_scene)
 
         # Verify screenshot methods exist
-        self.assertTrue(hasattr(handler, '_take_screenshot_full'))
-        self.assertTrue(hasattr(handler, '_take_screenshot_viewport'))
+        assert hasattr(handler, '_take_screenshot_full')
+        assert hasattr(handler, '_take_screenshot_viewport')
 
     @patch('game.ui.screens.strategy_input_handler.ScreenshotManager')
     def test_f12_triggers_full_screenshot(self, mock_sm_class):
@@ -208,7 +211,7 @@ class TestScreenshotInputHandler(unittest.TestCase):
 
         mock_sm.capture_strategy_layer.assert_called_once()
         args, kwargs = mock_sm.capture_strategy_layer.call_args
-        self.assertEqual(kwargs.get('include_ui'), True)
+        assert kwargs.get('include_ui') == True
 
     @patch('game.ui.screens.strategy_input_handler.ScreenshotManager')
     def test_f11_triggers_viewport_screenshot(self, mock_sm_class):
@@ -229,10 +232,10 @@ class TestScreenshotInputHandler(unittest.TestCase):
 
         mock_sm.capture_strategy_layer.assert_called_once()
         args, kwargs = mock_sm.capture_strategy_layer.call_args
-        self.assertEqual(kwargs.get('include_ui'), False)
+        assert kwargs.get('include_ui') == False
 
 
-class TestBuildQueueScreenshotSupport(unittest.TestCase):
+class TestBuildQueueScreenshotSupport:
     """Tests for screenshot support in BuildQueueScreen."""
 
     def test_build_queue_has_screenshot_handling(self):
@@ -244,13 +247,11 @@ class TestBuildQueueScreenshotSupport(unittest.TestCase):
         from game.ui.screens.build_queue_screen import BuildQueueScreen
 
         # Check that handle_event method exists
-        self.assertTrue(hasattr(BuildQueueScreen, 'handle_event'))
+        assert hasattr(BuildQueueScreen, 'handle_event')
 
         # Check that screenshot methods exist
-        self.assertTrue(
-            hasattr(BuildQueueScreen, '_take_screenshot'),
+        assert hasattr(BuildQueueScreen, '_take_screenshot'), \
             "BuildQueueScreen should have _take_screenshot method"
-        )
 
     @patch('game.core.screenshot_manager.pygame.image.save')
     def test_build_queue_f12_triggers_screenshot(self, mock_save):
@@ -258,7 +259,6 @@ class TestBuildQueueScreenshotSupport(unittest.TestCase):
         Pressing F12 while BuildQueueScreen is open should take a screenshot.
         """
         from game.ui.screens.build_queue_screen import BuildQueueScreen
-        from game.core.screenshot_manager import ScreenshotManager
 
         # Mock objects
         mock_manager = MagicMock()
@@ -279,7 +279,7 @@ class TestBuildQueueScreenshotSupport(unittest.TestCase):
 
             # Create instance - will need heavy mocking
             # For now, just verify the method exists and is callable
-            self.assertTrue(hasattr(BuildQueueScreen, '_take_screenshot'))
+            assert hasattr(BuildQueueScreen, '_take_screenshot')
 
     @patch('game.ui.screens.build_queue_screen.ScreenshotManager')
     def test_build_queue_f12_event_calls_take_screenshot(self, mock_sm_class):
@@ -338,7 +338,3 @@ class TestBuildQueueScreenshotSupport(unittest.TestCase):
             mock_sm_class.instance.assert_called()
             # Verify capture was called
             mock_sm.capture.assert_called_once_with(label="build_queue")
-
-
-if __name__ == '__main__':
-    unittest.main()

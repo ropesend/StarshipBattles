@@ -329,11 +329,16 @@ class ShipInstance:
 
         Args:
             resource_type: Resource type to consume
-            amount: Amount to consume
+            amount: Amount to consume (must be >= 0)
 
         Returns:
-            True if resource was available and consumed, False if insufficient.
+            True if resource was available and consumed, False if insufficient
+            or if amount is negative.
         """
+        # Reject negative amounts - cannot "consume" a negative amount
+        if amount < 0:
+            return False
+
         max_val = self.get_resource_capacity(resource_type)
         current = self.resource_levels.get(resource_type, max_val)
 

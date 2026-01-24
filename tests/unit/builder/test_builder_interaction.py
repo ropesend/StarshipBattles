@@ -1,18 +1,19 @@
-import unittest
+import pytest
 from unittest.mock import MagicMock
 import pygame
 from ui.builder.drop_target import DropTarget
 from ui.builder.interaction_controller import InteractionController
+
 
 class MockDropTarget(DropTarget):
     def __init__(self):
         self.accepted = False
         self.last_pos = None
         self.last_comp = None
-        
+
     def can_accept_drop(self, pos):
         return pos[0] > 100 # Accept if x > 100
-        
+
     def accept_drop(self, pos, component, count=1):
         if self.can_accept_drop(pos):
             self.accepted = True
@@ -21,42 +22,48 @@ class MockDropTarget(DropTarget):
             return True
         return False
 
-class TestBuilderInteraction(unittest.TestCase):
-    def setUp(self):
-        pygame.init()
-        self.builder = MagicMock()
-        self.builder.detail_panel.rect = pygame.Rect(0, 0, 0, 0) # Mock rect
-        self.builder.left_panel.get_add_count.return_value = 1
-        self.view = MagicMock()
-        self.view.rect = pygame.Rect(0, 0, 100, 100)
-        
-        self.controller = InteractionController(self.builder, self.view)
-        
-    def tearDown(self):
-        pygame.quit()
-        
-    def test_drop_delegation(self):
+
+@pytest.fixture
+def pygame_init():
+    pygame.init()
+    yield
+    pygame.quit()
+
+
+@pytest.fixture
+def interaction_setup(pygame_init):
+    builder = MagicMock()
+    builder.detail_panel.rect = pygame.Rect(0, 0, 0, 0)  # Mock rect
+    builder.left_panel.get_add_count.return_value = 1
+    view = MagicMock()
+    view.rect = pygame.Rect(0, 0, 100, 100)
+
+    controller = InteractionController(builder, view)
+    return controller
+
+
+class TestBuilderInteraction:
+    def test_drop_delegation(self, interaction_setup):
+        controller = interaction_setup
         target = MockDropTarget()
-        self.controller.register_drop_target(target)
-        
+        controller.register_drop_target(target)
+
         # Simulate Drop at (150, 150) - Should accept
         comp = MagicMock()
-        self.controller.dragged_item = comp
-        self.controller._handle_drop((150, 150))
-        
-        self.assertTrue(target.accepted)
-        self.assertEqual(target.last_comp, comp)
-        
-    def test_drop_rejection(self):
+        controller.dragged_item = comp
+        controller._handle_drop((150, 150))
+
+        assert target.accepted is True
+        assert target.last_comp == comp
+
+    def test_drop_rejection(self, interaction_setup):
+        controller = interaction_setup
         target = MockDropTarget()
-        self.controller.register_drop_target(target)
-        
+        controller.register_drop_target(target)
+
         # Simulate Drop at (50, 50) - Should reject (x < 100)
         comp = MagicMock()
-        self.controller.dragged_item = comp
-        self.controller._handle_drop((50, 50))
-        
-        self.assertFalse(target.accepted)
+        controller.dragged_item = comp
+        controller._handle_drop((50, 50))
 
-if __name__ == '__main__':
-    unittest.main()
+        assert target.accepted is False

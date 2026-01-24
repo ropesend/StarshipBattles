@@ -13,6 +13,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
+| 2026-01-23 | Test Coverage Review | full-codebase-coverage-gaps | In Progress | [2026-01-23_test-coverage_full-codebase-coverage-gaps](results/2026-01-23_test-coverage_full-codebase-coverage-gaps/) |
 
 ---
 

@@ -4,11 +4,10 @@ BUG-17 Reproduction Test: Build Queue drag/drop not visually obvious.
 Rev 2: The drag preview should use an icon/portrait that follows the cursor.
 The icon should be clearly visible and indicate what item is being dragged.
 """
-import unittest
 import pygame
 
 
-class TestDragPreviewIcon(unittest.TestCase):
+class TestDragPreviewIcon:
     """Tests for icon-based drag preview in build queue."""
 
     def test_dragged_item_stores_portrait(self):
@@ -26,8 +25,8 @@ class TestDragPreviewIcon(unittest.TestCase):
         source = inspect.getsource(build_queue_screen.BuildQueueScreen.handle_event)
 
         # The fix should store portrait in dragged_item
-        self.assertIn("portrait", source.lower(),
-                      "handle_event should store portrait in dragged_item during drag start")
+        assert "portrait" in source.lower(), \
+            "handle_event should store portrait in dragged_item during drag start"
 
     def test_draw_renders_icon_at_cursor(self):
         """
@@ -43,8 +42,8 @@ class TestDragPreviewIcon(unittest.TestCase):
         source = inspect.getsource(build_queue_screen.BuildQueueScreen.draw)
 
         # The draw method should blit the portrait/icon
-        self.assertIn("portrait", source.lower(),
-                      "Draw method should render portrait icon during drag")
+        assert "portrait" in source.lower(), \
+            "Draw method should render portrait icon during drag"
 
     def test_icon_size_appropriate(self):
         """
@@ -57,9 +56,5 @@ class TestDragPreviewIcon(unittest.TestCase):
         # Expected drag icon size (implementation detail)
         DRAG_ICON_SIZE = 48
 
-        self.assertGreaterEqual(DRAG_ICON_SIZE, 32, "Icon should be at least 32px")
-        self.assertLessEqual(DRAG_ICON_SIZE, 64, "Icon should not exceed 64px")
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert DRAG_ICON_SIZE >= 32, "Icon should be at least 32px"
+        assert DRAG_ICON_SIZE <= 64, "Icon should not exceed 64px"
