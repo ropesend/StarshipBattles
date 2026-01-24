@@ -7,11 +7,11 @@
 ## 2. Bug Queue
 | ID | Date Found | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
-| BUG-35 | 2026-01-23 | Strategy view smaller planets too compacted | Awaiting Confirmation | [BUG-35.md](active_bugs/BUG-35.md) |
-| BUG-37 | 2026-01-23 | Load Design Screen obsolete filter not working | Awaiting Confirmation | [BUG-37.md](active_bugs/BUG-37.md) |
-| BUG-38 | 2026-01-23 | Load Design Screen needs portrait/top-down views | Awaiting Confirmation | [BUG-38.md](active_bugs/BUG-38.md) |
-| BUG-42 | 2026-01-23 | Design Workshop remnants visible after exit | Awaiting Confirmation | [BUG-42.md](active_bugs/BUG-42.md) |
-| BUG-46 | 2026-01-23 | Fleet Report ship top-down image too small | Awaiting Confirmation | [BUG-46.md](active_bugs/BUG-46.md) |
+| BUG-35 | 2026-01-23 | Strategy view smaller planets too compacted | In-Progress | [BUG-35.md](active_bugs/BUG-35.md) |
+| BUG-37 | 2026-01-23 | Load Design Screen obsolete filter not working | In-Progress | [BUG-37.md](active_bugs/BUG-37.md) |
+| BUG-38 | 2026-01-23 | Load Design Screen needs portrait/top-down views | In-Progress | [BUG-38.md](active_bugs/BUG-38.md) |
+| BUG-42 | 2026-01-23 | Design Workshop remnants visible after exit | In-Progress | [BUG-42.md](active_bugs/BUG-42.md) |
+| BUG-46 | 2026-01-23 | Fleet Report ship top-down image too small | In-Progress | [BUG-46.md](active_bugs/BUG-46.md) |
 
 ## 3. Current Focus: BUG-45
 **Status:** Awaiting Confirmation - Fixes applied for warp navigation logic issues
