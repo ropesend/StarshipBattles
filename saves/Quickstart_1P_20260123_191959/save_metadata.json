@@ -1,0 +1,13 @@
+{
+    "version": "2.0.0",
+    "timestamp": "2026-01-23T20:30:17.877682",
+    "player_name": "TestEmp1",
+    "empire_count": 1,
+    "empire_names": [
+        "TestEmp1"
+    ],
+    "latest_turn_number": 11,
+    "turn_number": 11,
+    "galaxy_radius": 3000,
+    "system_count": 15
+}

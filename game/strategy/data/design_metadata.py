@@ -83,8 +83,11 @@ class DesignMetadata:
         name = data.get("name", "Unnamed")
         ship_class = data.get("ship_class", "Unknown")
         vehicle_type = data.get("vehicle_type", "Ship")
-        mass = data.get("mass", 0.0)
         theme_id = data.get("theme_id", "")
+
+        # Mass is stored in expected_stats (saved designs) or top-level (legacy)
+        expected_stats = data.get("expected_stats", {})
+        mass = expected_stats.get("mass", data.get("mass", 0.0))
 
         # Calculate combat power (simplified metric)
         combat_power = cls._calculate_combat_power(data)

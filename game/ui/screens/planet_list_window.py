@@ -35,10 +35,13 @@ class PlanetListWindow(UIWindow):
         self.filter_name = ""
         self.filter_types = {'Terran': True, 'Gas': True, 'Ice': True, 'Desert': True, 'Moon': True}
         self.filter_owner = {'Player': True, 'Enemy': True, 'Unowned': True}
+
+        # Compute dynamic filter ranges from actual planet data
+        self._planet_ranges = self._compute_planet_ranges()
         self.filter_ranges = {
-            'gravity': [0.0, 10.0],   # Min/Max g
-            'temp': [0, 2000],       # Min/Max K
-            'mass': [0.0, 500.0]    # Min/Max Earths
+            'gravity': [self._planet_ranges['gravity'][0], self._planet_ranges['gravity'][1]],
+            'temp': [self._planet_ranges['temp'][0], self._planet_ranges['temp'][1]],
+            'mass': [self._planet_ranges['mass'][0], self._planet_ranges['mass'][1]]
         }
         
         # Sort State - default sort by owner name as per BUG-23
@@ -176,10 +179,58 @@ class PlanetListWindow(UIWindow):
                 q_str = f"{qty/1000:.0f}k"
             else:
                 q_str = str(qty)
-                
+
             qual = r['quality']
             return f"{q_str} (Q{qual:.0f})"
         return "-"
+
+    def _compute_planet_ranges(self):
+        """Compute min/max ranges for filter sliders from actual planet data."""
+        m_earth = 5.97e24
+
+        # Default fallbacks if no planets exist
+        ranges = {
+            'gravity': (0.0, 10.0),
+            'temp': (0, 2000),
+            'mass': (0.0, 500.0)
+        }
+
+        if not self.all_planets:
+            return ranges
+
+        gravities = []
+        temps = []
+        masses = []
+
+        for p in self.all_planets:
+            # Gravity in g (Earth = 9.81 m/s^2)
+            if hasattr(p, 'surface_gravity'):
+                gravities.append(p.surface_gravity / 9.81)
+            # Temperature in Kelvin
+            if hasattr(p, 'surface_temperature'):
+                temps.append(p.surface_temperature)
+            # Mass in Earth masses
+            if hasattr(p, 'mass'):
+                masses.append(p.mass / m_earth)
+
+        # Compute ranges with small padding
+        if gravities:
+            g_min, g_max = min(gravities), max(gravities)
+            # Add 5% padding and round nicely
+            g_range = g_max - g_min if g_max > g_min else 1.0
+            ranges['gravity'] = (max(0.0, g_min - g_range * 0.05), g_max + g_range * 0.05)
+
+        if temps:
+            t_min, t_max = min(temps), max(temps)
+            t_range = t_max - t_min if t_max > t_min else 100
+            ranges['temp'] = (max(0, int(t_min - t_range * 0.05)), int(t_max + t_range * 0.05))
+
+        if masses:
+            m_min, m_max = min(masses), max(masses)
+            m_range = m_max - m_min if m_max > m_min else 1.0
+            ranges['mass'] = (max(0.0, m_min - m_range * 0.05), m_max + m_range * 0.05)
+
+        return ranges
 
     def _init_sidebar(self):
         """Initialize Filter and Config controls."""
@@ -321,10 +372,14 @@ class PlanetListWindow(UIWindow):
                 'limits': (min_limit, max_limit)
             }
 
-        add_range("Gravity (g)", 'gravity', 0.0, 10.0)
-        add_range("Temp (K)", 'temp', 0, 2000)
-        add_range("Mass (Earths)", 'mass', 0.0, 500.0) # Expanded for giants
-        # Let's cap mass slider at 500 for now.
+        # Use dynamic ranges computed from actual planet data
+        grav_range = self._planet_ranges['gravity']
+        temp_range = self._planet_ranges['temp']
+        mass_range = self._planet_ranges['mass']
+
+        add_range("Gravity (g)", 'gravity', grav_range[0], grav_range[1])
+        add_range("Temp (K)", 'temp', temp_range[0], temp_range[1])
+        add_range("Mass (Earths)", 'mass', mass_range[0], mass_range[1])
         
         # Button: Apply Filters
         self.btn_apply = UIButton(
@@ -564,10 +619,10 @@ class PlanetListWindow(UIWindow):
                 # Optimization: Most planets have images.
                 
                 if col['id'] == 'icon':
-                    # Place holder image
-                    img = UIImage(relative_rect=pygame.Rect(5, 5, 40, 40), 
-                                  image_surface=pygame.Surface((40,40)), 
-                                  manager=self.ui_manager, 
+                    # Place holder image - use x_off for correct column position
+                    img = UIImage(relative_rect=pygame.Rect(x_off + 5, 5, 40, 40),
+                                  image_surface=pygame.Surface((40,40)),
+                                  manager=self.ui_manager,
                                   container=row_panel)
                     widgets.append({'type': 'image', 'el': img, 'col': col})
                 else:

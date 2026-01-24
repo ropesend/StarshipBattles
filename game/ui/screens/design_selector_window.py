@@ -5,11 +5,12 @@ This module provides the DesignSelectorWindow class for browsing the design
 library in integrated mode. It supports filtering by class, type, and obsolete
 status, as well as text search.
 """
+import os
 import pygame
 import pygame_gui
 from pygame_gui.elements import (
     UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer,
-    UITextEntryLine, UIDropDownMenu
+    UITextEntryLine, UIDropDownMenu, UIImage
 )
 from typing import Optional, Callable, List
 from game.strategy.systems.design_library import DesignLibrary
@@ -82,7 +83,7 @@ class DesignSelectorWindow(UIWindow):
         # Title
         UILabel(
             relative_rect=pygame.Rect(10, y_offset, self.sidebar_width - 20, 30),
-            text="<b>Filters</b>",
+            text="Filters",
             manager=self.ui_manager,
             container=self.sidebar_panel
         )
@@ -280,7 +281,8 @@ class DesignSelectorWindow(UIWindow):
 
         # Create rows for each design
         y_offset = 10
-        row_width = self.list_container.get_container().get_rect().width - 20
+        # Use main_panel width as stable reference (not scrolling container which shrinks)
+        row_width = self.main_panel.get_container().get_rect().width - 30
 
         for design in self.filtered_designs:
             row = self._create_design_row(design, y_offset, row_width)
@@ -310,10 +312,11 @@ class DesignSelectorWindow(UIWindow):
             object_id=f"#design_row_{design.design_id}"
         )
 
-        # Icon placeholder (future: actual ship sprite)
-        UILabel(
+        # Portrait thumbnail
+        portrait_surface = self._load_portrait_thumbnail(design, 50)
+        UIImage(
             relative_rect=pygame.Rect(5, 5, 50, 50),
-            text="🚀",  # Emoji placeholder
+            image_surface=portrait_surface,
             manager=self.ui_manager,
             container=row
         )
@@ -325,7 +328,7 @@ class DesignSelectorWindow(UIWindow):
 
         UILabel(
             relative_rect=pygame.Rect(65, 5, 200, 25),
-            text=f"<b>{name_text}</b>",
+            text=name_text,
             manager=self.ui_manager,
             container=row
         )
@@ -367,6 +370,69 @@ class DesignSelectorWindow(UIWindow):
         select_btn.design_id = design.design_id
 
         return row
+
+    def _load_portrait_thumbnail(self, design: DesignMetadata, size: int = 50) -> pygame.Surface:
+        """
+        Load a portrait thumbnail for the design.
+
+        Args:
+            design: Design metadata
+            size: Thumbnail size (square)
+
+        Returns:
+            pygame.Surface with the portrait or a placeholder
+        """
+        theme = design.theme_id or "Federation"
+        ship_class = design.ship_class or "Unknown"
+
+        # Normalize class name for filename
+        class_clean = ship_class.replace(" ", "_").replace("-", "_")
+        filename = f"{class_clean}_Portrait.jpg"
+
+        # Try multiple portrait paths
+        portrait_paths = [
+            os.path.join("assets", "ShipThemes", theme, "Portraits", filename),
+            os.path.join("assets", "ShipThemes", theme, "Portraits", f"{ship_class}_Portrait.jpg"),
+            os.path.join("assets", "Images", "Default_Ship_Portrait.png")
+        ]
+
+        for path in portrait_paths:
+            if os.path.exists(path):
+                try:
+                    loaded_img = pygame.image.load(path)
+                    return pygame.transform.smoothscale(loaded_img, (size, size))
+                except Exception:
+                    continue
+
+        # Fallback: Create placeholder with gradient
+        surface = pygame.Surface((size, size))
+
+        # Color based on vehicle type
+        type_colors = {
+            "Ship": (60, 80, 120),
+            "Fighter": (80, 100, 60),
+            "Satellite": (100, 80, 100),
+            "Planetary Complex": (90, 70, 50)
+        }
+        base_color = type_colors.get(design.vehicle_type, (80, 80, 80))
+
+        # Gradient fill
+        for y in range(size):
+            fade = 1.0 - (y / size) * 0.5
+            color = tuple(int(c * fade) for c in base_color)
+            pygame.draw.line(surface, color, (0, y), (size, y))
+
+        # Add class initial
+        font = pygame.font.SysFont("arial", int(size * 0.5), bold=True)
+        initial = ship_class[0] if ship_class else "?"
+        text = font.render(initial, True, (200, 200, 200))
+        text_rect = text.get_rect(center=(size // 2, size // 2))
+        surface.blit(text, text_rect)
+
+        # Border
+        pygame.draw.rect(surface, (100, 100, 100), (0, 0, size, size), 1)
+
+        return surface
 
     def process_event(self, event: pygame.event.Event) -> bool:
         """

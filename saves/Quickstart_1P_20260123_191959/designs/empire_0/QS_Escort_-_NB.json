@@ -1,0 +1,137 @@
+{
+    "name": "QS Escort - NB",
+    "ship_class": "Escort",
+    "vehicle_type": "Ship",
+    "theme_id": "Federation",
+    "team_id": 0,
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "ai_strategy": "standard_ranged",
+    "layers": {
+        "CORE": [
+            {
+                "id": "bridge",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "OUTER": [
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "warp_drive_light",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "ARMOR": []
+    },
+    "resources": {
+        "fuel": 50000.0,
+        "energy": 2000.0,
+        "ammo": 0.0
+    },
+    "expected_stats": {
+        "max_hp": 740,
+        "max_fuel": 50000.0,
+        "max_energy": 0.0,
+        "max_ammo": 0.0,
+        "max_speed": 12.5,
+        "acceleration_rate": 4.166666666666667,
+        "turn_speed": 0.0,
+        "total_thrust": 150.0,
+        "strategic_movement": 100.0,
+        "mass": 300.0,
+        "armor_hp_pool": 0,
+        "warp_max_tonnage": 2000.0,
+        "warp_energy_cost": 0.0,
+        "strategic_fuel_per_hex": 100.0
+    },
+    "_metadata": {
+        "is_obsolete": false,
+        "times_built": 1,
+        "created_date": "2026-01-23T20:02:33.372670",
+        "last_modified": "2026-01-23T20:02:33.372670"
+    }
+}

@@ -132,6 +132,7 @@ def find_hybrid_path(galaxy, start_hex, end_hex, fleet=None):
     can_use_warp = True
     if fleet is not None and hasattr(fleet, 'can_use_warp'):
         can_use_warp = fleet.can_use_warp()
+        log_debug(f"find_hybrid_path: fleet={fleet.id}, can_use_warp={can_use_warp}")
 
     # 1. Identify Start/End Systems
     # If in deep space, find NEAREST system to enter/exit the network.
@@ -284,7 +285,8 @@ def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
         target_hex = pt['hex']
         
         # Calculate REAL path length using hybrid pathfinding
-        path_to_target = find_hybrid_path(galaxy, chaser_fleet.location, target_hex)
+        # Pass chaser_fleet to respect warp capability (BUG-45 fix)
+        path_to_target = find_hybrid_path(galaxy, chaser_fleet.location, target_hex, fleet=chaser_fleet)
         
         if not path_to_target:
             log_debug(f"  [{i}] {target_hex} @ T{target_turn}: UNREACHABLE")
@@ -328,7 +330,7 @@ def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
         log_debug(f"    Target at hex during turn {best_target_turn}")
         
         # Cross-verification: simulate chaser path to verify
-        chaser_path = find_hybrid_path(galaxy, chaser_fleet.location, result)
+        chaser_path = find_hybrid_path(galaxy, chaser_fleet.location, result, fleet=chaser_fleet)
         if chaser_path:
             log_debug("--- CROSS-VERIFICATION ---")
             chaser_path_len = len(chaser_path) - 1

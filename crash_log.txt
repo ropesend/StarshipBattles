@@ -1,16 +1,28 @@
 Traceback (most recent call last):
-  File "C:\Dev\Starship Battles\game\app.py", line 715, in main
+  File "C:\Developer\StarshipBattles\game\app.py", line 719, in main
     game.run()
-  File "C:\Dev\Starship Battles\game\app.py", line 448, in run
-    self._update_and_draw(frame_time, events)
-  File "C:\Dev\Starship Battles\game\app.py", line 606, in _update_and_draw
-    self.strategy_scene.draw(self.screen)
-  File "C:\Dev\Starship Battles\game\ui\screens\strategy_scene.py", line 146, in draw
-    self._renderer.draw(screen)
-  File "C:\Dev\Starship Battles\game\ui\screens\strategy_renderer.py", line 91, in draw
-    self._draw_move_preview(screen)
-  File "C:\Dev\Starship Battles\game\ui\screens\strategy_renderer.py", line 114, in _draw_move_preview
-    fx, fy = hex_to_pixel(start_hex, self.HEX_SIZE)
-  File "C:\Dev\Starship Battles\game\strategy\data\hex_math.py", line 63, in hex_to_pixel
-    q = hex_coord.q
-AttributeError: 'NoneType' object has no attribute 'q'
+  File "C:\Developer\StarshipBattles\game\app.py", line 450, in run
+    self._handle_normal_events(events)
+  File "C:\Developer\StarshipBattles\game\app.py", line 494, in _handle_normal_events
+    self._forward_event_to_scene(event)
+  File "C:\Developer\StarshipBattles\game\app.py", line 517, in _forward_event_to_scene
+    self.builder_scene.handle_event(event)
+  File "C:\Developer\StarshipBattles\game\ui\screens\workshop_screen.py", line 392, in handle_event
+    return self.event_router.handle_event(event)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Developer\StarshipBattles\game\ui\screens\workshop_event_router.py", line 76, in handle_event
+    return self._handle_button_pressed(event)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Developer\StarshipBattles\game\ui\screens\workshop_event_router.py", line 284, in _handle_button_pressed
+    gui._load_ship()
+  File "C:\Developer\StarshipBattles\game\core\profiling.py", line 153, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Developer\StarshipBattles\game\ui\screens\workshop_screen.py", line 775, in _load_ship
+    selector = DesignSelectorWindow(
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Developer\StarshipBattles\game\ui\screens\design_selector_window.py", line 62, in __init__
+    self._create_sidebar()
+  File "C:\Developer\StarshipBattles\game\ui\screens\design_selector_window.py", line 84, in _create_sidebar
+    UILabel(
+TypeError: UILabel.__init__() got an unexpected keyword argument 'html_text'

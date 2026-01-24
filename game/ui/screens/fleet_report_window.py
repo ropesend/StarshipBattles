@@ -67,7 +67,7 @@ class FleetReportWindow(UIWindow):
         # ID, Width, Title, Visible
         self.columns = [
             {'id': 'portrait', 'width': 44, 'title': '', 'type': 'image', 'visible': True},
-            {'id': 'topdown', 'width': 44, 'title': '', 'type': 'image', 'visible': True},
+            {'id': 'topdown', 'width': 60, 'title': '', 'type': 'image', 'visible': True},  # Larger for top-down view
             {'id': 'serial', 'width': 130, 'title': 'Serial ID', 'visible': True},
             {'id': 'design', 'width': 100, 'title': 'Design', 'visible': True},
             {'id': 'name', 'width': 120, 'title': 'Name', 'visible': True},
@@ -394,34 +394,76 @@ class FleetReportWindow(UIWindow):
         )
 
     def _rebuild_headers(self):
-        """Build column header buttons."""
+        """Build column header buttons with reorder arrows."""
         # Clear existing headers
         if hasattr(self, 'header_widgets'):
             for widget in self.header_widgets:
                 widget.kill()
         self.header_widgets = []
 
-        x = 0
-        for col in self.columns:
-            if not col.get('visible', True):
-                continue
+        # Get visible columns with their indices
+        visible_cols = [(i, col) for i, col in enumerate(self.columns) if col.get('visible', True)]
+        arrow_w = 20
 
+        x = 0
+        for vis_idx, (col_idx, col) in enumerate(visible_cols):
             width = col['width']
+            title_w = width - (arrow_w * 2)
+
+            # Left Arrow (can move left if not first visible column)
+            if vis_idx > 0:
+                btn_l = UIButton(
+                    relative_rect=pygame.Rect(x, 0, arrow_w, self.header_height),
+                    text="<",
+                    manager=self.ui_manager,
+                    container=self.header_container
+                )
+                btn_l.col_ref = col
+                btn_l.direction = -1
+                self.header_widgets.append(btn_l)
 
             # Sort indicator
             sort_indicator = ""
             if col['id'] == self.sort_column_id:
                 sort_indicator = " ▼" if self.sort_descending else " ▲"
 
+            # Title button (sortable)
             btn = UIButton(
-                relative_rect=pygame.Rect(x, 0, width, self.header_height),
+                relative_rect=pygame.Rect(x + arrow_w, 0, title_w, self.header_height),
                 text=col['title'] + sort_indicator,
                 manager=self.ui_manager,
                 container=self.header_container,
                 object_id=f"#header_{col['id']}"
             )
+            btn.sort_col_ref = col
             self.header_widgets.append(btn)
+
+            # Right Arrow (can move right if not last visible column)
+            if vis_idx < len(visible_cols) - 1:
+                btn_r = UIButton(
+                    relative_rect=pygame.Rect(x + width - arrow_w, 0, arrow_w, self.header_height),
+                    text=">",
+                    manager=self.ui_manager,
+                    container=self.header_container
+                )
+                btn_r.col_ref = col
+                btn_r.direction = 1
+                self.header_widgets.append(btn_r)
+
             x += width
+
+    def _swap_columns(self, col, direction):
+        """Swap a column with its neighbor in the given direction."""
+        idx = self.columns.index(col)
+        new_idx = idx + direction
+
+        if 0 <= new_idx < len(self.columns):
+            # Swap in the columns list
+            self.columns[idx], self.columns[new_idx] = self.columns[new_idx], self.columns[idx]
+            # Rebuild UI
+            self._rebuild_headers()
+            self._rebuild_row_pool()
+            self.refresh_list()
 
     def _rebuild_row_pool(self):
         """Build the row pool for virtual scrolling."""
@@ -561,13 +603,15 @@ class FleetReportWindow(UIWindow):
 
         # Get image from theme manager
         theme_mgr = ShipThemeManager.instance()
-        target_size = (40, self.row_height - 4)  # Small icon size
 
         if image_type == 'portrait':
+            target_size = (40, self.row_height - 4)  # Standard portrait size
             raw_surf = theme_mgr.get_portrait_image(theme_id, ship_class)
         elif image_type == 'topdown':
+            target_size = (56, self.row_height - 4)  # Larger for top-down view
             raw_surf = theme_mgr.get_image(theme_id, ship_class)
         else:
+            target_size = (40, self.row_height - 4)
             raw_surf = None
 
         if raw_surf:
@@ -816,6 +860,24 @@ class FleetReportWindow(UIWindow):
         for col_id, btn in self.column_buttons.items():
             if btn.check_pressed():
                 self._toggle_column(col_id)
+
+        # Handle header arrows and sort clicks
+        if hasattr(self, 'header_widgets'):
+            for el in self.header_widgets:
+                if isinstance(el, UIButton) and el.check_pressed():
+                    if hasattr(el, 'col_ref') and hasattr(el, 'direction'):
+                        # Move Column
+                        self._swap_columns(el.col_ref, el.direction)
+                    elif hasattr(el, 'sort_col_ref'):
+                        # Sort Column
+                        col = el.sort_col_ref
+                        if self.sort_column_id == col['id']:
+                            self.sort_descending = not self.sort_descending
+                        else:
+                            self.sort_column_id = col['id']
+                            self.sort_descending = False
+                        self._rebuild_headers()
+                        self.refresh_list()
 
     def _toggle_filter(self, filter_id: str):
         """Toggle a filter state and update UI."""

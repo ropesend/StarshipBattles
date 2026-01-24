@@ -359,12 +359,16 @@ class StrategyRenderer:
                 if smaller_count == 1:
                     smaller_angles = [0]  # Right of largest
                 elif smaller_count == 2:
-                    smaller_angles = [30, -30]  # 30° above and below horizontal
+                    smaller_angles = [35, -35]  # 35° above and below horizontal
                 elif smaller_count == 3:
-                    smaller_angles = [15, 0, -45]  # 15° up, horizontal, 45° down
+                    smaller_angles = [40, 0, -40]  # 40° up, horizontal, 40° down
+                elif smaller_count == 4:
+                    smaller_angles = [50, 20, -20, -50]  # Even spread
+                elif smaller_count == 5:
+                    smaller_angles = [55, 27, 0, -27, -55]  # Even spread
                 else:
-                    # More planets: spread them from 45° to -60°
-                    smaller_angles = [45 - i * (105 / max(1, smaller_count - 1)) for i in range(smaller_count)]
+                    # 6+ planets: spread evenly from 60° to -70° (130° arc)
+                    smaller_angles = [60 - i * (130 / max(1, smaller_count - 1)) for i in range(smaller_count)]
 
                 for i, p in enumerate(planets):
                     rel_scale = p.radius / largest.radius
@@ -465,14 +469,14 @@ class StrategyRenderer:
                 emp_assets = self.empire_assets.get(owner_emp.id)
                 if emp_assets and 'colony' in emp_assets:
                     flag_img = emp_assets['colony']
+                    # Preserve original aspect ratio
+                    orig_w, orig_h = flag_img.get_width(), flag_img.get_height()
                     f_w = max(10, int(size * 1.5))
-                    f_h = int(f_w * 0.66)
+                    f_h = int(f_w * orig_h / orig_w) if orig_w > 0 else f_w
 
                     scaled_flag = pygame.transform.smoothscale(flag_img, (f_w, f_h))
                     flag_rect = scaled_flag.get_rect(bottomleft=marker_pos)
                     screen.blit(scaled_flag, flag_rect)
-
-                    pygame.draw.rect(screen, (255, 255, 255), flag_rect, 1)
                 else:
                     pygame.draw.circle(screen, owner_emp.color, marker_pos, max(3, int(size / 3)))
                     pygame.draw.circle(screen, (255, 255, 255), marker_pos, max(3, int(size / 3)) + 1, 1)

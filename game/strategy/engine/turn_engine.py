@@ -295,10 +295,17 @@ class TurnEngine:
 
             # Check and consume warp resources if this is a warp jump
             if is_warp:
+                # Check warp CAPABILITY first (BUG-45: must verify immediately before jump)
+                if not fleet.can_use_warp():
+                    log_debug(f"Fleet {fleet.id} warp blocked - no warp capability")
+                    log_warning(f"Fleet {fleet.id} cannot warp - no warp capability")
+                    fleet.clear_orders()
+                    continue
                 if not fleet.has_resources_for_warp():
                     log_warning(f"Fleet {fleet.id} cannot warp - insufficient resources")
                     fleet.clear_orders()
                     continue
+                log_debug(f"Fleet {fleet.id} executing warp jump to {next_hex}")
                 fleet.consume_warp_resources()
 
             # Consume movement resources for this hex (data-driven)

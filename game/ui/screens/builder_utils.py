@@ -12,7 +12,7 @@ from dataclasses import dataclass
 class PanelWidths:
     """Fixed panel widths (in pixels)."""
     component_palette: int = 400   # Left panel - component selection
-    layer_panel: int = 400         # Layer/structure view
+    layer_panel: int = 500         # Layer/structure view (25% wider for cost columns)
     right_panel: int = 750         # Ship stats and portrait
     detail_panel: int = 500        # Component detail overlay
 
@@ -96,21 +96,21 @@ def calculate_schematic_rect(screen_width: int, screen_height: int):
 def calculate_dynamic_layer_width(screen_width: int) -> int:
     """
     Calculate a responsive layer panel width based on available space.
-    
+
     For very wide screens (>1920px), the layer panel can grow slightly.
     For narrower screens, it maintains minimum usability.
-    
+
     Args:
         screen_width: Total screen width
-        
+
     Returns:
         Dynamic layer panel width
     """
     center = calculate_center_width(screen_width)
-    
-    # Layer panel takes 30% of center, capped between 300-500px
-    dynamic_width = int(center * 0.3)
-    return max(300, min(500, dynamic_width))
+
+    # Layer panel takes 37.5% of center, capped between 375-625px (25% wider than original)
+    dynamic_width = int(center * 0.375)
+    return max(375, min(625, dynamic_width))
 
 
 def calculate_bottom_panel_height(screen_height: int) -> int:

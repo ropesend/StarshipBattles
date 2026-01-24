@@ -151,6 +151,10 @@ class Game:
 
     def on_builder_return(self, custom_ship=None):
         """Return from design workshop to caller or main menu."""
+        # Clean up workshop UI elements before switching state
+        if hasattr(self, 'builder_scene') and hasattr(self.builder_scene, 'cleanup'):
+            self.builder_scene.cleanup()
+
         if self.builder_return_state == STRATEGY:
             self.state = STRATEGY
             if hasattr(self.strategy_scene, 'handle_resize'):

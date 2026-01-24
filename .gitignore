@@ -14,9 +14,5 @@ venv/
 
 /component_presets.json
 battle.log
-<<<<<<< HEAD
 battle_log.txt
-=======
->>>>>>> 448ab2463f8162485f4fea01e70c8b049c829eef
-combat_lab.log
 combat_lab.log

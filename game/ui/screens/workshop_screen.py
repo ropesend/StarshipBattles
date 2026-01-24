@@ -926,3 +926,14 @@ class DesignWorkshopGUI:
             log_error(f"Failed to prompt for design name: {e}")
             return default_name
 
+    def cleanup(self):
+        """
+        Clean up all UI elements when exiting the workshop.
+
+        This must be called when transitioning away from the workshop to prevent
+        UI remnants from appearing in other screens.
+        """
+        # Clear the UI manager to remove all pygame_gui elements
+        if hasattr(self, 'ui_manager') and self.ui_manager:
+            self.ui_manager.clear_and_reset()
+

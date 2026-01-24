@@ -273,6 +273,110 @@ class InputHandler:
             self.input_mode = 'SELECT'
         self.scene.on_ui_selection(fleet)
 
+    def _hit_test_planets(self, mx, my, system):
+        """
+        Hit-test click against expanded planet positions when zoomed in.
+
+        Args:
+            mx, my: Screen coordinates of click
+            system: StarSystem to check planets in
+
+        Returns:
+            Planet if clicked, None otherwise
+        """
+        from game.strategy.data.hex_math import hex_to_pixel
+
+        # Group planets by hex (same as renderer)
+        hex_groups = {}
+        for p in system.planets:
+            key = (p.location.q, p.location.r)
+            if key not in hex_groups:
+                hex_groups[key] = []
+            hex_groups[key].append(p)
+
+        camera = self.scene.camera
+        hex_size = self.scene.HEX_SIZE
+
+        # Same expansion parameters as renderer
+        EXPAND_START = 1.5
+        EXPAND_END = 2.0
+        expansion_t = max(0.0, min(1.0, (camera.zoom - EXPAND_START) / (EXPAND_END - EXPAND_START)))
+
+        hex_px_radius = hex_size * camera.zoom
+
+        sys_hx, sys_hy = hex_to_pixel(system.global_location, hex_size)
+        sys_world_pos = pygame.math.Vector2(sys_hx, sys_hy)
+
+        for key, planets in hex_groups.items():
+            coord = planets[0].location
+            px, py = hex_to_pixel(coord, hex_size)
+            hex_center_world = pygame.math.Vector2(sys_world_pos.x + px, sys_world_pos.y + py)
+            hex_center_screen = camera.world_to_screen(hex_center_world)
+
+            if len(planets) > 1:
+                planets_sorted = sorted(planets, key=lambda x: x.mass, reverse=True)
+                largest = planets_sorted[0]
+
+                largest_draw_r = hex_px_radius * 0.5
+                largest_diameter = largest_draw_r * 2
+                group_offset_x = -largest_diameter * 0.20
+
+                # Angles for smaller planets (same as renderer)
+                smaller_count = len(planets_sorted) - 1
+                if smaller_count == 1:
+                    smaller_angles = [0]
+                elif smaller_count == 2:
+                    smaller_angles = [30, -30]
+                elif smaller_count == 3:
+                    smaller_angles = [15, 0, -45]
+                else:
+                    smaller_angles = [45 - i * (105 / max(1, smaller_count - 1)) for i in range(smaller_count)]
+
+                for i, p in enumerate(planets_sorted):
+                    rel_scale = p.radius / largest.radius
+                    if rel_scale < 0.4:
+                        rel_scale = 0.4
+
+                    base_r = hex_px_radius * 0.25
+                    draw_r = max(2, int(base_r * rel_scale))
+
+                    if p == largest:
+                        final_offset = pygame.math.Vector2(group_offset_x, 0)
+                        primary_draw_r = max(2, int(largest_draw_r * rel_scale))
+                        draw_r = primary_draw_r
+                    else:
+                        idx = planets_sorted.index(p) - 1
+                        angle = smaller_angles[idx] if idx < len(smaller_angles) else 0
+                        dist = largest_draw_r * 1.5
+                        final_offset = pygame.math.Vector2(group_offset_x + dist, 0).rotate(-angle)
+
+                    current_offset = final_offset * expansion_t
+                    p_screen = hex_center_screen + current_offset
+
+                    # Hit test: check if click is within planet's drawn radius
+                    dx = mx - p_screen.x
+                    dy = my - p_screen.y
+                    dist_sq = dx * dx + dy * dy
+                    # Add small margin for easier clicking
+                    click_radius = draw_r + 4
+                    if dist_sq <= click_radius * click_radius:
+                        return p
+            else:
+                # Single planet - check centered position
+                p = planets[0]
+                base_r = 5 * camera.zoom
+                if 'Giant' in p.planet_type.name:
+                    base_r *= 1.5
+
+                dx = mx - hex_center_screen.x
+                dy = my - hex_center_screen.y
+                dist_sq = dx * dx + dy * dy
+                click_radius = base_r + 4
+                if dist_sq <= click_radius * click_radius:
+                    return p
+
+        return None
+
     def _handle_picking(self, mx, my):
         """Raycast from screen to galaxy objects."""
         world_pos = self.scene.camera.screen_to_world((mx, my))
@@ -287,11 +391,20 @@ class InputHandler:
                 if f.location == hex_clicked:
                     sector_contents.append(f)
 
+        # When zoomed in, use hit-testing against planet screen positions
+        clicked_planet = None
+        if clicked_system and self.scene.camera.zoom >= 1.5:
+            clicked_planet = self._hit_test_planets(mx, my, clicked_system)
+
         if clicked_system:
             for p in clicked_system.planets:
                 p_global = clicked_system.global_location + p.location
                 if p_global == hex_clicked:
-                    sector_contents.append(p)
+                    # If we hit-tested a specific planet, put it first
+                    if clicked_planet == p:
+                        sector_contents.insert(0, p)
+                    else:
+                        sector_contents.append(p)
 
             for wp in clicked_system.warp_points:
                 wp_global = clicked_system.global_location + wp.location

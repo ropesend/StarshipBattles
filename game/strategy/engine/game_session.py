@@ -1,5 +1,5 @@
 import os
-from game.core.logger import log_info
+from game.core.logger import log_info, log_debug
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.data.empire import Empire
@@ -131,7 +131,11 @@ class GameSession:
         # Avoid circular imports if possible, or lazy import
         from game.strategy.data.pathfinding import find_hybrid_path
 
-        path = find_hybrid_path(self.galaxy, fleet.location, target_hex)
+        # Log warp capability for debugging navigation issues (BUG-45)
+        can_warp = fleet.can_use_warp() if hasattr(fleet, 'can_use_warp') else 'N/A'
+        log_debug(f"preview_fleet_path: fleet={fleet.id}, can_use_warp={can_warp}, target={target_hex}")
+
+        path = find_hybrid_path(self.galaxy, fleet.location, target_hex, fleet=fleet)
 
         # Consistent with Engine: remove start hex if it matches current location
         if path and path[0] == fleet.location:

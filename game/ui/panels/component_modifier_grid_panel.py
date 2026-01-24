@@ -76,8 +76,7 @@ class ComponentModifierGridPanel:
             event_bus.subscribe(BuilderEvents.SELECTION_CHANGED, self._on_selection_changed)
             event_bus.subscribe(BuilderEvents.SHIP_UPDATED, self._on_ship_updated)
 
-        # Start hidden until a component with modifiers is selected
-        self.panel.hide()
+        # Panel is always visible (persistent) - shows "no modifier effects" when nothing selected
 
     def _on_selection_changed(self, selection_data):
         """Handle component selection changes."""
@@ -104,10 +103,9 @@ class ComponentModifierGridPanel:
 
         if component and component.modifiers:
             self.modifier_grid.update(component)
-            self.panel.show()
         else:
+            # Show "no modifier effects to display" message (grid handles this)
             self.modifier_grid.update(None)
-            self.panel.hide()
 
     def draw(self, screen: pygame.Surface):
         """
@@ -119,7 +117,7 @@ class ComponentModifierGridPanel:
         Args:
             screen: Surface to draw on
         """
-        if self.panel.visible and self.current_component:
+        if self.panel.visible:
             self.modifier_grid.draw(screen)
 
     def handle_event(self, event) -> bool:
