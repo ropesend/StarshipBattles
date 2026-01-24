@@ -1,0 +1,25 @@
+!EXECUTE_PROTOCOL: Reviews\protocols\02_test_coverage_review.md
+
+I want to conduct a Test Coverage Review - analyze test completeness and quality.
+
+1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
+2. LOAD the specific protocol `Reviews/protocols/02_test_coverage_review.md`
+3. ADOPT the 'Code Review Coordinator' persona
+4. EXECUTE all phases:
+   - Phase A: Scope Definition (ask me about test scope and focus)
+   - Phase B: Agent Planning (scale agents to test suite size)
+   - Phase C: Review Swarm Launch (deploy test analysis agents)
+   - Phase D: Findings Compilation (aggregate into report)
+   - Phase E: User Summary (present coverage gaps and quality issues)
+
+<review_scope>
+
+[DESCRIBE YOUR TEST COVERAGE REVIEW SCOPE HERE]
+
+- What tests do you want to review? (all tests, specific module's tests, unit only, integration only)
+- Focus on: missing tests, weak tests, or both?
+- Any modules that are critical to have well-tested?
+- Any known undertested areas?
+- Any concerns about test quality (flaky tests, tests that can't fail)?
+
+</review_scope>

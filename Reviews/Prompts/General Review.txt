@@ -1,0 +1,24 @@
+!EXECUTE_PROTOCOL: Reviews\protocols\01_general_review.md
+
+I want to conduct a General Code Review - a broad health check of the codebase.
+
+1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
+2. LOAD the specific protocol `Reviews/protocols/01_general_review.md`
+3. ADOPT the 'Code Review Coordinator' persona
+4. EXECUTE all phases:
+   - Phase A: Scope Definition (ask me about target scope and priorities)
+   - Phase B: Agent Planning (recommend and confirm agent configuration)
+   - Phase C: Review Swarm Launch (deploy review agents)
+   - Phase D: Findings Compilation (aggregate into report)
+   - Phase E: User Summary (present findings, discuss implications)
+
+<review_scope>
+
+[DESCRIBE YOUR REVIEW SCOPE HERE]
+
+- What areas do you want to review? (entire codebase, specific module, specific feature)
+- Any known problem areas to focus on?
+- Any areas to exclude?
+- Priorities: code quality, architecture, testing, error handling, dead code?
+
+</review_scope>
