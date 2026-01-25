@@ -85,8 +85,10 @@ def validate_audit_ready(project_id: str, run_tests: bool = False) -> Validation
             result.warnings.append(f"Index status: {entry.status}")
 
     # Check 5: Run tests if requested
+    # NOTE: Audit ALWAYS runs full test suite (no --testmon)
+    # This ensures complete verification regardless of testmon state
     if run_tests:
-        print("\nRunning pytest...")
+        print("\nRunning pytest (FULL SUITE - no testmon)...")
         try:
             proc = subprocess.run(
                 ["pytest", "tests/", "-v", "--tb=short"],

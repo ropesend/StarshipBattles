@@ -28,10 +28,11 @@ Before closing a project, verify:
 - [ ] All tasks in the plan are checked off
 - [ ] Audit has passed (check Audit Log)
 - [ ] User has verified completion
+- [ ] Full test suite passes: `pytest tests/` (without --testmon)
 
 **Run validation to check:**
 ```bash
-python Projects/scripts/validate_close_ready.py PROJ-XX
+python Projects/scripts/validate_close_ready.py PROJ-XX --run-tests
 ```
 
 ---

@@ -12,9 +12,13 @@ Continue working on project PROJ-XX.
 
 4. EXECUTE the autonomous work loop:
    - Work through tasks using Strict TDD
+   - Use `pytest tests/ --testmon` for incremental testing (fast)
+   - Use `pytest tests/path/to/test.py --testmon` for targeted tests
    - Check off completed subtasks
    - Add implementation notes
    - Continue until context limit (~80%) or phase complete
+
+NOTE: If first session on a new project, run `pytest tests/` (full, no --testmon) first.
 
 5. BEFORE STOPPING:
    - Update `## Current State` with comprehensive handoff

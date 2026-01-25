@@ -10,6 +10,11 @@ I want to start a new refactor/addition project. Below is my description of what
      python Projects/scripts/create_project.py "Project Title"
      ```
      Do NOT create project files manually. The script ensures proper directory structure.
+   - **MANDATORY:** Run full test suite to establish baseline:
+     ```bash
+     pytest tests/
+     ```
+     All tests must pass before proceeding. This also initializes testmon.
    - Perform deep code review of relevant areas
    - Ask clarifying questions
    - Make suggestions based on findings

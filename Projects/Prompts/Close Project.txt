@@ -8,8 +8,9 @@ Close and archive project PROJ-XX.
 
 4. RUN close readiness validation:
    ```bash
-   python Projects/scripts/validate_close_ready.py PROJ-XX
+   python Projects/scripts/validate_close_ready.py PROJ-XX --run-tests
    ```
+   This runs the FULL test suite (no testmon) to ensure complete verification before archival.
    Only proceed if validation PASSES.
 
 5. ARCHIVE using the script:

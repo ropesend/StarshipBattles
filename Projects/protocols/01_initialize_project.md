@@ -67,14 +67,24 @@ This means:
    > python Reviews/scripts/review_to_project.py <review_folder>
    > ```
 
-3. **Deep Code Review**
+3. **Run Full Test Suite (Baseline)**
+   Before beginning deep code review, establish a passing baseline:
+   ```bash
+   pytest tests/
+   ```
+   - All tests MUST pass before proceeding
+   - If tests fail, investigate and fix before continuing
+   - This run also initializes the testmon database for future incremental runs
+   - Document any pre-existing issues in `## Initial Analysis`
+
+4. **Deep Code Review**
    - Launch 2-3 Explore agents to understand current architecture:
      - Agent 1: Examine the primary code area being modified
      - Agent 2: Identify related components and dependencies
      - Agent 3: Review existing patterns and conventions
    - Document findings in `## Initial Analysis` section
 
-4. **Initial Questions & Suggestions**
+5. **Initial Questions & Suggestions**
    - Use AskUserQuestion to:
      - Clarify scope and boundaries
      - Understand priorities and constraints
@@ -82,7 +92,7 @@ This means:
      - Offer suggestions based on findings
    - Document answers in `## Decisions Log`
 
-5. **Draft Tentative Plan**
+6. **Draft Tentative Plan**
    - Create high-level outline of phases and major tasks
    - Present to user for initial feedback
 
@@ -265,15 +275,18 @@ Create `Projects/active_projects/PROJ-XX/plan.md` with this structure:
 
 ## Verification Checklist
 
+### Project Start (REQUIRED)
+- [ ] Run full test suite: `pytest tests/` - all tests pass (establishes baseline)
+
 ### After Each Phase
-- [ ] Run `pytest tests/unit/` - all tests pass
+- [ ] Run `pytest tests/ --testmon` - all affected tests pass
 - [ ] Manual test [specific scenario] - no crashes
 - [ ] Verify [specific behavior]
 
 ### Final Verification
 - [ ] [End-to-end test scenario 1]
 - [ ] [End-to-end test scenario 2]
-- [ ] Run full test suite: `pytest`
+- [ ] Run full test suite: `pytest tests/` (NOT --testmon, full verification)
 
 ---
 

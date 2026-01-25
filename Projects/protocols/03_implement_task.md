@@ -26,10 +26,10 @@
 2. If tests don't exist:
    - Create test file at specified location
    - Write tests that verify the expected behavior
-   - Run tests - confirm they FAIL
+   - Run tests - confirm they FAIL: `pytest tests/path/to/test.py --testmon`
    - Document test creation in task notes
 3. If tests exist:
-   - Run them to confirm current state
+   - Run them to confirm current state: `pytest tests/path/to/test.py --testmon`
    - Add additional tests if needed for subtasks
 
 ### 3. Implement
@@ -42,9 +42,11 @@ For each subtask:
 
 ### 4. Verify
 
-1. Run all tests for this task
-2. Run regression tests for the affected area
+1. Run all tests for this task: `pytest tests/path/to/test.py --testmon`
+2. Run incremental regression tests: `pytest tests/ --testmon`
 3. Ensure no breaks introduced
+4. If tests fail unexpectedly or you suspect broader regression:
+   - Run full suite: `pytest tests/` (without --testmon)
 
 ### 5. Document
 

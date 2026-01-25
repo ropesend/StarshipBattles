@@ -8,8 +8,9 @@ Perform skeptical audit of project PROJ-XX.
 
 4. RUN pre-audit validation (REQUIRED):
    ```bash
-   python Projects/scripts/validate_audit_ready.py PROJ-XX
+   python Projects/scripts/validate_audit_ready.py PROJ-XX --run-tests
    ```
+   This runs the FULL test suite (no testmon) to ensure complete verification.
    Only proceed if validation PASSES. If it FAILS, return project to implementation.
 
 5. EXECUTE Comprehensive Review:

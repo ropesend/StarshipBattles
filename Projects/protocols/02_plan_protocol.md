@@ -90,13 +90,31 @@ python Projects/scripts/validate_phase.py PROJ-XX 2 --strict
 
 ```
 1. Write failing test(s) for the task
-2. Run test - confirm it fails
+2. Run test - confirm it fails: `pytest tests/path/to/test.py --testmon`
 3. Implement the minimum code to pass
-4. Run test - confirm it passes
-5. Run regression tests
+4. Run test - confirm it passes: `pytest tests/path/to/test.py --testmon`
+5. Run incremental regression tests: `pytest tests/ --testmon`
 6. Check off subtasks as completed
 7. Add implementation notes
 ```
+
+**Note:** Use `--testmon` for incremental testing. Run full suite (`pytest tests/` without --testmon) only at project start, end, or if you suspect widespread regression.
+
+### Test Execution Commands
+
+This project uses **pytest-testmon** for intelligent test selection.
+
+| Mode | Command | When to Use |
+|------|---------|-------------|
+| **FULL** | `pytest tests/` | Project start, project end, suspected regression |
+| **INCREMENTAL** | `pytest tests/ --testmon` | Per-task testing during implementation |
+| **TARGETED** | `pytest tests/path/to/test.py --testmon` | Task-specific tests |
+
+**Rules:**
+1. Run **FULL** at the START of every project (establishes baseline)
+2. Run **INCREMENTAL** after each task (uses testmon for speed)
+3. Run **FULL** if you suspect regression or tests behave unexpectedly
+4. Run **FULL** at the END of every project before audit
 
 ### Checking Off Work
 

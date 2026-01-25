@@ -93,10 +93,12 @@ If the project is in `archived_projects/`:
 Add revision-specific verification items:
 ```markdown
 ### Revision Verification
+- [ ] Full test suite passes before starting: `pytest tests/`
 - [ ] New Phase [N+1] tasks checked off
+- [ ] Incremental tests during implementation: `pytest tests/ --testmon`
 - [ ] Original functionality still works (regression)
 - [ ] User's specific feedback addressed: [item]
-- [ ] Run full test suite: `pytest`
+- [ ] Full test suite passes at revision end: `pytest tests/`
 ```
 
 ### 6. Determine Next Steps

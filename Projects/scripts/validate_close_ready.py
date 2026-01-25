@@ -4,10 +4,12 @@ Validate that a project is ready to be closed/archived.
 
 Usage:
     python validate_close_ready.py PROJ-08
+    python validate_close_ready.py PROJ-08 --run-tests  # Also run pytest
 """
 
 import argparse
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import List
@@ -31,7 +33,7 @@ class ValidationResult:
         return len(self.errors) == 0
 
 
-def validate_close_ready(project_id: str) -> ValidationResult:
+def validate_close_ready(project_id: str, run_tests: bool = False) -> ValidationResult:
     """Validate that a project is ready to be archived."""
     result = ValidationResult()
 
@@ -117,6 +119,32 @@ def validate_close_ready(project_id: str) -> ValidationResult:
         else:
             result.warnings.append(f"Index status is '{entry.status}', expected 'Awaiting Verification'")
 
+    # Check 7: Run full test suite if requested
+    # NOTE: Close ALWAYS runs full test suite (no --testmon)
+    # This ensures complete verification before archival
+    if run_tests:
+        print("\nRunning pytest (FULL SUITE - no testmon)...")
+        try:
+            proc = subprocess.run(
+                ["pytest", "tests/", "-v", "--tb=short"],
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+            if proc.returncode == 0:
+                result.passes.append("Full test suite passed")
+            else:
+                result.errors.append(f"Tests failed (exit code {proc.returncode})")
+                # Show last few lines of output
+                lines = proc.stdout.split('\n')[-10:]
+                for line in lines:
+                    if line.strip():
+                        result.errors.append(f"  {line}")
+        except subprocess.TimeoutExpired:
+            result.errors.append("Tests timed out after 5 minutes")
+        except FileNotFoundError:
+            result.warnings.append("pytest not found - skipping test run")
+
     return result
 
 
@@ -127,9 +155,12 @@ def main():
         epilog="""
 Examples:
     python validate_close_ready.py PROJ-08
+    python validate_close_ready.py PROJ-08 --run-tests
         """
     )
     parser.add_argument('project_id', help='Project ID (e.g., PROJ-08)')
+    parser.add_argument('--run-tests', action='store_true',
+                        help='Run pytest to verify tests pass before close')
 
     args = parser.parse_args()
 
@@ -137,7 +168,7 @@ Examples:
     print(f"Close Readiness Check: {args.project_id}")
     print('=' * 50)
 
-    result = validate_close_ready(args.project_id)
+    result = validate_close_ready(args.project_id, args.run_tests)
 
     print("\nCHECKING: Completion status")
     for msg in result.passes:
@@ -175,6 +206,13 @@ Examples:
             print(f"  [WARN] {msg}")
     for msg in result.errors:
         if 'index' in msg.lower():
+            print(f"  [FAIL] {msg}")
+
+    if args.run_tests:
+        print("\nCHECKING: Tests")
+        for msg in [m for m in result.passes if 'test' in m.lower()]:
+            print(f"  [PASS] {msg}")
+        for msg in [m for m in result.errors if 'test' in m.lower()]:
             print(f"  [FAIL] {msg}")
 
     print(f"\n{'=' * 50}")

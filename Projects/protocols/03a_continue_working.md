@@ -18,6 +18,12 @@ python Projects/scripts/current_task.py PROJ-XX
 ```
 This tells you exactly where to start.
 
+**FIRST TIME ON A NEW PROJECT:**
+```bash
+pytest tests/
+```
+Run full suite (no --testmon) to establish baseline and initialize testmon database.
+
 **BEFORE STOPPING WORK:**
 ```bash
 python Projects/scripts/validate_phase.py PROJ-XX [current_phase]
@@ -95,7 +101,7 @@ Stop the loop when ANY of these occur:
 - Phase 2 is 75% complete (3 of 4 tasks done)
 - Cache layer is now in place (see cache.py)
 - Task 2.4 needs to add invalidation hooks in repository.py lines 45-60
-- All existing tests passing (ran full suite at Task 2.3)
+- All tests passing (incremental: `pytest tests/ --testmon` at each task)
 - Decision: Using TTL-based invalidation per Decisions Log 2026-01-20
 ```
 
@@ -159,3 +165,4 @@ Avoid stopping:
 5. **No placeholders** - Don't leave TODO comments or incomplete code
 6. **Run validation** - Always run `validate_phase.py` before stopping
 7. **Check off tasks** - Mark subtasks complete AS you finish them, not in batches
+8. **Use testmon for speed** - Run `pytest tests/ --testmon` for incremental tests; run full `pytest tests/` at project start, end, or when regression suspected
