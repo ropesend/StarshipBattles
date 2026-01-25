@@ -303,3 +303,164 @@ class TestAIControllerFormation:
 
         # Should not raise
         controller.update()
+
+
+# =============================================================================
+# Test: AIController Avoidance Self-Skip (Fix 9.1)
+# =============================================================================
+
+class TestAIControllerAvoidance:
+    """Tests for AIController check_avoidance() correctly skipping self."""
+
+    def test_check_avoidance_skips_own_ship_when_using_adapter(self, mock_ship, mock_grid):
+        """
+        check_avoidance() should skip the ship's own object when grid returns it.
+
+        BUG FIX (PROJ-12 Phase 9.1): When AIController uses ShipControllableAdapter,
+        self.ship is the adapter but grid.query_radius() returns raw Ship objects.
+        The comparison `obj == self.ship` fails because adapter != raw_ship.
+        The fix is to compare `obj == self.ship.ship` to unwrap the adapter.
+        """
+        from game.ai.controller import AIController
+        from game.ai.interfaces.controllable import ShipControllableAdapter
+        from game.core.config import BattleConfig
+
+        # Set up ship
+        mock_ship.is_alive = True
+        mock_ship.position = Vector2(100, 100)
+        mock_ship.radius = 40
+        mock_ship.team_id = 1
+
+        # Create an enemy that IS within collision threshold
+        enemy_ship = MagicMock()
+        enemy_ship.is_alive = True
+        enemy_ship.position = Vector2(110, 100)  # Only 10 units away (overlap with radii 40)
+        enemy_ship.radius = 40
+        enemy_ship.team_id = 2
+
+        # Grid returns BOTH the ship itself (raw Ship) AND the enemy
+        mock_grid.query_radius.return_value = [mock_ship, enemy_ship]
+
+        adapter = ShipControllableAdapter(mock_ship)
+        controller = AIController(adapter, mock_grid, enemy_team_id=2)
+
+        result = controller.check_avoidance()
+
+        # With ships overlapping (distance 10, combined radii 80), should return avoidance
+        assert result is not None, "Should return avoidance position for nearby enemy"
+
+        # The avoidance position should be AWAY from the enemy (negative X direction
+        # since enemy is at +10 X relative to ship at 100,100)
+        assert result.x < mock_ship.position.x, (
+            f"Avoidance position {result} should be away from enemy at {enemy_ship.position}"
+        )
+
+    def test_check_avoidance_does_not_avoid_itself(self, mock_ship, mock_grid):
+        """
+        When only the ship itself is in the query results, no avoidance is needed.
+
+        If the bug exists, the ship would try to avoid itself (distance 0).
+        """
+        from game.ai.controller import AIController
+        from game.ai.interfaces.controllable import ShipControllableAdapter
+
+        mock_ship.is_alive = True
+        mock_ship.position = Vector2(100, 100)
+        mock_ship.radius = 40
+        mock_ship.team_id = 1
+
+        # Grid returns ONLY the ship itself
+        mock_grid.query_radius.return_value = [mock_ship]
+
+        adapter = ShipControllableAdapter(mock_ship)
+        controller = AIController(adapter, mock_grid, enemy_team_id=2)
+
+        result = controller.check_avoidance()
+
+        # Should return None because the ship correctly skips itself
+        assert result is None, "Should not try to avoid itself"
+
+
+class TestFormationIntegrityWithAdapter:
+    """Tests for _check_formation_integrity with ShipControllableAdapter.
+
+    Fix 10.1: Verifies that formation member removal works correctly when
+    AIController.ship is a ShipControllableAdapter wrapping a raw Ship,
+    but formation_members list contains raw Ships.
+    """
+
+    def test_formation_member_removed_when_ship_damaged(self, mock_grid):
+        """When ship breaks formation due to damage, it should be removed from formation_members."""
+        from game.ai.interfaces.controllable import ShipControllableAdapter
+        from game.ai.controller import AIController
+
+        # Create a mock ship that is in a formation
+        mock_ship = MagicMock()
+        mock_ship.position = Vector2(100, 100)
+        mock_ship.velocity = Vector2(0, 0)
+        mock_ship.angle = 0.0
+        mock_ship.team_id = 1
+        mock_ship.is_alive = True
+        mock_ship.radius = 40
+        mock_ship.in_formation = True
+
+        # Create formation master with members list containing RAW ships (not adapters)
+        mock_master = MagicMock()
+        mock_master.formation_members = [mock_ship]  # Raw ship in list
+        mock_ship.formation_master = mock_master
+
+        # Create a damaged propulsion component
+        damaged_component = MagicMock()
+        damaged_component.current_hp = 50
+        damaged_component.max_hp = 100
+        # Code calls get_components_by_ability for 'CombatPropulsion' and 'ManeuveringThruster'
+        mock_ship.get_components_by_ability.return_value = [damaged_component]
+
+        # Wrap in adapter (as production does)
+        adapter = ShipControllableAdapter(mock_ship)
+        controller = AIController(adapter, mock_grid, enemy_team_id=2)
+
+        # Verify ship is in formation_members before
+        assert mock_ship in mock_master.formation_members
+
+        # Call _check_formation_integrity which should detect damage and remove from formation
+        controller._check_formation_integrity()
+
+        # Verify ship was removed from formation_members
+        assert mock_ship not in mock_master.formation_members, \
+            "Ship should be removed from formation_members when breaking formation"
+        # Verify formation state was cleared
+        assert mock_ship.in_formation == False
+
+    def test_formation_member_not_removed_when_undamaged(self, mock_grid):
+        """When ship is undamaged, it should stay in formation."""
+        from game.ai.interfaces.controllable import ShipControllableAdapter
+        from game.ai.controller import AIController
+
+        mock_ship = MagicMock()
+        mock_ship.position = Vector2(100, 100)
+        mock_ship.velocity = Vector2(0, 0)
+        mock_ship.angle = 0.0
+        mock_ship.team_id = 1
+        mock_ship.is_alive = True
+        mock_ship.radius = 40
+        mock_ship.in_formation = True
+
+        mock_master = MagicMock()
+        mock_master.formation_members = [mock_ship]
+        mock_ship.formation_master = mock_master
+
+        # Undamaged propulsion component
+        undamaged_component = MagicMock()
+        undamaged_component.current_hp = 100
+        undamaged_component.max_hp = 100
+        mock_ship.get_components_by_ability.return_value = [undamaged_component]
+
+        adapter = ShipControllableAdapter(mock_ship)
+        controller = AIController(adapter, mock_grid, enemy_team_id=2)
+
+        controller._check_formation_integrity()
+
+        # Ship should still be in formation
+        assert mock_ship in mock_master.formation_members
+        assert mock_ship.in_formation == True

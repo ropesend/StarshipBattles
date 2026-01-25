@@ -1,3 +1,42 @@
+"""
+Turn Engine - Strategy Layer Turn Processing
+
+This module contains TurnEngine, the core engine for processing strategy-layer
+turns. Each turn consists of 100 sub-ticks of movement and combat, followed by
+end-of-turn order processing and production.
+
+Turn Phases:
+    1. SUBTURN LOOP (100 ticks):
+       For each tick:
+       - Phase 0: Per-turn resource consumption (1/100th of costs)
+       - Phase 1: Instant orders (JOIN_FLEET) executed
+       - Phase 2: Calculate next hex for all moving fleets
+       - Phase 3: Apply movements simultaneously
+       - Phase 4: Resolve combat at contested hexes
+
+    2. END-OF-TURN ORDERS:
+       - Process static orders (COLONIZE, etc.)
+       - Fleet may be consumed by order (e.g., colonization)
+
+    3. PRODUCTION:
+       - Process construction queues for all colonies
+       - Spawn completed ships/complexes
+
+Order Types:
+    - MOVE: Fleet travels to destination hex via pathfinding
+    - COLONIZE: Fleet colonizes planet at current location
+    - JOIN_FLEET: Merge this fleet into another fleet at same location
+    - PATROL: Continuous movement between waypoints (future)
+
+Dependency Injection:
+    TurnEngine accepts an optional IBattleResolver for combat resolution.
+    Default: SimulationBattleResolver (full battle simulation)
+    Testing: Mock resolvers can be injected for fast strategy tests.
+
+Example:
+    engine = TurnEngine()
+    engine.process_turn(empires, galaxy, save_path="saves/game1")
+"""
 import random
 from game.core.logger import log_debug, log_info, log_warning
 from game.strategy.data.fleet import Fleet, OrderType

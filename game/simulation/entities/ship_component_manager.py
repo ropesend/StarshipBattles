@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Any, Iterator, Tuple, Ca
 from game.simulation.components.component import Component, LayerType
 from game.core.logger import log_debug, log_info, log_warning, log_error
 from game.core.registry import get_vehicle_classes
+from game.core.constants import LayerDefaults
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -58,9 +59,9 @@ class ShipComponentManager:
         # Fallback if no layers defined in vehicle class
         if not layer_defs:
             layer_defs = [
-                {"type": "CORE", "radius_pct": 0.2, "restrictions": []},
-                {"type": "INNER", "radius_pct": 0.5, "restrictions": []},
-                {"type": "OUTER", "radius_pct": 0.8, "restrictions": []},
+                {"type": "CORE", "radius_pct": LayerDefaults.CORE_RADIUS_PCT, "restrictions": []},
+                {"type": "INNER", "radius_pct": LayerDefaults.INNER_RADIUS_PCT, "restrictions": []},
+                {"type": "OUTER", "radius_pct": LayerDefaults.OUTER_RADIUS_PCT, "restrictions": []},
                 {"type": "ARMOR", "radius_pct": 1.0, "restrictions": []}
             ]
 

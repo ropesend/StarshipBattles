@@ -1,3 +1,55 @@
+"""
+Battle Engine - Core Combat Simulation System
+
+This module provides the BattleEngine class, which runs real-time space combat
+simulations between two teams of ships.
+
+Battle Lifecycle:
+    1. INIT: Create BattleEngine instance
+       engine = BattleEngine()
+
+    2. START: Initialize battle with ships
+       engine.start(team1_ships, team2_ships, seed=42)
+       - Assigns team IDs (0 and 1)
+       - Creates AIController for each ship
+       - Initializes spatial grid and projectile manager
+       - Starts logging session
+
+    3. TICK: Run simulation loop
+       while not engine.is_battle_over():
+           engine.update()
+       - Updates spatial grid with alive ships/projectiles
+       - Runs AI controllers for target selection and behavior
+       - Processes ship updates (movement, weapons, abilities)
+       - Handles new attacks (projectiles, beams, fighter launches)
+       - Processes collisions (ramming)
+       - Updates projectiles
+
+    4. END: Check winner and cleanup
+       winner = engine.get_winner()  # 0, 1, or -1 (draw)
+       engine.shutdown()  # Close logger
+
+End Condition Modes (BattleEndMode):
+    - HP_BASED: Battle ends when all ships on one team are dead (default)
+    - TIME_BASED: Battle ends after max_ticks reached
+    - CAPABILITY_BASED: Battle ends when a team can't fight or move
+    - MANUAL: Battle never ends automatically
+
+BattleLogger:
+    Writes timestamped battle events to a file for debugging and replay.
+    Supports context manager usage and toggleable enabled/disabled state.
+    Log format: Plain text, one event per line.
+
+Example:
+    engine = BattleEngine()
+    engine.start([ship1, ship2], [enemy1], seed=12345)
+
+    while not engine.is_battle_over():
+        engine.update()
+
+    winner = engine.get_winner()
+    engine.shutdown()
+"""
 import math
 import random
 import time
@@ -71,8 +123,29 @@ class BattleLogger:
                 self.file = None
 
 class BattleEngine:
-    """Core combat simulation engine."""
-    
+    """
+    Core combat simulation engine.
+
+    Manages real-time space combat between two teams of ships, handling:
+    - Ship and AI controller lifecycle
+    - Spatial indexing for efficient collision queries
+    - Projectile and beam weapon processing
+    - Fighter launches and reinforcements
+    - Battle end conditions
+
+    Attributes:
+        ships: All ships currently in battle
+        ai_controllers: AI controllers for each ship
+        projectile_manager: Tracks and updates projectiles
+        collision_system: Handles hit detection
+        recent_beams: Beam attack data for current tick (for rendering)
+        grid: Spatial hash grid for efficient neighbor queries
+        tick_counter: Number of simulation ticks elapsed
+        winner: Winning team ID after battle ends (0, 1, or None)
+        end_condition: Configurable battle end condition
+        logger: Battle event logger (disabled by default)
+    """
+
     def __init__(self, logger: Optional[BattleLogger] = None):
         self.ships: List['Ship'] = []
         self.ai_controllers: List[AIController] = []
@@ -212,7 +285,22 @@ class BattleEngine:
         return None
 
     def update(self) -> None:
-        """Run one simulation tick."""
+        """
+        Run one simulation tick.
+
+        Tick sequence:
+            1. Rebuild spatial grid with alive ships/projectiles
+            2. Update AI controllers (target selection, behavior)
+            3. Update ships (movement, weapons, abilities)
+            4. Process new attacks:
+               - PROJECTILE/MISSILE: Add to projectile manager
+               - BEAM: Raycast hit detection via collision system
+               - LAUNCH: Spawn fighter ship with initial velocity
+            5. Process ramming collisions (kamikaze ships)
+            6. Update projectiles (movement, hit detection, expiration)
+
+        Returns immediately if battle is already over.
+        """
         if self.is_battle_over():
             return
             
@@ -297,10 +385,9 @@ class BattleEngine:
                 
                 # Inherit some properties or init velocity
                 new_ship.velocity = Vector2(source_ship.velocity)
-                # Maybe boost it forward?
+                # Boost fighter forward at launch speed
                 launch_dir = Vector2(1, 0).rotate(source_ship.angle)
-                # TODO: Replace magic number with BattleConfig.FIGHTER_LAUNCH_SPEED once added to config
-                new_ship.velocity += launch_dir * 100  # Initial push
+                new_ship.velocity += launch_dir * BattleConfig.FIGHTER_LAUNCH_SPEED
                 new_ship.angle = source_ship.angle
                 
                 # Add to battle
@@ -403,6 +490,14 @@ class BattleEngine:
         return False
 
     def get_winner(self) -> int:
+        """
+        Determine battle winner based on surviving ships.
+
+        Returns:
+            0: Team 0 wins (team 1 has no alive ships)
+            1: Team 1 wins (team 0 has no alive ships)
+            -1: Draw (both teams have alive ships, or both eliminated)
+        """
         team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
         team2_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
         if team1_alive > 0 and team2_alive == 0:
@@ -412,4 +507,5 @@ class BattleEngine:
         return -1
     
     def shutdown(self) -> None:
+        """Close resources and cleanup. Must be called when battle ends."""
         self.logger.close()

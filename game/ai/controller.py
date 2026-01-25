@@ -1,10 +1,53 @@
+"""
+AI Controller - Ship Combat AI Decision Making
+
+This module contains AIController, which provides autonomous behavior for
+ships during combat. Each ship gets an AIController that selects targets,
+chooses movement behaviors, and coordinates with formations.
+
+Behavior Selection Flowchart:
+    1. Is ship alive? → No: Return (no action)
+    2. Is ship in formation with master? → Yes: Use 'formation' behavior
+    3. Check HP percentage against retreat threshold
+       - HP <= threshold → Use 'flee' behavior
+    4. Otherwise → Use behavior from movement policy (default: 'kite')
+
+Available Behaviors:
+    - kite: Maintain optimal range, close in or back off as needed
+    - attack_run: Approach target, fire, retreat, repeat cycle
+    - ram: Move directly toward target, no collision avoidance
+    - flee: Move away from target (optionally fire while retreating)
+    - formation: Follow formation master, maintain offset position
+    - orbit: Circle around target at fixed distance
+    - stationary_fire: Don't move, just fire (for testing/satellites)
+    - do_nothing: No movement or firing (for testing)
+
+Targeting System:
+    1. Query spatial grid for entities within TARGET_QUERY_RADIUS
+    2. Filter to enemies (matching enemy_team_id)
+    3. Include missiles if strategy rules care about them
+    4. Score each candidate using TargetEvaluator and targeting rules
+    5. Select highest-scoring target as primary
+    6. If ship has multiplex tracking, select additional secondary targets
+
+Strategy Resolution:
+    Ships have an ai_strategy attribute (e.g., 'standard_ranged', 'aggressive').
+    StrategyManager resolves this to a full strategy definition with:
+    - targeting: rules for scoring targets
+    - movement: behavior, engage_distance, retreat_hp_threshold
+    - attack_run_behavior: approach/retreat distances and timing
+
+Example:
+    controller = AIController(ship_adapter, grid, enemy_team=1)
+    controller.update()  # Called each tick by BattleEngine
+"""
 import math
 import pygame
 from game.core.config import AIConfig, BattleConfig
 from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior,
                           FormationBehavior, DoNothingBehavior, StraightLineBehavior,
                           RotateOnlyBehavior, ErraticBehavior, OrbitBehavior, StationaryFireBehavior)
-from game.core.constants import AttackType
+from game.core.constants import AttackType, CombatConstants
 
 # Re-export from strategy_manager for backward compatibility
 from game.ai.strategy_manager import (
@@ -58,75 +101,42 @@ class AIController:
             return float(val)
         return 1.0
 
-    def find_target(self):
-        """Find target based on strategy's targeting priority."""
-        candidates = self.grid.query_radius(self.ship.position, BattleConfig.TARGET_QUERY_RADIUS)
-        enemies = [obj for obj in candidates
-                   if obj.is_alive and hasattr(obj, 'team_id')
-                   and obj.team_id == self.enemy_team_id]
+    def _find_enemies_in_radius(self, exclude=None, check_missiles=False):
+        """Find alive enemy entities within targeting radius.
 
-        resolved = self.get_resolved_strategy()
-        targeting_policy = resolved['targeting']
-        rules = targeting_policy.get('rules', [])
+        Args:
+            exclude: Optional entity to exclude from results (e.g., primary target)
+            check_missiles: If True, also include enemy missiles within missile query radius
 
-        # Special case: check for missiles if policy cares about them
-        check_missiles = any(r.get('type') in ['pdc_arc', 'missiles_in_pdc_arc'] for r in rules)
-
-        if check_missiles:
-            missiles = [obj for obj in self.grid.query_radius(self.ship.position, BattleConfig.MISSILE_QUERY_RADIUS)
-                        if (getattr(obj, 'type', '') == 'missile' or getattr(obj, 'type', '') == AttackType.MISSILE)
-                        and obj.is_alive
-                        and getattr(obj, 'team_id', -1) != self.ship.team_id]
-            enemies.extend(missiles)
-
-        if not enemies:
-            return None
-
-        # Score
-        scored_enemies = []
-        for e in enemies:
-            score = TargetEvaluator.evaluate(self.ship, e, rules)
-            if score > -float('inf'):
-                scored_enemies.append((score, e))
-
-        scored_enemies.sort(key=lambda x: x[0], reverse=True)
-
-        return scored_enemies[0][1] if scored_enemies else None
-
-    def find_secondary_targets(self):
-        """Find additional targets if ship has multiplex tracking."""
-        max_targets = getattr(self.ship, 'max_targets', 1)
-        if max_targets <= 1:
-            return []
-
-        count_needed = max_targets - 1
-        current = self.ship.current_target
-
+        Returns:
+            List of enemy entities (ships and optionally missiles)
+        """
         candidates = self.grid.query_radius(self.ship.position, BattleConfig.TARGET_QUERY_RADIUS)
         enemies = [obj for obj in candidates
                    if obj.is_alive and hasattr(obj, 'team_id')
                    and obj.team_id == self.enemy_team_id
-                   and obj != current]
-
-        resolved = self.get_resolved_strategy()
-        targeting_policy = resolved['targeting']
-        rules = targeting_policy.get('rules', [])
-
-        # Check for missiles if policy cares about them
-        check_missiles = any(r.get('type') in ['pdc_arc', 'missiles_in_pdc_arc'] for r in rules)
+                   and obj != exclude]
 
         if check_missiles:
             missiles = [obj for obj in self.grid.query_radius(self.ship.position, BattleConfig.MISSILE_QUERY_RADIUS)
                         if (getattr(obj, 'type', '') == 'missile' or getattr(obj, 'type', '') == AttackType.MISSILE)
                         and obj.is_alive
                         and getattr(obj, 'team_id', -1) != self.ship.team_id
-                        and obj != current]
+                        and obj != exclude]
             enemies.extend(missiles)
 
-        if not enemies:
-            return []
+        return enemies
 
-        # Score
+    def _score_and_sort_enemies(self, enemies, rules):
+        """Score enemies using targeting rules and return sorted list (highest first).
+
+        Args:
+            enemies: List of potential targets
+            rules: Targeting rules from strategy policy
+
+        Returns:
+            List of enemies sorted by score (highest first), excluding -inf scores
+        """
         scored_enemies = []
         for e in enemies:
             score = TargetEvaluator.evaluate(self.ship, e, rules)
@@ -134,8 +144,46 @@ class AIController:
                 scored_enemies.append((score, e))
 
         scored_enemies.sort(key=lambda x: x[0], reverse=True)
+        return [e for _, e in scored_enemies]
 
-        return [e for _, e in scored_enemies[:count_needed]]
+    def find_target(self):
+        """Find target based on strategy's targeting priority."""
+        resolved = self.get_resolved_strategy()
+        targeting_policy = resolved['targeting']
+        rules = targeting_policy.get('rules', [])
+
+        # Check if policy cares about missiles
+        check_missiles = any(r.get('type') in ['pdc_arc', 'missiles_in_pdc_arc'] for r in rules)
+
+        enemies = self._find_enemies_in_radius(check_missiles=check_missiles)
+        if not enemies:
+            return None
+
+        sorted_enemies = self._score_and_sort_enemies(enemies, rules)
+        return sorted_enemies[0] if sorted_enemies else None
+
+    def find_secondary_targets(self):
+        """Find additional targets if ship has multiplex tracking."""
+        max_targets = getattr(self.ship, 'max_targets', CombatConstants.DEFAULT_MAX_TARGETS)
+        if max_targets <= CombatConstants.DEFAULT_MAX_TARGETS:
+            return []
+
+        count_needed = max_targets - 1
+        current = self.ship.current_target
+
+        resolved = self.get_resolved_strategy()
+        targeting_policy = resolved['targeting']
+        rules = targeting_policy.get('rules', [])
+
+        # Check if policy cares about missiles
+        check_missiles = any(r.get('type') in ['pdc_arc', 'missiles_in_pdc_arc'] for r in rules)
+
+        enemies = self._find_enemies_in_radius(exclude=current, check_missiles=check_missiles)
+        if not enemies:
+            return []
+
+        sorted_enemies = self._score_and_sort_enemies(enemies, rules)
+        return sorted_enemies[:count_needed]
 
     @staticmethod
     def _stat_get_hp_percent(ship):
@@ -190,7 +238,7 @@ class AIController:
             self.ship.current_target = target
 
         # Secondary target acquisition for ships with multiplex tracking
-        if getattr(self.ship, 'max_targets', 1) > 1:
+        if getattr(self.ship, 'max_targets', CombatConstants.DEFAULT_MAX_TARGETS) > CombatConstants.DEFAULT_MAX_TARGETS:
             self.ship.secondary_targets = self.find_secondary_targets()
         else:
             self.ship.secondary_targets = []
@@ -281,7 +329,10 @@ class AIController:
         if dmg:
             self.ship.in_formation = False
             try:
-                self.ship.formation_master.formation_members.remove(self.ship)
+                # Unwrap adapter if present: formation_members contains raw Ships,
+                # but self.ship may be a ShipControllableAdapter
+                own_ship = getattr(self.ship, 'ship', self.ship)
+                own_ship.formation_master.formation_members.remove(own_ship)
             except (AttributeError, ValueError):
                 pass
             self.ship.formation_master = None
@@ -295,7 +346,10 @@ class AIController:
         min_d = float('inf')
 
         for obj in nearby:
-            if obj == self.ship:
+            # Skip self: self.ship may be ShipControllableAdapter wrapping the raw ship
+            # Grid contains raw Ship objects, so compare via .ship property if adapter
+            own_ship = getattr(self.ship, 'ship', self.ship)
+            if obj == own_ship:
                 continue
             if not obj.is_alive:
                 continue

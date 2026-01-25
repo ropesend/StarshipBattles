@@ -4,13 +4,13 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-12 | God Class Decomposition | Awaiting Verification | 2026-01-24 | 2026-01-24 |
-| PROJ-13 | Code Quality & Documentation | Planning | 2026-01-24 | 2026-01-24 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-12 | God Class Decomposition | Archived | 2026-01-24 | 2026-01-25 |
+| PROJ-13 | Code Quality & Documentation | Archived | 2026-01-24 | 2026-01-25 |
 | PROJ-11 | Architecture Layer Separation | Archived | 2026-01-24 | 2026-01-24 |
 | PROJ-10 | Error Handling & Logging Remediation | Archived | 2026-01-24 | 2026-01-24 |
 | PROJ-09 | Test Coverage Remediation | Archived | 2026-01-23 | 2026-01-24 |

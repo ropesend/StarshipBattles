@@ -1,8 +1,60 @@
+"""
+Ship Stats Calculator - Derived Statistics Computation
+
+This module contains ShipStatsCalculator, which computes all derived ship
+statistics from the ship's components, abilities, and class definition.
+
+Stat Calculation Phases:
+    The calculate() method runs through 5 phases in order:
+
+    Phase 1 - DAMAGE CHECK & SUPPLY GATHERING:
+        - Reset component status assumptions
+        - Check damage threshold to mark damaged components
+        - Gather available crew and life support from active components
+        - Build component pool for subsequent phases
+
+    Phase 2 - RESOURCE ALLOCATION:
+        - Calculate effective crew (min of available crew, life support)
+        - Sort components by priority (critical systems first)
+        - Deactivate components that can't be crewed
+        - Track crew_required and crew_onboard for UI
+
+    Phase 3 - STATS AGGREGATION:
+        - Iterate active components only
+        - Aggregate resource storage (fuel, ammo, energy)
+        - Aggregate resource generation (energy, ammo)
+        - Sum combat stats: thrust, turn speed, shields
+        - Sum hangar stats: capacity, launch cycle
+        - Track max_targets from MultiplexTracking
+
+    Phase 4 - PHYSICS & LIMITS:
+        - Apply physics formulas with inverse mass scaling:
+          * max_speed = (thrust * K_SPEED) / mass
+          * acceleration = (thrust * K_THRUST) / mass²
+          * turn_speed = (raw_turn * K_TURN) / mass^1.5
+        - Check mass budget limits
+        - Calculate ship radius from total mass
+
+    Phase 5 - SENSOR/DEFENSE SCORES:
+        - Aggregate sensor scores for targeting
+        - Aggregate ECM scores for defense
+
+Physics Constants:
+    K_SPEED, K_THRUST, K_TURN defined in physics_constants.py
+    These control how ship stats convert to gameplay behavior.
+
+Example:
+    from game.core.registry import get_vehicle_classes
+    calculator = ShipStatsCalculator(get_vehicle_classes())
+    calculator.calculate(ship)
+    # ship.max_speed, ship.turn_speed, etc. are now updated
+"""
 from game.simulation.components.component import ComponentStatus, LayerType
 from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
 from game.simulation.entities.ability_aggregator import calculate_ability_totals, get_ability_total
 from game.simulation.entities.combat_endurance import calculate_combat_endurance
 from game.core.config import PhysicsConfig
+from game.core.constants import CombatConstants
 import math
 
 class ShipStatsCalculator:
@@ -117,7 +169,7 @@ class ShipStatsCalculator:
         # Store for UI
         ship.crew_onboard = available_crew
         ship.crew_required = 0
-        ship.max_targets = 1 # Reset to default
+        ship.max_targets = CombatConstants.DEFAULT_MAX_TARGETS  # Reset to default
         
         # Centralize mass budget lookup
         ship.max_mass_budget = self.vehicle_classes.get(ship.ship_class, {}).get('max_mass', 1000)

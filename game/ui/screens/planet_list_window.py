@@ -777,7 +777,6 @@ class PlanetListWindow(UIWindow):
                 self.filter_types[t] = False
                 btn.unselect()
                 btn.set_text(f"{t}")
-                btn.set_text(f"{t}")
             self.refresh_list()
             
         # Check Scrollbar

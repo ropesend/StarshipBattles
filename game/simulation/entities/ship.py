@@ -10,6 +10,7 @@ from game.simulation.components.component import (
 )
 from game.core.logger import log_debug, log_info, log_warning, log_error
 from game.core.registry import get_vehicle_classes, get_component_registry, get_modifier_registry
+from game.core.constants import LayerDefaults, CombatConstants
 from game.simulation.ship_validator import ValidationResult
 from .ship_stats import ShipStatsCalculator
 from .ship_physics import ShipPhysicsMixin
@@ -34,7 +35,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.team_id: int = team_id
         self.current_target: Optional[Any] = None
         self.secondary_targets: List[Any] = []  # List of additional targets
-        self.max_targets: int = 1         # Default 1 target (primary only)
+        self.max_targets: int = CombatConstants.DEFAULT_MAX_TARGETS  # Primary target only by default
         self.ship_class: str = ship_class
         self.theme_id: str = theme_id
         
@@ -320,9 +321,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Fallback if no layers defined in vehicle class
         if not layer_defs:
             layer_defs = [
-                { "type": "CORE", "radius_pct": 0.2, "restrictions": [] },
-                { "type": "INNER", "radius_pct": 0.5, "restrictions": [] },
-                { "type": "OUTER", "radius_pct": 0.8, "restrictions": [] },
+                { "type": "CORE", "radius_pct": LayerDefaults.CORE_RADIUS_PCT, "restrictions": [] },
+                { "type": "INNER", "radius_pct": LayerDefaults.INNER_RADIUS_PCT, "restrictions": [] },
+                { "type": "OUTER", "radius_pct": LayerDefaults.OUTER_RADIUS_PCT, "restrictions": [] },
                 { "type": "ARMOR", "radius_pct": 1.0, "restrictions": [] }
             ]
             

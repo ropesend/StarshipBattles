@@ -1,3 +1,48 @@
+"""
+Game Session - Strategy Game State Manager
+
+This module contains GameSession, which manages the lifecycle and state of
+a single strategy game. It owns the Galaxy, Empires, and TurnEngine, and
+provides the interface for UI layers to interact with the game.
+
+GameSession is designed to run headless (without UI) for testing and AI.
+
+Responsibilities:
+    - Galaxy generation and system initialization
+    - Empire creation from game configuration
+    - Turn processing via TurnEngine
+    - Command dispatch (MOVE, COLONIZE, BUILD, etc.)
+    - Pathfinding preview for UI
+    - Serialization/deserialization for save/load
+
+Command Dispatch:
+    handle_command(cmd) routes commands to handlers based on type:
+    - IssueColonizeCommand → _handle_colonize_command
+    - IssueMoveCommand → _handle_move_command
+    - IssueBuildShipCommand → _handle_build_ship_command
+
+    Each handler:
+    1. Resolves entity references (fleet, planet)
+    2. Validates the action
+    3. Applies the order if valid
+    4. Returns ValidationResult
+
+Save/Load:
+    to_dict() → dict: Serialize full game state
+    from_dict(data) → GameSession: Deserialize (two-phase loading)
+
+Example:
+    config = GameConfig(galaxy_radius=5000, system_count=20)
+    session = GameSession(config=config)
+
+    # Process a turn
+    session.process_turn()
+
+    # Issue a move command
+    from game.strategy.commands import IssueMoveCommand
+    cmd = IssueMoveCommand(fleet_id=fleet.id, target_hex=destination)
+    result = session.handle_command(cmd)
+"""
 import os
 from game.core.logger import log_info, log_debug
 from game.strategy.engine.turn_engine import TurnEngine

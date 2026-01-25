@@ -342,6 +342,60 @@ class TestFleetSerialization:
         assert "Owner:0" in r
         assert "Ships:2" in r
 
+    def test_from_dict_restores_move_orders(self):
+        """Test that MOVE orders are restored from serialized data (STRAT-001)."""
+        d = {
+            'id': 'f1',
+            'owner_id': 0,
+            'location': [0, 0],
+            'speed': 5.0,
+            'ships': [],
+            'orders': [
+                {'type': 'MOVE', 'target': {'q': 5, 'r': 3}}
+            ],
+            'path': [],
+        }
+
+        fleet = Fleet.from_dict(d)
+
+        assert len(fleet.orders) == 1
+        assert fleet.orders[0].type == OrderType.MOVE
+        # Target should be HexCoord
+        assert fleet.orders[0].target == HexCoord(5, 3)
+
+    def test_from_dict_restores_colonize_orders(self):
+        """Test that COLONIZE orders are restored from serialized data."""
+        d = {
+            'id': 'f1',
+            'owner_id': 0,
+            'location': [0, 0],
+            'speed': 5.0,
+            'ships': [],
+            'orders': [
+                {'type': 'COLONIZE', 'target': None}
+            ],
+            'path': [],
+        }
+
+        fleet = Fleet.from_dict(d)
+
+        assert len(fleet.orders) == 1
+        assert fleet.orders[0].type == OrderType.COLONIZE
+        assert fleet.orders[0].target is None
+
+    def test_roundtrip_orders_preserved(self):
+        """Test that orders survive serialization roundtrip."""
+        original = Fleet("test", 0, HexCoord(0, 0))
+        original.add_order(FleetOrder(OrderType.MOVE, HexCoord(2, 2)))
+
+        d = original.to_dict()
+        d['location'] = [0, 0]  # Fix HexCoord serialization gap
+
+        restored = Fleet.from_dict(d)
+
+        assert len(restored.orders) == 1
+        assert restored.orders[0].type == OrderType.MOVE
+
 
 class TestMovementResourceMethods:
     """Test cases for fleet movement resource methods (Group 4.1)."""

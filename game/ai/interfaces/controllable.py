@@ -13,6 +13,8 @@ This enables:
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional, TYPE_CHECKING
 
+from game.core.constants import CombatConstants
+
 if TYPE_CHECKING:
     from pygame.math import Vector2
 
@@ -293,7 +295,7 @@ class ShipControllableAdapter(IControllable):
 
     def get_max_targets(self) -> int:
         """Get the maximum number of simultaneous targets."""
-        return getattr(self._ship, 'max_targets', 1)
+        return getattr(self._ship, 'max_targets', CombatConstants.DEFAULT_MAX_TARGETS)
 
     # =========================================================================
     # Formation

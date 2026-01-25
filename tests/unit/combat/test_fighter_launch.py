@@ -161,3 +161,54 @@ class TestFighterLaunch:
         assert getattr(ship, 'fighters_per_wave', 0) == 1
         assert getattr(ship, 'fighter_size_cap', 0) == 50
         assert getattr(ship, 'launch_cycle', 0) == 5.0
+
+    def test_fighter_launch_speed_uses_config(self):
+        """Test launched fighters receive BattleConfig.FIGHTER_LAUNCH_SPEED velocity boost."""
+        from game.core.config import BattleConfig
+        from game.core.math import Vector2
+
+        engine = BattleEngine()
+
+        # Create stationary carrier at origin facing right (angle=0)
+        carrier = Ship("Carrier", 0, 0, (255, 0, 0), team_id=0, ship_class="Cruiser")
+        carrier.velocity = Vector2(0, 0)
+        carrier.angle = 0  # Facing right
+
+        # Add Bridge
+        comps = RegistryManager.instance().components
+        bridge = comps["bridge"].clone()
+        bridge.abilities.pop("CrewRequired", None)
+        carrier.add_component(bridge, LayerType.CORE)
+        bridge.current_hp = bridge.max_hp
+
+        # Add Engine
+        ship_engine = comps["standard_engine"].clone()
+        carrier.add_component(ship_engine, LayerType.INNER)
+
+        # Add Hangar
+        hangar = comps["fighter_launch_bay"].clone()
+        hangar.abilities.pop("CrewRequired", None)
+        carrier.add_component(hangar, LayerType.INNER)
+        carrier.recalculate_stats()
+
+        enemy = Ship("Enemy", 1000, 0, (0, 0, 255), team_id=1)
+
+        engine.start([carrier], [enemy])
+
+        # Run updates until fighter is launched
+        for _ in range(3):
+            carrier.current_target = enemy
+            engine.update()
+            if len(engine.ships) > 2:
+                break
+
+        # Verify fighter was created
+        assert len(engine.ships) == 3, "Fighter should have been launched"
+        fighter = engine.ships[-1]
+
+        # Fighter velocity should be approximately FIGHTER_LAUNCH_SPEED in the forward direction
+        # Since carrier is at origin, stationary, facing right (angle=0),
+        # the launch direction is (1, 0) and velocity should be (100, 0)
+        expected_speed = BattleConfig.FIGHTER_LAUNCH_SPEED
+        assert abs(fighter.velocity.x) == pytest.approx(expected_speed, abs=5), \
+            f"Fighter X velocity should be ~{expected_speed}, got {fighter.velocity.x}"

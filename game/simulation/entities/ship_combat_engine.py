@@ -14,7 +14,7 @@ import random
 from typing import TYPE_CHECKING, List, Optional, Tuple, Any, Dict
 
 from game.core.math import Vector2
-from game.core.constants import AttackType
+from game.core.constants import AttackType, CombatConstants
 from game.core.logger import log_debug, log_info
 from game.simulation.components.component import LayerType, ComponentStatus
 
@@ -320,7 +320,7 @@ class ShipCombatEngine:
         if ship.current_target:
             potential_targets.append(ship.current_target)
 
-        if getattr(ship, 'max_targets', 1) > 1 and hasattr(ship, 'secondary_targets'):
+        if getattr(ship, 'max_targets', CombatConstants.DEFAULT_MAX_TARGETS) > CombatConstants.DEFAULT_MAX_TARGETS and hasattr(ship, 'secondary_targets'):
             potential_targets.extend(ship.secondary_targets)
 
         for candidate in potential_targets:

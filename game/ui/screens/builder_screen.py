@@ -20,7 +20,6 @@ from game.simulation.entities.ship import LayerType
 from game.core.registry import RegistryManager, get_component_registry, get_modifier_registry, get_vehicle_classes
 from game.simulation.components.component import get_all_components
 from game.ui.renderer.sprites import SpriteManager
-# PresetManager removed - preset system deprecated
 from game.simulation.systems.persistence import ShipIO
 from game.ui.panels.builder_widgets import ModifierEditorPanel
 from game.simulation.ship_theme import ShipThemeManager

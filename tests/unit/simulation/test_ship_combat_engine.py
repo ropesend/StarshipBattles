@@ -362,12 +362,15 @@ class TestDamageApplication:
 
         ship = MagicMock()
         ship.is_alive = False
+        ship.recalculate_stats = MagicMock()
+        ship.update_derelict_status = MagicMock()
 
         engine = ShipCombatEngine(ship)
         engine.take_damage(100)
 
-        # Ship methods should not be called
-        assert not hasattr(ship, 'current_shields') or ship.current_shields == ship.current_shields
+        # Ship methods should NOT be called since ship is dead
+        ship.recalculate_stats.assert_not_called()
+        ship.update_derelict_status.assert_not_called()
 
     def test_take_damage_applies_emissive_armor_reduction(self):
         """take_damage reduces damage by emissive armor amount."""
@@ -377,20 +380,46 @@ class TestDamageApplication:
         ship.is_alive = True
         ship.emissive_armor = 5
         ship.crystalline_armor = 0
-        ship.current_shields = 0
+        ship.current_shields = 100  # Give shields so damage can be absorbed
+        ship.max_shields = 100
         ship.layers = {}
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
         engine = ShipCombatEngine(ship)
 
-        # Track damage that would be applied
-        # With 5 emissive armor, 10 damage becomes 5
-        # Since no layers, damage just gets absorbed
+        # With 5 emissive armor, 10 damage becomes 5.
+        # Shields absorb the remaining 5 damage: 100 - 5 = 95
         engine.take_damage(10)
 
-        # Verify stats were recalculated (damage was applied)
-        # Note: actual assertion depends on implementation
+        # Verify shields absorbed damage (emissive armor reduced it)
+        assert ship.current_shields == 95
+        # Verify damage was processed
+        ship.recalculate_stats.assert_called_once()
+        ship.update_derelict_status.assert_called_once()
+
+    def test_take_damage_emissive_armor_blocks_all_when_damage_less_than_armor(self):
+        """take_damage with emissive armor blocking all damage skips processing."""
+        from game.simulation.entities.ship_combat_engine import ShipCombatEngine
+
+        ship = MagicMock()
+        ship.is_alive = True
+        ship.emissive_armor = 10  # Armor greater than damage
+        ship.crystalline_armor = 0
+        ship.current_shields = 100
+        ship.recalculate_stats = MagicMock()
+        ship.update_derelict_status = MagicMock()
+
+        engine = ShipCombatEngine(ship)
+
+        # 5 damage is completely absorbed by 10 emissive armor
+        engine.take_damage(5)
+
+        # No damage reached the ship, so these should NOT be called
+        ship.recalculate_stats.assert_not_called()
+        ship.update_derelict_status.assert_not_called()
+        # Shields should remain unchanged
+        assert ship.current_shields == 100
 
     def test_take_damage_applies_crystalline_armor(self):
         """take_damage applies crystalline armor absorption and shield recharge."""
@@ -409,9 +438,14 @@ class TestDamageApplication:
         engine = ShipCombatEngine(ship)
         engine.take_damage(20)
 
-        # Crystalline armor should have absorbed 10, recharged shields
-        # Then remaining 10 damage goes to shields
-        # Final shields: 50 + 10 (recharge) - 10 (damage) = 50
+        # Crystalline armor absorbs min(10, 20) = 10 damage
+        # Shields recharge by 10: 50 + 10 = 60
+        # Remaining damage: 20 - 10 = 10
+        # Shields absorb 10: 60 - 10 = 50
+        # Final shields: 50
+        assert ship.current_shields == 50
+        ship.recalculate_stats.assert_called_once()
+        ship.update_derelict_status.assert_called_once()
 
     def test_take_damage_shields_absorb_before_layers(self):
         """take_damage shields absorb damage before hull layers."""

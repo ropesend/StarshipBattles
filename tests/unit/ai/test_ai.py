@@ -7,6 +7,7 @@ import inspect
 from game.simulation.entities.ship import Ship, LayerType
 from game.ai import controller as ai
 from game.ai.controller import AIController
+from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, create_component
 from game.core.registry import RegistryManager
@@ -56,7 +57,8 @@ def ai_setup():
     grid.insert(ship2)
 
     # Create AI controller for ship1 targeting team 1
-    ai_controller = AIController(ship1, grid, enemy_team_id=1)
+    # Use ShipControllableAdapter to match production behavior (battle_engine.py)
+    ai_controller = AIController(ShipControllableAdapter(ship1), grid, enemy_team_id=1)
 
     yield {
         'grid': grid,
@@ -182,7 +184,8 @@ def strategy_setup():
     grid.insert(ship)
     grid.insert(target)
 
-    ai_controller = AIController(ship, grid, enemy_team_id=1)
+    # Use ShipControllableAdapter to match production behavior (battle_engine.py)
+    ai_controller = AIController(ShipControllableAdapter(ship), grid, enemy_team_id=1)
 
     yield {
         'grid': grid,
@@ -229,3 +232,80 @@ class TestAIStrategyStates:
         # After being very close, should switch to retreat
         assert strategy_setup['ai'].current_behavior is not None
         assert strategy_setup['ai'].current_behavior.attack_state == 'retreat'
+
+
+class TestTargetingHelpers:
+    """Test AI targeting helper methods (CQ-007 refactoring)."""
+
+    def test_find_enemies_in_radius_returns_alive_enemies(self, ai_setup):
+        """_find_enemies_in_radius should return alive enemies within radius."""
+        enemies = ai_setup['ai']._find_enemies_in_radius()
+        assert len(enemies) == 1
+        assert ai_setup['ship2'] in enemies
+
+    def test_find_enemies_in_radius_excludes_dead(self, ai_setup):
+        """_find_enemies_in_radius should exclude dead ships."""
+        ai_setup['ship2'].is_alive = False
+        enemies = ai_setup['ai']._find_enemies_in_radius()
+        assert len(enemies) == 0
+
+    def test_find_enemies_in_radius_excludes_same_team(self, ai_setup):
+        """_find_enemies_in_radius should exclude ships on same team."""
+        ai_setup['ship2'].team_id = 0  # Same team
+        enemies = ai_setup['ai']._find_enemies_in_radius()
+        assert len(enemies) == 0
+
+    def test_find_enemies_in_radius_excludes_specified_ship(self, ai_setup):
+        """_find_enemies_in_radius should exclude specified ship."""
+        enemies = ai_setup['ai']._find_enemies_in_radius(exclude=ai_setup['ship2'])
+        assert len(enemies) == 0
+
+    def test_find_enemies_in_radius_includes_missiles_when_needed(self, ai_setup):
+        """_find_enemies_in_radius should include missiles when targeting policy requires."""
+        # Set up strategy with missile targeting rules
+        ai_setup['ship1'].ai_strategy = 'pdc_defense'
+
+        # Create a mock missile
+        class MockMissile:
+            def __init__(self):
+                self.position = pygame.math.Vector2(500, 0)
+                self.type = 'missile'
+                self.is_alive = True
+                self.team_id = 1  # Enemy team
+                self.radius = 10
+
+        missile = MockMissile()
+        ai_setup['grid'].insert(missile)
+
+        # Get enemies with check_missiles=True
+        enemies = ai_setup['ai']._find_enemies_in_radius(check_missiles=True)
+        assert missile in enemies
+
+    def test_score_and_sort_enemies_returns_sorted_list(self, ai_setup):
+        """_score_and_sort_enemies should return enemies sorted by score (highest first)."""
+        enemies = [ai_setup['ship2']]
+        rules = []  # Empty rules = equal scores
+
+        scored = ai_setup['ai']._score_and_sort_enemies(enemies, rules)
+        assert len(scored) == 1
+        assert scored[0] == ai_setup['ship2']
+
+    def test_score_and_sort_enemies_excludes_negative_infinity(self, ai_setup):
+        """_score_and_sort_enemies should exclude targets with -inf score."""
+        # Create a third ship
+        from game.simulation.entities.ship import Ship
+        from game.simulation.components.component import create_component
+
+        ship3 = Ship("Enemy2", 2000, 0, (255, 0, 0), team_id=1, ship_class="TestM_4L")
+        ship3.add_component(create_component('bridge'), LayerType.CORE)
+        ship3.add_component(create_component('crew_quarters'), LayerType.CORE)
+        ship3.add_component(create_component('life_support'), LayerType.CORE)
+        ship3.recalculate_stats()
+        ai_setup['grid'].insert(ship3)
+
+        enemies = [ai_setup['ship2'], ship3]
+        rules = []  # Empty rules
+
+        scored = ai_setup['ai']._score_and_sort_enemies(enemies, rules)
+        # Both should be included with empty rules (score is 0, not -inf)
+        assert len(scored) == 2

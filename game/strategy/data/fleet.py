@@ -666,8 +666,27 @@ class Fleet:
             else:
                 fleet.path.append(p)
 
-        # Orders need special handling for fleet references - skip for now
-        # TODO: Restore orders with proper reference resolution
+        # Restore orders
+        for order_data in data.get('orders', []):
+            order_type = OrderType[order_data['type']]
+            target = None
+
+            target_data = order_data.get('target')
+            if target_data is not None:
+                if isinstance(target_data, dict):
+                    if 'q' in target_data and 'r' in target_data:
+                        # HexCoord
+                        target = HexCoord(target_data['q'], target_data['r'])
+                    elif target_data.get('type') == 'coord':
+                        # Tuple-style coord
+                        target = HexCoord(target_data['value'][0], target_data['value'][1])
+                    elif target_data.get('type') == 'fleet_ref':
+                        # Fleet reference - store ID for later resolution
+                        target = {'_fleet_ref': target_data['id']}
+                    elif target_data.get('type') == 'raw':
+                        target = target_data['value']
+
+            fleet.orders.append(FleetOrder(order_type, target))
 
         return fleet
 

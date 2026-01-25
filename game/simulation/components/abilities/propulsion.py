@@ -18,6 +18,12 @@ class CombatPropulsion(Ability):
         self.base_thrust = float(val)
         self.thrust_force = self.base_thrust
 
+    def sync_data(self, data: Any):
+        super().sync_data(data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0) if isinstance(data, dict) else 0
+        self.base_thrust = float(val)
+        self.thrust_force = self.base_thrust
+
     def recalculate(self):
         self.thrust_force = self.base_thrust * self.get_effective_stat('thrust_mult', 1.0)
 
@@ -38,6 +44,12 @@ class ManeuveringThruster(Ability):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.base_turn_rate = float(val)
+        self.turn_rate = self.base_turn_rate
+
+    def sync_data(self, data: Any):
+        super().sync_data(data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0) if isinstance(data, dict) else 0
         self.base_turn_rate = float(val)
         self.turn_rate = self.base_turn_rate
 
@@ -79,6 +91,12 @@ class StrategicMovement(Ability):
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
         val = data if isinstance(data, (int, float)) else data.get('value', 0)
+        self.base_movement_points = float(val)
+        self.movement_points = self.base_movement_points
+
+    def sync_data(self, data: Any):
+        super().sync_data(data)
+        val = data if isinstance(data, (int, float)) else data.get('value', 0) if isinstance(data, dict) else 0
         self.base_movement_points = float(val)
         self.movement_points = self.base_movement_points
 

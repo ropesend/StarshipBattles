@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import pygame
 
 from game.ai.controller import TargetEvaluator, AIController
+from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.core.constants import AttackType
 
 
@@ -181,7 +182,8 @@ class TestTargetingRules:
         # We can construct a controller with a mock grid.
 
         mock_grid = MagicMock()
-        controller = AIController(ship, mock_grid, enemy_team_id=1)
+        # Use ShipControllableAdapter to match production behavior (battle_engine.py)
+        controller = AIController(ShipControllableAdapter(ship), mock_grid, enemy_team_id=1)
 
         t1 = MagicMock()
         t1.team_id = 1

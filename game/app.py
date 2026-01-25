@@ -630,7 +630,7 @@ class Game:
 
                         # Get empire theme
                         empire_theme_id = empire.empire_theme_id if hasattr(empire, 'empire_theme_id') else None
-                        print(f"DEBUG: Creating WorkshopContext with empire_theme_id={empire_theme_id}")
+                        log_debug(f"Creating WorkshopContext with empire_theme_id={empire_theme_id}")
 
                         # Create integrated context regardless of save_path
                         # If save_path is None, designs will use temp storage or in-memory

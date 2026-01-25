@@ -91,10 +91,6 @@ class SystemTreeItem:
             
         text_x = (self.indent*20) + 5 + (25 if self.icon_image else 0)
         self.label.set_relative_position((text_x, y))
-        
-        if self.arrow_button:
-            # Arrow pos logic
-            pass
 
     def show(self):
         self.button.show()

@@ -1,6 +1,6 @@
 from game.engine.physics import PhysicsBody
 from game.simulation.physics_constants import K_SPEED, K_THRUST
-# Engine, Thruster imports removed - using ability-based checks (Phase 3)
+
 
 class ShipPhysicsMixin:
     """
@@ -12,40 +12,28 @@ class ShipPhysicsMixin:
     
     def update_physics_movement(self):
         """
+        Update ship physics for one tick.
+
+        When thrusting:
+        - Calculates dynamic thrust from operational engines only
+        - Derives acceleration: (thrust * K_THRUST) / mass^2
+        - Derives max speed: (thrust * K_SPEED) / mass
+        - Applies throttle to determine target speed
+
+        When coasting:
+        - Decelerates using base acceleration_rate until stopped
+
+        Uses arcade-style physics: velocity always matches heading direction.
         """
-        # Determine target speed based on input state
         if getattr(self, 'is_thrusting', False):
-            # Calculate Dynamic Thrust based on OPERATIONAL engines (Phase 3: ability-based)
             current_total_thrust = self.get_total_ability_value('CombatPropulsion', operational_only=True)
-            
-            # Recalculate acceleration for this frame based on available thrust
-            # Mass constant for now
+
             if self.mass > 0:
                 current_accel = (current_total_thrust * K_THRUST) / (self.mass * self.mass)
-                # Cap at max potential accel? Or just use it.
-                # Just use it.
-                # Update Max Speed potential too? 
-                # If we have half engines, we have half top speed?
-                # Physics says Force / Drag ~ Speed. 
-                # self.max_speed is currently pre-calculated based on ALL engines.
-                # We should scale target_speed?
-                
-                # Simple logic: target_speed is max_speed * throttle.
-                # But if engines are down, we can't reach max_speed.
-                # With less thrust, we just accelerate slower?
-                # Arcade physics: max_speed is usually a limit, but if Force is lower, do we cap speed lower?
-                # Formula: max_speed = (total_thrust * K_SPEED) / mass
-                # Let's dynamically calculate this frame's max speed potential.
                 potential_max_speed = (current_total_thrust * K_SPEED) / self.mass
-                
-                # Apply Throttle
                 target_v = potential_max_speed * getattr(self, 'engine_throttle', 1.0)
-                
-                # Override self.acceleration_rate temporarily for this update? 
-                # Or just use the local current_accel
                 step = current_accel
-                
-                # Logic copied from original but dynamic step/target
+
                 diff = target_v - self.current_speed
                 if diff != 0:
                      if abs(diff) <= step:
@@ -54,28 +42,24 @@ class ShipPhysicsMixin:
                          self.current_speed += step if diff > 0 else -step
             
         else:
-            # Coasting / Decelerating
-            # Drag? 
+            # Decelerate toward zero using base acceleration rate
             self.target_speed = 0
-            step = self.acceleration_rate # Use base accel as deceleration? Or Drag?
-            # Original code used self.acceleration_rate for decel too.
+            step = self.acceleration_rate
             diff = 0 - self.current_speed
             if diff != 0:
                 if abs(diff) <= step:
                     self.current_speed = 0
                 else:
                     self.current_speed += step if diff > 0 else -step
-            
-        # Reset input flag for next frame
+
         self.is_thrusting = False
-    
-        # 2. Update Position
-        # Velocity matches heading * speed (No drift, Arcade style)
+
+        # Update position based on current speed and heading
         forward = self.forward_vector()
         self.velocity = forward * self.current_speed
         self.position += self.velocity
-        
-        # 3. Angular Update
+
+        # Update rotation
         self.angle += self.angular_velocity
         self.angle %= 360
         self.angular_velocity = 0

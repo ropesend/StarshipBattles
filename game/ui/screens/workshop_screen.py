@@ -11,6 +11,7 @@ from pygame_gui.elements import (
 )
 from pygame_gui.windows import UIConfirmationDialog
 
+from game.core.logger import log_debug
 from game.core.profiling import profile_action, profile_block
 
 from game.simulation.entities.ship import LayerType
@@ -104,9 +105,9 @@ class DesignWorkshopGUI:
         # In integrated mode, set ship theme from empire
         if self.context.is_integrated() and self.context.empire_theme_id:
             self.ship.theme_id = self.context.empire_theme_id
-            print(f"DEBUG: Workshop set ship.theme_id to {self.ship.theme_id}")
+            log_debug(f"Workshop set ship.theme_id to {self.ship.theme_id}")
         else:
-            print(f"DEBUG: Workshop NOT setting theme - integrated={self.context.is_integrated()}, empire_theme_id={self.context.empire_theme_id}")
+            log_debug(f"Workshop NOT setting theme - integrated={self.context.is_integrated()}, empire_theme_id={self.context.empire_theme_id}")
         
         # Managers
         self.viewmodel.refresh_available_components()

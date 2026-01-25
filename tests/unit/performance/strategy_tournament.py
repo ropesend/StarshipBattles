@@ -20,6 +20,7 @@ pygame.display.set_mode((800, 600))
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.ai.controller import AIController, StrategyManager
+from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.registry import RegistryManager
@@ -67,8 +68,9 @@ def run_battle(strategy_a, strategy_b, ship_json_path, seed=None):
         )
         s.angle = 0  # Face right
         ships.append(s)
-        ai_controllers.append(AIController(s, grid, enemy_team_id=1))
-    
+        # Use ShipControllableAdapter to match production behavior (battle_engine.py)
+        ai_controllers.append(AIController(ShipControllableAdapter(s), grid, enemy_team_id=1))
+
     # Team B (right side)
     for i in range(SHIPS_PER_TEAM):
         s = load_ship_from_json(
@@ -80,7 +82,8 @@ def run_battle(strategy_a, strategy_b, ship_json_path, seed=None):
         )
         s.angle = 180  # Face left
         ships.append(s)
-        ai_controllers.append(AIController(s, grid, enemy_team_id=0))
+        # Use ShipControllableAdapter to match production behavior (battle_engine.py)
+        ai_controllers.append(AIController(ShipControllableAdapter(s), grid, enemy_team_id=0))
     
     projectiles = []
     dt = 1.0  # Tick-based physics (time-independent)
