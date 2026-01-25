@@ -2,8 +2,9 @@ import pytest
 import copy
 import pygame
 
-from game.simulation.entities.ship import Ship, initialize_ship_data
-from game.simulation.components.component import load_components, create_component, Component, LayerType
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
+from game.simulation.components import load_components, create_component, Component, LayerType
 from game.simulation.entities.ship_stats import ShipStatsCalculator
 from tests.fixtures.paths import get_project_root, get_data_dir
 

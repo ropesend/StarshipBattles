@@ -24,7 +24,7 @@ class TestShipStatsBaseline:
 
         # Import after mocking
         from game.core.registry import RegistryManager
-        from game.simulation.components.component import Component, load_components, load_modifiers
+        from game.simulation.components import Component, load_components, load_modifiers
         from game.simulation.entities.ship_stats import ShipStatsCalculator
 
         self.Component = Component
@@ -49,7 +49,7 @@ class TestShipStatsBaseline:
 
     def _create_mock_ship(self, components):
         """Create a mock ship with the given components."""
-        from game.simulation.components.component import LayerType
+        from game.simulation.components import LayerType
         from game.simulation.systems.resource_manager import ResourceRegistry
 
         ship = MagicMock()
@@ -256,7 +256,7 @@ class TestAbilityModifierSync:
         })
         self.modules_patcher.start()
 
-        from game.simulation.components.component import Component, load_components, load_modifiers
+        from game.simulation.components import Component, load_components, load_modifiers
         from game.core.registry import RegistryManager
 
         self.Component = Component

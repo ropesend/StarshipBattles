@@ -1,6 +1,6 @@
 import pytest
 
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 from game.simulation.entities.ship import Ship
 
 

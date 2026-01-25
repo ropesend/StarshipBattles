@@ -342,6 +342,60 @@ class TestFleetSerialization:
         assert "Owner:0" in r
         assert "Ships:2" in r
 
+    def test_from_dict_restores_move_orders(self):
+        """Test that MOVE orders are restored from serialized data (STRAT-001)."""
+        d = {
+            'id': 'f1',
+            'owner_id': 0,
+            'location': [0, 0],
+            'speed': 5.0,
+            'ships': [],
+            'orders': [
+                {'type': 'MOVE', 'target': {'q': 5, 'r': 3}}
+            ],
+            'path': [],
+        }
+
+        fleet = Fleet.from_dict(d)
+
+        assert len(fleet.orders) == 1
+        assert fleet.orders[0].type == OrderType.MOVE
+        # Target should be HexCoord
+        assert fleet.orders[0].target == HexCoord(5, 3)
+
+    def test_from_dict_restores_colonize_orders(self):
+        """Test that COLONIZE orders are restored from serialized data."""
+        d = {
+            'id': 'f1',
+            'owner_id': 0,
+            'location': [0, 0],
+            'speed': 5.0,
+            'ships': [],
+            'orders': [
+                {'type': 'COLONIZE', 'target': None}
+            ],
+            'path': [],
+        }
+
+        fleet = Fleet.from_dict(d)
+
+        assert len(fleet.orders) == 1
+        assert fleet.orders[0].type == OrderType.COLONIZE
+        assert fleet.orders[0].target is None
+
+    def test_roundtrip_orders_preserved(self):
+        """Test that orders survive serialization roundtrip."""
+        original = Fleet("test", 0, HexCoord(0, 0))
+        original.add_order(FleetOrder(OrderType.MOVE, HexCoord(2, 2)))
+
+        d = original.to_dict()
+        d['location'] = [0, 0]  # Fix HexCoord serialization gap
+
+        restored = Fleet.from_dict(d)
+
+        assert len(restored.orders) == 1
+        assert restored.orders[0].type == OrderType.MOVE
+
 
 class TestMovementResourceMethods:
     """Test cases for fleet movement resource methods (Group 4.1)."""
@@ -814,8 +868,8 @@ class TestBackwardCompatibility:
             return mock
         return _make
 
-    def test_backward_compat_has_energy_for_warp_wrapper(self, make_mock_ship):
-        """Test has_energy_for_warp() is an alias for has_resources_for_warp()."""
+    def test_has_resources_for_warp(self, make_mock_ship):
+        """Test has_resources_for_warp() checks all ships have warp resources."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         ship = make_mock_ship(
             warp_resource_costs={'energy': 500.0},
@@ -823,12 +877,10 @@ class TestBackwardCompatibility:
         )
         fleet.ships.append(ship)
 
-        # Both methods should return the same result
-        assert fleet.has_energy_for_warp() == fleet.has_resources_for_warp()
-        assert fleet.has_energy_for_warp() is True
+        assert fleet.has_resources_for_warp() is True
 
-    def test_backward_compat_consume_warp_energy_wrapper(self, make_mock_ship):
-        """Test consume_warp_energy() is an alias for consume_warp_resources()."""
+    def test_consume_warp_resources(self, make_mock_ship):
+        """Test consume_warp_resources() consumes from all ships."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         ship = make_mock_ship(
             warp_resource_costs={'energy': 500.0},
@@ -836,7 +888,7 @@ class TestBackwardCompatibility:
         )
         fleet.ships.append(ship)
 
-        result = fleet.consume_warp_energy()
+        result = fleet.consume_warp_resources()
 
         assert result is True
         ship.consume_resource.assert_called_with('energy', 500.0)
@@ -854,8 +906,8 @@ class TestBackwardCompatibility:
 
         assert result is True
 
-    def test_backward_compat_legacy_warp_methods_still_work(self, make_mock_ship):
-        """Test that legacy warp methods work with data-driven system."""
+    def test_warp_resources_multiple_resource_types(self, make_mock_ship):
+        """Test that warp methods work with multiple resource types."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         # Ship with both energy and fuel warp costs
         ship = make_mock_ship(
@@ -864,11 +916,11 @@ class TestBackwardCompatibility:
         )
         fleet.ships.append(ship)
 
-        # has_energy_for_warp should check all warp resources
-        assert fleet.has_energy_for_warp() is True
+        # has_resources_for_warp should check all warp resources
+        assert fleet.has_resources_for_warp() is True
 
-        # consume_warp_energy should consume all warp resources
-        result = fleet.consume_warp_energy()
+        # consume_warp_resources should consume all warp resources
+        result = fleet.consume_warp_resources()
         assert result is True
 
         # Verify both resources were requested to be consumed

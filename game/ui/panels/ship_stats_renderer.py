@@ -4,10 +4,10 @@ This module provides rendering functions for ship statistics, resources,
 weapons, and components display in the battle UI.
 """
 import pygame
-from game.simulation.components.component import ComponentStatus
-from game.simulation.entities.ship import LayerType
-from game.ai.controller import StrategyManager
+from game.simulation.components import ComponentStatus, LayerType
+from game.ai import StrategyManager
 from game.core.config import UIConfig
+from game.core.constants import CombatConstants
 
 
 # Define standard colors for known resources (fallback to gray)
@@ -332,8 +332,8 @@ def draw_ship_combat_stats(surface, ship, x_indent, y, font):
                 y += UIConfig.ELEMENT_SPACING
 
     # Targeting Cap
-    max_targets = getattr(ship, 'max_targets', 1)
-    cap_text = "Single" if max_targets == 1 else f"Multi ({max_targets})"
+    max_targets = getattr(ship, 'max_targets', CombatConstants.DEFAULT_MAX_TARGETS)
+    cap_text = "Single" if max_targets == CombatConstants.DEFAULT_MAX_TARGETS else f"Multi ({max_targets})"
     text = font.render(f"Sys: {cap_text}", True, (150, 150, 150))
     surface.blit(text, (x_indent + 200, y - 18))
 

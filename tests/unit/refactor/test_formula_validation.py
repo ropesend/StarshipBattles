@@ -68,7 +68,7 @@ class TestFormulaValidation:
 
     def test_validate_all_modifiers_on_load(self):
         """All modifiers in modifiers.json should pass validation."""
-        from game.simulation.components.component import load_modifiers
+        from game.simulation.components import load_modifiers
         from game.core.registry import get_modifier_registry
 
         load_modifiers("data/modifiers.json")

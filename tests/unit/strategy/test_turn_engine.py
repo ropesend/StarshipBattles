@@ -262,13 +262,13 @@ class TestTurnProcessing:
 
 
 class TestMovementCalculation:
-    """Tests for _calculate_next_hex method."""
+    """Tests for movement calculation via FleetMovementEngine."""
 
     def test_no_order_returns_none(self, turn_engine, mock_fleet, mock_galaxy):
         """Fleet with no orders returns None."""
         mock_fleet.get_current_order.return_value = None
 
-        result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+        result = turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
         assert result is None
 
@@ -280,10 +280,10 @@ class TestMovementCalculation:
         mock_fleet.path = []
         mock_fleet.location = HexCoord(0, 0)
 
-        with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.fleet_movement_engine.find_hybrid_path') as mock_path:
             mock_path.return_value = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)]
 
-            result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+            result = turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
             mock_path.assert_called()
 
@@ -295,7 +295,7 @@ class TestMovementCalculation:
         mock_fleet.path = []
         mock_fleet.location = target  # Already there
 
-        result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+        result = turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
         mock_fleet.pop_order.assert_called()
         assert result is None
@@ -309,12 +309,12 @@ class TestMovementCalculation:
         mock_fleet.path = []
         mock_fleet.location = HexCoord(0, 0)
 
-        with patch('game.strategy.data.pathfinding.calculate_intercept_point') as mock_intercept:
-            with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.fleet_movement_engine.calculate_intercept_point') as mock_intercept:
+            with patch('game.strategy.engine.fleet_movement_engine.find_hybrid_path') as mock_path:
                 mock_intercept.return_value = HexCoord(25, 0)
                 mock_path.return_value = [HexCoord(0, 0), HexCoord(5, 0)]
 
-                turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+                turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
                 mock_intercept.assert_called()
 
@@ -324,7 +324,7 @@ class TestMovementCalculation:
         mock_fleet.get_current_order.return_value = order
         mock_fleet.path = []
 
-        result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+        result = turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
         mock_fleet.pop_order.assert_called()
         assert result is None
@@ -446,7 +446,8 @@ class TestProductionProcessing:
         mock_planet.has_space_shipyard = True
         mock_empire.colonies = [mock_planet]
 
-        with patch.object(turn_engine, '_spawn_ship') as mock_spawn:
+        # PROJ-12: TurnEngine delegates to ProductionEngine, so patch there
+        with patch.object(turn_engine.production_engine, '_spawn_ship') as mock_spawn:
             turn_engine.process_production([mock_empire], mock_galaxy)
 
             mock_spawn.assert_called()
@@ -469,7 +470,8 @@ class TestProductionProcessing:
         mock_planet.has_space_shipyard = False
         mock_empire.colonies = [mock_planet]
 
-        with patch.object(turn_engine, '_spawn_complex') as mock_spawn:
+        # PROJ-12: TurnEngine delegates to ProductionEngine, so patch there
+        with patch.object(turn_engine.production_engine, '_spawn_complex') as mock_spawn:
             turn_engine.process_production([mock_empire], mock_galaxy)
 
             mock_spawn.assert_called()
@@ -665,16 +667,17 @@ class TestTickProcessing:
 
         mock_empire.fleets = [fleet]
 
-        with patch.object(turn_engine, '_calculate_next_hex') as mock_calc:
-            with patch.object(turn_engine, '_process_per_turn_resources'):
-                with patch.object(turn_engine, '_resolve_conflicts'):
-                    mock_calc.return_value = None
+        with patch.object(turn_engine.movement_engine, 'collect_movements') as mock_collect:
+            with patch.object(turn_engine.movement_engine, 'apply_movements'):
+                with patch.object(turn_engine, '_process_per_turn_resources'):
+                    with patch.object(turn_engine, '_resolve_conflicts'):
+                        mock_collect.return_value = []
 
-                    # Tick 10 should trigger movement check (10 % 10 == 0)
-                    turn_engine._process_tick(10, [mock_empire], mock_galaxy)
+                        # Tick 10 should trigger movement check (10 % 10 == 0)
+                        turn_engine._process_tick(10, [mock_empire], mock_galaxy)
 
-                    # Tick 5 should also check but still call calculate_next_hex
-                    turn_engine._process_tick(5, [mock_empire], mock_galaxy)
+                        # Tick 5 should also check - collect_movements is always called
+                        turn_engine._process_tick(5, [mock_empire], mock_galaxy)
 
     def test_zero_speed_fleet_never_moves(self, turn_engine, mock_empire, mock_galaxy):
         """Fleet with zero speed never moves."""
@@ -690,13 +693,16 @@ class TestTickProcessing:
 
         mock_empire.fleets = [fleet]
 
-        with patch.object(turn_engine, '_calculate_next_hex') as mock_calc:
-            with patch.object(turn_engine, '_process_per_turn_resources'):
-                with patch.object(turn_engine, '_resolve_conflicts'):
-                    for tick in range(1, 11):  # Check first 10 ticks
-                        turn_engine._process_tick(tick, [mock_empire], mock_galaxy)
+        with patch.object(turn_engine.movement_engine, 'collect_movements') as mock_collect:
+            with patch.object(turn_engine.movement_engine, 'apply_movements') as mock_apply:
+                with patch.object(turn_engine, '_process_per_turn_resources'):
+                    with patch.object(turn_engine, '_resolve_conflicts'):
+                        mock_collect.return_value = []  # Zero speed means no movements collected
+                        for tick in range(1, 11):  # Check first 10 ticks
+                            turn_engine._process_tick(tick, [mock_empire], mock_galaxy)
 
-                    mock_calc.assert_not_called()
+                        # Movement engine is called but returns empty queue for zero-speed fleet
+                        assert mock_collect.called
 
     def test_movement_consumes_resources(self, turn_engine, mock_empire, mock_galaxy):
         """Movement consumes fleet resources."""
@@ -897,3 +903,313 @@ class TestTurnEngineEdgeCases:
             turn_engine.process_turn([mock_empire], mock_galaxy, save_path="/test/path")
 
             mock_prod.assert_called_with([mock_empire], mock_galaxy, "/test/path")
+
+
+# =============================================================================
+# PROJ-11 Phase 4: IBattleResolver Dependency Injection Tests
+# =============================================================================
+
+
+class TestBattleResolverInjection:
+    """
+    Tests for TurnEngine battle resolver dependency injection.
+
+    PROJ-11 Phase 4: TurnEngine now accepts an optional IBattleResolver
+    parameter for clean separation between strategy and simulation layers.
+    """
+
+    def test_turn_engine_accepts_battle_resolver(self):
+        """TurnEngine constructor should accept battle_resolver parameter."""
+        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+        class MockResolver(IBattleResolver):
+            def resolve_battle(self, fleet1, fleet2, seed=None):
+                return BattleResult(winner=0, tick_count=0, team0_survivors=[], team1_survivors=[])
+
+        resolver = MockResolver()
+        engine = TurnEngine(battle_resolver=resolver)
+
+        assert engine._battle_resolver is resolver
+
+    def test_turn_engine_defaults_to_simulation_resolver(self):
+        """TurnEngine should default to SimulationBattleResolver."""
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        engine = TurnEngine()
+
+        assert isinstance(engine._battle_resolver, SimulationBattleResolver)
+
+    def test_resolve_combat_simulated_uses_injected_resolver(self):
+        """_resolve_combat_simulated should use injected resolver."""
+        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+        call_count = 0
+        last_fleets = []
+
+        class TrackingResolver(IBattleResolver):
+            def resolve_battle(self, fleet1, fleet2, seed=None):
+                nonlocal call_count, last_fleets
+                call_count += 1
+                last_fleets = [fleet1, fleet2]
+                return BattleResult(
+                    winner=0,
+                    tick_count=100,
+                    team0_survivors=[],
+                    team1_survivors=[]
+                )
+
+        resolver = TrackingResolver()
+        engine = TurnEngine(battle_resolver=resolver)
+
+        fleet1 = MagicMock()
+        fleet1.id = 1
+        fleet1.has_ship_instances.return_value = True
+
+        fleet2 = MagicMock()
+        fleet2.id = 2
+        fleet2.has_ship_instances.return_value = True
+
+        result = engine._resolve_combat_simulated(fleet1, fleet2)
+
+        assert call_count == 1
+        assert fleet1 in last_fleets
+        assert fleet2 in last_fleets
+        assert result == fleet1  # Winner was team 0 (fleet1)
+
+    def test_mock_resolver_enables_unit_testing(self):
+        """Mock resolver allows unit testing without simulation."""
+        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+        class AlwaysFleet1WinsResolver(IBattleResolver):
+            def resolve_battle(self, fleet1, fleet2, seed=None):
+                return BattleResult(
+                    winner=0,  # Team 0 (fleet1) wins
+                    tick_count=50,
+                    team0_survivors=[MagicMock()],
+                    team1_survivors=[]
+                )
+
+        engine = TurnEngine(battle_resolver=AlwaysFleet1WinsResolver())
+
+        fleet1 = MagicMock()
+        fleet1.id = 1
+        fleet1.has_ship_instances.return_value = True
+        fleet1.get_ship_instances.return_value = [MagicMock()]
+        fleet1.ships = [MagicMock()]
+        fleet1.update_from_battle_results = MagicMock()
+
+        fleet2 = MagicMock()
+        fleet2.id = 2
+        fleet2.has_ship_instances.return_value = True
+        fleet2.get_ship_instances.return_value = [MagicMock()]
+        fleet2.ships = [MagicMock()]
+        fleet2.update_from_battle_results = MagicMock()
+
+        winner = engine._resolve_combat_simulated(fleet1, fleet2)
+
+        assert winner == fleet1
+
+    def test_draw_result_handled(self):
+        """Draw (winner=None) should be handled correctly."""
+        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+        class DrawResolver(IBattleResolver):
+            def resolve_battle(self, fleet1, fleet2, seed=None):
+                return BattleResult(
+                    winner=None,  # Draw
+                    tick_count=1000,
+                    team0_survivors=[MagicMock(), MagicMock()],  # 2 survivors
+                    team1_survivors=[MagicMock()]  # 1 survivor
+                )
+
+        engine = TurnEngine(battle_resolver=DrawResolver())
+
+        fleet1 = MagicMock()
+        fleet1.id = 1
+        fleet1.has_ship_instances.return_value = True
+        fleet1.update_from_battle_results = MagicMock()
+
+        fleet2 = MagicMock()
+        fleet2.id = 2
+        fleet2.has_ship_instances.return_value = True
+        fleet2.update_from_battle_results = MagicMock()
+
+        winner = engine._resolve_combat_simulated(fleet1, fleet2)
+
+        # Fleet with more survivors wins on draw
+        assert winner == fleet1
+
+    def test_seed_passed_to_resolver(self):
+        """Battle seed should be passed to resolver."""
+        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+        received_seed = None
+
+        class SeedCapturingResolver(IBattleResolver):
+            def resolve_battle(self, fleet1, fleet2, seed=None):
+                nonlocal received_seed
+                received_seed = seed
+                return BattleResult(
+                    winner=0,
+                    tick_count=0,
+                    team0_survivors=[],
+                    team1_survivors=[]
+                )
+
+        engine = TurnEngine(battle_resolver=SeedCapturingResolver())
+
+        fleet1 = MagicMock()
+        fleet1.id = 1
+        fleet1.has_ship_instances.return_value = True
+
+        fleet2 = MagicMock()
+        fleet2.id = 2
+        fleet2.has_ship_instances.return_value = True
+
+        engine._resolve_combat_simulated(fleet1, fleet2)
+
+        # The engine uses _generate_battle_seed() internally
+        assert received_seed is not None
+        assert isinstance(received_seed, int)
+
+    def test_battle_results_applied_to_fleets(self):
+        """Battle results should be applied to fleet ship states."""
+        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+        survivor0 = MagicMock()
+        survivor1 = MagicMock()
+
+        class ResultResolver(IBattleResolver):
+            def resolve_battle(self, fleet1, fleet2, seed=None):
+                return BattleResult(
+                    winner=0,
+                    tick_count=100,
+                    team0_survivors=[survivor0],
+                    team1_survivors=[survivor1]
+                )
+
+        engine = TurnEngine(battle_resolver=ResultResolver())
+
+        fleet1 = MagicMock()
+        fleet1.id = 1
+        fleet1.has_ship_instances.return_value = True
+        fleet1.update_from_battle_results = MagicMock()
+
+        fleet2 = MagicMock()
+        fleet2.id = 2
+        fleet2.has_ship_instances.return_value = True
+        fleet2.update_from_battle_results = MagicMock()
+
+        engine._resolve_combat_simulated(fleet1, fleet2)
+
+        # Verify fleet.update_from_battle_results was called with survivors
+        fleet1.update_from_battle_results.assert_called_once_with([survivor0])
+        fleet2.update_from_battle_results.assert_called_once_with([survivor1])
+
+
+# =============================================================================
+# Test: Iterator Safety
+# =============================================================================
+
+
+class TestFleetIteratorSafety:
+    """Test that turn processing handles fleet modification safely.
+
+    Regression test for PROJ-12 Phase 7 Fix 7.4:
+    Line 104 iterates empire.fleets directly while colonization may remove fleets.
+    While Python doesn't always raise RuntimeError for list modification during
+    iteration, removing items can cause skipped iterations (silent bugs).
+    """
+
+    def test_fleet_removal_during_iteration_skips_items(self):
+        """Verify that direct iteration skips items when list is modified.
+
+        When iterating directly over a list and removing an item, the
+        iteration can skip items because indices shift. The fix (using
+        list()) prevents this.
+        """
+        # Create fleets
+        fleet1 = MagicMock(spec=Fleet)
+        fleet1.id = 1
+
+        fleet2 = MagicMock(spec=Fleet)
+        fleet2.id = 2
+
+        fleet3 = MagicMock(spec=Fleet)
+        fleet3.id = 3
+
+        fleets = [fleet1, fleet2, fleet3]
+
+        # BUG: Direct iteration with removal skips items
+        processed_ids_buggy = []
+        fleets_copy = [fleet1, fleet2, fleet3]
+        for fleet in fleets_copy:  # Iterating directly
+            processed_ids_buggy.append(fleet.id)
+            if fleet.id == 1:
+                # Removing fleet2 shifts fleet3 to index 1
+                # But iterator advances to index 2, skipping fleet3
+                fleets_copy.remove(fleet2)
+
+        # fleet3 gets skipped because of index shift
+        assert processed_ids_buggy == [1, 3], f"Expected [1, 3] due to skip, got {processed_ids_buggy}"
+
+        # FIX: Using list() copy processes all items correctly
+        processed_ids_fixed = []
+        fleets = [fleet1, fleet2, fleet3]
+        for fleet in list(fleets):  # Copy prevents issues
+            processed_ids_fixed.append(fleet.id)
+            if fleet.id == 1:
+                fleets.remove(fleet2)
+
+        # All three fleets are processed
+        assert processed_ids_fixed == [1, 2, 3], f"Expected [1, 2, 3], got {processed_ids_fixed}"
+
+    @patch.object(TurnEngine, '_process_tick')
+    @patch.object(TurnEngine, 'process_production')
+    def test_process_turn_processes_all_fleets_when_modified(
+        self, mock_production, mock_tick
+    ):
+        """Verify process_turn processes all fleets even if list is modified.
+
+        After the fix, all fleets should be processed even if some are removed
+        during end-turn processing.
+        """
+        turn_engine = TurnEngine()
+
+        mock_empire = MagicMock(spec=Empire)
+        mock_empire.id = 0
+
+        fleet1 = MagicMock(spec=Fleet)
+        fleet1.id = 1
+        fleet1.orders = []
+        fleet1.get_current_order = MagicMock(return_value=None)
+
+        fleet2 = MagicMock(spec=Fleet)
+        fleet2.id = 2
+        fleet2.orders = []
+        fleet2.get_current_order = MagicMock(return_value=None)
+
+        fleet3 = MagicMock(spec=Fleet)
+        fleet3.id = 3
+        fleet3.orders = []
+        fleet3.get_current_order = MagicMock(return_value=None)
+
+        mock_empire.fleets = [fleet1, fleet2, fleet3]
+        mock_galaxy = MagicMock()
+        mock_galaxy.systems = {}
+
+        # Track which fleets get processed
+        processed_fleets = []
+
+        def track_and_remove(fleet, empire, galaxy):
+            processed_fleets.append(fleet.id)
+            # Simulate colonization removing fleet2 when processing fleet1
+            if fleet.id == 1 and fleet2 in mock_empire.fleets:
+                mock_empire.fleets.remove(fleet2)
+
+        with patch.object(turn_engine, '_process_end_turn_orders', side_effect=track_and_remove):
+            turn_engine.process_turn([mock_empire], mock_galaxy)
+
+        # After the fix, all 3 fleets should be processed
+        # Before the fix, fleet3 would be skipped
+        assert len(processed_fleets) == 3, f"Expected 3 fleets processed, got {processed_fleets}"

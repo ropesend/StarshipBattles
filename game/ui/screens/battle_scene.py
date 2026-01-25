@@ -14,7 +14,6 @@ from typing import Optional, List, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_info, log_warning
 from game.core.config import UIConfig
-from game.ai.controller import AIController
 from game.ui.renderer.game_renderer import draw_ship
 from game.ui.renderer.camera import Camera
 from game.ui.screens.battle_screen import BattleInterface

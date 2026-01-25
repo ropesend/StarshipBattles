@@ -6,7 +6,7 @@ import sys
 # Add current directory to path so we can import modules
 sys.path.append(os.getcwd())
 
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 from game.core.registry import RegistryManager
 from game.simulation.entities.ship import Ship, LayerType
 from ship_stats import ShipStatsCalculator

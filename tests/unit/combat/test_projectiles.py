@@ -3,8 +3,9 @@ import pytest
 import pygame
 
 from game.simulation.entities.projectile import Projectile
-from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
-from game.simulation.components.component import load_components, create_component
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.entities.ship_loader import initialize_ship_data
+from game.simulation.components import load_components, create_component
 from tests.fixtures.paths import get_project_root, get_data_dir
 
 
@@ -36,7 +37,7 @@ class TestProjectileBasics:
         assert proj.damage == 50
         assert proj.max_range == 1000
         assert proj.endurance == 5.0
-        from game.simulation.entities.ship_combat import AttackType
+        from game.core.constants import AttackType
         assert proj.type == AttackType.PROJECTILE
         assert proj.team_id == 0
         assert proj.is_alive

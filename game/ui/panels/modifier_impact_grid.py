@@ -14,7 +14,7 @@ from pygame_gui.elements import UIPanel, UILabel
 from typing import Dict, Any, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from game.simulation.components.component import Component
+    from game.simulation.components import Component
 
 
 class ModifierImpactGrid:

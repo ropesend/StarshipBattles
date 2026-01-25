@@ -16,6 +16,57 @@ MULTIPLICATIVE_ABILITIES = {'ToHitAttackModifier', 'ToHitDefenseModifier'}
 MARKER_ABILITIES = {'CommandAndControl', 'Armor', 'RequiresCommandAndControl', 'RequiresCombatMovement'}
 
 
+def _aggregate_ability_groups(ability_groups: Dict[str, Dict[Any, List[Any]]]) -> Dict[str, Any]:
+    """Aggregate ability values from grouped data structure.
+
+    Two-phase aggregation:
+    1. Intra-group: Take MAX within each named group (redundancy)
+    2. Inter-group: Sum across different groups (or multiply for special abilities)
+
+    Args:
+        ability_groups: Dict mapping ability_name -> {group_key -> [values]}
+
+    Returns:
+        Dict mapping ability names to their aggregated totals
+    """
+    totals = {}
+
+    for ability_name, groups in ability_groups.items():
+        # 1. Intra-Group Aggregation (MAX / Redundancy)
+        group_contributions = []
+
+        for key, values in groups.items():
+            # Filter for numeric
+            nums = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
+            if nums:
+                group_contributions.append(max(nums))
+            elif any(v is True for v in values):
+                # Boolean support (if any is True, the group is True)
+                group_contributions.append(True)
+
+        if not group_contributions:
+            continue
+
+        # 2. Inter-Group Aggregation (Sum or Multiply)
+        first = group_contributions[0]
+
+        if isinstance(first, bool):
+            # If any group contributes True, result is True
+            totals[ability_name] = True
+        else:
+            if ability_name in MULTIPLICATIVE_ABILITIES:
+                val = 1.0
+                for v in group_contributions:
+                    if isinstance(v, (int, float)):
+                        val *= v
+                totals[ability_name] = val
+            else:
+                val = sum(v for v in group_contributions if isinstance(v, (int, float)))
+                totals[ability_name] = val
+
+    return totals
+
+
 def calculate_ability_totals(components):
     """Calculate total values for all abilities from components.
 
@@ -102,42 +153,8 @@ def calculate_ability_totals(components):
 
                 ability_groups[ability_name][group_key].append(value)
 
-    # Aggregate
-    for ability_name, groups in ability_groups.items():
-        # 1. Intra-Group Aggregation (MAX / Redundancy)
-        # All items in a Named Group provide redundancy -> Take MAX
-        group_contributions = []
-
-        for key, values in groups.items():
-            # Filter for numeric
-            nums = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
-            if nums:
-                group_contributions.append(max(nums))
-            elif any(v is True for v in values):
-                # Boolean support (if any is True, the group is True)
-                group_contributions.append(True)
-
-        if not group_contributions:
-            continue
-
-        # 2. Inter-Group Aggregation (Sum or Multiply)
-        first = group_contributions[0]
-
-        if isinstance(first, bool):
-            # If any group contributes True, result is True
-            totals[ability_name] = True
-        else:
-            if ability_name in MULTIPLICATIVE_ABILITIES:
-                val = 1.0
-                for v in group_contributions:
-                    if isinstance(v, (int, float)):
-                        val *= v
-                totals[ability_name] = val
-            else:
-                val = sum(v for v in group_contributions if isinstance(v, (int, float)))
-                totals[ability_name] = val
-
-    return totals
+    # Use shared aggregation helper
+    return _aggregate_ability_groups(ability_groups)
 
 
 def get_ability_total(components, ability_name):
@@ -226,36 +243,5 @@ def calculate_ability_totals_for_layer(
                     ability_groups[alias][group_key] = []
                 ability_groups[alias][group_key].append(value)
 
-    # Aggregate using same logic as calculate_ability_totals
-    for ability_name, groups in ability_groups.items():
-        # 1. Intra-Group Aggregation (MAX / Redundancy)
-        group_contributions = []
-
-        for key, values in groups.items():
-            # Filter for numeric
-            nums = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
-            if nums:
-                group_contributions.append(max(nums))
-            elif any(v is True for v in values):
-                group_contributions.append(True)
-
-        if not group_contributions:
-            continue
-
-        # 2. Inter-Group Aggregation (Sum or Multiply)
-        first = group_contributions[0]
-
-        if isinstance(first, bool):
-            totals[ability_name] = True
-        else:
-            if ability_name in MULTIPLICATIVE_ABILITIES:
-                val = 1.0
-                for v in group_contributions:
-                    if isinstance(v, (int, float)):
-                        val *= v
-                totals[ability_name] = val
-            else:
-                val = sum(v for v in group_contributions if isinstance(v, (int, float)))
-                totals[ability_name] = val
-
-    return totals
+    # Use shared aggregation helper
+    return _aggregate_ability_groups(ability_groups)

@@ -2,10 +2,12 @@ import pytest
 from unittest.mock import MagicMock
 import pygame
 
-from game.simulation.entities.ship import Ship, initialize_ship_data
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.ui.screens.battle_scene import BattleScene
-from game.ai.controller import AIController, StrategyManager
-from game.simulation.components.component import LayerType, load_components, load_modifiers
+from game.ai import AIController, StrategyManager
+from game.ai.interfaces.controllable import ShipControllableAdapter
+from game.simulation.components import LayerType, load_components, load_modifiers
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 
@@ -74,7 +76,8 @@ class TestMovementAndAI:
         mock_grid = MagicMock()
         mock_grid.query_radius.return_value = [target]
 
-        ai = AIController(attacker, mock_grid, 1)
+        # Use ShipControllableAdapter to match production behavior
+        ai = AIController(ShipControllableAdapter(attacker), mock_grid, 1)
 
         found_target = ai.find_target()
 
@@ -123,7 +126,8 @@ class TestMovementAndAI:
         mock_grid = MagicMock()
         mock_grid.query_radius.return_value = [target]
 
-        ai = AIController(attacker, mock_grid, 1)
+        # Use ShipControllableAdapter to match production behavior
+        ai = AIController(ShipControllableAdapter(attacker), mock_grid, 1)
 
         # 1. Find target
         attacker.current_target = ai.find_target()

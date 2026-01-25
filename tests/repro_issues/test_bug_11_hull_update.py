@@ -5,7 +5,7 @@ to the default_hull_id of the new class.
 """
 import pytest
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import Component, LayerType
+from game.simulation.components import Component, LayerType
 from game.core.registry import RegistryManager
 
 @pytest.fixture

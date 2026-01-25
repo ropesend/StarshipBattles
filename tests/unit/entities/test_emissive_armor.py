@@ -1,5 +1,5 @@
 import pytest
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_combat import ShipCombatMixin
 
@@ -30,7 +30,7 @@ class TestEmissiveArmor:
         }
         # Register it so it can be cloned if needed, or just use it directly
         from game.core.registry import RegistryManager
-        from game.simulation.components.component import Component
+        from game.simulation.components import Component
 
         # Ensure ship has mass budget for formula eval when added
         self.ship.max_mass_budget = 1000

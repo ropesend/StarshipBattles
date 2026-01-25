@@ -1,6 +1,6 @@
 import pytest
 import math
-from game.simulation.components.component import Component, ComponentStatus
+from game.simulation.components import Component, ComponentStatus
 from game.simulation.ship_validator import ResourceDependencyRule, ValidationResult
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability, ResourceStorage, ResourceConsumption

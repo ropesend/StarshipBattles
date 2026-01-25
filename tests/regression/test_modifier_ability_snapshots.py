@@ -20,7 +20,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from game.simulation.components.component import (
+from game.simulation.components import (
     Component, load_components, load_modifiers, create_component,
     reset_component_caches
 )

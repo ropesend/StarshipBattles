@@ -1,7 +1,8 @@
 from unittest.mock import MagicMock
 import sys
 
-from game.simulation.entities.ship import Ship, initialize_ship_data
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
 from ui.builder.stats_config import StatDefinition, get_logistics_rows
 from tests.fixtures.paths import get_project_root
 
@@ -52,7 +53,7 @@ class TestStatsConfig:
         ship.resources.register_storage("fuel", 100)
 
         # Add a component with consumption
-        from game.simulation.components.component import Component
+        from game.simulation.components import Component
         from game.simulation.entities.ship import LayerType
 
         comp = Component({'id': 'test_engine', 'name': 'Test Engine', 'type': 'Engine', 'mass': 10, 'hp': 10})

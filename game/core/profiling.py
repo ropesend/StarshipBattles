@@ -105,7 +105,6 @@ class Profiler:
             "metadata": metadata or {}
         }
         self.records.append(entry)
-        # logger.debug(f"Profiled {name}: {duration*1000:.2f}ms")
 
     def save_history(self, filename: str = "profiling_history.json"):
         """Save current session to history file."""

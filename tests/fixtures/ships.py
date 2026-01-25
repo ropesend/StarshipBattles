@@ -24,8 +24,8 @@ Available fixtures:
 import pytest
 from typing import Tuple
 
-from game.simulation.entities.ship import Ship
-from game.simulation.components.component import create_component, LayerType
+from game.simulation.entities import Ship
+from game.simulation.components import create_component, LayerType
 
 
 # =============================================================================

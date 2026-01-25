@@ -10,7 +10,7 @@ import pytest
 from typing import List, Tuple
 
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import Component, create_component, LayerType
+from game.simulation.components import Component, create_component, LayerType
 from game.core.registry import RegistryManager
 
 

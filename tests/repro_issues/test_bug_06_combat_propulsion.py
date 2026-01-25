@@ -5,7 +5,7 @@ Uses 'Manual Headless Assembly' pattern to avoid state pollution from registry r
 import pytest
 from game.simulation.entities.ship import Ship, LayerType
 from game.core.registry import RegistryManager
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 from game.simulation.components.abilities import (
     CombatPropulsion, CommandAndControl, ResourceStorage
 )

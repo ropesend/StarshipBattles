@@ -15,10 +15,11 @@ pygame.init()
 pygame.display.set_mode((800, 600))
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.ai.controller import AIController
+from game.ai import AIController
+from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.simulation.designs import create_brick, create_interceptor
-from game.simulation.components.component import load_components, load_modifiers
+from game.simulation.components import load_components, load_modifiers
 from game.core.constants import COMPONENTS_FILE, MODIFIERS_FILE
 
 def run_battle_simulation(num_ships_per_team=10, num_ticks=300):
@@ -41,18 +42,20 @@ def run_battle_simulation(num_ships_per_team=10, num_ticks=300):
         )
         s.team_id = 0
         ships.append(s)
-        ai_controllers.append(AIController(s, grid, 1))
-    
+        # Use ShipControllableAdapter to match production behavior (battle_engine.py)
+        ai_controllers.append(AIController(ShipControllableAdapter(s), grid, 1))
+
     # Team 2 - Interceptors (right line, within weapon range ~2400)
     for i in range(num_ships_per_team):
         s = create_interceptor(
-            3000 + random.randint(-500, 500), 
+            3000 + random.randint(-500, 500),
             i * 300 + random.randint(-100, 100)
         )
         s.team_id = 1
         s.angle = 180
         ships.append(s)
-        ai_controllers.append(AIController(s, grid, 0))
+        # Use ShipControllableAdapter to match production behavior (battle_engine.py)
+        ai_controllers.append(AIController(ShipControllableAdapter(s), grid, 0))
     
     projectiles = []
     beams = []

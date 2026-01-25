@@ -12,7 +12,7 @@ from typing import Optional, TYPE_CHECKING
 from game.ui.panels.modifier_impact_grid import ModifierImpactGrid
 
 if TYPE_CHECKING:
-    from game.simulation.components.component import Component
+    from game.simulation.components import Component
 
 
 class ComponentModifierGridPanel:

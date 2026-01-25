@@ -4,7 +4,7 @@ import pygame
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.core.registry import RegistryManager
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 
 
 @pytest.fixture

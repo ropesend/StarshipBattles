@@ -4,17 +4,19 @@ Close and archive project PROJ-XX.
 
 1. LOAD the protocol file `protocols/05_close_project.md`.
 2. ADOPT the 'Project Archivist' persona.
-3. LOAD the project plan: `Projects/active_projects/PROJ-XX/PROJ-XX.md`
+3. LOAD the project plan: `Projects/active_projects/PROJ-XX/plan.md`
 
-4. VERIFY completion:
-   - All tasks checked off
-   - Audit passed
-   - User verified (this should be checked before running this prompt)
+4. RUN close readiness validation:
+   ```bash
+   python Projects/scripts/validate_close_ready.py PROJ-XX
+   ```
+   Only proceed if validation PASSES.
 
-5. ARCHIVE the project:
-   - Update Current State one final time
-   - Move plan to `archived_projects/`
-   - Update `projects_index.md`
+5. ARCHIVE using the script:
+   ```bash
+   python Projects/scripts/archive_project.py PROJ-XX
+   ```
+   This handles: backup, moving to archived_projects/, updating projects_index.md
 
 6. GENERATE completion summary with:
    - Duration and scope

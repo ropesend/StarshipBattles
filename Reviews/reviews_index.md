@@ -63,7 +63,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 | `create_review.py` | Create new review folder |
 | `calculate_agents.py` | Recommend agent count for scope |
 | `compile_findings.py` | Generate report from agent findings |
-| `review_to_project.py` | Create project handoff from findings |
+| `review_to_project.py` | Create project from findings (or handoff with `--no-create-project`) |
 
 ---
 

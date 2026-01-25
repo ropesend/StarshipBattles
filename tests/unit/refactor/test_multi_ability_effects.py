@@ -100,7 +100,7 @@ class TestAbilitySpecificStats:
 
     def test_component_has_ability_stats_dict(self):
         """Component should have an ability_stats dict for targeted effects."""
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
 
@@ -112,7 +112,7 @@ class TestAbilitySpecificStats:
 
     def test_targeted_effect_goes_to_ability_stats(self):
         """Effects with target_ability should populate ability_stats[ability_name]."""
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
         from game.simulation.components.component_constants import Modifier
         from game.core.registry import get_modifier_registry
 
@@ -146,7 +146,7 @@ class TestAbilitySpecificStats:
 
     def test_global_effect_stays_in_stats(self):
         """Effects without target_ability should stay in component.stats."""
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
         from game.simulation.components.component_constants import Modifier
         from game.core.registry import get_modifier_registry
 
@@ -188,7 +188,7 @@ class TestAbilityRecalculateWithTargetedStats:
 
     def test_ability_uses_targeted_stat_over_global(self):
         """Ability should use ability_stats[cls_name][stat] if present."""
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
         from game.simulation.components.component_constants import Modifier
         from game.core.registry import get_modifier_registry
 
@@ -233,7 +233,7 @@ class TestAbilityRecalculateWithTargetedStats:
 
     def test_multiple_abilities_same_stat_targeted_differently(self):
         """Different abilities consuming same stat can be targeted independently."""
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
         from game.simulation.components.component_constants import Modifier
         from game.core.registry import get_modifier_registry
 
@@ -275,7 +275,7 @@ class TestMixedGlobalAndTargetedEffects:
 
     def test_modifier_with_global_and_targeted_effects(self):
         """A modifier can have both global effects and ability-targeted effects."""
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
         from game.simulation.components.component_constants import Modifier
         from game.core.registry import get_modifier_registry
 

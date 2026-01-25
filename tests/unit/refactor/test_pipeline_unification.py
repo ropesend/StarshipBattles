@@ -12,7 +12,7 @@ class TestSingleRecalculatePath:
 
     def test_resource_consumption_recalculates_via_stat_bindings(self):
         """ResourceConsumption.recalculate() should apply consumption_mult correctly."""
-        from game.simulation.components.component import (
+        from game.simulation.components import (
             load_components, load_modifiers, create_component, reset_component_caches
         )
         reset_component_caches()
@@ -38,7 +38,7 @@ class TestSingleRecalculatePath:
 
     def test_resource_storage_recalculates_via_stat_bindings(self):
         """ResourceStorage.recalculate() should apply capacity_mult correctly."""
-        from game.simulation.components.component import (
+        from game.simulation.components import (
             load_components, load_modifiers, create_component, reset_component_caches
         )
         reset_component_caches()
@@ -67,7 +67,7 @@ class TestSingleRecalculatePath:
 
     def test_resource_generation_recalculates_via_stat_bindings(self):
         """ResourceGeneration.recalculate() should apply energy_gen_mult correctly."""
-        from game.simulation.components.component import (
+        from game.simulation.components import (
             load_components, load_modifiers, create_component, reset_component_caches
         )
         reset_component_caches()
@@ -93,7 +93,7 @@ class TestSingleRecalculatePath:
 
     def test_all_abilities_recalculate_called(self):
         """All ability instances should have recalculate() called during stats recalc."""
-        from game.simulation.components.component import (
+        from game.simulation.components import (
             load_components, load_modifiers, create_component, reset_component_caches
         )
         reset_component_caches()
@@ -116,7 +116,7 @@ class TestNoManuaStatsApplication:
 
     def test_weapon_damage_from_ability_recalculate(self):
         """WeaponAbility should apply damage_mult via its own recalculate()."""
-        from game.simulation.components.component import (
+        from game.simulation.components import (
             load_components, load_modifiers, create_component, reset_component_caches
         )
         reset_component_caches()
@@ -140,7 +140,7 @@ class TestNoManuaStatsApplication:
 
     def test_propulsion_thrust_from_ability_recalculate(self):
         """CombatPropulsion should apply thrust_mult via its own recalculate()."""
-        from game.simulation.components.component import (
+        from game.simulation.components import (
             load_components, load_modifiers, create_component, reset_component_caches
         )
         reset_component_caches()

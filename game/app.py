@@ -12,10 +12,10 @@ parser.add_argument('--force-resolution', action='store_true',
                     help='Force 2560x1600 resolution regardless of monitor size')
 args, _ = parser.parse_known_args()
 
-from game.simulation.components.component import load_components, load_modifiers
+from game.simulation.components import load_components, load_modifiers
 from game.core.resources import load_resources
-from ui import Button
-from game.ui.screens.builder_screen import BuilderSceneGUI
+from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_context import WorkshopContext
 from game.ui.renderer.sprites import SpriteManager
 from game.ui.screens.battle_scene import BattleScene
 from game.ui.screens.setup_screen import BattleSetupScreen
@@ -104,18 +104,23 @@ class Game:
         load_resources(os.path.join(base_path, "data", "resources.json"))
 
         # Initialize ship data
-        from game.simulation.entities.ship import initialize_ship_data
+        from game.simulation.entities.ship_loader import initialize_ship_data
         initialize_ship_data(base_path)
 
         # Load sprites
-        sprite_mgr = SpriteManager.get_instance()
+        sprite_mgr = SpriteManager.instance()
         sprite_mgr.load_sprites(base_path)
 
-        # Menu UI
+        # Menu UI - initialize pygame_gui manager for menu buttons
+        import pygame_gui
+        self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+        self.menu_buttons = []
         self.update_menu_buttons()
 
         # Scene objects
-        self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return)
+        context = WorkshopContext.standalone(tech_preset_name="default")
+        context.on_return = self.on_builder_return
+        self.builder_scene = DesignWorkshopGUI(WIDTH, HEIGHT, context)
         self.battle_setup = BattleSetupScreen()
         self.battle_scene = BattleScene(WIDTH, HEIGHT)
         self.strategy_scene = StrategyScene(WIDTH, HEIGHT)
@@ -123,18 +128,40 @@ class Game:
         self.test_lab_scene = TestLabScene(self)
 
     def update_menu_buttons(self):
-        self.menu_buttons = [
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 320, 200, 50, "Quickstart 1P", self.start_quickstart_1p),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 250, 200, 50, "Quickstart 2P", self.start_quickstart_2p),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 180, 200, 50, "New Game", self.start_strategy_layer),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 110, 200, 50, "Load Game", self.show_load_menu),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 40, 200, 50, "Race Setup", self.start_race_setup),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 30, 200, 50, "Design Workshop", self.start_builder),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 100, 200, 50, "Battle Setup", self.start_battle_setup),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 170, 200, 50, "Formation Editor", self.start_formation_editor),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 240, 200, 50, "Combat Lab", self.start_test_lab),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 310, 200, 50, "Research Tree", self.start_research_tree)
+        """Create or recreate menu buttons using pygame_gui UIButton."""
+        import pygame_gui
+
+        # Kill existing buttons before recreating (for window resize)
+        for btn in self.menu_buttons:
+            btn.kill()
+        self.menu_buttons = []
+
+        # Update manager resolution if it exists
+        if hasattr(self, 'menu_ui_manager'):
+            self.menu_ui_manager.set_window_resolution((WIDTH, HEIGHT))
+
+        # Button configuration: (y_offset, text, callback)
+        button_configs = [
+            (-320, "Quickstart 1P", self.start_quickstart_1p),
+            (-250, "Quickstart 2P", self.start_quickstart_2p),
+            (-180, "New Game", self.start_strategy_layer),
+            (-110, "Load Game", self.show_load_menu),
+            (-40, "Race Setup", self.start_race_setup),
+            (30, "Design Workshop", self.start_builder),
+            (100, "Battle Setup", self.start_battle_setup),
+            (170, "Formation Editor", self.start_formation_editor),
+            (240, "Combat Lab", self.start_test_lab),
+            (310, "Research Tree", self.start_research_tree)
         ]
+
+        for y_offset, text, callback in button_configs:
+            btn = pygame_gui.elements.UIButton(
+                relative_rect=pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 + y_offset, 200, 50),
+                text=text,
+                manager=self.menu_ui_manager
+            )
+            btn._callback = callback  # Store callback for event dispatch
+            self.menu_buttons.append(btn)
 
     @profile_action("App: Start Builder")
     def start_builder(self, return_to=None, context=None):
@@ -147,7 +174,10 @@ class Game:
         """
         self.state = BUILDER
         self.builder_return_state = return_to
-        self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return, context)
+        if context is None:
+            context = WorkshopContext.standalone(tech_preset_name="default")
+        context.on_return = self.on_builder_return
+        self.builder_scene = DesignWorkshopGUI(WIDTH, HEIGHT, context)
 
     def on_builder_return(self, custom_ship=None):
         """Return from design workshop to caller or main menu."""
@@ -511,8 +541,14 @@ class Game:
             return
 
         if self.state == MENU:
-            for btn in self.menu_buttons:
-                btn.handle_event(event)
+            import pygame_gui
+            self.menu_ui_manager.process_events(event)
+            # Handle menu button clicks
+            if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                for btn in self.menu_buttons:
+                    if event.ui_element == btn and hasattr(btn, '_callback'):
+                        btn._callback()
+                        return
         elif self.state == BUILDER:
             self.builder_scene.handle_event(event)
         elif self.state == BATTLE_SETUP:
@@ -630,7 +666,7 @@ class Game:
 
                         # Get empire theme
                         empire_theme_id = empire.empire_theme_id if hasattr(empire, 'empire_theme_id') else None
-                        print(f"DEBUG: Creating WorkshopContext with empire_theme_id={empire_theme_id}")
+                        log_debug(f"Creating WorkshopContext with empire_theme_id={empire_theme_id}")
 
                         # Create integrated context regardless of save_path
                         # If save_path is None, designs will use temp storage or in-memory
@@ -661,8 +697,10 @@ class Game:
     def _draw_menu(self):
         """Draw main menu."""
         self.screen.fill((20, 20, 30))
-        for btn in self.menu_buttons:
-            btn.draw(self.screen)
+
+        # Update and draw menu UI manager (handles all menu buttons)
+        self.menu_ui_manager.update(self.clock.get_time() / 1000.0)
+        self.menu_ui_manager.draw_ui(self.screen)
 
         # Draw new game setup UI if showing
         if hasattr(self, 'showing_new_game_setup') and self.showing_new_game_setup and hasattr(self, 'menu_ui_manager'):

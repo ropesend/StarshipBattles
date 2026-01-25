@@ -454,7 +454,8 @@ class TestFormationIntegrity:
 
     def test_propulsion_damage_breaks_formation(self):
         """Damaged propulsion should cause ship to leave formation."""
-        from game.ai.controller import AIController
+        from game.ai import AIController
+        from game.ai.interfaces.controllable import ShipControllableAdapter
 
         mock_grid = MagicMock()
         mock_ship = MagicMock()
@@ -462,6 +463,7 @@ class TestFormationIntegrity:
         mock_ship.is_alive = True
         mock_ship.in_formation = True
         mock_ship.formation_master = MagicMock()
+        # formation_members contains RAW ships (not adapters) - matches production
         mock_ship.formation_master.formation_members = [mock_ship]
         mock_ship.formation_members = []
 
@@ -479,11 +481,17 @@ class TestFormationIntegrity:
 
         mock_ship.get_components_by_ability = get_components
 
-        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        # Save reference to formation_members before the call (formation_master gets set to None)
+        formation_members = mock_ship.formation_master.formation_members
+
+        # Use ShipControllableAdapter to match production behavior (battle_engine.py)
+        controller = AIController(ShipControllableAdapter(mock_ship), mock_grid, enemy_team_id=1)
         controller._check_formation_integrity()
 
-        # Should exit formation
+        # Should exit formation and be removed from formation_members
         assert mock_ship.in_formation == False
+        assert mock_ship not in formation_members  # Ship should be removed from master's list
+        assert mock_ship.formation_master is None  # Master reference should be cleared
 
 
 # =============================================================================

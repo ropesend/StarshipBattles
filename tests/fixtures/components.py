@@ -23,7 +23,7 @@ Available fixtures:
 """
 import pytest
 
-from game.simulation.components.component import create_component, Component, LayerType
+from game.simulation.components import create_component, Component
 
 
 # =============================================================================

@@ -1,4 +1,69 @@
+"""
+Hex Math - Hexagonal Grid Mathematics
+
+This module provides utilities for working with hexagonal grids in the
+strategy layer. Used for galaxy maps, fleet positions, and pathfinding.
+
+Coordinate System:
+    Uses AXIAL coordinates (q, r) for storage efficiency.
+    Internally tracks cube coordinates (q, r, s) where q + r + s = 0.
+
+    Flat-topped hexes (pointy sides on left/right):
+
+             ___
+            /   \
+           /     \
+           \     /
+            \___/
+
+    Axis orientation:
+        +q: Right/down-right
+        +r: Down
+        +s: Up-left (derived: s = -q - r)
+
+    The origin hex (0, 0) is at the center of the galaxy.
+
+Distance Calculation:
+    Grid distance (number of hex steps) uses cube coordinates:
+        distance = max(|dq|, |dr|, |ds|)
+
+    This gives the minimum number of hexes to traverse.
+
+Pixel Conversion:
+    hex_to_pixel(hex, size): Convert hex coord to screen position
+        x = size * (3/2 * q)
+        y = size * (sqrt(3)/2 * q + sqrt(3) * r)
+
+    pixel_to_hex(x, y, size): Convert screen position to nearest hex
+        Uses rounding with constraint preservation (q + r + s = 0)
+
+Utility Functions:
+    - hex_distance(a, b): Grid distance between hexes
+    - hex_ring(radius): All hexes at distance 'radius' from origin
+    - hex_lerp(a, b, t): Interpolate between hexes
+    - hex_linedraw(a, b): All hexes along a line
+    - neighbors(): Get 6 adjacent hexes
+
+Serialization:
+    hex_to_dict(coord): Serialize to {'q': q, 'r': r}
+    hex_from_dict(data): Deserialize from dict
+
+Example:
+    # Create coordinates
+    start = HexCoord(0, 0)
+    dest = HexCoord(3, -1)
+
+    # Get distance
+    dist = hex_distance(start, dest)  # Returns 3
+
+    # Get neighbors
+    adjacent = start.neighbors()  # 6 HexCoord objects
+
+    # Convert to pixels
+    px, py = hex_to_pixel(dest, size=50)
+"""
 import math
+
 
 class HexCoord:
     """
@@ -101,44 +166,30 @@ def _hex_round(q, r, s):
 def hex_ring(radius):
     """
     Return all HexCoords at distance 'radius' from (0,0).
+
+    Uses the standard hex ring algorithm:
+    1. Start at direction[4] * radius (the -q, +r corner)
+    2. Walk around the ring, taking 'radius' steps in each of 6 directions
+    3. Each full circuit visits exactly 6*radius hexes
     """
     results = []
     if radius == 0:
         return [HexCoord(0, 0)]
-    
-    # Start at top-left-ish? (direction 4 scaled by radius)
-    # Standard algo: pick a direction, scale by radius, then walk around
-    
-    # Directions: (1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1)
-    # Start at (-radius, radius) which is direction 4 * radius?
-    # Let's use standard walk.
-    
-    curr = HexCoord(-1, 1) # Direction 4
-    # Actually, simplistic way:
-    # Start at q = -radius, r = 0? No that's direction 3 (Left) * radius?
-    # Direction 4 is (-1, 1). Multiplied by radius: (-radius, radius).
-    
-    # Let's use the neighbors directions list to walk
+
     directions = [
         HexCoord(1, 0), HexCoord(1, -1), HexCoord(0, -1),
         HexCoord(-1, 0), HexCoord(-1, 1), HexCoord(0, 1)
     ]
-    
-    # Start at direction 4 scaled
-    start_dir = directions[4] # (-1, 1)
-    
-    # Actually, simpler: Start at direction 4 * radius, walk direction 0, then 1, etc.
-    # Start at (-1, 1) * radius ??? No HexCoord doesn't mult.
-    
+
+    # Start at direction[4] scaled by radius
     curr = HexCoord(directions[4].q * radius, directions[4].r * radius)
-    
+
     for i in range(6):
-        # Walk 'radius' steps in direction i
         walk_dir = directions[i]
         for _ in range(radius):
             results.append(curr)
             curr = curr + walk_dir
-            
+
     return results
 
 

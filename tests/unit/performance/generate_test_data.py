@@ -7,9 +7,9 @@ import os
 import sys
 
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import Component, LayerType, create_component
+from game.simulation.components import Component, LayerType, create_component
 from game.core.registry import RegistryManager
-from game.simulation.components.component import load_components
+from game.simulation.components import load_components
 from tests.fixtures.paths import get_project_root
 
 def load_json_data(filepath):

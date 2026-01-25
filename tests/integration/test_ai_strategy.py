@@ -14,12 +14,14 @@ import math
 from unittest.mock import MagicMock, patch
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.ai.controller import AIController
+from game.ai import AIController
 from game.ai import controller as ai
+from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.ai.target_evaluator import TargetEvaluator
 from game.engine.spatial import SpatialGrid
-from game.simulation.components.component import load_components, create_component
+from game.simulation.components import load_components, create_component
 from game.core.registry import RegistryManager
+from game.core.math import Vector2
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 
 
@@ -35,7 +37,7 @@ def setup_game_data():
     unit_test_data_dir = get_unit_test_data_dir()
 
     load_components(str(data_dir / "components.json"))
-    from game.simulation.entities.ship import load_vehicle_classes
+    from game.simulation.entities.ship_loader import load_vehicle_classes
     load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"))
 
     # Load test data for AI strategies
@@ -91,7 +93,7 @@ class TestAIEvaluationCycle:
         spatial_grid.insert(ship1)
         spatial_grid.insert(ship2)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
         # Should not raise
         ai_controller.update()
@@ -104,7 +106,7 @@ class TestAIEvaluationCycle:
         spatial_grid.insert(ship1)
         spatial_grid.insert(ship2)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
         assert ship1.current_target is None
 
@@ -120,7 +122,7 @@ class TestAIEvaluationCycle:
         spatial_grid.insert(ship1)
         spatial_grid.insert(ship2)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
         # First update - acquire target
         ai_controller.update()
@@ -141,7 +143,7 @@ class TestAIEvaluationCycle:
         spatial_grid.insert(ship1)
         spatial_grid.insert(ship2)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
         ship1.comp_trigger_pulled = False
 
         ai_controller.update()
@@ -154,7 +156,7 @@ class TestAIEvaluationCycle:
 
         spatial_grid.insert(ship1)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
         ship1.comp_trigger_pulled = True  # Pre-set to verify it gets cleared
         ship1.in_formation = False  # Not in formation
 
@@ -184,7 +186,7 @@ class TestTargetSelection:
         spatial_grid.insert(enemy_close)
         spatial_grid.insert(enemy_far)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
         target = ai_controller.find_target()
 
@@ -198,7 +200,7 @@ class TestTargetSelection:
         spatial_grid.insert(ship1)
         spatial_grid.insert(ship2)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
         target = ai_controller.find_target()
 
@@ -213,7 +215,7 @@ class TestTargetSelection:
         spatial_grid.insert(ship1)
         spatial_grid.insert(dead_enemy)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
         target = ai_controller.find_target()
 
@@ -231,7 +233,7 @@ class TestTargetSelection:
         spatial_grid.insert(enemy2)
         spatial_grid.insert(enemy3)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
         target = ai_controller.find_target()
 
@@ -258,7 +260,7 @@ class TestCommandGeneration:
 
         ship1.ai_strategy = 'max_weapons_range'
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
         ai_controller.update()
 
         # Behavior should be set
@@ -272,7 +274,7 @@ class TestCommandGeneration:
         spatial_grid.insert(ship1)
         spatial_grid.insert(ship2)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
         # Mock low HP
         with patch.object(ai_controller, '_get_hp_percent', return_value=0.05):
@@ -288,7 +290,7 @@ class TestCommandGeneration:
 
         spatial_grid.insert(ship1)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
         # Ship facing right (0), target is down (90 degrees)
         ship1.angle = 0
@@ -307,13 +309,13 @@ class TestCommandGeneration:
         spatial_grid.insert(ship1)
         spatial_grid.insert(ship2)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
         override = ai_controller.check_avoidance()
 
-        # Should return avoidance target position
+        # Should return avoidance target position (game.core.math.Vector2, not pygame.math.Vector2)
         assert override is not None
-        assert isinstance(override, pygame.math.Vector2)
+        assert isinstance(override, Vector2)
 
 
 # =============================================================================
@@ -334,7 +336,7 @@ class TestAIResponse:
         spatial_grid.insert(enemy1)
         spatial_grid.insert(enemy2)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
         # First update - targets enemy1 (closer)
         ai_controller.update()
@@ -364,7 +366,7 @@ class TestAIResponse:
         ship2.formation_offset = pygame.math.Vector2(100, 0)  # Required for formation behavior
         ship1.formation_members = [ship2]
 
-        ai_controller = AIController(ship2, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship2), spatial_grid, enemy_team_id=1)
         ai_controller.update()
 
         # Should use formation behavior
@@ -390,7 +392,7 @@ class TestAIResponse:
         leader.formation_members = [follower]
         leader.current_target = enemy2
 
-        ai_controller = AIController(follower, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(follower), spatial_grid, enemy_team_id=1)
         ai_controller.update()
 
         # Follower should sync to master's target
@@ -404,7 +406,7 @@ class TestAIResponse:
         spatial_grid.insert(ship1)
         spatial_grid.insert(enemy)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
         # Normal update
         with patch.object(ai_controller, '_get_hp_percent', return_value=1.0):
@@ -436,7 +438,7 @@ class TestStrategyResolution:
 
         ship1.ai_strategy = 'max_weapons_range'
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
         resolved = ai_controller.get_resolved_strategy()
 
         assert resolved is not None
@@ -453,7 +455,7 @@ class TestStrategyResolution:
         if hasattr(ship1, 'ai_strategy'):
             delattr(ship1, 'ai_strategy')
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
         resolved = ai_controller.get_resolved_strategy()
 
         # Should still resolve to some strategy
@@ -465,7 +467,7 @@ class TestStrategyResolution:
 
         spatial_grid.insert(ship1)
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
         # Test various engage distance configs
         assert ai_controller.get_engage_distance_multiplier({'engage_distance': 'max_range'}) == 1.0
@@ -493,7 +495,7 @@ class TestSecondaryTargets:
 
         ship1.max_targets = 1
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
         ai_controller.update()
 
         assert ship1.secondary_targets == []
@@ -510,7 +512,7 @@ class TestSecondaryTargets:
 
         ship1.max_targets = 3
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
         ai_controller.update()
 
         # Should have primary + secondary
@@ -531,7 +533,7 @@ class TestSecondaryTargets:
 
         ship1.max_targets = 3
 
-        ai_controller = AIController(ship1, spatial_grid, enemy_team_id=1)
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
         ai_controller.update()
 
         # Primary should not be in secondary list

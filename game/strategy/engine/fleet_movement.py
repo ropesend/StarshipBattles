@@ -40,17 +40,11 @@ class PathSegment:
     turn: int
     is_warp: bool
     
-    @property
-    def hex(self) -> HexCoord:
-        """Alias for end, for backward compatibility."""
-        return self.end
-    
     def to_dict(self) -> dict:
-        """Convert to dict for backward compatibility with existing code."""
+        """Convert to dict representation."""
         return {
             'start': self.start,
             'end': self.end,
-            'hex': self.end,
             'turn': self.turn,
             'is_warp': self.is_warp
         }
@@ -303,12 +297,3 @@ class FleetMovementSimulator:
                 moves_left_in_turn = moves_per_turn
         
         return segments
-    
-    def project_path_as_dicts(self, fleet: Fleet, galaxy, max_turns: int = 10) -> list[dict]:
-        """
-        Project fleet path and return as list of dicts for backward compatibility.
-        
-        This is a wrapper around project_path() that converts PathSegments to dicts.
-        """
-        segments = self.project_path(fleet, galaxy, max_turns)
-        return [seg.to_dict() for seg in segments]

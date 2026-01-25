@@ -1,8 +1,70 @@
+"""
+AI Behaviors - Ship Movement and Combat Behaviors
 
+This module defines the behavior classes used by AIController to control
+ship movement during combat. Each behavior implements a different tactical
+approach.
+
+Behavior Classes:
+    AIBehavior: Base class, defines enter() and update() interface
+
+    Combat Behaviors:
+        KiteBehavior: Maintain optimal weapon range
+            - Close in if too far from target
+            - Back off if too close
+            - Uses collision avoidance if enabled in strategy
+            - engage_distance parameter controls optimal range multiplier
+
+        AttackRunBehavior: Hit-and-run tactics
+            - Approach phase: Move toward target until approach_distance
+            - Retreat phase: Flee for retreat_duration seconds
+            - Cycle repeats automatically
+            - Good for high-alpha, long-cooldown weapons
+
+        RamBehavior: Direct collision course
+            - Navigate straight to target position
+            - No collision avoidance
+            - Used by kamikaze ships
+
+        FleeBehavior: Retreat from combat
+            - Move away from target at FLEE_DISTANCE
+            - fire_while_retreating controls weapon usage
+            - Triggered when HP below retreat_hp_threshold
+
+        FormationBehavior: Follow formation master
+            - Maintain formation_offset relative to master
+            - Match master's heading (relative or fixed mode)
+            - Apply correction forces to stay in position
+            - Dropout detection if master dies or drifts too far
+
+        OrbitBehavior: Circle around target
+            - Maintain fixed distance while strafing
+            - Good for continuous fire weapons
+
+    Test/Debug Behaviors:
+        DoNothingBehavior: No action (for isolated testing)
+        StationaryFireBehavior: Fire without moving
+        StraightLineBehavior: Move in straight line
+        RotateOnlyBehavior: Only rotate, no thrust
+        ErraticBehavior: Random movement (stress testing)
+
+Strategy Parameters:
+    Behaviors read parameters from the strategy dict passed to update():
+    - avoid_collisions: bool - Enable collision avoidance (KiteBehavior)
+    - engage_distance: float|'max_range'|'ram' - Range multiplier
+    - fire_while_retreating: bool - Fire during flee (FleeBehavior)
+    - retreat_hp_threshold: float - HP % to trigger flee
+    - attack_run_behavior: dict - approach/retreat distances
+
+Example:
+    behavior = KiteBehavior(controller)
+    behavior.update(target, strategy={'engage_distance': 0.8})
+"""
 import pygame
 from typing import Any, Dict
 
 from game.core.config import AIConfig, PhysicsConfig
+
 
 class AIBehavior:
     def __init__(self, controller: Any) -> None:

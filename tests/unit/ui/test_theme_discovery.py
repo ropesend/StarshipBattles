@@ -21,7 +21,7 @@ class TestNewThemes:
              pygame.display.set_mode((1, 1), pygame.NOFRAME)
 
         ShipThemeManager.reset()
-        manager = ShipThemeManager.get_instance()
+        manager = ShipThemeManager.instance()
 
         # Verify resources exist
         klingon_json = os.path.join(ASSET_DIR, "ShipThemes", "Klingons", "theme.json")

@@ -61,10 +61,10 @@ class TestAdvancedFleetOrders:
         # T=2: F2 @ (12, 0)
         # F1 Speed 10. Distance to (10,0) is 10.
 
-        # Mock Projection: Returns future path of F2
+        # Mock Projection: Returns future path of F2 (using 'end' key)
         mock_project_path.return_value = [
-            {'hex': HexCoord(11, 0), 'turn': 1},
-            {'hex': HexCoord(12, 0), 'turn': 2}
+            {'end': HexCoord(11, 0), 'turn': 1},
+            {'end': HexCoord(12, 0), 'turn': 2}
         ]
 
         # Mock Pathfinding
@@ -96,11 +96,13 @@ class TestAdvancedFleetOrders:
         # OR mock calculate_intercept_point in TurnEngine to verify it's utilized.
         pass
 
-    @patch('game.strategy.data.pathfinding.calculate_intercept_point')
-    @patch('game.strategy.data.pathfinding.find_hybrid_path')
+    @patch('game.strategy.engine.fleet_movement_engine.calculate_intercept_point')
+    @patch('game.strategy.engine.fleet_movement_engine.find_hybrid_path')
     def test_intercept_integration(self, mock_find_path, mock_calc_intercept):
-        """Verify TurnEngine calls calculate_intercept_point."""
-        engine = TurnEngine()
+        """Verify FleetMovementEngine calls calculate_intercept_point."""
+        from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
+
+        movement_engine = FleetMovementEngine()
         galaxy = MagicMock()
         galaxy.systems = {}
 
@@ -123,8 +125,10 @@ class TestAdvancedFleetOrders:
         # Mock Pathfinding to that predicted hex
         mock_find_path.return_value = [HexCoord(1, 0)]
 
-        # Execute
-        engine._execute_move_step(f1, galaxy)
+        # Execute - use movement_engine directly
+        next_hex = movement_engine.calculate_next_hex(f1, galaxy)
+        if next_hex:
+            f1.location = next_hex
 
         # Verify
         mock_calc_intercept.assert_called_with(f1, f2, galaxy)
@@ -159,13 +163,13 @@ class TestAdvancedFleetOrders:
         f2.location = HexCoord(4, 0)
         f2.speed = 1.0
 
-        # Mock Target Path
+        # Mock Target Path (using 'end' key - the canonical name)
         mock_project.return_value = [
-            {'hex': HexCoord(5, 0), 'turn': 1},
-            {'hex': HexCoord(6, 0), 'turn': 2},
-            {'hex': HexCoord(7, 0), 'turn': 3},
-            {'hex': HexCoord(8, 0), 'turn': 4},
-            {'hex': HexCoord(9, 0), 'turn': 5}
+            {'end': HexCoord(5, 0), 'turn': 1},
+            {'end': HexCoord(6, 0), 'turn': 2},
+            {'end': HexCoord(7, 0), 'turn': 3},
+            {'end': HexCoord(8, 0), 'turn': 4},
+            {'end': HexCoord(9, 0), 'turn': 5}
         ]
 
         # Mock find_hybrid_path to return paths of correct lengths
@@ -282,12 +286,12 @@ class TestAdvancedFleetOrders:
         # Target @ 10,0.
         f2.location = HexCoord(10, 0)
 
-        # Mock Target Path: Goes far then loops back closer
+        # Mock Target Path: Goes far then loops back closer (using 'end' key)
         # Turn 5: at (30, 0) - far away
         # Turn 10: at (15, 0) - closer
         mock_project.return_value = [
-            {'hex': HexCoord(30, 0), 'turn': 5},   # Chaser needs 30 steps = 6 turns. INVALID.
-            {'hex': HexCoord(15, 0), 'turn': 10},  # Chaser needs 15 steps = 3 turns. VALID, arrives early!
+            {'end': HexCoord(30, 0), 'turn': 5},   # Chaser needs 30 steps = 6 turns. INVALID.
+            {'end': HexCoord(15, 0), 'turn': 10},  # Chaser needs 15 steps = 3 turns. VALID, arrives early!
         ]
 
         # Mock pathfinding to return paths of correct length (includes start hex)

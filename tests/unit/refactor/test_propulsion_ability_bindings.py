@@ -135,3 +135,49 @@ class TestWarpJumpBindings:
 
         consumed = WarpJump.get_consumed_stats()
         assert len(consumed) == 0
+
+
+class TestPropulsionSyncData:
+    """Tests for propulsion ability sync_data consistency (SIM-13)."""
+
+    def test_combat_propulsion_sync_data_updates_thrust(self):
+        """CombatPropulsion.sync_data should update base_thrust."""
+        from game.simulation.components.abilities.propulsion import CombatPropulsion
+
+        class MockComponent:
+            stats = {}
+
+        ability = CombatPropulsion(MockComponent(), {'value': 1000})
+        assert ability.base_thrust == 1000
+
+        ability.sync_data({'value': 2000})
+        assert ability.base_thrust == 2000
+        assert ability.thrust_force == 2000
+
+    def test_maneuvering_thruster_sync_data_updates_turn_rate(self):
+        """ManeuveringThruster.sync_data should update base_turn_rate."""
+        from game.simulation.components.abilities.propulsion import ManeuveringThruster
+
+        class MockComponent:
+            stats = {}
+
+        ability = ManeuveringThruster(MockComponent(), {'value': 30})
+        assert ability.base_turn_rate == 30
+
+        ability.sync_data({'value': 60})
+        assert ability.base_turn_rate == 60
+        assert ability.turn_rate == 60
+
+    def test_strategic_movement_sync_data_updates_movement_points(self):
+        """StrategicMovement.sync_data should update base_movement_points."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        class MockComponent:
+            stats = {}
+
+        ability = StrategicMovement(MockComponent(), {'value': 10})
+        assert ability.base_movement_points == 10
+
+        ability.sync_data({'value': 20})
+        assert ability.base_movement_points == 20
+        assert ability.movement_points == 20

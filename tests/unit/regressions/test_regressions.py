@@ -3,7 +3,8 @@ import pygame
 import os
 from unittest.mock import patch
 from game.simulation.entities import ship as ship
-from game.simulation.entities.ship import Ship, load_vehicle_classes
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import load_vehicle_classes
 from game.core.registry import RegistryManager
 from game.simulation.ship_theme import ShipThemeManager
 
@@ -37,7 +38,7 @@ class TestRegressions:
         original_id = id(original_ref)
 
         # Call loader
-        ship.load_vehicle_classes()
+        load_vehicle_classes()
 
         # Verify reference is identical
         assert id(RegistryManager.instance().vehicle_classes) == original_id, \
@@ -52,7 +53,7 @@ class TestRegressions:
         Regression Test for Crash on Missing Image:
         Verify that getting an image for a non-existent theme or class returns a valid fallback surface.
         """
-        manager = ShipThemeManager.get_instance()
+        manager = ShipThemeManager.instance()
         # Force reload to ensure clean state if needed, but singleton persists.
         # Just use it.
 

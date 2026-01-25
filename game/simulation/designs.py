@@ -1,5 +1,5 @@
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import create_component, LayerType
+from game.simulation.components import create_component, LayerType
 
 def create_brick(x, y):
     # Use Cruiser class which has INNER layer (Capital_Standard config)

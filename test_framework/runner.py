@@ -12,8 +12,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from game.core.registry import RegistryManager
 from game.simulation.systems.battle_engine import BattleEngine
-from game.simulation.components.component import load_components, load_modifiers
-from game.simulation.entities.ship import initialize_ship_data
+from game.simulation.components import load_components, load_modifiers
+from game.simulation.entities.ship_loader import initialize_ship_data
 from simulation_tests.logging_config import get_logger, setup_combat_lab_logging
 
 # Setup logging
@@ -61,7 +61,7 @@ class TestRunner:
             load_components(paths['components'])
 
             # Helper needed in ship.py to accept direct path
-            from game.simulation.entities.ship import load_vehicle_classes
+            from game.simulation.entities.ship_loader import load_vehicle_classes
             logger.debug(f"Loading vehicle classes from {paths['vehicle_classes']}")
             load_vehicle_classes(paths['vehicle_classes'])
 

@@ -10,7 +10,6 @@ from pygame_gui.elements import UIPanel, UILabel, UIButton, UIScrollingContainer
 from typing import Dict, Optional, Tuple, List
 
 from game.strategy.data.ship_instance import ShipInstance
-from game.simulation.components.component import LayerType
 from game.simulation.ship_theme import ShipThemeManager
 
 

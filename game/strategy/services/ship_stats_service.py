@@ -437,3 +437,52 @@ class ShipStatsService:
             return [val]
         # Simple value - wrap in dict
         return [{'value': val}]
+
+    @staticmethod
+    def has_warp_capability(ship: Any) -> bool:
+        """
+        Check if a ship has functional warp capability.
+
+        PROJ-11: Moved from game.ui.screens.fleet_report_filters to eliminate
+        strategy->UI dependency. This is the canonical location for warp
+        capability checks.
+
+        A ship is warp-capable if:
+        1. It has a WarpJump ability component with max_tonnage >= ship's mass
+        2. The warp drive is undamaged (warp_max_tonnage will be 0 if damaged)
+        3. The ship has enough resource storage capacity for at least one warp jump
+
+        Args:
+            ship: Object with get_calculated_stats() method (e.g., ShipInstance)
+
+        Returns:
+            True if ship can use warp points, False otherwise
+        """
+        # Use calculated stats which respect component damage
+        calculated_stats = ship.get_calculated_stats()
+
+        # Get ship mass
+        ship_mass = calculated_stats.get('mass', 0)
+        if ship_mass <= 0:
+            return False
+
+        # Check warp_max_tonnage - will be 0 if warp drive is damaged
+        warp_max_tonnage = calculated_stats.get('warp_max_tonnage', 0)
+        if warp_max_tonnage < ship_mass:
+            return False
+
+        # Check if ship has resource capacity for warp
+        # A ship with a warp drive but insufficient storage cannot warp
+        warp_energy_cost = calculated_stats.get('warp_energy_cost', 0)
+        if warp_energy_cost > 0:
+            max_energy = calculated_stats.get('max_energy', 0)
+            if max_energy < warp_energy_cost:
+                return False
+
+        warp_fuel_cost = calculated_stats.get('warp_fuel_cost', 0)
+        if warp_fuel_cost > 0:
+            max_fuel = calculated_stats.get('max_fuel', 0)
+            if max_fuel < warp_fuel_cost:
+                return False
+
+        return True

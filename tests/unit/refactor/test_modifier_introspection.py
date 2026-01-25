@@ -17,7 +17,7 @@ class TestModifierIntrospectionGetModifierAffects:
     def test_get_modifier_affects_returns_dict(self):
         """get_modifier_affects() should return a dictionary."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         mod_def = {
@@ -35,7 +35,7 @@ class TestModifierIntrospectionGetModifierAffects:
     def test_get_modifier_affects_returns_abilities(self):
         """get_modifier_affects() should return affected ability names."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         mod_def = {
@@ -55,7 +55,7 @@ class TestModifierIntrospectionGetModifierAffects:
     def test_get_modifier_affects_returns_effects_preview(self):
         """get_modifier_affects() should return effect descriptions."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         mod_def = {
@@ -76,7 +76,7 @@ class TestModifierIntrospectionGetModifierAffects:
     def test_get_modifier_affects_with_targeted_effect(self):
         """get_modifier_affects() should include targeted abilities."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         mod_def = {
@@ -94,7 +94,7 @@ class TestModifierIntrospectionGetModifierAffects:
     def test_get_modifier_affects_multiple_stats(self):
         """get_modifier_affects() should list all affected abilities from multiple stats."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         mod_def = {
@@ -120,7 +120,7 @@ class TestModifierIntrospectionGetComponentModifierSummary:
     def test_get_component_modifier_summary_returns_dict(self):
         """get_component_modifier_summary() should return a dictionary."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
 
@@ -131,7 +131,7 @@ class TestModifierIntrospectionGetComponentModifierSummary:
     def test_get_component_modifier_summary_lists_applied_modifiers(self):
         """get_component_modifier_summary() should list all applied modifiers."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         railgun.add_modifier('hardened_mount', 2.0)
@@ -148,7 +148,7 @@ class TestModifierIntrospectionGetComponentModifierSummary:
     def test_get_component_modifier_summary_includes_param_values(self):
         """Summary should include parameter values for each modifier."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         railgun.add_modifier('hardened_mount', 3.0)
@@ -162,7 +162,7 @@ class TestModifierIntrospectionGetComponentModifierSummary:
     def test_get_component_modifier_summary_no_modifiers(self):
         """Summary should handle components with no modifiers gracefully."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         # Don't add any modifiers
@@ -179,7 +179,7 @@ class TestModifierIntrospectionGetAbilityModifierSummary:
     def test_get_ability_modifier_summary_returns_dict(self):
         """get_ability_modifier_summary() should return a dictionary."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         weapon_ability = railgun.get_ability('ProjectileWeaponAbility')
@@ -191,7 +191,7 @@ class TestModifierIntrospectionGetAbilityModifierSummary:
     def test_get_ability_modifier_summary_shows_base_vs_current(self):
         """Summary should show base vs current values."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         railgun.add_modifier('hardened_mount', 2.0)
@@ -205,7 +205,7 @@ class TestModifierIntrospectionGetAbilityModifierSummary:
     def test_get_ability_modifier_summary_lists_affected_stats(self):
         """Summary should list which stats are affected by modifiers."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         railgun.add_modifier('range_mount', 2)  # Affects range_mult
@@ -223,7 +223,7 @@ class TestModifierIntrospectionGetAbilityModifierSummary:
     def test_get_ability_modifier_summary_no_modifiers(self):
         """Summary should handle unmodified abilities gracefully."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         # Don't add any modifiers
@@ -241,7 +241,7 @@ class TestModifierIntrospectionGenerateTooltip:
     def test_generate_modifier_tooltip_returns_string(self):
         """generate_modifier_tooltip() should return a string."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         mod_def = {
@@ -260,7 +260,7 @@ class TestModifierIntrospectionGenerateTooltip:
     def test_generate_modifier_tooltip_includes_modifier_name(self):
         """Tooltip should include the modifier name."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         mod_def = {
@@ -278,7 +278,7 @@ class TestModifierIntrospectionGenerateTooltip:
     def test_generate_modifier_tooltip_includes_effects(self):
         """Tooltip should include effect information."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         mod_def = {
@@ -302,7 +302,7 @@ class TestModifierIntrospectionGenerateAbilityStatsDisplay:
     def test_generate_ability_stats_display_returns_list(self):
         """generate_ability_stats_display() should return a list of display entries."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         weapon_ability = railgun.get_ability('ProjectileWeaponAbility')
@@ -314,7 +314,7 @@ class TestModifierIntrospectionGenerateAbilityStatsDisplay:
     def test_generate_ability_stats_display_shows_modified_values(self):
         """Display should highlight modified values."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         railgun.add_modifier('range_mount', 2)  # 4x range
@@ -328,7 +328,7 @@ class TestModifierIntrospectionGenerateAbilityStatsDisplay:
     def test_generate_ability_stats_display_format(self):
         """Display entries should have expected format."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         railgun.add_modifier('hardened_mount', 2.0)

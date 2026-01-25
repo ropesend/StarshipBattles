@@ -1,7 +1,7 @@
 import pytest
 import math
 
-from game.simulation.components.component import load_components, create_component, load_modifiers
+from game.simulation.components import load_components, create_component, load_modifiers
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_data_dir
 

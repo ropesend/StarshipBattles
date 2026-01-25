@@ -7,7 +7,7 @@ including allowance checks, mandatory modifier management, and value constraints
 import pytest
 
 from game.simulation.services.modifier_service import ModifierService
-from game.simulation.components.component import create_component
+from game.simulation.components import create_component
 
 
 # =============================================================================

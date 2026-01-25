@@ -554,6 +554,63 @@ class TestBattleEngineDirect:
         assert len(team1_ships) == 2
 
 
+# === Adapter Integration Tests ===
+
+class TestAIAdapterIntegration:
+    """Tests for ShipControllableAdapter integration with BattleEngine."""
+
+    def test_ai_controllers_use_adapter(self, two_ship_teams):
+        """Test that AI controllers receive wrapped ships via adapter."""
+        from game.ai.interfaces import ShipControllableAdapter
+
+        team1, team2 = two_ship_teams
+        engine = create_battle_engine()
+        engine.start(team1, team2)
+
+        # All AI controllers should have ShipControllableAdapter as their ship
+        for ai in engine.ai_controllers:
+            assert isinstance(ai.ship, ShipControllableAdapter), \
+                f"AI controller should use ShipControllableAdapter, got {type(ai.ship)}"
+
+    def test_adapter_provides_interface_methods(self, two_ship_teams):
+        """Test that adapter provides IControllable interface methods."""
+        team1, team2 = two_ship_teams
+        engine = create_battle_engine()
+        engine.start(team1, team2)
+
+        for ai in engine.ai_controllers:
+            adapter = ai.ship
+            # Test interface methods exist and work
+            assert hasattr(adapter, 'get_position')
+            assert hasattr(adapter, 'get_velocity')
+            assert hasattr(adapter, 'get_rotation')
+            assert hasattr(adapter, 'set_throttle')
+            assert hasattr(adapter, 'is_alive')
+            assert hasattr(adapter, 'get_team_id')
+
+            # Call methods to ensure they work
+            pos = adapter.get_position()
+            assert pos is not None
+
+    def test_adapter_provides_backward_compatibility(self, two_ship_teams):
+        """Test that adapter provides backward-compatible ship access."""
+        from game.simulation.entities.ship import Ship
+
+        team1, team2 = two_ship_teams
+        engine = create_battle_engine()
+        engine.start(team1, team2)
+
+        for ai in engine.ai_controllers:
+            adapter = ai.ship
+            # Test backward-compatible access to underlying ship
+            assert hasattr(adapter, 'ship')
+            assert isinstance(adapter.ship, Ship)
+
+            # Test fallback attribute access
+            assert hasattr(adapter, 'name')  # Forwarded from ship
+            assert adapter.name == adapter.ship.name
+
+
 # === Edge Case Tests ===
 
 class TestBattleEdgeCases:

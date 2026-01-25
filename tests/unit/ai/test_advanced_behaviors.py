@@ -3,7 +3,8 @@ from unittest.mock import MagicMock
 import pygame
 
 from game.ai.behaviors import KiteBehavior, AttackRunBehavior, OrbitBehavior
-from game.ai.controller import AIController
+from game.ai import AIController
+from game.ai.interfaces.controllable import ShipControllableAdapter
 
 
 @pytest.fixture
@@ -141,11 +142,14 @@ class TestAdvancedBehaviors:
         # But we can test it by manually creating a controller or moving logic to mixin?
         # It's a method on AIController. Let's instanciate a real one with mocks.
 
-        real_controller = AIController(advanced_setup['mock_controller'].ship, MagicMock(), 0)
+        mock_ship = advanced_setup['mock_controller'].ship
+        # Use ShipControllableAdapter to match production behavior (battle_engine.py)
+        real_controller = AIController(ShipControllableAdapter(mock_ship), MagicMock(), 0)
 
-        # Setup Ship with Ability-based Logic
-        real_controller.ship.in_formation = True
-        real_controller.ship.formation_master = MagicMock()
+        # Setup Ship with Ability-based Logic (access through underlying ship)
+        mock_ship.in_formation = True
+        mock_ship.formation_master = MagicMock()
+        mock_ship.formation_master.formation_members = [mock_ship]  # Raw ships in list
 
         # Case 1: Ability Healthy
         comp = MagicMock()
@@ -154,13 +158,13 @@ class TestAdvancedBehaviors:
         comp.max_hp = 100
 
         # Mock the Ship helper methods to return our component
-        real_controller.ship.get_components_by_ability = MagicMock(return_value=[comp])
+        mock_ship.get_components_by_ability = MagicMock(return_value=[comp])
 
         real_controller._check_formation_integrity()
-        assert real_controller.ship.in_formation is True
+        assert mock_ship.in_formation is True
 
         # Case 2: Ability Damaged
         comp.current_hp = 50
 
         real_controller._check_formation_integrity()
-        assert real_controller.ship.in_formation is False
+        assert mock_ship.in_formation is False

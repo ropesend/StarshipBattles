@@ -6,8 +6,9 @@ import glob
 
 sys.path.append(os.getcwd())
 
-from game.simulation.entities.ship import Ship, load_vehicle_classes
-from game.simulation.components.component import load_components, load_modifiers
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import load_vehicle_classes
+from game.simulation.components import load_components, load_modifiers
 from game.core.registry import RegistryManager
 
 def update_stats():

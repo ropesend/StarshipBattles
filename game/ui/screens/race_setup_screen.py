@@ -1,6 +1,8 @@
 """
 Race Setup Screen - Multi-step wizard for configuring custom races.
 
+PROJ-12 Phase 4: Extracted RaceBrowserDialog to separate module.
+
 Allows users to:
 - Select visual identity (flag, portrait, ship theme)
 - Configure environmental preferences (gravity, temperature, atmosphere)
@@ -18,310 +20,15 @@ from game.strategy.data.race_config import RaceConfig
 from game.strategy.systems.race_library import RaceLibrary
 from game.simulation.ship_theme import ShipThemeManager
 
-
-class RaceBrowserDialog(pygame_gui.elements.UIWindow):
-    """
-    In-game dialog for browsing and selecting saved races.
-
-    Shows a scrollable list of races with small previews:
-    - Portrait (60px)
-    - Flag (60px, all 3 shapes)
-    - Ship (60px, top-down view)
-    - Race name
-    """
-
-    # Preview sizes
-    PREVIEW_SIZE = 60
-    ROW_HEIGHT = 80
-
-    def __init__(self, rect: pygame.Rect, manager: pygame_gui.UIManager,
-                 race_library: RaceLibrary,
-                 on_select_callback: Callable[[RaceConfig], None],
-                 on_cancel_callback: Callable[[], None]):
-        """
-        Create race browser dialog.
-
-        Args:
-            rect: Window rectangle
-            manager: pygame_gui UIManager
-            race_library: RaceLibrary instance for loading races
-            on_select_callback: Callback(RaceConfig) when user selects a race
-            on_cancel_callback: Callback() when user cancels
-        """
-        super().__init__(
-            rect,
-            manager,
-            window_display_title="Load Race",
-            object_id="#race_browser_dialog",
-            resizable=False
-        )
-
-        self.race_library = race_library
-        self.on_select_callback = on_select_callback
-        self.on_cancel_callback = on_cancel_callback
-
-        # Track UI elements for cleanup
-        self.race_rows = []  # List of dicts with row UI elements
-        self.selected_race = None
-        self.selected_row_index = -1
-
-        self._create_ui()
-        self._load_races()
-
-    def _create_ui(self):
-        """Create the dialog UI elements."""
-        container = self.get_container()
-        content_width = container.get_size()[0] - 20
-        content_height = container.get_size()[1]
-
-        # Scrolling container for race list
-        scroll_height = content_height - 80  # Leave room for buttons
-        self.scroll_container = pygame_gui.elements.UIScrollingContainer(
-            relative_rect=pygame.Rect(10, 10, content_width, scroll_height),
-            manager=self.ui_manager,
-            container=container
-        )
-
-        # Bottom buttons
-        btn_width = 120
-        btn_height = 40
-        btn_y = content_height - 55
-
-        self.btn_cancel = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(10, btn_y, btn_width, btn_height),
-            text="Cancel",
-            manager=self.ui_manager,
-            container=container
-        )
-
-        self.btn_load = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(content_width - btn_width, btn_y, btn_width, btn_height),
-            text="Load",
-            manager=self.ui_manager,
-            container=container
-        )
-        self.btn_load.disable()  # Disabled until a race is selected
-
-        # "No races" label (hidden by default)
-        self.no_races_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, scroll_height // 2, content_width, 30),
-            text="No saved races found. Create one first!",
-            manager=self.ui_manager,
-            container=container
-        )
-        self.no_races_label.hide()
-
-    def _load_races(self):
-        """Load all races and populate the list."""
-        races = self.race_library.get_all_races()
-
-        if not races:
-            self.no_races_label.show()
-            return
-
-        # Initialize ShipThemeManager for ship previews
-        theme_manager = ShipThemeManager.instance()
-        theme_manager.initialize()
-
-        # Set scrollable area size
-        scroll_rect = self.scroll_container.get_relative_rect()
-        total_height = len(races) * self.ROW_HEIGHT + 10
-        self.scroll_container.set_scrollable_area_dimensions(
-            (scroll_rect.width - 20, max(total_height, scroll_rect.height))
-        )
-
-        y = 5
-        for i, race in enumerate(races):
-            row = self._create_race_row(race, y, i, theme_manager)
-            self.race_rows.append(row)
-            y += self.ROW_HEIGHT
-
-    def _create_race_row(self, race: RaceConfig, y: int, index: int,
-                         theme_manager: ShipThemeManager) -> dict:
-        """Create a single race row with previews."""
-        scroll_rect = self.scroll_container.get_relative_rect()
-        row_width = scroll_rect.width - 40
-
-        row = {
-            'race': race,
-            'index': index,
-            'elements': []
-        }
-
-        x = 5
-
-        # Row button (clickable background)
-        row_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(x, y, row_width, self.ROW_HEIGHT - 5),
-            text="",
-            manager=self.ui_manager,
-            container=self.scroll_container,
-            object_id=f"#race_row_{index}"
-        )
-        row['button'] = row_btn
-        row['elements'].append(row_btn)
-
-        # Portrait preview
-        x += 10
-        portrait_surf = self._load_portrait_preview(race.portrait_id)
-        if portrait_surf:
-            portrait_img = pygame_gui.elements.UIImage(
-                relative_rect=pygame.Rect(x, y + 10, self.PREVIEW_SIZE, self.PREVIEW_SIZE),
-                image_surface=portrait_surf,
-                manager=self.ui_manager,
-                container=self.scroll_container
-            )
-            row['elements'].append(portrait_img)
-        x += self.PREVIEW_SIZE + 10
-
-        # Flag preview (single shape, not all 3)
-        flag_surf = self._load_flag_preview(race.flag_id)
-        if flag_surf:
-            flag_img = pygame_gui.elements.UIImage(
-                relative_rect=pygame.Rect(x, y + 10, self.PREVIEW_SIZE, self.PREVIEW_SIZE),
-                image_surface=flag_surf,
-                manager=self.ui_manager,
-                container=self.scroll_container
-            )
-            row['elements'].append(flag_img)
-        x += self.PREVIEW_SIZE + 10
-
-        # Ship preview (top-down view)
-        if race.theme_id:
-            ship_surf = theme_manager.get_image(race.theme_id, "Cruiser")
-            if ship_surf:
-                # Scale to preview size
-                w, h = ship_surf.get_size()
-                scale = min(self.PREVIEW_SIZE / w, self.PREVIEW_SIZE / h)
-                new_size = (int(w * scale), int(h * scale))
-                scaled_ship = pygame.transform.smoothscale(ship_surf, new_size)
-
-                ship_img = pygame_gui.elements.UIImage(
-                    relative_rect=pygame.Rect(x, y + 10, self.PREVIEW_SIZE, self.PREVIEW_SIZE),
-                    image_surface=scaled_ship,
-                    manager=self.ui_manager,
-                    container=self.scroll_container
-                )
-                row['elements'].append(ship_img)
-        x += self.PREVIEW_SIZE + 15
-
-        # Race name label
-        name_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, y + 25, row_width - x - 10, 30),
-            text=race.name or "[Unnamed Race]",
-            manager=self.ui_manager,
-            container=self.scroll_container
-        )
-        row['elements'].append(name_label)
-        row['name_label'] = name_label
-
-        return row
-
-    def _load_portrait_preview(self, portrait_id: Optional[str]) -> Optional[pygame.Surface]:
-        """Load and scale a portrait for preview."""
-        if not portrait_id:
-            return None
-
-        portraits_dir = os.path.join(ASSET_DIR, "RacePortraits")
-        portrait_path = os.path.join(portraits_dir, portrait_id)
-
-        if not os.path.exists(portrait_path):
-            return None
-
-        try:
-            # Load first image in the directory
-            for fname in os.listdir(portrait_path):
-                if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
-                    img_path = os.path.join(portrait_path, fname)
-                    surf = pygame.image.load(img_path).convert_alpha()
-                    # Scale to preview size
-                    return pygame.transform.smoothscale(surf, (self.PREVIEW_SIZE, self.PREVIEW_SIZE))
-        except Exception as e:
-            log_warning(f"Failed to load portrait preview: {e}")
-
-        return None
-
-    def _load_flag_preview(self, flag_id: Optional[str]) -> Optional[pygame.Surface]:
-        """Load and scale a flag for preview (rectangle shape only)."""
-        if not flag_id:
-            return None
-
-        flags_dir = os.path.join(ASSET_DIR, "RaceFlags")
-        flag_path = os.path.join(flags_dir, flag_id)
-
-        if not os.path.exists(flag_path):
-            return None
-
-        try:
-            # Look for rectangle flag
-            for fname in os.listdir(flag_path):
-                if 'rectangle' in fname.lower() and fname.lower().endswith(('.png', '.jpg', '.jpeg')):
-                    img_path = os.path.join(flag_path, fname)
-                    surf = pygame.image.load(img_path).convert_alpha()
-                    # Scale to preview size
-                    return pygame.transform.smoothscale(surf, (self.PREVIEW_SIZE, self.PREVIEW_SIZE))
-            # Fallback to any image
-            for fname in os.listdir(flag_path):
-                if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
-                    img_path = os.path.join(flag_path, fname)
-                    surf = pygame.image.load(img_path).convert_alpha()
-                    return pygame.transform.smoothscale(surf, (self.PREVIEW_SIZE, self.PREVIEW_SIZE))
-        except Exception as e:
-            log_warning(f"Failed to load flag preview: {e}")
-
-        return None
-
-    def _select_row(self, index: int):
-        """Select a race row."""
-        # Deselect previous
-        if self.selected_row_index >= 0 and self.selected_row_index < len(self.race_rows):
-            old_row = self.race_rows[self.selected_row_index]
-            old_row['button'].unselect()
-
-        # Select new
-        self.selected_row_index = index
-        if index >= 0 and index < len(self.race_rows):
-            row = self.race_rows[index]
-            row['button'].select()
-            self.selected_race = row['race']
-            self.btn_load.enable()
-        else:
-            self.selected_race = None
-            self.btn_load.disable()
-
-    def process_event(self, event: pygame.event.Event) -> bool:
-        """Handle UI events."""
-        consumed = super().process_event(event)
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.btn_cancel:
-                self.on_cancel_callback()
-                self.kill()
-                return True
-
-            elif event.ui_element == self.btn_load:
-                if self.selected_race:
-                    self.on_select_callback(self.selected_race)
-                    self.kill()
-                return True
-
-            # Check if a race row was clicked
-            for i, row in enumerate(self.race_rows):
-                if event.ui_element == row['button']:
-                    self._select_row(i)
-                    return True
-
-        # Double-click to load
-        if event.type == pygame_gui.UI_BUTTON_DOUBLE_CLICKED:
-            for i, row in enumerate(self.race_rows):
-                if event.ui_element == row['button']:
-                    self._select_row(i)
-                    if self.selected_race:
-                        self.on_select_callback(self.selected_race)
-                        self.kill()
-                    return True
-
-        return consumed
+# PROJ-12 Phase 4: Import extracted components
+from game.ui.screens.race_browser_dialog import RaceBrowserDialog
+from game.ui.screens.race_validator import RaceValidator
+from game.ui.screens.race_asset_loader import RaceAssetLoader
+from game.ui.panels.race_environment_panel import RaceEnvironmentPanel
+from game.ui.panels.race_description_panel import RaceDescriptionPanel
+from game.ui.panels.race_flag_gallery import RaceFlagGallery
+from game.ui.panels.race_portrait_gallery import RacePortraitGallery
+from game.ui.panels.race_theme_gallery import RaceThemeGallery
 
 
 class RaceSetupScreen(pygame_gui.elements.UIWindow):
@@ -343,8 +50,8 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     ]
 
     # Thumbnail sizes (larger for 2560x1600 displays)
-    FLAG_THUMB_SIZE = 256
-    PORTRAIT_THUMB_SIZE = 256
+    # FLAG_THUMB_SIZE moved to RaceFlagGallery
+    # PORTRAIT_THUMB_SIZE moved to RacePortraitGallery
     THEME_SHIP_SIZE = 180  # For ship preview images
 
     def __init__(self, rect: pygame.Rect, manager: pygame_gui.UIManager,
@@ -386,10 +93,15 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         # Race library for save/load
         self.race_library = RaceLibrary()
 
-        # Asset caches
-        self._flag_cache = None  # List of (flag_id, thumbnail_surface)
-        self._portrait_cache = None  # List of (portrait_id, thumbnail_surface)
-        self._theme_cache = None  # List of (theme_id, ship_surfaces_dict)
+        # PROJ-12 Phase 4: Use extracted asset loader
+        self._asset_loader = RaceAssetLoader()
+
+        # PROJ-12 Phase 4: Extracted panels
+        self._environment_panel = None
+        self._description_panel = None
+        self._flag_gallery = None
+        self._portrait_gallery = None
+        self._theme_gallery = None
 
         # UI element references
         self.step_panels = []
@@ -399,16 +111,8 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self.btn_load = None  # Load Race button on Summary
         self.error_label = None
 
-        # Visual selection UI elements
+        # Visual selection UI elements (flag/portrait/theme UI moved to respective galleries)
         self.name_input = None
-        self.flag_buttons = []
-        self.portrait_buttons = []
-        self.theme_buttons = []
-        self.selected_flag_highlight = None
-        self.selected_portrait_highlight = None
-        self.selected_theme_highlight = None
-        self.flag_preview_images = []
-        self.portrait_preview_image = None
 
         self._create_ui()
         self._show_step(self.current_step)
@@ -512,185 +216,29 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self._create_descriptions_panel_content(panel_descriptions)
         self.step_panels.append(panel_descriptions)
 
-    # =========================================================================
-    # Asset Discovery Methods
-    # =========================================================================
-
-    def _discover_flags(self) -> List[Tuple[str, pygame.Surface]]:
-        """
-        Discover all flag designs from assets folder.
-
-        Returns:
-            List of (flag_id, thumbnail_surface) tuples
-        """
-        if self._flag_cache is not None:
-            return self._flag_cache
-
-        flags = []
-        flags_dir = os.path.join(ASSET_DIR, "Images", "Flags", "Processed")
-
-        if not os.path.exists(flags_dir):
-            log_warning(f"Flags directory not found: {flags_dir}")
-            return flags
-
-        for entry in os.scandir(flags_dir):
-            if entry.is_dir() and entry.name.startswith("flag_"):
-                # Load the 128px rectangle thumbnail
-                thumb_path = os.path.join(entry.path, "128", "rectangle.png")
-                if not os.path.exists(thumb_path):
-                    # Fallback to root rectangle
-                    thumb_path = os.path.join(entry.path, "rectangle.png")
-
-                if os.path.exists(thumb_path):
-                    try:
-                        surf = pygame.image.load(thumb_path).convert_alpha()
-                        # Scale to thumbnail size
-                        scaled = pygame.transform.smoothscale(
-                            surf, (self.FLAG_THUMB_SIZE, self.FLAG_THUMB_SIZE)
-                        )
-                        flags.append((entry.name, scaled))
-                    except Exception as e:
-                        log_error(f"Failed to load flag thumbnail {thumb_path}: {e}")
-
-        flags.sort(key=lambda x: x[0])
-        self._flag_cache = flags
-        log_debug(f"Discovered {len(flags)} flags")
-        return flags
-
-    def _discover_portraits(self) -> List[Tuple[str, pygame.Surface]]:
-        """
-        Discover all race portraits from assets folder.
-
-        Returns:
-            List of (portrait_id, thumbnail_surface) tuples
-        """
-        if self._portrait_cache is not None:
-            return self._portrait_cache
-
-        portraits = []
-        portraits_dir = os.path.join(ASSET_DIR, "Images", "Race Portraits")
-
-        if not os.path.exists(portraits_dir):
-            log_warning(f"Portraits directory not found: {portraits_dir}")
-            return portraits
-
-        for entry in os.scandir(portraits_dir):
-            if entry.is_file() and entry.name.lower().endswith(('.jpg', '.jpeg', '.png')):
-                try:
-                    surf = pygame.image.load(entry.path).convert_alpha()
-                    # Scale to thumbnail size (original is 2048x2048)
-                    scaled = pygame.transform.smoothscale(
-                        surf, (self.PORTRAIT_THUMB_SIZE, self.PORTRAIT_THUMB_SIZE)
-                    )
-                    portraits.append((entry.name, scaled))
-                except Exception as e:
-                    log_error(f"Failed to load portrait {entry.path}: {e}")
-
-        portraits.sort(key=lambda x: x[0])
-        self._portrait_cache = portraits
-        log_debug(f"Discovered {len(portraits)} portraits")
-        return portraits
-
-    def _discover_themes(self) -> List[Tuple[str, dict]]:
-        """
-        Discover all ship themes.
-
-        Returns:
-            List of (theme_id, {ship_class: surface}) tuples
-        """
-        if self._theme_cache is not None:
-            return self._theme_cache
-
-        themes = []
-        theme_manager = ShipThemeManager.instance()
-        theme_manager.initialize()
-
-        for theme_name in theme_manager.get_available_themes():
-            ship_surfaces = {}
-            # Load Escort (small) and Battleship (large) for preview
-            for ship_class in ["Escort", "Battleship"]:
-                surf = theme_manager.get_image(theme_name, ship_class)
-                if surf:
-                    # Scale to preview size
-                    w, h = surf.get_size()
-                    scale = min(self.THEME_SHIP_SIZE / w, self.THEME_SHIP_SIZE / h)
-                    new_size = (int(w * scale), int(h * scale))
-                    scaled = pygame.transform.smoothscale(surf, new_size)
-                    ship_surfaces[ship_class] = scaled
-
-            themes.append((theme_name, ship_surfaces))
-
-        self._theme_cache = themes
-        log_debug(f"Discovered {len(themes)} themes")
-        return themes
 
     def _load_flag_full(self, flag_id: str) -> List[pygame.Surface]:
         """
         Load all three shapes for a flag at full display size.
 
-        Args:
-            flag_id: Flag directory name
-
-        Returns:
-            List of [rectangle, shield, triangle] surfaces (original size, caller scales)
+        PROJ-12 Phase 4: Delegates to RaceAssetLoader.
         """
-        shapes = []
-        flags_dir = os.path.join(ASSET_DIR, "Images", "Flags", "Processed")
-        flag_dir = os.path.join(flags_dir, flag_id)
-
-        for shape in ["rectangle", "shield", "triangle"]:
-            # Try 1024px first for best quality, then 512, 256, then root
-            shape_path = None
-            for size_dir in ["1024", "512", "256", ""]:
-                if size_dir:
-                    test_path = os.path.join(flag_dir, size_dir, f"{shape}.png")
-                else:
-                    test_path = os.path.join(flag_dir, f"{shape}.png")
-                if os.path.exists(test_path):
-                    shape_path = test_path
-                    break
-
-            if shape_path:
-                try:
-                    surf = pygame.image.load(shape_path).convert_alpha()
-                    shapes.append(surf)
-                except Exception as e:
-                    log_error(f"Failed to load flag shape {shape_path}: {e}")
-                    shapes.append(self._create_placeholder(256, 256))
-            else:
-                shapes.append(self._create_placeholder(256, 256))
-
-        return shapes
+        return self._asset_loader.load_flag_full(flag_id)
 
     def _load_portrait_full(self, portrait_id: str) -> Optional[pygame.Surface]:
         """
         Load a portrait at full display size.
 
-        Args:
-            portrait_id: Portrait filename
-
-        Returns:
-            Surface (original size, caller scales as needed) or None
+        PROJ-12 Phase 4: Delegates to RaceAssetLoader.
         """
-        portraits_dir = os.path.join(ASSET_DIR, "Images", "Race Portraits")
-        portrait_path = os.path.join(portraits_dir, portrait_id)
-
-        if os.path.exists(portrait_path):
-            try:
-                surf = pygame.image.load(portrait_path).convert_alpha()
-                return surf
-            except Exception as e:
-                log_error(f"Failed to load portrait {portrait_path}: {e}")
-
-        return None
+        return self._asset_loader.load_portrait_full(portrait_id)
 
     def _create_placeholder(self, width: int, height: int) -> pygame.Surface:
-        """Create a placeholder surface for missing assets."""
-        surf = pygame.Surface((width, height), pygame.SRCALPHA)
-        pygame.draw.rect(surf, (80, 80, 80), surf.get_rect(), 2)
-        pygame.draw.line(surf, (80, 80, 80), (0, 0), (width, height), 1)
-        pygame.draw.line(surf, (80, 80, 80), (width, 0), (0, height), 1)
-        return surf
+        """Create a placeholder surface for missing assets.
+
+        PROJ-12 Phase 4: Delegates to RaceAssetLoader.
+        """
+        return self._asset_loader.create_placeholder(width, height)
 
     def _sanitize_object_id(self, text: str) -> str:
         """Sanitize text for use in pygame_gui object_id (no dots or spaces)."""
@@ -727,313 +275,41 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         col_width = (panel_width - 20) // 2
         gallery_height = panel_height - y - 20
 
-        # Column 1: Flags
-        self._create_flag_gallery(panel, 10, y, col_width, gallery_height)
-
-        # Column 2: Portraits
-        self._create_portrait_gallery(panel, 15 + col_width, y, col_width, gallery_height)
-
-    def _create_flag_gallery(self, panel, x: int, y: int, width: int, height: int):
-        """Create flag selection gallery with large thumbnails."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, y, width, 30),
-            text="Select Flag:",
+        # Column 1: Flags (PROJ-12 Phase 4: Delegate to RaceFlagGallery)
+        self._flag_gallery = RaceFlagGallery(
+            panel=panel,
             manager=self.ui_manager,
-            container=panel
+            race_config=self.race_config,
+            x=10,
+            y=y,
+            width=col_width,
+            height=gallery_height,
+            asset_loader=self._asset_loader
         )
-        y += 35
 
-        # Preview area for selected flag (3 shapes at full size)
-        preview_height = 280  # Larger preview for 256px shapes
-        self.flag_preview_panel = pygame_gui.elements.UIPanel(
-            relative_rect=pygame.Rect(x, y, width, preview_height),
+        # Column 2: Portraits (PROJ-12 Phase 4: Delegate to RacePortraitGallery)
+        self._portrait_gallery = RacePortraitGallery(
+            panel=panel,
             manager=self.ui_manager,
-            container=panel,
-            object_id="#flag_preview"
+            race_config=self.race_config,
+            x=15 + col_width,
+            y=y,
+            width=col_width,
+            height=gallery_height,
+            asset_loader=self._asset_loader
         )
-        y += preview_height + 10
-
-        # Scrolling container for thumbnails
-        scroll_height = height - 35 - preview_height - 20
-        self.flag_scroll = pygame_gui.elements.UIScrollingContainer(
-            relative_rect=pygame.Rect(x, y, width, scroll_height),
-            manager=self.ui_manager,
-            container=panel,
-            allow_scroll_x=False,
-            allow_scroll_y=True
-        )
-
-        # Populate with flag buttons
-        flags = self._discover_flags()
-        thumb_size = self.FLAG_THUMB_SIZE
-        spacing = 10
-        cols = max(1, (width - 20) // (thumb_size + spacing))
-        row = 0
-        col = 0
-
-        for flag_id, thumb_surf in flags:
-            btn_x = 5 + col * (thumb_size + spacing)
-            btn_y = 5 + row * (thumb_size + spacing)
-
-            btn = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect(btn_x, btn_y, thumb_size, thumb_size),
-                text="",
-                manager=self.ui_manager,
-                container=self.flag_scroll,
-                object_id=f"#flag_{self._sanitize_object_id(flag_id)}"
-            )
-            btn.flag_id = flag_id
-
-            # Create image element on top of button
-            img = pygame_gui.elements.UIImage(
-                relative_rect=pygame.Rect(btn_x, btn_y, thumb_size, thumb_size),
-                image_surface=thumb_surf,
-                manager=self.ui_manager,
-                container=self.flag_scroll
-            )
-
-            self.flag_buttons.append((btn, img, flag_id))
-
-            col += 1
-            if col >= cols:
-                col = 0
-                row += 1
-
-        # Set scrollable area height
-        total_rows = (len(flags) + cols - 1) // cols if cols > 0 else 1
-        self.flag_scroll.set_scrollable_area_dimensions(
-            (width - 20, 10 + total_rows * (thumb_size + spacing))
-        )
-
-        # Pre-select if editing
-        if self.race_config.flag_id:
-            self._on_flag_selected(self.race_config.flag_id)
-
-    def _create_portrait_gallery(self, panel, x: int, y: int, width: int, height: int):
-        """Create portrait selection gallery with large thumbnails."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, y, width, 30),
-            text="Select Portrait:",
-            manager=self.ui_manager,
-            container=panel
-        )
-        y += 35
-
-        # Preview area for selected portrait (larger)
-        preview_height = 280  # Larger preview for 256px portrait
-        self.portrait_preview_panel = pygame_gui.elements.UIPanel(
-            relative_rect=pygame.Rect(x, y, width, preview_height),
-            manager=self.ui_manager,
-            container=panel,
-            object_id="#portrait_preview"
-        )
-        y += preview_height + 10
-
-        # Scrolling container for thumbnails
-        scroll_height = height - 35 - preview_height - 20
-        self.portrait_scroll = pygame_gui.elements.UIScrollingContainer(
-            relative_rect=pygame.Rect(x, y, width, scroll_height),
-            manager=self.ui_manager,
-            container=panel,
-            allow_scroll_x=False,
-            allow_scroll_y=True
-        )
-
-        # Populate with portrait buttons
-        portraits = self._discover_portraits()
-        thumb_size = self.PORTRAIT_THUMB_SIZE
-        spacing = 10
-        cols = max(1, (width - 20) // (thumb_size + spacing))
-        row = 0
-        col = 0
-
-        for portrait_id, thumb_surf in portraits:
-            btn_x = 5 + col * (thumb_size + spacing)
-            btn_y = 5 + row * (thumb_size + spacing)
-
-            btn = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect(btn_x, btn_y, thumb_size, thumb_size),
-                text="",
-                manager=self.ui_manager,
-                container=self.portrait_scroll,
-                object_id=f"#portrait_{self._sanitize_object_id(portrait_id)}"
-            )
-            btn.portrait_id = portrait_id
-
-            # Create image element on top of button
-            img = pygame_gui.elements.UIImage(
-                relative_rect=pygame.Rect(btn_x, btn_y, thumb_size, thumb_size),
-                image_surface=thumb_surf,
-                manager=self.ui_manager,
-                container=self.portrait_scroll
-            )
-
-            self.portrait_buttons.append((btn, img, portrait_id))
-
-            col += 1
-            if col >= cols:
-                col = 0
-                row += 1
-
-        # Set scrollable area height
-        total_rows = (len(portraits) + cols - 1) // cols if cols > 0 else 1
-        self.portrait_scroll.set_scrollable_area_dimensions(
-            (width - 20, 10 + total_rows * (thumb_size + spacing))
-        )
-
-        # Pre-select if editing
-        if self.race_config.portrait_id:
-            self._on_portrait_selected(self.race_config.portrait_id)
-
-    def _create_theme_gallery(self, panel, x: int, y: int, width: int):
-        """Create ship theme selection gallery."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, y, width, 25),
-            text="Select Ship Theme:",
-            manager=self.ui_manager,
-            container=panel
-        )
-        y += 25
-
-        # Preview area (placeholder - shows selected theme name)
-        preview_height = 70
-        self.theme_preview_panel = pygame_gui.elements.UIPanel(
-            relative_rect=pygame.Rect(x, y, width, preview_height),
-            manager=self.ui_manager,
-            container=panel,
-            object_id="#theme_preview"
-        )
-        self.theme_preview_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(5, 5, width - 10, 30),
-            text="No theme selected",
-            manager=self.ui_manager,
-            container=self.theme_preview_panel
-        )
-        y += preview_height + 5
-
-        # List of themes (not scrolling - only 4 themes)
-        themes = self._discover_themes()
-        btn_height = 50
-
-        for theme_id, ship_surfs in themes:
-            btn = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect(x, y, width, btn_height),
-                text=theme_id,
-                manager=self.ui_manager,
-                container=panel,
-                object_id=f"#theme_{self._sanitize_object_id(theme_id)}"
-            )
-            btn.theme_id = theme_id
-
-            # Add ship preview images
-            if "Escort" in ship_surfs:
-                img_x = x + width - 70
-                pygame_gui.elements.UIImage(
-                    relative_rect=pygame.Rect(img_x, y + 5, 30, 40),
-                    image_surface=ship_surfs["Escort"],
-                    manager=self.ui_manager,
-                    container=panel
-                )
-            if "Battleship" in ship_surfs:
-                img_x = x + width - 35
-                pygame_gui.elements.UIImage(
-                    relative_rect=pygame.Rect(img_x, y + 5, 30, 40),
-                    image_surface=ship_surfs["Battleship"],
-                    manager=self.ui_manager,
-                    container=panel
-                )
-
-            self.theme_buttons.append((btn, theme_id))
-            y += btn_height + 5
-
-        # Pre-select if editing or default
-        if self.race_config.theme_id:
-            self._on_theme_selected(self.race_config.theme_id)
-        elif themes:
-            self._on_theme_selected(themes[0][0])
-
-    def _on_flag_selected(self, flag_id: str):
-        """Handle flag selection."""
-        self.race_config.flag_id = flag_id
-        log_debug(f"Flag selected: {flag_id}")
-
-        # Clear existing preview images
-        for img in self.flag_preview_images:
-            img.kill()
-        self.flag_preview_images = []
-
-        # Load and display all three shapes at larger size
-        shapes = self._load_flag_full(flag_id)
-        shape_names = ["rectangle", "shield", "triangle"]
-        shape_size = 256  # Full size for preview
-        preview_x = 10
-
-        for i, (surf, name) in enumerate(zip(shapes, shape_names)):
-            # Scale to full preview size
-            scaled = pygame.transform.smoothscale(surf, (shape_size, shape_size))
-            img = pygame_gui.elements.UIImage(
-                relative_rect=pygame.Rect(preview_x + i * (shape_size + 15), 10, shape_size, shape_size),
-                image_surface=scaled,
-                manager=self.ui_manager,
-                container=self.flag_preview_panel
-            )
-            self.flag_preview_images.append(img)
-
-        # Update button highlights
-        for btn, img, fid in self.flag_buttons:
-            if fid == flag_id:
-                btn.select()
-            else:
-                btn.unselect()
-
-    def _on_portrait_selected(self, portrait_id: str):
-        """Handle portrait selection."""
-        self.race_config.portrait_id = portrait_id
-        log_debug(f"Portrait selected: {portrait_id}")
-
-        # Clear existing preview
-        if self.portrait_preview_image:
-            self.portrait_preview_image.kill()
-            self.portrait_preview_image = None
-
-        # Load and display larger preview (256px)
-        surf = self._load_portrait_full(portrait_id)
-        if surf:
-            # Scale to full preview size
-            preview_size = 256
-            scaled = pygame.transform.smoothscale(surf, (preview_size, preview_size))
-            self.portrait_preview_image = pygame_gui.elements.UIImage(
-                relative_rect=pygame.Rect(10, 10, preview_size, preview_size),
-                image_surface=scaled,
-                manager=self.ui_manager,
-                container=self.portrait_preview_panel
-            )
-
-        # Update button highlights
-        for btn, img, pid in self.portrait_buttons:
-            if pid == portrait_id:
-                btn.select()
-            else:
-                btn.unselect()
 
     def _on_theme_selected(self, theme_id: str):
-        """Handle theme selection."""
+        """Handle theme selection.
+
+        PROJ-12 Phase 4: Button highlighting now handled by RaceThemeGallery.
+        This method is called via on_select_callback from the gallery.
+        """
         self.race_config.theme_id = theme_id
         log_debug(f"Theme selected: {theme_id}")
 
-        # Update preview label (if old theme gallery exists)
-        if hasattr(self, 'theme_preview_label') and self.theme_preview_label:
-            self.theme_preview_label.set_text(f"Selected: {theme_id}")
-
         # Refresh ship preview in Ships panel
         self._refresh_ship_preview(theme_id)
-
-        # Update button highlights
-        for btn, tid in self.theme_buttons:
-            if tid == theme_id:
-                btn.select()
-            else:
-                btn.unselect()
 
     # =========================================================================
     # Ships Panel (dedicated ship theme selection)
@@ -1054,23 +330,22 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         )
         y += 45
 
-        # Theme selector buttons at top (horizontal row)
-        themes = self._discover_themes()
-        btn_width = min(200, (panel_width - 20) // max(1, len(themes)))
-        btn_height = 50
+        # PROJ-12 Phase 4: Use RaceThemeGallery for theme selection
+        # The gallery handles theme buttons and selection highlighting
+        self._theme_gallery = RaceThemeGallery(
+            panel=panel,
+            manager=self.ui_manager,
+            race_config=self.race_config,
+            x=10,
+            y=y,
+            width=panel_width,
+            on_select_callback=self._on_theme_selected
+        )
 
-        for i, (theme_id, ship_surfs) in enumerate(themes):
-            btn = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect(10 + i * (btn_width + 10), y, btn_width, btn_height),
-                text=theme_id,
-                manager=self.ui_manager,
-                container=panel,
-                object_id=f"#theme_{self._sanitize_object_id(theme_id)}"
-            )
-            btn.theme_id = theme_id
-            self.theme_buttons.append((btn, theme_id))
-
-        y += btn_height + 20
+        # Calculate remaining height for ship preview area
+        # Account for theme gallery (approx 200px for label + preview + 4 theme buttons)
+        theme_gallery_height = 200
+        y += theme_gallery_height + 10
 
         # Ship preview area (scrolling container for ship images)
         preview_height = panel_height - y - 20
@@ -1085,11 +360,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         # Store reference to container for dynamic updates
         self.ship_preview_container = self.ship_preview_scroll
 
-        # Pre-select theme
-        if self.race_config.theme_id:
-            self._on_theme_selected(self.race_config.theme_id)
-        elif themes:
-            self._on_theme_selected(themes[0][0])
+        # Note: theme selection is handled by RaceThemeGallery via on_select_callback
 
     def _refresh_ship_preview(self, theme_id: str):
         """Refresh the ship preview area with ships from the selected theme."""
@@ -1223,258 +494,41 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         return None
 
     # =========================================================================
-    # Environment Panel
+    # Environment Panel (PROJ-12 Phase 4: Delegates to RaceEnvironmentPanel)
     # =========================================================================
 
     def _create_environment_panel_content(self, panel):
-        """Create content for Step 2: Environmental Preferences."""
-        panel_width = panel.get_relative_rect().width - 20
-        y = 5
-
-        # Initialize slider references
-        self.gravity_ideal_slider = None
-        self.gravity_tolerance_slider = None
-        self.gravity_ideal_label = None
-        self.gravity_tolerance_label = None
-
-        self.temp_ideal_slider = None
-        self.temp_tolerance_slider = None
-        self.temp_ideal_label = None
-        self.temp_tolerance_label = None
-
-        self.radiation_slider = None
-        self.radiation_label = None
-
-        self.atmosphere_sliders = {}
-        self.atmosphere_labels = {}
-
-        # Section 1: Gravity
-        y = self._create_gravity_section(panel, y, panel_width)
-        y += 15
-
-        # Section 2: Temperature
-        y = self._create_temperature_section(panel, y, panel_width)
-        y += 15
-
-        # Section 3: Radiation Tolerance
-        y = self._create_radiation_section(panel, y, panel_width)
-        y += 15
-
-        # Section 4: Atmosphere Preferences
-        y = self._create_atmosphere_section(panel, y, panel_width)
-
-    def _create_gravity_section(self, panel, y: int, width: int) -> int:
-        """Create gravity preference controls."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Gravity Preferences:",
+        """Create content for Environment tab using extracted RaceEnvironmentPanel."""
+        self._environment_panel = RaceEnvironmentPanel(
+            panel=panel,
             manager=self.ui_manager,
-            container=panel,
-            object_id="#section_header"
+            race_config=self.race_config
         )
-        y += 28
 
-        # Ideal gravity: 0.1 - 3.0 g
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(20, y, 100, 22),
-            text="Ideal (g):",
-            manager=self.ui_manager,
-            container=panel
-        )
-        self.gravity_ideal_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(120, y, width - 200, 22),
-            start_value=self.race_config.gravity_ideal,
-            value_range=(0.1, 3.0),
-            manager=self.ui_manager,
-            container=panel,
-            click_increment=0.1
-        )
-        self.gravity_ideal_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(width - 70, y, 60, 22),
-            text=f"{self.race_config.gravity_ideal:.1f}",
-            manager=self.ui_manager,
-            container=panel
-        )
-        y += 26
+    def _update_env_from_sliders(self):
+        """Update race_config from environment slider values.
 
-        # Tolerance: 0.0 - 1.0 g
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(20, y, 100, 22),
-            text="Tolerance:",
-            manager=self.ui_manager,
-            container=panel
-        )
-        self.gravity_tolerance_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(120, y, width - 200, 22),
-            start_value=self.race_config.gravity_tolerance,
-            value_range=(0.0, 1.0),
-            manager=self.ui_manager,
-            container=panel,
-            click_increment=0.05
-        )
-        self.gravity_tolerance_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(width - 70, y, 60, 22),
-            text=f"±{self.race_config.gravity_tolerance:.2f}",
-            manager=self.ui_manager,
-            container=panel
-        )
-        y += 26
+        PROJ-12 Phase 4: Delegates to RaceEnvironmentPanel.
+        """
+        if self._environment_panel:
+            self._environment_panel.update_config()
 
-        return y
+    def _update_env_labels(self):
+        """Update environment value display labels.
 
-    def _create_temperature_section(self, panel, y: int, width: int) -> int:
-        """Create temperature preference controls."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Temperature Preferences:",
-            manager=self.ui_manager,
-            container=panel,
-            object_id="#section_header"
-        )
-        y += 28
-
-        # Ideal temperature: 200 - 400 K
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(20, y, 100, 22),
-            text="Ideal (K):",
-            manager=self.ui_manager,
-            container=panel
-        )
-        self.temp_ideal_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(120, y, width - 200, 22),
-            start_value=self.race_config.temperature_ideal,
-            value_range=(200, 400),
-            manager=self.ui_manager,
-            container=panel,
-            click_increment=5
-        )
-        self.temp_ideal_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(width - 70, y, 60, 22),
-            text=f"{self.race_config.temperature_ideal:.0f}",
-            manager=self.ui_manager,
-            container=panel
-        )
-        y += 26
-
-        # Tolerance: 0 - 100 K
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(20, y, 100, 22),
-            text="Tolerance:",
-            manager=self.ui_manager,
-            container=panel
-        )
-        self.temp_tolerance_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(120, y, width - 200, 22),
-            start_value=self.race_config.temperature_tolerance,
-            value_range=(0, 100),
-            manager=self.ui_manager,
-            container=panel,
-            click_increment=5
-        )
-        self.temp_tolerance_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(width - 70, y, 60, 22),
-            text=f"±{self.race_config.temperature_tolerance:.0f}",
-            manager=self.ui_manager,
-            container=panel
-        )
-        y += 26
-
-        return y
-
-    def _create_radiation_section(self, panel, y: int, width: int) -> int:
-        """Create radiation tolerance control."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Radiation Tolerance:",
-            manager=self.ui_manager,
-            container=panel,
-            object_id="#section_header"
-        )
-        y += 28
-
-        # Radiation: -100 (sensitive) to +100 (resistant)
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(20, y, 100, 22),
-            text="Tolerance:",
-            manager=self.ui_manager,
-            container=panel
-        )
-        self.radiation_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(120, y, width - 200, 22),
-            start_value=self.race_config.radiation_tolerance,
-            value_range=(-100, 100),
-            manager=self.ui_manager,
-            container=panel,
-            click_increment=5
-        )
-        self.radiation_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(width - 70, y, 60, 22),
-            text=self._format_radiation(self.race_config.radiation_tolerance),
-            manager=self.ui_manager,
-            container=panel
-        )
-        y += 26
-
-        return y
-
-    def _create_atmosphere_section(self, panel, y: int, width: int) -> int:
-        """Create atmosphere preference controls."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 300, 25),
-            text="Atmosphere Preferences (-100 toxic to +100 beneficial):",
-            manager=self.ui_manager,
-            container=panel,
-            object_id="#section_header"
-        )
-        y += 28
-
-        # Create two columns of atmosphere sliders
-        gases = list(self.race_config.atmosphere_preferences.keys())
-        col_width = (width - 30) // 2
-
-        for i, gas in enumerate(gases):
-            col = i % 2
-            row = i // 2
-            x_offset = 10 + col * (col_width + 10)
-            y_pos = y + row * 28
-
-            # Gas label
-            pygame_gui.elements.UILabel(
-                relative_rect=pygame.Rect(x_offset, y_pos, 80, 22),
-                text=f"{gas}:",
-                manager=self.ui_manager,
-                container=panel
-            )
-
-            # Slider: -100 to +100
-            slider = pygame_gui.elements.UIHorizontalSlider(
-                relative_rect=pygame.Rect(x_offset + 85, y_pos, col_width - 145, 22),
-                start_value=self.race_config.atmosphere_preferences.get(gas, 0),
-                value_range=(-100, 100),
-                manager=self.ui_manager,
-                container=panel,
-                click_increment=5
-            )
-            self.atmosphere_sliders[gas] = slider
-
-            # Value label
-            value = self.race_config.atmosphere_preferences.get(gas, 0)
-            label = pygame_gui.elements.UILabel(
-                relative_rect=pygame.Rect(x_offset + col_width - 55, y_pos, 50, 22),
-                text=self._format_atmosphere(value),
-                manager=self.ui_manager,
-                container=panel
-            )
-            self.atmosphere_labels[gas] = label
-
-        # Calculate final y position
-        rows = (len(gases) + 1) // 2
-        y += rows * 28
-
-        return y
+        PROJ-12 Phase 4: Delegates to RaceEnvironmentPanel.
+        """
+        if self._environment_panel:
+            self._environment_panel.update_labels()
 
     def _format_radiation(self, value: float) -> str:
-        """Format radiation tolerance value for display."""
+        """Format radiation tolerance value for display.
+
+        PROJ-12 Phase 4: Delegates to RaceEnvironmentPanel.
+        """
+        if self._environment_panel:
+            return self._environment_panel._format_radiation(value)
+        # Fallback if panel not initialized
         if value < -50:
             return f"{value:.0f} Sens"
         elif value > 50:
@@ -1484,147 +538,33 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         else:
             return f"{value:.0f}"
 
-    def _format_atmosphere(self, value: float) -> str:
-        """Format atmosphere preference value for display."""
-        if value >= 0:
-            return f"+{value:.0f}"
-        else:
-            return f"{value:.0f}"
-
-    def _update_env_from_sliders(self):
-        """Update race_config from environment slider values."""
-        if self.gravity_ideal_slider:
-            self.race_config.gravity_ideal = self.gravity_ideal_slider.get_current_value()
-        if self.gravity_tolerance_slider:
-            self.race_config.gravity_tolerance = self.gravity_tolerance_slider.get_current_value()
-        if self.temp_ideal_slider:
-            self.race_config.temperature_ideal = self.temp_ideal_slider.get_current_value()
-        if self.temp_tolerance_slider:
-            self.race_config.temperature_tolerance = self.temp_tolerance_slider.get_current_value()
-        if self.radiation_slider:
-            self.race_config.radiation_tolerance = self.radiation_slider.get_current_value()
-
-        for gas, slider in self.atmosphere_sliders.items():
-            self.race_config.atmosphere_preferences[gas] = slider.get_current_value()
-
-    def _update_env_labels(self):
-        """Update environment value display labels."""
-        if self.gravity_ideal_slider and self.gravity_ideal_label:
-            val = self.gravity_ideal_slider.get_current_value()
-            self.gravity_ideal_label.set_text(f"{val:.1f}")
-
-        if self.gravity_tolerance_slider and self.gravity_tolerance_label:
-            val = self.gravity_tolerance_slider.get_current_value()
-            self.gravity_tolerance_label.set_text(f"±{val:.2f}")
-
-        if self.temp_ideal_slider and self.temp_ideal_label:
-            val = self.temp_ideal_slider.get_current_value()
-            self.temp_ideal_label.set_text(f"{val:.0f}")
-
-        if self.temp_tolerance_slider and self.temp_tolerance_label:
-            val = self.temp_tolerance_slider.get_current_value()
-            self.temp_tolerance_label.set_text(f"±{val:.0f}")
-
-        if self.radiation_slider and self.radiation_label:
-            val = self.radiation_slider.get_current_value()
-            self.radiation_label.set_text(self._format_radiation(val))
-
-        for gas, slider in self.atmosphere_sliders.items():
-            if gas in self.atmosphere_labels:
-                val = slider.get_current_value()
-                self.atmosphere_labels[gas].set_text(self._format_atmosphere(val))
-
     # =========================================================================
-    # Descriptions Panel (Step 3)
+    # Descriptions Panel (PROJ-12 Phase 4: Delegates to RaceDescriptionPanel)
     # =========================================================================
 
     def _create_descriptions_panel_content(self, panel):
-        """Create content for Step 3: Text Descriptions."""
-        panel_width = panel.get_relative_rect().width - 20
-        panel_height = panel.get_relative_rect().height - 20
-        y = 5
-
-        # Initialize text box references
-        self.bio_text_box = None
-        self.bio_char_label = None
-        self.socio_text_box = None
-        self.socio_char_label = None
-
-        # Calculate height for each text area (split available space)
-        text_area_height = (panel_height - 100) // 2  # Minus space for labels and margins
-
-        # Biological Description
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 300, 25),
-            text="Biological Description:",
+        """Create content for Descriptions tab using extracted RaceDescriptionPanel."""
+        self._description_panel = RaceDescriptionPanel(
+            panel=panel,
             manager=self.ui_manager,
-            container=panel,
-            object_id="#section_header"
-        )
-        self.bio_char_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(panel_width - 80, y, 80, 25),
-            text=f"{len(self.race_config.bio_description)}/500",
-            manager=self.ui_manager,
-            container=panel
-        )
-        y += 28
-
-        self.bio_text_box = pygame_gui.elements.UITextEntryBox(
-            relative_rect=pygame.Rect(10, y, panel_width, text_area_height),
-            initial_text=self.race_config.bio_description,
-            manager=self.ui_manager,
-            container=panel,
-            object_id="#description_box"
-        )
-        y += text_area_height + 15
-
-        # Sociological Description
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 300, 25),
-            text="Sociological Description:",
-            manager=self.ui_manager,
-            container=panel,
-            object_id="#section_header"
-        )
-        self.socio_char_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(panel_width - 80, y, 80, 25),
-            text=f"{len(self.race_config.socio_description)}/500",
-            manager=self.ui_manager,
-            container=panel
-        )
-        y += 28
-
-        self.socio_text_box = pygame_gui.elements.UITextEntryBox(
-            relative_rect=pygame.Rect(10, y, panel_width, text_area_height),
-            initial_text=self.race_config.socio_description,
-            manager=self.ui_manager,
-            container=panel,
-            object_id="#description_box"
+            race_config=self.race_config
         )
 
     def _update_description_char_counts(self):
-        """Update character count labels for description text boxes."""
-        if self.bio_text_box and self.bio_char_label:
-            text = self.bio_text_box.get_text()
-            count = len(text)
-            self.bio_char_label.set_text(f"{count}/500")
+        """Update character count labels for description text boxes.
 
-        if self.socio_text_box and self.socio_char_label:
-            text = self.socio_text_box.get_text()
-            count = len(text)
-            self.socio_char_label.set_text(f"{count}/500")
+        PROJ-12 Phase 4: Delegates to RaceDescriptionPanel.
+        """
+        if self._description_panel:
+            self._description_panel.update_char_counts()
 
     def _update_descriptions_from_text(self):
-        """Update race_config from description text boxes."""
-        if self.bio_text_box:
-            text = self.bio_text_box.get_text()
-            # Enforce 500 char limit
-            self.race_config.bio_description = text[:500]
+        """Update race_config from description text boxes.
 
-        if self.socio_text_box:
-            text = self.socio_text_box.get_text()
-            # Enforce 500 char limit
-            self.race_config.socio_description = text[:500]
+        PROJ-12 Phase 4: Delegates to RaceDescriptionPanel.
+        """
+        if self._description_panel:
+            self._description_panel.update_config()
 
     # =========================================================================
     # Summary Panel (Landing Page)
@@ -2113,6 +1053,8 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         """
         Validate all required fields before saving.
 
+        PROJ-12 Phase 4: Delegates to RaceValidator.
+
         Returns:
             Tuple of (is_valid, error_message)
         """
@@ -2120,23 +1062,10 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         if hasattr(self, 'name_input') and self.name_input:
             self.race_config.name = self.name_input.get_text().strip()
 
-        # Name is required
-        if not self.race_config.name:
-            return False, "Race name is required (set in Visuals tab)"
-
-        # Flag selection required
-        if not self.race_config.flag_id:
-            return False, "Please select a flag (Visuals tab)"
-
-        # Portrait selection required
-        if not self.race_config.portrait_id:
-            return False, "Please select a portrait (Visuals tab)"
-
-        # Theme selection required
-        if not self.race_config.theme_id:
-            return False, "Please select a ship theme (Ships tab)"
-
-        return True, ""
+        # PROJ-12: Use extracted RaceValidator
+        validator = RaceValidator()
+        result = validator.validate(self.race_config)
+        return result.is_valid, result.message
 
     def _on_tab_clicked(self, tab_index: int):
         """Handle tab button click."""
@@ -2192,48 +1121,25 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         if hasattr(self, 'name_input') and self.name_input:
             self.name_input.set_text(self.race_config.name or "")
 
-        # Update flag selection
-        if self.race_config.flag_id:
-            self._on_flag_selected(self.race_config.flag_id)
+        # Update flag selection (PROJ-12 Phase 4: Delegate to RaceFlagGallery)
+        if self._flag_gallery:
+            self._flag_gallery.set_from_config()
 
-        # Update portrait selection
-        if self.race_config.portrait_id:
-            self._on_portrait_selected(self.race_config.portrait_id)
+        # Update portrait selection (PROJ-12 Phase 4: Delegate to RacePortraitGallery)
+        if self._portrait_gallery:
+            self._portrait_gallery.set_from_config()
 
-        # Update theme selection
-        if self.race_config.theme_id:
-            self._on_theme_selected(self.race_config.theme_id)
+        # Update theme selection (PROJ-12 Phase 4: Delegate to RaceThemeGallery)
+        if self._theme_gallery:
+            self._theme_gallery.set_from_config()
 
-        # Update environment sliders
-        if hasattr(self, 'gravity_ideal_slider') and self.gravity_ideal_slider:
-            self.gravity_ideal_slider.set_current_value(self.race_config.gravity_ideal)
-        if hasattr(self, 'gravity_tolerance_slider') and self.gravity_tolerance_slider:
-            self.gravity_tolerance_slider.set_current_value(self.race_config.gravity_tolerance)
-        if hasattr(self, 'temp_ideal_slider') and self.temp_ideal_slider:
-            self.temp_ideal_slider.set_current_value(self.race_config.temperature_ideal)
-        if hasattr(self, 'temp_tolerance_slider') and self.temp_tolerance_slider:
-            self.temp_tolerance_slider.set_current_value(self.race_config.temperature_tolerance)
-        if hasattr(self, 'radiation_slider') and self.radiation_slider:
-            self.radiation_slider.set_current_value(self.race_config.radiation_tolerance)
+        # Update environment sliders (PROJ-12 Phase 4: Delegate to RaceEnvironmentPanel)
+        if self._environment_panel:
+            self._environment_panel.set_from_config()
 
-        # Update atmosphere sliders
-        if hasattr(self, 'atmosphere_sliders'):
-            for gas, slider in self.atmosphere_sliders.items():
-                if gas in self.race_config.atmosphere_preferences:
-                    slider.set_current_value(self.race_config.atmosphere_preferences[gas])
-
-        # Update environment labels
-        self._update_env_labels()
-
-        # Update description text boxes
-        if hasattr(self, 'bio_text_box') and self.bio_text_box:
-            self.bio_text_box.set_text(self.race_config.bio_description or "")
-        if hasattr(self, 'socio_text_box') and self.socio_text_box:
-            self.socio_text_box.set_text(self.race_config.socio_description or "")
-
-        # Update description char counts
-        if hasattr(self, '_update_description_char_counts'):
-            self._update_description_char_counts()
+        # Update description text boxes (PROJ-12 Phase 4: Delegate to RaceDescriptionPanel)
+        if self._description_panel:
+            self._description_panel.set_from_config()
 
     def _on_cancel(self):
         """Handle Cancel button click."""
@@ -2286,28 +1192,19 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                     self._on_load_race()
                     handled = True
                 else:
-                    # Check flag buttons
-                    for btn, img, flag_id in self.flag_buttons:
-                        if event.ui_element == btn:
-                            self._on_flag_selected(flag_id)
+                    # Check flag buttons (PROJ-12 Phase 4: Delegate to RaceFlagGallery)
+                    if self._flag_gallery and self._flag_gallery.handle_button_click(event.ui_element):
+                        handled = True
+
+                    # Check portrait buttons (PROJ-12 Phase 4: Delegate to RacePortraitGallery)
+                    if not handled:
+                        if self._portrait_gallery and self._portrait_gallery.handle_button_click(event.ui_element):
                             handled = True
-                            break
 
-                    # Check portrait buttons
+                    # Check theme buttons (PROJ-12 Phase 4: Delegate to RaceThemeGallery)
                     if not handled:
-                        for btn, img, portrait_id in self.portrait_buttons:
-                            if event.ui_element == btn:
-                                self._on_portrait_selected(portrait_id)
-                                handled = True
-                                break
-
-                    # Check theme buttons
-                    if not handled:
-                        for btn, theme_id in self.theme_buttons:
-                            if event.ui_element == btn:
-                                self._on_theme_selected(theme_id)
-                                handled = True
-                                break
+                        if self._theme_gallery and self._theme_gallery.handle_button_click(event.ui_element):
+                            handled = True
 
         # Handle slider changes
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
@@ -2315,11 +1212,16 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             self._update_env_from_sliders()
             handled = True
 
-        # Handle text entry changes
+        # Handle text entry changes (PROJ-12 Phase 4: Check description panel text boxes)
         elif event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED:
-            if event.ui_element in (self.bio_text_box, self.socio_text_box):
-                self._update_description_char_counts()
-                self._update_descriptions_from_text()
-                handled = True
+            if self._description_panel:
+                desc_text_boxes = (
+                    self._description_panel.bio_text_box,
+                    self._description_panel.socio_text_box
+                )
+                if event.ui_element in desc_text_boxes:
+                    self._update_description_char_counts()
+                    self._update_descriptions_from_text()
+                    handled = True
 
         return handled

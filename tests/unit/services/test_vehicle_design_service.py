@@ -1,13 +1,13 @@
 """
-Tests for VehicleDesignService (renamed from ShipBuilderService).
+Tests for VehicleDesignService.
 
 This service provides an abstraction layer between UI and Ship domain objects,
-handling vehicle creation, component management, and design validation.
+handling ship creation, component management, and design validation.
 """
 import pytest
 
 from game.simulation.services.vehicle_design_service import VehicleDesignService, DesignResult
-from game.simulation.components.component import LayerType
+from game.simulation.components import LayerType
 
 
 @pytest.fixture

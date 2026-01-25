@@ -88,7 +88,7 @@ class TestModifierLoaderV2:
 
     def test_load_v2_modifiers_file(self):
         """Should load modifiers_v2.json file correctly."""
-        from game.simulation.components.component import load_modifiers
+        from game.simulation.components import load_modifiers
         from game.core.registry import get_modifier_registry
 
         # Clear registry first

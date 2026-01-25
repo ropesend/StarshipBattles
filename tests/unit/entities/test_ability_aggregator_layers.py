@@ -216,3 +216,69 @@ class TestBackwardCompatibility:
 
         assert 'MockCombatAbility' in totals
         assert totals['MockCombatAbility'] == 100
+
+
+class TestAggregateAbilityGroups:
+    """Tests for the _aggregate_ability_groups helper function (SIM-08 refactoring)."""
+
+    def test_aggregate_groups_sums_by_default(self):
+        """Should sum values from different groups by default."""
+        from game.simulation.entities.ability_aggregator import _aggregate_ability_groups
+
+        ability_groups = {
+            'Thrust': {
+                'engine1': [100],
+                'engine2': [150]
+            }
+        }
+
+        totals = _aggregate_ability_groups(ability_groups)
+        assert totals['Thrust'] == 250
+
+    def test_aggregate_groups_takes_max_within_group(self):
+        """Should take MAX value within same group (redundancy)."""
+        from game.simulation.entities.ability_aggregator import _aggregate_ability_groups
+
+        ability_groups = {
+            'Thrust': {
+                'main_engines': [100, 150, 120]  # Multiple values in same group
+            }
+        }
+
+        totals = _aggregate_ability_groups(ability_groups)
+        assert totals['Thrust'] == 150  # MAX of the group
+
+    def test_aggregate_groups_multiplies_for_special_abilities(self):
+        """Should multiply values for ToHitAttackModifier and ToHitDefenseModifier."""
+        from game.simulation.entities.ability_aggregator import _aggregate_ability_groups
+
+        ability_groups = {
+            'ToHitDefenseModifier': {
+                'ecm': [2.0],
+                'scattering': [1.5]
+            }
+        }
+
+        totals = _aggregate_ability_groups(ability_groups)
+        assert totals['ToHitDefenseModifier'] == pytest.approx(3.0)  # 2.0 * 1.5
+
+    def test_aggregate_groups_handles_boolean_marker_abilities(self):
+        """Should return True if any group contributes True."""
+        from game.simulation.entities.ability_aggregator import _aggregate_ability_groups
+
+        ability_groups = {
+            'Armor': {
+                'armor1': [True],
+                'armor2': [True]
+            }
+        }
+
+        totals = _aggregate_ability_groups(ability_groups)
+        assert totals['Armor'] is True
+
+    def test_aggregate_groups_empty_returns_empty(self):
+        """Should return empty dict for empty input."""
+        from game.simulation.entities.ability_aggregator import _aggregate_ability_groups
+
+        totals = _aggregate_ability_groups({})
+        assert totals == {}

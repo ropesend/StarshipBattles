@@ -1,17 +1,72 @@
+"""
+Component System - Ship Component Model
+
+This module defines the Component class, which represents individual parts
+of a ship (engines, weapons, sensors, etc.) with their abilities and modifiers.
+
+Component Lifecycle:
+    1. CREATION: Component loaded from JSON definition via RegistryManager
+       - Base stats initialized (mass, hp, cost)
+       - Abilities instantiated from data
+       - Default modifiers applied
+
+    2. ATTACHMENT: Component added to Ship via add_component()
+       - Layer assignment (CORE, INNER, OUTER)
+       - Ship reference set for resource access
+       - Stats recalculated with ship context
+
+    3. SIMULATION: Component updated each tick
+       - update() called: resource consumption, cooldowns
+       - Abilities update their state
+       - is_operational reflects resource availability
+
+    4. DAMAGE: Component takes damage during combat
+       - HP reduced, status updated (ACTIVE → DAMAGED → DESTROYED)
+       - Below damage_threshold: component becomes inactive
+       - Destroyed: removed from combat calculations
+
+Ability System:
+    Components have abilities that define their behavior:
+    - WeaponAbility: Firing logic, damage, cooldowns
+    - ThrustAbility: Engine thrust contribution
+    - ResourceConsumption: Fuel/energy costs
+    - SensorAbility: Detection bonuses
+    - CapacityAbility: Cargo/hangar space
+
+    Abilities are instantiated from the abilities dict and stored in
+    ability_instances list. Access via get_ability(name) or get_abilities(name).
+
+    Ability data flow:
+    1. JSON definition → abilities dict
+    2. _instantiate_abilities() → ability_instances list
+    3. update() → each ability.update() called
+    4. recalculate_stats() → ability contributions aggregated
+
+Modifier System:
+    Modifiers alter component stats (mass, damage, cooldown, etc.):
+    - Loaded from component definition or applied at runtime
+    - ApplicationModifier wraps ModifierDefinition with a value
+    - Effects applied during recalculate_stats()
+
+    Operations: 'add', 'multiply', 'set'
+    Example: accuracy_mult * 1.1 increases accuracy by 10%
+
+Key Classes:
+    Component: The main component class
+    ComponentStatus: Enum (ACTIVE, DAMAGED, DESTROYED)
+    LayerType: Enum (CORE, INNER, OUTER)
+    ApplicationModifier: Applied modifier with value
+"""
 import math
 import threading
 from game.simulation.formula_system import evaluate_math_formula
 from game.core.registry import get_component_registry, get_modifier_registry
 from game.core.json_utils import load_json_required
 from game.core.logger import log_warning, log_error
+from game.core.constants import CombatConstants
 
-# Re-export from component_constants for backward compatibility
-from .component_constants import (
-    ComponentStatus,
-    LayerType,
-    Modifier,
-    ApplicationModifier,
-)
+# Import component constants for internal use
+from .component_constants import ComponentStatus, Modifier, ApplicationModifier
 
 
 class Component:
@@ -40,11 +95,9 @@ class Component:
         self.cost = data.get('cost', 0)
 
         # Damage threshold: HP percentage at which component becomes inactive
-        # Default: 0.5 (50%) - components fail when damaged to half HP
-        # Can be configured per-component:
-        #   - Fragile sensors: 0.8 (fail at 80% damage)
-        #   - Robust armor: 0.1 (fail at 90% damage)
-        self.damage_threshold = data.get('damage_threshold', 0.5)
+        # Default: 50% - components fail when damaged to half HP
+        # Can be configured per-component (fragile sensors: 0.8, robust armor: 0.1)
+        self.damage_threshold = data.get('damage_threshold', CombatConstants.DEFAULT_DAMAGE_THRESHOLD)
 
         # Parse abilities from data
         self.abilities = self.data.get('abilities', {})
@@ -419,9 +472,6 @@ class Component:
 
         # 3. Apply Base Stats (Generic attributes)
         self._apply_base_stats(stats, old_max_hp)
-        
-        # 4. Apply Custom/Subclass Stats
-        self._apply_custom_stats(stats)
 
 
 
@@ -529,13 +579,6 @@ class Component:
         # Recalculate all abilities with updated stats from modifiers
         for ab in self.ability_instances:
             ab.recalculate()
-
-
-
-    def _apply_custom_stats(self, stats):
-        """Hook for subclasses to apply specific stats."""
-        # Base implementation handles Crew/LifeSupport as they are somewhat generic in this system
-        pass
 
     def clone(self):
         # Create a new instance with the same data

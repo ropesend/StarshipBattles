@@ -1,12 +1,59 @@
+"""
+Collision System - Hit Detection and Combat Resolution
+
+This module handles collision detection and damage resolution for combat:
+- Beam weapon raycasting (sphere-ray intersection)
+- Ship-to-ship ramming collisions
+
+Sphere-Ray Intersection (Beam Attacks):
+    Uses quadratic formula to find intersection points of a ray with a sphere.
+
+    Given:
+        - Ray origin: P
+        - Ray direction: D (unit vector)
+        - Sphere center: C
+        - Sphere radius: r
+
+    Let f = P - C (vector from sphere center to ray origin)
+
+    Solve: |P + t*D - C|² = r²
+    Expands to: (D·D)t² + 2(f·D)t + (f·f - r²) = 0
+
+    Coefficients:
+        a = D·D (always 1 if D is normalized)
+        b = 2(f·D)
+        c = f·f - r²
+
+    Discriminant: b² - 4ac
+        < 0: No intersection (ray misses sphere)
+        = 0: Tangent hit (one intersection point)
+        > 0: Two intersection points (entry and exit)
+
+    Solutions: t = (-b ± √discriminant) / 2a
+        t₁ is the entry point (closer)
+        t₂ is the exit point (farther)
+
+Hit Chance Calculation (Sigmoid):
+    Hit probability uses a logistic function for smooth falloff.
+    See BeamWeaponAbility.calculate_hit_chance() in abilities/weapons.py
+
+    Formula: P = 1 / (1 + e^(-net_score))
+
+    Where: net_score = (base_accuracy + attack_bonuses) - (range_penalty + defense_penalties)
+        - base_accuracy: Weapon's inherent accuracy (0.0-1.0 typically)
+        - attack_bonuses: Attacker's sensor score
+        - range_penalty: accuracy_falloff * distance
+        - defense_penalties: Target's ECM/defense score
+"""
 import math
 import random
 from typing import List, Dict, Any, TYPE_CHECKING
-import pygame
 
 from game.core.config import BattleConfig
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
+
 
 class CollisionSystem:
     """

@@ -161,7 +161,7 @@ class BuilderLeftPanel:
     def on_registry_reloaded(self, data):
         """Handle registry reload event - refresh component list and filter options."""
         # Update available components from new registry data
-        from game.simulation.components.component import get_all_components
+        from game.simulation.components import get_all_components
         self.viewmodel._available_components = get_all_components()
         self.component_order_map = {c.id: i for i, c in enumerate(self.viewmodel.available_components)}
         

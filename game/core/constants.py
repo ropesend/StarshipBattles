@@ -55,3 +55,24 @@ VEHICLE_CLASSES_FILE = os.path.join(DATA_DIR, "vehicleclasses.json")
 # Debug Flags
 DEBUG_SCREENSHOTS = True
 
+
+# Layer Defaults - radius percentages for ship layer zones
+class LayerDefaults:
+    """Default radius percentages for ship layer zones (core, inner, outer)."""
+    CORE_RADIUS_PCT = 0.2    # Core layer at 20% of ship radius
+    INNER_RADIUS_PCT = 0.5   # Inner layer at 50% of ship radius
+    OUTER_RADIUS_PCT = 0.8   # Outer layer at 80% of ship radius
+
+
+# Combat Constants
+class CombatConstants:
+    """Constants for combat simulation."""
+    DEFAULT_MAX_TARGETS = 1           # Default maximum targets for multi-target weapons
+    DEFAULT_DAMAGE_THRESHOLD = 0.5    # Components fail at 50% HP by default
+    # Note: FIGHTER_LAUNCH_SPEED is in BattleConfig (game/core/config.py)
+
+
+# Resource Types
+# PROJ-11: Moved from game.strategy.data.planet to eliminate simulation->strategy dependency
+PLANET_RESOURCES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+

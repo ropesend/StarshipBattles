@@ -1,9 +1,9 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import LayerType, Component
+from game.simulation.components import LayerType, Component
 from game.core.registry import RegistryManager
-from game.ui.screens.builder_screen import BuilderSceneGUI
+from game.ui.screens.workshop_screen import DesignWorkshopGUI
 
 @pytest.fixture
 def simple_ship_registry():
@@ -39,15 +39,15 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
     """
     BUG-13 Reproduction: Verify that _clear_design removes the hull component.
     """
-    # Instantiate BuilderSceneGUI without calling __init__ to avoid UI complexity
-    gui = BuilderSceneGUI.__new__(BuilderSceneGUI)
+    # Instantiate DesignWorkshopGUI without calling __init__ to avoid UI complexity
+    gui = DesignWorkshopGUI.__new__(DesignWorkshopGUI)
     
     # Setup minimal required state - MVVM architecture requires viewmodel
     from ui.builder.event_bus import EventBus
-    from game.ui.screens.builder_viewmodel import BuilderViewModel
-    
+    from game.ui.screens.workshop_viewmodel import WorkshopViewModel
+
     gui.event_bus = EventBus()
-    gui.viewmodel = BuilderViewModel(gui.event_bus, 1280, 720)
+    gui.viewmodel = WorkshopViewModel(gui.event_bus, 1280, 720)
     
     # Setup ship via viewmodel
     gui.viewmodel._ship = Ship("Test Ship", 0, 0, (255,255,255), ship_class="Escort")
@@ -67,7 +67,7 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
     gui.ship.layers[LayerType.CORE]['components'].append(laser)
     
     # Trigger the bug by calling the actual method
-    BuilderSceneGUI._clear_design(gui)
+    DesignWorkshopGUI._clear_design(gui)
     
     # Verify the bug
     # 1. Non-hull component is correctly removed

@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch
 
-from game.simulation.components.component import Component, Modifier
+from game.simulation.components import Component, Modifier
 from game.core.registry import RegistryManager
 from ui.builder.modifier_logic import ModifierLogic
 

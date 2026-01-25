@@ -1,5 +1,5 @@
-import pygame
 from typing import List, Set, Any, TYPE_CHECKING
+from game.core.math import Vector2
 from game.core.constants import AttackType
 from game.core.config import BattleConfig
 from game.core.logger import log_debug
@@ -43,26 +43,29 @@ class ProjectileManager:
                 projectiles_to_remove.add(idx)
                 continue
                 
-            p_pos = p.position 
-            
-            query_radius = p.velocity.length() + BattleConfig.PROJECTILE_QUERY_BUFFER
+            # Ensure we use our Vector2 for all calculations (handles pygame Vector2 from mocks)
+            p_pos = Vector2(p.position.x, p.position.y)
+            p_vel = Vector2(p.velocity.x, p.velocity.y)
+
+            query_radius = p_vel.length() + BattleConfig.PROJECTILE_QUERY_BUFFER
             nearby_ships = grid.query_radius(p_pos, query_radius)
-            
+
             hit_occurred = False
-            
-            p_start = p_pos - p.velocity
+
+            p_start = p_pos - p_vel
             
             # Check against Ships
             for s in nearby_ships:
                 if not s.is_alive: continue
                 if s.team_id == p.team_id: continue
                 
-                s_vel = s.velocity
-                s_pos = s.position
+                # Convert ship vectors to our Vector2 as well
+                s_vel = Vector2(s.velocity.x, s.velocity.y)
+                s_pos = Vector2(s.position.x, s.position.y)
                 s_prev_pos = s_pos - s_vel
-                
+
                 D0 = p_start - s_prev_pos
-                DV = p.velocity - s_vel
+                DV = p_vel - s_vel
                 
                 dv_sq = DV.dot(DV)
                 collision_radius = s.radius + BattleConfig.PROJECTILE_HIT_TOLERANCE
@@ -76,8 +79,8 @@ class ProjectileManager:
                 else:
                     t = -D0.dot(DV) / dv_sq
                     t_clamped = max(0, min(t, 1.0))
-                    
-                    p_at_t = p_start + p.velocity * t_clamped
+
+                    p_at_t = p_start + p_vel * t_clamped
                     s_at_t = s_prev_pos + s_vel * t_clamped
                     
                     dist = p_at_t.distance_to(s_at_t)

@@ -4,10 +4,11 @@ import pygame
 
 from game.engine.spatial import SpatialGrid
 from game.ui.screens.battle_scene import BattleScene
-from game.simulation.entities.ship import Ship, initialize_ship_data
-from game.simulation.components.component import load_components
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
+from game.simulation.components import load_components
 
-from game.ai.controller import StrategyManager
+from game.ai import StrategyManager
 from tests.fixtures.paths import get_project_root, get_data_dir, get_unit_test_data_dir
 
 
@@ -79,8 +80,9 @@ class TestBattleSetupLogic:
 
         # Check AI target teams
         # AIController(ship, grid, enemy_team_id)
-        ai1 = next(ai for ai in scene.ai_controllers if ai.ship == ship1)
-        ai2 = next(ai for ai in scene.ai_controllers if ai.ship == ship2)
+        # Note: ai.ship is a ShipControllableAdapter, need to unwrap via .ship property
+        ai1 = next(ai for ai in scene.ai_controllers if ai.ship.ship == ship1)
+        ai2 = next(ai for ai in scene.ai_controllers if ai.ship.ship == ship2)
 
         assert ai1.enemy_team_id == 1
         assert ai2.enemy_team_id == 0

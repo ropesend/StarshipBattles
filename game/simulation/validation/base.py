@@ -9,7 +9,7 @@ from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
-    from game.simulation.components.component import Component, LayerType
+    from game.simulation.components import Component, LayerType
 
 
 class ValidationResult:

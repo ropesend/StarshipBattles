@@ -122,7 +122,7 @@ Create a brief summary for the user:
 
 ---
 
-Plan archived to: Projects/archived_projects/PROJ-XX.md
+Plan archived to: Projects/archived_projects/PROJ-XX/
 ```
 
 ---

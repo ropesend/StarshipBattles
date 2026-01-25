@@ -7,9 +7,10 @@ import pygame
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 from game.ui.screens.battle_scene import BattleScene
-from game.simulation.entities.ship import Ship, initialize_ship_data
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.designs import create_interceptor, create_brick
-from game.simulation.components.component import load_components, load_modifiers
+from game.simulation.components import load_components, load_modifiers
 from game.core.registry import RegistryManager
 from game.core.constants import COMPONENTS_FILE, MODIFIERS_FILE
 from tests.fixtures.paths import get_project_root

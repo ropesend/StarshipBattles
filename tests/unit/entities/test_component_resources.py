@@ -1,5 +1,5 @@
 import pytest
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 from game.simulation.systems.resource_manager import ResourceConsumption, ABILITY_REGISTRY, ResourceState, ResourceRegistry
 
 

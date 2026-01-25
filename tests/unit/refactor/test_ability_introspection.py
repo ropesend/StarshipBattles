@@ -139,7 +139,7 @@ class TestRealComponentIntrospection:
 
     def test_weapon_get_effect_summary_with_range_mount(self):
         """WeaponAbility.get_effect_summary() should show range change with range_mount."""
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         railgun.add_modifier('range_mount', 2)  # Level 2 = 4x range
@@ -154,7 +154,7 @@ class TestRealComponentIntrospection:
 
     def test_weapon_get_effect_summary_with_hardened_mount(self):
         """WeaponAbility.get_effect_summary() should show damage with hardened_mount."""
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         railgun.add_modifier('hardened_mount', 2.0)  # 2x mass, 4x HP
@@ -168,7 +168,7 @@ class TestRealComponentIntrospection:
 
     def test_effect_summary_empty_when_no_modifiers(self):
         """get_effect_summary() should return empty list with no modifiers."""
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         railgun = create_component('railgun')
         # No modifiers applied

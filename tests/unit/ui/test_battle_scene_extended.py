@@ -3,10 +3,11 @@ import sys
 
 import pygame
 from game.ui.screens.battle_scene import BattleScene
-from game.simulation.entities.ship import Ship, initialize_ship_data
-from game.simulation.components.component import load_components, create_component, LayerType
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
+from game.simulation.components import load_components, create_component, LayerType
 from unittest.mock import MagicMock
-from game.ai.controller import StrategyManager
+from game.ai import StrategyManager
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_unit_test_data_dir
 

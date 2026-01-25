@@ -4,9 +4,9 @@ import pygame
 import pygame_gui
 from unittest.mock import MagicMock, patch
 
-from game.ui.screens.builder_screen import ModifierEditorPanel
+from game.ui.screens.workshop_screen import ModifierEditorPanel
 from game.core.registry import RegistryManager
-from game.simulation.components.component import Modifier
+from game.simulation.components import Modifier
 
 
 @pytest.fixture

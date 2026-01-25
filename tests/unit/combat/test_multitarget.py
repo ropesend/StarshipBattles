@@ -3,10 +3,12 @@ from unittest.mock import MagicMock, patch
 import pygame
 import math
 
-from game.simulation.entities.ship import Ship, initialize_ship_data
-from game.simulation.components.component import Component, LayerType, load_components
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
+from game.simulation.components import Component, LayerType, load_components
 from game.core.registry import RegistryManager
-from game.ai.controller import AIController
+from game.ai import AIController
+from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.simulation.entities.projectile import Projectile
 from game.core.constants import AttackType
@@ -30,7 +32,8 @@ def grid():
 def base_ship(grid):
     """Create a fully equipped base ship for testing."""
     ship = Ship("TestShip", 1000, 1000, (255, 0, 0), team_id=0, ship_class="Cruiser")
-    ai = AIController(ship, grid, enemy_team_id=1)
+    # Use ShipControllableAdapter to match production behavior (battle_engine.py)
+    ai = AIController(ShipControllableAdapter(ship), grid, enemy_team_id=1)
     ship.ai_controller = ai
 
     # Add Infrastructure to avoid derelict status and allow components to work
@@ -159,7 +162,7 @@ class TestMultitarget:
         grid.insert(m2)
 
         # Inject Strategy into StrategyManager (new data-driven system)
-        from game.ai.controller import StrategyManager
+        from game.ai import StrategyManager
         manager = StrategyManager.instance()
         manager._loaded = True  # Prevent ensure_loaded() from overwriting test data
 
@@ -211,3 +214,30 @@ class TestMultitarget:
         # Handle dict or object return
         target = shot.target if hasattr(shot, 'target') else shot.get('target')
         assert target == m1
+
+
+class TestMaxTargetsDefault:
+    """Tests for CombatConstants.DEFAULT_MAX_TARGETS usage."""
+
+    def test_ship_default_max_targets_equals_constant(self):
+        """Ship's default max_targets should equal CombatConstants.DEFAULT_MAX_TARGETS."""
+        from game.core.constants import CombatConstants
+
+        ship = Ship("TestShip", 0, 0, (255, 0, 0), team_id=0, ship_class="Escort")
+        assert ship.max_targets == CombatConstants.DEFAULT_MAX_TARGETS
+
+    def test_stats_reset_uses_default_constant(self):
+        """ShipStatsCalculator reset should use CombatConstants.DEFAULT_MAX_TARGETS."""
+        from game.core.constants import CombatConstants
+        from game.simulation.entities.ship_stats import ShipStatsCalculator
+        from game.core.registry import get_vehicle_classes
+
+        ship = Ship("TestShip", 0, 0, (255, 0, 0), team_id=0, ship_class="Escort")
+        # Manually set max_targets to a different value
+        ship.max_targets = 99
+
+        calculator = ShipStatsCalculator(get_vehicle_classes())
+        calculator.calculate(ship)
+
+        # After recalculation, should be reset to default
+        assert ship.max_targets == CombatConstants.DEFAULT_MAX_TARGETS

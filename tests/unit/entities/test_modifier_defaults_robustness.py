@@ -1,6 +1,6 @@
 import pytest
 
-from game.simulation.components.component import load_components, load_modifiers, create_component
+from game.simulation.components import load_components, load_modifiers, create_component
 from game.core.registry import RegistryManager
 from ui.builder.modifier_logic import ModifierLogic
 

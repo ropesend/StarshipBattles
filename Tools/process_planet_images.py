@@ -20,18 +20,7 @@ def make_background_transparent(image, threshold=30):
     # However, for 155 images, let's just do the exact logic but faster if possible,
     # or just accept it takes 30s to run this script once.
     
-    # Let's stick to the logic provided in the codebase to ensure visual consistency,
-    # but use get_at/set_at on the surface as per the original code to be 100% sure
-    # we don't change the visual result.
-    # Wait, the prompt asked to process them.
-    # The original was:
-    # for x in range(width):
-    #     for y in range(height):
-    #         c = image.get_at((x, y))
-    #         if c[0] < threshold and c[1] < threshold and c[2] < threshold:
-    #             image.set_at((x, y), (0, 0, 0, 0))
-    
-    # Optimized version using PixelArray for O(1) access vs O(N) function call overhead
+    # Process each pixel
     for x in range(width):
         for y in range(height):
             # PixelArray contains integers mapped to color

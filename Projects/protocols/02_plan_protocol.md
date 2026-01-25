@@ -22,7 +22,7 @@ Projects/active_projects/PROJ-XX/
 
 ### Old Flat File Structure (Legacy)
 ```
-Projects/active_projects/PROJ-XX.md   # Single file with everything
+Projects/active_projects/PROJ-XX/plan.md   # Single file with everything
 ```
 
 ---
@@ -33,15 +33,20 @@ Use these scripts to get quick information:
 ```bash
 # Show project status and progress
 python Projects/scripts/project_status.py PROJ-XX
+python Projects/scripts/project_status.py PROJ-XX --brief
+python Projects/scripts/project_status.py --all
 
 # Show exactly what task to work on next
 python Projects/scripts/current_task.py PROJ-XX
 
 # List all incomplete tasks
 python Projects/scripts/list_incomplete.py PROJ-XX
+python Projects/scripts/list_incomplete.py PROJ-XX --phase 2
 
 # Validate phase before marking complete
-python Projects/scripts/validate_phase.py PROJ-XX [phase_num]
+python Projects/scripts/validate_phase.py PROJ-XX 2
+python Projects/scripts/validate_phase.py PROJ-XX all
+python Projects/scripts/validate_phase.py PROJ-XX 2 --strict
 ```
 
 ---

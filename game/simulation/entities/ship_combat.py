@@ -1,421 +1,185 @@
-import pygame
+"""
+ShipCombatMixin - Thin facade for ship combat operations.
+
+This mixin delegates to ShipCombatEngine for actual implementation.
+Maintained for backward compatibility during PROJ-12 transition.
+
+PROJ-12: God Class Decomposition - Phase 1
+"""
 import math
-import random
-from game.simulation.components.component import LayerType, ComponentStatus
-from game.core.logger import log_debug, log_info
-from game.core.constants import AttackType
+from typing import Optional, List, Any
+
+from game.core.math import Vector2
+from game.core.logger import log_info
+
 
 class ShipCombatMixin:
     """
     Mixin class handling ship combat (firing, taking damage).
-    Requires the host class to have:
-    - layers (dict of components)
-    - current_energy, current_ammo, is_alive
-    - position, velocity, angle
-    - current_target (for aiming)
+
+    This is now a thin facade that delegates to ShipCombatEngine.
+    Kept for backward compatibility - the Ship class inherits this mixin.
+
+    The combat_engine property is lazily initialized on first access.
     """
 
-    def update_combat_cooldowns(self):
-        """Update weapon cooldowns and energy regeneration. Assumes 1 tick cycle."""
-        if not self.is_alive: return
+    @property
+    def combat_engine(self):
+        """
+        Get or create the ShipCombatEngine for this ship.
 
-        # Regenerate Shield (Custom Logic preserved as per Plan)
-        # Using Generic Energy Resource
-        if self.current_shields < self.max_shields and self.shield_regen_rate > 0:
-            regen_amount = self.shield_regen_rate / 100.0
-            cost_amount = self.shield_regen_cost / 100.0
-            
-            # Use Generic Resource
-            has_energy = True
-            if cost_amount > 0 and hasattr(self, 'resources'):
-                energy_res = self.resources.get_resource('energy')
-                if energy_res:
-                    if energy_res.current_value >= cost_amount:
-                        energy_res.consume(cost_amount)
-                    else:
-                        has_energy = False
+        Lazy initialization to avoid import cycles and ensure ship
+        is fully initialized before engine creation.
+        """
+        if not hasattr(self, '_combat_engine') or self._combat_engine is None:
+            from game.simulation.entities.ship_combat_engine import ShipCombatEngine
+            self._combat_engine = ShipCombatEngine(self)
+        return self._combat_engine
 
-            
-            if has_energy:
-                self.current_shields += regen_amount
-                if self.current_shields > self.max_shields:
-                    self.current_shields = self.max_shields
-        
-        # Apply Ship Repair
-        if getattr(self, 'repair_rate', 0) > 0:
-             self._apply_repair(self.repair_rate / 100.0)
+    def update_combat_cooldowns(self) -> None:
+        """
+        Update weapon cooldowns and energy regeneration.
 
-        # Component Cooldowns - Moved to Ship.update()
-        pass
+        Delegates to ShipCombatEngine.update_combat_cooldowns().
+        """
+        self.combat_engine.update_combat_cooldowns()
 
-    def fire_weapons(self, context=None):
-        attacks = []
-        if not self.is_alive or getattr(self, 'is_derelict', False): return attacks
+    def fire_weapons(self, context: Optional[dict] = None) -> List[Any]:
+        """
+        Fire all ready weapons at available targets.
 
-        for layer_type, comp in self.iter_components():
-            # Handle Hangar Launch (Phase 4: ability-based check)
-            if comp.has_ability('VehicleLaunch') and comp.is_active:
-                vl_ability = comp.get_ability('VehicleLaunch')
-                # Auto-launch if we have a target (or maybe strategy dictates?)
-                # For now, if we have a target, we launch.
-                if self.current_target and vl_ability.try_launch():
-                    attacks.append({
-                        'type': AttackType.LAUNCH,
-                        'source': self,
-                        'origin': self.position,
-                        'hangar': comp,
-                        'fighter_class': vl_ability.fighter_class
-                    })
-                continue
+        Delegates to ShipCombatEngine.fire_weapons().
 
-            if comp.has_ability('WeaponAbility') and comp.is_active:
-                weapon_ab = comp.get_ability('WeaponAbility')
-                has_resource = comp.can_afford_activation()
+        Args:
+            context: Optional context dict with projectiles list for PDC targeting
 
-                # Tracer
-                dist = 0
-                diff = 0
-                comp_facing = self.angle + getattr(comp, 'facing_angle', 0)
-                if self.current_target:
-                    rel_pos = self.current_target.position - self.position
-                    target_angle = math.degrees(math.atan2(rel_pos.y, rel_pos.x))
-                    diff = (target_angle - comp_facing + 180) % 360 - 180
-                    dist = rel_pos.length()
+        Returns:
+            List of attack objects (Projectiles or beam attack dicts)
+        """
+        return self.combat_engine.fire_weapons(context)
 
-                if has_resource and weapon_ab.can_fire():
-                    # TARGETING logic
-                    valid_target = False
-                    target = None
+    def take_damage(self, damage_amount: float) -> None:
+        """
+        Apply damage to the ship.
 
-                    # Potential targets list: Primary + Secondaries
-                    potential_targets = []
-                    if self.current_target:
-                        potential_targets.append(self.current_target)
+        Delegates to ShipCombatEngine.take_damage().
 
-                    # Only consider secondary targets if we have the capability
-                    if getattr(self, 'max_targets', 1) > 1 and hasattr(self, 'secondary_targets'):
-                        potential_targets.extend(self.secondary_targets)
+        Args:
+            damage_amount: Amount of damage to apply
+        """
+        self.combat_engine.take_damage(damage_amount)
 
-                    # Iterate through potential targets to find the first one we can hit
-                    for candidate in potential_targets:
-                        if not candidate:
-                            continue
+    def solve_lead(self, pos, vel, t_pos, t_vel, p_speed) -> float:
+        """
+        Calculate interception time for a projectile.
 
-                        # Safety: don't target dead things or friendlies
-                        if not getattr(candidate, 'is_alive', True):
-                            continue
-                        if getattr(candidate, 'team_id', -1) == self.team_id:
-                            continue
+        Delegates to ShipCombatEngine.solve_lead().
 
-                        # Specialization check: Non-PDC weapons should NOT fire at missiles
-                        is_pdc = comp.has_pdc_ability()
-                        t_type = getattr(candidate, 'type', 'ship')
-                        if t_type == 'missile' and not is_pdc:
-                            continue  # Standard guns ignore missiles
+        Args:
+            pos: Shooter position
+            vel: Shooter velocity
+            t_pos: Target position
+            t_vel: Target velocity
+            p_speed: Projectile speed
 
-                        # Simplified Phase 9 Logic: Delegate to Ability
-                        if comp.has_ability('SeekerWeaponAbility'):
-                            # Seeker Weapons have unique rules (infinite arc, range = speed*endurance)
-                            seeker_ab = comp.get_ability('SeekerWeaponAbility')
-                            # Simple proximity check for Seekers
-                            dist = self.position.distance_to(candidate.position)
-                            max_range = seeker_ab.projectile_speed * seeker_ab.endurance * 2.0
-                            if dist <= max_range:
-                                valid_target = True
-                                target = candidate
-                                break
-                        else:
-                            # Standard Direct-Fire Weapons
-                            # 1. Solve Lead
-                            aim_pos, aim_vec = self._calculate_firing_solution(comp, candidate)
+        Returns:
+            Interception time t > 0 if solution exists, else 0
+        """
+        return self.combat_engine.solve_lead(pos, vel, t_pos, t_vel, p_speed)
 
-                            # 2. Check Arc/Range using Intercept Point
-                            if weapon_ab.check_firing_solution(self.position, self.angle, aim_pos):
-                                valid_target = True
-                                target = candidate
-                                break
+    def _calculate_firing_solution(self, comp, target):
+        """
+        Calculate aim position and vector for firing at a target.
 
-                    if valid_target and target and weapon_ab.fire(target):
-                        self.total_shots_fired += 1
-                        if not hasattr(comp, 'shots_fired'):
-                            comp.shots_fired = 0
-                        comp.shots_fired += 1
+        Delegates to ShipCombatEngine.calculate_firing_solution().
 
-                        if comp.has_ability('BeamWeaponAbility'):
-                            if not hasattr(comp, 'shots_hit'):
-                                comp.shots_hit = 0
-                            comp.shots_hit += 1
+        Args:
+            comp: The weapon component
+            target: The target to fire at
 
-                            attacks.append({
-                                'type': AttackType.BEAM,
-                                'source': self,
-                                'target': target,
-                                'damage': weapon_ab.damage,
-                                'range': weapon_ab.range,
-                                'origin': self.position,
-                                'component': comp,
-                                'direction': aim_vec.normalize() if aim_vec.length() > 0 else pygame.math.Vector2(1, 0),
-                                'hit': True
-                            })
-                        else:
-                            from game.simulation.entities.projectile import Projectile
-
-                            if comp.has_ability('SeekerWeaponAbility'):
-                                seeker_ab = comp.get_ability('SeekerWeaponAbility')
-
-                                # Calculate aim_vec for seeker launch direction
-                                aim_pos, aim_vec = self._calculate_firing_solution(comp, target)
-
-                                # Launch vector
-                                comp_facing = self.angle + getattr(comp, 'facing_angle', 0)
-                                rad = math.radians(comp_facing)
-                                launch_vec = pygame.math.Vector2(math.cos(rad), math.sin(rad))
-
-                                # If target in arc, launch at target
-                                if abs(diff) <= (weapon_ab.firing_arc / 2):
-                                    launch_vec = aim_vec.normalize() if aim_vec.length() > 0 else launch_vec
-
-                                speed = seeker_ab.projectile_speed / 100.0  # Pixels/tick
-                                p_vel = launch_vec * speed + self.velocity
-
-                                proj = Projectile(
-                                    owner=self,
-                                    position=pygame.math.Vector2(self.position),
-                                    velocity=p_vel,
-                                    damage=seeker_ab.damage,
-                                    range_val=seeker_ab.projectile_speed * seeker_ab.endurance,
-                                    endurance=seeker_ab.endurance,
-                                    proj_type=AttackType.MISSILE,
-                                    turn_rate=seeker_ab.turn_rate,
-                                    max_speed=speed,
-                                    target=target,
-                                    hp=getattr(seeker_ab, 'missile_hp', 1),
-                                    color=(255, 50, 50),
-                                    source_weapon=comp
-                                )
-                                attacks.append(proj)
-
-                            else:
-                                # Standard Projectile
-                                projectile_ab = comp.get_ability('ProjectileWeaponAbility')
-                                speed = projectile_ab.projectile_speed / 100.0
-                                p_vel = aim_vec.normalize() * speed + self.velocity
-
-                                proj = Projectile(
-                                    owner=self,
-                                    position=pygame.math.Vector2(self.position),
-                                    velocity=p_vel,
-                                    damage=projectile_ab.damage,
-                                    range_val=projectile_ab.range,
-                                    endurance=None,  # Range limited
-                                    proj_type=AttackType.PROJECTILE,
-                                    color=(255, 200, 50),
-                                    source_weapon=comp,
-                                    target=target
-                                )
-                                attacks.append(proj)
-        return attacks
+        Returns:
+            Tuple of (aim_position, aim_vector)
+        """
+        return self.combat_engine.calculate_firing_solution(comp, target)
 
     def _find_pdc_target(self, comp, context):
-        """Find the best target for a Point Defense Cannon."""
+        """
+        Find the best target for a Point Defense Cannon.
+
+        Note: This method is kept for backward compatibility but may
+        be deprecated in future versions.
+
+        Args:
+            comp: PDC weapon component
+            context: Context dict containing projectiles list
+
+        Returns:
+            Best PDC target or None
+        """
         projectiles = context.get('projectiles', [])
-        if not projectiles: return None
-        
+        if not projectiles:
+            return None
+
         # Get weapon ability for range check
         weapon_range = 0
         if hasattr(comp, 'get_ability'):
             weapon_ab = comp.get_ability('WeaponAbility')
             weapon_range = weapon_ab.range if weapon_ab else 0
         else:
-            # Fallback for legacy test mocks
             weapon_range = getattr(comp, 'range', 0)
-        
+
         possible_targets = []
         for p in projectiles:
-            if not p.is_alive: continue
-            if getattr(p, 'team_id', -1) == self.team_id: continue # Don't shoot friendly missiles
-            
-            # Check range
+            if not p.is_alive:
+                continue
+            if getattr(p, 'team_id', -1) == self.team_id:
+                continue
+
             dist = self.position.distance_to(p.position)
-            if dist > weapon_range: continue
-                
+            if dist > weapon_range:
+                continue
+
             possible_targets.append((p, dist))
-            
-        if not possible_targets: return None
-        
-        # Sort by distance (closest first)
+
+        if not possible_targets:
+            return None
+
         possible_targets.sort(key=lambda x: x[1])
         return possible_targets[0][0]
 
-    def _calculate_firing_solution(self, comp, target):
-        """Helper to solve lead and return aim_pos, aim_vec."""
-        aim_pos = target.position 
-        
-        # Determine target velocity
-        t_vel = getattr(target, 'velocity', pygame.math.Vector2(0,0))
-        
-        if comp.has_ability('ProjectileWeaponAbility') or comp.has_ability('SeekerWeaponAbility'):
-            # Get projectile speed from the appropriate ability
-            if comp.has_ability('SeekerWeaponAbility'):
-                proj_ab = comp.get_ability('SeekerWeaponAbility')
-            else:
-                proj_ab = comp.get_ability('ProjectileWeaponAbility')
-            
-            projectile_speed = proj_ab.projectile_speed if proj_ab else 500
-            t = self.solve_lead(self.position, self.velocity, target.position, t_vel, projectile_speed / 100.0)
-            if t > 0:
-                aim_pos = target.position + t_vel * t
-                
-                # Correct for our own velocity (Relative Intercept)
-                intercept_vec = aim_pos - self.position
-                aim_vec = intercept_vec - self.velocity * t
-            else:
-                 # No solution, aim at target
-                 aim_pos = target.position
-                 aim_vec = aim_pos - self.position
-        else:
-             # Beam
-             aim_pos = target.position
-             aim_vec = aim_pos - self.position
-             
-        return aim_pos, aim_vec
-
-    def solve_lead(self, pos, vel, t_pos, t_vel, p_speed):
+    def die(self) -> None:
         """
-        Calculates interception time t for a projectile.
-        Returns t > 0 if solution found, else 0.
-        Note: p_speed should be per tick if vel is per tick.
+        Handle ship destruction.
+
+        Sets ship to dead state and resets velocity.
         """
-        D = t_pos - pos
-        V = t_vel - vel
-        
-        a = V.dot(V) - p_speed**2
-        b = 2 * V.dot(D)
-        c = D.dot(D)
-        
-        if a == 0:
-            if b == 0: return 0
-            t = -c / b
-            return t if t > 0 else 0
-        
-        disc = b*b - 4*a*c
-        if disc < 0: return 0
-        
-        sqrt_disc = math.sqrt(disc)
-        t1 = (-b + sqrt_disc) / (2*a)
-        t2 = (-b - sqrt_disc) / (2*a)
-        
-        ts = [x for x in [t1, t2] if x > 0]
-        return min(ts) if ts else 0
-
-    def take_damage(self, damage_amount):
-        if not self.is_alive: return
-
-        # Apply Emissive Armor Reduction (Flat reduction per hit)
-        ea = getattr(self, 'emissive_armor', 0)
-        if ea > 0:
-            damage_amount = max(0, damage_amount - ea)
-            if damage_amount <= 0:
-                return
-
-        # Apply Crystalline Armor (Absorb and Recharge Shields)
-        ca = getattr(self, 'crystalline_armor', 0)
-        if ca > 0 and damage_amount > 0:
-            absorption = min(ca, damage_amount)
-            
-            # Reduce Damage
-            damage_amount -= absorption
-            
-            # Recharge Shields
-            # Only recharge if shields are active (max_shields > 0)
-            if self.max_shields > 0:
-                self.current_shields = min(self.max_shields, self.current_shields + absorption)
-                
-            if damage_amount <= 0:
-                return
-
-        remaining_damage = damage_amount
-        
-        # Shield Absorption
-        if self.current_shields > 0:
-            absorbed = min(self.current_shields, remaining_damage)
-            self.current_shields -= absorbed
-            remaining_damage -= absorbed
-            
-        # Dynamic Layer Order: Sort by radius_pct descending (Outermost first)
-        sorted_layers = sorted(self.layers.items(), key=lambda x: x[1]['radius_pct'], reverse=True)
-        
-        for ltype, layer_data in sorted_layers:
-            if remaining_damage <= 0: break
-            remaining_damage = self._damage_layer(ltype, remaining_damage)
-            
-        if remaining_damage < damage_amount:
-            self.recalculate_stats()
-            self.update_derelict_status()
-
-    def _damage_layer(self, layer_type, damage):
-        layer = self.layers[layer_type]
-        
-        # Loop until damage is exhausted or no valid targets remain
-        while damage > 0:
-            # Filter for components with HP > 0 (even if inactive/non-functional)
-            targets = [c for c in layer['components'] if c.current_hp > 0]
-            
-            if not targets:
-                break
-                
-            # Weighted random selection based on current HP
-            # Higher HP = higher chance to be hit
-            weights = [c.current_hp for c in targets]
-            
-            # random.choices returns a list, even for k=1
-            target = random.choices(targets, weights=weights, k=1)[0]
-            
-            damage_absorbed = min(target.current_hp, damage)
-            target.take_damage(damage_absorbed)
-            
-            damage -= damage_absorbed
-                
-        return damage
-
-    def die(self):
         log_info(f"{self.name} EXPLODED!")
         self.is_alive = False
-        self.velocity = pygame.math.Vector2(0,0)
-        # Recalculate to ensure UI shows 0 stats
+        self.velocity = Vector2(0, 0)
         self.recalculate_stats()
 
-    def _apply_repair(self, repair_amount):
-        """Apply structural repair to damaged components."""
-        if repair_amount <= 0: return
+    def _damage_layer(self, layer_type, damage: float) -> float:
+        """
+        Apply damage to a specific layer.
 
-        # Identify damaged components (Current HP < Max HP)
-        # Filter for live components only (HP > 0) to avoid reviving dead parts (unless desired?)
-        # For now, sticking to repairing 'damaged' but not strict 'destroyed' logic,
-        # but consistency with `_damage_layer` which stops at 0 suggests 0 is dead.
-        damaged_candidates = [
-            c for c in self.get_all_components()
-            if 0 < c.current_hp < c.max_hp
-        ]
+        Delegates to ShipCombatEngine._damage_layer().
 
-        if not damaged_candidates:
-            return
+        Args:
+            layer_type: The layer to damage
+            damage: Amount of damage to apply
 
-        # Strategy: Repair the most damaged one (relative) to try and restore functionality
-        damaged_candidates.sort(key=lambda c: c.current_hp / c.max_hp)
+        Returns:
+            Remaining damage after layer absorption
+        """
+        return self.combat_engine._damage_layer(layer_type, damage)
 
-        target = damaged_candidates[0]
-        
-        # Apply repair
-        missing = target.max_hp - target.current_hp
-        amount_to_apply = min(missing, repair_amount)
-        
-        target.current_hp += amount_to_apply
-        
-        # Check Status Restoration
-        # If component was considered inactive/damaged due to HP <= 50%, restore it
-        if not target.is_active:
-             if target.current_hp > (target.max_hp * 0.5):
-                 target.is_active = True
-                 target.status = ComponentStatus.ACTIVE
+    def _apply_repair(self, repair_amount: float) -> None:
+        """
+        Apply structural repair to damaged components.
 
+        Delegates to ShipCombatEngine._apply_repair().
+
+        Args:
+            repair_amount: Amount of HP to repair per tick
+        """
+        self.combat_engine._apply_repair(repair_amount)

@@ -2,6 +2,7 @@
 import pygame
 import math
 from game.simulation.entities.ship import LayerType
+from game.core.constants import LayerDefaults
 
 
 # Layer color constants
@@ -38,7 +39,7 @@ def draw_ship(surface, ship, camera):
     
     # Draw Theme Image if available
     from game.simulation.ship_theme import ShipThemeManager
-    theme_mgr = ShipThemeManager.get_instance()
+    theme_mgr = ShipThemeManager.instance()
     theme_id = getattr(ship, 'theme_id', 'Federation')
     ship_img = theme_mgr.get_image(theme_id, ship.ship_class)
     
@@ -87,9 +88,9 @@ def draw_ship(surface, ship, camera):
         
         # Draw Layers (from large to small)
         pygame.draw.circle(surface, LAYER_COLORS[LayerType.ARMOR], (cx, cy), scale(base_radius), 1)
-        pygame.draw.circle(surface, LAYER_COLORS[LayerType.OUTER], (cx, cy), scale(base_radius * 0.8), 1)
-        pygame.draw.circle(surface, LAYER_COLORS[LayerType.INNER], (cx, cy), scale(base_radius * 0.5), 1)
-        pygame.draw.circle(surface, LAYER_COLORS[LayerType.CORE], (cx, cy), scale(base_radius * 0.2), 1)
+        pygame.draw.circle(surface, LAYER_COLORS[LayerType.OUTER], (cx, cy), scale(base_radius * LayerDefaults.OUTER_RADIUS_PCT), 1)
+        pygame.draw.circle(surface, LAYER_COLORS[LayerType.INNER], (cx, cy), scale(base_radius * LayerDefaults.INNER_RADIUS_PCT), 1)
+        pygame.draw.circle(surface, LAYER_COLORS[LayerType.CORE], (cx, cy), scale(base_radius * LayerDefaults.CORE_RADIUS_PCT), 1)
 
         # Draw Components (Simplified visualization for Battle)
         if camera.zoom > 0.3:

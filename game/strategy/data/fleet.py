@@ -137,14 +137,14 @@ class Fleet:
             True if all combat-capable ships are warp-capable, False otherwise.
             Returns False if fleet has no combat-capable ships.
         """
-        from game.ui.screens.fleet_report_filters import has_warp_capability
+        from game.strategy.services.ship_stats_service import ShipStatsService
 
         combat_ships = self.get_combat_capable_ships()
         if not combat_ships:
             return False
 
         for ship in combat_ships:
-            if not has_warp_capability(ship):
+            if not ShipStatsService.has_warp_capability(ship):
                 return False
         return True
 
@@ -155,10 +155,10 @@ class Fleet:
         Returns:
             The first ship without warp capability, or None if all ships are warp-capable.
         """
-        from game.ui.screens.fleet_report_filters import has_warp_capability
+        from game.strategy.services.ship_stats_service import ShipStatsService
 
         for ship in self.get_combat_capable_ships():
-            if not has_warp_capability(ship):
+            if not ShipStatsService.has_warp_capability(ship):
                 return ship
         return None
 
@@ -347,18 +347,6 @@ class Fleet:
                         return False
         return True
 
-    def has_energy_for_warp(self) -> bool:
-        """
-        Check if fleet has resources for a warp jump.
-
-        This is an alias for has_resources_for_warp() for backward compatibility.
-        The actual check is data-driven based on warp drive configuration.
-
-        Returns:
-            True if all combat-capable ships have enough resources for one warp.
-        """
-        return self.has_resources_for_warp()
-
     def consume_warp_resources(self) -> bool:
         """
         Consume all required resources from all ships for a warp jump.
@@ -388,19 +376,6 @@ class Fleet:
                     ship.consume_resource(resource_type, cost)
 
         return True
-
-    def consume_warp_energy(self) -> bool:
-        """
-        Consume resources from all ships for a warp jump.
-
-        This is an alias for consume_warp_resources() for backward compatibility.
-        The actual consumption is data-driven based on warp drive configuration.
-
-        Returns:
-            True if all ships had sufficient resources, False otherwise.
-            Note: If False, no resources are consumed (atomic operation).
-        """
-        return self.consume_warp_resources()
 
     # --- Capability Summary Methods ---
 
@@ -666,8 +641,27 @@ class Fleet:
             else:
                 fleet.path.append(p)
 
-        # Orders need special handling for fleet references - skip for now
-        # TODO: Restore orders with proper reference resolution
+        # Restore orders
+        for order_data in data.get('orders', []):
+            order_type = OrderType[order_data['type']]
+            target = None
+
+            target_data = order_data.get('target')
+            if target_data is not None:
+                if isinstance(target_data, dict):
+                    if 'q' in target_data and 'r' in target_data:
+                        # HexCoord
+                        target = HexCoord(target_data['q'], target_data['r'])
+                    elif target_data.get('type') == 'coord':
+                        # Tuple-style coord
+                        target = HexCoord(target_data['value'][0], target_data['value'][1])
+                    elif target_data.get('type') == 'fleet_ref':
+                        # Fleet reference - store ID for later resolution
+                        target = {'_fleet_ref': target_data['id']}
+                    elif target_data.get('type') == 'raw':
+                        target = target_data['value']
+
+            fleet.orders.append(FleetOrder(order_type, target))
 
         return fleet
 
