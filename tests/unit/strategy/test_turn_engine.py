@@ -280,7 +280,8 @@ class TestMovementCalculation:
         mock_fleet.path = []
         mock_fleet.location = HexCoord(0, 0)
 
-        with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_path:
+        # PROJ-12: TurnEngine delegates to FleetMovementEngine, so patch there
+        with patch('game.strategy.engine.fleet_movement_engine.find_hybrid_path') as mock_path:
             mock_path.return_value = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)]
 
             result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
@@ -309,8 +310,9 @@ class TestMovementCalculation:
         mock_fleet.path = []
         mock_fleet.location = HexCoord(0, 0)
 
-        with patch('game.strategy.data.pathfinding.calculate_intercept_point') as mock_intercept:
-            with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_path:
+        # PROJ-12: TurnEngine delegates to FleetMovementEngine, so patch there
+        with patch('game.strategy.engine.fleet_movement_engine.calculate_intercept_point') as mock_intercept:
+            with patch('game.strategy.engine.fleet_movement_engine.find_hybrid_path') as mock_path:
                 mock_intercept.return_value = HexCoord(25, 0)
                 mock_path.return_value = [HexCoord(0, 0), HexCoord(5, 0)]
 
@@ -446,7 +448,8 @@ class TestProductionProcessing:
         mock_planet.has_space_shipyard = True
         mock_empire.colonies = [mock_planet]
 
-        with patch.object(turn_engine, '_spawn_ship') as mock_spawn:
+        # PROJ-12: TurnEngine delegates to ProductionEngine, so patch there
+        with patch.object(turn_engine.production_engine, '_spawn_ship') as mock_spawn:
             turn_engine.process_production([mock_empire], mock_galaxy)
 
             mock_spawn.assert_called()
@@ -469,7 +472,8 @@ class TestProductionProcessing:
         mock_planet.has_space_shipyard = False
         mock_empire.colonies = [mock_planet]
 
-        with patch.object(turn_engine, '_spawn_complex') as mock_spawn:
+        # PROJ-12: TurnEngine delegates to ProductionEngine, so patch there
+        with patch.object(turn_engine.production_engine, '_spawn_complex') as mock_spawn:
             turn_engine.process_production([mock_empire], mock_galaxy)
 
             mock_spawn.assert_called()

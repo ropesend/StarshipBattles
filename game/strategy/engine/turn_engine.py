@@ -7,6 +7,9 @@ from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from game.simulation.battle_state import BattleResults
     from game.strategy.interfaces.battle_resolver import IBattleResolver
+    from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
+    from game.strategy.engine.production_engine import ProductionEngine
+    from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
 
 
 @dataclass
@@ -22,6 +25,11 @@ class TurnEngine:
 
     PROJ-11 Phase 4: Supports dependency injection of IBattleResolver
     for clean separation between strategy and simulation layers.
+
+    PROJ-12 Phase 3: Delegates to specialized engines:
+    - FleetMovementEngine: Movement calculation and application
+    - ProductionEngine: Construction queue processing
+    - FleetOrderProcessor: Order lifecycle management
     """
 
     def __init__(self, battle_resolver: Optional['IBattleResolver'] = None):
@@ -41,6 +49,35 @@ class TurnEngine:
             self._battle_resolver = SimulationBattleResolver()
         else:
             self._battle_resolver = battle_resolver
+
+        # PROJ-12 Phase 3: Lazy-initialized specialized engines
+        self._movement_engine: Optional['FleetMovementEngine'] = None
+        self._production_engine: Optional['ProductionEngine'] = None
+        self._order_processor: Optional['FleetOrderProcessor'] = None
+
+    @property
+    def movement_engine(self) -> 'FleetMovementEngine':
+        """Lazy initialization of FleetMovementEngine."""
+        if self._movement_engine is None:
+            from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
+            self._movement_engine = FleetMovementEngine()
+        return self._movement_engine
+
+    @property
+    def production_engine(self) -> 'ProductionEngine':
+        """Lazy initialization of ProductionEngine."""
+        if self._production_engine is None:
+            from game.strategy.engine.production_engine import ProductionEngine
+            self._production_engine = ProductionEngine()
+        return self._production_engine
+
+    @property
+    def order_processor(self) -> 'FleetOrderProcessor':
+        """Lazy initialization of FleetOrderProcessor."""
+        if self._order_processor is None:
+            from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+            self._order_processor = FleetOrderProcessor()
+        return self._order_processor
 
     def _generate_battle_seed(self) -> int:
         """Generate a deterministic seed for battles."""
@@ -115,144 +152,35 @@ class TurnEngine:
     def process_production(self, empires, galaxy=None, save_path=None):
         """Process construction queues for all colonies.
 
+        PROJ-12 Phase 3: Delegates to ProductionEngine.
+
         Args:
             empires: List of Empire objects to process
             galaxy: Galaxy object for fleet spawning
             save_path: Path to savegame folder for loading designs
         """
-        for emp in empires:
-            for colony in emp.colonies:
-                if not colony.construction_queue:
-                    continue
-
-                item = colony.construction_queue[0]
-
-                # Support both old format (list) and new format (dict)
-                if isinstance(item, list):
-                    # Old format: ["Colony Ship", 5] - modify in place
-                    vehicle_type = "ship"
-                    design_id = item[0]
-                else:
-                    # New format: dict
-                    vehicle_type = item.get("type", "ship")
-                    design_id = item["design_id"]
-
-                # Check if item requires shipyard
-                if vehicle_type in ["ship", "fighter", "satellite"]:
-                    if not colony.has_space_shipyard:
-                        log_info(f"Build paused at {colony.name}: no shipyard for {design_id}")
-                        continue  # Skip this colony, don't decrement turns
-
-                # Decrement turns now that validation passed
-                if isinstance(item, list):
-                    item[1] -= 1
-                    turns_remaining = item[1]
-                else:
-                    item["turns_remaining"] -= 1
-                    turns_remaining = item["turns_remaining"]
-
-                if turns_remaining <= 0:
-                    colony.construction_queue.pop(0)
-                    log_info(f"Production Complete: {design_id} ({vehicle_type})")
-
-                    # Route to appropriate spawner
-                    if vehicle_type == "complex":
-                        self._spawn_complex(colony, design_id, emp, save_path)
-                    else:
-                        self._spawn_ship(colony, design_id, emp, galaxy, save_path)
+        self.production_engine.process_production(empires, galaxy, save_path)
 
     def _spawn_complex(self, planet, design_id, empire, save_path=None):
         """Add completed complex to planet's facilities.
 
-        Args:
-            planet: Planet to add facility to
-            design_id: ID of the complex design
-            empire: Empire that owns the planet
-            save_path: Path to savegame folder for loading design data
+        PROJ-12 Phase 3: Delegates to ProductionEngine.
+        Kept for backward compatibility.
         """
-        import uuid
-        from game.strategy.data.planet import PlanetaryFacility
-
-        # Load design data if possible
-        design_data = {}
-
-        if save_path:
-            from game.strategy.systems.design_library import DesignLibrary
-            library = DesignLibrary(save_path, empire.id)
-            loaded_data = library.load_design_data(design_id)
-            if loaded_data:
-                design_data = loaded_data
-            else:
-                log_warning(f"Could not load design: {design_id}")
-        else:
-            log_warning(f"No savegame path - creating empty facility for {design_id}")
-
-        # Create facility instance
-        facility = PlanetaryFacility(
-            instance_id=str(uuid.uuid4()),
-            design_id=design_id,
-            name=design_data.get("name", design_id),
-            design_data=design_data,
-            is_operational=True
-        )
-
-        planet.facilities.append(facility)
-        log_info(f"Built {facility.name} on {planet.name}")
+        self.production_engine._spawn_complex(planet, design_id, empire, save_path)
 
     def _spawn_ship(self, planet, design_id, empire, galaxy, save_path=None):
         """Spawn ship/satellite/fighter as fleet with ShipInstance.
 
-        Args:
-            planet: Planet where ship spawns
-            design_id: ID of the ship design
-            empire: Empire that owns the ship
-            galaxy: Galaxy for location calculation
-            save_path: Path to savegame folder for loading design data
+        PROJ-12 Phase 3: Delegates to ProductionEngine.
+        Kept for backward compatibility.
         """
-        from game.strategy.data.ship_instance import ShipInstance
-        from game.strategy.systems.design_library import DesignLibrary
-
-        # Calculate spawn location
-        spawn_loc = planet.location
-        if galaxy:
-            parent_sys = galaxy.get_system_of_planet(planet)
-            if parent_sys:
-                spawn_loc = parent_sys.global_location + planet.location
-
-        # Load design data
-        if not save_path:
-            log_warning(f"Cannot spawn {design_id}: no save_path provided")
-            return
-
-        design_library = DesignLibrary(save_path, empire.id)
-        design_data = design_library.load_design_data(design_id)
-
-        if not design_data:
-            log_warning(f"Cannot spawn {design_id}: design data not found")
-            return
-
-        # Create ShipInstance (with serial number)
-        ship_instance = ShipInstance.create(
-            design_id=design_id,
-            design_data=design_data,
-            owner_id=empire.id,
-            name=design_data.get("name", design_id),
-            empire=empire
-        )
-
-        # Create fleet with unique ID
-        fleet_id = empire.get_next_fleet_id()
-        new_fleet = Fleet(fleet_id, empire.id, spawn_loc)
-        new_fleet.add_ship_instance(ship_instance)
-        empire.add_fleet(new_fleet)
-
-        # Increment design's times_built counter
-        design_library.increment_built_count(design_id)
-
-        log_info(f"Spawned {design_data.get('name', design_id)} at {spawn_loc} (Fleet {new_fleet.id})")
+        self.production_engine._spawn_ship(planet, design_id, empire, galaxy, save_path)
 
     def _process_tick(self, tick, empires, galaxy):
         """Process 1 sub-tick of movement and combat.
+
+        PROJ-12 Phase 3: Delegates to specialized engines.
 
         Five-phase processing:
         Phase 0: Per-turn resource consumption (1/100th of per_turn costs)
@@ -266,142 +194,30 @@ class TurnEngine:
         self._process_per_turn_resources(tick, empires)
 
         # --- Phase 1: Instant Orders (JOIN_FLEET) ---
-        # Process JOIN_FLEET orders for any fleets that are already co-located with their target.
-        # This happens every subtick so fleets can join as soon as they arrive.
-        fleets_to_remove = []
-        for empire in empires:
-            for fleet in list(empire.fleets):  # Copy list since we may modify it
-                order = fleet.get_current_order()
-                if order and order.type == OrderType.JOIN_FLEET:
-                    target_fleet = order.target
-                    if target_fleet and hasattr(target_fleet, 'location'):
-                        if fleet.location == target_fleet.location:
-                            log_debug(f"TurnEngine [Tick {tick}]: Fleet {fleet.id} merging into {target_fleet.id}")
-                            fleet.merge_with(target_fleet)
-                            fleets_to_remove.append((empire, fleet))
-        
-        # Remove merged fleets
-        for empire, fleet in fleets_to_remove:
-            empire.remove_fleet(fleet)
-        
+        # PROJ-12: Delegate to FleetOrderProcessor
+        self.order_processor.process_instant_orders(empires)
+
         # --- Phase 2: Calculate Moves ---
-        # Collect (fleet, next_hex) pairs for all fleets that should move this tick
-        move_queue = []
-        
-        for empire in empires:
-            for fleet in empire.fleets:
-                if fleet.speed <= 0: 
-                    continue
-                
-                interval = int(100 // fleet.speed)
-                if interval <= 0: 
-                    interval = 1  # Safety
-                
-                if tick % interval == 0:
-                    # Calculate next hex WITHOUT moving yet
-                    next_hex = self._calculate_next_hex(fleet, galaxy)
-                    if next_hex is not None:
-                        move_queue.append((fleet, next_hex))
-        
+        # PROJ-12: Delegate to FleetMovementEngine
+        move_queue = self.movement_engine.collect_movements(empires, galaxy, tick)
+
         # --- Phase 3: Apply Moves ---
-        for fleet, next_hex in move_queue:
-            # Check resources before moving (data-driven - any resource type)
-            if not fleet.has_resources_for_movement():
-                log_warning(f"Fleet {fleet.id} stranded - insufficient resources for movement")
-                fleet.clear_orders()
-                continue
-
-            # Detect warp jump (hex distance > 1 indicates warp transit)
-            from game.strategy.data.hex_math import hex_distance
-            is_warp = hex_distance(fleet.location, next_hex) > 1
-
-            # Check and consume warp resources if this is a warp jump
-            if is_warp:
-                # Check warp CAPABILITY first (BUG-45: must verify immediately before jump)
-                if not fleet.can_use_warp():
-                    log_debug(f"Fleet {fleet.id} warp blocked - no warp capability")
-                    log_warning(f"Fleet {fleet.id} cannot warp - no warp capability")
-                    fleet.clear_orders()
-                    continue
-                if not fleet.has_resources_for_warp():
-                    log_warning(f"Fleet {fleet.id} cannot warp - insufficient resources")
-                    fleet.clear_orders()
-                    continue
-                log_debug(f"Fleet {fleet.id} executing warp jump to {next_hex}")
-                fleet.consume_warp_resources()
-
-            # Consume movement resources for this hex (data-driven)
-            fleet.consume_movement_resources(1)
-
-            # Apply movement
-            fleet.location = next_hex
-
-            # If path complete, order is done
-            if not fleet.path:
-                fleet.pop_order()
+        # PROJ-12: Delegate to FleetMovementEngine
+        self.movement_engine.apply_movements(move_queue, galaxy)
 
         # --- Phase 4: Combat ---
         self._resolve_conflicts(empires)
 
     def _calculate_next_hex(self, fleet, galaxy):
         """Calculate (but don't apply) the next hex for a fleet.
-        
+
+        PROJ-12 Phase 3: Delegates to FleetMovementEngine.
+        Kept for backward compatibility.
+
         Returns the next hex to move to, or None if no movement.
         Side effect: Updates fleet.path if needed.
         """
-        order = fleet.get_current_order()
-        if not order:
-            return None
-
-        destination = None
-        
-        if order.type == OrderType.MOVE:
-            destination = order.target
-        elif order.type == OrderType.MOVE_TO_FLEET:
-            target_fleet = order.target
-            if not target_fleet or not hasattr(target_fleet, 'location'):
-                log_warning(f"TurnEngine: Target fleet invalid. Order cancelled.")
-                fleet.pop_order()
-                return None
-            
-            # Use Predictive Intercept
-            from game.strategy.data.pathfinding import calculate_intercept_point
-            destination = calculate_intercept_point(fleet, target_fleet, galaxy)
-        else:
-            return None
-            
-        # Check for Re-Pathing (for Dynamic Targets)
-        if fleet.path:
-            current_dest = fleet.path[-1]
-            if current_dest != destination:
-                fleet.path = []  # Force recalc
-            
-        # Calculate path if needed
-        if not fleet.path:
-            from game.strategy.data.pathfinding import find_hybrid_path
-            
-            if fleet.location == destination:
-                fleet.pop_order()
-                return None
-
-            fleet.path = find_hybrid_path(galaxy, fleet.location, destination, fleet=fleet)
-            
-            # Remove start hex if path begins with current location
-            if fleet.path and fleet.path[0] == fleet.location:
-                fleet.path.pop(0)
-            
-            if not fleet.path:
-                if fleet.location != destination:
-                    pass  # Retry next tick
-                else: 
-                    fleet.pop_order()
-                return None
-
-        if fleet.path:
-            # Pop next hex from path (still part of calculation, applied in Phase 2)
-            return fleet.path.pop(0)
-        
-        return None
+        return self.movement_engine.calculate_next_hex(fleet, galaxy)
 
     def _execute_move_step(self, fleet, galaxy):
         """Advance fleet 1 hex if it has a MOVE order and path.
@@ -647,71 +463,11 @@ class TurnEngine:
 
     def _process_end_turn_orders(self, fleet, empire, galaxy):
         """Process static orders like COLONIZE.
-        
+
+        PROJ-12 Phase 3: Delegates to FleetOrderProcessor.
+
         Returns:
             True if fleet was consumed/deleted by the order, False otherwise.
         """
-        order = fleet.get_current_order()
-        if not order:
-            return False
-            
-        if order.type == OrderType.COLONIZE:
-            target_planet = order.target
-            
-            # Validate
-            validation = self.validate_colonize_order(galaxy, fleet, target_planet)
-            
-            if not validation.is_valid:
-                 log_warning(f"TurnEngine: Colonize failed - {validation.message}")
-                 fleet.pop_order()
-                 return False
-
-            # If valid, execute
-            # If target_planet was None ("Any"), we need to pick one.
-            final_planet = target_planet
-            
-            if final_planet is None:
-                # Use O(1) spatial index to find candidate at fleet location
-                planets_at_loc = galaxy.get_planets_at_global_hex(fleet.location)
-                for p in planets_at_loc:
-                    if p.owner_id is None:
-                        final_planet = p
-                        break
-            
-            if final_planet:
-                empire.add_colony(final_planet)
-                fleet.pop_order()
-                empire.remove_fleet(fleet)
-                log_info(f"TurnEngine: Colonization successful. {empire.name} claimed {final_planet.name}")
-                return True
-            else:
-                 # Should not happen if validation passed
-                 log_warning("TurnEngine: Colonization execution failed unexpectedly (Candidate missing?).")
-                 fleet.pop_order()
-
-        elif order.type == OrderType.JOIN_FLEET:
-            target_fleet = order.target
-            
-            # Validation
-            if not target_fleet or not hasattr(target_fleet, 'location'):
-                log_warning("TurnEngine: Join Fleet failed - Target invalid/destroyed.")
-                fleet.pop_order()
-                return False
-
-            if fleet.location == target_fleet.location:
-                log_debug(f"TurnEngine: Fleet {fleet.id} merging into {target_fleet.id}")
-                fleet.merge_with(target_fleet)
-                # Remove self from empire
-                empire.remove_fleet(fleet)
-                return True
-            else:
-                # Not at location yet? Should have arrived if move order preceded this.
-                # If we rely on Move order finishing exactly at location, handling leftovers is tricky.
-                # But typically Join follows Move. If Move finished, we are there.
-                log_warning("TurnEngine: Join Fleet failed - Not at same location.")
-                fleet.pop_order() # Cancel join if we aren't there? Or wait? 
-                # If we are not there, and have no move order, we are stuck.
-                # Better to cancel.
-                
-        return False
+        return self.order_processor.process_end_turn_orders(fleet, empire, galaxy)
 

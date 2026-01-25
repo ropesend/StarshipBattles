@@ -1,5 +1,6 @@
 {
   "tests/integration/test_ai_strategy.py::TestCommandGeneration::test_collision_avoidance_returns_position": true,
   "tests/unit/builder/test_builder_warning_logic.py::TestBuilderWarningLogic::test_change_class_empty_ship": true,
-  "tests/unit/builder/test_builder_warning_logic.py::TestBuilderWarningLogic::test_change_type_empty_ship": true
+  "tests/unit/builder/test_builder_warning_logic.py::TestBuilderWarningLogic::test_change_type_empty_ship": true,
+  "tests/unit/test_advanced_fleet_orders.py::TestAdvancedFleetOrders::test_intercept_integration": true
 }

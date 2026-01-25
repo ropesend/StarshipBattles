@@ -1,0 +1,496 @@
+"""
+Unit tests for FleetOrderProcessor.
+
+PROJ-12 Phase 3: TDD tests written before implementation.
+Tests order lifecycle management - advance, complete, cancel operations.
+"""
+
+import pytest
+from unittest.mock import MagicMock, patch
+
+from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.hex_math import HexCoord
+
+
+# =============================================================================
+# Fixtures
+# =============================================================================
+
+@pytest.fixture
+def mock_fleet():
+    """Create a mock fleet with standard order attributes."""
+    fleet = MagicMock(spec=Fleet)
+    fleet.id = 1
+    fleet.owner_id = 0
+    fleet.location = HexCoord(0, 0)
+    fleet.orders = []
+    fleet.path = []
+    fleet.get_current_order = MagicMock(return_value=None)
+    fleet.pop_order = MagicMock()
+    fleet.clear_orders = MagicMock()
+    fleet.merge_with = MagicMock()
+    return fleet
+
+
+@pytest.fixture
+def mock_empire():
+    """Create a mock empire."""
+    empire = MagicMock()
+    empire.id = 0
+    empire.name = "Test Empire"
+    empire.fleets = []
+    empire.remove_fleet = MagicMock()
+    empire.add_colony = MagicMock()
+    return empire
+
+
+@pytest.fixture
+def mock_galaxy():
+    """Create a mock galaxy."""
+    galaxy = MagicMock()
+    galaxy.get_planets_at_global_hex = MagicMock(return_value=[])
+    return galaxy
+
+
+# =============================================================================
+# Test: FleetOrderProcessor Creation
+# =============================================================================
+
+class TestFleetOrderProcessorCreation:
+    """Tests for FleetOrderProcessor initialization."""
+
+    def test_fleet_order_processor_can_be_created(self):
+        """FleetOrderProcessor can be instantiated."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        assert processor is not None
+
+    def test_fleet_order_processor_has_complete_order(self):
+        """FleetOrderProcessor has complete_order method."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        assert hasattr(processor, 'complete_order')
+        assert callable(processor.complete_order)
+
+    def test_fleet_order_processor_has_cancel_order(self):
+        """FleetOrderProcessor has cancel_order method."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        assert hasattr(processor, 'cancel_order')
+        assert callable(processor.cancel_order)
+
+
+# =============================================================================
+# Test: Order Completion
+# =============================================================================
+
+class TestOrderCompletion:
+    """Tests for complete_order method."""
+
+    def test_complete_order_pops_order(self, mock_fleet):
+        """complete_order pops the current order from queue."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
+        mock_fleet.get_current_order.return_value = order
+
+        processor.complete_order(mock_fleet)
+
+        mock_fleet.pop_order.assert_called()
+
+    def test_complete_order_returns_completed_order(self, mock_fleet):
+        """complete_order returns the order that was completed."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
+        mock_fleet.get_current_order.return_value = order
+
+        result = processor.complete_order(mock_fleet)
+
+        assert result == order
+
+    def test_complete_order_with_no_order(self, mock_fleet):
+        """complete_order with no current order returns None."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+        mock_fleet.get_current_order.return_value = None
+
+        result = processor.complete_order(mock_fleet)
+
+        assert result is None
+        mock_fleet.pop_order.assert_not_called()
+
+
+# =============================================================================
+# Test: Order Cancellation
+# =============================================================================
+
+class TestOrderCancellation:
+    """Tests for cancel_order method."""
+
+    def test_cancel_order_pops_order(self, mock_fleet):
+        """cancel_order pops the current order from queue."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
+        mock_fleet.get_current_order.return_value = order
+
+        processor.cancel_order(mock_fleet, reason="Invalid target")
+
+        mock_fleet.pop_order.assert_called()
+
+    def test_cancel_order_returns_cancelled_order(self, mock_fleet):
+        """cancel_order returns the order that was cancelled."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
+        mock_fleet.get_current_order.return_value = order
+
+        result = processor.cancel_order(mock_fleet, reason="Invalid target")
+
+        assert result == order
+
+    def test_cancel_order_with_no_order(self, mock_fleet):
+        """cancel_order with no current order returns None."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+        mock_fleet.get_current_order.return_value = None
+
+        result = processor.cancel_order(mock_fleet, reason="No order")
+
+        assert result is None
+
+    def test_cancel_all_orders_clears_all(self, mock_fleet):
+        """cancel_all_orders clears all orders from fleet."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        processor.cancel_all_orders(mock_fleet, reason="Stranded")
+
+        mock_fleet.clear_orders.assert_called()
+
+
+# =============================================================================
+# Test: JOIN_FLEET Processing
+# =============================================================================
+
+class TestJoinFleetProcessing:
+    """Tests for JOIN_FLEET order processing."""
+
+    def test_process_join_fleet_merges_at_same_location(self, mock_fleet, mock_empire, mock_galaxy):
+        """JOIN_FLEET merges fleets when at same location."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        target_fleet = MagicMock()
+        target_fleet.id = 2
+        target_fleet.location = HexCoord(5, 5)
+
+        mock_fleet.location = HexCoord(5, 5)  # Same location
+        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        mock_fleet.get_current_order.return_value = order
+
+        result = processor.process_join_fleet(mock_fleet, mock_empire, mock_galaxy)
+
+        assert result.merged is True
+        mock_fleet.merge_with.assert_called_with(target_fleet)
+        mock_empire.remove_fleet.assert_called_with(mock_fleet)
+
+    def test_process_join_fleet_fails_at_different_location(self, mock_fleet, mock_empire, mock_galaxy):
+        """JOIN_FLEET fails when not at same location."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        target_fleet = MagicMock()
+        target_fleet.id = 2
+        target_fleet.location = HexCoord(100, 100)  # Different
+
+        mock_fleet.location = HexCoord(0, 0)
+        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        mock_fleet.get_current_order.return_value = order
+
+        result = processor.process_join_fleet(mock_fleet, mock_empire, mock_galaxy)
+
+        assert result.merged is False
+        mock_fleet.merge_with.assert_not_called()
+
+    def test_process_join_fleet_cancels_with_invalid_target(self, mock_fleet, mock_empire, mock_galaxy):
+        """JOIN_FLEET is cancelled when target is invalid."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        order = FleetOrder(OrderType.JOIN_FLEET, None)  # Invalid target
+        mock_fleet.get_current_order.return_value = order
+
+        result = processor.process_join_fleet(mock_fleet, mock_empire, mock_galaxy)
+
+        assert result.merged is False
+        assert result.cancelled is True
+        mock_fleet.pop_order.assert_called()
+
+    def test_process_join_fleet_no_order(self, mock_fleet, mock_empire, mock_galaxy):
+        """process_join_fleet returns empty result when no order."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+        mock_fleet.get_current_order.return_value = None
+
+        result = processor.process_join_fleet(mock_fleet, mock_empire, mock_galaxy)
+
+        assert result.merged is False
+
+
+# =============================================================================
+# Test: COLONIZE Processing
+# =============================================================================
+
+class TestColonizeProcessing:
+    """Tests for COLONIZE order processing."""
+
+    def test_process_colonize_success(self, mock_fleet, mock_empire, mock_galaxy):
+        """COLONIZE succeeds when valid planet at location."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        mock_planet = MagicMock()
+        mock_planet.owner_id = None  # Unowned
+        mock_planet.name = "Target Planet"
+
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
+
+        order = FleetOrder(OrderType.COLONIZE, mock_planet)
+        mock_fleet.get_current_order.return_value = order
+        mock_fleet.location = HexCoord(5, 5)
+
+        result = processor.process_colonize(mock_fleet, mock_empire, mock_galaxy)
+
+        assert result.colonized is True
+        mock_empire.add_colony.assert_called_with(mock_planet)
+        mock_empire.remove_fleet.assert_called_with(mock_fleet)
+
+    def test_process_colonize_any_planet(self, mock_fleet, mock_empire, mock_galaxy):
+        """COLONIZE with None target picks first valid planet."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        mock_planet = MagicMock()
+        mock_planet.owner_id = None  # Unowned
+        mock_planet.name = "Auto-selected Planet"
+
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
+
+        order = FleetOrder(OrderType.COLONIZE, None)  # Any planet
+        mock_fleet.get_current_order.return_value = order
+        mock_fleet.location = HexCoord(5, 5)
+
+        result = processor.process_colonize(mock_fleet, mock_empire, mock_galaxy)
+
+        assert result.colonized is True
+        mock_empire.add_colony.assert_called_with(mock_planet)
+
+    def test_process_colonize_fails_no_planet(self, mock_fleet, mock_empire, mock_galaxy):
+        """COLONIZE fails when no valid planet at location."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        mock_galaxy.get_planets_at_global_hex.return_value = []  # No planets
+
+        order = FleetOrder(OrderType.COLONIZE, None)
+        mock_fleet.get_current_order.return_value = order
+
+        result = processor.process_colonize(mock_fleet, mock_empire, mock_galaxy)
+
+        assert result.colonized is False
+        mock_fleet.pop_order.assert_called()
+
+    def test_process_colonize_fails_owned_planet(self, mock_fleet, mock_empire, mock_galaxy):
+        """COLONIZE fails when planet is already owned."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        mock_planet = MagicMock()
+        mock_planet.owner_id = 1  # Already owned
+
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
+
+        order = FleetOrder(OrderType.COLONIZE, mock_planet)
+        mock_fleet.get_current_order.return_value = order
+
+        result = processor.process_colonize(mock_fleet, mock_empire, mock_galaxy)
+
+        assert result.colonized is False
+
+
+# =============================================================================
+# Test: End-Turn Order Processing
+# =============================================================================
+
+class TestEndTurnOrderProcessing:
+    """Tests for process_end_turn_orders method."""
+
+    def test_process_end_turn_orders_colonize(self, mock_fleet, mock_empire, mock_galaxy):
+        """End-turn processing handles COLONIZE orders."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        mock_planet = MagicMock()
+        mock_planet.owner_id = None
+        mock_planet.name = "Test Planet"
+
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
+
+        order = FleetOrder(OrderType.COLONIZE, mock_planet)
+        mock_fleet.get_current_order.return_value = order
+        mock_fleet.location = HexCoord(5, 5)
+
+        result = processor.process_end_turn_orders(mock_fleet, mock_empire, mock_galaxy)
+
+        assert result is True  # Fleet consumed
+        mock_empire.add_colony.assert_called()
+
+    def test_process_end_turn_orders_join_fleet(self, mock_fleet, mock_empire, mock_galaxy):
+        """End-turn processing handles JOIN_FLEET orders."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        target_fleet = MagicMock()
+        target_fleet.id = 2
+        target_fleet.location = HexCoord(5, 5)
+
+        mock_fleet.location = HexCoord(5, 5)
+        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        mock_fleet.get_current_order.return_value = order
+
+        result = processor.process_end_turn_orders(mock_fleet, mock_empire, mock_galaxy)
+
+        assert result is True  # Fleet consumed
+        mock_fleet.merge_with.assert_called()
+
+    def test_process_end_turn_orders_no_order(self, mock_fleet, mock_empire, mock_galaxy):
+        """End-turn processing with no order returns False."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+        mock_fleet.get_current_order.return_value = None
+
+        result = processor.process_end_turn_orders(mock_fleet, mock_empire, mock_galaxy)
+
+        assert result is False
+
+
+# =============================================================================
+# Test: Instant Order Processing (During Tick)
+# =============================================================================
+
+class TestInstantOrderProcessing:
+    """Tests for process_instant_orders during ticks."""
+
+    def test_process_instant_join_fleet_at_location(self, mock_empire, mock_galaxy):
+        """Instant JOIN_FLEET processing merges co-located fleets."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        target_fleet = MagicMock()
+        target_fleet.id = 2
+        target_fleet.location = HexCoord(5, 5)
+        target_fleet.get_current_order = MagicMock(return_value=None)
+
+        joining_fleet = MagicMock()
+        joining_fleet.id = 1
+        joining_fleet.location = HexCoord(5, 5)  # Same location
+        joining_fleet.merge_with = MagicMock()
+
+        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        joining_fleet.get_current_order = MagicMock(return_value=order)
+
+        mock_empire.fleets = [joining_fleet, target_fleet]
+        mock_empire.remove_fleet = MagicMock()
+
+        removed = processor.process_instant_orders([mock_empire])
+
+        assert len(removed) > 0
+        joining_fleet.merge_with.assert_called_with(target_fleet)
+
+    def test_process_instant_join_fleet_not_at_location(self, mock_empire, mock_galaxy):
+        """Instant JOIN_FLEET doesn't merge when not co-located."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        target_fleet = MagicMock()
+        target_fleet.id = 2
+        target_fleet.location = HexCoord(100, 100)  # Different location
+        target_fleet.get_current_order = MagicMock(return_value=None)
+
+        joining_fleet = MagicMock()
+        joining_fleet.id = 1
+        joining_fleet.location = HexCoord(0, 0)
+        joining_fleet.merge_with = MagicMock()
+
+        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        joining_fleet.get_current_order = MagicMock(return_value=order)
+
+        mock_empire.fleets = [joining_fleet, target_fleet]
+
+        removed = processor.process_instant_orders([mock_empire])
+
+        assert len(removed) == 0
+        joining_fleet.merge_with.assert_not_called()
+
+
+# =============================================================================
+# Test: Order Result Dataclass
+# =============================================================================
+
+class TestOrderResult:
+    """Tests for OrderResult dataclass."""
+
+    def test_join_fleet_result_has_required_fields(self):
+        """JoinFleetResult has expected fields."""
+        from game.strategy.engine.fleet_order_processor import JoinFleetResult
+
+        result = JoinFleetResult(merged=True, cancelled=False)
+
+        assert result.merged is True
+        assert result.cancelled is False
+
+    def test_colonize_result_has_required_fields(self):
+        """ColonizeResult has expected fields."""
+        from game.strategy.engine.fleet_order_processor import ColonizeResult
+
+        result = ColonizeResult(colonized=True, planet_name="Earth")
+
+        assert result.colonized is True
+        assert result.planet_name == "Earth"
+
+    def test_colonize_result_defaults(self):
+        """ColonizeResult has sensible defaults."""
+        from game.strategy.engine.fleet_order_processor import ColonizeResult
+
+        result = ColonizeResult(colonized=False)
+
+        assert result.colonized is False
+        assert result.planet_name is None
