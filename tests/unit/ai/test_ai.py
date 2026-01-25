@@ -6,10 +6,10 @@ import inspect
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.ai import controller as ai
-from game.ai.controller import AIController
+from game.ai import AIController
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
-from game.simulation.components.component import load_components, create_component
+from game.simulation.components import load_components, create_component
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 
@@ -21,7 +21,7 @@ def ai_setup():
     unit_test_data_dir = get_unit_test_data_dir()
 
     load_components(str(data_dir / "components.json"))
-    from game.simulation.entities.ship import load_vehicle_classes
+    from game.simulation.entities.ship_loader import load_vehicle_classes
     load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"))
     # Load test data for AI strategies to ensure reproducible tests
     manager = ai.StrategyManager.instance()
@@ -152,7 +152,7 @@ def strategy_setup():
     unit_test_data_dir = get_unit_test_data_dir()
 
     load_components(str(data_dir / "components.json"))
-    from game.simulation.entities.ship import load_vehicle_classes
+    from game.simulation.entities.ship_loader import load_vehicle_classes
     load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"))
     # Load test data for AI strategies to ensure reproducible tests
     manager = ai.StrategyManager.instance()
@@ -294,7 +294,7 @@ class TestTargetingHelpers:
         """_score_and_sort_enemies should exclude targets with -inf score."""
         # Create a third ship
         from game.simulation.entities.ship import Ship
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         ship3 = Ship("Enemy2", 2000, 0, (255, 0, 0), team_id=1, ship_class="TestM_4L")
         ship3.add_component(create_component('bridge'), LayerType.CORE)

@@ -1,5 +1,5 @@
 import pytest
-from game.simulation.components.component import Component, load_modifiers
+from game.simulation.components import Component, load_modifiers
 from game.core.registry import RegistryManager
 from game.simulation.entities.ship import Ship, LayerType
 from tests.fixtures.paths import get_data_dir

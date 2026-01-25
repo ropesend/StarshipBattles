@@ -4,11 +4,14 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-16 | Legacy Cleanup Phase 3 - Consolidate Re-exports | Planning | 2026-01-25 | 2026-01-25 |
+| PROJ-15 | Legacy Cleanup Phase 2 - Remove Shims and Aliases | Planning | 2026-01-25 | 2026-01-25 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-14 | Legacy Cleanup Phase 1 - Delete Dead Code | Archived | 2026-01-25 | 2026-01-25 |
 | PROJ-12 | God Class Decomposition | Archived | 2026-01-24 | 2026-01-25 |
 | PROJ-13 | Code Quality & Documentation | Archived | 2026-01-24 | 2026-01-25 |
 | PROJ-11 | Architecture Layer Separation | Archived | 2026-01-24 | 2026-01-24 |
@@ -64,24 +67,35 @@
 **Dependencies:** Can run in parallel with other projects
 **Source:** [Review 2026-01-24_general_full-codebase-maintainability](../Reviews/results/2026-01-24_general_full-codebase-maintainability/)
 
+### PROJ-14: Legacy Cleanup Phase 1 - Delete Dead Code
+**Scope:** Delete dead directories, log files, debug tools, commented code
+**Phases:** 4 (Dead Directories → Commented Code → Button Migration → Legacy UI)
+**Key Goals:** Remove `Marked_For_Deletion_*`, `MagicMock/` dirs, migrate Button class to pygame_gui
+**Dependencies:** None
+**Source:** [Projects/legacy_cleanup/PHASE_1_DELETE_DEAD_CODE.md](legacy_cleanup/PHASE_1_DELETE_DEAD_CODE.md)
+
+### PROJ-15: Legacy Cleanup Phase 2 - Remove Shims and Aliases
+**Scope:** Remove backward compatibility shims and aliases from refactoring
+**Phases:** 6 (Pure Alias Files → Singleton Aliases → Method Aliases → Deprecated Functions → BuilderSceneGUI → Test Rename)
+**Key Goals:** Delete 5 shim files, remove `get_instance` aliases, remove deprecated functions, rename test directory
+**Dependencies:** PROJ-14 must complete first
+**Source:** [Projects/legacy_cleanup/PHASE_2_REMOVE_SHIMS_ALIASES.md](legacy_cleanup/PHASE_2_REMOVE_SHIMS_ALIASES.md)
+
 ---
 
 ## Recommended Execution Order
 
 ```
-PROJ-10 (Error Handling) ✅ COMPLETE ──────────────────────┐
-                                                           │
-PROJ-13 Phase 1 (Dead Code) ───────────────────────────────┤
-                                                           │
-                    PROJ-11 (Architecture) ✅ COMPLETE ────┤
-                              │                            │
-                              ▼                            │
-                    PROJ-12 (God Classes) ─────────────────┤
-                              │                            │
-                              ▼                            │
-                    PROJ-13 Phase 3-5 (Docs, Quality) ─────┘
+Legacy Cleanup Track:
+PROJ-14 (Phase 1: Delete Dead Code) ✅ COMPLETE
+         │
+         ▼
+PROJ-15 (Phase 2: Remove Shims/Aliases) ← READY TO START
+         │
+         ▼
+    [Legacy Phases 3-8 as separate projects]
 ```
 
 ---
 
-## Next Project ID: PROJ-14
+## Next Project ID: PROJ-17

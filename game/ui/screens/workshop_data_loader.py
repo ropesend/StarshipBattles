@@ -83,7 +83,7 @@ class WorkshopDataLoader:
     
     def clear_registries(self) -> None:
         """Clear all game data registries before loading new data."""
-        from game.ai.controller import StrategyManager
+        from game.ai import StrategyManager
 
         RegistryManager.instance().clear()
 
@@ -99,9 +99,8 @@ class WorkshopDataLoader:
         Returns:
             LoadResult with success status, default class, and any errors/warnings
         """
-        from game.simulation.components.component import load_components, load_modifiers
-        from game.simulation.entities.ship import load_vehicle_classes
-        from game.ai.controller import load_combat_strategies
+        from game.simulation.components import load_components, load_modifiers
+        from game.simulation.entities.ship_loader import load_vehicle_classes
 
         result = LoadResult()
         
@@ -145,14 +144,16 @@ class WorkshopDataLoader:
     
     def _load_strategies(self, result: LoadResult) -> None:
         """Load combat strategies with test mode detection."""
-        from game.ai.controller import StrategyManager, load_combat_strategies
+        from game.ai import StrategyManager
+
+        manager = StrategyManager.instance()
 
         # Check if test files exist (with test_ prefix)
         test_strat = os.path.join(self.directory, "test_combat_strategies.json")
 
         if os.path.exists(test_strat):
             # Test data mode - use test_ prefixed files
-            manager = StrategyManager.instance()
+            manager.clear()
             manager.load_data(
                 self.directory,
                 targeting_file="test_targeting_policies.json",
@@ -165,12 +166,14 @@ class WorkshopDataLoader:
             # Production mode - try standard names
             strat_path, _ = self.find_file(["combatstrategies.json", "combat_strategies.json"])
             if strat_path:
-                load_combat_strategies(strat_path)
+                manager.clear()
+                manager.load_data(os.path.dirname(strat_path))
+                manager._loaded = True
                 log_info(f"Loaded strategies from {strat_path}")
     
     def _load_vehicle_classes(self, result: LoadResult) -> None:
         """Load vehicle classes and layer definitions."""
-        from game.simulation.entities.ship import load_vehicle_classes
+        from game.simulation.entities.ship_loader import load_vehicle_classes
         
         vclass_path, _ = self.find_file(["vehicleclasses.json", "classes.json"])
         vlayer_path, _ = self.find_file(["vehiclelayers.json", "layers.json"])

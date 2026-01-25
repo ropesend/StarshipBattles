@@ -14,12 +14,12 @@ import math
 from unittest.mock import MagicMock, patch
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.ai.controller import AIController
+from game.ai import AIController
 from game.ai import controller as ai
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.ai.target_evaluator import TargetEvaluator
 from game.engine.spatial import SpatialGrid
-from game.simulation.components.component import load_components, create_component
+from game.simulation.components import load_components, create_component
 from game.core.registry import RegistryManager
 from game.core.math import Vector2
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
@@ -37,7 +37,7 @@ def setup_game_data():
     unit_test_data_dir = get_unit_test_data_dir()
 
     load_components(str(data_dir / "components.json"))
-    from game.simulation.entities.ship import load_vehicle_classes
+    from game.simulation.entities.ship_loader import load_vehicle_classes
     load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"))
 
     # Load test data for AI strategies

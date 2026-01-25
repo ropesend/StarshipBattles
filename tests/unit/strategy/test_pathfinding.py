@@ -452,13 +452,13 @@ class TestFleetPathProjection:
         galaxy, sys_a, sys_b, sys_c = mock_galaxy
 
         mock_instance = MagicMock()
-        mock_instance.project_path_as_dicts.return_value = []
+        mock_instance.project_path.return_value = []
         mock_simulator_class.return_value = mock_instance
 
         result = project_fleet_path(mock_fleet, galaxy)
 
         mock_simulator_class.assert_called_once()
-        mock_instance.project_path_as_dicts.assert_called_once()
+        mock_instance.project_path.assert_called_once()
 
     @patch('game.strategy.engine.fleet_movement.FleetMovementSimulator')
     def test_passes_max_turns_parameter(self, mock_simulator_class, mock_fleet, mock_galaxy):
@@ -466,30 +466,32 @@ class TestFleetPathProjection:
         galaxy, sys_a, sys_b, sys_c = mock_galaxy
 
         mock_instance = MagicMock()
-        mock_instance.project_path_as_dicts.return_value = []
+        mock_instance.project_path.return_value = []
         mock_simulator_class.return_value = mock_instance
 
         project_fleet_path(mock_fleet, galaxy, max_turns=25)
 
-        mock_instance.project_path_as_dicts.assert_called_with(
+        mock_instance.project_path.assert_called_with(
             mock_fleet, galaxy, 25
         )
 
     @patch('game.strategy.engine.fleet_movement.FleetMovementSimulator')
     def test_returns_list_of_dicts(self, mock_simulator_class, mock_fleet, mock_galaxy):
         """Returns list of segment dictionaries."""
+        from game.strategy.engine.fleet_movement import PathSegment
         galaxy, sys_a, sys_b, sys_c = mock_galaxy
 
-        expected = [
-            {'start': HexCoord(0, 0), 'end': HexCoord(1, 0), 'turn': 0, 'hex': HexCoord(1, 0)},
-            {'start': HexCoord(1, 0), 'end': HexCoord(2, 0), 'turn': 0, 'hex': HexCoord(2, 0)},
+        segments = [
+            PathSegment(start=HexCoord(0, 0), end=HexCoord(1, 0), turn=0, is_warp=False),
+            PathSegment(start=HexCoord(1, 0), end=HexCoord(2, 0), turn=0, is_warp=False),
         ]
         mock_instance = MagicMock()
-        mock_instance.project_path_as_dicts.return_value = expected
+        mock_instance.project_path.return_value = segments
         mock_simulator_class.return_value = mock_instance
 
         result = project_fleet_path(mock_fleet, galaxy)
 
+        expected = [seg.to_dict() for seg in segments]
         assert result == expected
 
 
@@ -559,11 +561,11 @@ class TestInterceptCalculation:
 
         # Mock target's path
         target_path = [
-            {'hex': HexCoord(11, 0), 'turn': 0},
-            {'hex': HexCoord(12, 0), 'turn': 0},
-            {'hex': HexCoord(13, 0), 'turn': 0},
-            {'hex': HexCoord(14, 0), 'turn': 1},
-            {'hex': HexCoord(15, 0), 'turn': 1},
+            {'end': HexCoord(11, 0), 'turn': 0},
+            {'end': HexCoord(12, 0), 'turn': 0},
+            {'end': HexCoord(13, 0), 'turn': 0},
+            {'end': HexCoord(14, 0), 'turn': 1},
+            {'end': HexCoord(15, 0), 'turn': 1},
         ]
 
         with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
@@ -572,7 +574,7 @@ class TestInterceptCalculation:
             result = calculate_intercept_point(chaser, target, galaxy)
 
             # Result should be one of the hexes on target path or target location
-            valid_hexes = [pt['hex'] for pt in target_path] + [target.location]
+            valid_hexes = [pt['end'] for pt in target_path] + [target.location]
             assert result in valid_hexes or isinstance(result, HexCoord)
 
     def test_fast_chaser_intercepts_early(self, mock_galaxy):
@@ -585,11 +587,11 @@ class TestInterceptCalculation:
         target.speed = 5.0
 
         target_path = [
-            {'hex': HexCoord(11, 0), 'turn': 0},
-            {'hex': HexCoord(12, 0), 'turn': 1},
-            {'hex': HexCoord(13, 0), 'turn': 2},
-            {'hex': HexCoord(14, 0), 'turn': 3},
-            {'hex': HexCoord(15, 0), 'turn': 4},
+            {'end': HexCoord(11, 0), 'turn': 0},
+            {'end': HexCoord(12, 0), 'turn': 1},
+            {'end': HexCoord(13, 0), 'turn': 2},
+            {'end': HexCoord(14, 0), 'turn': 3},
+            {'end': HexCoord(15, 0), 'turn': 4},
         ]
 
         # Fast chaser
@@ -651,7 +653,7 @@ class TestInterceptCalculation:
         target.location = HexCoord(100, 0)
         target.speed = 5.0
 
-        target_path = [{'hex': HexCoord(101, 0), 'turn': 0}]
+        target_path = [{'end': HexCoord(101, 0), 'turn': 0}]
 
         with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
             with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_hybrid:

@@ -3,8 +3,9 @@ import pytest
 import pygame
 
 from game.simulation.entities.projectile import Projectile
-from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
-from game.simulation.components.component import load_components, create_component
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.entities.ship_loader import initialize_ship_data
+from game.simulation.components import load_components, create_component
 from tests.fixtures.paths import get_project_root, get_data_dir
 
 

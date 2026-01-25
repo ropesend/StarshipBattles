@@ -9,8 +9,8 @@ import pygame
 import os
 
 from tests.fixtures.paths import get_data_dir, get_project_root
-from game.simulation.entities.ship import initialize_ship_data
-from game.simulation.components.component import load_components, load_modifiers
+from game.simulation.entities.ship_loader import initialize_ship_data
+from game.simulation.components import load_components, load_modifiers
 
 
 # Ensure headless pygame for all tests

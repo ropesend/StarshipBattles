@@ -1,7 +1,7 @@
 import pytest
 import json
 import os
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 from game.strategy.data.planet import PLANET_RESOURCES
 
 # Path to components.json
@@ -48,13 +48,13 @@ class TestComponentModifierCosts:
     @pytest.fixture(autouse=True)
     def setup_registry(self):
         """Ensure registries are loaded."""
-        from game.simulation.components.component import load_components, load_modifiers
+        from game.simulation.components import load_components, load_modifiers
         load_components()
         load_modifiers()
 
     def test_get_resource_cost_base(self):
         """Verify get_resource_cost returns base costs when no modifiers present."""
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
         comp = create_component('bridge')
         
         # Base Metals cost for bridge is 80
@@ -64,7 +64,7 @@ class TestComponentModifierCosts:
 
     def test_size_mount_multiplies_cost(self):
         """Verify simple_size_mount scales all costs linearly."""
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
         comp = create_component('railgun') # Base Metals: 150
         
         # Add size modifier (2.0x)
@@ -75,7 +75,7 @@ class TestComponentModifierCosts:
 
     def test_range_mount_exponential_cost(self):
         """Verify range_mount scales costs by 3.5^level."""
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
         comp = create_component('railgun') # Base Metals: 150
         
         # Add range modifier (Level 1)

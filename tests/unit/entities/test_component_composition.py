@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 from game.simulation.components.abilities import CombatPropulsion, ResourceConsumption, WeaponAbility
 
 

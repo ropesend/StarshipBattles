@@ -1,7 +1,8 @@
 import pytest
 
-from game.simulation.entities.ship import Ship, initialize_ship_data, LayerType
-from game.simulation.components.component import load_components, load_modifiers, get_all_components
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.entities.ship_loader import initialize_ship_data
+from game.simulation.components import load_components, load_modifiers, get_all_components
 from game.core.registry import RegistryManager
 
 

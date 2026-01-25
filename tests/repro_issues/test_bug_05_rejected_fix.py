@@ -8,7 +8,7 @@ def cleanup_registry():
     RegistryManager.instance().clear()
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 from game.simulation.components.abilities import ResourceGeneration, ResourceStorage, ResourceConsumption, WeaponAbility
 from ui.builder.stats_config import get_logistics_rows
 from game.simulation.entities.ship_stats import ShipStatsCalculator

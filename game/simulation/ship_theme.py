@@ -40,9 +40,6 @@ class ShipThemeManager:
                     cls._instance = cls()
         return cls._instance
 
-    # Backwards compatibility alias
-    get_instance = instance
-
     def __init__(self):
         if ShipThemeManager._instance is not None:
             raise Exception("ShipThemeManager is a singleton. Use ShipThemeManager.instance()")

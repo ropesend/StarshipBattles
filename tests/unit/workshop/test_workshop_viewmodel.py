@@ -38,8 +38,8 @@ def workshop_class_setup():
     """Class-level setup for WorkshopViewModel tests."""
     pygame.init()
     # Load data for Ship creation
-    from game.simulation.entities.ship import initialize_ship_data
-    from game.simulation.components.component import load_components, load_modifiers
+    from game.simulation.entities.ship_loader import initialize_ship_data
+    from game.simulation.components import load_components, load_modifiers
     initialize_ship_data(str(get_project_root()))
     data_dir = get_data_dir()
     load_components(str(data_dir / "components.json"))
@@ -113,7 +113,7 @@ class TestWorkshopViewModel:
         """Single selection replaces existing selection."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import Ship, LayerType
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort")
         viewmodel._ship = ship
@@ -130,7 +130,7 @@ class TestWorkshopViewModel:
         """Append selection adds to existing selection."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import Ship, LayerType
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort")
         viewmodel._ship = ship
@@ -147,7 +147,7 @@ class TestWorkshopViewModel:
         """Toggle deselects already selected component."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import LayerType
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         comp = create_component('armor_plate')
         selection = (LayerType.ARMOR, 0, comp)
@@ -164,7 +164,7 @@ class TestWorkshopViewModel:
         """Selecting different component type replaces selection."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import LayerType
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         armor = create_component('armor_plate')
         engine = create_component('standard_engine')
@@ -180,7 +180,7 @@ class TestWorkshopViewModel:
         """Selecting None clears the selection."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import LayerType
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         comp = create_component('armor_plate')
         viewmodel.select_component((LayerType.ARMOR, 0, comp))
@@ -193,7 +193,7 @@ class TestWorkshopViewModel:
         """primary_selection returns last selected component."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import LayerType
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         comp1 = create_component('armor_plate')
         comp2 = create_component('armor_plate')
@@ -208,7 +208,7 @@ class TestWorkshopViewModel:
         """Selection changes emit SELECTION_CHANGED event."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import LayerType
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         event_bus.clear()
 
@@ -225,7 +225,7 @@ class TestWorkshopViewModel:
     def test_dragged_item_setter_emits_event(self, viewmodel_setup):
         """Setting dragged_item emits DRAG_STATE_CHANGED event."""
         viewmodel, event_bus = viewmodel_setup
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         event_bus.clear()
 
@@ -244,7 +244,7 @@ class TestWorkshopViewModel:
         """clear_design removes components but preserves hull layer."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import Ship, LayerType
-        from game.simulation.components.component import create_component
+        from game.simulation.components import create_component
 
         ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort")
         ship.add_component(create_component('armor_plate'), LayerType.ARMOR)

@@ -13,7 +13,7 @@ from datetime import datetime
 import json
 import uuid
 
-from game.simulation.components.component import LayerType
+from game.simulation.components import LayerType
 from game.core.logger import log_debug, log_warning
 
 if TYPE_CHECKING:

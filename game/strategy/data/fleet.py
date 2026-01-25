@@ -347,18 +347,6 @@ class Fleet:
                         return False
         return True
 
-    def has_energy_for_warp(self) -> bool:
-        """
-        Check if fleet has resources for a warp jump.
-
-        This is an alias for has_resources_for_warp() for backward compatibility.
-        The actual check is data-driven based on warp drive configuration.
-
-        Returns:
-            True if all combat-capable ships have enough resources for one warp.
-        """
-        return self.has_resources_for_warp()
-
     def consume_warp_resources(self) -> bool:
         """
         Consume all required resources from all ships for a warp jump.
@@ -388,19 +376,6 @@ class Fleet:
                     ship.consume_resource(resource_type, cost)
 
         return True
-
-    def consume_warp_energy(self) -> bool:
-        """
-        Consume resources from all ships for a warp jump.
-
-        This is an alias for consume_warp_resources() for backward compatibility.
-        The actual consumption is data-driven based on warp drive configuration.
-
-        Returns:
-            True if all ships had sufficient resources, False otherwise.
-            Note: If False, no resources are consumed (atomic operation).
-        """
-        return self.consume_warp_resources()
 
     # --- Capability Summary Methods ---
 

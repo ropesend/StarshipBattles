@@ -57,7 +57,7 @@ from typing import List, Optional, Tuple, Dict, Any
 
 from game.core.math import Vector2
 from game.core.logger import log_warning, log_info
-from game.ai.controller import AIController
+from game.ai import AIController
 from game.ai.interfaces import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.core.constants import AttackType

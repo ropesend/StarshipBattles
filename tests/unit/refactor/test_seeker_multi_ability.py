@@ -211,7 +211,7 @@ class TestMultipleSeekerTargetedEffects:
         # This is an integration-level test to verify multi-ability targeting works
         # with SeekerWeaponAbility after the fix
 
-        from game.simulation.components.component import Component, create_component, load_components, load_modifiers, reset_component_caches
+        from game.simulation.components import Component, create_component, load_components, load_modifiers, reset_component_caches
 
         reset_component_caches()
         load_modifiers("data/modifiers.json")

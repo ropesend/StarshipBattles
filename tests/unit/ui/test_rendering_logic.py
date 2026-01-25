@@ -61,7 +61,7 @@ class TestRenderingLogic:
     def test_component_color_coding(self, mock_theme_mgr_cls):
         """Verify components are colored based on abilities."""
         mock_theme_instance = MagicMock()
-        mock_theme_mgr_cls.get_instance.return_value = mock_theme_instance
+        mock_theme_mgr_cls.instance.return_value = mock_theme_instance
         mock_theme_instance.get_image.return_value = None
 
         comp_weapon = MagicMock()

@@ -2,7 +2,7 @@ import pytest
 import pygame
 import math
 from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 from game.ui.screens.battle_scene import BattleScene
 from game.simulation.entities.projectile import Projectile
 from game.core.constants import AttackType
@@ -59,9 +59,9 @@ class TestPDC:
     def setup(self):
         pygame.init()
         # Initialize vehicle classes and components so registry works
-        from game.simulation.entities.ship import initialize_ship_data
+        from game.simulation.entities.ship_loader import initialize_ship_data
         initialize_ship_data()
-        from game.simulation.components.component import load_components
+        from game.simulation.components import load_components
         load_components()
 
         self.scene = BattleScene(100, 100)
@@ -70,7 +70,7 @@ class TestPDC:
         self.ship = Ship("Defender", 0, 0, (255, 255, 255), team_id=0, ship_class="Satellite (Small)")
 
         # ADD A BRIDGE so it's not derelict
-        from game.simulation.components.component import create_component, Component  # Phase 7: Removed Bridge import
+        from game.simulation.components import create_component, Component  # Phase 7: Removed Bridge import
         bridge = create_component('satellite_core')  # Specific for satellites
         if not bridge:
             bridge = create_component('bridge')
@@ -125,10 +125,6 @@ class TestPDC:
         # fire_weapons prioritized current_target first, and only looks at secondary if max_targets > 1
         self.ship.current_target = self.missile
         self.ship.secondary_targets = [self.missile]
-
-        # Diagnostic: Why is it not firing?
-        # print(f"DEBUG: Alive={self.ship.is_alive}, Derelict={self.ship.is_derelict}, Energy={self.ship.resources.get_value('energy')}/{self.ship.resources.get_max_value('energy')}, Targets={self.ship.current_target}")
-        # print(f"DEBUG: PDC Active={self.pdc.is_active}, CD={self.pdc.cooldown_timer}, Range={self.pdc.range}")
 
         attacks = self.ship.fire_weapons(context)
 

@@ -4,7 +4,7 @@ import pygame
 import random
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.components.component import create_component  # Phase 7: Removed Bridge import
+from game.simulation.components import create_component  # Phase 7: Removed Bridge import
 from unittest.mock import MagicMock
 
 
@@ -276,7 +276,7 @@ class TestCombatFlow:
     def test_fire_weapons_creates_projectiles(self):
         """Test that fire_weapons returns correct projectile objects."""
         from game.simulation.entities.ship import Ship, LayerType
-        from game.simulation.components.component import Component
+        from game.simulation.components import Component
         from game.core.constants import AttackType
 
         ship = Ship("Shooter", 0,0, (255,255,255))

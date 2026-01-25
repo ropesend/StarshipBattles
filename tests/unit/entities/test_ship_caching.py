@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import Component, LayerType
+from game.simulation.components import Component, LayerType
 from game.core.registry import RegistryManager
 # Assuming registry is populated or we mock it.
 # Better to mock components or use a minimal test case without full registry dependency if possible.

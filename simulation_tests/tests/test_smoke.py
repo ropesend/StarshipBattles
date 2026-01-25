@@ -3,7 +3,7 @@ import pytest
 import os
 
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import create_component
+from game.simulation.components import create_component
 from game.core.registry import get_vehicle_classes
 
 

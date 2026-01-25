@@ -105,7 +105,7 @@ class TestAIControllerWithAdapter:
 
     def test_aicontroller_accepts_adapter(self, mock_ship, mock_grid):
         """AIController can be constructed with a ShipControllableAdapter."""
-        from game.ai.controller import AIController
+        from game.ai import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         adapter = ShipControllableAdapter(mock_ship)
@@ -118,7 +118,7 @@ class TestAIControllerWithAdapter:
 
     def test_aicontroller_can_access_position_via_adapter(self, mock_ship, mock_grid):
         """AIController can access position through adapter."""
-        from game.ai.controller import AIController
+        from game.ai import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         adapter = ShipControllableAdapter(mock_ship)
@@ -131,7 +131,7 @@ class TestAIControllerWithAdapter:
 
     def test_aicontroller_can_access_ship_attributes_via_adapter_fallback(self, mock_ship, mock_grid):
         """AIController can access ship attributes via adapter's __getattr__ fallback."""
-        from game.ai.controller import AIController
+        from game.ai import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         adapter = ShipControllableAdapter(mock_ship)
@@ -152,7 +152,7 @@ class TestAIControllerBehavior:
 
     def test_navigate_to_uses_position(self, mock_ship, mock_grid):
         """navigate_to uses the controllable's position."""
-        from game.ai.controller import AIController
+        from game.ai import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         mock_ship.position = Vector2(0, 0)
@@ -170,7 +170,7 @@ class TestAIControllerBehavior:
 
     def test_navigate_to_rotates_toward_target(self, mock_ship, mock_grid):
         """navigate_to rotates the controllable toward the target."""
-        from game.ai.controller import AIController
+        from game.ai import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         mock_ship.position = Vector2(0, 0)
@@ -196,7 +196,7 @@ class TestAIControllerTargeting:
 
     def test_find_target_queries_grid_at_position(self, mock_ship, mock_grid):
         """find_target queries grid at controllable's position."""
-        from game.ai.controller import AIController
+        from game.ai import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         mock_ship.position = Vector2(100, 200)
@@ -221,7 +221,7 @@ class TestAIControllerUpdate:
 
     def test_update_checks_is_alive(self, mock_ship, mock_grid):
         """update() checks if controllable is alive first."""
-        from game.ai.controller import AIController
+        from game.ai import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         mock_ship.is_alive = False
@@ -238,7 +238,7 @@ class TestAIControllerUpdate:
 
     def test_update_resets_throttles(self, mock_ship, mock_grid):
         """update() resets turn and engine throttles."""
-        from game.ai.controller import AIController
+        from game.ai import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         mock_ship.is_alive = True
@@ -264,7 +264,7 @@ class TestAIControllerFormation:
 
     def test_update_handles_formation_master(self, mock_ship, mock_grid):
         """update() handles formation master ship."""
-        from game.ai.controller import AIController
+        from game.ai import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         member = MagicMock()
@@ -286,7 +286,7 @@ class TestAIControllerFormation:
 
     def test_update_handles_formation_member(self, mock_ship, mock_grid):
         """update() handles ship in formation."""
-        from game.ai.controller import AIController
+        from game.ai import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         master = MagicMock()
@@ -321,7 +321,7 @@ class TestAIControllerAvoidance:
         The comparison `obj == self.ship` fails because adapter != raw_ship.
         The fix is to compare `obj == self.ship.ship` to unwrap the adapter.
         """
-        from game.ai.controller import AIController
+        from game.ai import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
         from game.core.config import BattleConfig
 
@@ -361,7 +361,7 @@ class TestAIControllerAvoidance:
 
         If the bug exists, the ship would try to avoid itself (distance 0).
         """
-        from game.ai.controller import AIController
+        from game.ai import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         mock_ship.is_alive = True
@@ -392,7 +392,7 @@ class TestFormationIntegrityWithAdapter:
     def test_formation_member_removed_when_ship_damaged(self, mock_grid):
         """When ship breaks formation due to damage, it should be removed from formation_members."""
         from game.ai.interfaces.controllable import ShipControllableAdapter
-        from game.ai.controller import AIController
+        from game.ai import AIController
 
         # Create a mock ship that is in a formation
         mock_ship = MagicMock()
@@ -435,7 +435,7 @@ class TestFormationIntegrityWithAdapter:
     def test_formation_member_not_removed_when_undamaged(self, mock_grid):
         """When ship is undamaged, it should stay in formation."""
         from game.ai.interfaces.controllable import ShipControllableAdapter
-        from game.ai.controller import AIController
+        from game.ai import AIController
 
         mock_ship = MagicMock()
         mock_ship.position = Vector2(100, 100)

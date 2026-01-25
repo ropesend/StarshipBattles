@@ -158,7 +158,7 @@ class TestAbilities:
 
     def test_get_abilities_polymorphism(self):
         """Test that get_abilities() finds abilities by parent class."""
-        from game.simulation.components.component import Component
+        from game.simulation.components import Component
         data = {
             "id": "poly_test",
             "name": "Polymorphism Test",
@@ -182,7 +182,7 @@ class TestAbilities:
 
     def test_has_pdc_ability(self):
         """Test has_pdc_ability() with tag-based detection."""
-        from game.simulation.components.component import Component
+        from game.simulation.components import Component
         # Component with 'pdc' tag
         data = {
             "id": "pdc_test",

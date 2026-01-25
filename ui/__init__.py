@@ -1,2 +1,2 @@
 import pygame
-from .components import Button, Label, Slider
+# Legacy UI components (Button, Label, Slider) removed - use pygame_gui instead

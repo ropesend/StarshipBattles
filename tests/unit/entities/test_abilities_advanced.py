@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 import pygame
 import math
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 from game.simulation.components.abilities import WeaponAbility, BeamWeaponAbility, ProjectileWeaponAbility
 
 

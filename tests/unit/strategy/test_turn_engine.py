@@ -262,13 +262,13 @@ class TestTurnProcessing:
 
 
 class TestMovementCalculation:
-    """Tests for _calculate_next_hex method."""
+    """Tests for movement calculation via FleetMovementEngine."""
 
     def test_no_order_returns_none(self, turn_engine, mock_fleet, mock_galaxy):
         """Fleet with no orders returns None."""
         mock_fleet.get_current_order.return_value = None
 
-        result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+        result = turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
         assert result is None
 
@@ -280,11 +280,10 @@ class TestMovementCalculation:
         mock_fleet.path = []
         mock_fleet.location = HexCoord(0, 0)
 
-        # PROJ-12: TurnEngine delegates to FleetMovementEngine, so patch there
         with patch('game.strategy.engine.fleet_movement_engine.find_hybrid_path') as mock_path:
             mock_path.return_value = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)]
 
-            result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+            result = turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
             mock_path.assert_called()
 
@@ -296,7 +295,7 @@ class TestMovementCalculation:
         mock_fleet.path = []
         mock_fleet.location = target  # Already there
 
-        result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+        result = turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
         mock_fleet.pop_order.assert_called()
         assert result is None
@@ -310,13 +309,12 @@ class TestMovementCalculation:
         mock_fleet.path = []
         mock_fleet.location = HexCoord(0, 0)
 
-        # PROJ-12: TurnEngine delegates to FleetMovementEngine, so patch there
         with patch('game.strategy.engine.fleet_movement_engine.calculate_intercept_point') as mock_intercept:
             with patch('game.strategy.engine.fleet_movement_engine.find_hybrid_path') as mock_path:
                 mock_intercept.return_value = HexCoord(25, 0)
                 mock_path.return_value = [HexCoord(0, 0), HexCoord(5, 0)]
 
-                turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+                turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
                 mock_intercept.assert_called()
 
@@ -326,7 +324,7 @@ class TestMovementCalculation:
         mock_fleet.get_current_order.return_value = order
         mock_fleet.path = []
 
-        result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+        result = turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
         mock_fleet.pop_order.assert_called()
         assert result is None
@@ -669,16 +667,17 @@ class TestTickProcessing:
 
         mock_empire.fleets = [fleet]
 
-        with patch.object(turn_engine, '_calculate_next_hex') as mock_calc:
-            with patch.object(turn_engine, '_process_per_turn_resources'):
-                with patch.object(turn_engine, '_resolve_conflicts'):
-                    mock_calc.return_value = None
+        with patch.object(turn_engine.movement_engine, 'collect_movements') as mock_collect:
+            with patch.object(turn_engine.movement_engine, 'apply_movements'):
+                with patch.object(turn_engine, '_process_per_turn_resources'):
+                    with patch.object(turn_engine, '_resolve_conflicts'):
+                        mock_collect.return_value = []
 
-                    # Tick 10 should trigger movement check (10 % 10 == 0)
-                    turn_engine._process_tick(10, [mock_empire], mock_galaxy)
+                        # Tick 10 should trigger movement check (10 % 10 == 0)
+                        turn_engine._process_tick(10, [mock_empire], mock_galaxy)
 
-                    # Tick 5 should also check but still call calculate_next_hex
-                    turn_engine._process_tick(5, [mock_empire], mock_galaxy)
+                        # Tick 5 should also check - collect_movements is always called
+                        turn_engine._process_tick(5, [mock_empire], mock_galaxy)
 
     def test_zero_speed_fleet_never_moves(self, turn_engine, mock_empire, mock_galaxy):
         """Fleet with zero speed never moves."""
@@ -694,13 +693,16 @@ class TestTickProcessing:
 
         mock_empire.fleets = [fleet]
 
-        with patch.object(turn_engine, '_calculate_next_hex') as mock_calc:
-            with patch.object(turn_engine, '_process_per_turn_resources'):
-                with patch.object(turn_engine, '_resolve_conflicts'):
-                    for tick in range(1, 11):  # Check first 10 ticks
-                        turn_engine._process_tick(tick, [mock_empire], mock_galaxy)
+        with patch.object(turn_engine.movement_engine, 'collect_movements') as mock_collect:
+            with patch.object(turn_engine.movement_engine, 'apply_movements') as mock_apply:
+                with patch.object(turn_engine, '_process_per_turn_resources'):
+                    with patch.object(turn_engine, '_resolve_conflicts'):
+                        mock_collect.return_value = []  # Zero speed means no movements collected
+                        for tick in range(1, 11):  # Check first 10 ticks
+                            turn_engine._process_tick(tick, [mock_empire], mock_galaxy)
 
-                    mock_calc.assert_not_called()
+                        # Movement engine is called but returns empty queue for zero-speed fleet
+                        assert mock_collect.called
 
     def test_movement_consumes_resources(self, turn_engine, mock_empire, mock_galaxy):
         """Movement consumes fleet resources."""

@@ -13,7 +13,7 @@ This is WORKING AS DESIGNED - not a code bug.
 import pytest
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.components.component import Component, load_components, create_component
+from game.simulation.components import Component, load_components, create_component
 from game.core.registry import RegistryManager
 from game.simulation.entities.ship_stats import ShipStatsCalculator
 

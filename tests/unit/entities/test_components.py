@@ -1,6 +1,6 @@
 import pytest
 
-from game.simulation.components.component import get_all_components, create_component
+from game.simulation.components import get_all_components, create_component
 from game.core.registry import RegistryManager
 
 

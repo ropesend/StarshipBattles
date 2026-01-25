@@ -1,7 +1,7 @@
 import pytest
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 from game.simulation.components.abilities import ResourceGeneration, ResourceStorage, ResourceConsumption, WeaponAbility
 from ui.builder.stats_config import get_logistics_rows
 from game.simulation.entities.ship_stats import ShipStatsCalculator
@@ -37,7 +37,7 @@ def test_missing_logistics_details():
     battery = Component({"id": "batt", "name": "Battery", "mass": 10, "hp": 20, "type": "Internal"})
     battery.ability_instances = [ResourceStorage(battery, {'resource': 'energy', 'amount': 100})]
     
-    from game.simulation.components.component import LayerType as LT
+    from game.simulation.components import LayerType as LT
     print(f"Test LayerType.INNER: {LayerType.INNER} (id: {id(LayerType.INNER)})")
     if ship.layers:
         first_key = list(ship.layers.keys())[0]

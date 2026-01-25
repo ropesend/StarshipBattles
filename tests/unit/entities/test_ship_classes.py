@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch
 import pygame
 import os
-from game.simulation.entities.ship import initialize_ship_data
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.core.registry import RegistryManager
 from game.simulation.ship_theme import ShipThemeManager
 from tests.fixtures.paths import get_project_root
@@ -16,7 +16,7 @@ class TestShipClasses:
         # Initialize with project root
         project_root = str(get_project_root())
         initialize_ship_data(project_root)
-        self.theme_manager = ShipThemeManager.get_instance()
+        self.theme_manager = ShipThemeManager.instance()
         # Initialize theme manager with project root to load themes
         self.theme_manager.initialize(project_root)
 

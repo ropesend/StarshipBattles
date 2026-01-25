@@ -2,11 +2,12 @@ import pytest
 from unittest.mock import MagicMock
 import pygame
 
-from game.simulation.entities.ship import Ship, initialize_ship_data
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.ui.screens.battle_scene import BattleScene
-from game.ai.controller import AIController, StrategyManager
+from game.ai import AIController, StrategyManager
 from game.ai.interfaces.controllable import ShipControllableAdapter
-from game.simulation.components.component import LayerType, load_components, load_modifiers
+from game.simulation.components import LayerType, load_components, load_modifiers
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 

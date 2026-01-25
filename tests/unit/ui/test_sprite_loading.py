@@ -11,7 +11,7 @@ class TestSpriteLoading:
     def setup(self):
         # Reset singleton
         SpriteManager.reset()
-        self.mgr = SpriteManager.get_instance()
+        self.mgr = SpriteManager.instance()
 
     @patch('os.path.exists')
     @patch('os.listdir')

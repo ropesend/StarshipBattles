@@ -273,7 +273,7 @@
                 {
                     "id": "target_profile",
                     "label": "Evasion Score",
-                    "key": "to_hit_profile",
+                    "key": "total_defense_score",
                     "formatter": "fmt_score",
                     "unit": ""
                 },

@@ -2,7 +2,7 @@ import pygame
 import pygame_gui
 import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
-from game.simulation.components.component import LayerType
+from game.simulation.components import LayerType
 from game.core.logger import log_error
 # Lazy import to avoid circular import through game.ui.__init__
 # Chain: ui.builder -> game.ui.__init__ -> builder_screen -> ui.builder

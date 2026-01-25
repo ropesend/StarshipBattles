@@ -4,8 +4,9 @@ import pytest
 import pygame
 pygame.init()
 
-from game.simulation.components.component import Component
-from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
+from game.simulation.components import Component
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.entities.ship_combat import ShipCombatMixin
 
 
@@ -40,7 +41,7 @@ class TestCrystallineArmor:
 
         # Mock Registry
         from game.core.registry import RegistryManager
-        from game.simulation.components.component import Component
+        from game.simulation.components import Component
         self.ship.max_mass_budget = 1000
 
         c = Component(self.armor_data)
@@ -77,7 +78,7 @@ class TestCrystallineArmor:
             "abilities": { "ShieldProjection": 100 }
         }
         # Create ad-hoc component instance (cannot use registry if not registered)
-        from game.simulation.components.component import Component
+        from game.simulation.components import Component
         s_comp = Component(shield_data)
         self.ship.layers[LayerType.ARMOR]['components'].append(s_comp)
 
@@ -143,7 +144,7 @@ class TestCrystallineArmor:
                 "CrystallineArmor": 5  # No group -> stacks
             }
         }
-        from game.simulation.components.component import Component
+        from game.simulation.components import Component
         c = Component(other_data)
         self.ship.layers[LayerType.ARMOR]['components'].append(c)
         self.ship.recalculate_stats()

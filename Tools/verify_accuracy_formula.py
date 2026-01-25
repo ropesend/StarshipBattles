@@ -1,4 +1,4 @@
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 import math
 
 def test_formula():

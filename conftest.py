@@ -14,7 +14,7 @@ def reset_game_state(monkeypatch, request):
     and cleaned up after. Registry is ALWAYS cleared pre/post-test for isolation.
     """
     from tests.infrastructure.session_cache import SessionRegistryCache
-    from game.simulation.components.component import reset_component_caches
+    from game.simulation.components import reset_component_caches
 
     # 0. PRE-TEST CLEANUP (ALWAYS - ensures isolation even after test failures)
     mgr = RegistryManager.instance()
@@ -43,21 +43,18 @@ def reset_game_state(monkeypatch, request):
         # 4. Patch Loaders/Caches to prevent Disk I/O during test execution
 
         # A. Component Cache: Inject data so load_components() returns early
-        from game.simulation.components.component import ComponentCacheManager
+        from game.simulation.components import ComponentCacheManager
         cache_mgr = ComponentCacheManager.instance()
         cache_mgr.component_cache = cache.get_components()
         cache_mgr.modifier_cache = cache.get_modifiers()
 
         # B. Ship Vehicle Classes: Patch loader to be a no-op (Data already in Registry)
-        monkeypatch.setattr("game.simulation.entities.ship.load_vehicle_classes", lambda *args, **kwargs: None)
+        monkeypatch.setattr("game.simulation.entities.ship_loader.load_vehicle_classes", lambda *args, **kwargs: None)
 
         # C. Combat Strategies: Hydrate from cache
-        from game.ai.controller import StrategyManager
+        from game.ai import StrategyManager
         strategy_mgr = StrategyManager.instance()
         strategy_mgr.strategies = cache.get_strategies()
-
-        # D. Patch load_combat_strategies to be a no-op (Data already loaded)
-        monkeypatch.setattr("game.ai.controller.load_combat_strategies", lambda *args, **kwargs: None)
 
         yield
     finally:
@@ -68,7 +65,7 @@ def reset_game_state(monkeypatch, request):
         reset_component_caches()
 
         # Reset AI Strategy Manager using singleton pattern
-        from game.ai.controller import StrategyManager
+        from game.ai import StrategyManager
         StrategyManager.instance().clear()
 
         # Reset singletons using thread-safe reset() methods

@@ -2,7 +2,7 @@
 import pytest
 import threading
 
-from game.simulation.components.component import (
+from game.simulation.components import (
     reset_component_caches,
     ComponentCacheManager,
 )

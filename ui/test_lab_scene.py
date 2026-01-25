@@ -6,7 +6,6 @@ import time
 
 from game.core.constants import WHITE, BLACK, BLUE, WIDTH, HEIGHT, FONT_MAIN
 from game.core.json_utils import load_json
-from ui.components import Button
 from test_framework.runner import TestRunner
 from test_framework.registry import TestRegistry
 from test_framework.test_history import TestHistory
@@ -18,7 +17,7 @@ logger = get_logger(__name__)
 class JSONPopup:
     """Popup window for displaying JSON data."""
 
-    def __init__(self, title, json_data, screen_width, screen_height):
+    def __init__(self, title, json_data, screen_width, screen_height, ui_manager=None):
         """
         Create JSON popup.
 
@@ -27,11 +26,15 @@ class JSONPopup:
             json_data: Dictionary or string to display as JSON
             screen_width: Screen width
             screen_height: Screen height
+            ui_manager: pygame_gui UIManager for buttons
         """
+        import pygame_gui
+
         self.title = title
         self.json_text = json.dumps(json_data, indent=2) if isinstance(json_data, dict) else str(json_data)
         self.screen_width = screen_width
         self.screen_height = screen_height
+        self.ui_manager = ui_manager
 
         # Popup dimensions (80% of screen)
         self.width = int(screen_width * 0.8)
@@ -48,18 +51,29 @@ class JSONPopup:
         self.line_height = 18
         self.lines = self.json_text.split('\n')
 
-        # Close button
-        self.close_button = Button(self.x + self.width - 120, self.y + 10, 100, 40, "Close", self.close)
+        # Close button using pygame_gui
+        self.close_button = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(self.x + self.width - 120, self.y + 10, 100, 40),
+            text="Close",
+            manager=self.ui_manager
+        )
         self.is_open = True
 
     def close(self):
         """Close the popup."""
         self.is_open = False
+        if self.close_button:
+            self.close_button.kill()
 
     def handle_event(self, event):
         """Handle user input."""
-        # Handle close button
-        self.close_button.handle_event(event)
+        import pygame_gui
+
+        # Handle close button click via pygame_gui
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.close_button:
+                self.close()
+                return
 
         # Handle scrolling
         if event.type == pygame.MOUSEWHEEL:
@@ -89,8 +103,7 @@ class JSONPopup:
         title_surf = self.title_font.render(self.title, True, (150, 200, 255))
         screen.blit(title_surf, (self.x + 20, self.y + 15))
 
-        # Close button
-        self.close_button.draw(screen)
+        # Close button is drawn by pygame_gui UIManager
 
         # Content area
         content_y = self.y + 70
@@ -113,7 +126,7 @@ class JSONPopup:
 class ConfirmationDialog:
     """Dialog for confirming changes to test metadata."""
 
-    def __init__(self, title, changes, screen_width, screen_height, on_confirm, on_cancel):
+    def __init__(self, title, changes, screen_width, screen_height, on_confirm, on_cancel, ui_manager=None):
         """
         Create confirmation dialog.
 
@@ -124,13 +137,17 @@ class ConfirmationDialog:
             screen_height: Screen height
             on_confirm: Callback function when confirmed
             on_cancel: Callback function when canceled
+            ui_manager: pygame_gui UIManager for buttons
         """
+        import pygame_gui
+
         self.title = title
         self.changes = changes
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.on_confirm = on_confirm
         self.on_cancel = on_cancel
+        self.ui_manager = ui_manager
 
         # Dialog dimensions (60% of screen, but smaller than JSON popup)
         self.width = min(800, int(screen_width * 0.6))
@@ -143,20 +160,22 @@ class ConfirmationDialog:
         self.body_font = pygame.font.SysFont(FONT_MAIN, 16)
         self.small_font = pygame.font.SysFont(FONT_MAIN, 14)
 
-        # Buttons
+        # Buttons using pygame_gui
         button_y = self.y + self.height - 60
         button_width = 120
         button_spacing = 20
         total_button_width = button_width * 2 + button_spacing
         button_start_x = self.x + (self.width - total_button_width) // 2
 
-        self.confirm_button = Button(
-            button_start_x, button_y, button_width, 40,
-            "Confirm", self._handle_confirm
+        self.confirm_button = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(button_start_x, button_y, button_width, 40),
+            text="Confirm",
+            manager=self.ui_manager
         )
-        self.cancel_button = Button(
-            button_start_x + button_width + button_spacing, button_y, button_width, 40,
-            "Cancel", self._handle_cancel
+        self.cancel_button = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(button_start_x + button_width + button_spacing, button_y, button_width, 40),
+            text="Cancel",
+            manager=self.ui_manager
         )
 
         self.is_open = True
@@ -166,6 +185,7 @@ class ConfirmationDialog:
         """User confirmed changes."""
         self.result = 'confirm'
         self.is_open = False
+        self._kill_buttons()
         if self.on_confirm:
             self.on_confirm()
 
@@ -173,14 +193,29 @@ class ConfirmationDialog:
         """User canceled changes."""
         self.result = 'cancel'
         self.is_open = False
+        self._kill_buttons()
         if self.on_cancel:
             self.on_cancel()
 
+    def _kill_buttons(self):
+        """Remove buttons from pygame_gui manager."""
+        if self.confirm_button:
+            self.confirm_button.kill()
+        if self.cancel_button:
+            self.cancel_button.kill()
+
     def handle_event(self, event):
         """Handle user input."""
-        # Handle button clicks
-        self.confirm_button.handle_event(event)
-        self.cancel_button.handle_event(event)
+        import pygame_gui
+
+        # Handle button clicks via pygame_gui
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.confirm_button:
+                self._handle_confirm()
+                return
+            if event.ui_element == self.cancel_button:
+                self._handle_cancel()
+                return
 
         # Close on Escape
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -239,9 +274,7 @@ class ConfirmationDialog:
             new_surf = self.small_font.render(new_text, True, (100, 255, 150))
             screen.blit(new_surf, (self.x + 50, change_y + line_height * 2))
 
-        # Buttons
-        self.confirm_button.draw(screen)
-        self.cancel_button.draw(screen)
+        # Buttons are drawn by pygame_gui UIManager
 
 
 class ScrollableJSONViewer:
@@ -1639,6 +1672,10 @@ class TestLabScene:
         self.body_font = pygame.font.SysFont(FONT_MAIN, 18)
         self.small_font = pygame.font.SysFont(FONT_MAIN, 14)
 
+        # Initialize pygame_gui UIManager for buttons
+        import pygame_gui
+        self.ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+
         # Initialize controller (handles all business logic)
         from test_framework.services.test_lab_controller import TestLabUIController
         self.registry = TestRegistry()
@@ -1937,9 +1974,7 @@ class TestLabScene:
                     logger.info(f"  {test_id}: {pass_count} pass, {fail_count} fail, {warn_count} warn")
 
             except Exception as e:
-                logger.info(f"  {test_id}: Validation error - {e}")
-                import traceback
-                traceback.print_exc()
+                logger.exception(f"  {test_id}: Validation error - {e}")
 
         logger.info("=== Static Validation Complete ===\n")
 
@@ -2071,7 +2106,8 @@ class TestLabScene:
             screen_width=self.game.screen.get_width(),
             screen_height=self.game.screen.get_height(),
             on_confirm=lambda: self._apply_metadata_updates(changes),
-            on_cancel=lambda: logger.info("Update canceled")
+            on_cancel=lambda: logger.info("Update canceled"),
+            ui_manager=self.ui_manager
         )
 
     def _apply_metadata_updates(self, changes):
@@ -2163,9 +2199,7 @@ class TestLabScene:
             logger.info("Registry refreshed. Metadata updated successfully!")
 
         except Exception as e:
-            logger.error(f"Error updating metadata: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception(f"Error updating metadata: {e}")
 
     def _create_ship_panels(self, test_id):
         """
@@ -2314,12 +2348,25 @@ class TestLabScene:
         logger.debug(f"Created results panel at x={base_x} and details panel at x={details_x} for test {test_id}")
 
     def _create_ui(self):
-        """Create UI buttons."""
-        self.buttons = []
+        """Create UI buttons using pygame_gui."""
+        import pygame_gui
+
+        # Kill existing buttons before recreating (for window resize)
+        if hasattr(self, 'btn_back') and self.btn_back:
+            self.btn_back.kill()
+
+        # Update manager resolution
+        self.ui_manager.set_window_resolution((WIDTH, HEIGHT))
 
         # Back Button
-        self.btn_back = Button(20, 20, 100, 40, "Back", self._on_back)
-        self.buttons.append(self.btn_back)
+        self.btn_back = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(20, 20, 100, 40),
+            text="Back",
+            manager=self.ui_manager
+        )
+
+        # Legacy buttons list (kept for compatibility, but now empty)
+        self.buttons = []
 
         # Run Test and Run Headless buttons are now drawn in _draw_metadata_panel()
         self.run_test_btn_rect = None
@@ -2582,8 +2629,7 @@ class TestLabScene:
 
         except Exception as e:
             self.output_log.append(f"ERROR: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception(f"Error in _on_run_test: {e}")
 
     def _on_run_headless(self):
         """Run the selected test scenario in headless mode (fast, no visuals)."""
@@ -2715,8 +2761,7 @@ class TestLabScene:
         except Exception as e:
             self.headless_running = False
             self.output_log.append(f"ERROR: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception(f"Error in _on_run_headless: {e}")
 
     def _on_run_all_tests(self):
         """Run all visible tests headlessly in sequence."""
@@ -2917,9 +2962,15 @@ class TestLabScene:
                 mx, my = event.pos
                 self._handle_click(mx, my)
 
-            # Let buttons handle events
-            for btn in self.buttons:
-                btn.handle_event(event)
+            # Let pygame_gui handle events
+            import pygame_gui
+            self.ui_manager.process_events(event)
+
+            # Handle back button click
+            if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == self.btn_back:
+                    self._on_back()
+                    continue
 
     def _update_hover_state(self, mx, my):
         """Update hover state for categories and tests."""
@@ -3139,9 +3190,9 @@ class TestLabScene:
         # Output log
         self._draw_output_log(screen)
 
-        # Buttons
-        for btn in self.buttons:
-            btn.draw(screen)
+        # Update and draw pygame_gui elements
+        self.ui_manager.update(self.game.clock.get_time() / 1000.0)
+        self.ui_manager.draw_ui(screen)
 
         # JSON popup (drawn last, on top of everything)
         if self.json_popup and self.json_popup.is_open:
@@ -3654,92 +3705,6 @@ class TestLabScene:
         ticks_surf = self.small_font.render(ticks_text, True, (120, 120, 120))
         screen.blit(ticks_surf, (x, y))
 
-    def _draw_seed_controls_OLD(self, screen, x, y, metadata):
-        """DEPRECATED - Seed controls moved to header. This is kept for reference."""
-        mx, my = pygame.mouse.get_pos()
-
-        # Max ticks display
-        ticks_text = f"Max Ticks: {metadata.max_ticks}"
-        ticks_surf = self.small_font.render(ticks_text, True, (120, 120, 120))
-        screen.blit(ticks_surf, (x, y))
-
-        # Seed control section
-        y += 20
-        seed_label = self.small_font.render("Seed:", True, (120, 120, 120))
-        screen.blit(seed_label, (x, y))
-
-        # Seed mode buttons
-        mode_x = x + 45
-        btn_height = 20
-        btn_spacing = 5
-
-        current_mode = self.controller.ui_state.get_seed_mode()
-        self.seed_mode_rects = {}
-
-        modes = [
-            ("random", "Random", 60),
-            ("metadata", f"Fixed ({metadata.seed})", 100),
-            ("custom", "Custom", 55)
-        ]
-
-        for mode_id, mode_label, btn_width in modes:
-            rect = pygame.Rect(mode_x, y - 2, btn_width, btn_height)
-            self.seed_mode_rects[mode_id] = rect
-
-            is_active = current_mode == mode_id
-            is_hovered = rect.collidepoint(mx, my)
-
-            if is_active:
-                bg_color = (40, 80, 120)
-                border_color = (80, 140, 200)
-                text_color = (200, 220, 255)
-            elif is_hovered:
-                bg_color = (50, 50, 60)
-                border_color = (100, 100, 110)
-                text_color = self.TEXT_COLOR
-            else:
-                bg_color = self.CATEGORY_BG
-                border_color = self.BORDER_COLOR
-                text_color = (150, 150, 150)
-
-            pygame.draw.rect(screen, bg_color, rect, border_radius=3)
-            pygame.draw.rect(screen, border_color, rect, 1, border_radius=3)
-
-            mode_text = self.small_font.render(mode_label, True, text_color)
-            screen.blit(mode_text, (rect.x + 4, rect.y + 3))
-
-            mode_x += btn_width + btn_spacing
-
-        # If custom mode, show the custom seed value or input hint
-        if current_mode == "custom":
-            custom_seed = self.controller.ui_state.get_custom_seed()
-            if custom_seed is not None:
-                seed_display = f"= {custom_seed}"
-            else:
-                seed_display = "(click to set)"
-            custom_surf = self.small_font.render(seed_display, True, (100, 180, 255))
-            screen.blit(custom_surf, (mode_x + 10, y))
-
-        # Show effective seed that will be used
-        y += 22
-        if current_mode == "random":
-            effective_text = "Next run: random seed"
-            effective_color = (100, 100, 100)
-        elif current_mode == "metadata":
-            effective_text = f"Next run: seed {metadata.seed}"
-            effective_color = (100, 140, 100)
-        else:
-            custom_seed = self.controller.ui_state.get_custom_seed()
-            if custom_seed is not None:
-                effective_text = f"Next run: seed {custom_seed}"
-                effective_color = (100, 140, 180)
-            else:
-                effective_text = "Set custom seed first"
-                effective_color = (180, 100, 100)
-
-        effective_surf = self.small_font.render(effective_text, True, effective_color)
-        screen.blit(effective_surf, (x, y))
-
     def _draw_section(self, screen, x, y, label, text, color):
         """Draw a single-line metadata section."""
         # Label
@@ -4123,7 +4088,7 @@ class TestLabScene:
         if not ships_data:
             ships_data = {"error": "No ship files found for this test"}
 
-        self.json_popup = JSONPopup(f"Ships JSON - {test_id}", ships_data, WIDTH, HEIGHT)
+        self.json_popup = JSONPopup(f"Ships JSON - {test_id}", ships_data, WIDTH, HEIGHT, ui_manager=self.ui_manager)
 
     def _show_components_json(self):
         """Show JSON for all components in the test data."""
@@ -4133,9 +4098,9 @@ class TestLabScene:
 
         components_data = load_json(components_path)
         if components_data is not None:
-            self.json_popup = JSONPopup("Components JSON", components_data, WIDTH, HEIGHT)
+            self.json_popup = JSONPopup("Components JSON", components_data, WIDTH, HEIGHT, ui_manager=self.ui_manager)
         else:
-            self.json_popup = JSONPopup("Components JSON", {"error": "components.json not found or invalid"}, WIDTH, HEIGHT)
+            self.json_popup = JSONPopup("Components JSON", {"error": "components.json not found or invalid"}, WIDTH, HEIGHT, ui_manager=self.ui_manager)
 
     def _draw_output_log(self, screen):
         """Draw the output log at the bottom."""

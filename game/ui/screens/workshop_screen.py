@@ -14,11 +14,8 @@ from pygame_gui.windows import UIConfirmationDialog
 from game.core.logger import log_debug
 from game.core.profiling import profile_action, profile_block
 
-from game.simulation.entities.ship import LayerType
+from game.simulation.components import LayerType, get_all_components
 from game.core.registry import RegistryManager, get_component_registry, get_vehicle_classes
-from game.simulation.components.component import (
-    get_all_components
-)
 from game.ui.renderer.sprites import SpriteManager
 from game.simulation.systems.persistence import ShipIO
 from game.ui.panels.builder_widgets import ModifierEditorPanel
@@ -85,7 +82,7 @@ class DesignWorkshopGUI:
         self.on_start_battle = context.on_return  # Use context's callback
 
         self.event_bus = EventBus()
-        self.screenshot_manager = ScreenshotManager.get_instance()
+        self.screenshot_manager = ScreenshotManager.instance()
 
         # MVVM: Create ViewModel to manage builder state
         self.viewmodel = WorkshopViewModel(self.event_bus, screen_width, screen_height)
@@ -111,10 +108,10 @@ class DesignWorkshopGUI:
         
         # Managers
         self.viewmodel.refresh_available_components()
-        self.sprite_mgr = SpriteManager.get_instance()
+        self.sprite_mgr = SpriteManager.instance()
         
         with profile_block("Builder: Init Managers"):
-            self.theme_manager = ShipThemeManager.get_instance()
+            self.theme_manager = ShipThemeManager.instance()
             self.theme_manager.initialize() # No path needed anymore
         
         # Layout (from centralized constants)

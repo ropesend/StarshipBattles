@@ -41,8 +41,8 @@ class SessionRegistryCache:
 
             try:
                 # 1. Import Loaders inside method to avoid circular imports at top level
-                from game.simulation.components.component import load_components, load_modifiers
-                from game.simulation.entities.ship import load_vehicle_classes
+                from game.simulation.components import load_components, load_modifiers
+                from game.simulation.entities.ship_loader import load_vehicle_classes
                 from game.core.registry import RegistryManager
 
                 # 2. Reset Registry to clean state for capture
@@ -61,8 +61,11 @@ class SessionRegistryCache:
                 load_vehicle_classes()
 
                 # 4. Load combat strategies
-                from game.ai.controller import load_combat_strategies, StrategyManager
-                load_combat_strategies(str(DATA_DIR))
+                from game.ai import StrategyManager
+                strategy_manager = StrategyManager.instance()
+                strategy_manager.clear()
+                strategy_manager.load_data(str(DATA_DIR))
+                strategy_manager._loaded = True
 
                 # 5. Capture State (Deep Copy for initial load, shallow copies on retrieval)
                 self.modifiers_data = copy.deepcopy(mgr.modifiers)

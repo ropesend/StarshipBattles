@@ -1,7 +1,7 @@
 """Tests for component modifier system."""
 import pytest
 
-from game.simulation.components.component import (
+from game.simulation.components import (
     load_components, load_modifiers, create_component, Component
 )
 from game.core.registry import RegistryManager

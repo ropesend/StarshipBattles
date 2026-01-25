@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pygame
 
 from game.ai.behaviors import KiteBehavior, AttackRunBehavior, OrbitBehavior
-from game.ai.controller import AIController
+from game.ai import AIController
 from game.ai.interfaces.controllable import ShipControllableAdapter
 
 

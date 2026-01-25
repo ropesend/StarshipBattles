@@ -3,10 +3,11 @@ from unittest.mock import MagicMock, patch
 import pygame
 import math
 
-from game.simulation.entities.ship import Ship, initialize_ship_data
-from game.simulation.components.component import Component, LayerType, load_components
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
+from game.simulation.components import Component, LayerType, load_components
 from game.core.registry import RegistryManager
-from game.ai.controller import AIController
+from game.ai import AIController
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.simulation.entities.projectile import Projectile
@@ -161,7 +162,7 @@ class TestMultitarget:
         grid.insert(m2)
 
         # Inject Strategy into StrategyManager (new data-driven system)
-        from game.ai.controller import StrategyManager
+        from game.ai import StrategyManager
         manager = StrategyManager.instance()
         manager._loaded = True  # Prevent ensure_loaded() from overwriting test data
 

@@ -5,7 +5,7 @@ Rules extend AdditionValidationRule or DesignValidationRule to reduce guard clau
 """
 from typing import List, Optional
 
-from game.simulation.components.component import Component, LayerType
+from game.simulation.components import Component, LayerType
 
 # Import base classes from validation module (Phase 12 refactoring)
 from game.simulation.validation.base import (

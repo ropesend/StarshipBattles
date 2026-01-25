@@ -1,6 +1,6 @@
 import pytest
 
-from game.simulation.components.component import load_components, load_modifiers, get_all_components, create_component
+from game.simulation.components import load_components, load_modifiers, get_all_components, create_component
 from tests.fixtures.paths import get_data_dir
 
 

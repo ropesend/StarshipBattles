@@ -8,7 +8,7 @@ import sys
 
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 
 
 class TestStatsRender:

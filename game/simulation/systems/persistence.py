@@ -7,9 +7,13 @@ from game.core.json_utils import load_json_required, save_json
 from game.core.logger import log_warning
 
 # Initialize Tkinter root and hide it (for file dialogs)
+# Skip tkinter initialization in headless/test mode (SDL_VIDEODRIVER=dummy)
 try:
-    tk_root = tkinter.Tk()
-    tk_root.withdraw()
+    if os.environ.get("SDL_VIDEODRIVER") == "dummy":
+        tk_root = None
+    else:
+        tk_root = tkinter.Tk()
+        tk_root.withdraw()
 except Exception as e:
     log_warning(f"Tkinter initialization failed, file dialogs will be unavailable: {e}")
     tk_root = None

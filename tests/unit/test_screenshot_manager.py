@@ -13,7 +13,7 @@ def screenshot_manager():
         pygame.init()
     # Reset singleton if possible or just re-setup
     ScreenshotManager.reset()
-    manager = ScreenshotManager.get_instance()
+    manager = ScreenshotManager.instance()
     manager.enabled = True  # Force enable for tests logic
     manager.base_dir = "test_screenshots"
 

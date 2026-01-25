@@ -200,22 +200,6 @@ class TurnEngine:
         """
         self.production_engine.process_production(empires, galaxy, save_path)
 
-    def _spawn_complex(self, planet, design_id, empire, save_path=None):
-        """Add completed complex to planet's facilities.
-
-        PROJ-12 Phase 3: Delegates to ProductionEngine.
-        Kept for backward compatibility.
-        """
-        self.production_engine._spawn_complex(planet, design_id, empire, save_path)
-
-    def _spawn_ship(self, planet, design_id, empire, galaxy, save_path=None):
-        """Spawn ship/satellite/fighter as fleet with ShipInstance.
-
-        PROJ-12 Phase 3: Delegates to ProductionEngine.
-        Kept for backward compatibility.
-        """
-        self.production_engine._spawn_ship(planet, design_id, empire, galaxy, save_path)
-
     def _process_tick(self, tick, empires, galaxy):
         """Process 1 sub-tick of movement and combat.
 
@@ -246,44 +230,6 @@ class TurnEngine:
 
         # --- Phase 4: Combat ---
         self._resolve_conflicts(empires)
-
-    def _calculate_next_hex(self, fleet, galaxy):
-        """Calculate (but don't apply) the next hex for a fleet.
-
-        PROJ-12 Phase 3: Delegates to FleetMovementEngine.
-        Kept for backward compatibility.
-
-        Returns the next hex to move to, or None if no movement.
-        Side effect: Updates fleet.path if needed.
-        """
-        return self.movement_engine.calculate_next_hex(fleet, galaxy)
-
-    def _execute_move_step(self, fleet, galaxy):
-        """Advance fleet 1 hex if it has a MOVE order and path.
-        
-        .. deprecated::
-            This method exists for backward compatibility with tests.
-            Use _calculate_next_hex directly in new code.
-            In the main turn loop, _calculate_next_hex is called in Phase 1,
-            and movement is applied in Phase 2.
-        """
-        import warnings
-        warnings.warn(
-            "_execute_move_step is deprecated. Use _calculate_next_hex and apply movement manually.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-        
-        # Use the canonical calculation method
-        next_hex = self._calculate_next_hex(fleet, galaxy)
-        
-        if next_hex:
-            # Apply the movement
-            fleet.location = next_hex
-            
-            # If path complete, order is done
-            if not fleet.path:
-                fleet.pop_order()
 
     def _process_per_turn_resources(self, tick: int, empires) -> None:
         """

@@ -5,7 +5,7 @@ import typing
 from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Iterator
 
 from game.engine.physics import PhysicsBody
-from game.simulation.components.component import (
+from game.simulation.components import (
     Component, LayerType, create_component
 )
 from game.core.logger import log_debug, log_info, log_warning, log_error
@@ -17,13 +17,7 @@ from .ship_physics import ShipPhysicsMixin
 from .ship_combat import ShipCombatMixin
 from .ship_formation import ShipFormation
 from game.simulation.systems.resource_manager import ResourceRegistry
-
-# Re-export from ship_loader for backward compatibility
-from .ship_loader import (
-    get_or_create_validator,
-    load_vehicle_classes,
-    initialize_ship_data,
-)
+from .ship_loader import get_or_create_validator
 
 
 class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):

@@ -1,11 +1,12 @@
 import pytest
 import pygame
-from game.simulation.entities.ship import Ship, initialize_ship_data
-from game.simulation.components.component import load_components, LayerType
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
+from game.simulation.components import load_components, LayerType
 from game.core.registry import RegistryManager
 from game.simulation.systems.battle_engine import BattleEngine
 from game.core.constants import AttackType
-from game.ai.controller import StrategyManager
+from game.ai import StrategyManager
 from tests.fixtures.paths import get_unit_test_data_dir
 
 

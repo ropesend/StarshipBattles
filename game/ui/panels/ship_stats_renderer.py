@@ -4,9 +4,8 @@ This module provides rendering functions for ship statistics, resources,
 weapons, and components display in the battle UI.
 """
 import pygame
-from game.simulation.components.component import ComponentStatus
-from game.simulation.entities.ship import LayerType
-from game.ai.controller import StrategyManager
+from game.simulation.components import ComponentStatus, LayerType
+from game.ai import StrategyManager
 from game.core.config import UIConfig
 from game.core.constants import CombatConstants
 

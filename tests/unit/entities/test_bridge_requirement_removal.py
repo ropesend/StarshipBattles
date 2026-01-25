@@ -5,7 +5,7 @@ import json
 from game.simulation.ship_validator import ShipDesignValidator, ValidationResult
 from game.simulation.entities.ship import Ship, LayerType
 from game.core.registry import RegistryManager
-from game.simulation.components.component import Component
+from game.simulation.components import Component
 from tests.fixtures.paths import get_unit_test_data_dir
 
 

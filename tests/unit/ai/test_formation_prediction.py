@@ -454,7 +454,7 @@ class TestFormationIntegrity:
 
     def test_propulsion_damage_breaks_formation(self):
         """Damaged propulsion should cause ship to leave formation."""
-        from game.ai.controller import AIController
+        from game.ai import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         mock_grid = MagicMock()

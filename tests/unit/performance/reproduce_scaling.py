@@ -1,7 +1,7 @@
 import pytest
 import pygame
 
-from game.simulation.components.component import load_components, create_component, load_modifiers
+from game.simulation.components import load_components, create_component, load_modifiers
 from game.core.registry import RegistryManager
 from game.core.constants import COMPONENTS_FILE, MODIFIERS_FILE
 

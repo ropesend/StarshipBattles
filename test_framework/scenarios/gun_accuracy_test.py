@@ -1,5 +1,5 @@
 from test_framework.scenario import CombatScenario
-from game.simulation.components.component import create_component, LayerType
+from game.simulation.components import create_component, LayerType
 import pygame
 import pygame
 
