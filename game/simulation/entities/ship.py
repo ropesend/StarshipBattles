@@ -1,7 +1,8 @@
+import pygame
 import random
 import math
 import typing
-from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Iterator, TYPE_CHECKING
+from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Iterator
 
 from game.engine.physics import PhysicsBody
 from game.simulation.components.component import (
@@ -23,9 +24,6 @@ from .ship_loader import (
     initialize_ship_data,
 )
 
-if TYPE_CHECKING:
-    from .ship_component_manager import ShipComponentManager
-
 
 class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     def __init__(self, name: str, x: float, y: float, color: Union[Tuple[int, int, int], List[int]], 
@@ -43,12 +41,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # Get class definition (no fallback - data must be present)
         class_def = get_vehicle_classes().get(self.ship_class, {})
 
-        # Component Manager (Phase 2 - delegates component operations)
-        self._component_manager: Optional['ShipComponentManager'] = None
-
         # Initialize Layers dynamically from class definition
         self._initialize_layers()
-
+        
         # Auto-equip default Hull component if defined for this class
         default_hull_id = class_def.get('default_hull_id')
         hull_equipped = False
@@ -168,25 +163,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     def hp(self, value: int) -> None:
         """Set cached hp value."""
         self._cached_hp = value
-
-    # =========================================================================
-    # Component Manager Property (PROJ-12 Phase 2)
-    # =========================================================================
-
-    @property
-    def component_manager(self) -> 'ShipComponentManager':
-        """
-        Get or create the ShipComponentManager for this ship.
-
-        Lazy initialization to avoid import cycles and ensure ship
-        is fully initialized before manager creation.
-        """
-        if self._component_manager is None:
-            from .ship_component_manager import ShipComponentManager
-            self._component_manager = ShipComponentManager(self)
-            # Sync the manager's layers with ship's layers
-            self._component_manager.layers = self.layers
-        return self._component_manager
 
     # =========================================================================
     # Formation Delegation Properties (backward compatibility)
@@ -340,10 +316,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         class_def = get_vehicle_classes().get(self.ship_class, {})
         self.layers = {}
         layer_defs = class_def.get('layers', [])
-
-        # Sync component manager's reference to layers if it exists
-        if self._component_manager is not None:
-            self._component_manager.layers = self.layers
         
         # Fallback if no layers defined in vehicle class
         if not layer_defs:
@@ -432,7 +404,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.ship_class = new_class
         class_def = get_vehicle_classes().get(self.ship_class)
         if class_def is None:
-            from game.core.logger import log_error
+            # log_error is imported at module level (line 11)
             log_error(f"Ship.change_class: Unknown vehicle class '{self.ship_class}', using defaults")
             class_def = {}
         self.base_mass = 0.0  # Hull component provides mass via ShipStatsCalculator
@@ -478,19 +450,30 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.recalculate_stats()
 
     def add_component(self, component: Component, layer_type: LayerType) -> bool:
-        """
-        Validate and add a component to the specified layer.
+        """Validate and add a component to the specified layer."""
+        if component is None:
+            log_error("Attempted to add None component to ship")
+            return False
 
-        Delegates to ShipComponentManager.add_component().
+        result = get_or_create_validator().validate_addition(self, component, layer_type)
 
-        Args:
-            component: The component to add
-            layer_type: The layer to add to
+        if not result.is_valid:
+            for err in result.errors:
+                log_error(err)
+            return False
 
-        Returns:
-            True if added successfully, False otherwise
-        """
-        return self.component_manager.add_component(component, layer_type)
+        self.layers[layer_type]['components'].append(component)
+        component.layer_assigned = layer_type
+        component.ship = self
+        component.recalculate_stats()
+        # Apply mandatory modifiers (e.g., size mount) immediately upon addition
+        from game.simulation.services.modifier_service import ModifierService
+        ModifierService.ensure_mandatory_modifiers(component)
+        self._cached_summary = {}  # Invalidate cache
+        
+        # Update Stats
+        self.recalculate_stats()
+        return True
 
     @property
     def cached_summary(self):
@@ -500,33 +483,48 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     def add_components_bulk(self, component: Component, layer_type: LayerType, count: int) -> int:
         """
         Add multiple copies of a component to the specified layer.
-
-        Delegates to ShipComponentManager.add_components_bulk().
-
-        Args:
-            component: The component to clone and add
-            layer_type: The layer to add to
-            count: Number of copies to add
-
-        Returns:
-            Number of components successfully added
+        Performs validation for each addition but defers full ship stat recalculation until the end.
+        Returns the number of components successfully added.
         """
-        return self.component_manager.add_components_bulk(component, layer_type, count)
+        added_count = 0
+        
+        # Loop to add
+        for _ in range(count):
+            # Must clone for each new instance
+            new_comp = component.clone()
+            
+            # Use the global validator
+            result = get_or_create_validator().validate_addition(self, new_comp, layer_type)
+            if not result.is_valid:
+                # Stop adding if we hit a limit
+                if added_count == 0:
+                    # If the very first one fails, log errors
+                    for err in result.errors:
+                        log_error(err)
+                break
+                
+            self.layers[layer_type]['components'].append(new_comp)
+            new_comp.layer_assigned = layer_type
+            new_comp.ship = self
+            new_comp.recalculate_stats()
+            # Apply mandatory modifiers (e.g., size mount) immediately upon addition
+            from game.simulation.services.modifier_service import ModifierService
+            ModifierService.ensure_mandatory_modifiers(new_comp)
+            added_count += 1
+            
+        if added_count > 0:
+            self.recalculate_stats()
+            
+        return added_count
 
     def remove_component(self, layer_type: LayerType, index: int) -> Optional[Component]:
-        """
-        Remove a component from the specified layer by index.
-
-        Delegates to ShipComponentManager.remove_component().
-
-        Args:
-            layer_type: The layer to remove from
-            index: Index of the component to remove
-
-        Returns:
-            The removed component, or None if index was invalid
-        """
-        return self.component_manager.remove_component(layer_type, index)
+        """Remove a component from the specified layer by index."""
+        if 0 <= index < len(self.layers[layer_type]['components']):
+            comp = self.layers[layer_type]['components'].pop(index)
+            self.recalculate_stats()
+            return comp
+        log_warning(f"remove_component failed: index {index} out of range for layer {layer_type.name}")
+        return None
 
     def recalculate_stats(self) -> None:
         """
@@ -615,32 +613,33 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         return float(result) if isinstance(result, (int, float)) else 0.0
 
     # =========================================================================
-    # Component Access Helper Methods (Phase 2 - Delegate to ComponentManager)
+    # Component Access Helper Methods (Phase 2 Consolidation)
     # =========================================================================
 
     def get_all_components(self) -> List[Component]:
         """
         Return a list of all components across all layers.
 
-        Delegates to ShipComponentManager.get_all_components().
-
         Returns:
             List of Component instances from all layers (HULL, CORE, INNER, OUTER, ARMOR).
             Returns a fresh list each call (not a reference to internal storage).
         """
-        return self.component_manager.get_all_components()
+        result = []
+        for layer_data in self.layers.values():
+            result.extend(layer_data['components'])
+        return result
 
     def iter_components(self) -> Iterator[Tuple[LayerType, Component]]:
         """
         Iterate through (layer_type, component) tuples for all components.
 
-        Delegates to ShipComponentManager.iter_components().
-
         Yields:
             Tuple of (LayerType, Component) for each component in the ship.
             Iterates through layers in dictionary order.
         """
-        return self.component_manager.iter_components()
+        for layer_type, layer_data in self.layers.items():
+            for component in layer_data['components']:
+                yield layer_type, component
 
     def get_components_by_ability(
         self,
@@ -650,8 +649,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         """
         Return all components that have a specific ability.
 
-        Delegates to ShipComponentManager.get_components_by_ability().
-
         Args:
             ability_name: Name of the ability to search for (e.g., 'WeaponAbility').
             operational_only: If True (default), only return operational components.
@@ -660,13 +657,18 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         Returns:
             List of Component instances that have the specified ability.
         """
-        return self.component_manager.get_components_by_ability(ability_name, operational_only)
+        result = []
+        for layer_data in self.layers.values():
+            for comp in layer_data['components']:
+                if operational_only and not comp.is_operational:
+                    continue
+                if comp.has_ability(ability_name):
+                    result.append(comp)
+        return result
 
     def get_components_by_layer(self, layer_type: LayerType) -> List[Component]:
         """
         Return all components in a specific layer.
-
-        Delegates to ShipComponentManager.get_components_by_layer().
 
         Args:
             layer_type: The LayerType to get components from.
@@ -676,27 +678,28 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             Returns empty list if layer doesn't exist or has no components.
             Returns a fresh list each call (not a reference to internal storage).
         """
-        return self.component_manager.get_components_by_layer(layer_type)
+        layer_data = self.layers.get(layer_type)
+        if layer_data is None:
+            return []
+        return list(layer_data['components'])
 
     def has_components(self) -> bool:
         """
         Check if ship has any components.
 
-        Delegates to ShipComponentManager.has_components().
-
         Returns:
             True if ship has at least one component in any layer, False otherwise.
         """
-        return self.component_manager.has_components()
+        for layer_data in self.layers.values():
+            if layer_data['components']:
+                return True
+        return False
 
     def find_component_with_index(
         self,
         predicate: Callable[[Component], bool]
     ) -> Optional[Tuple[LayerType, int, Component]]:
-        """
-        Find first component matching predicate, with its location.
-
-        Delegates to ShipComponentManager.find_component_with_index().
+        """Find first component matching predicate, with its location.
 
         Args:
             predicate: Function that returns True for matching component
@@ -704,17 +707,21 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         Returns:
             Tuple of (layer_type, index, component) or None if not found
         """
-        return self.component_manager.find_component_with_index(predicate)
+        for layer_type, layer_data in self.layers.items():
+            for idx, comp in enumerate(layer_data['components']):
+                if predicate(comp):
+                    return (layer_type, idx, comp)
+        return None
 
     def clear_non_hull_components(self) -> None:
-        """
-        Remove all components except hull.
-
-        Delegates to ShipComponentManager.clear_non_hull_components().
+        """Remove all components except hull.
 
         Useful for ship class changes where only the hull is preserved.
         """
-        self.component_manager.clear_non_hull_components()
+        for layer_type, layer_data in self.layers.items():
+            if layer_type != LayerType.HULL:
+                layer_data['components'].clear()
+        self.recalculate_stats()
 
     def check_validity(self) -> bool:
         """Check if the current ship design is valid."""

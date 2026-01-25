@@ -25,7 +25,7 @@ Use this protocol when:
 ### 1. Assess Revision Scope
 
 1. **Read the user's feedback** - What changes are needed?
-2. **Load the project file** - `Projects/active_projects/PROJ-XX.md` or `Projects/archived_projects/PROJ-XX.md`
+2. **Load the project file** - `Projects/active_projects/PROJ-XX/plan.md` or `Projects/archived_projects/PROJ-XX/plan.md`
 3. **Determine revision type:**
 
 | Type | Description | Action |
@@ -38,9 +38,9 @@ Use this protocol when:
 
 If the project is in `archived_projects/`:
 
-1. **Move** the file:
-   - FROM: `Projects/archived_projects/PROJ-XX.md`
-   - TO: `Projects/active_projects/PROJ-XX.md`
+1. **Move** the directory:
+   - FROM: `Projects/archived_projects/PROJ-XX/`
+   - TO: `Projects/active_projects/PROJ-XX/`
 
 2. **Update** `Projects/projects_index.md`:
    - Change status to `Revision`

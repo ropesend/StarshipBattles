@@ -20,6 +20,7 @@ from game.ai.target_evaluator import TargetEvaluator
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, create_component
 from game.core.registry import RegistryManager
+from game.core.math import Vector2
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 
 
@@ -311,9 +312,9 @@ class TestCommandGeneration:
 
         override = ai_controller.check_avoidance()
 
-        # Should return avoidance target position
+        # Should return avoidance target position (game.core.math.Vector2, not pygame.math.Vector2)
         assert override is not None
-        assert isinstance(override, pygame.math.Vector2)
+        assert isinstance(override, Vector2)
 
 
 # =============================================================================

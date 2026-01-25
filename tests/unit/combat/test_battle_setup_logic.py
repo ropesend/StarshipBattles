@@ -79,8 +79,9 @@ class TestBattleSetupLogic:
 
         # Check AI target teams
         # AIController(ship, grid, enemy_team_id)
-        ai1 = next(ai for ai in scene.ai_controllers if ai.ship == ship1)
-        ai2 = next(ai for ai in scene.ai_controllers if ai.ship == ship2)
+        # Note: ai.ship is a ShipControllableAdapter, need to unwrap via .ship property
+        ai1 = next(ai for ai in scene.ai_controllers if ai.ship.ship == ship1)
+        ai2 = next(ai for ai in scene.ai_controllers if ai.ship.ship == ship2)
 
         assert ai1.enemy_team_id == 1
         assert ai2.enemy_team_id == 0

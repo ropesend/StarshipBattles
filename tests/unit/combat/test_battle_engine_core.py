@@ -127,3 +127,49 @@ class TestBattleEngineCore:
                 engine.update()
 
             mock_beam.assert_called()
+
+    def test_remove_ship_removes_ai_controller(self):
+        """
+        Test that remove_ship() removes both the ship and its AI controller.
+
+        Regression test for PROJ-12 Phase 7 Fix 7.1:
+        BattleEngine wraps ships in ShipControllableAdapter, so the comparison
+        ai.ship == ship must unwrap the adapter via ai.ship.ship == ship.
+        """
+        mock_logger = MagicMock()
+        engine = BattleEngine(logger=mock_logger)
+
+        # Create test ships
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0), team_id=0)
+        ship2 = Ship("Ship2", 200, 0, (0, 0, 255), team_id=1)
+
+        # Start battle - this creates AI controllers with adapters
+        engine.start([ship1], [ship2])
+
+        # Verify both ships and AI controllers are present
+        assert len(engine.ships) == 2
+        assert len(engine.ai_controllers) == 2
+
+        # Find the AI controller for ship1
+        ship1_ai = None
+        for ai in engine.ai_controllers:
+            if ai.ship.ship == ship1:  # ai.ship is adapter, ai.ship.ship is raw ship
+                ship1_ai = ai
+                break
+        assert ship1_ai is not None, "Should have AI controller for ship1"
+
+        # Remove ship1
+        result = engine.remove_ship(ship1)
+
+        # Verify ship was removed
+        assert result is True
+        assert ship1 not in engine.ships
+        assert len(engine.ships) == 1
+
+        # Verify AI controller was also removed (this was the bug)
+        assert len(engine.ai_controllers) == 1
+        assert ship1_ai not in engine.ai_controllers
+
+        # Verify remaining AI controller is for ship2
+        remaining_ai = engine.ai_controllers[0]
+        assert remaining_ai.ship.ship == ship2

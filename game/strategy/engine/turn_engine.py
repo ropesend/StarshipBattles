@@ -99,9 +99,9 @@ class TurnEngine:
 
         # 2. End-of-Turn Orders (Static actions like Colonize)
         for empire in empires:
-            # Iterate copy since fleets might execute orders that change state?
-            # Actually colonization doesn't remove fleet usually, but we should be safe.
-            for fleet in empire.fleets:
+            # Iterate copy since fleets may be modified during processing
+            # (e.g., colonization can remove/dissolve fleets)
+            for fleet in list(empire.fleets):
                 self._process_end_turn_orders(fleet, empire, galaxy)
 
         # 3. Production Phase
@@ -145,8 +145,8 @@ class TurnEngine:
             if target_planet not in valid_candidates:
                 # Determine detailed reason for better feedback
                 # If owner is none (checked above), then it must be location.
-                 return ValidationResult(False, f"Planet {target_planet.name} is not at fleet location.", "WRONG_LOCATION")
-                 
+                return ValidationResult(False, f"Planet {target_planet.name} is not at fleet location.", "WRONG_LOCATION")
+
             return ValidationResult(True, "Planet is valid for colonization.")
 
     def process_production(self, empires, galaxy=None, save_path=None):

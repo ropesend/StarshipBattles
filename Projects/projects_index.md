@@ -4,7 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-12 | God Class Decomposition | Planning | 2026-01-24 | 2026-01-24 |
+| PROJ-12 | God Class Decomposition | Awaiting Verification | 2026-01-24 | 2026-01-24 |
 | PROJ-13 | Code Quality & Documentation | Planning | 2026-01-24 | 2026-01-24 |
 
 ## Archived Projects

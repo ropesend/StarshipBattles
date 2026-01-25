@@ -1103,3 +1103,111 @@ class TestBattleResolverInjection:
         # Verify fleet.update_from_battle_results was called with survivors
         fleet1.update_from_battle_results.assert_called_once_with([survivor0])
         fleet2.update_from_battle_results.assert_called_once_with([survivor1])
+
+
+# =============================================================================
+# Test: Iterator Safety
+# =============================================================================
+
+
+class TestFleetIteratorSafety:
+    """Test that turn processing handles fleet modification safely.
+
+    Regression test for PROJ-12 Phase 7 Fix 7.4:
+    Line 104 iterates empire.fleets directly while colonization may remove fleets.
+    While Python doesn't always raise RuntimeError for list modification during
+    iteration, removing items can cause skipped iterations (silent bugs).
+    """
+
+    def test_fleet_removal_during_iteration_skips_items(self):
+        """Verify that direct iteration skips items when list is modified.
+
+        When iterating directly over a list and removing an item, the
+        iteration can skip items because indices shift. The fix (using
+        list()) prevents this.
+        """
+        # Create fleets
+        fleet1 = MagicMock(spec=Fleet)
+        fleet1.id = 1
+
+        fleet2 = MagicMock(spec=Fleet)
+        fleet2.id = 2
+
+        fleet3 = MagicMock(spec=Fleet)
+        fleet3.id = 3
+
+        fleets = [fleet1, fleet2, fleet3]
+
+        # BUG: Direct iteration with removal skips items
+        processed_ids_buggy = []
+        fleets_copy = [fleet1, fleet2, fleet3]
+        for fleet in fleets_copy:  # Iterating directly
+            processed_ids_buggy.append(fleet.id)
+            if fleet.id == 1:
+                # Removing fleet2 shifts fleet3 to index 1
+                # But iterator advances to index 2, skipping fleet3
+                fleets_copy.remove(fleet2)
+
+        # fleet3 gets skipped because of index shift
+        assert processed_ids_buggy == [1, 3], f"Expected [1, 3] due to skip, got {processed_ids_buggy}"
+
+        # FIX: Using list() copy processes all items correctly
+        processed_ids_fixed = []
+        fleets = [fleet1, fleet2, fleet3]
+        for fleet in list(fleets):  # Copy prevents issues
+            processed_ids_fixed.append(fleet.id)
+            if fleet.id == 1:
+                fleets.remove(fleet2)
+
+        # All three fleets are processed
+        assert processed_ids_fixed == [1, 2, 3], f"Expected [1, 2, 3], got {processed_ids_fixed}"
+
+    @patch.object(TurnEngine, '_process_tick')
+    @patch.object(TurnEngine, 'process_production')
+    def test_process_turn_processes_all_fleets_when_modified(
+        self, mock_production, mock_tick
+    ):
+        """Verify process_turn processes all fleets even if list is modified.
+
+        After the fix, all fleets should be processed even if some are removed
+        during end-turn processing.
+        """
+        turn_engine = TurnEngine()
+
+        mock_empire = MagicMock(spec=Empire)
+        mock_empire.id = 0
+
+        fleet1 = MagicMock(spec=Fleet)
+        fleet1.id = 1
+        fleet1.orders = []
+        fleet1.get_current_order = MagicMock(return_value=None)
+
+        fleet2 = MagicMock(spec=Fleet)
+        fleet2.id = 2
+        fleet2.orders = []
+        fleet2.get_current_order = MagicMock(return_value=None)
+
+        fleet3 = MagicMock(spec=Fleet)
+        fleet3.id = 3
+        fleet3.orders = []
+        fleet3.get_current_order = MagicMock(return_value=None)
+
+        mock_empire.fleets = [fleet1, fleet2, fleet3]
+        mock_galaxy = MagicMock()
+        mock_galaxy.systems = {}
+
+        # Track which fleets get processed
+        processed_fleets = []
+
+        def track_and_remove(fleet, empire, galaxy):
+            processed_fleets.append(fleet.id)
+            # Simulate colonization removing fleet2 when processing fleet1
+            if fleet.id == 1 and fleet2 in mock_empire.fleets:
+                mock_empire.fleets.remove(fleet2)
+
+        with patch.object(turn_engine, '_process_end_turn_orders', side_effect=track_and_remove):
+            turn_engine.process_turn([mock_empire], mock_galaxy)
+
+        # After the fix, all 3 fleets should be processed
+        # Before the fix, fleet3 would be skipped
+        assert len(processed_fleets) == 3, f"Expected 3 fleets processed, got {processed_fleets}"

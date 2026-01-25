@@ -321,3 +321,37 @@ class TestHPAggregation:
         expected_hp = sum(c.max_hp for c in ship.get_all_components())
 
         assert ship.max_hp == expected_hp, f"Ship.max_hp ({ship.max_hp}) != expected ({expected_hp})"
+
+
+class TestChangeClassInvalidInput:
+    """Test Ship.change_class() with invalid inputs.
+
+    Regression test for PROJ-12 Phase 7 Fix 7.3:
+    Local import at line 435 shadowed module-level import, causing
+    UnboundLocalError when log_error was called at line 417.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_and_teardown(self):
+        if not pygame.get_init():
+            pygame.init()
+        initialize_ship_data()
+        load_components()
+        yield
+        RegistryManager.instance().clear()
+        if pygame.get_init():
+            pygame.quit()
+
+    def test_change_class_invalid_class_name_does_not_raise(self):
+        """Verify change_class() with invalid class name handles error gracefully.
+
+        Prior to fix, this would raise UnboundLocalError due to local import shadowing.
+        """
+        ship = Ship("Test", 0, 0, (255, 255, 255), ship_class="Frigate")
+        original_class = ship.ship_class
+
+        # This should NOT raise UnboundLocalError - just log error and return
+        ship.change_class("NonExistentClassXYZ")
+
+        # Ship class should remain unchanged since the new class doesn't exist
+        assert ship.ship_class == original_class

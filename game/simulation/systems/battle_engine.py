@@ -6,6 +6,7 @@ from typing import List, Optional, Tuple, Dict, Any
 from game.core.math import Vector2
 from game.core.logger import log_warning, log_info
 from game.ai.controller import AIController
+from game.ai.interfaces import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.core.constants import AttackType
 from game.core.config import PhysicsConfig, BattleConfig
@@ -134,13 +135,13 @@ class BattleEngine:
         for s in team1_ships:
             s.team_id = 0
             self.ships.append(s)
-            self.ai_controllers.append(AIController(s, self.grid, 1))
-        
+            self.ai_controllers.append(AIController(ShipControllableAdapter(s), self.grid, 1))
+
         # Setup Team 2
         for s in team2_ships:
             s.team_id = 1
             self.ships.append(s)
-            self.ai_controllers.append(AIController(s, self.grid, 0))
+            self.ai_controllers.append(AIController(ShipControllableAdapter(s), self.grid, 0))
             
         # Logging
         self.logger.start_session()
@@ -173,7 +174,7 @@ class BattleEngine:
 
         # Create AI controller for the new ship
         enemy_team = 1 if team_id == 0 else 0
-        ai = AIController(ship, self.grid, enemy_team)
+        ai = AIController(ShipControllableAdapter(ship), self.grid, enemy_team)
         self.ai_controllers.append(ai)
 
         self.logger.log(f"Reinforcement arrived: {ship.name} (Team {team_id})")
@@ -193,8 +194,9 @@ class BattleEngine:
             self.ships.remove(ship)
 
             # Remove associated AI controller
+            # Note: ai.ship is a ShipControllableAdapter, need to unwrap via .ship property
             for ai in self.ai_controllers:
-                if ai.ship == ship:
+                if ai.ship.ship == ship:
                     self.ai_controllers.remove(ai)
                     break
 
@@ -309,7 +311,7 @@ class BattleEngine:
                 # Should be dynamic based on teams?
                 # Assuming 2 teams: 0 and 1. Enemy is 1 - team_id.
                 enemy_team = 1 - new_ship.team_id
-                self.ai_controllers.append(AIController(new_ship, self.grid, enemy_team))
+                self.ai_controllers.append(AIController(ShipControllableAdapter(new_ship), self.grid, enemy_team))
                 
                 self.logger.log(f"LAUNCH: {new_name} launched from {source_ship.name}")
 

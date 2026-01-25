@@ -7,7 +7,7 @@
 
 ## CRITICAL: The PROJ-XX.md File Is The Single Source of Truth
 
-**The project file (`Projects/active_projects/PROJ-XX.md`) must contain ALL context needed for any agent to pick up the work at any point.**
+**The project file (`Projects/active_projects/PROJ-XX/plan.md`) must contain ALL context needed for any agent to pick up the work at any point.**
 
 This means:
 - Every task must have **specific file paths** and **line number references**
@@ -173,7 +173,7 @@ Launch **6-8 Explore agents in parallel** to analyze the codebase with the tenta
 
 ## Plan Document Template
 
-Create `Projects/active_projects/PROJ-XX.md` with this structure:
+Create `Projects/active_projects/PROJ-XX/plan.md` with this structure:
 
 ```markdown
 # PROJ-XX: [Project Title]
