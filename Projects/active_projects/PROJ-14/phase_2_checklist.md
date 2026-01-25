@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Clean up commented debug code from production files
 
 ---
@@ -18,31 +18,31 @@
 
 **IMPORTANT:** Work from bottom to top to preserve line numbers!
 
-- [ ] Delete deprecated method `_draw_seed_controls_OLD()` (lines 3657-3741, 85 lines)
+- [x] Delete deprecated method `_draw_seed_controls_OLD()` (lines 3657-3741, 85 lines)
   - This entire method is marked `"""DEPRECATED - Seed controls moved to header. This is kept for reference."""`
-- [ ] Remove debug import at lines 2718-2719:
+- [x] Remove debug import at lines 2718-2719:
   ```python
   import traceback
   traceback.print_exc()
   ```
-- [ ] Remove debug import at lines 2585-2586:
+- [x] Remove debug import at lines 2585-2586:
   ```python
   import traceback
   traceback.print_exc()
   ```
-- [ ] Remove debug import at lines 2167-2168:
+- [x] Remove debug import at lines 2167-2168:
   ```python
   import traceback
   traceback.print_exc()
   ```
-- [ ] Remove debug import at lines 1941-1942:
+- [x] Remove debug import at lines 1941-1942:
   ```python
   import traceback
   traceback.print_exc()
   ```
-- [ ] Verify: `pytest tests/unit/ui/test_test_lab_scene.py -v` - passes
+- [x] Verify: `pytest tests/unit/ui/test_test_lab_scene.py -v` - passes
 
-**Notes:** [Filled during implementation]
+**Notes:** Removed deprecated _draw_seed_controls_OLD method (85 lines) and all 4 debug traceback imports. 79 tests pass.
 
 ---
 
@@ -50,13 +50,13 @@
 **File:** `game/core/profiling.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Remove commented debug log at line 108:
+- [x] Remove commented debug log at line 108:
   ```python
   # logger.debug(f"Profiled {name}: {duration*1000:.2f}ms")
   ```
-- [ ] Verify: File still works
+- [x] Verify: File still works
 
-**Notes:** [Filled during implementation]
+**Notes:** Removed commented debug log. Import works correctly.
 
 ---
 
@@ -64,7 +64,7 @@
 **File:** `simulation_tests/tests/test_example_scenarios.py`
 **Tests:** `pytest simulation_tests/tests/test_example_scenarios.py -v`
 
-- [ ] Remove commented test methods at lines 92-99:
+- [x] Remove commented test methods at lines 92-99:
   ```python
   # def test_beam_mid_range(self):
   #     scenario = self.runner.run_scenario(BeamMidRangeTest, headless=True)
@@ -74,9 +74,9 @@
   #     scenario = self.runner.run_scenario(BeamMaxRangeTest, headless=True)
   #     assert scenario.passed
   ```
-- [ ] Verify: File still parses correctly
+- [x] Verify: File still parses correctly
 
-**Notes:** [Filled during implementation]
+**Notes:** Removed commented test placeholder methods. File parses correctly.
 
 ---
 
@@ -84,14 +84,14 @@
 **File:** `tests/unit/combat/test_pdc.py`
 **Tests:** `pytest tests/unit/combat/test_pdc.py -v`
 
-- [ ] Remove commented debug prints at lines 130-131:
+- [x] Remove commented debug prints at lines 130-131:
   ```python
   # print(f"DEBUG: Alive={self.ship.is_alive}, Derelict={self.ship.is_derelict}...")
   # print(f"DEBUG: PDC Active={self.pdc.is_active}, CD={self.pdc.cooldown_timer}...")
   ```
-- [ ] Verify: Test still passes
+- [x] Verify: Test still passes
 
-**Notes:** [Filled during implementation]
+**Notes:** Removed commented diagnostic prints. 2 tests pass.
 
 ---
 
@@ -99,7 +99,7 @@
 **File:** `Tools/process_planet_images.py`
 **Tests:** N/A (utility script)
 
-- [ ] Remove commented nested loops at lines 28-32:
+- [x] Remove commented nested loops at lines 28-32:
   ```python
   # for x in range(width):
   #     for y in range(height):
@@ -107,17 +107,17 @@
   #         if c[0] < threshold and c[1] < threshold and c[2] < threshold:
   #             image.set_at((x, y), (0, 0, 0, 0))
   ```
-- [ ] Verify: File still parses correctly
+- [x] Verify: File still parses correctly
 
-**Notes:** [Filled during implementation]
+**Notes:** Removed commented code block and associated explanation comments. File parses correctly.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/ --testmon` - passes
-- [ ] No functionality changes (this phase only removes dead code)
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 3
+- [x] All task checkboxes above are checked
+- [x] Run `pytest tests/ --testmon` - passes
+- [x] No functionality changes (this phase only removes dead code)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 3

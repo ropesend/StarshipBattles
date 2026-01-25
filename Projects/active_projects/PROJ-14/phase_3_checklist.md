@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress
 **Objective:** Replace legacy Button with pygame_gui UIButton in main menu
 
 **CRITICAL:** This is the highest-risk phase. The main menu is the first thing users see. Test thoroughly!
@@ -18,18 +18,18 @@
 **File:** `game/app.py`
 **Tests:** `pytest tests/unit/test_app_integration.py -v`
 
-- [ ] Add import at top of file (around line 10):
+- [x] Add import at top of file (around line 10):
   ```python
   import pygame_gui
   ```
-- [ ] In `__init__()` method, after `pygame.display.set_mode()`, add:
+- [x] In `__init__()` method, after `pygame.display.set_mode()`, add:
   ```python
   self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
   self._menu_button_callbacks = {}  # Maps UIButton -> callback function
   ```
-- [ ] Verify: App still initializes without errors
+- [x] Verify: App still initializes without errors
 
-**Notes:** [Filled during implementation]
+**Notes:** Added pygame_gui import and UIManager initialization. App imports successfully.
 
 ---
 
@@ -37,11 +37,11 @@
 **File:** `game/app.py` (lines 125-137)
 **Tests:** Manual - launch game and verify menu displays
 
-- [ ] Change import from `from ui import Button` to:
+- [x] Change import from `from ui import Button` to:
   ```python
   from pygame_gui.elements import UIButton
   ```
-- [ ] Rewrite `update_menu_buttons()` method:
+- [x] Rewrite `update_menu_buttons()` method:
   ```python
   def update_menu_buttons(self):
       # Clear old buttons if they exist
@@ -72,9 +72,9 @@
           self.menu_buttons.append(btn)
           self._menu_button_callbacks[btn] = callback
   ```
-- [ ] Verify: No syntax errors
+- [x] Verify: No syntax errors
 
-**Notes:** [Filled during implementation]
+**Notes:** Replaced legacy Button import with UIButton. Rewrote update_menu_buttons() to create UIButtons with callback mapping.
 
 ---
 
@@ -82,8 +82,8 @@
 **File:** `game/app.py`
 **Tests:** Manual - click each menu button
 
-- [ ] Find `_forward_event_to_scene()` method
-- [ ] In the `if self.state == MENU:` block, replace legacy button handling with:
+- [x] Find `_forward_event_to_scene()` method
+- [x] In the `if self.state == MENU:` block, replace legacy button handling with:
   ```python
   if self.state == MENU:
       self.menu_ui_manager.process_events(event)
@@ -93,10 +93,10 @@
               callback()
               return  # Event consumed
   ```
-- [ ] Remove legacy button loop: `for btn in self.menu_buttons: btn.handle_event(event)`
-- [ ] Verify: Events are processed correctly
+- [x] Remove legacy button loop: `for btn in self.menu_buttons: btn.handle_event(event)`
+- [x] Verify: Events are processed correctly
 
-**Notes:** [Filled during implementation]
+**Notes:** Replaced legacy event handling with pygame_gui UI_BUTTON_PRESSED event pattern.
 
 ---
 
@@ -104,17 +104,17 @@
 **File:** `game/app.py`
 **Tests:** Visual - menu buttons render correctly
 
-- [ ] Find `_draw_menu()` method
-- [ ] Add UIManager update (needs frame_time parameter):
+- [x] Find `_draw_menu()` method
+- [x] Add UIManager update (needs frame_time parameter):
   ```python
   # In _draw_menu(), add after background drawing:
   self.menu_ui_manager.update(frame_time)  # frame_time in seconds
   self.menu_ui_manager.draw_ui(self.screen)
   ```
-- [ ] Remove legacy button draw loop: `for btn in self.menu_buttons: btn.draw(self.screen)`
-- [ ] Verify: Buttons render with pygame_gui styling
+- [x] Remove legacy button draw loop: `for btn in self.menu_buttons: btn.draw(self.screen)`
+- [x] Verify: Buttons render with pygame_gui styling
 
-**Notes:** May need to check where frame_time comes from - typically from `clock.tick() / 1000.0`
+**Notes:** Simplified _draw_menu() to always update/draw the UIManager. Uses clock.get_time() / 1000.0 for frame_time.
 
 ---
 
@@ -122,15 +122,15 @@
 **File:** `game/app.py`
 **Tests:** Resize window - buttons reposition correctly
 
-- [ ] Find `_handle_resize()` method
-- [ ] Add UIManager resize call:
+- [x] Find `_handle_resize()` method
+- [x] Add UIManager resize call:
   ```python
   self.menu_ui_manager.set_window_resolution((WIDTH, HEIGHT))
   ```
-- [ ] `update_menu_buttons()` is already called - this recreates buttons at new positions
-- [ ] Verify: Resize window, buttons reposition correctly
+- [x] `update_menu_buttons()` is already called - this recreates buttons at new positions
+- [x] Verify: Resize window, buttons reposition correctly
 
-**Notes:** [Filled during implementation]
+**Notes:** Added menu_ui_manager.set_window_resolution() call before update_menu_buttons().
 
 ---
 

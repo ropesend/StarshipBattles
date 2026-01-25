@@ -89,15 +89,6 @@ class TestBeamRangeExamples:
         )
         assert scenario.passed
 
-    # In a real test suite, you would add more tests here:
-    # def test_beam_mid_range(self):
-    #     scenario = self.runner.run_scenario(BeamMidRangeTest, headless=True)
-    #     assert scenario.passed
-    #
-    # def test_beam_max_range(self):
-    #     scenario = self.runner.run_scenario(BeamMaxRangeTest, headless=True)
-    #     assert scenario.passed
-
 
 if __name__ == '__main__':
     # Allow running this test file directly

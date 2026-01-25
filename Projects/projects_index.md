@@ -4,7 +4,8 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-15 | Phase 2 - Remove Shims and Aliases | Planning | 2026-01-25 | 2026-01-25 |
+| PROJ-16 | Consolidate Re-exports (Phase 3) | Planning | 2026-01-25 | 2026-01-25 |
+| PROJ-15 | Phase 2 - Remove Shims and Aliases | Ready for Implementation | 2026-01-25 | 2026-01-25 |
 | PROJ-14 | Legacy Cleanup Phase 1 - Delete Dead Code | Ready for Implementation | 2026-01-25 | 2026-01-25 |
 
 ## Archived Projects
@@ -37,6 +38,13 @@
 ---
 
 ## Project Summaries
+
+### PROJ-15: Phase 2 - Remove Shims and Aliases
+**Scope:** Legacy Code Cleanup Phase 2 - Remove backward compatibility shims and aliases
+**Phases:** 6 (Singleton Aliases → Fleet Warp → ShipBuilderService → PathSegment/to_hit_profile → Deprecated Functions → Builder Shims)
+**Key Goals:** Delete 5 shim files, remove method aliases, standardize singleton access, remove deprecated functions
+**Dependencies:** Phase 1 (Dead Code Deletion) must be complete
+**Source:** [legacy_cleanup/PHASE_2_REMOVE_SHIMS_ALIASES.md](legacy_cleanup/PHASE_2_REMOVE_SHIMS_ALIASES.md)
 
 ### PROJ-10: Error Handling & Logging Remediation
 **Scope:** 47 error handling issues from code review
@@ -86,4 +94,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-16
+## Next Project ID: PROJ-17

@@ -145,16 +145,19 @@ class RaceThemeGallery:
             return self._theme_cache
 
         themes = []
-        theme_manager = ShipThemeManager()
-        theme_ids = theme_manager.list_themes()
+        theme_manager = ShipThemeManager.instance()
+        theme_manager.initialize()
+        theme_ids = theme_manager.get_available_themes()
 
         for theme_id in theme_ids:
             # Load small preview images of a couple ships
             ship_surfs = {}
             for ship_class in ["Escort", "Battleship"]:
-                surf = theme_manager.load_ship_thumbnail(theme_id, ship_class, size=40)
+                surf = theme_manager.get_image(theme_id, ship_class)
                 if surf:
-                    ship_surfs[ship_class] = surf
+                    # Scale to thumbnail size
+                    scaled = pygame.transform.scale(surf, (40, 40))
+                    ship_surfs[ship_class] = scaled
             themes.append((theme_id, ship_surfs))
 
         self._theme_cache = themes

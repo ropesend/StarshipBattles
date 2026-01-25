@@ -16,6 +16,8 @@ venv/
 battle.log
 battle_log.txt
 combat_lab.log
+crash_log.txt
+collect_log*.txt
 .pytest_cache/
 
 # pytest-testmon

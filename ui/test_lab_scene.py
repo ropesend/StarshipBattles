@@ -1938,8 +1938,6 @@ class TestLabScene:
 
             except Exception as e:
                 logger.info(f"  {test_id}: Validation error - {e}")
-                import traceback
-                traceback.print_exc()
 
         logger.info("=== Static Validation Complete ===\n")
 
@@ -2164,8 +2162,6 @@ class TestLabScene:
 
         except Exception as e:
             logger.error(f"Error updating metadata: {e}")
-            import traceback
-            traceback.print_exc()
 
     def _create_ship_panels(self, test_id):
         """
@@ -2582,8 +2578,6 @@ class TestLabScene:
 
         except Exception as e:
             self.output_log.append(f"ERROR: {e}")
-            import traceback
-            traceback.print_exc()
 
     def _on_run_headless(self):
         """Run the selected test scenario in headless mode (fast, no visuals)."""
@@ -2715,8 +2709,6 @@ class TestLabScene:
         except Exception as e:
             self.headless_running = False
             self.output_log.append(f"ERROR: {e}")
-            import traceback
-            traceback.print_exc()
 
     def _on_run_all_tests(self):
         """Run all visible tests headlessly in sequence."""
@@ -3653,92 +3645,6 @@ class TestLabScene:
         ticks_text = f"Max Ticks: {metadata.max_ticks}    |    Test Seed: {metadata.seed}"
         ticks_surf = self.small_font.render(ticks_text, True, (120, 120, 120))
         screen.blit(ticks_surf, (x, y))
-
-    def _draw_seed_controls_OLD(self, screen, x, y, metadata):
-        """DEPRECATED - Seed controls moved to header. This is kept for reference."""
-        mx, my = pygame.mouse.get_pos()
-
-        # Max ticks display
-        ticks_text = f"Max Ticks: {metadata.max_ticks}"
-        ticks_surf = self.small_font.render(ticks_text, True, (120, 120, 120))
-        screen.blit(ticks_surf, (x, y))
-
-        # Seed control section
-        y += 20
-        seed_label = self.small_font.render("Seed:", True, (120, 120, 120))
-        screen.blit(seed_label, (x, y))
-
-        # Seed mode buttons
-        mode_x = x + 45
-        btn_height = 20
-        btn_spacing = 5
-
-        current_mode = self.controller.ui_state.get_seed_mode()
-        self.seed_mode_rects = {}
-
-        modes = [
-            ("random", "Random", 60),
-            ("metadata", f"Fixed ({metadata.seed})", 100),
-            ("custom", "Custom", 55)
-        ]
-
-        for mode_id, mode_label, btn_width in modes:
-            rect = pygame.Rect(mode_x, y - 2, btn_width, btn_height)
-            self.seed_mode_rects[mode_id] = rect
-
-            is_active = current_mode == mode_id
-            is_hovered = rect.collidepoint(mx, my)
-
-            if is_active:
-                bg_color = (40, 80, 120)
-                border_color = (80, 140, 200)
-                text_color = (200, 220, 255)
-            elif is_hovered:
-                bg_color = (50, 50, 60)
-                border_color = (100, 100, 110)
-                text_color = self.TEXT_COLOR
-            else:
-                bg_color = self.CATEGORY_BG
-                border_color = self.BORDER_COLOR
-                text_color = (150, 150, 150)
-
-            pygame.draw.rect(screen, bg_color, rect, border_radius=3)
-            pygame.draw.rect(screen, border_color, rect, 1, border_radius=3)
-
-            mode_text = self.small_font.render(mode_label, True, text_color)
-            screen.blit(mode_text, (rect.x + 4, rect.y + 3))
-
-            mode_x += btn_width + btn_spacing
-
-        # If custom mode, show the custom seed value or input hint
-        if current_mode == "custom":
-            custom_seed = self.controller.ui_state.get_custom_seed()
-            if custom_seed is not None:
-                seed_display = f"= {custom_seed}"
-            else:
-                seed_display = "(click to set)"
-            custom_surf = self.small_font.render(seed_display, True, (100, 180, 255))
-            screen.blit(custom_surf, (mode_x + 10, y))
-
-        # Show effective seed that will be used
-        y += 22
-        if current_mode == "random":
-            effective_text = "Next run: random seed"
-            effective_color = (100, 100, 100)
-        elif current_mode == "metadata":
-            effective_text = f"Next run: seed {metadata.seed}"
-            effective_color = (100, 140, 100)
-        else:
-            custom_seed = self.controller.ui_state.get_custom_seed()
-            if custom_seed is not None:
-                effective_text = f"Next run: seed {custom_seed}"
-                effective_color = (100, 140, 180)
-            else:
-                effective_text = "Set custom seed first"
-                effective_color = (180, 100, 100)
-
-        effective_surf = self.small_font.render(effective_text, True, effective_color)
-        screen.blit(effective_surf, (x, y))
 
     def _draw_section(self, screen, x, y, label, text, color):
         """Draw a single-line metadata section."""

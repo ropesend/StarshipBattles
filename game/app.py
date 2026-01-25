@@ -1,6 +1,7 @@
 """Main game entry point - coordinates scenes and game loop."""
 import argparse
 import pygame
+import pygame_gui
 import os
 
 from game.core.logger import log_debug, log_info, log_error
@@ -14,7 +15,7 @@ args, _ = parser.parse_known_args()
 
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.resources import load_resources
-from ui import Button
+from pygame_gui.elements import UIButton
 from game.ui.screens.builder_screen import BuilderSceneGUI
 from game.ui.renderer.sprites import SpriteManager
 from game.ui.screens.battle_scene import BattleScene
@@ -89,6 +90,10 @@ class Game:
 
         pygame.display.set_caption(f"Starship Battles ({WIDTH}x{HEIGHT})")
 
+        # pygame_gui UIManager for main menu buttons
+        self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+        self._menu_button_callbacks = {}  # Maps UIButton -> callback function
+
         self.clock = pygame.time.Clock()
         self.running = True
         self.show_exit_dialog = False
@@ -123,18 +128,33 @@ class Game:
         self.test_lab_scene = TestLabScene(self)
 
     def update_menu_buttons(self):
-        self.menu_buttons = [
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 320, 200, 50, "Quickstart 1P", self.start_quickstart_1p),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 250, 200, 50, "Quickstart 2P", self.start_quickstart_2p),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 180, 200, 50, "New Game", self.start_strategy_layer),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 110, 200, 50, "Load Game", self.show_load_menu),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 - 40, 200, 50, "Race Setup", self.start_race_setup),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 30, 200, 50, "Design Workshop", self.start_builder),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 100, 200, 50, "Battle Setup", self.start_battle_setup),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 170, 200, 50, "Formation Editor", self.start_formation_editor),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 240, 200, 50, "Combat Lab", self.start_test_lab),
-            Button(WIDTH // 2 - 100, HEIGHT // 2 + 310, 200, 50, "Research Tree", self.start_research_tree)
+        # Clear old buttons if they exist
+        for btn in getattr(self, 'menu_buttons', []):
+            btn.kill()
+        self._menu_button_callbacks.clear()
+
+        self.menu_buttons = []
+        button_data = [
+            ("Quickstart 1P", self.start_quickstart_1p),
+            ("Quickstart 2P", self.start_quickstart_2p),
+            ("New Game", self.start_strategy_layer),
+            ("Load Game", self.show_load_menu),
+            ("Race Setup", self.start_race_setup),
+            ("Design Workshop", self.start_builder),
+            ("Battle Setup", self.start_battle_setup),
+            ("Formation Editor", self.start_formation_editor),
+            ("Combat Lab", self.start_test_lab),
+            ("Research Tree", self.start_research_tree),
         ]
+
+        for i, (text, callback) in enumerate(button_data):
+            btn = UIButton(
+                relative_rect=pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 - 320 + i * 70, 200, 50),
+                text=text,
+                manager=self.menu_ui_manager
+            )
+            self.menu_buttons.append(btn)
+            self._menu_button_callbacks[btn] = callback
 
     @profile_action("App: Start Builder")
     def start_builder(self, return_to=None, context=None):
@@ -511,8 +531,12 @@ class Game:
             return
 
         if self.state == MENU:
-            for btn in self.menu_buttons:
-                btn.handle_event(event)
+            self.menu_ui_manager.process_events(event)
+            if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                callback = self._menu_button_callbacks.get(event.ui_element)
+                if callback:
+                    callback()
+                    return  # Event consumed
         elif self.state == BUILDER:
             self.builder_scene.handle_event(event)
         elif self.state == BATTLE_SETUP:
@@ -532,6 +556,9 @@ class Game:
         global WIDTH, HEIGHT
         WIDTH, HEIGHT = w, h
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+
+        # Update menu UIManager resolution
+        self.menu_ui_manager.set_window_resolution((WIDTH, HEIGHT))
 
         if self.state == MENU:
             self.update_menu_buttons()
@@ -661,23 +688,11 @@ class Game:
     def _draw_menu(self):
         """Draw main menu."""
         self.screen.fill((20, 20, 30))
-        for btn in self.menu_buttons:
-            btn.draw(self.screen)
 
-        # Draw new game setup UI if showing
-        if hasattr(self, 'showing_new_game_setup') and self.showing_new_game_setup and hasattr(self, 'menu_ui_manager'):
-            self.menu_ui_manager.update(self.clock.get_time() / 1000.0)
-            self.menu_ui_manager.draw_ui(self.screen)
-
-        # Draw load menu UI if showing
-        elif self.showing_load_menu and hasattr(self, 'menu_ui_manager'):
-            self.menu_ui_manager.update(self.clock.get_time() / 1000.0)
-            self.menu_ui_manager.draw_ui(self.screen)
-
-        # Draw race setup UI if showing
-        elif self.showing_race_setup and hasattr(self, 'menu_ui_manager'):
-            self.menu_ui_manager.update(self.clock.get_time() / 1000.0)
-            self.menu_ui_manager.draw_ui(self.screen)
+        # Update and draw pygame_gui elements (menu buttons and dialogs)
+        frame_time = self.clock.get_time() / 1000.0
+        self.menu_ui_manager.update(frame_time)
+        self.menu_ui_manager.draw_ui(self.screen)
 
     def _update_battle_setup(self):
         """Update and draw battle setup, handle actions."""

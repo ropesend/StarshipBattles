@@ -126,10 +126,6 @@ class TestPDC:
         self.ship.current_target = self.missile
         self.ship.secondary_targets = [self.missile]
 
-        # Diagnostic: Why is it not firing?
-        # print(f"DEBUG: Alive={self.ship.is_alive}, Derelict={self.ship.is_derelict}, Energy={self.ship.resources.get_value('energy')}/{self.ship.resources.get_max_value('energy')}, Targets={self.ship.current_target}")
-        # print(f"DEBUG: PDC Active={self.pdc.is_active}, CD={self.pdc.cooldown_timer}, Range={self.pdc.range}")
-
         attacks = self.ship.fire_weapons(context)
 
         assert len(attacks) > 0, "PDC should have fired."
