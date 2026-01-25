@@ -1,4 +1,3 @@
 {
-  "tests/unit/strategy/test_turn_engine.py::TestFleetIteratorSafety::test_fleet_removal_during_end_turn_processing_does_not_crash": true,
-  "tests/unit/test_advanced_fleet_orders.py::TestAdvancedFleetOrders::test_intercept_integration": true
+  "tests/unit/strategy/test_turn_engine.py::TestFleetIteratorSafety::test_fleet_removal_during_end_turn_processing_does_not_crash": true
 }

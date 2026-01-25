@@ -4,6 +4,8 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-15 | Phase 2 - Remove Shims and Aliases | Planning | 2026-01-25 | 2026-01-25 |
+| PROJ-14 | Legacy Cleanup Phase 1 - Delete Dead Code | Ready for Implementation | 2026-01-25 | 2026-01-25 |
 
 ## Archived Projects
 
@@ -84,4 +86,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-14
+## Next Project ID: PROJ-16
