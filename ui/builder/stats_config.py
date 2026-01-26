@@ -466,7 +466,7 @@ def get_construction_rows(ship):
     """
     Generate the list of stat rows for the Construction section.
     """
-    from game.strategy.data.planet import PLANET_RESOURCES
+    from game.core.constants import PLANET_RESOURCES
     rows = []
     
     # Construction costs from ship.construction_cost

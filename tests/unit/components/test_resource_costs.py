@@ -2,7 +2,7 @@ import pytest
 import json
 import os
 from game.simulation.components.component import Component
-from game.strategy.data.planet import PLANET_RESOURCES
+from game.core.constants import PLANET_RESOURCES
 
 # Path to components.json
 COMPONENTS_JSON_PATH = os.path.join("data", "components.json")

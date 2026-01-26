@@ -1,7 +1,7 @@
 import pygame
 import pygame_gui
 from unittest.mock import MagicMock
-from game.simulation.components.component import Modifier
+from game.simulation.components.component_constants import Modifier
 
 
 class TestModifierRow:
@@ -147,7 +147,7 @@ class TestModifierRowErrorLogging:
         """Tooltip generation failure should log warning with modifier details (ERR-012)."""
         import logging
         from ui.builder.modifier_row import ModifierControlRow
-        from game.simulation.components.component import Modifier
+        from game.simulation.components.component_constants import Modifier
         from unittest.mock import patch
 
         # Need to include effects so the code path that calls evaluate_modifier is reached
@@ -184,7 +184,7 @@ class TestModifierRowErrorLogging:
         """Successful tooltip generation should not produce warnings."""
         import logging
         from ui.builder.modifier_row import ModifierControlRow
-        from game.simulation.components.component import Modifier
+        from game.simulation.components.component_constants import Modifier
 
         mod_def = Modifier({
             'id': 'working_mod',

@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, List, Optional, Tuple, Any, Dict
 from game.core.math import Vector2
 from game.core.constants import AttackType, CombatConstants
 from game.core.logger import log_debug, log_info
-from game.simulation.components.component import LayerType, ComponentStatus
+from game.simulation.components.component_constants import LayerType, ComponentStatus
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship

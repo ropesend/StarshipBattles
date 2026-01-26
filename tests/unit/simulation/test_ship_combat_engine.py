@@ -15,7 +15,8 @@ from unittest.mock import MagicMock, patch
 
 from game.core.math import Vector2
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import Component, LayerType, create_component
+from game.simulation.components.component import Component, create_component
+from game.simulation.components.component_constants import LayerType
 from game.core.constants import AttackType
 
 

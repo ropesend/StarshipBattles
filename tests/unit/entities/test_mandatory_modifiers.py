@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from game.ui.panels.builder_widgets import ModifierEditorPanel
 from game.core.registry import RegistryManager
-from game.simulation.components.component import Modifier
+from game.simulation.components.component_constants import Modifier
 
 
 @pytest.fixture

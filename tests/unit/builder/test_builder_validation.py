@@ -2,8 +2,9 @@ import pytest
 from unittest.mock import MagicMock, patch
 import pygame
 
-from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.components.component import Component, LayerType  # Phase 7: Removed Bridge, Armor, Weapon imports
+from game.simulation.entities.ship import Ship
+from game.simulation.components.component import Component
+from game.simulation.components.component_constants import LayerType  # Phase 7: Removed Bridge, Armor, Weapon imports
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_project_root
 
@@ -389,7 +390,7 @@ class TestValidationGuardClauses:
         # Create a component with a required_mount
         comp = self.create_component(required_mount="Heavy")
 
-        from game.simulation.components.component import LayerType
+        from game.simulation.components.component_constants import LayerType
 
         # Remove a layer from the ship to simulate a nonexistent layer scenario
         # Save the layer first so we can restore it
@@ -410,7 +411,7 @@ class TestValidationGuardClauses:
         """LayerRestrictionDefinitionRule should not raise KeyError for nonexistent layer."""
         comp = self.create_component()
 
-        from game.simulation.components.component import LayerType
+        from game.simulation.components.component_constants import LayerType
 
         # Remove a layer from the ship to simulate a nonexistent layer scenario
         removed_layer = LayerType.OUTER

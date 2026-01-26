@@ -4,7 +4,7 @@ This module provides the TargetEvaluator class which scores potential targets
 based on configurable rules from combat strategies.
 """
 import pygame
-from game.simulation.components.component import LayerType
+from game.simulation.components.component_constants import LayerType
 from game.core.constants import AttackType
 
 

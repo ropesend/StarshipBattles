@@ -5,7 +5,8 @@ but dissimilar components DO stack (MULTIPLY across stack_groups).
 """
 import pytest
 
-from game.simulation.components.component import Component, LayerType
+from game.simulation.components.component import Component
+from game.simulation.components.component_constants import LayerType
 from game.simulation.entities.ship import Ship
 
 

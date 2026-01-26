@@ -2,7 +2,8 @@ import pytest
 import math
 
 from game.simulation.entities.ship import Ship, initialize_ship_data
-from game.simulation.components.component import Component, LayerType, load_components
+from game.simulation.components.component import Component, load_components
+from game.simulation.components.component_constants import LayerType
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_project_root, get_data_dir
 

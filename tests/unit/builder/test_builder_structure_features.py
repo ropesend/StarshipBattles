@@ -6,7 +6,8 @@ from ui.builder.layer_panel import LayerComponentItem, IndividualComponentItem
 from game.ui.screens.workshop_screen import DesignWorkshopGUI
 from game.ui.screens.workshop_context import WorkshopContext
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import Component, ApplicationModifier
+from game.simulation.components.component import Component
+from game.simulation.components.component_constants import ApplicationModifier
 from game.core.registry import RegistryManager
 
 

@@ -3,10 +3,6 @@ from enum import Enum, auto
 from typing import Dict, List, Optional, Any
 from game.strategy.data.hex_math import HexCoord
 
-# PROJ-11: Global Resource Definition moved to game.core.constants
-# Re-exported here for backward compatibility
-from game.core.constants import PLANET_RESOURCES
-
 class PlanetType(Enum):
     """
     Broad classification of planetary bodies.

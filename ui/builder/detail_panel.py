@@ -2,7 +2,7 @@ import pygame
 import pygame_gui
 import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
-from game.simulation.components.component import LayerType
+from game.simulation.components.component_constants import LayerType
 from game.core.logger import log_error
 # Lazy import to avoid circular import through game.ui.__init__
 # Chain: ui.builder -> game.ui.__init__ -> builder_screen -> ui.builder
@@ -131,7 +131,7 @@ class ComponentDetailPanel:
         costs = comp.get_resource_cost()
         if costs:
             cost_strs = []
-            from game.strategy.data.planet import PLANET_RESOURCES
+            from game.core.constants import PLANET_RESOURCES
             for res in PLANET_RESOURCES: # Keep order
                 if res in costs and costs[res] > 0:
                     cost_strs.append(f"{res[0]}:{costs[res]}") # M:10, O:5 etc

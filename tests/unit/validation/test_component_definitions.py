@@ -85,7 +85,7 @@ class TestComponentDefinitions:
     def test_component_resource_costs(self, comp):
         """Verify resource costs logic if present."""
         if 'resource_cost' in comp:
-            from game.strategy.data.planet import PLANET_RESOURCES
+            from game.core.constants import PLANET_RESOURCES
             costs = comp['resource_cost']
             assert isinstance(costs, dict), "resource_cost must be a dictionary"
             for res, amount in costs.items():

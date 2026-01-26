@@ -25,7 +25,8 @@ import pytest
 from typing import Tuple
 
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import create_component, LayerType
+from game.simulation.components.component import create_component
+from game.simulation.components.component_constants import LayerType
 
 
 # =============================================================================

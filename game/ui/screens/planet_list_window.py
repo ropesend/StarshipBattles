@@ -1,6 +1,6 @@
 import pygame
 import pygame_gui.windows
-from game.strategy.data.planet import PLANET_RESOURCES
+from game.core.constants import PLANET_RESOURCES
 from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UITextEntryLine, UIHorizontalSlider, UIDropDownMenu, UIImage, UIVerticalScrollBar
 from pygame_gui import UI_TEXT_ENTRY_FINISHED
 

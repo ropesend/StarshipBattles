@@ -7,7 +7,7 @@ handling vehicle creation, component management, and design validation.
 import pytest
 
 from game.simulation.services.vehicle_design_service import VehicleDesignService, DesignResult
-from game.simulation.components.component import LayerType
+from game.simulation.components.component_constants import LayerType
 
 
 @pytest.fixture

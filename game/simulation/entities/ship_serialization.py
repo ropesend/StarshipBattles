@@ -4,7 +4,8 @@ Handles to_dict() and from_dict() operations for Ship entities.
 """
 from typing import Dict, Any, TYPE_CHECKING
 
-from game.simulation.components.component import LayerType, create_component
+from game.simulation.components.component import create_component
+from game.simulation.components.component_constants import LayerType
 from game.core.registry import get_component_registry, get_modifier_registry
 from game.core.logger import log_warning
 

@@ -64,14 +64,7 @@ from game.core.registry import get_component_registry, get_modifier_registry
 from game.core.json_utils import load_json_required
 from game.core.logger import log_warning, log_error
 from game.core.constants import CombatConstants
-
-# Re-export from component_constants for backward compatibility
-from .component_constants import (
-    ComponentStatus,
-    LayerType,
-    Modifier,
-    ApplicationModifier,
-)
+from .component_constants import ComponentStatus, Modifier, ApplicationModifier
 
 
 class Component:

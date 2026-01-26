@@ -49,7 +49,7 @@ Example:
     calculator.calculate(ship)
     # ship.max_speed, ship.turn_speed, etc. are now updated
 """
-from game.simulation.components.component import ComponentStatus, LayerType
+from game.simulation.components.component_constants import ComponentStatus, LayerType
 from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
 from game.simulation.entities.ability_aggregator import calculate_ability_totals, get_ability_total
 from game.simulation.entities.combat_endurance import calculate_combat_endurance

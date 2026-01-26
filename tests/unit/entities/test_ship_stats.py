@@ -49,7 +49,7 @@ class TestShipStatsBaseline:
 
     def _create_mock_ship(self, components):
         """Create a mock ship with the given components."""
-        from game.simulation.components.component import LayerType
+        from game.simulation.components.component_constants import LayerType
         from game.simulation.systems.resource_manager import ResourceRegistry
 
         ship = MagicMock()

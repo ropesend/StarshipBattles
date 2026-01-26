@@ -8,7 +8,8 @@ import random
 import math
 from typing import List, Dict
 
-from game.strategy.data.planet import Planet, PlanetType, PLANET_RESOURCES
+from game.core.constants import PLANET_RESOURCES
+from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.hex_math import HexCoord, hex_ring
 from game.strategy.data.physics import calculate_incident_radiation
 from game.strategy.data.stars import Star

@@ -1,7 +1,8 @@
 import pytest
 import pygame
 from game.simulation.entities.ship import Ship, initialize_ship_data
-from game.simulation.components.component import load_components, LayerType
+from game.simulation.components.component import load_components
+from game.simulation.components.component_constants import LayerType
 from game.core.registry import RegistryManager
 from game.simulation.systems.battle_engine import BattleEngine
 from game.core.constants import AttackType

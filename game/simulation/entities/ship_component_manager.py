@@ -13,7 +13,8 @@ PROJ-12: God Class Decomposition - Phase 2
 import math
 from typing import TYPE_CHECKING, Dict, List, Optional, Any, Iterator, Tuple, Callable
 
-from game.simulation.components.component import Component, LayerType
+from game.simulation.components.component import Component
+from game.simulation.components.component_constants import LayerType
 from game.core.logger import log_debug, log_info, log_warning, log_error
 from game.core.registry import get_vehicle_classes
 from game.core.constants import LayerDefaults

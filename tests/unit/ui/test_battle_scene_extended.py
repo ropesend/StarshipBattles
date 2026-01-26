@@ -4,7 +4,8 @@ import sys
 import pygame
 from game.ui.screens.battle_scene import BattleScene
 from game.simulation.entities.ship import Ship, initialize_ship_data
-from game.simulation.components.component import load_components, create_component, LayerType
+from game.simulation.components.component import load_components, create_component
+from game.simulation.components.component_constants import LayerType
 from unittest.mock import MagicMock
 from game.ai.controller import StrategyManager
 from game.core.registry import RegistryManager

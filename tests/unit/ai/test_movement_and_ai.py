@@ -6,7 +6,8 @@ from game.simulation.entities.ship import Ship, initialize_ship_data
 from game.ui.screens.battle_scene import BattleScene
 from game.ai.controller import AIController, StrategyManager
 from game.ai.interfaces.controllable import ShipControllableAdapter
-from game.simulation.components.component import LayerType, load_components, load_modifiers
+from game.simulation.components.component import load_components, load_modifiers
+from game.simulation.components.component_constants import LayerType
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 

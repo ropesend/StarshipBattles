@@ -30,7 +30,7 @@ class StructureListHeader:
         self.panel.background_colour = pygame.Color("#1a1e26")
         
         # Resource Icons
-        from game.strategy.data.planet import PLANET_RESOURCES
+        from game.core.constants import PLANET_RESOURCES
         import os
         
         icon_x = -160 - (len(PLANET_RESOURCES) * config.RESOURCE_COL_WIDTH)
@@ -141,7 +141,7 @@ class IndividualComponentItem:
 
         # Resource Costs
         self.resource_labels = {}
-        from game.strategy.data.planet import PLANET_RESOURCES
+        from game.core.constants import PLANET_RESOURCES
         costs = component.get_resource_cost()
         icon_x = -160 - (len(PLANET_RESOURCES) * config.RESOURCE_COL_WIDTH)
         for res in PLANET_RESOURCES:
@@ -340,7 +340,7 @@ class LayerComponentItem:
 
         # Resource Costs (Aggregated)
         self.resource_labels = {}
-        from game.strategy.data.planet import PLANET_RESOURCES
+        from game.core.constants import PLANET_RESOURCES
         total_costs = {}
         
         # Calculate total costs for the group

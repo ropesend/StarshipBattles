@@ -1,7 +1,8 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import LayerType, Component
+from game.simulation.components.component import Component
+from game.simulation.components.component_constants import LayerType
 from game.core.registry import RegistryManager
 from game.ui.screens.workshop_screen import DesignWorkshopGUI
 

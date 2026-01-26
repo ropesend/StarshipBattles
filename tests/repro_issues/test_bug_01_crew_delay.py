@@ -1,7 +1,8 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.components.component import Component, Modifier
+from game.simulation.entities.ship import Ship
+from game.simulation.components.component import Component
+from game.simulation.components.component_constants import LayerType, Modifier
 from ui.builder.stats_config import get_crew_required
 
 class TestBug01CrewDelay:
@@ -79,7 +80,7 @@ class TestBug01CrewDelay:
         # component.py:277 add_modifier checks REGISTRY.
         # We can mock the registry or just manually append to self.modifiers and call recalculate.
         
-        from game.simulation.components.component import ApplicationModifier
+        from game.simulation.components.component_constants import ApplicationModifier
         app_mod = ApplicationModifier(mod_def, 2.0) # Value doesn't matter for linear unless formula uses it? 
         # Modifier.create_modifier uses value. 
         # apply_modifier_effects in modifiers.py uses it.

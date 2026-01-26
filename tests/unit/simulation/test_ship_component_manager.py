@@ -15,7 +15,8 @@ import pytest
 from unittest.mock import MagicMock, patch
 from typing import List, Tuple
 
-from game.simulation.components.component import Component, LayerType, create_component
+from game.simulation.components.component import Component, create_component
+from game.simulation.components.component_constants import LayerType
 
 
 class TestShipComponentManagerCreation:
