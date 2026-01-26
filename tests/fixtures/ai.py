@@ -11,7 +11,7 @@ Usage in conftest.py:
 import pytest
 
 from tests.fixtures.paths import get_unit_test_data_dir
-from game.ai.controller import StrategyManager
+from game.ai.strategy_manager import StrategyManager
 
 
 @pytest.fixture

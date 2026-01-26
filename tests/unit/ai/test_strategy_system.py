@@ -2,7 +2,8 @@ import pytest
 import pygame
 import json
 from unittest.mock import MagicMock, patch
-from game.ai.controller import StrategyManager, TargetEvaluator
+from game.ai.strategy_manager import StrategyManager
+from game.ai.target_evaluator import TargetEvaluator
 from tests.fixtures.paths import get_unit_test_data_dir
 
 

@@ -2,7 +2,8 @@ import pytest
 from unittest.mock import MagicMock
 import pygame
 
-from game.ai.controller import TargetEvaluator, AIController
+from game.ai.target_evaluator import TargetEvaluator
+from game.ai.controller import AIController
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.core.constants import AttackType
 

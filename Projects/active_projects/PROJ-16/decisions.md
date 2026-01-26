@@ -13,6 +13,7 @@
 | 2026-01-25 | **KEEP** ShipControllableAdapter backward compat | Production code (controller.py) extensively uses direct ship attribute access (self.ship.position, self.ship.turn_throttle, etc.). Removing delegation breaks 50+ tests. Refactoring controller.py is out of scope. |
 | 2026-01-25 | No new `__init__.py` exports | Creating formal package exports (e.g., `game/simulation/__init__.py`) is out of scope for this project. Could be a future enhancement. |
 | 2026-01-25 | Update mock patches if they break | Some tests patch re-export paths. These must be updated when re-exports are removed. |
+| 2026-01-26 | **AUDIT CYCLE 1 FAILED** | Phase 3 never completed (all checkboxes unchecked, re-exports still exist). Phase 2 has 9 files still using old imports. Added Phase 6 for fixes. |
 
 ## Detailed Rationale
 

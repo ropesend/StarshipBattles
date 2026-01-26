@@ -8,7 +8,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
-from game.simulation.components.component import load_components, create_component, ComponentStatus
+from game.simulation.components.component import load_components, create_component
+from game.simulation.components.component_constants import ComponentStatus
 
 class TestShipResources(unittest.TestCase):
     """Test resource initialization, capacity, life support, and crew logic."""

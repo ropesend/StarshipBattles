@@ -5,7 +5,7 @@ weapons, and components display in the battle UI.
 """
 import pygame
 from game.simulation.components.component_constants import ComponentStatus, LayerType
-from game.ai.controller import StrategyManager
+from game.ai.strategy_manager import StrategyManager
 from game.core.config import UIConfig
 from game.core.constants import CombatConstants
 

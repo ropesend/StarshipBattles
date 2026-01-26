@@ -163,7 +163,7 @@ class TestMultitarget:
         grid.insert(m2)
 
         # Inject Strategy into StrategyManager (new data-driven system)
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
         manager = StrategyManager.instance()
         manager._loaded = True  # Prevent ensure_loaded() from overwriting test data
 

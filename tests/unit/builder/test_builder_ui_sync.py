@@ -17,7 +17,7 @@ class TestBuilderUISync:
         # In parallel mode, other tests may have cleared or partially populated
         # the registry (e.g., test_hull_layer.py's registry_with_hull fixture).
         from tests.infrastructure.session_cache import SessionRegistryCache
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         cache = SessionRegistryCache.instance()
         cache.load_all_data()
@@ -127,7 +127,7 @@ class TestBuilderUISync:
         assert val == target_class
 
         # AI Strategy Name lookup
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
         strat_name = StrategyManager.instance().strategies["kamikaze"]["name"]
         val = self._get_option_value(self.panel.ai_dropdown.selected_option)
         assert val == strat_name

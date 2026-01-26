@@ -83,7 +83,7 @@ class WorkshopDataLoader:
     
     def clear_registries(self) -> None:
         """Clear all game data registries before loading new data."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         RegistryManager.instance().clear()
 
@@ -144,7 +144,7 @@ class WorkshopDataLoader:
     
     def _load_strategies(self, result: LoadResult) -> None:
         """Load combat strategies with test mode detection."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         # Check if test files exist (with test_ prefix)
         test_strat = os.path.join(self.directory, "test_combat_strategies.json")

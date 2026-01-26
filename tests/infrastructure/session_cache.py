@@ -61,7 +61,7 @@ class SessionRegistryCache:
                 load_vehicle_classes()
 
                 # 4. Load combat strategies
-                from game.ai.controller import StrategyManager
+                from game.ai.strategy_manager import StrategyManager
                 strategy_mgr = StrategyManager.instance()
                 strategy_mgr.clear()
                 strategy_mgr.load_data(str(DATA_DIR))

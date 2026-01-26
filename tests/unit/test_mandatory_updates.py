@@ -6,7 +6,8 @@ import os
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from game.simulation.components.component import Component, Modifier, MODIFIER_REGISTRY
+from game.simulation.components.component import Component, MODIFIER_REGISTRY
+from game.simulation.components.component_constants import Modifier
 from game.ui.screens.builder.modifier_logic import ModifierLogic
 
 class TestMandatoryUpdates(unittest.TestCase):

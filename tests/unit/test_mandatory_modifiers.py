@@ -9,7 +9,8 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from game.ui.screens.builder.legacy_components import ModifierEditorPanel
-from game.simulation.components.component import MODIFIER_REGISTRY, Modifier
+from game.simulation.components.component import MODIFIER_REGISTRY
+from game.simulation.components.component_constants import Modifier
 
 class TestMandatoryModifiers(unittest.TestCase):
     def setUp(self):

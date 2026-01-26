@@ -9,7 +9,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from game.ui.screens.builder.modifier_logic import ModifierLogic
-from game.simulation.components.component import Modifier
+from game.simulation.components.component_constants import Modifier
 
 class TestModifierRow(unittest.TestCase):
     def setUp(self):

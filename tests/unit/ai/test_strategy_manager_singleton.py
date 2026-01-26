@@ -16,7 +16,7 @@ class TestStrategyManagerSingleton:
 
     def test_instance_returns_same_object(self):
         """Test that instance() returns the same object on multiple calls."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         instance1 = StrategyManager.instance()
         instance2 = StrategyManager.instance()
@@ -25,7 +25,7 @@ class TestStrategyManagerSingleton:
 
     def test_direct_init_raises_after_instance_exists(self):
         """Test that direct __init__ raises exception when singleton exists."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         # Ensure instance exists
         _ = StrategyManager.instance()
@@ -38,7 +38,7 @@ class TestStrategyManagerSingleton:
 
     def test_reset_destroys_instance(self):
         """Test that reset() destroys the singleton instance."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         # Get initial instance
         instance1 = StrategyManager.instance()
@@ -53,7 +53,7 @@ class TestStrategyManagerSingleton:
 
     def test_clear_preserves_instance(self):
         """Test that clear() resets data but keeps the same instance."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         instance1 = StrategyManager.instance()
 
@@ -79,7 +79,7 @@ class TestStrategyManagerThreadSafety:
 
     def test_concurrent_instance_calls_return_same_object(self):
         """Test that concurrent calls to instance() all get the same object."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         # Reset to start fresh
         StrategyManager.reset()
@@ -118,7 +118,7 @@ class TestStrategyManagerDataLoading:
 
     def test_load_data_populates_strategies(self):
         """Test that load_data populates strategy dictionaries."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         manager = StrategyManager.instance()
         manager.clear()
@@ -139,7 +139,7 @@ class TestStrategyManagerDataLoading:
 
     def test_load_data_with_missing_files_uses_defaults(self):
         """Test that missing files result in empty dicts (not crashes)."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         manager = StrategyManager.instance()
         manager.clear()
@@ -158,7 +158,7 @@ class TestStrategyManagerLazyLoading:
 
     def test_no_data_loaded_on_import(self):
         """Test that importing the module doesn't trigger disk I/O."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         # Reset the singleton completely
         StrategyManager.reset()
@@ -172,7 +172,7 @@ class TestStrategyManagerLazyLoading:
 
     def test_ensure_loaded_triggers_once(self):
         """Test that ensure_loaded() only loads data once."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         manager = StrategyManager.instance()
         manager.clear()
@@ -193,7 +193,7 @@ class TestStrategyManagerLazyLoading:
 
     def test_get_strategy_triggers_ensure_loaded(self):
         """Test that get_strategy() calls ensure_loaded()."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         manager = StrategyManager.instance()
 
@@ -203,7 +203,7 @@ class TestStrategyManagerLazyLoading:
 
     def test_get_targeting_policy_triggers_ensure_loaded(self):
         """Test that get_targeting_policy() calls ensure_loaded()."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         manager = StrategyManager.instance()
 
@@ -213,7 +213,7 @@ class TestStrategyManagerLazyLoading:
 
     def test_get_movement_policy_triggers_ensure_loaded(self):
         """Test that get_movement_policy() calls ensure_loaded()."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         manager = StrategyManager.instance()
 
@@ -227,7 +227,7 @@ class TestStrategyManagerDefaults:
 
     def test_get_strategy_returns_default_for_unknown_id(self):
         """Test that get_strategy returns default for unknown strategy."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         manager = StrategyManager.instance()
         manager._loaded = True  # Skip loading
@@ -240,7 +240,7 @@ class TestStrategyManagerDefaults:
 
     def test_get_targeting_policy_returns_default_for_unknown_id(self):
         """Test that get_targeting_policy returns default for unknown policy."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         manager = StrategyManager.instance()
         manager._loaded = True
@@ -252,7 +252,7 @@ class TestStrategyManagerDefaults:
 
     def test_get_movement_policy_returns_default_for_unknown_id(self):
         """Test that get_movement_policy returns default for unknown policy."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         manager = StrategyManager.instance()
         manager._loaded = True
@@ -268,7 +268,7 @@ class TestStrategyManagerResolve:
 
     def test_resolve_strategy_combines_policies(self):
         """Test that resolve_strategy combines strategy with policies."""
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
 
         manager = StrategyManager.instance()
         manager._loaded = True

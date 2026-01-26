@@ -4,7 +4,7 @@ Battle setup screen rendering functions.
 Pure rendering functions for drawing the setup screen UI elements.
 """
 import pygame
-from game.ai.controller import StrategyManager
+from game.ai.strategy_manager import StrategyManager
 
 
 def draw_title(screen, sw):

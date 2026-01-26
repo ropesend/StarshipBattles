@@ -5,8 +5,8 @@ import math
 import inspect
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.ai import controller as ai
 from game.ai.controller import AIController
+from game.ai.strategy_manager import StrategyManager
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, create_component
@@ -24,7 +24,7 @@ def ai_setup():
     from game.simulation.entities.ship_loader import load_vehicle_classes
     load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"))
     # Load test data for AI strategies to ensure reproducible tests
-    manager = ai.StrategyManager.instance()
+    manager = StrategyManager.instance()
     manager.load_data(
         str(unit_test_data_dir),
         targeting_file="test_targeting_policies.json",
@@ -69,7 +69,7 @@ def ai_setup():
 
     # Cleanup
     RegistryManager.instance().clear()
-    ai.StrategyManager.instance().clear()
+    StrategyManager.instance().clear()
 
 
 class TestAIController:
@@ -155,7 +155,7 @@ def strategy_setup():
     from game.simulation.entities.ship_loader import load_vehicle_classes
     load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"))
     # Load test data for AI strategies to ensure reproducible tests
-    manager = ai.StrategyManager.instance()
+    manager = StrategyManager.instance()
     manager.load_data(
         str(unit_test_data_dir),
         targeting_file="test_targeting_policies.json",
@@ -196,7 +196,7 @@ def strategy_setup():
 
     # Cleanup
     RegistryManager.instance().clear()
-    ai.StrategyManager.instance().clear()
+    StrategyManager.instance().clear()
 
 
 class TestAIStrategyStates:

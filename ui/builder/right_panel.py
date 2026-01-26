@@ -5,7 +5,7 @@ from pygame_gui.core import UIElement
 
 from game.core.registry import RegistryManager
 from game.core.logger import log_error
-from game.ai.controller import StrategyManager
+from game.ai.strategy_manager import StrategyManager
 # Lazy import to avoid circular import through game.ui.__init__
 # Chain: ui.builder -> game.ui.__init__ -> builder_screen -> ui.builder
 _BuilderEvents = None

@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.ai.controller import AIController
-from game.ai import controller as ai
+from game.ai.strategy_manager import StrategyManager
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.ai.target_evaluator import TargetEvaluator
 from game.engine.spatial import SpatialGrid
@@ -41,7 +41,7 @@ def setup_game_data():
     load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"))
 
     # Load test data for AI strategies
-    manager = ai.StrategyManager.instance()
+    manager = StrategyManager.instance()
     manager.load_data(
         str(unit_test_data_dir),
         targeting_file="test_targeting_policies.json",
@@ -53,7 +53,7 @@ def setup_game_data():
     yield
 
     RegistryManager.instance().clear()
-    ai.StrategyManager.instance().clear()
+    StrategyManager.instance().clear()
 
 
 @pytest.fixture

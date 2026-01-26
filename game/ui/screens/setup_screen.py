@@ -7,7 +7,7 @@ from tkinter import filedialog
 
 from game.core.logger import log_error
 from game.simulation.entities.ship import Ship
-from game.ai.controller import StrategyManager
+from game.ai.strategy_manager import StrategyManager
 from game.core.json_utils import load_json_required
 from game.ui.screens.setup_data_io import (
     get_base_path, scan_ship_designs, scan_formations,

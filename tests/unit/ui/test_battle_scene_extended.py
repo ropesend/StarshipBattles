@@ -8,7 +8,7 @@ from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
 from game.simulation.components.component_constants import LayerType
 from unittest.mock import MagicMock
-from game.ai.controller import StrategyManager
+from game.ai.strategy_manager import StrategyManager
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_unit_test_data_dir
 

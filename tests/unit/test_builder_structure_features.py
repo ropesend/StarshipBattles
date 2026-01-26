@@ -11,7 +11,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from game.ui.screens.builder.layer_panel import LayerComponentItem, IndividualComponentItem, LayerPanel
 from game.ui.screens.builder.main import BuilderSceneGUI
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import Component, MODIFIER_REGISTRY, ApplicationModifier
+from game.simulation.components.component import Component, MODIFIER_REGISTRY
+from game.simulation.components.component_constants import ApplicationModifier
 
 class TestBuilderStructureFeatures(unittest.TestCase):
     def setUp(self):

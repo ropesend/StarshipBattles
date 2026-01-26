@@ -1,7 +1,7 @@
 import pygame
 import math
 import random
-from game.simulation.components.component import ComponentStatus
+from game.simulation.components.component_constants import ComponentStatus
 from game.simulation.components.component_constants import LayerType
 from game.core.logger import log_debug
 from game.core.constants import AttackType

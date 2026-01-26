@@ -19,7 +19,8 @@ pygame.init()
 pygame.display.set_mode((800, 600))
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.ai.controller import AIController, StrategyManager
+from game.ai.controller import AIController
+from game.ai.strategy_manager import StrategyManager
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, load_modifiers

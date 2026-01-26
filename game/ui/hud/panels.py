@@ -1,6 +1,6 @@
 import pygame
 import math
-from game.simulation.components.component import ComponentStatus
+from game.simulation.components.component_constants import ComponentStatus
 from game.simulation.entities.ship import LayerType
 from game.ai.core.system import COMBAT_STRATEGIES
 from game.core.profiling import profile_action, profile_block

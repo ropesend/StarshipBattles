@@ -7,7 +7,7 @@ from game.simulation.components.component_constants import LayerType
 from game.core.registry import RegistryManager
 from game.simulation.systems.battle_engine import BattleEngine
 from game.core.constants import AttackType
-from game.ai.controller import StrategyManager
+from game.ai.strategy_manager import StrategyManager
 from tests.fixtures.paths import get_unit_test_data_dir
 
 

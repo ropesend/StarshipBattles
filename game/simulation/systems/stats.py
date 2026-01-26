@@ -1,4 +1,4 @@
-from game.simulation.components.component import ComponentStatus
+from game.simulation.components.component_constants import ComponentStatus
 from game.simulation.components.component_constants import LayerType
 import math
 

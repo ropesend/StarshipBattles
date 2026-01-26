@@ -48,17 +48,8 @@ from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRu
                           FormationBehavior, DoNothingBehavior, StraightLineBehavior,
                           RotateOnlyBehavior, ErraticBehavior, OrbitBehavior, StationaryFireBehavior)
 from game.core.constants import AttackType, CombatConstants
-
-# Re-export from strategy_manager for backward compatibility
-from game.ai.strategy_manager import (
-    StrategyManager,
-    get_strategy_names,
-    reset_strategy_manager,
-)
-
-# Re-export TargetEvaluator for backward compatibility
 from game.ai.target_evaluator import TargetEvaluator
-
+from game.ai.strategy_manager import StrategyManager
 
 class AIController:
     def __init__(self, ship, grid, enemy_team_id):

@@ -8,7 +8,7 @@ from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components
 
-from game.ai.controller import StrategyManager
+from game.ai.strategy_manager import StrategyManager
 from tests.fixtures.paths import get_project_root, get_data_dir, get_unit_test_data_dir
 
 
