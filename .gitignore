@@ -21,4 +21,4 @@ collect_log*.txt
 .pytest_cache/
 
 # pytest-testmon
-.testmondata
+.testmondata*
