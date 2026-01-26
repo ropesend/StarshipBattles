@@ -6,7 +6,7 @@ import pygame
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
-from sprites import SpriteManager
+from game.ui.renderer.sprites import SpriteManager
 
 class TestSprites(unittest.TestCase):
     @classmethod

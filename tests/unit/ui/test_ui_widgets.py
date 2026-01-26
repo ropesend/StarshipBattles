@@ -1,7 +1,7 @@
 """Tests for UI widget classes."""
 import pygame
 
-from ui import Button, Label, Slider
+from game.ui.widgets import Button, Label, Slider
 
 
 class TestButton:

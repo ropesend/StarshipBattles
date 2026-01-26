@@ -1,8 +1,8 @@
 import pytest
 from unittest.mock import MagicMock
 import pygame
-from ui.builder.drop_target import DropTarget
-from ui.builder.interaction_controller import InteractionController
+from game.ui.screens.builder.drop_target import DropTarget
+from game.ui.screens.builder.interaction_controller import InteractionController
 
 
 class MockDropTarget(DropTarget):
