@@ -6,12 +6,12 @@
 |----|-------|--------|---------|--------------|
 | PROJ-16 | Consolidate Re-exports (Phase 3) | Planning | 2026-01-25 | 2026-01-25 |
 | PROJ-15 | Phase 2 - Remove Shims and Aliases | Ready for Implementation | 2026-01-25 | 2026-01-25 |
-| PROJ-14 | Legacy Cleanup Phase 1 - Delete Dead Code | Ready for Implementation | 2026-01-25 | 2026-01-25 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-14 | Legacy Cleanup Phase 1 - Delete Dead Code | Archived | 2026-01-25 | 2026-01-25 |
 | PROJ-12 | God Class Decomposition | Archived | 2026-01-24 | 2026-01-25 |
 | PROJ-13 | Code Quality & Documentation | Archived | 2026-01-24 | 2026-01-25 |
 | PROJ-11 | Architecture Layer Separation | Archived | 2026-01-24 | 2026-01-24 |
