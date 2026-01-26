@@ -123,8 +123,12 @@ class TestAdvancedFleetOrders:
         # Mock Pathfinding to that predicted hex
         mock_find_path.return_value = [HexCoord(1, 0)]
 
-        # Execute
-        engine._execute_move_step(f1, galaxy)
+        # Execute: Calculate next hex and apply movement manually
+        next_hex = engine._calculate_next_hex(f1, galaxy)
+        if next_hex:
+            f1.location = next_hex
+            if not f1.path:
+                f1.pop_order()
 
         # Verify
         mock_calc_intercept.assert_called_with(f1, f2, galaxy)

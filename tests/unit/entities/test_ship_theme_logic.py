@@ -16,7 +16,7 @@ class TestShipThemeLogic:
 
         # Ensure singleton is reset before each test
         ShipThemeManager.reset()
-        self.manager = ShipThemeManager.get_instance()
+        self.manager = ShipThemeManager.instance()
 
         yield
 
@@ -31,8 +31,8 @@ class TestShipThemeLogic:
 
     def test_singleton_handling(self):
         """Test that the singleton pattern works and enforces unique instance."""
-        instance1 = ShipThemeManager.get_instance()
-        instance2 = ShipThemeManager.get_instance()
+        instance1 = ShipThemeManager.instance()
+        instance2 = ShipThemeManager.instance()
         assert instance1 is instance2
 
         # Test direct init raises exception

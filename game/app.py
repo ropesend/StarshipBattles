@@ -113,7 +113,7 @@ class Game:
         initialize_ship_data(base_path)
 
         # Load sprites
-        sprite_mgr = SpriteManager.get_instance()
+        sprite_mgr = SpriteManager.instance()
         sprite_mgr.load_sprites(base_path)
 
         # Menu UI

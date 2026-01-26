@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component, get_all_components
-from game.simulation.services import ShipBuilderService, ShipBuilderResult
+from game.simulation.services.vehicle_design_service import VehicleDesignService, DesignResult
 from game.core.registry import get_modifier_registry
 from game.ui.screens.builder_utils import BuilderEvents
 
@@ -46,10 +46,10 @@ class WorkshopViewModel:
         self.screen_height = screen_height
 
         # Service layer for ship operations
-        self._ship_service = ShipBuilderService()
+        self._ship_service = VehicleDesignService()
 
         # Last operation result (for error display)
-        self._last_result: Optional[ShipBuilderResult] = None
+        self._last_result: Optional[DesignResult] = None
 
         # Core state
         self._ship: Optional[Ship] = None
@@ -275,7 +275,7 @@ class WorkshopViewModel:
     # ─────────────────────────────────────────────────────────────────
 
     @property
-    def last_result(self) -> Optional[ShipBuilderResult]:
+    def last_result(self) -> Optional[DesignResult]:
         """The result of the last service operation."""
         return self._last_result
 

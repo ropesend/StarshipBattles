@@ -56,9 +56,6 @@ def reset_game_state(monkeypatch, request):
         strategy_mgr = StrategyManager.instance()
         strategy_mgr.strategies = cache.get_strategies()
 
-        # D. Patch load_combat_strategies to be a no-op (Data already loaded)
-        monkeypatch.setattr("game.ai.controller.load_combat_strategies", lambda *args, **kwargs: None)
-
         yield
     finally:
         # POST-TEST CLEANUP (ALWAYS RUNS - even on test failure or use_custom_data)

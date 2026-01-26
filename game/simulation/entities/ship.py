@@ -127,7 +127,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.total_shots_fired: int = 0
         
         # To-Hit Calculation Stats
-        self.to_hit_profile: float = 1.0       # Defensive Multiplier
+        self.total_defense_score: float = 1.0  # Defensive score (evasion)
         self.baseline_to_hit_offense: float = 1.0 # Offensive Multiplier
         
         # Initialize helper (lazy or eager)

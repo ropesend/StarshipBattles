@@ -40,17 +40,11 @@ class PathSegment:
     turn: int
     is_warp: bool
     
-    @property
-    def hex(self) -> HexCoord:
-        """Alias for end, for backward compatibility."""
-        return self.end
-    
     def to_dict(self) -> dict:
-        """Convert to dict for backward compatibility with existing code."""
+        """Convert to dict for serialization."""
         return {
             'start': self.start,
             'end': self.end,
-            'hex': self.end,
             'turn': self.turn,
             'is_warp': self.is_warp
         }

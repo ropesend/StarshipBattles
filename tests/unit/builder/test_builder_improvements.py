@@ -86,7 +86,7 @@ class TestBuilderImprovements:
         mock_ship.shield_regen_cost = 5
         mock_ship.layer_status = {}
         mock_ship.get_ability_total.return_value = 100
-        mock_ship.to_hit_profile = 1.0
+        mock_ship.total_defense_score = 1.0
         mock_ship.baseline_to_hit_offense = 1.0
 
         # Mock ShipIO

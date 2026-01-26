@@ -148,29 +148,6 @@ class StrategyManager:
         }
 
 
-def load_combat_strategies(filepath=None):
-    """
-    Entry point for loading. Filepath arg is an optional override for base path.
-
-    NOTE: This function is deprecated. StrategyManager now uses lazy loading.
-    Kept for backward compatibility with existing code.
-    """
-    manager = StrategyManager.instance()
-    manager.clear()
-
-    # Determine base path from filepath or default
-    if filepath:
-        if os.path.isdir(filepath):
-            base_dir = filepath
-        else:
-            base_dir = os.path.dirname(filepath)
-    else:
-        base_dir = "data"
-
-    manager.load_data(base_dir)
-    manager._loaded = True
-
-
 def get_strategy_names():
     """Return list of available strategy IDs for UI."""
     manager = StrategyManager.instance()

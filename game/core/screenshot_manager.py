@@ -43,8 +43,6 @@ class ScreenshotManager:
                     cls._instance = cls()
         return cls._instance
 
-    # Backwards compatibility alias
-    get_instance = instance
 
     @classmethod
     def reset(cls):

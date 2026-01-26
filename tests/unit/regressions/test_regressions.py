@@ -52,7 +52,7 @@ class TestRegressions:
         Regression Test for Crash on Missing Image:
         Verify that getting an image for a non-existent theme or class returns a valid fallback surface.
         """
-        manager = ShipThemeManager.get_instance()
+        manager = ShipThemeManager.instance()
         # Force reload to ensure clean state if needed, but singleton persists.
         # Just use it.
 

@@ -78,10 +78,10 @@ def test_project_chained_orders():
     
     assert len(segments) == 4
     # Ensure continuity
-    assert segments[0]['hex'] == HexCoord(1,0)
-    assert segments[1]['hex'] == HexCoord(2,0)
-    assert segments[2]['hex'] == HexCoord(3,0)
-    assert segments[3]['hex'] == HexCoord(4,0)
+    assert segments[0]['end'] == HexCoord(1,0)
+    assert segments[1]['end'] == HexCoord(2,0)
+    assert segments[2]['end'] == HexCoord(3,0)
+    assert segments[3]['end'] == HexCoord(4,0)
     
     assert segments[0]['turn'] == 0
     assert segments[1]['turn'] == 0

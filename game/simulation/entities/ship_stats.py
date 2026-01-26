@@ -385,10 +385,7 @@ class ShipStatsCalculator:
         
         # Total Defense Score
         ship.total_defense_score = size_score + maneuver_score + ecm_score
-        
-        # Legacy/Alias for UI until fully refactored
-        ship.to_hit_profile = ship.total_defense_score
-        
+
         # Offensive Baseline (Sensor Strength) - Score
         attack_mods = self._get_ability_total(component_pool, 'ToHitAttackModifier')
         # Default 0

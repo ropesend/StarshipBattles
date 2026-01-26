@@ -85,7 +85,7 @@ class DesignWorkshopGUI:
         self.on_start_battle = context.on_return  # Use context's callback
 
         self.event_bus = EventBus()
-        self.screenshot_manager = ScreenshotManager.get_instance()
+        self.screenshot_manager = ScreenshotManager.instance()
 
         # MVVM: Create ViewModel to manage builder state
         self.viewmodel = WorkshopViewModel(self.event_bus, screen_width, screen_height)
@@ -111,10 +111,10 @@ class DesignWorkshopGUI:
         
         # Managers
         self.viewmodel.refresh_available_components()
-        self.sprite_mgr = SpriteManager.get_instance()
+        self.sprite_mgr = SpriteManager.instance()
         
         with profile_block("Builder: Init Managers"):
-            self.theme_manager = ShipThemeManager.get_instance()
+            self.theme_manager = ShipThemeManager.instance()
             self.theme_manager.initialize() # No path needed anymore
         
         # Layout (from centralized constants)

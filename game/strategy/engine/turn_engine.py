@@ -258,33 +258,6 @@ class TurnEngine:
         """
         return self.movement_engine.calculate_next_hex(fleet, galaxy)
 
-    def _execute_move_step(self, fleet, galaxy):
-        """Advance fleet 1 hex if it has a MOVE order and path.
-        
-        .. deprecated::
-            This method exists for backward compatibility with tests.
-            Use _calculate_next_hex directly in new code.
-            In the main turn loop, _calculate_next_hex is called in Phase 1,
-            and movement is applied in Phase 2.
-        """
-        import warnings
-        warnings.warn(
-            "_execute_move_step is deprecated. Use _calculate_next_hex and apply movement manually.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-        
-        # Use the canonical calculation method
-        next_hex = self._calculate_next_hex(fleet, galaxy)
-        
-        if next_hex:
-            # Apply the movement
-            fleet.location = next_hex
-            
-            # If path complete, order is done
-            if not fleet.path:
-                fleet.pop_order()
-
     def _process_per_turn_resources(self, tick: int, empires) -> None:
         """
         Process per-turn resource consumption (1/100th per tick).

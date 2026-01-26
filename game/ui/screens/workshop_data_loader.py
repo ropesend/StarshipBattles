@@ -101,7 +101,6 @@ class WorkshopDataLoader:
         """
         from game.simulation.components.component import load_components, load_modifiers
         from game.simulation.entities.ship import load_vehicle_classes
-        from game.ai.controller import load_combat_strategies
 
         result = LoadResult()
         
@@ -145,14 +144,16 @@ class WorkshopDataLoader:
     
     def _load_strategies(self, result: LoadResult) -> None:
         """Load combat strategies with test mode detection."""
-        from game.ai.controller import StrategyManager, load_combat_strategies
+        from game.ai.controller import StrategyManager
 
         # Check if test files exist (with test_ prefix)
         test_strat = os.path.join(self.directory, "test_combat_strategies.json")
 
+        manager = StrategyManager.instance()
+        manager.clear()
+
         if os.path.exists(test_strat):
             # Test data mode - use test_ prefixed files
-            manager = StrategyManager.instance()
             manager.load_data(
                 self.directory,
                 targeting_file="test_targeting_policies.json",
@@ -165,7 +166,9 @@ class WorkshopDataLoader:
             # Production mode - try standard names
             strat_path, _ = self.find_file(["combatstrategies.json", "combat_strategies.json"])
             if strat_path:
-                load_combat_strategies(strat_path)
+                base_dir = os.path.dirname(strat_path)
+                manager.load_data(base_dir)
+                manager._loaded = True
                 log_info(f"Loaded strategies from {strat_path}")
     
     def _load_vehicle_classes(self, result: LoadResult) -> None:

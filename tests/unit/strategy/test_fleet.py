@@ -868,33 +868,6 @@ class TestBackwardCompatibility:
             return mock
         return _make
 
-    def test_backward_compat_has_energy_for_warp_wrapper(self, make_mock_ship):
-        """Test has_energy_for_warp() is an alias for has_resources_for_warp()."""
-        fleet = Fleet("f1", 0, HexCoord(0, 0))
-        ship = make_mock_ship(
-            warp_resource_costs={'energy': 500.0},
-            current_resources={'energy': 1000.0}
-        )
-        fleet.ships.append(ship)
-
-        # Both methods should return the same result
-        assert fleet.has_energy_for_warp() == fleet.has_resources_for_warp()
-        assert fleet.has_energy_for_warp() is True
-
-    def test_backward_compat_consume_warp_energy_wrapper(self, make_mock_ship):
-        """Test consume_warp_energy() is an alias for consume_warp_resources()."""
-        fleet = Fleet("f1", 0, HexCoord(0, 0))
-        ship = make_mock_ship(
-            warp_resource_costs={'energy': 500.0},
-            current_resources={'energy': 1000.0}
-        )
-        fleet.ships.append(ship)
-
-        result = fleet.consume_warp_energy()
-
-        assert result is True
-        ship.consume_resource.assert_called_with('energy', 500.0)
-
     def test_backward_compat_consume_fleet_fuel_wrapper(self, make_mock_ship):
         """Test consume_fleet_fuel uses legacy fuel methods."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
@@ -907,26 +880,6 @@ class TestBackwardCompatibility:
         result = fleet.consume_fleet_fuel(hexes=1)
 
         assert result is True
-
-    def test_backward_compat_legacy_warp_methods_still_work(self, make_mock_ship):
-        """Test that legacy warp methods work with data-driven system."""
-        fleet = Fleet("f1", 0, HexCoord(0, 0))
-        # Ship with both energy and fuel warp costs
-        ship = make_mock_ship(
-            warp_resource_costs={'energy': 500.0, 'fuel': 100.0},
-            current_resources={'energy': 1000.0, 'fuel': 200.0}
-        )
-        fleet.ships.append(ship)
-
-        # has_energy_for_warp should check all warp resources
-        assert fleet.has_energy_for_warp() is True
-
-        # consume_warp_energy should consume all warp resources
-        result = fleet.consume_warp_energy()
-        assert result is True
-
-        # Verify both resources were requested to be consumed
-        assert ship.consume_resource.call_count == 2
 
 
 class TestEdgeCases:

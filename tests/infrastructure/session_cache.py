@@ -61,8 +61,11 @@ class SessionRegistryCache:
                 load_vehicle_classes()
 
                 # 4. Load combat strategies
-                from game.ai.controller import load_combat_strategies, StrategyManager
-                load_combat_strategies(str(DATA_DIR))
+                from game.ai.controller import StrategyManager
+                strategy_mgr = StrategyManager.instance()
+                strategy_mgr.clear()
+                strategy_mgr.load_data(str(DATA_DIR))
+                strategy_mgr._loaded = True
 
                 # 5. Capture State (Deep Copy for initial load, shallow copies on retrieval)
                 self.modifiers_data = copy.deepcopy(mgr.modifiers)

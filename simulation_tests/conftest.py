@@ -82,8 +82,8 @@ def isolated_registry():
     from game.core.registry import RegistryManager
     from game.simulation.entities.ship import load_vehicle_classes
     from game.simulation.components.component import load_components, load_modifiers
-    from game.ai.controller import load_combat_strategies
-    
+    from game.ai.controller import StrategyManager
+
     # Clear registries
     RegistryManager.instance().clear()
 
@@ -93,7 +93,10 @@ def isolated_registry():
     load_modifiers(DATA_DIR / 'modifiers.json')
 
     # Load combat strategies for AI
-    load_combat_strategies(DATA_DIR)
+    manager = StrategyManager.instance()
+    manager.clear()
+    manager.load_data(str(DATA_DIR))
+    manager._loaded = True
     
     yield
     
