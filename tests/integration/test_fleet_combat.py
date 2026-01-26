@@ -602,11 +602,11 @@ class TestAIAdapterIntegration:
 
         for ai in engine.ai_controllers:
             adapter = ai.ship
-            # Test backward-compatible access to underlying ship
+            # Test access to underlying ship via .ship property
             assert hasattr(adapter, 'ship')
             assert isinstance(adapter.ship, Ship)
 
-            # Test fallback attribute access
+            # Test fallback attribute access via __getattr__
             assert hasattr(adapter, 'name')  # Forwarded from ship
             assert adapter.name == adapter.ship.name
 

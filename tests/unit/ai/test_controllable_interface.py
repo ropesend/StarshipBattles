@@ -464,27 +464,28 @@ class TestBackwardCompatibility:
     """Tests that adapter provides backward-compatible access to ship."""
 
     def test_adapter_exposes_underlying_ship(self, mock_ship):
-        """Adapter provides access to underlying ship for legacy code."""
+        """Adapter provides access to underlying ship."""
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         adapter = ShipControllableAdapter(mock_ship)
 
-        # For backward compatibility during transition
+        # .ship property and _ship both access underlying ship
         assert adapter.ship == mock_ship
+        assert adapter._ship == mock_ship
 
     def test_adapter_exposes_ship_attributes_via_getattr(self, mock_ship):
-        """Adapter allows fallback attribute access to ship (transition period)."""
+        """Adapter allows attribute access to ship via __getattr__."""
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
-        mock_ship.some_legacy_attribute = "legacy_value"
+        mock_ship.some_attribute = "test_value"
 
         adapter = ShipControllableAdapter(mock_ship)
 
-        # __getattr__ fallback for attributes not on adapter
-        assert adapter.some_legacy_attribute == "legacy_value"
+        # __getattr__ delegates to ship
+        assert adapter.some_attribute == "test_value"
 
     def test_adapter_setattr_delegates_to_underlying_ship(self, mock_ship):
-        """Attribute assignment via adapter goes to underlying ship, not adapter."""
+        """Attribute assignment via adapter goes to underlying ship."""
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         adapter = ShipControllableAdapter(mock_ship)
@@ -495,7 +496,7 @@ class TestBackwardCompatibility:
         adapter.comp_trigger_pulled = True
         adapter.current_target = "some_target"
 
-        # Verify attributes were set on the ship, not the adapter
+        # Verify attributes were set on the ship
         assert mock_ship.turn_throttle == 0.5
         assert mock_ship.engine_throttle == 0.8
         assert mock_ship.comp_trigger_pulled is True
@@ -510,7 +511,7 @@ class TestBackwardCompatibility:
         # The internal _ship attribute should be on the adapter itself
         assert adapter._ship == mock_ship
 
-        # Changing _ship should work (for re-assignment scenarios)
+        # Changing _ship should work
         new_ship = MagicMock()
         adapter._ship = new_ship
         assert adapter._ship == new_ship

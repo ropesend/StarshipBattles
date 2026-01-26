@@ -178,39 +178,28 @@ class ShipControllableAdapter(IControllable):
         """
         self._ship = ship
 
-    # =========================================================================
-    # Backward Compatibility
-    # =========================================================================
-
     @property
     def ship(self) -> Any:
-        """Access the underlying ship (for backward compatibility)."""
+        """Access the underlying ship."""
         return self._ship
 
-    def __getattr__(self, name: str) -> Any:
-        """
-        Fallback attribute access to underlying ship.
+    # =========================================================================
+    # Transparent Delegation (Required for Production Code)
+    # =========================================================================
+    # NOTE: The AIController in controller.py directly accesses ship attributes
+    # like self.ship.position, self.ship.turn_throttle, etc. rather than using
+    # interface methods. Until controller.py is refactored to use interface
+    # methods exclusively, these delegation methods must remain.
 
-        This allows legacy code to access ship attributes during
-        the transition period.
-        """
+    def __getattr__(self, name: str) -> Any:
+        """Delegate attribute access to underlying ship."""
         return getattr(self._ship, name)
 
     def __setattr__(self, name: str, value: Any) -> None:
-        """
-        Delegate attribute assignment to underlying ship.
-
-        This ensures that attribute assignments like `adapter.turn_throttle = 0.5`
-        set the value on the underlying ship, not on the adapter object.
-
-        The only exception is '_ship' which must be stored on the adapter itself
-        for initialization.
-        """
+        """Delegate attribute assignment to underlying ship."""
         if name == '_ship':
-            # Store the ship reference on the adapter itself
             object.__setattr__(self, name, value)
         else:
-            # Delegate all other attribute assignments to the ship
             setattr(self._ship, name, value)
 
     # =========================================================================
