@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, patch
 import pygame
 import pygame_gui
 from ui.builder.layer_panel import LayerComponentItem, IndividualComponentItem
-from game.ui.screens.builder_screen import BuilderSceneGUI
+from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_context import WorkshopContext
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component, ApplicationModifier
 from game.core.registry import RegistryManager
@@ -83,7 +84,8 @@ def builder_setup():
     ship.has_components = has_components
 
     # Create Builder GUI (_create_ui is mocked so panels won't be created)
-    builder_gui = BuilderSceneGUI(800, 600, None)
+    context = WorkshopContext.standalone(tech_preset_name="default")
+    builder_gui = DesignWorkshopGUI(800, 600, context)
 
     # Manually setup the mocks that _create_ui would have created
     builder_gui.ui_manager = MagicMock()

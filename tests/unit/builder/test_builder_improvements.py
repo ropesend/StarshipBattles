@@ -2,8 +2,9 @@ import pytest
 import pygame
 import pygame_gui
 from unittest.mock import MagicMock, patch
-from game.ui.screens import builder_screen
-from game.ui.screens.builder_screen import BuilderSceneGUI
+from game.ui.screens import workshop_screen
+from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_context import WorkshopContext
 from game.simulation.entities.ship import Ship
 from game.core.registry import RegistryManager
 
@@ -37,7 +38,8 @@ class TestBuilderImprovements:
         # But we can verify it doesn't crash.
 
         # Real Builder with Real UI Manager
-        builder = BuilderSceneGUI(1200, 800, None)
+        context = WorkshopContext.standalone(tech_preset_name="default")
+        builder = DesignWorkshopGUI(1200, 800, context)
         builder._create_ui()
 
         # Test Draw
@@ -50,7 +52,8 @@ class TestBuilderImprovements:
         """
         Test that loading a ship updates the dropdowns.
         """
-        builder = BuilderSceneGUI(1200, 800, None)
+        context = WorkshopContext.standalone(tech_preset_name="default")
+        builder = DesignWorkshopGUI(1200, 800, context)
         builder._create_ui()
 
         # Create a mock ship to load
@@ -90,7 +93,7 @@ class TestBuilderImprovements:
         mock_ship.baseline_to_hit_offense = 1.0
 
         # Mock ShipIO
-        with patch('game.ui.screens.builder_screen.ShipIO.load_ship', return_value=(mock_ship, "Success")):
+        with patch('game.ui.screens.workshop_screen.ShipIO.load_ship', return_value=(mock_ship, "Success")):
             builder._load_ship()
 
         # Verification

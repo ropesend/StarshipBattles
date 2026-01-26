@@ -7,7 +7,8 @@ import os
 # Dummy video driver
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
-from game.ui.screens.builder_screen import BuilderSceneGUI
+from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_context import WorkshopContext
 from game.core.registry import RegistryManager
 
 
@@ -29,7 +30,9 @@ def builder_warning_setup():
     p3.start()
     p4.start()
 
-    builder = BuilderSceneGUI(800, 600, MagicMock())
+    context = WorkshopContext.standalone(tech_preset_name="default")
+    context.on_return = MagicMock()
+    builder = DesignWorkshopGUI(800, 600, context)
 
     # Manually setup the mocks that _create_ui would have created
     builder.ui_manager = MagicMock()
@@ -78,8 +81,7 @@ class TestBuilderWarningLogic:
         event.text = "Cruiser"
 
         # Mock _execute_pending_action to verify it's called
-        # Patch on the wrapped _workshop instance instead of the wrapper
-        with patch.object(builder._workshop, '_execute_pending_action') as mock_execute:
+        with patch.object(builder, '_execute_pending_action') as mock_execute:
             print(f"DEBUG: Left Panel Handle Event returns: {builder.left_panel.handle_event(event)}")
             print(f"DEBUG: Layer Panel Handle Event returns: {builder.layer_panel.handle_event(event)}")
             builder.handle_event(event)
@@ -100,7 +102,7 @@ class TestBuilderWarningLogic:
         event.ui_element = builder.right_panel.class_dropdown
         event.text = "Cruiser"
 
-        with patch.object(builder._workshop, '_execute_pending_action') as mock_execute:
+        with patch.object(builder, '_execute_pending_action') as mock_execute:
             builder.handle_event(event)
 
             # Check warning
@@ -121,7 +123,7 @@ class TestBuilderWarningLogic:
         # Mock getattr for checking current type
         from game.core.registry import RegistryManager
         with patch.object(RegistryManager.instance(), 'vehicle_classes', {'Station': {'type': 'Station', 'max_mass': 5000}}):
-            with patch.object(builder._workshop, '_execute_pending_action') as mock_execute:
+            with patch.object(builder, '_execute_pending_action') as mock_execute:
                 builder.handle_event(event)
 
                 # Should find a pending action and execute it
@@ -142,7 +144,7 @@ class TestBuilderWarningLogic:
 
         from game.core.registry import RegistryManager
         with patch.object(RegistryManager.instance(), 'vehicle_classes', {'Station': {'type': 'Station', 'max_mass': 5000}}):
-            with patch.object(builder._workshop, '_execute_pending_action') as mock_execute:
+            with patch.object(builder, '_execute_pending_action') as mock_execute:
                 builder.handle_event(event)
 
                 assert builder.pending_action is not None

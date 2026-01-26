@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-18 | Standardize Registry Access | Planning | 2026-01-25 | 2026-01-25 |
 | PROJ-17 | Enforce Layer Boundaries | Planning | 2026-01-25 | 2026-01-25 |
 | PROJ-16 | Consolidate Re-exports (Phase 3) | Planning | 2026-01-25 | 2026-01-25 |
 | PROJ-15 | Phase 2 - Remove Shims and Aliases | Ready for Implementation | 2026-01-25 | 2026-01-25 |
@@ -102,4 +103,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-18
+## Next Project ID: PROJ-19

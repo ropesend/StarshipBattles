@@ -8,8 +8,9 @@ import pygame
 # But BuilderSceneGUI __init__ creates UIManager which needs a window surface or size.
 # We can mock UIManager.
 
-from game.ui.screens import builder_screen
-from game.ui.screens.builder_screen import BuilderSceneGUI
+from game.ui.screens import workshop_screen
+from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_context import WorkshopContext
 from game.core.registry import RegistryManager
 from game.simulation.entities.ship import LayerType
 
@@ -49,7 +50,9 @@ class TestBuilderDragDropReal:
 
         # Initialize Builder
         # We need a valid screen size
-        builder = BuilderSceneGUI(1280, 720, lambda x: None)
+        context = WorkshopContext.standalone(tech_preset_name="default")
+        context.on_return = lambda x: None
+        builder = DesignWorkshopGUI(1280, 720, context)
 
         # Manually setup the mocks that _create_ui would have created
         builder.ui_manager = MagicMock()

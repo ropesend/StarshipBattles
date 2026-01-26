@@ -56,7 +56,7 @@ class TestBuilderDataLoader:
 
     def test_find_file_direct_match(self, temp_test_dirs):
         """find_file returns direct path when file exists in custom directory."""
-        from game.ui.screens.builder_data_loader import BuilderDataLoader
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
         loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"])
         path, is_fallback = loader.find_file("components.json")
@@ -68,7 +68,7 @@ class TestBuilderDataLoader:
 
     def test_find_file_test_prefix_fallback(self, temp_test_dirs):
         """find_file tries test_ prefixed filenames when direct match fails."""
-        from game.ui.screens.builder_data_loader import BuilderDataLoader
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
         loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"])
         # modifiers.json doesn't exist directly, but test_modifiers.json does
@@ -80,7 +80,7 @@ class TestBuilderDataLoader:
 
     def test_find_file_default_fallback(self, temp_test_dirs):
         """find_file falls back to default data directory when custom fails."""
-        from game.ui.screens.builder_data_loader import BuilderDataLoader
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
         loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"])
         # vehicleclasses.json only exists in default_dir
@@ -92,7 +92,7 @@ class TestBuilderDataLoader:
 
     def test_find_file_not_found(self, temp_test_dirs):
         """find_file returns None when no file found anywhere."""
-        from game.ui.screens.builder_data_loader import BuilderDataLoader
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
         loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"])
         path, is_fallback = loader.find_file("nonexistent_file.json", allow_default=True)
@@ -102,7 +102,7 @@ class TestBuilderDataLoader:
 
     def test_find_file_multiple_names(self, temp_test_dirs):
         """find_file accepts list of alternative filenames."""
-        from game.ui.screens.builder_data_loader import BuilderDataLoader
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
         loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"])
         # Try multiple names, first should match
@@ -113,7 +113,7 @@ class TestBuilderDataLoader:
 
     def test_clear_registries_clears_registry_manager(self, temp_test_dirs):
         """clear_registries calls RegistryManager.clear()."""
-        from game.ui.screens.builder_data_loader import BuilderDataLoader
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
         loader = BuilderDataLoader(temp_test_dirs["custom_dir"])
 
@@ -142,7 +142,7 @@ class TestBuilderDataLoaderIntegration:
 
     def test_load_all_with_real_data(self):
         """load_all successfully loads from real data directory."""
-        from game.ui.screens.builder_data_loader import BuilderDataLoader
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
         loader = BuilderDataLoader(self.data_dir)
         result = loader.load_all()
@@ -158,7 +158,7 @@ class TestBuilderDataLoaderIntegration:
         Registry state verification is done via LoadResult.default_class
         which requires vehicle classes to have loaded successfully.
         """
-        from game.ui.screens.builder_data_loader import BuilderDataLoader
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
         loader = BuilderDataLoader(self.data_dir)
         result = loader.load_all()

@@ -34,7 +34,7 @@ def pytest_configure(config):
         import game.ui.renderer.game_renderer
         import game.ui.screens.battle_scene
         import game.ui.screens.battle_screen
-        import game.ui.screens.builder_screen
+        import game.ui.screens.workshop_screen
         import game.ui.panels.battle_panels
         import game.ui.panels.builder_widgets
     except ImportError as e:

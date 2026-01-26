@@ -16,7 +16,8 @@ args, _ = parser.parse_known_args()
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.resources import load_resources
 from pygame_gui.elements import UIButton
-from game.ui.screens.builder_screen import BuilderSceneGUI
+from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_context import WorkshopContext
 from game.ui.renderer.sprites import SpriteManager
 from game.ui.screens.battle_scene import BattleScene
 from game.ui.screens.setup_screen import BattleSetupScreen
@@ -120,7 +121,9 @@ class Game:
         self.update_menu_buttons()
 
         # Scene objects
-        self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return)
+        context = WorkshopContext.standalone(tech_preset_name="default")
+        context.on_return = self.on_builder_return
+        self.builder_scene = DesignWorkshopGUI(WIDTH, HEIGHT, context)
         self.battle_setup = BattleSetupScreen()
         self.battle_scene = BattleScene(WIDTH, HEIGHT)
         self.strategy_scene = StrategyScene(WIDTH, HEIGHT)
@@ -167,7 +170,11 @@ class Game:
         """
         self.state = BUILDER
         self.builder_return_state = return_to
-        self.builder_scene = BuilderSceneGUI(WIDTH, HEIGHT, self.on_builder_return, context)
+        # Use provided context or create default standalone context
+        if context is None:
+            context = WorkshopContext.standalone(tech_preset_name="default")
+        context.on_return = self.on_builder_return
+        self.builder_scene = DesignWorkshopGUI(WIDTH, HEIGHT, context)
 
     def on_builder_return(self, custom_ship=None):
         """Return from design workshop to caller or main menu."""

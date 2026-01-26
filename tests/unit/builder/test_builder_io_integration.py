@@ -1,6 +1,6 @@
 from unittest.mock import patch, MagicMock
-from game.ui.screens import builder_screen
-from game.ui.screens.builder_screen import BuilderSceneGUI
+from game.ui.screens import workshop_screen
+from game.ui.screens.workshop_screen import DesignWorkshopGUI
 from game.ui.screens.workshop_context import WorkshopMode
 
 
@@ -13,7 +13,7 @@ class TestBuilderIOIntegration:
         gui_mock.context.mode = WorkshopMode.STANDALONE
         return gui_mock
 
-    @patch('game.ui.screens.builder_screen.ShipIO.save_ship')
+    @patch('game.ui.screens.workshop_screen.ShipIO.save_ship')
     def test_save_ship_success_flow(self, mock_save):
         """Verify GUI flow when save is successful."""
         mock_save.return_value = (True, "Saved successfully")
@@ -23,7 +23,7 @@ class TestBuilderIOIntegration:
         gui_mock.ship = MagicMock()
 
         # Call the method (we grab it from the class and bind it to our mock)
-        BuilderSceneGUI._save_ship(gui_mock)
+        DesignWorkshopGUI._save_ship(gui_mock)
 
         # Verify ShipIO called
         mock_save.assert_called_once_with(gui_mock.ship)
@@ -32,7 +32,7 @@ class TestBuilderIOIntegration:
         # or we could verify print via mock, but key is no error dialog)
         gui_mock.show_error.assert_not_called()
 
-    @patch('game.ui.screens.builder_screen.ShipIO.save_ship')
+    @patch('game.ui.screens.workshop_screen.ShipIO.save_ship')
     def test_save_ship_failure_flow(self, mock_save):
         """Verify GUI flow when save fails."""
         mock_save.return_value = (False, "Permission Denied")
@@ -40,12 +40,12 @@ class TestBuilderIOIntegration:
         gui_mock = self._create_gui_mock_standalone()
         gui_mock.ship = MagicMock()
 
-        BuilderSceneGUI._save_ship(gui_mock)
+        DesignWorkshopGUI._save_ship(gui_mock)
 
         # Verify error shown
         gui_mock.show_error.assert_called_once_with("Permission Denied")
 
-    @patch('game.ui.screens.builder_screen.ShipIO.load_ship')
+    @patch('game.ui.screens.workshop_screen.ShipIO.load_ship')
     def test_load_ship_success_flow(self, mock_load):
         """Verify GUI flow when load is successful."""
         mock_new_ship = MagicMock()
@@ -59,7 +59,7 @@ class TestBuilderIOIntegration:
         # Mock _apply_loaded_ship to verify it's called with the right ship
         gui_mock._apply_loaded_ship = MagicMock()
 
-        BuilderSceneGUI._load_ship(gui_mock)
+        DesignWorkshopGUI._load_ship(gui_mock)
 
         # Verify _apply_loaded_ship was called with the loaded ship
         gui_mock._apply_loaded_ship.assert_called_once()
@@ -70,7 +70,7 @@ class TestBuilderIOIntegration:
         # Verify no error
         gui_mock.show_error.assert_not_called()
 
-    @patch('game.ui.screens.builder_screen.ShipIO.load_ship')
+    @patch('game.ui.screens.workshop_screen.ShipIO.load_ship')
     def test_load_ship_failure_flow(self, mock_load):
         """Verify GUI flow when load fails."""
         mock_load.return_value = (None, "Corrupt File")
@@ -80,7 +80,7 @@ class TestBuilderIOIntegration:
         gui_mock.height = 1080
         gui_mock.right_panel = MagicMock()
 
-        BuilderSceneGUI._load_ship(gui_mock)
+        DesignWorkshopGUI._load_ship(gui_mock)
 
         # Verify error shown
         gui_mock.show_error.assert_called_once_with("Corrupt File")

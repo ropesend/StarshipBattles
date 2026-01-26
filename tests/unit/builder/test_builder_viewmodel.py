@@ -55,7 +55,7 @@ def pygame_and_data():
 def viewmodel_setup(pygame_and_data):
     """Per-test fixture to create a fresh viewmodel."""
     event_bus = MockEventBus()
-    from game.ui.screens.builder_viewmodel import BuilderViewModel
+    from game.ui.screens.workshop_viewmodel import WorkshopViewModel as BuilderViewModel
     viewmodel = BuilderViewModel(event_bus, 1280, 720)
 
     yield {'event_bus': event_bus, 'viewmodel': viewmodel}

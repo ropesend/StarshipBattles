@@ -18,27 +18,22 @@
 | 3. ShipBuilderService Shim | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. PathSegment & to_hit_profile | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Deprecated Functions | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Builder Shims | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Builder Shims | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-25
-**Active Phase:** Phase 6 - Builder Shims (In Progress)
-**Last Action:** Completed Phases 1-5. Also fixed tests/strategy/test_path_projection.py which was using removed `['hex']` key (now uses `['end']`).
-**Next Action:** Phase 6 is complex with ~25 files to update. Key tasks:
-  1. Update game/app.py to use DesignWorkshopGUI and WorkshopContext instead of BuilderSceneGUI
-  2. Update game/ui/__init__.py to reference workshop_screen instead of builder_screen
-  3. Update 9+ test files in tests/unit/builder/ to use workshop_screen imports
-  4. Update test_builder_data_loader.py (8 locations) to use WorkshopDataLoader
-  5. Update test_builder_viewmodel.py to use WorkshopViewModel
-  6. Delete 4 shim files when all callers are updated
+**Active Phase:** PROJECT COMPLETE
+**Last Action:** Completed Phase 6 - Builder Shims. All 6 phases complete.
+**Next Action:** None - project complete. Run final verification and close project.
 **Blockers:** None
 
-### Summary of Work Done This Session:
+### Summary of Work Done:
 - **Phase 1 (Singleton Aliases):** Removed get_instance() aliases from SpriteManager, ShipThemeManager, ScreenshotManager. Updated 13 callers.
 - **Phase 2 (Fleet Warp Aliases):** Removed has_energy_for_warp() and consume_warp_energy() from Fleet. Updated tests.
 - **Phase 3 (ShipBuilderService Shim):** Deleted ship_builder_service.py. Updated workshop_viewmodel.py and services/__init__.py. Deleted duplicate test file.
 - **Phase 4 (PathSegment & to_hit_profile):** Removed PathSegment.hex property and to_hit_profile alias. Updated ship.py, ship_stats.py, stats_layout.json, and tests.
 - **Phase 5 (Deprecated Functions):** Removed load_combat_strategies() and _execute_move_step(). Updated 6+ caller files.
+- **Phase 6 (Builder Shims):** Deleted 4 shim files (builder_screen.py, builder_viewmodel.py, builder_data_loader.py, builder_event_router.py). Updated game/app.py, game/ui/__init__.py, 8 test files, and tests/unit/ui/conftest.py. All 178 builder tests pass.
 
 ### Files Changed Summary:
 - game/ui/renderer/sprites.py, game/simulation/ship_theme.py, game/core/screenshot_manager.py (singleton aliases)

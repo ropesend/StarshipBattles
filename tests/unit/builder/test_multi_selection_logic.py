@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, patch
 import pygame
 import os
 
-from game.ui.screens.builder_screen import BuilderSceneGUI
+from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_context import WorkshopContext
 from game.simulation.components.component import Component
 
 
@@ -16,7 +17,8 @@ class TestMultiSelectionLogic:
         pygame.display.set_mode((800, 600), flags=pygame.HIDDEN)
 
         # Mocking Builder with minimal dependencies
-        self.builder = BuilderSceneGUI(800, 600, None)
+        context = WorkshopContext.standalone(tech_preset_name="default")
+        self.builder = DesignWorkshopGUI(800, 600, context)
         self.builder.ship = MagicMock()
         self.builder.ship.layers = {}
 
