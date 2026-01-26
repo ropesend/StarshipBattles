@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Complete
+**Status:** Not Started
 **Objective:** Replace legacy Button with pygame_gui UIButton in main menu
 
 **CRITICAL:** This is the highest-risk phase. The main menu is the first thing users see. Test thoroughly!
@@ -18,18 +18,18 @@
 **File:** `game/app.py`
 **Tests:** `pytest tests/unit/test_app_integration.py -v`
 
-- [x] Add import at top of file (around line 10):
+- [ ] Add import at top of file (around line 10):
   ```python
   import pygame_gui
   ```
-- [x] In `__init__()` method, after `pygame.display.set_mode()`, add:
+- [ ] In `__init__()` method, after `pygame.display.set_mode()`, add:
   ```python
   self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
   self._menu_button_callbacks = {}  # Maps UIButton -> callback function
   ```
-- [x] Verify: App still initializes without errors
+- [ ] Verify: App still initializes without errors
 
-**Notes:** Added pygame_gui import and UIManager initialization. App imports successfully.
+**Notes:** [Filled during implementation]
 
 ---
 
@@ -37,11 +37,11 @@
 **File:** `game/app.py` (lines 125-137)
 **Tests:** Manual - launch game and verify menu displays
 
-- [x] Change import from `from ui import Button` to:
+- [ ] Change import from `from ui import Button` to:
   ```python
   from pygame_gui.elements import UIButton
   ```
-- [x] Rewrite `update_menu_buttons()` method:
+- [ ] Rewrite `update_menu_buttons()` method:
   ```python
   def update_menu_buttons(self):
       # Clear old buttons if they exist
@@ -72,9 +72,9 @@
           self.menu_buttons.append(btn)
           self._menu_button_callbacks[btn] = callback
   ```
-- [x] Verify: No syntax errors
+- [ ] Verify: No syntax errors
 
-**Notes:** Replaced legacy Button import with UIButton. Rewrote update_menu_buttons() to create UIButtons with callback mapping.
+**Notes:** [Filled during implementation]
 
 ---
 
@@ -82,8 +82,8 @@
 **File:** `game/app.py`
 **Tests:** Manual - click each menu button
 
-- [x] Find `_forward_event_to_scene()` method
-- [x] In the `if self.state == MENU:` block, replace legacy button handling with:
+- [ ] Find `_forward_event_to_scene()` method
+- [ ] In the `if self.state == MENU:` block, replace legacy button handling with:
   ```python
   if self.state == MENU:
       self.menu_ui_manager.process_events(event)
@@ -93,10 +93,10 @@
               callback()
               return  # Event consumed
   ```
-- [x] Remove legacy button loop: `for btn in self.menu_buttons: btn.handle_event(event)`
-- [x] Verify: Events are processed correctly
+- [ ] Remove legacy button loop: `for btn in self.menu_buttons: btn.handle_event(event)`
+- [ ] Verify: Events are processed correctly
 
-**Notes:** Replaced legacy event handling with pygame_gui UI_BUTTON_PRESSED event pattern.
+**Notes:** [Filled during implementation]
 
 ---
 
@@ -104,17 +104,17 @@
 **File:** `game/app.py`
 **Tests:** Visual - menu buttons render correctly
 
-- [x] Find `_draw_menu()` method
-- [x] Add UIManager update (needs frame_time parameter):
+- [ ] Find `_draw_menu()` method
+- [ ] Add UIManager update (needs frame_time parameter):
   ```python
   # In _draw_menu(), add after background drawing:
   self.menu_ui_manager.update(frame_time)  # frame_time in seconds
   self.menu_ui_manager.draw_ui(self.screen)
   ```
-- [x] Remove legacy button draw loop: `for btn in self.menu_buttons: btn.draw(self.screen)`
-- [x] Verify: Buttons render with pygame_gui styling
+- [ ] Remove legacy button draw loop: `for btn in self.menu_buttons: btn.draw(self.screen)`
+- [ ] Verify: Buttons render with pygame_gui styling
 
-**Notes:** Simplified _draw_menu() to always update/draw the UIManager. Uses clock.get_time() / 1000.0 for frame_time.
+**Notes:** May need to check where frame_time comes from - typically from `clock.tick() / 1000.0`
 
 ---
 
@@ -122,39 +122,39 @@
 **File:** `game/app.py`
 **Tests:** Resize window - buttons reposition correctly
 
-- [x] Find `_handle_resize()` method
-- [x] Add UIManager resize call:
+- [ ] Find `_handle_resize()` method
+- [ ] Add UIManager resize call:
   ```python
   self.menu_ui_manager.set_window_resolution((WIDTH, HEIGHT))
   ```
-- [x] `update_menu_buttons()` is already called - this recreates buttons at new positions
-- [x] Verify: Resize window, buttons reposition correctly
+- [ ] `update_menu_buttons()` is already called - this recreates buttons at new positions
+- [ ] Verify: Resize window, buttons reposition correctly
 
-**Notes:** Added menu_ui_manager.set_window_resolution() call before update_menu_buttons().
+**Notes:** [Filled during implementation]
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [x] All task checkboxes above are checked
-- [x] Run `pytest tests/ --testmon` - passes
-- [x] **CRITICAL MANUAL TESTS:**
-  - [x] Launch game - menu displays
-  - [x] All 10 buttons visible with pygame_gui styling
-  - [x] Click "Quickstart 1P" - enters strategy mode
-  - [x] Click "Quickstart 2P" - enters strategy mode
-  - [x] Click "New Game" - shows dialog
-  - [x] Click "Load Game" - shows dialog
-  - [x] Click "Race Setup" - shows dialog
-  - [x] Click "Design Workshop" - enters builder
-  - [x] Click "Battle Setup" - enters battle setup
-  - [x] Click "Formation Editor" - enters formation editor
-  - [x] Click "Combat Lab" - enters test lab
-  - [x] Click "Research Tree" - enters research tree
-  - [x] Resize window - buttons reposition
-  - [x] Hover states work (buttons change appearance on hover)
-- [x] Update status at top of this file to `Complete`
-- [x] Update plan.md phase table row to `Complete`
-- [x] Update plan.md Current State to point to Phase 4
+- [ ] All task checkboxes above are checked
+- [ ] Run `pytest tests/ --testmon` - passes
+- [ ] **CRITICAL MANUAL TESTS:**
+  - [ ] Launch game - menu displays
+  - [ ] All 10 buttons visible with pygame_gui styling
+  - [ ] Click "Quickstart 1P" - enters strategy mode
+  - [ ] Click "Quickstart 2P" - enters strategy mode
+  - [ ] Click "New Game" - shows dialog
+  - [ ] Click "Load Game" - shows dialog
+  - [ ] Click "Race Setup" - shows dialog
+  - [ ] Click "Design Workshop" - enters builder
+  - [ ] Click "Battle Setup" - enters battle setup
+  - [ ] Click "Formation Editor" - enters formation editor
+  - [ ] Click "Combat Lab" - enters test lab
+  - [ ] Click "Research Tree" - enters research tree
+  - [ ] Resize window - buttons reposition
+  - [ ] Hover states work (buttons change appearance on hover)
+- [ ] Update status at top of this file to `Complete`
+- [ ] Update plan.md phase table row to `Complete`
+- [ ] Update plan.md Current State to point to Phase 4
 
 **ROLLBACK PLAN:** If buttons don't work, `git revert` to restore legacy Button

@@ -19,21 +19,23 @@
 | 4. PathSegment & to_hit_profile | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Deprecated Functions | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Builder Shims | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Audit Fixes (Cycle 1) | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-25
-**Active Phase:** PROJECT COMPLETE
-**Last Action:** Completed Phase 6 - Builder Shims. All 6 phases complete.
-**Next Action:** None - project complete. Run final verification and close project.
+**Active Phase:** AUDIT COMPLETE
+**Last Action:** Audit Cycle 2 passed with no PROJ-15 issues found.
+**Next Action:** User verification required.
 **Blockers:** None
 
 ### Summary of Work Done:
-- **Phase 1 (Singleton Aliases):** Removed get_instance() aliases from SpriteManager, ShipThemeManager, ScreenshotManager. Updated 13 callers.
-- **Phase 2 (Fleet Warp Aliases):** Removed has_energy_for_warp() and consume_warp_energy() from Fleet. Updated tests.
-- **Phase 3 (ShipBuilderService Shim):** Deleted ship_builder_service.py. Updated workshop_viewmodel.py and services/__init__.py. Deleted duplicate test file.
-- **Phase 4 (PathSegment & to_hit_profile):** Removed PathSegment.hex property and to_hit_profile alias. Updated ship.py, ship_stats.py, stats_layout.json, and tests.
-- **Phase 5 (Deprecated Functions):** Removed load_combat_strategies() and _execute_move_step(). Updated 6+ caller files.
-- **Phase 6 (Builder Shims):** Deleted 4 shim files (builder_screen.py, builder_viewmodel.py, builder_data_loader.py, builder_event_router.py). Updated game/app.py, game/ui/__init__.py, 8 test files, and tests/unit/ui/conftest.py. All 178 builder tests pass.
+- **Phase 1 (Singleton Aliases):** ✓ Complete. Removed get_instance() aliases.
+- **Phase 2 (Fleet Warp Aliases):** ✓ Complete. Removed has_energy_for_warp() and consume_warp_energy().
+- **Phase 3 (ShipBuilderService Shim):** ✓ Complete. ship_builder_service.py and test file deleted.
+- **Phase 4 (PathSegment & to_hit_profile):** ✓ Complete. Removed aliases.
+- **Phase 5 (Deprecated Functions):** ✓ Complete. Removed deprecated functions.
+- **Phase 6 (Builder Shims):** ✓ Complete. All 4 shim files deleted.
+- **Phase 7 (Audit Fixes):** ✓ Complete. Deleted 5 production shim files + 1 test file that were incorrectly left as backward-compat wrappers.
 
 ### Files Changed Summary:
 - game/ui/renderer/sprites.py, game/simulation/ship_theme.py, game/core/screenshot_manager.py (singleton aliases)
@@ -110,7 +112,7 @@ Phase 2 of the Legacy Code Cleanup project. Removes backward compatibility shims
 - [ ] `python -m game.app` - Application launches
 - [ ] Navigate to Design Workshop - opens correctly
 - [ ] No DeprecationWarning emissions during tests
-- [ ] All 5 shim files deleted
+- [x] All 5 shim files deleted
 
 ## Pre-existing Issues
 - Test `test_intercept_integration` is flaky when run with parallel workers (pre-existing)
@@ -120,3 +122,17 @@ Phase 2 of the Legacy Code Cleanup project. Removes backward compatibility shims
 1. **BuilderSceneGUI wrapper complexity** - The shim is 154 lines with __getattr__ delegation. Mitigation: Update tests last, verify app.py works first.
 2. **workshop_viewmodel.py dependency** - Uses ShipBuilderService extensively. Mitigation: Update imports systematically.
 3. **Test flakiness** - Some tests have isolation issues. Mitigation: Run tests with `-n 1` if failures occur.
+
+## Audit Log
+| Cycle | Date | Findings | Resolution |
+|-------|------|----------|------------|
+| 1 | 2026-01-25 | 5 shim files not deleted (exist as wrappers), 1 test file not deleted | Added Phase 7 for fixes |
+| 1-fix | 2026-01-25 | Phase 7 completed - all 6 files deleted, 4529 tests pass | Ready for Audit Cycle 2 |
+| 2 | 2026-01-25 | No PROJ-15 issues found. All 7 phases verified complete. | **PASSED** |
+
+## Completion Checklist
+- [x] All tasks checked off (7 phases complete)
+- [x] All tests passing (4529 pass, 2 pre-existing flaky failures unrelated to PROJ-15)
+- [x] Regression tests passing
+- [x] Audit passed (no significant issues)
+- [ ] User verified
