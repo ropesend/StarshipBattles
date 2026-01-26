@@ -10,15 +10,22 @@ from pathlib import Path
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+<<<<<<< Updated upstream
 from game.core.registry import RegistryManager
 from game.simulation.systems.battle_engine import BattleEngine
 from game.simulation.components.component import load_components, load_modifiers
-from game.simulation.entities.ship import initialize_ship_data
+from game.simulation.entities.ship_loader import initialize_ship_data
 from simulation_tests.logging_config import get_logger, setup_combat_lab_logging
 
 # Setup logging
 setup_combat_lab_logging()
 logger = get_logger(__name__)
+=======
+from game.simulation.systems.battle_engine import BattleEngine
+from game.simulation.components.component import load_components, load_modifiers, COMPONENT_REGISTRY, MODIFIER_REGISTRY
+from game.simulation.entities.ship import VEHICLE_CLASSES
+from game.simulation.entities.ship_loader import initialize_ship_data
+>>>>>>> Stashed changes
 
 class TestRunner:
     __test__ = False  # Not a pytest test class
@@ -61,8 +68,11 @@ class TestRunner:
             load_components(paths['components'])
 
             # Helper needed in ship.py to accept direct path
-            from game.simulation.entities.ship import load_vehicle_classes
+            from game.simulation.entities.ship_loader import load_vehicle_classes
+<<<<<<< Updated upstream
             logger.debug(f"Loading vehicle classes from {paths['vehicle_classes']}")
+=======
+>>>>>>> Stashed changes
             load_vehicle_classes(paths['vehicle_classes'])
 
             # IMPORTANT: Keep unfrozen to allow ship loading in scenario.setup()
@@ -91,9 +101,15 @@ class TestRunner:
 
         # 2. Setup Engine
         from game.simulation.systems.battle_engine import BattleLogger
+<<<<<<< Updated upstream
         battle_logger = BattleLogger(enabled=True)
         self.engine = BattleEngine(logger=battle_logger) # Fresh engine with logging
 
+=======
+        logger = BattleLogger(enabled=True)
+        self.engine = BattleEngine(logger=logger) # Fresh engine with logging
+        
+>>>>>>> Stashed changes
         # 3. Scenario Setup
         scenario.setup(self.engine)
 

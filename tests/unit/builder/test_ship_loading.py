@@ -8,7 +8,8 @@ import pytest
 import os
 import glob
 
-from game.simulation.entities.ship import Ship, load_vehicle_classes
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import load_vehicle_classes
 from game.simulation.components.component import (
     load_components, load_modifiers, create_component
 )
@@ -105,7 +106,7 @@ class TestAllShipDesigns:
         data_dir = get_data_dir()
         load_components(str(data_dir / "components.json"))
         load_modifiers(str(data_dir / "modifiers.json"))
-        from game.simulation.entities.ship import load_vehicle_classes
+        from game.simulation.entities.ship_loader import load_vehicle_classes
         load_vehicle_classes(str(data_dir / "vehicleclasses.json"))
 
         # Find all ship JSON files in tests/unit/ships

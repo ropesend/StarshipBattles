@@ -100,7 +100,7 @@ class WorkshopDataLoader:
             LoadResult with success status, default class, and any errors/warnings
         """
         from game.simulation.components.component import load_components, load_modifiers
-        from game.simulation.entities.ship import load_vehicle_classes
+        from game.simulation.entities.ship_loader import load_vehicle_classes
 
         result = LoadResult()
         
@@ -173,7 +173,7 @@ class WorkshopDataLoader:
     
     def _load_vehicle_classes(self, result: LoadResult) -> None:
         """Load vehicle classes and layer definitions."""
-        from game.simulation.entities.ship import load_vehicle_classes
+        from game.simulation.entities.ship_loader import load_vehicle_classes
         
         vclass_path, _ = self.find_file(["vehicleclasses.json", "classes.json"])
         vlayer_path, _ = self.find_file(["vehiclelayers.json", "layers.json"])

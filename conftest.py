@@ -49,10 +49,10 @@ def reset_game_state(monkeypatch, request):
         cache_mgr.modifier_cache = cache.get_modifiers()
 
         # B. Ship Vehicle Classes: Patch loader to be a no-op (Data already in Registry)
-        monkeypatch.setattr("game.simulation.entities.ship.load_vehicle_classes", lambda *args, **kwargs: None)
+        monkeypatch.setattr("game.simulation.entities.ship_loader.load_vehicle_classes", lambda *args, **kwargs: None)
 
         # C. Combat Strategies: Hydrate from cache
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
         strategy_mgr = StrategyManager.instance()
         strategy_mgr.strategies = cache.get_strategies()
 
@@ -65,7 +65,7 @@ def reset_game_state(monkeypatch, request):
         reset_component_caches()
 
         # Reset AI Strategy Manager using singleton pattern
-        from game.ai.controller import StrategyManager
+        from game.ai.strategy_manager import StrategyManager
         StrategyManager.instance().clear()
 
         # Reset singletons using thread-safe reset() methods

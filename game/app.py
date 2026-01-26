@@ -110,7 +110,7 @@ class Game:
         load_resources(os.path.join(base_path, "data", "resources.json"))
 
         # Initialize ship data
-        from game.simulation.entities.ship import initialize_ship_data
+        from game.simulation.entities.ship_loader import initialize_ship_data
         initialize_ship_data(base_path)
 
         # Load sprites

@@ -37,7 +37,7 @@ def setup_game_data():
     unit_test_data_dir = get_unit_test_data_dir()
 
     load_components(str(data_dir / "components.json"))
-    from game.simulation.entities.ship import load_vehicle_classes
+    from game.simulation.entities.ship_loader import load_vehicle_classes
     load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"))
 
     # Load test data for AI strategies

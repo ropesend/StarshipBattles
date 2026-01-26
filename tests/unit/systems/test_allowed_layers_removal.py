@@ -8,7 +8,8 @@ import pytest
 
 from game.simulation.components.component import Component, load_components
 from game.core.registry import RegistryManager
-from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.entities.ship_loader import initialize_ship_data
 from tests.fixtures.paths import get_project_root, get_data_dir
 
 
@@ -89,7 +90,7 @@ class TestBuilderDropValidation:
 
     def test_validator_handles_component_placement(self, cruiser_ship):
         """Validator should handle layer checks without allowed_layers."""
-        from game.simulation.entities.ship import get_or_create_validator
+        from game.simulation.entities.ship_loader import get_or_create_validator
 
         comps = RegistryManager.instance().components
         if 'bridge' not in comps:
@@ -105,7 +106,7 @@ class TestBuilderDropValidation:
 
     def test_weapon_blocked_in_core_layer(self, cruiser_ship):
         """Weapon should be blocked in CORE layer via vehiclelayers.json rules."""
-        from game.simulation.entities.ship import get_or_create_validator
+        from game.simulation.entities.ship_loader import get_or_create_validator
 
         # Find any weapon component in registry
         weapon_id = None
@@ -128,7 +129,7 @@ class TestBuilderDropValidation:
 
     def test_armor_allowed_in_armor_layer(self, cruiser_ship):
         """Armor should be allowed in ARMOR layer."""
-        from game.simulation.entities.ship import get_or_create_validator
+        from game.simulation.entities.ship_loader import get_or_create_validator
 
         # Find any armor component in registry
         armor_id = None

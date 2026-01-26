@@ -4,7 +4,8 @@ import os
 import pygame
 sys.path.append(os.getcwd())
 
-from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
 
 def run():

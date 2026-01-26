@@ -2,7 +2,8 @@
 import pytest
 import pygame
 
-from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components  # Phase 7: Removed legacy class imports
 from game.simulation.designs import create_brick, create_interceptor
 from game.core.registry import RegistryManager

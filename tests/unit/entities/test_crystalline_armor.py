@@ -5,7 +5,8 @@ import pygame
 pygame.init()
 
 from game.simulation.components.component import Component
-from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.entities.ship_combat import ShipCombatMixin
 
 

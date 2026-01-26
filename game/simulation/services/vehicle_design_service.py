@@ -7,7 +7,8 @@ handling vehicle creation, component management, and design validation.
 from dataclasses import dataclass, field
 from typing import List, Optional, Any, TYPE_CHECKING
 
-from game.simulation.entities.ship import Ship, get_or_create_validator
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import get_or_create_validator
 from game.simulation.components.component import Component, create_component
 from game.simulation.components.component_constants import LayerType
 from game.core.registry import get_component_registry, get_vehicle_classes

@@ -18,7 +18,7 @@ class TestBuilderValidation:
             pygame.init()
 
         # Ensure data is loaded
-        from game.simulation.entities.ship import initialize_ship_data
+        from game.simulation.entities.ship_loader import initialize_ship_data
         initialize_ship_data(str(get_project_root()))
 
         # Create a standard ship for testing
@@ -254,7 +254,8 @@ class TestComplexRules:
         if not pygame.get_init():
             pygame.init()
         # Initialize ship logic
-        from game.simulation.entities.ship import initialize_ship_data, Ship
+        from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
         initialize_ship_data(str(get_project_root()))
 
         self.ship = Ship("Complex Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
@@ -357,7 +358,8 @@ class TestValidationGuardClauses:
     def setup_and_teardown(self):
         if not pygame.get_init():
             pygame.init()
-        from game.simulation.entities.ship import initialize_ship_data, Ship
+        from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
         initialize_ship_data(str(get_project_root()))
         self.ship = Ship("Guard Clause Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
 

@@ -8,7 +8,8 @@ import pygame
 
 
 from game.ui.screens.battle_scene import BattleScene
-from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import create_component, load_components
 from game.core.registry import RegistryManager
 

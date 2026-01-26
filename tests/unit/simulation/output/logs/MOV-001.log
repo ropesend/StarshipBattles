@@ -1,0 +1,29 @@
+[TICK:0] | SHIP_SPAWN | name=Test Target Stationary | pos=(0.0,0.0) | ship_class=TestM_2L | mass=220.0 | thrust=0.0
+[TICK:0] | SHIP_SPAWN | name=Test Target Erratic Small | pos=(1000.0,0.0) | ship_class=TestS_2L | mass=65.0 | thrust=500.0
+[TICK:0] | SHIP_SPAWN | name=Test Target Linear Fast | pos=(0.0,1000.0) | ship_class=TestM_2L | mass=280.0 | thrust=1500.0
+[TICK:0] | SIM_START | test_id=MOV-001 | ships=Test Target Stationary,Test Target Erratic Small,Test Target Linear Fast
+[TICK:0] | SHIP_VELOCITY | name=Test Target Stationary | vx=0.00 | vy=0.00 | speed=0.00 | heading=0.0
+[TICK:0] | SHIP_POSITION | name=Test Target Stationary | x=0.0 | y=0.0
+[TICK:0] | SHIP_VELOCITY | name=Test Target Erratic Small | vx=0.00 | vy=0.00 | speed=0.00 | heading=2.4
+[TICK:0] | SHIP_POSITION | name=Test Target Erratic Small | x=1000.0 | y=0.0
+[TICK:0] | SHIP_VELOCITY | name=Test Target Linear Fast | vx=47.83 | vy=0.00 | speed=47.83 | heading=0.0
+[TICK:0] | SHIP_POSITION | name=Test Target Linear Fast | x=47.8 | y=1000.0
+[TICK:10] | SHIP_VELOCITY | name=Test Target Stationary | vx=0.00 | vy=0.00 | speed=0.00 | heading=0.0
+[TICK:10] | SHIP_POSITION | name=Test Target Stationary | x=0.0 | y=0.0
+[TICK:10] | SHIP_VELOCITY | name=Test Target Erratic Small | vx=0.00 | vy=0.00 | speed=0.00 | heading=26.2
+[TICK:10] | SHIP_POSITION | name=Test Target Erratic Small | x=1000.0 | y=0.0
+[TICK:10] | SHIP_VELOCITY | name=Test Target Linear Fast | vx=133.93 | vy=0.00 | speed=133.93 | heading=0.0
+[TICK:10] | SHIP_POSITION | name=Test Target Linear Fast | x=1348.9 | y=1000.0
+[TICK:50] | SHIP_VELOCITY | name=Test Target Stationary | vx=0.00 | vy=0.00 | speed=0.00 | heading=0.0
+[TICK:50] | SHIP_POSITION | name=Test Target Stationary | x=0.0 | y=0.0
+[TICK:50] | SHIP_VELOCITY | name=Test Target Erratic Small | vx=0.00 | vy=0.00 | speed=0.00 | heading=121.6
+[TICK:50] | SHIP_POSITION | name=Test Target Erratic Small | x=1000.0 | y=0.0
+[TICK:50] | SHIP_VELOCITY | name=Test Target Linear Fast | vx=133.93 | vy=0.00 | speed=133.93 | heading=0.0
+[TICK:50] | SHIP_POSITION | name=Test Target Linear Fast | x=6706.0 | y=1000.0
+[TICK:100] | SHIP_VELOCITY | name=Test Target Stationary | vx=0.00 | vy=0.00 | speed=0.00 | heading=0.0
+[TICK:100] | SHIP_POSITION | name=Test Target Stationary | x=0.0 | y=0.0
+[TICK:100] | SHIP_VELOCITY | name=Test Target Erratic Small | vx=0.00 | vy=0.00 | speed=0.00 | heading=240.9
+[TICK:100] | SHIP_POSITION | name=Test Target Erratic Small | x=1000.0 | y=0.0
+[TICK:100] | SHIP_VELOCITY | name=Test Target Linear Fast | vx=133.93 | vy=0.00 | speed=133.93 | heading=0.0
+[TICK:100] | SHIP_POSITION | name=Test Target Linear Fast | x=13402.4 | y=1000.0
+[TICK:100] | SIM_END | final_tick=100 | ships_remaining=3

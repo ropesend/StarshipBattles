@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Remove StrategyManager, get_strategy_names, reset_strategy_manager, TargetEvaluator re-exports from controller.py
 **Risk:** Medium (test infrastructure affected)
 **Files Affected:** ~40

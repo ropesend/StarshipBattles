@@ -42,7 +42,7 @@ class SessionRegistryCache:
             try:
                 # 1. Import Loaders inside method to avoid circular imports at top level
                 from game.simulation.components.component import load_components, load_modifiers
-                from game.simulation.entities.ship import load_vehicle_classes
+                from game.simulation.entities.ship_loader import load_vehicle_classes
                 from game.core.registry import RegistryManager
 
                 # 2. Reset Registry to clean state for capture

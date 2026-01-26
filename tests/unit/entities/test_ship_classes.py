@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch
 import pygame
 import os
-from game.simulation.entities.ship import initialize_ship_data
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.core.registry import RegistryManager
 from game.simulation.ship_theme import ShipThemeManager
 from tests.fixtures.paths import get_project_root

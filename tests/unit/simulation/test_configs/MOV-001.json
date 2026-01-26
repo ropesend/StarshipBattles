@@ -1,0 +1,70 @@
+{
+    "test_id": "MOV-001",
+    "description": "Verify AI Movement Behaviors (Stationary, Rotate, Linear)",
+    "duration_ticks": 100,
+    "ships": [
+        {
+            "name": "StationaryShip",
+            "file": "tests/data/ships/Test_Target_Stationary.json",
+            "position": [
+                0,
+                0
+            ],
+            "ai_strategy": "do_nothing"
+        },
+        {
+            "name": "RotatingShip",
+            "file": "tests/data/ships/Test_Target_Erratic_Small.json",
+            "position": [
+                1000,
+                0
+            ],
+            "ai_strategy": "rotate_only"
+        },
+        {
+            "name": "MovingShip",
+            "file": "tests/data/ships/Test_Target_Linear_Fast.json",
+            "position": [
+                0,
+                1000
+            ],
+            "ai_strategy": "straight_line"
+        }
+    ],
+    "velocity_log_ticks": [
+        0,
+        10,
+        50,
+        100
+    ],
+    "assertions": [
+        {
+            "type": "position_delta",
+            "ship": "Test Target Stationary",
+            "start_tick": 0,
+            "end_tick": 100,
+            "max_delta": 0.1,
+            "min_delta": 0.0
+        },
+        {
+            "type": "heading_change",
+            "ship": "Test Target Erratic Small",
+            "tick": 100,
+            "min_rotation": 10.0
+        },
+        {
+            "type": "position_delta",
+            "ship": "Test Target Linear Fast",
+            "start_tick": 0,
+            "end_tick": 100,
+            "min_delta": 10.0,
+            "max_delta": 15000.0
+        },
+        {
+            "type": "max_speed",
+            "ship": "Test Target Linear Fast",
+            "expected": 133.93,
+            "tolerance": 5.0
+        }
+    ]
+}

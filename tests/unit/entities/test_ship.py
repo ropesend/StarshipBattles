@@ -1,7 +1,8 @@
 import pytest
 import pygame
 
-from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import Component, load_components, create_component  # Phase 7: Removed Bridge import
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_project_root, get_data_dir

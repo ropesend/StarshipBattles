@@ -6,7 +6,8 @@ import pytest
 import pygame
 from unittest import mock
 
-from game.simulation.entities.ship import Ship, initialize_ship_data
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.entities.ship_formation import ShipFormation
 from game.simulation.components.component import load_components
 from game.core.registry import RegistryManager

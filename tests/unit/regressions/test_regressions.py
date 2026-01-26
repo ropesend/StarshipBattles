@@ -3,7 +3,8 @@ import pygame
 import os
 from unittest.mock import patch
 from game.simulation.entities import ship as ship
-from game.simulation.entities.ship import Ship, load_vehicle_classes
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import load_vehicle_classes
 from game.core.registry import RegistryManager
 from game.simulation.ship_theme import ShipThemeManager
 

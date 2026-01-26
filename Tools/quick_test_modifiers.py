@@ -3,7 +3,8 @@ import sys
 import os
 sys.path.insert(0, os.getcwd())
 
-from game.simulation.entities.ship import Ship, initialize_ship_data, LayerType
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
 from game.core.registry import RegistryManager, get_modifier_registry
 

@@ -13,7 +13,7 @@ def test_hull_missing_required_abilities():
     Reproduction test for BUG-10.
     Verifies that hull components are missing CommandAndControl and CombatPropulsion.
     """
-    from game.simulation.entities.ship import load_vehicle_classes
+    from game.simulation.entities.ship_loader import load_vehicle_classes
     from game.simulation.components.component import load_components
     
     load_vehicle_classes()
@@ -38,7 +38,8 @@ def test_hull_missing_required_abilities():
 
 def test_validation_fails_when_requirements_unmet():
     """Verify that ship validation fails if requirement abilities are present but targets are missing."""
-    from game.simulation.entities.ship import Ship, load_vehicle_classes
+    from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import load_vehicle_classes
     from game.simulation.components.component import load_components
     from game.simulation.ship_validator import ShipDesignValidator
     
@@ -59,7 +60,7 @@ def test_validation_fails_when_requirements_unmet():
 
 if __name__ == "__main__":
     # Manual run for debugging
-    from game.simulation.entities.ship import initialize_ship_data
+    from game.simulation.entities.ship_loader import initialize_ship_data
     initialize_ship_data()
     try:
         test_hull_missing_required_abilities()

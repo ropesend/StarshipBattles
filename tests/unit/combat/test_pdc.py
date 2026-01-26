@@ -59,7 +59,7 @@ class TestPDC:
     def setup(self):
         pygame.init()
         # Initialize vehicle classes and components so registry works
-        from game.simulation.entities.ship import initialize_ship_data
+        from game.simulation.entities.ship_loader import initialize_ship_data
         initialize_ship_data()
         from game.simulation.components.component import load_components
         load_components()

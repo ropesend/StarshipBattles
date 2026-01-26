@@ -1,1 +1,24 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="1.088" timestamp="2026-01-25T18:32:21.213386-08:00" hostname="9950X3D"><testcase classname="tests.ui.test_build_queue_screen" name="test_bottom_bar_exists" time="0.346" /></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="29.571" timestamp="2026-01-25T19:34:03.869235-08:00" hostname="9950X3D"><testcase classname="" name="tests.test_framework.test_test_framework_registry" time="0.000"><error message="collection failure">C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\_pytest\python.py:507: in importtestmodule
+    mod = import_path(
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\_pytest\pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+&lt;frozen importlib._bootstrap&gt;:1050: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1027: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1006: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:688: in _load_unlocked
+    ???
+C:\Users\rossr\AppData\Local\Programs\Python\Python310\lib\site-packages\_pytest\assertion\rewrite.py:197: in exec_module
+    exec(co, module.__dict__)
+tests\test_framework\test_test_framework_registry.py:4: in &lt;module&gt;
+    from test_framework.registry import TestRegistry
+test_framework\__init__.py:10: in &lt;module&gt;
+    from .runner import TestRunner
+E     File "c:\Dev\Starship Battles\test_framework\runner.py", line 13
+E       &lt;&lt;&lt;&lt;&lt;&lt;&lt; Updated upstream
+E       ^^
+E   SyntaxError: invalid syntax</error></testcase></testsuite></testsuites>

@@ -15,23 +15,25 @@
 |-------|--------|-----------|
 | 1. PLANET_RESOURCES Re-export | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Component Constants Re-exports | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. AI Re-exports | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Ship Loader Re-exports | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 3. AI Re-exports | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Ship Loader Re-exports | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Wrapper Evaluation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-25 (Session 1)
-**Active Phase:** Phase 3
-**Last Action:** Completed Phase 2 - Component Constants re-export removal (65+ files updated including ship.py, tests, and simulation files). Re-export block removed from component.py.
-**Next Action:** Begin Phase 3 - AI Re-exports (StrategyManager, TargetEvaluator from controller.py)
+**Last Updated:** 2026-01-25 (Session 2)
+**Active Phase:** Phase 5
+**Last Action:** Completed Phase 4 - Ship Loader Re-export removal (98 files updated). Removed re-exports of get_or_create_validator, load_vehicle_classes, initialize_ship_data from ship.py. Kept internal import of get_or_create_validator (used by Ship class).
+**Next Action:** Begin Phase 5 - Wrapper Evaluation (ModifierLogic, _ProfilerProxy, ShipControllableAdapter)
 **Blockers:** None
 
 **Context for Next Agent:**
-- Phase 1 and Phase 2 are fully complete
-- All tests passing: 4524 passed (1 pre-existing failure in test_advanced_fleet_orders, 1 pre-existing import error in test_ui_widgets.py)
-- Key lesson from Phase 2: When removing re-exports, need to check if the module uses those types internally. component.py needed to import ComponentStatus, Modifier, ApplicationModifier for its own use
-- Key lesson: Combined imports like `from module import A, B, C` need special handling - grep for pattern `import.*CONSTANT` not just `import CONSTANT`
-- Phase 3 scope: AI re-exports from controller.py (~40+ files). See phase_3_checklist.md for details.
+- Phases 1-4 are fully complete
+- All tests passing: 4378 passed (some pre-existing failures in UI-related tests, unrelated to this project)
+- Key lesson from Phase 3: controller.py uses StrategyManager and TargetEvaluator internally, so keep imports but remove re-export block
+- Key lesson from Phase 4: ship.py uses get_or_create_validator internally for validation, so kept the internal import but removed re-export
+- Key lesson: Combined imports like `from module import A, B, C` need splitting when consolidating - batch Python script approach was effective for 98 files
+- Key lesson: Root conftest.py monkeypatch paths need updating when re-exports are removed (e.g., `game.simulation.entities.ship.load_vehicle_classes` → `game.simulation.entities.ship_loader.load_vehicle_classes`)
+- Phase 5 scope: Evaluate ModifierLogic wrapper, _ProfilerProxy, ShipControllableAdapter backward compat. See phase_5_checklist.md for details.
 
 ## Overview
 

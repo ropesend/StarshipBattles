@@ -38,7 +38,7 @@ def workshop_class_setup():
     """Class-level setup for WorkshopViewModel tests."""
     pygame.init()
     # Load data for Ship creation
-    from game.simulation.entities.ship import initialize_ship_data
+    from game.simulation.entities.ship_loader import initialize_ship_data
     from game.simulation.components.component import load_components, load_modifiers
     initialize_ship_data(str(get_project_root()))
     data_dir = get_data_dir()

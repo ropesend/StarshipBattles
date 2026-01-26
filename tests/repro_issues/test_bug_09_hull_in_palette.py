@@ -7,7 +7,8 @@ from unittest.mock import MagicMock
 # Set dummy video driver for headless testing
 os.environ['SDL_VIDEODRIVER'] = 'dummy'
 
-from game.simulation.entities.ship import Ship, initialize_ship_data
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, load_modifiers, get_all_components
 from ui.builder.left_panel import BuilderLeftPanel
 

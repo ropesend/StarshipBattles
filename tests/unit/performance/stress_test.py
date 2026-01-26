@@ -13,7 +13,7 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 from game.simulation.designs import create_brick, create_interceptor
 from game.simulation.components.component import load_components, load_modifiers
-from game.simulation.entities.ship import initialize_ship_data
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.core.registry import RegistryManager
 from game.core.constants import AttackType, COMPONENTS_FILE, MODIFIERS_FILE
 from tests.fixtures.paths import get_project_root

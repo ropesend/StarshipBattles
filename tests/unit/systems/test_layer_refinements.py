@@ -1,7 +1,8 @@
 import pytest
 from unittest.mock import MagicMock
 
-from game.simulation.entities.ship import Ship, LayerType, initialize_ship_data
+from game.simulation.entities.ship import Ship, LayerType
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import Component
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_project_root

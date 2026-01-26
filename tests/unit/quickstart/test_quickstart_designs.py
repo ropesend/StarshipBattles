@@ -8,7 +8,8 @@ detect when code changes break the fixture format.
 import pytest
 from pathlib import Path
 
-from game.simulation.entities.ship import Ship, initialize_ship_data, load_vehicle_classes
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data, load_vehicle_classes
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.registry import RegistryManager
 from game.core.json_utils import load_json

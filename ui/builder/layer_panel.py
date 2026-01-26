@@ -16,7 +16,7 @@ from ui.builder.structure_list_items import (
 from ui.builder.grouping_strategies import DefaultGroupingStrategy, TypeGroupingStrategy, FlatGroupingStrategy
 from ui.builder.panel_layout_config import StructurePanelLayoutConfig
 from ui.builder.drop_target import DropTarget
-from game.simulation.entities.ship import get_or_create_validator
+from game.simulation.entities.ship_loader import get_or_create_validator
 
 class LayerPanel(DropTarget):
     def __init__(self, builder, manager, rect, viewmodel=None):

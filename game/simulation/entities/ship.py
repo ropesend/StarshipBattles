@@ -17,12 +17,8 @@ from .ship_combat import ShipCombatMixin
 from .ship_formation import ShipFormation
 from game.simulation.systems.resource_manager import ResourceRegistry
 
-# Re-export from ship_loader for backward compatibility
-from .ship_loader import (
-    get_or_create_validator,
-    load_vehicle_classes,
-    initialize_ship_data,
-)
+# Internal import (no longer re-exported)
+from .ship_loader import get_or_create_validator
 
 
 class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):

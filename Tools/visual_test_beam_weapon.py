@@ -2,7 +2,7 @@ import pygame
 import time
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import create_component, Component, load_components, load_modifiers  # Phase 7: Replaced legacy class imports
-from game.simulation.entities.ship import initialize_ship_data
+from game.simulation.entities.ship_loader import initialize_ship_data
 
 def create_beam_ship(x, y, color):
     s = Ship("BeamShip", x, y, color)

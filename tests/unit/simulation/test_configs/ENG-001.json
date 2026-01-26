@@ -1,0 +1,39 @@
+{
+    "test_id": "ENG-001",
+    "description": "Base speed/accel calculation - verify ship reaches expected max speed",
+    "ships": [
+        {
+            "file": "tests/data/ships/Test_Engine_1x_LowMass.json",
+            "position": [
+                0,
+                0
+            ],
+            "ai_strategy": "straight_line"
+        }
+    ],
+    "duration_ticks": 1000,
+    "velocity_log_ticks": [
+        0,
+        10,
+        50,
+        100,
+        200,
+        500,
+        1000
+    ],
+    "assertions": [
+        {
+            "type": "max_speed",
+            "ship": "Test Engine 1x LowMass",
+            "expected": 312.5,
+            "tolerance": 1.0
+        },
+        {
+            "type": "velocity_at_tick",
+            "ship": "Test Engine 1x LowMass",
+            "tick": 1000,
+            "expected_speed": 312.5,
+            "tolerance": 1.0
+        }
+    ]
+}

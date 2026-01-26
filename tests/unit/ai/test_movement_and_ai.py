@@ -2,7 +2,8 @@ import pytest
 from unittest.mock import MagicMock
 import pygame
 
-from game.simulation.entities.ship import Ship, initialize_ship_data
+from game.simulation.entities.ship import Ship
+from game.simulation.entities.ship_loader import initialize_ship_data
 from game.ui.screens.battle_scene import BattleScene
 from game.ai.controller import AIController, StrategyManager
 from game.ai.interfaces.controllable import ShipControllableAdapter
