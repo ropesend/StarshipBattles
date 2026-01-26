@@ -50,7 +50,7 @@ except (tkinter.TclError, RuntimeError):
 
 
 # Colors
-from ui.colors import COLORS
+from game.ui.colors import COLORS
 BG_COLOR = COLORS['bg_deep']
 PANEL_BG = '#14181f'
 

@@ -1,7 +1,7 @@
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIScrollingContainer, UIDropDownMenu
-from ui.builder.components import ComponentListItem
+from game.ui.screens.builder.components import ComponentListItem
 
 
 # Local reference to BuilderEvents to avoid circular import.

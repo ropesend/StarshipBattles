@@ -94,10 +94,10 @@ class TestBattleSetupLogic(unittest.TestCase):
         self.assertEqual(ship2.team_id, 1)
         
         # Check AI target teams
-        # AIController(ship, grid, enemy_team_id)
-        ai1 = next(ai for ai in scene.ai_controllers if ai.ship == ship1)
-        ai2 = next(ai for ai in scene.ai_controllers if ai.ship == ship2)
-        
+        # AIController uses ShipControllableAdapter, so access underlying ship via .ship property
+        ai1 = next(ai for ai in scene.ai_controllers if getattr(ai.ship, 'ship', ai.ship) == ship1)
+        ai2 = next(ai for ai in scene.ai_controllers if getattr(ai.ship, 'ship', ai.ship) == ship2)
+
         self.assertEqual(ai1.enemy_team_id, 1)
         self.assertEqual(ai2.enemy_team_id, 0)
 

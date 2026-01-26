@@ -87,13 +87,13 @@ class TestModifierStacking(unittest.TestCase):
             msg=f"Expected {expected_mass}, got {railgun.mass}. Modifiers should stack multiplicatively!")
     
     def test_multiplicative_stacking_size_and_hardened(self):
-        """Size 2x + Hardened (+25% mass) should give 2.5x total mass."""
+        """Size 2x + Hardened (1.25x mass) should give 2.5x total mass."""
         railgun = create_component('railgun')
         base_mass = railgun.base_mass  # 100
-        
+
         railgun.add_modifier('simple_size_mount', 2.0)
-        railgun.add_modifier('hardened')  # +25% mass = 1.25x
-        
+        railgun.add_modifier('hardened_mount', 1.25)  # 1.25x mass
+
         expected_mass = base_mass * 2.0 * 1.25  # 2.5x = 250
         self.assertAlmostEqual(railgun.mass, expected_mass, places=2,
             msg=f"Expected {expected_mass}, got {railgun.mass}. Modifiers should stack multiplicatively!")
@@ -102,23 +102,25 @@ class TestModifierStacking(unittest.TestCase):
         """Size 2x + Range level 1 (3.5x) + Hardened (1.25x) = 8.75x mass."""
         railgun = create_component('railgun')
         base_mass = railgun.base_mass  # 100
-        
+
         railgun.add_modifier('simple_size_mount', 2.0)
         railgun.add_modifier('range_mount', 1.0)  # 3.5x
-        railgun.add_modifier('hardened')  # 1.25x
-        
+        railgun.add_modifier('hardened_mount', 1.25)  # 1.25x
+
         expected_mass = base_mass * 2.0 * 3.5 * 1.25  # 8.75x = 875
         self.assertAlmostEqual(railgun.mass, expected_mass, places=2,
             msg=f"Expected {expected_mass}, got {railgun.mass}. Triple stacking failed!")
     
     def test_hp_stacking(self):
         """Size 2x + Hardened (2x HP) should give 4x HP."""
+        import math
         railgun = create_component('railgun')
         base_hp = railgun.base_max_hp  # 150
-        
+
         railgun.add_modifier('simple_size_mount', 2.0)
-        railgun.add_modifier('hardened')  # +100% HP = 2x
-        
+        # hardened_mount: hp_mult = param^2, so param=sqrt(2) gives 2x HP
+        railgun.add_modifier('hardened_mount', math.sqrt(2))
+
         expected_hp = base_hp * 2.0 * 2.0  # 4x = 600
         self.assertAlmostEqual(railgun.max_hp, expected_hp, places=0,
             msg=f"Expected HP {expected_hp}, got {railgun.max_hp}")

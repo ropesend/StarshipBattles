@@ -10,7 +10,7 @@ import pygame
 from game.core.config import UIConfig
 from game.strategy.data.hex_math import hex_to_pixel, pixel_to_hex, HexCoord
 from game.strategy.data.fleet import OrderType
-from ui.colors import COLORS
+from game.ui.colors import COLORS
 
 
 class StrategyRenderer:

@@ -1,4 +1,5 @@
-from game.simulation.components.component import ComponentStatus, LayerType
+from game.simulation.components.component import ComponentStatus
+from game.simulation.components.component_constants import LayerType
 import math
 
 class ShipStatsCalculator:

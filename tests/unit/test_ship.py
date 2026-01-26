@@ -35,12 +35,15 @@ class TestShip(unittest.TestCase):
 
     def test_mass_calculation(self):
         ship = Ship("TestShip", 0, 0, (255, 255, 255))
-        # Initial mass
-        self.assertEqual(ship.current_mass, 0)
-        
-        bridge = create_component('bridge') # 50
+        # Recalculate to get accurate initial mass (includes auto-equipped hull)
+        ship.recalculate_stats()
+        initial_mass = ship.current_mass
+        # Escort ships auto-equip hull_escort (50 mass)
+        self.assertEqual(initial_mass, 50, "Escort ships start with 50 mass hull")
+
+        bridge = create_component('bridge')  # 50 mass
         ship.add_component(bridge, LayerType.CORE)
-        self.assertEqual(ship.current_mass, 50)
+        self.assertEqual(ship.current_mass, initial_mass + 50)
 
     def test_damage_armor_absorption(self):
         # Inject TestShip definition strictly

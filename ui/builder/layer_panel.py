@@ -13,9 +13,9 @@ from ui.builder.structure_list_items import (
     ACTION_TOGGLE_GROUP, ACTION_TOGGLE_LAYER,
     ACTION_START_DRAG, StructureListHeader
 )
-from ui.builder.grouping_strategies import DefaultGroupingStrategy, TypeGroupingStrategy, FlatGroupingStrategy
+from game.ui.screens.builder.grouping_strategies import DefaultGroupingStrategy, TypeGroupingStrategy, FlatGroupingStrategy
 from ui.builder.panel_layout_config import StructurePanelLayoutConfig
-from ui.builder.drop_target import DropTarget
+from game.ui.screens.builder.drop_target import DropTarget
 from game.simulation.entities.ship_loader import get_or_create_validator
 
 class LayerPanel(DropTarget):
@@ -517,7 +517,7 @@ class LayerPanel(DropTarget):
         subset = self.items[low : high + 1]
         result_components = []
         
-        from ui.builder.grouping_strategies import get_component_group_key
+        from game.ui.screens.builder.grouping_strategies import get_component_group_key
         
         for item in subset:
             if isinstance(item, IndividualComponentItem):

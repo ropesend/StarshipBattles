@@ -8,7 +8,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
 
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
-from game.simulation.components.component import load_components, create_component, Component, LayerType, COMPONENT_REGISTRY
+from game.simulation.components.component import load_components, create_component, Component, COMPONENT_REGISTRY
+from game.simulation.components.component_constants import LayerType
 from game.simulation.systems.stats import ShipStatsCalculator
 
 class TestEnergyRepro(unittest.TestCase):

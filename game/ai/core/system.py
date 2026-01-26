@@ -2,7 +2,7 @@ import math
 import json
 import os
 import pygame
-from game.simulation.components.component import LayerType
+from game.simulation.components.component_constants import LayerType
 from game.core.logger import log_info
 from game.ai.core.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior, 
                           FormationBehavior, DoNothingBehavior, StraightLineBehavior,

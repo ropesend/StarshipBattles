@@ -23,10 +23,12 @@ class TestProfiling(unittest.TestCase):
                 pass # Win32 file locking sometimes
 
     def test_singleton(self):
-        p1 = Profiler()
-        p2 = Profiler()
+        p1 = Profiler.instance()
+        p2 = Profiler.instance()
         self.assertIs(p1, p2)
-        self.assertIs(p1, PROFILER)
+        # PROFILER is a proxy that delegates to Profiler.instance()
+        # Verify proxy delegates correctly
+        self.assertIs(PROFILER.session_id, p1.session_id)
 
     def test_toggling(self):
         self.assertFalse(PROFILER.is_active())

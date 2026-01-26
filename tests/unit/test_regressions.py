@@ -1,8 +1,7 @@
 import unittest
 import pygame
 import os
-import game.simulation.entities.ship as ship
-from game.simulation.entities.ship import Ship, SHIP_CLASSES
+from game.simulation.entities.ship import Ship, VEHICLE_CLASSES
 from game.simulation.entities.ship_loader import load_vehicle_classes
 from game.ui.renderer.ship_theme import ShipThemeManager
 
@@ -16,23 +15,23 @@ class TestRegressions(unittest.TestCase):
     def test_ship_classes_update_in_place(self):
         """
         Regression Test for Builder Dropdown Bug:
-        Verify that load_vehicle_classes updates the SHIP_CLASSES dict in-place
+        Verify that load_vehicle_classes updates the VEHICLE_CLASSES dict in-place
         instead of replacing the reference.
         """
         # Store original reference
-        original_ref = SHIP_CLASSES
-        original_id = id(SHIP_CLASSES)
-        
+        original_ref = VEHICLE_CLASSES
+        original_id = id(VEHICLE_CLASSES)
+
         # Call loader
-        ship.load_vehicle_classes()
-        
+        load_vehicle_classes()
+
         # Verify reference is identical
-        self.assertEqual(id(ship.SHIP_CLASSES), original_id, 
-                         "SHIP_CLASSES reference changed! Imports in other modules will be stale.")
-        self.assertIs(ship.SHIP_CLASSES, original_ref)
-        
+        self.assertEqual(id(VEHICLE_CLASSES), original_id,
+                         "VEHICLE_CLASSES reference changed! Imports in other modules will be stale.")
+        self.assertIs(VEHICLE_CLASSES, original_ref)
+
         # Verify it has content
-        self.assertTrue(len(ship.SHIP_CLASSES) > 0, "SHIP_CLASSES should not be empty")
+        self.assertTrue(len(VEHICLE_CLASSES) > 0, "VEHICLE_CLASSES should not be empty")
 
     def test_theme_fallback_image(self):
         """

@@ -78,14 +78,14 @@ class TestModifierGroupPropagation(unittest.TestCase):
         
     def test_propagation(self):
         """Test that changes to leader propagate to group."""
-        mod_id = 'hardened'
-        
+        mod_id = 'hardened_mount'
+
         # Add to leader
         self.comp1.add_modifier(mod_id)
-        
+
         # Trigger propagation
         self.builder.propagate_group_modifiers(self.comp1)
-        
+
         # Check others
         self.assertIsNotNone(self.comp2.get_modifier(mod_id))
         self.assertIsNotNone(self.comp3.get_modifier(mod_id))

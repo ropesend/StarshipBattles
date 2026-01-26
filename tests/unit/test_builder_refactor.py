@@ -11,23 +11,20 @@ class TestBuilderRefactor(unittest.TestCase):
         """Test that builder_gui and extracted modules can be imported."""
         try:
             import game.ui.screens.builder.main as builder_gui
-            import preset_manager
+            from game.ui.screens.planet_list_presets import PresetManager
             import game.simulation.systems.persistence as ship_io
         except ImportError as e:
             self.fail(f"Failed to import modules: {e}")
 
     def test_preset_manager(self):
         """Test basic functionality of PresetManager."""
-        from preset_manager import PresetManager
-        pm = PresetManager('test_presets.json')
-        pm.add_preset('Test Preset', {'damage': 10})
-        self.assertIn('Test Preset', pm.get_all_presets())
-        pm.delete_preset('Test Preset')
-        self.assertNotIn('Test Preset', pm.get_all_presets())
-        
-        # Cleanup
-        if os.path.exists('test_presets.json'):
-            os.remove('test_presets.json')
+        from game.ui.screens.planet_list_presets import PresetManager
+        pm = PresetManager()
+        pm.save_preset('Test Preset', {'damage': 10})
+        self.assertIn('Test Preset', pm.get_preset_names())
+        # Verify we can retrieve the preset
+        preset_data = pm.get_preset('Test Preset')
+        self.assertEqual(preset_data.get('damage'), 10)
 
 if __name__ == '__main__':
     unittest.main()

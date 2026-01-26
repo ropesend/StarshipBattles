@@ -37,8 +37,8 @@ class TestRegressions:
         original_ref = RegistryManager.instance().vehicle_classes
         original_id = id(original_ref)
 
-        # Call loader
-        ship.load_vehicle_classes()
+        # Call loader (from ship_loader module)
+        load_vehicle_classes()
 
         # Verify reference is identical
         assert id(RegistryManager.instance().vehicle_classes) == original_id, \

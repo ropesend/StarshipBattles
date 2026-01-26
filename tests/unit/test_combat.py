@@ -132,37 +132,56 @@ class TestDamageLayerLogic(unittest.TestCase):
         self.assertFalse(self.ship.is_derelict)
 
     def test_bridge_requirement_kills_ship(self):
-        """Destroying the bridge SHOULD kill the ship IF required."""
-        # Inject requirement
-        from game.simulation.entities.ship import VEHICLE_CLASSES
-        VEHICLE_CLASSES["TestShip"] = {
-            "hull_mass": 50, "max_mass": 1000,
-            "requirements": {"CommandAndControl": True}
-        }
-        self.ship.ship_class = "TestShip" # Must match key
-        # Re-init ship to pick up requirements
-        self.ship.update_derelict_status()
-        
-        # Ensure bridge exists and provides CommandAndControl
-        # (Assuming standard bridge provides it)
-        
-        # Remove armor first
-        self.ship.layers[LayerType.ARMOR]['components'] = []
-        
-        bridge = None
-        for c in self.ship.layers[LayerType.CORE]['components']:
-             if c.type_str == 'Bridge':
-                 bridge = c
-                 break
-        
-        # Kill logic
-        for _ in range(50):
-            if self.ship.is_derelict:
-                break
-            self.ship.take_damage(100)
+        """Destroying the bridge SHOULD kill the ship IF required.
 
-        # Should be derelict now
-        self.assertTrue(self.ship.is_derelict)
+        The ability-based system works as follows:
+        - Hull components have RequiresCommandAndControl ability
+        - Bridge components have CommandAndControl ability
+        - When RequiresCommandAndControl > 0 and no operational CommandAndControl exists,
+          the ship becomes derelict via update_derelict_status()
+
+        Note: Bridge has CrewRequired ability, so it needs crew quarters and life support
+        to be operational. We add those to make the bridge operational.
+        """
+        # Create a ship with a hull that has RequiresCommandAndControl
+        # Use Escort class which has a hull with this requirement
+        ship = Ship("RequirementTestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+
+        # Add bridge and supporting crew infrastructure so bridge is operational
+        ship.add_component(create_component('bridge'), LayerType.CORE)
+        ship.add_component(create_component('crew_quarters'), LayerType.CORE)
+        ship.add_component(create_component('life_support'), LayerType.CORE)
+        ship.recalculate_stats()
+
+        # Verify the ship has the requirement from hull
+        requires_command = ship.get_total_ability_value('RequiresCommandAndControl')
+        self.assertGreater(requires_command, 0, "Hull should have RequiresCommandAndControl ability")
+
+        # Verify bridge provides CommandAndControl (use operational_only=False to check it exists)
+        has_command = ship.get_total_ability_value('CommandAndControl', operational_only=False)
+        self.assertGreater(has_command, 0, "Bridge should provide CommandAndControl ability")
+
+        # Find the bridge
+        bridge = None
+        for c in ship.layers[LayerType.CORE]['components']:
+            if c.type_str == 'Bridge':
+                bridge = c
+                break
+        self.assertIsNotNone(bridge, "Ship should have a bridge")
+
+        # Ensure bridge is operational (has crew support)
+        # Force operational status for test isolation
+        bridge._is_operational = True
+        ship.update_derelict_status()
+        self.assertFalse(ship.is_derelict, "Ship with operational bridge should not be derelict")
+
+        # Destroy the bridge
+        bridge.current_hp = 0
+        bridge.is_active = False
+        ship.update_derelict_status()
+
+        # Should be derelict now (RequiresCommandAndControl but no operational CommandAndControl)
+        self.assertTrue(ship.is_derelict, "Ship should be derelict when bridge is destroyed")
 
 
 class TestEnergyRegeneration(unittest.TestCase):

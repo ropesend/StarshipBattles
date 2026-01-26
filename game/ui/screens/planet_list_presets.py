@@ -47,6 +47,22 @@ class PresetManager:
         """Check if a preset exists."""
         return name in self.presets
 
+    def get_all_presets(self):
+        """Get all presets as a dictionary."""
+        return self.presets
+
+    def delete_preset(self, name):
+        """Delete a preset by name. Returns True if deleted, False if not found."""
+        if name in self.presets:
+            del self.presets[name]
+            self.save_to_disk()
+            return True
+        return False
+
+    def add_preset(self, name, state):
+        """Alias for save_preset for backward compatibility."""
+        self.save_preset(name, state)
+
 
 def capture_planet_list_state(columns, txt_name_filter, filter_types, filter_owner, ui_filters):
     """Capture current planet list state for saving as a preset.

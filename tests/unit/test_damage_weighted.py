@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, patch
 import pygame
 import random
 from game.simulation.entities.mixins.combat import ShipCombatMixin
-from game.simulation.components.component import Component, LayerType  # Phase 7: Removed Bridge import
+from game.simulation.components.component import Component
+from game.simulation.components.component_constants import LayerType
 
 class MockComponent(Component):
     def __init__(self, name, hp, max_hp):

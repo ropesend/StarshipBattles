@@ -14,7 +14,7 @@ class TestShipIOInteractive(unittest.TestCase):
         self.mock_ship.to_dict.return_value = {"name": "Test Ship", "components": []}
 
     @patch('game.simulation.systems.persistence.filedialog.asksaveasfilename')
-    @patch('builtins.open', new_callable=mock_open)
+    @patch('game.core.json_utils.open', new_callable=mock_open)
     @patch('game.simulation.systems.persistence.os.makedirs')
     @patch('game.simulation.systems.persistence.os.path.exists')
     def test_save_ship_success(self, mock_exists, mock_makedirs, mock_file_open, mock_asksaveas):
@@ -22,29 +22,24 @@ class TestShipIOInteractive(unittest.TestCase):
         # Setup mocks
         mock_exists.return_value = True # Folder exists
         mock_asksaveas.return_value = "/path/to/test_ship.json"
-        
+
         # Execute
         success, message = ShipIO.save_ship(self.mock_ship)
-        
+
         # Verify
         self.assertTrue(success)
         self.assertIn("Saved ship to", message)
-        
+
         # Verify file dialog called
         mock_asksaveas.assert_called_once()
-        
-        # Verify file written
-        mock_file_open.assert_called_once_with("/path/to/test_ship.json", 'w')
-        handle = mock_file_open()
-        
-        # Check that proper JSON was written
-        # We need to aggregate the write calls to check the full JSON string
-        written_content = "".join(call.args[0] for call in handle.write.mock_calls)
-        try:
-             json_data = json.loads(written_content)
-             self.assertEqual(json_data['name'], "Test Ship")
-        except json.JSONDecodeError:
-            pass # json.dump usually does multiple writes, check mostly for structure if needed or trust json.dump
+
+        # Verify file written (now uses Path objects and encoding)
+        from pathlib import Path
+        mock_file_open.assert_called_once()
+        call_args = mock_file_open.call_args
+        self.assertEqual(call_args[0][0], Path("/path/to/test_ship.json"))
+        self.assertEqual(call_args[0][1], 'w')
+        self.assertEqual(call_args[1].get('encoding'), 'utf-8')
 
     @patch('game.simulation.systems.persistence.filedialog.asksaveasfilename')
     @patch('builtins.open', new_callable=mock_open)
@@ -59,17 +54,17 @@ class TestShipIOInteractive(unittest.TestCase):
         mock_file_open.assert_not_called()
 
     @patch('game.simulation.systems.persistence.filedialog.asksaveasfilename')
-    @patch('builtins.open', new_callable=mock_open)
+    @patch('game.core.json_utils.open', new_callable=mock_open)
     def test_save_ship_failure(self, mock_file_open, mock_asksaveas):
         """Test file write permission error."""
         mock_asksaveas.return_value = "/path/to/protected.json"
         mock_file_open.side_effect = PermissionError("Access denied")
-        
+
         success, message = ShipIO.save_ship(self.mock_ship)
-        
+
         self.assertFalse(success)
-        self.assertIn("Save failed", message)
-        self.assertIn("Access denied", message)
+        # save_json catches the exception and returns False, so ShipIO returns this message
+        self.assertIn("Failed to save ship file", message)
 
     @patch('game.simulation.systems.persistence.filedialog.askopenfilename')
     @patch('builtins.open', new_callable=mock_open, read_data='{"invalid": "json"')

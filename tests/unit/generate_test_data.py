@@ -7,7 +7,8 @@ import sys
 sys.path.append(os.getcwd())
 
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import Component, LayerType, create_component
+from game.simulation.components.component import Component, create_component
+from game.simulation.components.component_constants import LayerType
 
 def load_json_data(filepath):
     with open(filepath, 'r') as f:

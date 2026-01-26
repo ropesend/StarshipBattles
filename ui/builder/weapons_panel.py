@@ -1,7 +1,7 @@
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIButton, UIVerticalScrollBar
-from ui.colors import COLORS
+from game.ui.colors import COLORS
 
 class WeaponsReportPanel:
     """Panel displaying weapon range and hit probability visualization."""

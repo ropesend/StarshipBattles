@@ -1,11 +1,6 @@
 from test_framework.scenario import CombatScenario
-<<<<<<< Updated upstream
 from game.simulation.components.component import create_component
 from game.simulation.components.component_constants import LayerType
-=======
-from game.simulation.components.component import create_component, LayerType
->>>>>>> Stashed changes
-import pygame
 import pygame
 
 import os

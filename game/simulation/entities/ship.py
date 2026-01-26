@@ -20,6 +20,19 @@ from game.simulation.systems.resource_manager import ResourceRegistry
 # Internal import (no longer re-exported)
 from .ship_loader import get_or_create_validator
 
+# Convenience aliases for registry data (read-only references)
+# These are the actual registry dicts, so callers can use them directly
+VEHICLE_CLASSES = get_vehicle_classes()
+SHIP_CLASSES = VEHICLE_CLASSES  # Alias for backward compatibility
+
+
+class _ValidatorProxy:
+    """Lazy proxy for validator to maintain backward compatibility."""
+    def __getattr__(self, name):
+        return getattr(get_or_create_validator(), name)
+
+VALIDATOR = _ValidatorProxy()
+
 
 class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     def __init__(self, name: str, x: float, y: float, color: Union[Tuple[int, int, int], List[int]], 

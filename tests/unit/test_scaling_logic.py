@@ -27,7 +27,7 @@ class TestScalingLogic(unittest.TestCase):
                  base_cons = ab.amount
                  break
                  
-        engine.add_modifier('efficient_engines') # 0.8x mul
+        engine.add_modifier('efficiency_mount', 0.8) # 0.8x mul
         engine.recalculate_stats()
         
         new_cons = 0

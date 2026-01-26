@@ -18,8 +18,8 @@ from game.simulation.entities.ship import Ship, LayerType, VEHICLE_CLASSES
 from game.simulation.components.component import (
     get_all_components, MODIFIER_REGISTRY
 )
-from sprites import SpriteManager
-from preset_manager import PresetManager
+from game.ui.renderer.sprites import SpriteManager
+from game.ui.screens.planet_list_presets import PresetManager
 from game.simulation.systems.persistence import ShipIO
 from game.ui.screens.builder.legacy_components import ModifierEditorPanel
 from game.ui.renderer.ship_theme import ShipThemeManager
@@ -80,11 +80,11 @@ class BuilderSceneGUI:
         # Managers
         self.available_components = get_all_components()
         self.template_modifiers = {}
-        self.sprite_mgr = SpriteManager.get_instance()
+        self.sprite_mgr = SpriteManager.instance()
         
         base_path = os.path.dirname(os.path.abspath(__file__))
         with profile_block("Builder: Init Managers"):
-            self.preset_manager = PresetManager(os.path.join(base_path, "data", "presets.json"))
+            self.preset_manager = PresetManager()
             self.theme_manager = ShipThemeManager.get_instance()
             self.theme_manager.initialize(base_path)
         
@@ -846,8 +846,8 @@ class BuilderSceneGUI:
         """Reload global game data from the specified directory."""
         from game.simulation.components.component import load_components, load_modifiers, COMPONENT_REGISTRY, MODIFIER_REGISTRY
         from game.simulation.entities.ship import VEHICLE_CLASSES, SHIP_CLASSES
-from game.simulation.entities.ship_loader import load_vehicle_classes
-        
+        from game.simulation.entities.ship_loader import load_vehicle_classes
+
         try:
             # 1. Clear Registries
             from game.ai.core.system import STRATEGY_MANAGER, load_combat_strategies

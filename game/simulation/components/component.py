@@ -66,6 +66,10 @@ from game.core.logger import log_warning, log_error
 from game.core.constants import CombatConstants
 from .component_constants import ComponentStatus, Modifier, ApplicationModifier
 
+# Convenience aliases for registry data (read-only references)
+COMPONENT_REGISTRY = get_component_registry()
+MODIFIER_REGISTRY = get_modifier_registry()
+
 
 class Component:
     def __init__(self, data):

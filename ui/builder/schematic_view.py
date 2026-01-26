@@ -3,7 +3,7 @@ import math
 from game.simulation.entities.ship import LayerType
 from game.core.registry import RegistryManager
 
-from ui.colors import COLORS
+from game.ui.colors import COLORS
 SHIP_VIEW_BG = COLORS['bg_deep']
 
 class SchematicView:

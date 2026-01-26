@@ -7,11 +7,7 @@ import json
 import time
 
 from game.core.constants import WHITE, BLACK, BLUE, WIDTH, HEIGHT, FONT_MAIN
-<<<<<<< Updated upstream
 from game.core.json_utils import load_json
-=======
-from game.ui.widgets import Button
->>>>>>> Stashed changes
 from test_framework.runner import TestRunner
 from test_framework.registry import TestRegistry
 from test_framework.test_history import TestHistory

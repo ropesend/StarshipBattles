@@ -12,7 +12,8 @@ from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.ui.screens.battle import BattleScene
 from game.ai.core.system import AIController, STRATEGY_MANAGER
-from game.simulation.components.component import LayerType, COMPONENT_REGISTRY, load_components, load_modifiers
+from game.simulation.components.component import COMPONENT_REGISTRY, load_components, load_modifiers
+from game.simulation.components.component_constants import LayerType
 
 class TestMovementAndAI(unittest.TestCase):
     @classmethod

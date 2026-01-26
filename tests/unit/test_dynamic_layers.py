@@ -8,7 +8,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
-from game.simulation.components.component import Component, LayerType, load_components
+from game.simulation.components.component import Component, load_components
+from game.simulation.components.component_constants import LayerType
 
 class TestDynamicLayers(unittest.TestCase):
     @classmethod

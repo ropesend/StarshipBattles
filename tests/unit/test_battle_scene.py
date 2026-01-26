@@ -32,7 +32,7 @@ class TestBattleScene(unittest.TestCase):
 
     def setUp(self):
         # Patch BattleInterface to avoid UI overhead
-        with patch('battle.BattleInterface') as MockUI:
+        with patch('game.ui.screens.battle_scene.BattleInterface') as MockUI:
             self.scene = BattleScene(800, 600)
             self.scene.ui = MockUI.return_value
             self.scene.ui.show_overlay = False

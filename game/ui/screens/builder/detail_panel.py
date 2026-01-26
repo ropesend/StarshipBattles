@@ -2,7 +2,7 @@ import pygame
 import pygame_gui
 import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
-from game.simulation.components.component import LayerType  # Phase 7: Removed unused legacy class imports
+from game.simulation.components.component_constants import LayerType
 import json
 from .modifier_logic import ModifierLogic
 

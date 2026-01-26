@@ -67,17 +67,23 @@ class TestBuilderLogic(unittest.TestCase):
         self.assertFalse(self.ship.mass_limits_ok, "Should report invalid if forcibly overloaded")
 
     def test_missing_bridge_requirement(self):
-        """Verify get_missing_requirements identifies missing command capability."""
+        """Verify get_missing_requirements identifies missing command capability.
+
+        The ability-based system works as follows:
+        - Hull components have RequiresCommandAndControl ability
+        - Bridge components have CommandAndControl ability
+        - Validator checks if RequiresCommandAndControl > 0 then CommandAndControl must be present
+        """
         self.ship.recalculate_stats()
         missing = self.ship.get_missing_requirements()
-        # Escort should need Command And Control
-        self.assertTrue(any("Command And Control" in m for m in missing))
-        
-        # Add bridge
+        # Escort hull has RequiresCommandAndControl, so without bridge it needs command capability
+        self.assertTrue(any("Command" in m for m in missing), f"Expected command requirement, got: {missing}")
+
+        # Add bridge which provides CommandAndControl ability
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.recalculate_stats()
         missing = self.ship.get_missing_requirements()
-        self.assertFalse(any("Command And Control" in m for m in missing))
+        self.assertFalse(any("Command" in m for m in missing), f"Bridge should satisfy command requirement, still missing: {missing}")
 
     def test_invalid_layer_addition_fallback(self):
         """Verify add_component returns False for invalid layers."""

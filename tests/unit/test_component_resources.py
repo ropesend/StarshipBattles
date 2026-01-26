@@ -72,6 +72,8 @@ class TestComponentCapabilities(unittest.TestCase):
             'crew_req_mult': 1.0
         }
         
+        # Set stats on component so abilities can access via get_effective_stat
+        c.stats = stats
         # We can call _apply_base_stats directly to verifying the logic handles mapping stats -> ability
         c._apply_base_stats(stats, old_max_hp=100)
         

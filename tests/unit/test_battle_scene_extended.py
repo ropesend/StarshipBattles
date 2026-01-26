@@ -7,7 +7,8 @@ import pygame
 from game.ui.screens.battle import BattleScene
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
-from game.simulation.components.component import load_components, create_component, LayerType
+from game.simulation.components.component import load_components, create_component
+from game.simulation.components.component_constants import LayerType
 import os
 from unittest import mock
 from game.ai.core.system import STRATEGY_MANAGER
