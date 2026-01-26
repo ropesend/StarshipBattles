@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "C:\Dev\Starship Battles\game\app.py", line 573, in main
+    game.run()
+  File "C:\Dev\Starship Battles\game\app.py", line 326, in run
+    self._handle_normal_events(events)
+  File "C:\Dev\Starship Battles\game\app.py", line 370, in _handle_normal_events
+    self._forward_event_to_scene(event)
+  File "C:\Dev\Starship Battles\game\app.py", line 394, in _forward_event_to_scene
+    self.strategy_scene.handle_event(event)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_scene.py", line 172, in handle_event
+    self._input.handle_event(event)
+  File "C:\Dev\Starship Battles\game\ui\screens\strategy_input_handler.py", line 38, in handle_event
+    self.scene.build_queue_screen.handle_event(event)
+  File "C:\Dev\Starship Battles\game\ui\screens\build_queue_screen.py", line 774, in handle_event
+    self._take_screenshot()
+  File "C:\Dev\Starship Battles\game\ui\screens\build_queue_screen.py", line 784, in _take_screenshot
+    self._show_screenshot_toast()
+  File "C:\Dev\Starship Battles\game\ui\screens\build_queue_screen.py", line 791, in _show_screenshot_toast
+    pygame_gui.elements.UILabel(
+TypeError: UILabel.__init__() got an unexpected keyword argument 'rect'
