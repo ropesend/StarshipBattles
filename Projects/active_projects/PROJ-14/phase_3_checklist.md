@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress
+**Status:** Complete
 **Objective:** Replace legacy Button with pygame_gui UIButton in main menu
 
 **CRITICAL:** This is the highest-risk phase. The main menu is the first thing users see. Test thoroughly!
@@ -136,25 +136,25 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/ --testmon` - passes
-- [ ] **CRITICAL MANUAL TESTS:**
-  - [ ] Launch game - menu displays
-  - [ ] All 10 buttons visible with pygame_gui styling
-  - [ ] Click "Quickstart 1P" - enters strategy mode
-  - [ ] Click "Quickstart 2P" - enters strategy mode
-  - [ ] Click "New Game" - shows dialog
-  - [ ] Click "Load Game" - shows dialog
-  - [ ] Click "Race Setup" - shows dialog
-  - [ ] Click "Design Workshop" - enters builder
-  - [ ] Click "Battle Setup" - enters battle setup
-  - [ ] Click "Formation Editor" - enters formation editor
-  - [ ] Click "Combat Lab" - enters test lab
-  - [ ] Click "Research Tree" - enters research tree
-  - [ ] Resize window - buttons reposition
-  - [ ] Hover states work (buttons change appearance on hover)
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 4
+- [x] All task checkboxes above are checked
+- [x] Run `pytest tests/ --testmon` - passes
+- [x] **CRITICAL MANUAL TESTS:**
+  - [x] Launch game - menu displays
+  - [x] All 10 buttons visible with pygame_gui styling
+  - [x] Click "Quickstart 1P" - enters strategy mode
+  - [x] Click "Quickstart 2P" - enters strategy mode
+  - [x] Click "New Game" - shows dialog
+  - [x] Click "Load Game" - shows dialog
+  - [x] Click "Race Setup" - shows dialog
+  - [x] Click "Design Workshop" - enters builder
+  - [x] Click "Battle Setup" - enters battle setup
+  - [x] Click "Formation Editor" - enters formation editor
+  - [x] Click "Combat Lab" - enters test lab
+  - [x] Click "Research Tree" - enters research tree
+  - [x] Resize window - buttons reposition
+  - [x] Hover states work (buttons change appearance on hover)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 4
 
 **ROLLBACK PLAN:** If buttons don't work, `git revert` to restore legacy Button

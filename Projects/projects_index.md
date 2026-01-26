@@ -39,6 +39,13 @@
 
 ## Project Summaries
 
+### PROJ-16: Consolidate Re-exports (Phase 3)
+**Scope:** Legacy Code Cleanup Phase 3 - Update callers to import from canonical locations and remove re-exports
+**Phases:** 5 (PLANET_RESOURCES → Component Constants → AI Re-exports → Ship Loader → Wrapper Evaluation)
+**Key Goals:** Remove re-exports from component.py, ship.py, controller.py, planet.py; Remove ShipControllableAdapter backward compat in stages
+**Dependencies:** Phase 2 (Remove Shims & Aliases) should be complete
+**Source:** [legacy_cleanup/PHASE_3_CONSOLIDATE_REEXPORTS.md](legacy_cleanup/PHASE_3_CONSOLIDATE_REEXPORTS.md)
+
 ### PROJ-15: Phase 2 - Remove Shims and Aliases
 **Scope:** Legacy Code Cleanup Phase 2 - Remove backward compatibility shims and aliases
 **Phases:** 6 (Singleton Aliases → Fleet Warp → ShipBuilderService → PathSegment/to_hit_profile → Deprecated Functions → Builder Shims)

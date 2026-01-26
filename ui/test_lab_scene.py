@@ -1,4 +1,6 @@
 import pygame
+import pygame_gui
+from pygame_gui.elements import UIButton
 import os
 import sys
 import json
@@ -6,7 +8,6 @@ import time
 
 from game.core.constants import WHITE, BLACK, BLUE, WIDTH, HEIGHT, FONT_MAIN
 from game.core.json_utils import load_json
-from ui.components import Button
 from test_framework.runner import TestRunner
 from test_framework.registry import TestRegistry
 from test_framework.test_history import TestHistory
@@ -18,7 +19,7 @@ logger = get_logger(__name__)
 class JSONPopup:
     """Popup window for displaying JSON data."""
 
-    def __init__(self, title, json_data, screen_width, screen_height):
+    def __init__(self, title, json_data, screen_width, screen_height, ui_manager):
         """
         Create JSON popup.
 
@@ -27,11 +28,13 @@ class JSONPopup:
             json_data: Dictionary or string to display as JSON
             screen_width: Screen width
             screen_height: Screen height
+            ui_manager: pygame_gui UIManager for button rendering
         """
         self.title = title
         self.json_text = json.dumps(json_data, indent=2) if isinstance(json_data, dict) else str(json_data)
         self.screen_width = screen_width
         self.screen_height = screen_height
+        self.ui_manager = ui_manager
 
         # Popup dimensions (80% of screen)
         self.width = int(screen_width * 0.8)
@@ -48,18 +51,27 @@ class JSONPopup:
         self.line_height = 18
         self.lines = self.json_text.split('\n')
 
-        # Close button
-        self.close_button = Button(self.x + self.width - 120, self.y + 10, 100, 40, "Close", self.close)
+        # Close button (pygame_gui UIButton)
+        self.close_button = UIButton(
+            relative_rect=pygame.Rect(self.x + self.width - 110, self.y + 10, 100, 40),
+            text="Close",
+            manager=self.ui_manager
+        )
         self.is_open = True
 
     def close(self):
         """Close the popup."""
         self.is_open = False
+        if hasattr(self, 'close_button') and self.close_button:
+            self.close_button.kill()
 
     def handle_event(self, event):
         """Handle user input."""
-        # Handle close button
-        self.close_button.handle_event(event)
+        # Handle pygame_gui button press
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.close_button:
+                self.close()
+                return True
 
         # Handle scrolling
         if event.type == pygame.MOUSEWHEEL:
@@ -89,8 +101,7 @@ class JSONPopup:
         title_surf = self.title_font.render(self.title, True, (150, 200, 255))
         screen.blit(title_surf, (self.x + 20, self.y + 15))
 
-        # Close button
-        self.close_button.draw(screen)
+        # Close button is drawn by UIManager in the main draw loop
 
         # Content area
         content_y = self.y + 70
@@ -113,7 +124,7 @@ class JSONPopup:
 class ConfirmationDialog:
     """Dialog for confirming changes to test metadata."""
 
-    def __init__(self, title, changes, screen_width, screen_height, on_confirm, on_cancel):
+    def __init__(self, title, changes, screen_width, screen_height, on_confirm, on_cancel, ui_manager):
         """
         Create confirmation dialog.
 
@@ -124,6 +135,7 @@ class ConfirmationDialog:
             screen_height: Screen height
             on_confirm: Callback function when confirmed
             on_cancel: Callback function when canceled
+            ui_manager: pygame_gui UIManager for button rendering
         """
         self.title = title
         self.changes = changes
@@ -131,6 +143,7 @@ class ConfirmationDialog:
         self.screen_height = screen_height
         self.on_confirm = on_confirm
         self.on_cancel = on_cancel
+        self.ui_manager = ui_manager
 
         # Dialog dimensions (60% of screen, but smaller than JSON popup)
         self.width = min(800, int(screen_width * 0.6))
@@ -143,20 +156,22 @@ class ConfirmationDialog:
         self.body_font = pygame.font.SysFont(FONT_MAIN, 16)
         self.small_font = pygame.font.SysFont(FONT_MAIN, 14)
 
-        # Buttons
+        # Buttons (pygame_gui UIButton)
         button_y = self.y + self.height - 60
         button_width = 120
         button_spacing = 20
         total_button_width = button_width * 2 + button_spacing
         button_start_x = self.x + (self.width - total_button_width) // 2
 
-        self.confirm_button = Button(
-            button_start_x, button_y, button_width, 40,
-            "Confirm", self._handle_confirm
+        self.confirm_button = UIButton(
+            relative_rect=pygame.Rect(button_start_x, button_y, button_width, 40),
+            text="Confirm",
+            manager=self.ui_manager
         )
-        self.cancel_button = Button(
-            button_start_x + button_width + button_spacing, button_y, button_width, 40,
-            "Cancel", self._handle_cancel
+        self.cancel_button = UIButton(
+            relative_rect=pygame.Rect(button_start_x + button_width + button_spacing, button_y, button_width, 40),
+            text="Cancel",
+            manager=self.ui_manager
         )
 
         self.is_open = True
@@ -166,6 +181,7 @@ class ConfirmationDialog:
         """User confirmed changes."""
         self.result = 'confirm'
         self.is_open = False
+        self._kill_buttons()
         if self.on_confirm:
             self.on_confirm()
 
@@ -173,14 +189,27 @@ class ConfirmationDialog:
         """User canceled changes."""
         self.result = 'cancel'
         self.is_open = False
+        self._kill_buttons()
         if self.on_cancel:
             self.on_cancel()
 
+    def _kill_buttons(self):
+        """Kill UIButtons when dialog closes."""
+        if hasattr(self, 'confirm_button') and self.confirm_button:
+            self.confirm_button.kill()
+        if hasattr(self, 'cancel_button') and self.cancel_button:
+            self.cancel_button.kill()
+
     def handle_event(self, event):
         """Handle user input."""
-        # Handle button clicks
-        self.confirm_button.handle_event(event)
-        self.cancel_button.handle_event(event)
+        # Handle pygame_gui button presses
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.confirm_button:
+                self._handle_confirm()
+                return True
+            elif event.ui_element == self.cancel_button:
+                self._handle_cancel()
+                return True
 
         # Close on Escape
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -239,9 +268,7 @@ class ConfirmationDialog:
             new_surf = self.small_font.render(new_text, True, (100, 255, 150))
             screen.blit(new_surf, (self.x + 50, change_y + line_height * 2))
 
-        # Buttons
-        self.confirm_button.draw(screen)
-        self.cancel_button.draw(screen)
+        # Buttons are drawn by UIManager in the main draw loop
 
 
 class ScrollableJSONViewer:
@@ -1633,6 +1660,10 @@ class TestLabScene:
     def __init__(self, game):
         self.game = game
 
+        # pygame_gui UIManager for buttons
+        self.ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+        self._button_callbacks = {}  # Maps UIButton -> callback function
+
         # Fonts
         self.title_font = pygame.font.SysFont(FONT_MAIN, 48)
         self.header_font = pygame.font.SysFont(FONT_MAIN, 24)
@@ -2069,7 +2100,8 @@ class TestLabScene:
             screen_width=self.game.screen.get_width(),
             screen_height=self.game.screen.get_height(),
             on_confirm=lambda: self._apply_metadata_updates(changes),
-            on_cancel=lambda: logger.info("Update canceled")
+            on_cancel=lambda: logger.info("Update canceled"),
+            ui_manager=self.ui_manager
         )
 
     def _apply_metadata_updates(self, changes):
@@ -2311,11 +2343,15 @@ class TestLabScene:
 
     def _create_ui(self):
         """Create UI buttons."""
-        self.buttons = []
+        self.buttons = []  # Legacy list, kept for compatibility but not used for new UIButtons
 
-        # Back Button
-        self.btn_back = Button(20, 20, 100, 40, "Back", self._on_back)
-        self.buttons.append(self.btn_back)
+        # Back Button (pygame_gui UIButton)
+        self.btn_back = UIButton(
+            relative_rect=pygame.Rect(20, 20, 100, 40),
+            text="Back",
+            manager=self.ui_manager
+        )
+        self._button_callbacks[self.btn_back] = self._on_back
 
         # Run Test and Run Headless buttons are now drawn in _draw_metadata_panel()
         self.run_test_btn_rect = None
@@ -2844,6 +2880,16 @@ class TestLabScene:
     def handle_input(self, events):
         """Handle user input for category selection, test selection, and buttons."""
         for event in events:
+            # Process pygame_gui events first
+            self.ui_manager.process_events(event)
+
+            # Handle pygame_gui button presses
+            if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                callback = self._button_callbacks.get(event.ui_element)
+                if callback:
+                    callback()
+                    continue  # Event consumed by button
+
             # Handle batch test continuation timer
             if event.type == pygame.USEREVENT + 1:
                 self._continue_batch_test()
@@ -2908,10 +2954,6 @@ class TestLabScene:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mx, my = event.pos
                 self._handle_click(mx, my)
-
-            # Let buttons handle events
-            for btn in self.buttons:
-                btn.handle_event(event)
 
     def _update_hover_state(self, mx, my):
         """Update hover state for categories and tests."""
@@ -3131,9 +3173,10 @@ class TestLabScene:
         # Output log
         self._draw_output_log(screen)
 
-        # Buttons
-        for btn in self.buttons:
-            btn.draw(screen)
+        # Update and draw pygame_gui UIManager (for UIButtons)
+        # Use a fixed time_delta since we don't have access to clock here
+        self.ui_manager.update(1.0 / 60.0)  # Assume 60 FPS
+        self.ui_manager.draw_ui(screen)
 
         # JSON popup (drawn last, on top of everything)
         if self.json_popup and self.json_popup.is_open:
@@ -4029,7 +4072,7 @@ class TestLabScene:
         if not ships_data:
             ships_data = {"error": "No ship files found for this test"}
 
-        self.json_popup = JSONPopup(f"Ships JSON - {test_id}", ships_data, WIDTH, HEIGHT)
+        self.json_popup = JSONPopup(f"Ships JSON - {test_id}", ships_data, WIDTH, HEIGHT, self.ui_manager)
 
     def _show_components_json(self):
         """Show JSON for all components in the test data."""
@@ -4039,9 +4082,9 @@ class TestLabScene:
 
         components_data = load_json(components_path)
         if components_data is not None:
-            self.json_popup = JSONPopup("Components JSON", components_data, WIDTH, HEIGHT)
+            self.json_popup = JSONPopup("Components JSON", components_data, WIDTH, HEIGHT, self.ui_manager)
         else:
-            self.json_popup = JSONPopup("Components JSON", {"error": "components.json not found or invalid"}, WIDTH, HEIGHT)
+            self.json_popup = JSONPopup("Components JSON", {"error": "components.json not found or invalid"}, WIDTH, HEIGHT, self.ui_manager)
 
     def _draw_output_log(self, screen):
         """Draw the output log at the bottom."""

@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Delete legacy widget tests and legacy components file
 
 ---
@@ -16,10 +16,10 @@
 **File:** `tests/unit/ui/test_ui_widgets.py`
 **Tests:** `pytest tests/ -x -q` after deletion
 
-- [ ] Delete entire file `tests/unit/ui/test_ui_widgets.py`
-- [ ] Verify: `pytest tests/ -x -q` - no collection errors
+- [x] Delete entire file `tests/unit/ui/test_ui_widgets.py`
+- [x] Verify: `pytest tests/ -x -q` - no collection errors
 
-**Notes:** These tests test the legacy Button/Label/Slider classes which are being deleted. Integration tests cover menu behavior. Total of 11 tests removed.
+**Notes:** Deleted test_ui_widgets.py (11 tests for legacy Button/Label/Slider). Tests run without collection errors.
 
 ---
 
@@ -27,10 +27,10 @@
 **File:** `ui/components.py`
 **Tests:** `pytest tests/ -x -q` after deletion
 
-- [ ] Delete entire file `ui/components.py`
-- [ ] Verify: `pytest tests/ -x -q` - no import errors
+- [x] Delete entire file `ui/components.py`
+- [x] Verify: `pytest tests/ -x -q` - no import errors
 
-**Notes:** This file contains Button, Label, Slider classes (102 lines total). All usages have been migrated to pygame_gui.
+**Notes:** Deleted ui/components.py (Button, Label, Slider - 102 lines). Required fixing ui/__init__.py first to remove the import.
 
 ---
 
@@ -38,27 +38,28 @@
 **File:** `ui/__init__.py`
 **Tests:** `pytest tests/ -x -q` after modification
 
-- [ ] Open `ui/__init__.py`
-- [ ] Remove line: `from .components import Button, Label, Slider`
-- [ ] Verify: `pytest tests/ -x -q` - no import errors
-- [ ] Verify: `python -c "from ui import Button"` - should raise ImportError (expected)
+- [x] Open `ui/__init__.py`
+- [x] Remove line: `from .components import Button, Label, Slider`
+- [x] Verify: `pytest tests/ -x -q` - no import errors
+- [x] Verify: `python -c "from ui import Button"` - should raise ImportError (expected)
 
-**Notes:** [Filled during implementation]
+**Notes:** Removed legacy import line. File now only contains `import pygame`. ImportError confirmed when trying to import Button from ui.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run full test suite: `pytest tests/` (NOT --testmon) - passes with expected count
+- [x] All task checkboxes above are checked
+- [x] Run full test suite: `pytest tests/` (NOT --testmon) - passes with expected count
   - Expected: ~4550 passed (was 4561, minus 11 deleted widget tests), 1 failed (pre-existing)
-- [ ] No import errors anywhere
-- [ ] `python -c "from game.app import Game"` - works
-- [ ] `python -c "from ui.test_lab_scene import TestLabScene"` - works
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to `Complete`
-- [ ] Update plan.md Completion Checklist
+  - **Actual: 4550 passed, 1 failed, 1 skipped** ✓
+- [x] No import errors anywhere
+- [x] `python -c "from game.app import Game"` - works
+- [x] `python -c "from ui.test_lab_scene import TestLabScene"` - works
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to `Complete`
+- [x] Update plan.md Completion Checklist
 
 ---
 
