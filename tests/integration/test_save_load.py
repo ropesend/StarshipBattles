@@ -22,6 +22,22 @@ from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.ship_instance import ShipInstance
+
+
+def make_mock_ship_instance(name="Test Ship", owner_id=0):
+    """Create a mock ShipInstance for testing."""
+    return ShipInstance(
+        instance_id=f"test-{name.lower().replace(' ', '-')}-{id(name)}",
+        design_id=name,
+        name=name,
+        owner_id=owner_id,
+        design_data={
+            'name': name,
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100}
+        },
+    )
 
 
 # =============================================================================
@@ -59,11 +75,11 @@ def game_session_with_state(minimal_game_session):
 
     # Add some fleets
     fleet1 = Fleet(100, 0, HexCoord(10, 10), speed=15.0)
-    fleet1.ships = ["Scout"]
+    fleet1.ships = [make_mock_ship_instance("Scout", 0)]
     session.empires[0].add_fleet(fleet1)
 
     fleet2 = Fleet(200, 1, HexCoord(20, 20), speed=10.0)
-    fleet2.ships = ["Destroyer"]
+    fleet2.ships = [make_mock_ship_instance("Destroyer", 1)]
     session.empires[1].add_fleet(fleet2)
 
     # Advance a few turns

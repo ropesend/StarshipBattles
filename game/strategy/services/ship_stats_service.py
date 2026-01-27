@@ -63,7 +63,6 @@ class ShipStatsService:
             - warp_resource_costs: Dict of resource_type -> cost per warp jump
             - strategic_movement: Movement points for strategic map
             - warp_max_tonnage: Max ship mass for warp (0 if damaged)
-            - Legacy fields for backward compatibility (max_fuel, max_energy, etc.)
         """
         if component_damage is None:
             component_damage = {}
@@ -87,46 +86,15 @@ class ShipStatsService:
         # This handles test fixtures and designs without component registry entries
         if not components_found:
             expected = design_data.get('expected_stats', {})
-            # Build resource_storage from legacy fields
-            fallback_storage = expected.get('resource_storage', {})
-            if not fallback_storage:
-                if expected.get('max_fuel', 0) > 0:
-                    fallback_storage['fuel'] = expected['max_fuel']
-                if expected.get('max_energy', 0) > 0:
-                    fallback_storage['energy'] = expected['max_energy']
-                if expected.get('max_ammo', 0) > 0:
-                    fallback_storage['ammo'] = expected['max_ammo']
-
-            # Build resource_consumption_per_hex from legacy fields
-            fallback_per_hex = expected.get('resource_consumption_per_hex', {})
-            if not fallback_per_hex and expected.get('strategic_fuel_per_hex', 0) > 0:
-                fallback_per_hex['fuel'] = expected['strategic_fuel_per_hex']
-
-            # Build warp_resource_costs from legacy fields
-            fallback_warp_costs = expected.get('warp_resource_costs', {})
-            if not fallback_warp_costs:
-                if expected.get('warp_energy_cost', 0) > 0:
-                    fallback_warp_costs['energy'] = expected['warp_energy_cost']
-                if expected.get('warp_fuel_cost', 0) > 0:
-                    fallback_warp_costs['fuel'] = expected['warp_fuel_cost']
-
             return {
                 'max_hp': expected.get('max_hp', 0),
                 'mass': expected.get('mass', 0),
-                # New generic fields
-                'resource_storage': fallback_storage,
-                'resource_consumption_per_hex': fallback_per_hex,
+                'resource_storage': expected.get('resource_storage', {}),
+                'resource_consumption_per_hex': expected.get('resource_consumption_per_hex', {}),
                 'resource_consumption_per_turn': expected.get('resource_consumption_per_turn', {}),
-                'warp_resource_costs': fallback_warp_costs,
+                'warp_resource_costs': expected.get('warp_resource_costs', {}),
                 'strategic_movement': expected.get('strategic_movement', 0),
                 'warp_max_tonnage': expected.get('warp_max_tonnage', 0),
-                # Legacy fields for backward compatibility
-                'max_fuel': expected.get('max_fuel', 0),
-                'max_energy': expected.get('max_energy', 0),
-                'max_ammo': expected.get('max_ammo', 0),
-                'strategic_fuel_per_hex': expected.get('strategic_fuel_per_hex', 0),
-                'warp_energy_cost': expected.get('warp_energy_cost', 0),
-                'warp_fuel_cost': expected.get('warp_fuel_cost', 0),
             }
 
         for layer_name, comp_entry, comp_def in components_found:
@@ -197,10 +165,7 @@ class ShipStatsService:
                     resource_consumption_per_turn[resource_type] = (
                         resource_consumption_per_turn.get(resource_type, 0) + amount * effectiveness
                     )
-                elif trigger == 'warp_jump':
-                    warp_resource_costs[resource_type] = (
-                        warp_resource_costs.get(resource_type, 0) + amount * effectiveness
-                    )
+                # Note: warp_jump trigger handled below with warp effectiveness
 
             # Warp Jump - requires 100% HP (effectiveness must be 1.0)
             if 'WarpJump' in abilities:
@@ -211,27 +176,21 @@ class ShipStatsService:
                     warp_data = abilities.get('WarpJump', {})
                     if isinstance(warp_data, dict):
                         tonnage = warp_data.get('max_tonnage', 0)
-                        # Legacy: support energy_cost/fuel_cost in WarpJump ability
-                        legacy_energy = warp_data.get('energy_cost', 0)
-                        legacy_fuel = warp_data.get('fuel_cost', 0)
                     else:
                         tonnage = warp_data if isinstance(warp_data, (int, float)) else 0
-                        legacy_energy = 0
-                        legacy_fuel = 0
 
                     # Use largest warp drive tonnage
                     if tonnage > warp_max_tonnage:
                         warp_max_tonnage = tonnage
 
-                    # Add legacy costs to warp_resource_costs
-                    if legacy_energy > 0:
-                        warp_resource_costs['energy'] = (
-                            warp_resource_costs.get('energy', 0) + legacy_energy
-                        )
-                    if legacy_fuel > 0:
-                        warp_resource_costs['fuel'] = (
-                            warp_resource_costs.get('fuel', 0) + legacy_fuel
-                        )
+                    # Warp resource costs only contribute when warp is functional
+                    for ability_data in ShipStatsService._get_ability_list(abilities, 'ResourceConsumption'):
+                        if ability_data.get('trigger') == 'warp_jump':
+                            resource_type = ability_data.get('resource', '')
+                            amount = ability_data.get('amount', 0)
+                            warp_resource_costs[resource_type] = (
+                                warp_resource_costs.get(resource_type, 0) + amount
+                            )
 
         return {
             'max_hp': int(total_hp),
@@ -243,13 +202,6 @@ class ShipStatsService:
             'warp_resource_costs': warp_resource_costs,
             'strategic_movement': total_strategic_movement,
             'warp_max_tonnage': warp_max_tonnage,
-            # Legacy fields for backward compatibility
-            'max_fuel': resource_storage.get('fuel', 0),
-            'max_energy': resource_storage.get('energy', 0),
-            'max_ammo': resource_storage.get('ammo', 0),
-            'strategic_fuel_per_hex': resource_consumption_per_hex.get('fuel', 0),
-            'warp_energy_cost': warp_resource_costs.get('energy', 0),
-            'warp_fuel_cost': warp_resource_costs.get('fuel', 0),
         }
 
     @staticmethod
@@ -345,13 +297,10 @@ class ShipStatsService:
         registry = get_component_registry()
 
         for layer_name, layer_components in layers.items():
-            # Handle both list format and dict format
-            if isinstance(layer_components, list):
-                components = layer_components
-            elif isinstance(layer_components, dict):
-                components = layer_components.get('components', [])
-            else:
+            # Direct list format: layers[layer_name] = [comp1, comp2, ...]
+            if not isinstance(layer_components, list):
                 continue
+            components = layer_components
 
             for comp_entry in components:
                 comp_id = comp_entry.get('id', '')
@@ -473,15 +422,18 @@ class ShipStatsService:
 
         # Check if ship has resource capacity for warp
         # A ship with a warp drive but insufficient storage cannot warp
-        warp_energy_cost = calculated_stats.get('warp_energy_cost', 0)
+        warp_resource_costs = calculated_stats.get('warp_resource_costs', {})
+        resource_storage = calculated_stats.get('resource_storage', {})
+
+        warp_energy_cost = warp_resource_costs.get('energy', 0)
         if warp_energy_cost > 0:
-            max_energy = calculated_stats.get('max_energy', 0)
+            max_energy = resource_storage.get('energy', 0)
             if max_energy < warp_energy_cost:
                 return False
 
-        warp_fuel_cost = calculated_stats.get('warp_fuel_cost', 0)
+        warp_fuel_cost = warp_resource_costs.get('fuel', 0)
         if warp_fuel_cost > 0:
-            max_fuel = calculated_stats.get('max_fuel', 0)
+            max_fuel = resource_storage.get('fuel', 0)
             if max_fuel < warp_fuel_cost:
                 return False
 

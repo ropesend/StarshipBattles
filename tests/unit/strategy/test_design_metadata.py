@@ -78,17 +78,15 @@ class TestDesignMetadata:
                 "mass": 50.0,
                 "theme_id": "Rebellion",
                 "layers": {
-                    "core": {
-                        "components": [
-                            {
-                                "id": "laser_cannon",
-                                "category": "weapon",
-                                "damage": 100,
-                                "rate_of_fire": 2,
-                                "cost": {"metal": 10, "energy": 5}
-                            }
-                        ]
-                    }
+                    "core": [
+                        {
+                            "id": "laser_cannon",
+                            "category": "weapon",
+                            "damage": 100,
+                            "rate_of_fire": 2,
+                            "cost": {"metal": 10, "energy": 5}
+                        }
+                    ]
                 },
                 "_metadata": {
                     "is_obsolete": False,
@@ -158,19 +156,17 @@ class TestDesignMetadata:
         """Combat power is calculated correctly"""
         design_data = {
             "layers": {
-                "core": {
-                    "components": [
-                        {
-                            "category": "weapon",
-                            "damage": 100,
-                            "rate_of_fire": 2
-                        },
-                        {
-                            "category": "armor",
-                            "hp": 500
-                        }
-                    ]
-                }
+                "core": [
+                    {
+                        "category": "weapon",
+                        "damage": 100,
+                        "rate_of_fire": 2
+                    },
+                    {
+                        "category": "armor",
+                        "hp": 500
+                    }
+                ]
             }
         }
 
@@ -183,13 +179,11 @@ class TestDesignMetadata:
         """Resource costs are summed correctly"""
         design_data = {
             "layers": {
-                "core": {
-                    "components": [
-                        {"cost": {"metal": 10, "energy": 5}},
-                        {"cost": {"metal": 20, "energy": 10}},
-                        {"cost": {"crystals": 5}}
-                    ]
-                }
+                "core": [
+                    {"cost": {"metal": 10, "energy": 5}},
+                    {"cost": {"metal": 20, "energy": 10}},
+                    {"cost": {"crystals": 5}}
+                ]
             }
         }
 

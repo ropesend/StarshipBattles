@@ -4,6 +4,22 @@ from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.empire import Empire
+from game.strategy.data.ship_instance import ShipInstance
+
+
+def make_mock_ship_instance(name="Test Ship", owner_id=0):
+    """Create a mock ShipInstance for testing."""
+    return ShipInstance(
+        instance_id=f"test-{name.lower().replace(' ', '-')}-{id(name)}",
+        design_id=name,
+        name=name,
+        owner_id=owner_id,
+        design_data={
+            'name': name,
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100}
+        },
+    )
 
 
 @pytest.fixture
@@ -38,15 +54,17 @@ class TestAdvancedFleetOrders:
         test_empire.add_fleet(f1)
         test_empire.add_fleet(f2)
 
-        f1.ships = ["ShipA"]
-        f2.ships = ["ShipB"]
+        ship_a = make_mock_ship_instance("ShipA", 0)
+        ship_b = make_mock_ship_instance("ShipB", 0)
+        f1.ships = [ship_a]
+        f2.ships = [ship_b]
         f1.orders = ["SomeOrder"]
 
         f1.merge_with(f2)
 
         # F2 should have both
-        assert "ShipA" in f2.ships
-        assert "ShipB" in f2.ships
+        assert ship_a in f2.ships
+        assert ship_b in f2.ships
 
         # F1 should be empty
         assert len(f1.ships) == 0
@@ -201,8 +219,10 @@ class TestAdvancedFleetOrders:
         # Setup: Co-located
         f1.location = HexCoord(5, 5)
         f2.location = HexCoord(5, 5)
-        f1.ships = ["ShipA"]
-        f2.ships = ["ShipB"]
+        ship_a = make_mock_ship_instance("ShipA", 0)
+        ship_b = make_mock_ship_instance("ShipB", 0)
+        f1.ships = [ship_a]
+        f2.ships = [ship_b]
 
         order = FleetOrder(OrderType.JOIN_FLEET, f2)
         f1.add_order(order)

@@ -749,7 +749,7 @@ class FleetReportWindow(UIWindow):
     def refresh_list(self):
         """Refresh the ship list with current fleet data."""
         # Get ships from fleet
-        ships = self.fleet.get_ship_instances()
+        ships = self.fleet.ships
 
         # Apply filters
         self.filtered_ships = self._apply_filters(ships)
@@ -787,7 +787,7 @@ class FleetReportWindow(UIWindow):
 
     def _update_summary(self):
         """Update the fleet summary labels using calculate_fleet_stats."""
-        ships = self.fleet.get_ship_instances()
+        ships = self.fleet.ships
         stats = calculate_fleet_stats(ships)
 
         # Combat Status

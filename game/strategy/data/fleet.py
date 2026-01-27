@@ -1,6 +1,6 @@
 from game.strategy.data.hex_math import HexCoord
 from enum import Enum, auto
-from typing import List, Union, Optional, Tuple, TYPE_CHECKING, Any, Dict
+from typing import List, Optional, Tuple, TYPE_CHECKING, Any, Dict
 
 if TYPE_CHECKING:
     from game.strategy.data.ship_instance import ShipInstance
@@ -46,25 +46,21 @@ class Fleet:
     """
     Represents a fleet of ships on the Strategy Map.
 
-    Ships can be stored as:
-    - Strings (legacy): Simple ship class names like "Scout", "Destroyer"
-    - ShipInstance objects: Full ship instances with state tracking
-
-    The fleet supports both formats for backward compatibility during migration.
+    Ships are stored as ShipInstance objects with full state tracking.
     """
 
     def __init__(self, fleet_id, owner_id, location, speed=5.0):
         self.id = fleet_id
         self.owner_id = owner_id  # 0=Player, 1=Enemy, etc
         self.location = location  # HexCoord
-        self.ships: List[Union[str, 'ShipInstance']] = []
+        self.ships: List['ShipInstance'] = []
 
         # Movement & Orders
         self.speed = float(speed)
         self.orders: List[FleetOrder] = []
         self.path: List[HexCoord] = []  # Current movement path for the ACTIVE Move order
 
-    def add_ship(self, ship: Union[str, 'ShipInstance']):
+    def add_ship(self, ship: 'ShipInstance'):
         """Add a ship to the fleet (string name or ShipInstance)."""
         self.ships.append(ship)
         self._trigger_speed_recalculation()
@@ -74,7 +70,7 @@ class Fleet:
         self.ships.append(instance)
         self._trigger_speed_recalculation()
 
-    def remove_ship(self, ship: Union[str, 'ShipInstance']) -> bool:
+    def remove_ship(self, ship: 'ShipInstance') -> bool:
         """Remove a ship from the fleet. Returns True if found and removed."""
         if ship in self.ships:
             self.ships.remove(ship)
@@ -88,43 +84,17 @@ class Fleet:
 
         Fleet speed is the minimum of all combat-capable ships' speeds,
         ensuring the fleet moves at the pace of its slowest member.
-
-        Note: Only recalculates if there are ShipInstance objects.
-        Fleets with only legacy string ships preserve their current speed.
         """
-        if not self.has_ship_instances():
-            return  # Preserve current speed for legacy string-only fleets
-
         from game.strategy.services.fleet_mobility_service import FleetMobilityService
         FleetMobilityService.recalculate_fleet_speed(self)
 
-    def get_ship_instances(self) -> List['ShipInstance']:
-        """Get all ShipInstance objects (filters out legacy strings)."""
-        from game.strategy.data.ship_instance import ShipInstance
-        return [s for s in self.ships if isinstance(s, ShipInstance)]
-
     def get_ship_names(self) -> List[str]:
-        """Get all ship names (works with both strings and ShipInstances)."""
-        result = []
-        for s in self.ships:
-            if isinstance(s, str):
-                result.append(s)
-            elif hasattr(s, 'name'):
-                result.append(s.name)
-        return result
+        """Get names of all ships in the fleet."""
+        return [s.name for s in self.ships]
 
     def get_combat_capable_ships(self) -> List['ShipInstance']:
         """Get ships capable of combat (not destroyed or derelict)."""
-        from game.strategy.data.ship_instance import ShipInstance
-        return [
-            s for s in self.ships
-            if isinstance(s, ShipInstance) and s.is_combat_capable()
-        ]
-
-    def has_ship_instances(self) -> bool:
-        """Check if fleet contains any ShipInstance objects."""
-        from game.strategy.data.ship_instance import ShipInstance
-        return any(isinstance(s, ShipInstance) for s in self.ships)
+        return [s for s in self.ships if s.is_combat_capable()]
 
     def can_use_warp(self) -> bool:
         """
@@ -469,19 +439,16 @@ class Fleet:
         Returns:
             List of Ship objects ready for battle
         """
-        from game.strategy.data.ship_instance import ShipInstance
-
         ships = []
-        instances = self.get_ship_instances()
 
-        if not instances:
+        if not self.ships:
             return []
 
         # Generate default positions if not provided
         if formation_positions is None:
-            formation_positions = self._default_formation_positions(len(instances), team_id)
+            formation_positions = self._default_formation_positions(len(self.ships), team_id)
 
-        for i, instance in enumerate(instances):
+        for i, instance in enumerate(self.ships):
             if not instance.is_combat_capable():
                 continue
 
@@ -588,12 +555,7 @@ class Fleet:
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for save game."""
-        ships_data = []
-        for s in self.ships:
-            if isinstance(s, str):
-                ships_data.append({'type': 'string', 'value': s})
-            elif hasattr(s, 'to_dict'):
-                ships_data.append({'type': 'instance', 'value': s.to_dict()})
+        ships_data = [s.to_dict() for s in self.ships]
 
         location_data = None
         if hasattr(self.location, 'to_dict'):
@@ -629,10 +591,7 @@ class Fleet:
 
         # Restore ships
         for ship_data in data.get('ships', []):
-            if ship_data['type'] == 'string':
-                fleet.ships.append(ship_data['value'])
-            elif ship_data['type'] == 'instance':
-                fleet.ships.append(ShipInstance.from_dict(ship_data['value']))
+            fleet.ships.append(ShipInstance.from_dict(ship_data))
 
         # Restore path
         for p in data.get('path', []):

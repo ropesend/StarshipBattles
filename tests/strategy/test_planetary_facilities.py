@@ -51,19 +51,17 @@ class TestPlanetaryFacilities:
             "name": "Resource Harvester",
             "vehicle_class": "Planetary Complex (Tier 1)",
             "layers": {
-                "outer": {
-                    "components": [
-                        {
-                            "id": "metal_harvester",
-                            "abilities": {
-                                "ResourceHarvester": {
-                                    "resource_type": "Metals",
-                                    "base_harvest_rate": 10.0
-                                }
+                "outer": [
+                    {
+                        "id": "metal_harvester",
+                        "abilities": {
+                            "ResourceHarvester": {
+                                "resource_type": "Metals",
+                                "base_harvest_rate": 10.0
                             }
                         }
-                    ]
-                }
+                    }
+                ]
             }
         }
 
@@ -86,19 +84,17 @@ class TestPlanetaryFacilities:
         shipyard_data = {
             "name": "Orbital Shipyard",
             "layers": {
-                "core": {
-                    "components": [
-                        {
-                            "id": "space_shipyard",
-                            "abilities": {
-                                "SpaceShipyard": {
-                                    "construction_speed_bonus": 1.0,
-                                    "max_ship_mass": 100000
-                                }
+                "core": [
+                    {
+                        "id": "space_shipyard",
+                        "abilities": {
+                            "SpaceShipyard": {
+                                "construction_speed_bonus": 1.0,
+                                "max_ship_mass": 100000
                             }
                         }
-                    ]
-                }
+                    }
+                ]
             }
         }
 
@@ -120,18 +116,16 @@ class TestPlanetaryFacilities:
         harvester_data = {
             "name": "Metal Harvester",
             "layers": {
-                "outer": {
-                    "components": [
-                        {
-                            "id": "metal_harvester",
-                            "abilities": {
-                                "ResourceHarvester": {
-                                    "resource_type": "Metals"
-                                }
+                "outer": [
+                    {
+                        "id": "metal_harvester",
+                        "abilities": {
+                            "ResourceHarvester": {
+                                "resource_type": "Metals"
                             }
                         }
-                    ]
-                }
+                    }
+                ]
             }
         }
 
@@ -151,18 +145,16 @@ class TestPlanetaryFacilities:
         shipyard_data = {
             "name": "Damaged Shipyard",
             "layers": {
-                "core": {
-                    "components": [
-                        {
-                            "id": "space_shipyard",
-                            "abilities": {
-                                "SpaceShipyard": {
-                                    "construction_speed_bonus": 1.0
-                                }
+                "core": [
+                    {
+                        "id": "space_shipyard",
+                        "abilities": {
+                            "SpaceShipyard": {
+                                "construction_speed_bonus": 1.0
                             }
                         }
-                    ]
-                }
+                    }
+                ]
             }
         }
 

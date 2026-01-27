@@ -103,14 +103,12 @@ class FleetMobilityService:
         Returns:
             Float speed value (hexes per turn)
         """
-        ship_instances = fleet.get_ship_instances()
-
-        if not ship_instances:
+        if not fleet.ships:
             return 0.0
 
         # Calculate speed for each combat-capable ship
         speeds = []
-        for ship in ship_instances:
+        for ship in fleet.ships:
             if ship.is_combat_capable():
                 speed = FleetMobilityService.calculate_ship_speed(ship)
                 speeds.append(speed)

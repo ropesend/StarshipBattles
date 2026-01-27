@@ -48,7 +48,7 @@ class TestShipStatsServiceBasics:
 
         assert stats['max_hp'] == 0
         assert stats['mass'] == 0
-        assert stats['max_fuel'] == 0
+        assert stats['resource_storage'].get('fuel', 0) == 0
         assert stats['strategic_movement'] == 0
         assert stats['warp_max_tonnage'] == 0
 
@@ -158,7 +158,10 @@ class TestWarpCapability:
 
         comp = MockComponent(
             'warp_drive', max_hp=100,
-            abilities={'WarpJump': {'max_tonnage': 5000, 'energy_cost': 500}}
+            abilities={
+                'WarpJump': {'max_tonnage': 5000},
+                'ResourceConsumption': [{'resource': 'energy', 'amount': 500, 'trigger': 'warp_jump'}]
+            }
         )
 
         # Full HP - warp works
@@ -177,7 +180,10 @@ class TestWarpCapability:
 
         warp_comp = MockComponent(
             'warp_drive', max_hp=100, mass=50,
-            abilities={'WarpJump': {'max_tonnage': 5000, 'energy_cost': 500}}
+            abilities={
+                'WarpJump': {'max_tonnage': 5000},
+                'ResourceConsumption': [{'resource': 'energy', 'amount': 500, 'trigger': 'warp_jump'}]
+            }
         )
 
         design_data = make_design_data({'OUTER': ['warp_drive']})
@@ -188,14 +194,14 @@ class TestWarpCapability:
             # Undamaged - has warp capability
             stats_ok = ShipStatsService.calculate_stats(design_data, {})
             assert stats_ok['warp_max_tonnage'] == 5000
-            assert stats_ok['warp_energy_cost'] == 500
+            assert stats_ok['warp_resource_costs'].get('energy', 0) == 500
 
             # Damaged - no warp capability
             stats_damaged = ShipStatsService.calculate_stats(
                 design_data, {'warp_drive': 99}
             )
             assert stats_damaged['warp_max_tonnage'] == 0
-            assert stats_damaged['warp_energy_cost'] == 0
+            assert stats_damaged['warp_resource_costs'].get('energy', 0) == 0
 
     def test_multiple_warp_drives_largest_tonnage(self):
         """With multiple warp drives, use largest tonnage."""
@@ -203,11 +209,17 @@ class TestWarpCapability:
 
         warp1 = MockComponent(
             'warp_small', max_hp=100, mass=30,
-            abilities={'WarpJump': {'max_tonnage': 2000, 'energy_cost': 200}}
+            abilities={
+                'WarpJump': {'max_tonnage': 2000},
+                'ResourceConsumption': [{'resource': 'energy', 'amount': 200, 'trigger': 'warp_jump'}]
+            }
         )
         warp2 = MockComponent(
             'warp_large', max_hp=100, mass=60,
-            abilities={'WarpJump': {'max_tonnage': 10000, 'energy_cost': 800}}
+            abilities={
+                'WarpJump': {'max_tonnage': 10000},
+                'ResourceConsumption': [{'resource': 'energy', 'amount': 800, 'trigger': 'warp_jump'}]
+            }
         )
 
         design_data = make_design_data({'OUTER': ['warp_small', 'warp_large']})
@@ -220,7 +232,7 @@ class TestWarpCapability:
             # Tonnage = max of drives (10000)
             assert stats['warp_max_tonnage'] == 10000
             # Energy = sum of drives (200 + 800)
-            assert stats['warp_energy_cost'] == 1000
+            assert stats['warp_resource_costs'].get('energy', 0) == 1000
 
     def test_one_damaged_warp_drive_reduces_capability(self):
         """If one of two warp drives is damaged, only undamaged contributes."""
@@ -228,11 +240,17 @@ class TestWarpCapability:
 
         warp1 = MockComponent(
             'warp_small', max_hp=100,
-            abilities={'WarpJump': {'max_tonnage': 2000, 'energy_cost': 200}}
+            abilities={
+                'WarpJump': {'max_tonnage': 2000},
+                'ResourceConsumption': [{'resource': 'energy', 'amount': 200, 'trigger': 'warp_jump'}]
+            }
         )
         warp2 = MockComponent(
             'warp_large', max_hp=100,
-            abilities={'WarpJump': {'max_tonnage': 10000, 'energy_cost': 800}}
+            abilities={
+                'WarpJump': {'max_tonnage': 10000},
+                'ResourceConsumption': [{'resource': 'energy', 'amount': 800, 'trigger': 'warp_jump'}]
+            }
         )
 
         design_data = make_design_data({'OUTER': ['warp_small', 'warp_large']})
@@ -246,7 +264,7 @@ class TestWarpCapability:
             )
 
             assert stats['warp_max_tonnage'] == 2000
-            assert stats['warp_energy_cost'] == 200
+            assert stats['warp_resource_costs'].get('energy', 0) == 200
 
 
 class TestStatAggregation:
@@ -328,7 +346,7 @@ class TestStatAggregation:
             mock_reg.return_value = {'fuel_tank': tank}
 
             stats = ShipStatsService.calculate_stats(design_data, {})
-            assert stats['max_fuel'] == 10000
+            assert stats['resource_storage']['fuel'] == 10000
 
     def test_strategic_fuel_consumption(self):
         """Strategic fuel per hex should sum across engines."""
@@ -348,7 +366,7 @@ class TestStatAggregation:
             mock_reg.return_value = {'engine': engine}
 
             stats = ShipStatsService.calculate_stats(design_data, {})
-            assert stats['strategic_fuel_per_hex'] == 100
+            assert stats['resource_consumption_per_hex']['fuel'] == 100
 
 
 class TestComponentIdMatching:
@@ -406,7 +424,10 @@ class TestIntegrationScenarios:
         )
         warp = MockComponent(
             'warp_drive', mass=40, max_hp=60,
-            abilities={'WarpJump': {'max_tonnage': 2000, 'energy_cost': 500}}
+            abilities={
+                'WarpJump': {'max_tonnage': 2000},
+                'ResourceConsumption': [{'resource': 'energy', 'amount': 500, 'trigger': 'warp_jump'}]
+            }
         )
         tank = MockComponent(
             'fuel_tank', mass=30, max_hp=50,
@@ -430,11 +451,11 @@ class TestIntegrationScenarios:
 
             assert stats['mass'] == 50 + 80 + 40 + 30  # 200
             assert stats['max_hp'] == 200 + 100 + 60 + 50  # 410
-            assert stats['max_fuel'] == 50000
+            assert stats['resource_storage']['fuel'] == 50000
             assert stats['strategic_movement'] == 100
-            assert stats['strategic_fuel_per_hex'] == 100
+            assert stats['resource_consumption_per_hex']['fuel'] == 100
             assert stats['warp_max_tonnage'] == 2000
-            assert stats['warp_energy_cost'] == 500
+            assert stats['warp_resource_costs'].get('energy', 0) == 500
 
     def test_damaged_escort_loses_warp(self):
         """Escort with damaged warp drive loses warp capability."""
@@ -446,7 +467,10 @@ class TestIntegrationScenarios:
         )
         warp = MockComponent(
             'warp_drive', mass=40, max_hp=60,
-            abilities={'WarpJump': {'max_tonnage': 2000, 'energy_cost': 500}}
+            abilities={
+                'WarpJump': {'max_tonnage': 2000},
+                'ResourceConsumption': [{'resource': 'energy', 'amount': 500, 'trigger': 'warp_jump'}]
+            }
         )
 
         design_data = make_design_data({'OUTER': ['engine', 'warp_drive']})
@@ -460,7 +484,7 @@ class TestIntegrationScenarios:
             )
 
             assert stats['warp_max_tonnage'] == 0
-            assert stats['warp_energy_cost'] == 0
+            assert stats['warp_resource_costs'].get('energy', 0) == 0
             # Engine still works (100% HP)
             assert stats['strategic_movement'] == 100
 
@@ -693,12 +717,12 @@ class TestComponentToggles:
             mock_reg.return_value = {'fuel_tank': tank}
 
             stats_on = ShipStatsService.calculate_stats(design_data, {})
-            assert stats_on['max_fuel'] == 10000
+            assert stats_on['resource_storage']['fuel'] == 10000
 
             stats_off = ShipStatsService.calculate_stats(
                 design_data, {}, component_toggles={'fuel_tank': False}
             )
-            assert stats_off['max_fuel'] == 0
+            assert stats_off['resource_storage'].get('fuel', 0) == 0
 
     def test_mixed_enabled_disabled_components(self):
         """Mix of enabled and disabled components should calculate correctly."""
@@ -878,6 +902,7 @@ class TestTriggerTypes:
         multi_consumer = MockComponent(
             'multi', mass=100, max_hp=100,
             abilities={
+                'WarpJump': {'max_tonnage': 5000},  # Required for warp_jump trigger to work
                 'ResourceConsumption': [
                     {'resource': 'fuel', 'amount': 100, 'trigger': 'strategic_per_hex'},
                     {'resource': 'fuel', 'amount': 50, 'trigger': 'per_turn'},
@@ -924,13 +949,11 @@ class TestTriggerTypes:
             assert abs(stats_damaged['resource_consumption_per_turn']['oxygen'] - 50) < 1
 
     def test_trigger_warp_jump_requires_full_hp(self):
-        """warp_jump consumption requires full HP (via warp effectiveness)."""
+        """warp_jump consumption requires full HP (warp resource costs are 0 if damaged)."""
         from game.strategy.services.ship_stats_service import ShipStatsService
 
-        # Note: warp_jump trigger uses regular effectiveness, not warp effectiveness
-        # However, ResourceConsumption with warp_jump trigger goes through regular
-        # effectiveness calculation, not the warp-specific one.
-        # This test documents that warp_jump resource consumption degrades normally.
+        # warp_jump trigger now uses warp effectiveness: either 0 (damaged) or 1 (100% HP)
+        # If warp drive is damaged, warp_resource_costs should be 0 (no warp possible)
         warp = MockComponent(
             'warp', mass=60, max_hp=100, damage_threshold=0.3,
             abilities={
@@ -951,14 +974,13 @@ class TestTriggerTypes:
             assert stats_full['warp_resource_costs']['energy'] == 500
 
             # 99% HP - warp drive disabled (0 tonnage)
-            # but resource consumption uses regular effectiveness (near 100%)
+            # warp_resource_costs should also be 0 (no warp = no cost)
             stats_damaged = ShipStatsService.calculate_stats(
                 design_data, {'warp': 99}
             )
             assert stats_damaged['warp_max_tonnage'] == 0
-            # Resource consumption still calculated with regular effectiveness
-            # At 99% HP: effectiveness = (0.99 - 0.3) / (1.0 - 0.3) = 0.986
-            assert stats_damaged['warp_resource_costs']['energy'] > 0
+            # When warp is disabled, warp_resource_costs should be empty or 0
+            assert stats_damaged['warp_resource_costs'].get('energy', 0) == 0
 
     def test_trigger_unknown_type_ignored(self):
         """Unknown trigger types should be ignored (no error)."""
@@ -1310,10 +1332,8 @@ class TestHasWarpCapability:
         ship.get_calculated_stats.return_value = {
             'mass': 1000,
             'warp_max_tonnage': 0,  # No warp drive
-            'warp_energy_cost': 0,
-            'warp_fuel_cost': 0,
-            'max_energy': 500,
-            'max_fuel': 5000,
+            'warp_resource_costs': {'energy': 0, 'fuel': 0},
+            'resource_storage': {'energy': 500, 'fuel': 5000},
         }
 
         result = ShipStatsService.has_warp_capability(ship)
@@ -1327,10 +1347,8 @@ class TestHasWarpCapability:
         ship.get_calculated_stats.return_value = {
             'mass': 1000,
             'warp_max_tonnage': 1500,  # Exceeds mass
-            'warp_energy_cost': 500,
-            'warp_fuel_cost': 0,
-            'max_energy': 1000,  # Enough for warp
-            'max_fuel': 5000,
+            'warp_resource_costs': {'energy': 500, 'fuel': 0},
+            'resource_storage': {'energy': 1000, 'fuel': 5000},  # Enough for warp
         }
 
         result = ShipStatsService.has_warp_capability(ship)
@@ -1344,10 +1362,8 @@ class TestHasWarpCapability:
         ship.get_calculated_stats.return_value = {
             'mass': 1000,
             'warp_max_tonnage': 1000,  # Exactly equal
-            'warp_energy_cost': 500,
-            'warp_fuel_cost': 0,
-            'max_energy': 1000,
-            'max_fuel': 5000,
+            'warp_resource_costs': {'energy': 500, 'fuel': 0},
+            'resource_storage': {'energy': 1000, 'fuel': 5000},
         }
 
         result = ShipStatsService.has_warp_capability(ship)
@@ -1361,10 +1377,8 @@ class TestHasWarpCapability:
         ship.get_calculated_stats.return_value = {
             'mass': 1000,
             'warp_max_tonnage': 500,  # Less than mass
-            'warp_energy_cost': 500,
-            'warp_fuel_cost': 0,
-            'max_energy': 1000,
-            'max_fuel': 5000,
+            'warp_resource_costs': {'energy': 500, 'fuel': 0},
+            'resource_storage': {'energy': 1000, 'fuel': 5000},
         }
 
         result = ShipStatsService.has_warp_capability(ship)
@@ -1378,10 +1392,8 @@ class TestHasWarpCapability:
         ship.get_calculated_stats.return_value = {
             'mass': 0,  # Zero mass
             'warp_max_tonnage': 1000,
-            'warp_energy_cost': 500,
-            'warp_fuel_cost': 0,
-            'max_energy': 1000,
-            'max_fuel': 5000,
+            'warp_resource_costs': {'energy': 500, 'fuel': 0},
+            'resource_storage': {'energy': 1000, 'fuel': 5000},
         }
 
         result = ShipStatsService.has_warp_capability(ship)
@@ -1395,10 +1407,8 @@ class TestHasWarpCapability:
         ship.get_calculated_stats.return_value = {
             'mass': 1000,
             'warp_max_tonnage': 1500,
-            'warp_energy_cost': 500,  # Needs 500 energy
-            'warp_fuel_cost': 0,
-            'max_energy': 300,  # Only has 300 energy capacity
-            'max_fuel': 5000,
+            'warp_resource_costs': {'energy': 500, 'fuel': 0},  # Needs 500 energy
+            'resource_storage': {'energy': 300, 'fuel': 5000},  # Only has 300 energy capacity
         }
 
         result = ShipStatsService.has_warp_capability(ship)
@@ -1412,10 +1422,8 @@ class TestHasWarpCapability:
         ship.get_calculated_stats.return_value = {
             'mass': 1000,
             'warp_max_tonnage': 1500,
-            'warp_energy_cost': 0,
-            'warp_fuel_cost': 1000,  # Needs 1000 fuel
-            'max_energy': 500,
-            'max_fuel': 500,  # Only has 500 fuel capacity
+            'warp_resource_costs': {'energy': 0, 'fuel': 1000},  # Needs 1000 fuel
+            'resource_storage': {'energy': 500, 'fuel': 500},  # Only has 500 fuel capacity
         }
 
         result = ShipStatsService.has_warp_capability(ship)
@@ -1429,10 +1437,8 @@ class TestHasWarpCapability:
         ship.get_calculated_stats.return_value = {
             'mass': 1000,
             'warp_max_tonnage': 1500,
-            'warp_energy_cost': 500,
-            'warp_fuel_cost': 200,
-            'max_energy': 500,  # Exactly enough
-            'max_fuel': 200,  # Exactly enough
+            'warp_resource_costs': {'energy': 500, 'fuel': 200},
+            'resource_storage': {'energy': 500, 'fuel': 200},  # Exactly enough
         }
 
         result = ShipStatsService.has_warp_capability(ship)
@@ -1446,10 +1452,8 @@ class TestHasWarpCapability:
         ship.get_calculated_stats.return_value = {
             'mass': 1000,
             'warp_max_tonnage': 1500,
-            'warp_energy_cost': 0,  # No energy cost
-            'warp_fuel_cost': 0,  # No fuel cost
-            'max_energy': 0,  # No energy storage
-            'max_fuel': 0,  # No fuel storage
+            'warp_resource_costs': {'energy': 0, 'fuel': 0},  # No resource costs
+            'resource_storage': {'energy': 0, 'fuel': 0},  # No storage
         }
 
         result = ShipStatsService.has_warp_capability(ship)
@@ -1466,10 +1470,8 @@ class TestHasWarpCapability:
         ship.get_calculated_stats.return_value = {
             'mass': 1000,
             'warp_max_tonnage': 0,  # Damaged warp drive = 0 tonnage
-            'warp_energy_cost': 0,
-            'warp_fuel_cost': 0,
-            'max_energy': 1000,
-            'max_fuel': 5000,
+            'warp_resource_costs': {'energy': 0, 'fuel': 0},
+            'resource_storage': {'energy': 1000, 'fuel': 5000},
         }
 
         result = ShipStatsService.has_warp_capability(ship)
@@ -1483,10 +1485,8 @@ class TestHasWarpCapability:
         ship.get_calculated_stats.return_value = {
             'mass': 1000,
             'warp_max_tonnage': 1500,
-            'warp_energy_cost': 500,
-            'warp_fuel_cost': 1000,
-            'max_energy': 600,  # Enough energy
-            'max_fuel': 500,  # NOT enough fuel
+            'warp_resource_costs': {'energy': 500, 'fuel': 1000},
+            'resource_storage': {'energy': 600, 'fuel': 500},  # Enough energy but NOT enough fuel
         }
 
         result = ShipStatsService.has_warp_capability(ship)

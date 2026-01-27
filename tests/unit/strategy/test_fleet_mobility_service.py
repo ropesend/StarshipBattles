@@ -181,7 +181,7 @@ class TestFleetMobilityServiceFleetSpeed:
         ship.is_combat_capable.return_value = True
 
         fleet = MagicMock()
-        fleet.get_ship_instances.return_value = [ship]
+        fleet.ships = [ship]
         fleet.speed = 5.0
 
         speed = FleetMobilityService.calculate_fleet_speed(fleet)
@@ -194,7 +194,7 @@ class TestFleetMobilityServiceFleetSpeed:
         from game.strategy.services.fleet_mobility_service import FleetMobilityService
 
         fleet = MagicMock()
-        fleet.get_ship_instances.return_value = []
+        fleet.ships = []
         fleet.speed = 5.0
 
         speed = FleetMobilityService.calculate_fleet_speed(fleet)
@@ -224,7 +224,7 @@ class TestFleetMobilityServiceFleetSpeed:
         destroyed_ship.is_combat_capable.return_value = False  # Destroyed
 
         fleet = MagicMock()
-        fleet.get_ship_instances.return_value = [working_ship, destroyed_ship]
+        fleet.ships = [working_ship, destroyed_ship]
 
         speed = FleetMobilityService.calculate_fleet_speed(fleet)
 
@@ -246,7 +246,7 @@ class TestFleetMobilityServiceFleetSpeed:
         ship.is_combat_capable.return_value = True
 
         fleet = MagicMock()
-        fleet.get_ship_instances.return_value = [ship]
+        fleet.ships = [ship]
         fleet.speed = 5.0  # Original value
 
         FleetMobilityService.recalculate_fleet_speed(fleet)

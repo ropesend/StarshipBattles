@@ -61,6 +61,25 @@ class TestFleet:
             speed=5.0
         )
 
+    @pytest.fixture
+    def make_mock_ship(self):
+        """Factory for creating mock ship instances."""
+        from game.strategy.data.ship_instance import ShipInstance
+
+        def _make(name="Test Ship", is_combat_capable=True):
+            mock = MagicMock(spec=ShipInstance)
+            mock.name = name
+            mock.is_combat_capable.return_value = is_combat_capable
+            mock.get_all_resource_costs_per_hex.return_value = {}
+            # Required for speed recalculation
+            mock.design_data = {'vehicle_type': 'Ship'}
+            mock.get_calculated_stats.return_value = {
+                'mass': 100,
+                'strategic_movement': 500  # Results in speed ~5
+            }
+            return mock
+        return _make
+
     def test_creation(self, basic_fleet):
         """Test fleet creation with basic parameters."""
         assert basic_fleet.id == "fleet_1"
@@ -71,52 +90,53 @@ class TestFleet:
         assert basic_fleet.orders == []
         assert basic_fleet.path == []
 
-    def test_add_ship_string(self, basic_fleet):
-        """Test adding a ship as string (legacy format)."""
-        basic_fleet.add_ship("Destroyer")
-        assert "Destroyer" in basic_fleet.ships
+    def test_add_ship(self, basic_fleet, make_mock_ship):
+        """Test adding a ShipInstance to fleet."""
+        ship = make_mock_ship(name="Destroyer")
+        basic_fleet.add_ship(ship)
+        assert ship in basic_fleet.ships
         assert len(basic_fleet.ships) == 1
 
-    def test_add_multiple_ships(self, basic_fleet):
+    def test_add_multiple_ships(self, basic_fleet, make_mock_ship):
         """Test adding multiple ships."""
-        basic_fleet.add_ship("Scout")
-        basic_fleet.add_ship("Cruiser")
-        basic_fleet.add_ship("Scout")
+        ship1 = make_mock_ship(name="Scout")
+        ship2 = make_mock_ship(name="Cruiser")
+        ship3 = make_mock_ship(name="Scout")
+        basic_fleet.add_ship(ship1)
+        basic_fleet.add_ship(ship2)
+        basic_fleet.add_ship(ship3)
         assert len(basic_fleet.ships) == 3
 
-    def test_remove_ship(self, basic_fleet):
+    def test_remove_ship(self, basic_fleet, make_mock_ship):
         """Test removing a ship from fleet."""
-        basic_fleet.add_ship("Destroyer")
-        basic_fleet.add_ship("Scout")
+        destroyer = make_mock_ship(name="Destroyer")
+        scout = make_mock_ship(name="Scout")
+        basic_fleet.add_ship(destroyer)
+        basic_fleet.add_ship(scout)
 
-        result = basic_fleet.remove_ship("Destroyer")
+        result = basic_fleet.remove_ship(destroyer)
         assert result is True
-        assert "Destroyer" not in basic_fleet.ships
+        assert destroyer not in basic_fleet.ships
         assert len(basic_fleet.ships) == 1
 
-    def test_remove_ship_not_found(self, basic_fleet):
+    def test_remove_ship_not_found(self, basic_fleet, make_mock_ship):
         """Test removing a ship that doesn't exist."""
-        basic_fleet.add_ship("Scout")
-        result = basic_fleet.remove_ship("Battleship")
+        scout = make_mock_ship(name="Scout")
+        battleship = make_mock_ship(name="Battleship")
+        basic_fleet.add_ship(scout)
+        result = basic_fleet.remove_ship(battleship)
         assert result is False
         assert len(basic_fleet.ships) == 1
 
-    def test_get_ship_names_with_strings(self, basic_fleet):
-        """Test getting ship names from string ships."""
-        basic_fleet.add_ship("Scout")
-        basic_fleet.add_ship("Destroyer")
+    def test_get_ship_names(self, basic_fleet, make_mock_ship):
+        """Test getting ship names from ShipInstance objects."""
+        scout = make_mock_ship(name="Scout")
+        destroyer = make_mock_ship(name="Destroyer")
+        basic_fleet.add_ship(scout)
+        basic_fleet.add_ship(destroyer)
         names = basic_fleet.get_ship_names()
         assert "Scout" in names
         assert "Destroyer" in names
-
-    def test_get_ship_names_with_instances(self, basic_fleet):
-        """Test getting ship names from ShipInstance objects."""
-        mock_instance = MagicMock()
-        mock_instance.name = "USS Enterprise"
-        basic_fleet.ships.append(mock_instance)
-
-        names = basic_fleet.get_ship_names()
-        assert "USS Enterprise" in names
 
 
 class TestFleetOrders:
@@ -191,22 +211,44 @@ class TestFleetOrders:
 class TestFleetMerge:
     """Test cases for fleet merging."""
 
-    def test_merge_transfers_ships(self):
+    @pytest.fixture
+    def make_mock_ship(self):
+        """Factory for creating mock ship instances."""
+        from game.strategy.data.ship_instance import ShipInstance
+
+        def _make(name="Test Ship", is_combat_capable=True):
+            mock = MagicMock(spec=ShipInstance)
+            mock.name = name
+            mock.is_combat_capable.return_value = is_combat_capable
+            mock.get_all_resource_costs_per_hex.return_value = {}
+            mock.design_data = {'vehicle_type': 'Ship'}
+            mock.get_calculated_stats.return_value = {
+                'mass': 100,
+                'strategic_movement': 500
+            }
+            return mock
+        return _make
+
+    def test_merge_transfers_ships(self, make_mock_ship):
         """Test that merge transfers ships to target fleet."""
         fleet1 = Fleet("f1", 0, HexCoord(0, 0))
         fleet2 = Fleet("f2", 0, HexCoord(0, 0))
 
-        fleet1.add_ship("Scout")
-        fleet1.add_ship("Destroyer")
-        fleet2.add_ship("Cruiser")
+        scout = make_mock_ship(name="Scout")
+        destroyer = make_mock_ship(name="Destroyer")
+        cruiser = make_mock_ship(name="Cruiser")
+
+        fleet1.add_ship(scout)
+        fleet1.add_ship(destroyer)
+        fleet2.add_ship(cruiser)
 
         fleet1.merge_with(fleet2)
 
         assert len(fleet1.ships) == 0  # Source fleet emptied
         assert len(fleet2.ships) == 3  # Target fleet has all ships
-        assert "Scout" in fleet2.ships
-        assert "Destroyer" in fleet2.ships
-        assert "Cruiser" in fleet2.ships
+        assert scout in fleet2.ships
+        assert destroyer in fleet2.ships
+        assert cruiser in fleet2.ships
 
     def test_merge_clears_source_orders(self):
         """Test that merge clears orders on source fleet."""
@@ -218,10 +260,11 @@ class TestFleetMerge:
 
         assert fleet1.orders == []
 
-    def test_merge_with_non_fleet(self):
+    def test_merge_with_non_fleet(self, make_mock_ship):
         """Test merge with non-Fleet object does nothing."""
         fleet1 = Fleet("f1", 0, HexCoord(0, 0))
-        fleet1.add_ship("Scout")
+        ship = make_mock_ship(name="Scout")
+        fleet1.add_ship(ship)
 
         fleet1.merge_with("not a fleet")
 
@@ -264,10 +307,26 @@ class TestFleetEquality:
 class TestFleetSerialization:
     """Test cases for fleet serialization."""
 
-    def test_to_dict_basic(self):
+    @pytest.fixture
+    def make_ship_instance(self):
+        """Factory for creating ShipInstance objects for serialization tests."""
+        from game.strategy.data.ship_instance import ShipInstance
+
+        def _make(name="Test Ship", design_id=None, owner_id=0):
+            return ShipInstance(
+                instance_id=f"test-{name.lower().replace(' ', '-')}",
+                design_id=design_id or name,
+                name=name,
+                owner_id=owner_id,
+                design_data={'name': name, 'vehicle_type': 'Ship'},
+            )
+        return _make
+
+    def test_to_dict_basic(self, make_ship_instance):
         """Test basic fleet serialization."""
         fleet = Fleet("f1", 0, HexCoord(2, 3), speed=7.5)
-        fleet.add_ship("Scout")
+        ship = make_ship_instance(name="Scout")
+        fleet.ships.append(ship)  # Bypass add_ship to avoid speed recalc
 
         d = fleet.to_dict()
 
@@ -275,18 +334,24 @@ class TestFleetSerialization:
         assert d['owner_id'] == 0
         assert d['speed'] == 7.5
         assert len(d['ships']) == 1
-        assert d['ships'][0] == {'type': 'string', 'value': 'Scout'}
+        assert d['ships'][0]['name'] == 'Scout'
+        assert d['ships'][0]['design_id'] == 'Scout'
 
     def test_from_dict_basic(self):
         """Test basic fleet deserialization."""
+        ship_data = {
+            'instance_id': 'test-destroyer',
+            'design_id': 'Destroyer',
+            'name': 'Destroyer',
+            'owner_id': 1,
+            'design_data': {'name': 'Destroyer', 'vehicle_type': 'Ship'},
+        }
         d = {
             'id': 'f1',
             'owner_id': 1,
             'location': [5, -2],
             'speed': 6.0,
-            'ships': [
-                {'type': 'string', 'value': 'Destroyer'}
-            ],
+            'ships': [ship_data],
             'orders': [],
             'path': [],
         }
@@ -297,13 +362,14 @@ class TestFleetSerialization:
         assert fleet.owner_id == 1
         assert fleet.location == HexCoord(5, -2)
         assert fleet.speed == 6.0
-        assert 'Destroyer' in fleet.ships
+        assert len(fleet.ships) == 1
+        assert fleet.ships[0].name == 'Destroyer'
 
-    def test_roundtrip_serialization(self):
+    def test_roundtrip_serialization(self, make_ship_instance):
         """Test serialization roundtrip preserves data."""
         original = Fleet("test_fleet", 0, HexCoord(3, -1), speed=8.0)
-        original.add_ship("Cruiser")
-        original.add_ship("Frigate")
+        original.ships.append(make_ship_instance(name="Cruiser"))
+        original.ships.append(make_ship_instance(name="Frigate"))
 
         d = original.to_dict()
 
@@ -318,6 +384,8 @@ class TestFleetSerialization:
         assert restored.location == original.location
         assert restored.speed == original.speed
         assert len(restored.ships) == 2
+        assert restored.ships[0].name == "Cruiser"
+        assert restored.ships[1].name == "Frigate"
 
     def test_to_dict_location_limitation(self):
         """Document that HexCoord location serializes as None.
@@ -331,11 +399,11 @@ class TestFleetSerialization:
         # HexCoord doesn't have to_dict and isn't a tuple, so location is None
         assert d['location'] is None
 
-    def test_repr(self):
+    def test_repr(self, make_ship_instance):
         """Test fleet string representation."""
         fleet = Fleet("f1", 0, HexCoord(1, 2), speed=5.0)
-        fleet.add_ship("Scout")
-        fleet.add_ship("Destroyer")
+        fleet.ships.append(make_ship_instance(name="Scout"))
+        fleet.ships.append(make_ship_instance(name="Destroyer"))
 
         r = repr(fleet)
         assert "f1" in r
@@ -463,16 +531,6 @@ class TestMovementResourceMethods:
     def test_movement_resource_costs_empty_fleet(self):
         """Test movement resource costs for empty fleet returns empty dict."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
-
-        costs = fleet.get_movement_resource_costs()
-
-        assert costs == {}
-
-    def test_movement_resource_costs_legacy_string_ships_only(self):
-        """Test movement costs with only legacy string ships returns empty dict."""
-        fleet = Fleet("f1", 0, HexCoord(0, 0))
-        fleet.ships.append("Scout")
-        fleet.ships.append("Destroyer")
 
         costs = fleet.get_movement_resource_costs()
 
@@ -686,16 +744,6 @@ class TestWarpResourceMethods:
     def test_warp_resource_costs_empty_fleet(self):
         """Test warp resource costs for empty fleet returns empty dict."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
-
-        costs = fleet.get_warp_resource_costs()
-
-        assert costs == {}
-
-    def test_warp_resource_costs_legacy_string_ships_only(self):
-        """Test warp costs with only legacy string ships returns empty dict."""
-        fleet = Fleet("f1", 0, HexCoord(0, 0))
-        fleet.ships.append("Scout")
-        fleet.ships.append("Destroyer")
 
         costs = fleet.get_warp_resource_costs()
 

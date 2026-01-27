@@ -23,6 +23,22 @@ from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
 from game.strategy.data.galaxy import Galaxy
 from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.ship_instance import ShipInstance
+
+
+def make_mock_ship_instance(name="Test Ship", owner_id=0):
+    """Create a mock ShipInstance for testing."""
+    return ShipInstance(
+        instance_id=f"test-{name.lower().replace(' ', '-')}",
+        design_id=name,
+        name=name,
+        owner_id=owner_id,
+        design_data={
+            'name': name,
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100}
+        },
+    )
 
 
 # =============================================================================
@@ -64,7 +80,7 @@ def empire_with_fleet(simple_galaxy):
 
     if target_planet:
         fleet = Fleet(1, empire.id, global_loc, speed=10.0)
-        fleet.ships = ["Colony Ship"]
+        fleet.ships = [make_mock_ship_instance("Colony Ship", empire.id)]
         empire.add_fleet(fleet)
         return empire, fleet, target_planet, simple_galaxy
 
@@ -119,7 +135,7 @@ class TestColonizationValidation:
 
         # Create fleet at different location (far away)
         fleet = Fleet(1, empire.id, HexCoord(-1000, -1000), speed=10.0)
-        fleet.ships = ["Colony Ship"]
+        fleet.ships = [make_mock_ship_instance("Colony Ship", empire.id)]
         empire.add_fleet(fleet)
 
         result = turn_engine.validate_colonize_order(simple_galaxy, fleet, planet)
@@ -254,7 +270,7 @@ class TestColonizationWithMovement:
         # Create fleet nearby (1 hex away)
         start_loc = HexCoord(target_loc.q + 1, target_loc.r)
         fleet = Fleet(1, empire.id, start_loc, speed=100.0)  # Fast
-        fleet.ships = ["Colony Ship"]
+        fleet.ships = [make_mock_ship_instance("Colony Ship", empire.id)]
         empire.add_fleet(fleet)
 
         # Queue move then colonize
@@ -300,7 +316,7 @@ class TestColonizationWithMovement:
 
         # Create fleet at start
         fleet = Fleet(1, empire.id, start_loc, speed=100.0)
-        fleet.ships = ["Colony Ship"]
+        fleet.ships = [make_mock_ship_instance("Colony Ship", empire.id)]
         empire.add_fleet(fleet)
 
         # Queue move + colonize
@@ -332,7 +348,7 @@ class TestColonizationEdgeCases:
 
         # Create fleet in deep space (no system)
         fleet = Fleet(1, empire.id, HexCoord(-999, -999), speed=10.0)
-        fleet.ships = ["Colony Ship"]
+        fleet.ships = [make_mock_ship_instance("Colony Ship", empire.id)]
         empire.add_fleet(fleet)
 
         # Try to colonize "any" - should fail
@@ -363,12 +379,12 @@ class TestColonizationEdgeCases:
 
         # Both empires have fleets at the planet location
         fleet1 = Fleet(1, empire1.id, target_loc, speed=10.0)
-        fleet1.ships = ["Colony Ship"]
+        fleet1.ships = [make_mock_ship_instance("Colony Ship", empire1.id)]
         fleet1.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
         empire1.add_fleet(fleet1)
 
         fleet2 = Fleet(2, empire2.id, target_loc, speed=10.0)
-        fleet2.ships = ["Colony Ship"]
+        fleet2.ships = [make_mock_ship_instance("Colony Ship", empire2.id)]
         fleet2.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
         empire2.add_fleet(fleet2)
 
@@ -404,13 +420,17 @@ class TestColonizationEdgeCases:
 
         # Empire 1 has colony ship
         fleet1 = Fleet(1, empire1.id, target_loc, speed=10.0)
-        fleet1.ships = ["Colony Ship"]
+        fleet1.ships = [make_mock_ship_instance("Colony Ship", empire1.id)]
         fleet1.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
         empire1.add_fleet(fleet1)
 
         # Empire 2 has combat fleet at same location
         fleet2 = Fleet(2, empire2.id, target_loc, speed=10.0)
-        fleet2.ships = ["Destroyer", "Destroyer", "Cruiser"]  # More combat power
+        fleet2.ships = [
+            make_mock_ship_instance("Destroyer", empire2.id),
+            make_mock_ship_instance("Destroyer", empire2.id),
+            make_mock_ship_instance("Cruiser", empire2.id)
+        ]
         empire2.add_fleet(fleet2)
 
         initial_fleet1_count = len(empire1.fleets)
@@ -485,7 +505,7 @@ class TestColonizationStateIntegrity:
 
         # Create fleet at planet location
         fleet = Fleet(10, empire.id, target_loc, speed=10.0)
-        fleet.ships = ["Colony Ship"]
+        fleet.ships = [make_mock_ship_instance("Colony Ship", empire.id)]
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
         empire.add_fleet(fleet)
 

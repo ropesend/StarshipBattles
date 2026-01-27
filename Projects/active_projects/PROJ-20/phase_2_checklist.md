@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Remove legacy string ship support. Ships must be `ShipInstance` objects only.
 
 **Risk:** Medium - 12 files call `get_ship_instances()`, need methodical replacement
@@ -20,12 +20,12 @@
 
 **Changes needed:**
 
-- [ ] Line 60: Change `ships: List[Union[str, 'ShipInstance']]` to `ships: List['ShipInstance']`
-- [ ] Lines 45-54: Update class docstring to remove mention of string format
-- [ ] Remove import of `Union` if no longer needed
-- [ ] Verify: `grep -n "Union\[str" game/strategy/data/fleet.py` returns nothing
+- [x] Line 60: Change `ships: List[Union[str, 'ShipInstance']]` to `ships: List['ShipInstance']`
+- [x] Lines 45-54: Update class docstring to remove mention of string format
+- [x] Remove import of `Union` if no longer needed
+- [x] Verify: `grep -n "Union\[str" game/strategy/data/fleet.py` returns nothing
 
-**Notes:**
+**Notes:** Also updated add_ship() and remove_ship() signatures to ShipInstance only. All 70 fleet tests pass.
 
 ---
 
@@ -33,17 +33,10 @@
 **File:** `game/strategy/data/fleet.py`
 **Tests:** `pytest tests/unit/strategy/test_fleet.py -v`
 
-**Current State (Lines 101-104):**
-```python
-def get_ship_instances(self) -> List['ShipInstance']:
-    """Return only ShipInstance objects, filtering out legacy strings."""
-    return [s for s in self.ships if isinstance(s, ShipInstance)]
-```
+- [x] Delete `get_ship_instances()` method entirely
+- [x] Verify: Method is removed from fleet.py
 
-- [ ] Delete `get_ship_instances()` method entirely
-- [ ] Verify: Method is removed from fleet.py
-
-**Notes:** Callers will be updated in Task 2.4
+**Notes:** Removed method and updated internal caller in create_simulation_ships().
 
 ---
 
@@ -51,16 +44,12 @@ def get_ship_instances(self) -> List['ShipInstance']:
 **File:** `game/strategy/data/fleet.py`
 **Tests:** `pytest tests/unit/strategy/test_fleet.py -v`
 
-**Current State:**
-- Lines 124-127: `has_ship_instances()` method
-- Lines 85-99: Speed recalculation guard for string-only fleets
+- [x] Delete `has_ship_instances()` method
+- [x] Remove guard in `_trigger_speed_recalculation()` that checks for string-only fleets
+- [x] The method should always proceed to calculate speed
+- [x] Verify: No `has_ship_instances` references in fleet.py
 
-- [ ] Delete `has_ship_instances()` method (lines 124-127)
-- [ ] Remove guard in `_trigger_speed_recalculation()` that checks for string-only fleets
-- [ ] The method should always proceed to calculate speed
-- [ ] Verify: No `has_ship_instances` references in fleet.py
-
-**Notes:**
+**Notes:** Also updated turn_engine.py _resolve_combat() to use fleet.ships instead.
 
 ---
 
@@ -68,20 +57,12 @@ def get_ship_instances(self) -> List['ShipInstance']:
 **Files:** Multiple files
 **Tests:** `pytest tests/unit/strategy/ tests/integration/ -v`
 
-**Files to update (replace `fleet.get_ship_instances()` with `fleet.ships`):**
+- [x] `fleet_mobility_service.py`: Replace `fleet.get_ship_instances()` with `fleet.ships`
+- [x] `fleet_report_window.py`: Replace all occurrences
+- [x] `turn_engine.py`: Replace all occurrences
+- [x] Verify: `grep -rn "get_ship_instances" game/` returns nothing
 
-| File | Line(s) | Context |
-|------|---------|---------|
-| `game/strategy/services/fleet_mobility_service.py` | ~106 | Speed calculation |
-| `game/ui/screens/fleet_report_window.py` | ~752, 790 | Ship listing |
-| `game/strategy/engine/turn_engine.py` | ~277, 464, 468 | Turn processing |
-
-- [ ] `fleet_mobility_service.py`: Replace `fleet.get_ship_instances()` with `fleet.ships`
-- [ ] `fleet_report_window.py`: Replace all occurrences
-- [ ] `turn_engine.py`: Replace all occurrences
-- [ ] Verify: `grep -rn "get_ship_instances" game/` returns nothing
-
-**Notes:**
+**Notes:** Updated fleet_mobility_service.py, fleet_report_window.py, turn_engine.py, and internal caller in fleet.py create_simulation_ships().
 
 ---
 
@@ -89,16 +70,12 @@ def get_ship_instances(self) -> List['ShipInstance']:
 **File:** `game/strategy/data/fleet.py`
 **Tests:** `pytest tests/unit/strategy/test_fleet.py -v`
 
-**Current State (Lines 589-666):**
-- `to_dict()` preserves both string and ShipInstance formats
-- `from_dict()` handles both formats
+- [x] Update `to_dict()` to only serialize ShipInstance objects
+- [x] Update `from_dict()` to only deserialize ShipInstance format
+- [x] Remove legacy string preservation logic
+- [x] Verify: Serialization roundtrip works for ShipInstance only
 
-- [ ] Update `to_dict()` to only serialize ShipInstance objects
-- [ ] Update `from_dict()` to only deserialize ShipInstance format
-- [ ] Remove legacy string preservation logic
-- [ ] Verify: Serialization roundtrip works for ShipInstance only
-
-**Notes:**
+**Notes:** Simplified to_dict() to just call s.to_dict() for each ship, from_dict() to just call ShipInstance.from_dict().
 
 ---
 
@@ -106,15 +83,11 @@ def get_ship_instances(self) -> List['ShipInstance']:
 **File:** `game/strategy/data/fleet.py`
 **Tests:** `pytest tests/unit/strategy/test_fleet.py -v`
 
-**Current State:**
-- `get_ship_names()` handles both strings and ShipInstance
-- `get_combat_capable_ships()` filters for ShipInstance
+- [x] Simplify `get_ship_names()` to assume all ships are ShipInstance: `return [s.name for s in self.ships]`
+- [x] Simplify `get_combat_capable_ships()` to remove isinstance check
+- [x] Verify: Methods work correctly with ShipInstance only
 
-- [ ] Simplify `get_ship_names()` to assume all ships are ShipInstance: `return [s.name for s in self.ships]`
-- [ ] Simplify `get_combat_capable_ships()` to remove isinstance check
-- [ ] Verify: Methods work correctly with ShipInstance only
-
-**Notes:**
+**Notes:** Simplified both methods to direct attribute access.
 
 ---
 
@@ -122,18 +95,10 @@ def get_ship_instances(self) -> List['ShipInstance']:
 **File:** `tests/unit/strategy/conftest.py`
 **Tests:** `pytest tests/unit/strategy/ -v`
 
-**Current State (Lines 256-270):**
-```python
-@pytest.fixture
-def legacy_string_fleet():
-    """Fleet with only legacy string ships."""
-    ...
-```
+- [x] Delete `legacy_string_fleet` fixture entirely
+- [x] Verify: No tests reference this fixture
 
-- [ ] Delete `legacy_string_fleet` fixture entirely
-- [ ] Verify: No tests reference this fixture
-
-**Notes:**
+**Notes:** Fixture was unused, removed.
 
 ---
 
@@ -141,24 +106,23 @@ def legacy_string_fleet():
 **Files:** Multiple test files
 **Tests:** Run full test suite after removal
 
-Tests to remove/update:
-- [ ] `tests/unit/strategy/test_fleet.py`: Remove `test_add_ship_string()` (if exists)
-- [ ] `tests/unit/strategy/test_fleet.py`: Remove `test_get_ship_names_with_strings()` (if exists)
-- [ ] `tests/unit/strategy/test_fleet.py`: Remove any tests for string-only fleets
-- [ ] `tests/integration/test_resource_system.py`: Remove `TestFleetMixedLegacyAndNewShipInstances` class (if exists)
-- [ ] Update any remaining tests that use string ships to use ShipInstance
-- [ ] Verify: All fleet tests pass
+- [x] `tests/unit/strategy/test_fleet.py`: Removed `test_add_ship_string()`, updated to `test_add_ship()`
+- [x] `tests/unit/strategy/test_fleet.py`: Removed `test_get_ship_names_with_strings()`, updated to `test_get_ship_names()`
+- [x] `tests/unit/strategy/test_fleet.py`: Removed legacy string-only tests (movement/warp costs legacy tests)
+- [x] `tests/integration/test_resource_system.py`: Removed `TestFleetMixedLegacyAndNewShipInstances` class
+- [x] Update any remaining tests that use string ships to use ShipInstance
+- [x] Verify: All fleet tests pass
 
-**Notes:**
+**Notes:** Updated tests in test_fleet.py, test_fleet_mobility_service.py, test_turn_engine.py, test_production_engine.py, test_colonization.py, test_gameplay_loop.py, test_save_load.py, test_advanced_fleet_orders.py to use ShipInstance mocks.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] `pytest tests/unit/strategy/test_fleet.py tests/unit/strategy/test_fleet_mobility_service.py -v` passes
-- [ ] `grep -rn "Union\[str.*ShipInstance" game/` returns nothing
-- [ ] `grep -rn "get_ship_instances\|has_ship_instances" game/` returns nothing
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 3
+- [x] All task checkboxes above are checked
+- [x] `pytest tests/unit/strategy/test_fleet.py tests/unit/strategy/test_fleet_mobility_service.py -v` passes
+- [x] `grep -rn "Union\[str.*ShipInstance" game/` returns nothing
+- [x] `grep -rn "get_ship_instances\|has_ship_instances" game/` returns nothing
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 3

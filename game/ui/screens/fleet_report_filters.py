@@ -80,9 +80,10 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
     for ship in ships:
         # Use calculated stats which respect component damage
         calculated_stats = ship.get_calculated_stats()
+        resource_storage = calculated_stats.get('resource_storage', {})
 
         # Fuel
-        ship_max_fuel = calculated_stats.get('max_fuel', 0)
+        ship_max_fuel = resource_storage.get('fuel', 0)
         max_fuel += ship_max_fuel
         if 'fuel' in ship.resource_levels:
             total_fuel += ship.resource_levels['fuel']
@@ -90,7 +91,7 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
             total_fuel += ship_max_fuel  # Full if not tracked
 
         # Energy
-        ship_max_energy = calculated_stats.get('max_energy', 0)
+        ship_max_energy = resource_storage.get('energy', 0)
         max_energy += ship_max_energy
         if 'energy' in ship.resource_levels:
             total_energy += ship.resource_levels['energy']
