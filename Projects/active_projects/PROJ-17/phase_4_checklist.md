@@ -114,9 +114,48 @@ After completing all tasks:
 - [x] Run: `pytest tests/unit/combat/` (82 passed)
 - [x] Run: `pytest tests/unit/ui/test_battle_orchestrator.py` (9 passed)
 - [x] Verify no top-level AI imports in BattleEngine (TYPE_CHECKING only, legacy inside functions)
-- [ ] Run full test suite: `pytest tests/`
+- [x] Run full test suite: `pytest tests/` - 4994 passed (20 pre-existing failures)
 - [ ] Run: `pytest simulation_tests/`
 - [ ] Launch game and play a battle manually
 - [ ] Verify AI ships still move and attack correctly
 
 **Phase complete when all boxes checked.**
+
+---
+
+## Audit Cycle 1 - 2026-01-26
+
+### Confirmed Issues
+
+| Task | Issue | Severity | Fix Required |
+|------|-------|----------|--------------|
+| 3.2 | Orphaned duplicate `game/ui/renderer/ship_theme.py` not removed | Major | Delete orphaned file, update 6 files that import from it |
+| 3.4 | Incomplete import migration: 6 files still import from `game/ui/renderer/ship_theme` | Major | Update imports to `game.ui.assets`, change `.get_instance()` to `.instance()` |
+| 3.4 | Test mock paths outdated in 2 rendering test files | Minor | Update mock paths to match actual import locations |
+
+### Resolved Concerns (False Positives)
+
+| Task | Original Concern | Resolution |
+|------|------------------|------------|
+| 1.2 | pygame TYPE_CHECKING import in game/ai/interfaces/controllable.py | Acceptable - only for static typing, no runtime dependency |
+
+### Detailed Findings
+
+**Issue 1: Orphaned Duplicate ShipThemeManager**
+- **File:** `game/ui/renderer/ship_theme.py` (173 lines)
+- **Problem:** This is an older, inferior implementation that should have been deleted:
+  - Uses `get_instance()` vs the canonical `instance()` method
+  - No thread safety (missing locks)
+  - Missing portrait support, `clear()`, and `reset()` methods
+- **Files still importing from it:**
+  1. `game/ui/renderer/renderer.py` (line 40)
+  2. `game/ui/screens/builder/main.py` (line 25)
+  3. `tests/unit/test_regressions.py`
+  4. `tests/unit/test_ship_classes.py`
+  5. `tests/unit/test_ship_theme_logic.py`
+  6. `tests/unit/verify_themes.py`
+
+**Issue 2: Test Mock Paths**
+- `tests/unit/ui/test_rendering_logic.py` (line 60) patches `game.simulation.ship_theme.ShipThemeManager`
+- `tests/unit/test_rendering_logic.py` (line 60) patches same old path
+- Tests pass due to re-export but rely on deprecated path and emit warnings

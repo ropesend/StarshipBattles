@@ -1,4 +1,4 @@
-
+import pytest
 from unittest.mock import MagicMock, patch
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
@@ -6,20 +6,37 @@ from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.empire import Empire
 
 
+@pytest.fixture
+def turn_engine():
+    """Create a fresh TurnEngine for each test."""
+    engine = TurnEngine()
+    yield engine
+
+
+@pytest.fixture
+def test_empire():
+    """Create a test empire with proper cleanup."""
+    empire = Empire(0, "Test Empire", (255, 0, 0))
+    yield empire
+    empire.fleets.clear()
+
+
+@pytest.fixture
+def galaxy_mock():
+    """Create mock galaxy."""
+    galaxy = MagicMock()
+    galaxy.systems = {}
+    return galaxy
+
+
 class TestAdvancedFleetOrders:
-    def test_fleet_merge_method(self):
+    def test_fleet_merge_method(self, turn_engine, test_empire, galaxy_mock):
         """Test the basic merge_with data operation."""
-        engine = TurnEngine()
-        galaxy = MagicMock()
-        galaxy.systems = {}
-
-        empire = Empire(0, "Test Empire", (255, 0, 0))
-
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
 
-        empire.add_fleet(f1)
-        empire.add_fleet(f2)
+        test_empire.add_fleet(f1)
+        test_empire.add_fleet(f2)
 
         f1.ships = ["ShipA"]
         f2.ships = ["ShipB"]
@@ -37,19 +54,13 @@ class TestAdvancedFleetOrders:
 
     @patch('game.strategy.data.pathfinding.project_fleet_path')
     @patch('game.strategy.data.pathfinding.find_hybrid_path')
-    def test_move_to_fleet_logic(self, mock_find_path, mock_project_path):
+    def test_move_to_fleet_logic(self, mock_find_path, mock_project_path, turn_engine, test_empire, galaxy_mock):
         """Verify predictive pathing updates."""
-        engine = TurnEngine()
-        galaxy = MagicMock()
-        galaxy.systems = {}
-
-        empire = Empire(0, "Test Empire", (255, 0, 0))
-
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
 
-        empire.add_fleet(f1)
-        empire.add_fleet(f2)
+        test_empire.add_fleet(f1)
+        test_empire.add_fleet(f2)
 
         # Setup Order
         order = FleetOrder(OrderType.MOVE_TO_FLEET, f2)
@@ -98,19 +109,13 @@ class TestAdvancedFleetOrders:
 
     @patch('game.strategy.data.pathfinding.calculate_intercept_point')
     @patch('game.strategy.data.pathfinding.find_hybrid_path')
-    def test_intercept_integration(self, mock_find_path, mock_calc_intercept):
+    def test_intercept_integration(self, mock_find_path, mock_calc_intercept, turn_engine, test_empire, galaxy_mock):
         """Verify TurnEngine calls calculate_intercept_point."""
-        engine = TurnEngine()
-        galaxy = MagicMock()
-        galaxy.systems = {}
-
-        empire = Empire(0, "Test Empire", (255, 0, 0))
-
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
 
-        empire.add_fleet(f1)
-        empire.add_fleet(f2)
+        test_empire.add_fleet(f1)
+        test_empire.add_fleet(f2)
 
         # Setup Order
         order = FleetOrder(OrderType.MOVE_TO_FLEET, f2)
@@ -124,34 +129,28 @@ class TestAdvancedFleetOrders:
         mock_find_path.return_value = [HexCoord(1, 0)]
 
         # Execute: Calculate next hex and apply movement manually
-        next_hex = engine._calculate_next_hex(f1, galaxy)
+        next_hex = turn_engine._calculate_next_hex(f1, galaxy_mock)
         if next_hex:
             f1.location = next_hex
             if not f1.path:
                 f1.pop_order()
 
         # Verify
-        mock_calc_intercept.assert_called_with(f1, f2, galaxy)
-        mock_find_path.assert_called_with(galaxy, HexCoord(0, 0), predicted_hex, fleet=f1)
+        mock_calc_intercept.assert_called_with(f1, f2, galaxy_mock)
+        mock_find_path.assert_called_with(galaxy_mock, HexCoord(0, 0), predicted_hex, fleet=f1)
         assert f1.location == HexCoord(1, 0)
 
     @patch('game.strategy.data.pathfinding.find_hybrid_path')
     @patch('game.strategy.data.pathfinding.project_fleet_path')
-    def test_calculate_intercept_algorithm(self, mock_project, mock_find_path):
+    def test_calculate_intercept_algorithm(self, mock_project, mock_find_path, turn_engine, test_empire, galaxy_mock):
         """Test the math of calculate_intercept_point using real path lengths."""
         from game.strategy.data.pathfinding import calculate_intercept_point
-
-        engine = TurnEngine()
-        galaxy = MagicMock()
-        galaxy.systems = {}
-
-        empire = Empire(0, "Test Empire", (255, 0, 0))
 
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
 
-        empire.add_fleet(f1)
-        empire.add_fleet(f2)
+        test_empire.add_fleet(f1)
+        test_empire.add_fleet(f2)
 
         # Scenario: Target is moving away slower than Chaser.
         # Chaser @ 0,0. Speed 2.
@@ -186,24 +185,18 @@ class TestAdvancedFleetOrders:
 
         mock_find_path.side_effect = path_mock
 
-        result = calculate_intercept_point(f1, f2, galaxy)
+        result = calculate_intercept_point(f1, f2, galaxy_mock)
 
         # Now correctly intercepts at (7,0) - 1 turn earlier than old buggy result!
         assert result == HexCoord(7, 0)
 
-    def test_join_fleet_execution(self):
+    def test_join_fleet_execution(self, turn_engine, test_empire, galaxy_mock):
         """Verify JOIN_FLEET order merges fleets."""
-        engine = TurnEngine()
-        galaxy = MagicMock()
-        galaxy.systems = {}
-
-        empire = Empire(0, "Test Empire", (255, 0, 0))
-
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
 
-        empire.add_fleet(f1)
-        empire.add_fleet(f2)
+        test_empire.add_fleet(f1)
+        test_empire.add_fleet(f2)
 
         # Setup: Co-located
         f1.location = HexCoord(5, 5)
@@ -216,7 +209,7 @@ class TestAdvancedFleetOrders:
 
         # Execute End Turn Orders
         # We need to pass [empire] usually, method is _process_end_turn_orders(fleet, empire, galaxy)
-        result = engine._process_end_turn_orders(f1, empire, galaxy)
+        result = turn_engine._process_end_turn_orders(f1, test_empire, galaxy_mock)
 
         assert result is True  # Should return True (fleet consumed)
 
@@ -224,21 +217,15 @@ class TestAdvancedFleetOrders:
         assert len(f2.ships) == 2
 
         # Verify Empire state
-        assert f1 not in empire.fleets
+        assert f1 not in test_empire.fleets
 
-    def test_join_fleet_fail_distance(self):
+    def test_join_fleet_fail_distance(self, turn_engine, test_empire, galaxy_mock):
         """Verify JOIN_FLEET fails if not at location."""
-        engine = TurnEngine()
-        galaxy = MagicMock()
-        galaxy.systems = {}
-
-        empire = Empire(0, "Test Empire", (255, 0, 0))
-
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
 
-        empire.add_fleet(f1)
-        empire.add_fleet(f2)
+        test_empire.add_fleet(f1)
+        test_empire.add_fleet(f2)
 
         f1.location = HexCoord(0, 0)
         f2.location = HexCoord(10, 0)
@@ -248,15 +235,15 @@ class TestAdvancedFleetOrders:
 
         # Execute
         # Capturing print output is tricky, but we check state
-        result = engine._process_end_turn_orders(f1, empire, galaxy)
+        result = turn_engine._process_end_turn_orders(f1, test_empire, galaxy_mock)
 
         assert result is False  # Did not consume fleet
-        assert f1 in empire.fleets
+        assert f1 in test_empire.fleets
         assert f1.get_current_order() is None  # Should have popped failed order
 
     @patch('game.strategy.data.pathfinding.find_hybrid_path')
     @patch('game.strategy.data.pathfinding.project_fleet_path')
-    def test_intercept_picks_earliest_chaser_arrival(self, mock_project, mock_find_path):
+    def test_intercept_picks_earliest_chaser_arrival(self, mock_project, mock_find_path, turn_engine, test_empire, galaxy_mock):
         """
         Regression test: Algorithm must pick EARLIEST chaser arrival, not first valid point.
 
@@ -267,17 +254,11 @@ class TestAdvancedFleetOrders:
         """
         from game.strategy.data.pathfinding import calculate_intercept_point
 
-        engine = TurnEngine()
-        galaxy = MagicMock()
-        galaxy.systems = {}
-
-        empire = Empire(0, "Test Empire", (255, 0, 0))
-
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
 
-        empire.add_fleet(f1)
-        empire.add_fleet(f2)
+        test_empire.add_fleet(f1)
+        test_empire.add_fleet(f2)
 
         # Chaser @ 0,0. Speed 5.
         f1.location = HexCoord(0, 0)
@@ -301,7 +282,7 @@ class TestAdvancedFleetOrders:
 
         mock_find_path.side_effect = path_mock
 
-        result = calculate_intercept_point(f1, f2, galaxy)
+        result = calculate_intercept_point(f1, f2, galaxy_mock)
 
         # Should pick (15, 0) at turn 10 - chaser arrives in 3 turns, much earlier!
         # NOT (10, 0) at turn 0 (unreachable) or (30, 0) at turn 5 (can't reach in time)
