@@ -237,10 +237,10 @@ class ClassRequirementsRule(DesignValidationRule):
         result = ValidationResult(True)
 
         # Import internally to avoid circular imports
-        from game.core.registry import RegistryManager
+        from game.core.registry import get_vehicle_classes
         from game.simulation.entities.ship_stats import ShipStatsCalculator
 
-        classes = RegistryManager.instance().vehicle_classes
+        classes = get_vehicle_classes()
         class_def = classes.get(ship.ship_class, {})
 
         all_components = ship.get_all_components()

@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Union
 
 from game.core.logger import log_error, log_info, log_warning, log_debug
-from game.core.registry import RegistryManager, get_vehicle_classes
+from game.core.registry import get_vehicle_classes, clear_registry
 
 
 @dataclass
@@ -85,7 +85,7 @@ class WorkshopDataLoader:
         """Clear all game data registries before loading new data."""
         from game.ai.strategy_manager import StrategyManager
 
-        RegistryManager.instance().clear()
+        clear_registry()
 
         # Clear StrategyManager data
         StrategyManager.instance().clear()

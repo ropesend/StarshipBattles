@@ -734,8 +734,8 @@ class Game:
 def main():
     game = Game()
 
-    from game.core.registry import RegistryManager
-    RegistryManager.instance().freeze()
+    from game.core.registry import freeze_registry
+    freeze_registry()
 
     try:
         game.run()

@@ -7,7 +7,7 @@ from typing import Optional
 
 from game.core.logger import log_info, log_warning
 from game.core.json_utils import load_json, load_json_required
-from game.core.registry import RegistryManager, get_vehicle_classes, get_validator
+from game.core.registry import get_vehicle_classes, get_validator, set_validator
 from game.simulation.ship_validator import ShipDesignValidator
 
 
@@ -16,7 +16,7 @@ def get_or_create_validator():
     val = get_validator()
     if not val:
         val = ShipDesignValidator()
-        RegistryManager.instance().set_validator(val)
+        set_validator(val)
     return val
 
 

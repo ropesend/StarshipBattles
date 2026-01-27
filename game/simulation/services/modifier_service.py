@@ -2,7 +2,7 @@
 Modifier service for managing component modifiers at the simulation layer.
 This provides domain logic that was previously in the UI layer.
 """
-from game.core.registry import RegistryManager
+from game.core.registry import get_modifier_registry
 
 
 class ModifierService:
@@ -14,10 +14,10 @@ class ModifierService:
     @staticmethod
     def is_modifier_allowed(mod_id: str, component) -> bool:
         """Check if a modifier is allowed for the given component."""
-        if mod_id not in RegistryManager.instance().modifiers:
+        if mod_id not in get_modifier_registry():
             return False
 
-        mod_def = RegistryManager.instance().modifiers[mod_id]
+        mod_def = get_modifier_registry()[mod_id]
         if not mod_def.restrictions:
             return True
 
@@ -105,7 +105,7 @@ class ModifierService:
     @staticmethod
     def get_initial_value(mod_id: str, component) -> float:
         """Get the initial value for a newly applied modifier."""
-        mod_def = RegistryManager.instance().modifiers.get(mod_id)
+        mod_def = get_modifier_registry().get(mod_id)
         if not mod_def:
             return 0
 
@@ -152,7 +152,7 @@ class ModifierService:
     @staticmethod
     def get_local_min_max(mod_id: str, component) -> tuple:
         """Returns (min, max) for a modifier, accounting for component-specific constraints."""
-        mod_def = RegistryManager.instance().modifiers.get(mod_id)
+        mod_def = get_modifier_registry().get(mod_id)
         if not mod_def:
             return (0, 100)
 

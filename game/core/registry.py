@@ -1,3 +1,19 @@
+"""
+Registry Access Patterns
+========================
+
+TIER 1 - Utility Functions (Raw Access):
+    from game.core.registry import get_component_registry
+    components = get_component_registry()
+
+TIER 2 - Domain Services (Computed Access):
+    from game.strategy.services.ship_stats_service import ShipStatsService
+    stats = ShipStatsService.calculate_ship_stats(design)
+
+AVOID - Direct Singleton Access:
+    # DON'T DO THIS - harder to test
+    RegistryManager.instance().components
+"""
 from typing import Dict, Any, Optional
 import threading
 
@@ -193,3 +209,38 @@ def get_validator():
 def get_resource_registry() -> Dict[str, Any]:
     """Get the resource registry dictionary."""
     return RegistryManager.instance().resources
+
+def freeze_registry() -> None:
+    """
+    Freeze the registry to prevent further modifications.
+
+    Call this after game initialization to catch accidental mutations
+    during gameplay. Thread-safe.
+
+    Note: Use RegistryManager.reset() to unfreeze (destroys instance).
+    """
+    RegistryManager.instance().freeze()
+
+def set_validator(validator) -> None:
+    """
+    Set the ship design validator.
+
+    Args:
+        validator: ShipDesignValidator instance
+
+    Raises:
+        RuntimeError: If the registry is frozen
+    """
+    RegistryManager.instance().set_validator(validator)
+
+def clear_registry() -> None:
+    """
+    Clear all registries to empty state.
+
+    Used by test fixtures to ensure clean state between tests.
+    Preserves dict identity, only empties contents.
+
+    Raises:
+        RuntimeError: If the registry is frozen
+    """
+    RegistryManager.instance().clear()

@@ -5,7 +5,7 @@ Loads resource type definitions from data/resources.json into the RegistryManage
 """
 
 import os
-from game.core.registry import RegistryManager
+from game.core.registry import get_resource_registry
 from game.core.json_utils import load_json_required
 from game.core.logger import log_warning, log_info
 
@@ -17,7 +17,7 @@ def load_resources(filepath: str = "data/resources.json") -> None:
     Args:
         filepath: Path to the resources JSON file. Defaults to data/resources.json.
     """
-    registry = RegistryManager.instance()
+    resources = get_resource_registry()
 
     if not os.path.exists(filepath):
         # Try absolute path based on this file's location
@@ -35,7 +35,7 @@ def load_resources(filepath: str = "data/resources.json") -> None:
                 'energy': {'id': 'energy'},
                 'ammo': {'id': 'ammo'},
             }
-            registry.resources.update(default_resources)
+            resources.update(default_resources)
             return
 
     try:
@@ -45,9 +45,9 @@ def load_resources(filepath: str = "data/resources.json") -> None:
         for res_def in data.get('resources', []):
             res_id = res_def.get('id')
             if res_id:
-                registry.resources[res_id] = res_def
+                resources[res_id] = res_def
 
-        log_info(f"Loaded {len(registry.resources)} resource types")
+        log_info(f"Loaded {len(resources)} resource types")
 
     except Exception as e:
         log_warning(f"Failed to load resources from {filepath}: {e}")
@@ -57,4 +57,4 @@ def load_resources(filepath: str = "data/resources.json") -> None:
             'energy': {'id': 'energy'},
             'ammo': {'id': 'ammo'},
         }
-        registry.resources.update(default_resources)
+        resources.update(default_resources)
