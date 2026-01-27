@@ -15,6 +15,7 @@ import os
 import pygame
 from game.core.config import UIConfig
 from game.core.logger import log_debug, log_info, log_warning
+from game.core.protocols import is_star, is_planet, is_fleet, is_warp_point
 from game.strategy.data.galaxy import StarSystem
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.hex_math import hex_to_pixel
@@ -493,7 +494,7 @@ class StrategyScene:
         from game.assets.asset_manager import get_asset_manager
         am = get_asset_manager()
 
-        if hasattr(obj, 'color') and hasattr(obj, 'mass'):  # Star
+        if is_star(obj):
             color = obj.color
             asset_key = 'yellow'
             if color[0] > 200 and color[1] < 100:
@@ -506,7 +507,7 @@ class StrategyScene:
                 asset_key = 'orange'
             return am.get_image('stars', asset_key)
 
-        elif hasattr(obj, 'planet_type'):
+        elif is_planet(obj):
             p_type_name = obj.planet_type.name.lower()
             cat = 'terran'
             if 'gas' in p_type_name:
@@ -517,10 +518,10 @@ class StrategyScene:
                 cat = 'venus'
             return am.get_random_from_group('planets', cat, seed_id=id(obj))
 
-        elif hasattr(obj, 'destination_id'):  # Warp Point
+        elif is_warp_point(obj):
             return am.get_random_from_group('warp_points', 'default', seed_id=id(obj))
 
-        elif hasattr(obj, 'ships'):  # Fleet
+        elif is_fleet(obj):
             emp_assets = self.empire_assets.get(obj.owner_id)
             if emp_assets and 'fleet' in emp_assets:
                 return emp_assets['fleet']

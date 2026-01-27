@@ -48,6 +48,7 @@ from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRu
                           FormationBehavior, DoNothingBehavior, StraightLineBehavior,
                           RotateOnlyBehavior, ErraticBehavior, OrbitBehavior, StationaryFireBehavior)
 from game.core.constants import AttackType, CombatConstants
+from game.core.protocols import is_combatant
 from game.ai.target_evaluator import TargetEvaluator
 from game.ai.strategy_manager import StrategyManager
 
@@ -103,7 +104,7 @@ class AIController:
         """
         candidates = self.grid.query_radius(self.ship.position, BattleConfig.TARGET_QUERY_RADIUS)
         enemies = [obj for obj in candidates
-                   if obj.is_alive and hasattr(obj, 'team_id')
+                   if obj.is_alive and is_combatant(obj)
                    and obj.team_id == self.enemy_team_id
                    and obj != exclude]
 
@@ -343,7 +344,7 @@ class AIController:
                 continue
             if not obj.is_alive:
                 continue
-            if not hasattr(obj, 'team_id'):
+            if not is_combatant(obj):
                 continue
 
             d = self.ship.position.distance_to(obj.position)

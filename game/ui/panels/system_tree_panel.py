@@ -1,6 +1,7 @@
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UIButton, UIImage, UILabel, UIScrollingContainer
+from game.core.protocols import is_star_system, is_star, is_planet, is_warp_point
 
 class SystemTreeItem:
     """Base class for items in the tree."""
@@ -149,18 +150,18 @@ class SystemTreePanel:
             return
             
         # Group detection
-        planets = [x for x in contents if hasattr(x, 'planet_type')]
-        stars = [x for x in contents if hasattr(x, 'color') and hasattr(x, 'mass')]
-        warp_points = [x for x in contents if hasattr(x, 'destination_id')]
-        
-        others = [x for x in contents if 
-                  not hasattr(x, 'planet_type') and
-                  not (hasattr(x, 'color') and hasattr(x, 'mass')) and
-                  not hasattr(x, 'destination_id')]
-        
+        planets = [x for x in contents if is_planet(x)]
+        stars = [x for x in contents if is_star(x)]
+        warp_points = [x for x in contents if is_warp_point(x)]
+
+        others = [x for x in contents if
+                  not is_planet(x) and
+                  not is_star(x) and
+                  not is_warp_point(x)]
+
         # 1. Add Others (Systems, Fleets, etc.)
         for obj in others:
-            if hasattr(obj, 'stars'): continue # Skip System object itself if present
+            if is_star_system(obj): continue  # Skip System object itself if present
             
             label = scene_interface._get_label_for_obj(obj)
             icon = scene_interface._get_object_asset(obj) # Resolve asset
