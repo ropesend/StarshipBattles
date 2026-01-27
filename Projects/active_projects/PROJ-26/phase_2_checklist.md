@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress
+**Status:** Complete
 **Objective:** Address major severity findings that significantly impact quality
 **Priority:** High
 
@@ -38,19 +38,23 @@
 - **Architecture observation:** "Builder" names reusable UI panels, "Workshop" names the screen that assembles them. This may be intentional layering.
 - **Recommendation:** Defer to a dedicated project with proper planning
 
-### Task 2.3: NC-05 - Battle vs Combat distinction [Deferred]
-**File:** `docs/NAMING_CONVENTIONS.md` (to create)
+### Task 2.3: NC-05 - Battle vs Combat distinction [Simple] ✓
+**File:** `docs/NAMING_CONVENTIONS.md` (created)
 **Tests:** N/A (documentation task)
 
 - [x] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Write test to verify the fix (N/A - documentation)
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
 **Notes:**
-- This is purely a documentation task (create `docs/NAMING_CONVENTIONS.md`)
-- Not a code change - deferred as lower priority
-- Investigation shows Battle=simulation layer, Combat=system behavior (intentional distinction)
+- Created `docs/NAMING_CONVENTIONS.md` documenting:
+  - Battle vs Combat distinction (simulation layer vs component behavior)
+  - Builder vs Workshop architecture (reusable panels vs screen assembly)
+  - Handler naming convention (prefix with context)
+  - Scene vs Screen usage
+  - Ability module package structure
+- Documents existing intentional patterns rather than changing code
 
 ### Task 2.4: NC-02 - Workshop imports from Builder directory [Deferred]
 **File:** Same scope as Task 2.2
@@ -100,7 +104,7 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked (deferred tasks marked appropriately)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase
