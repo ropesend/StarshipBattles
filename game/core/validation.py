@@ -1,0 +1,135 @@
+"""Validation utilities shared across all layers.
+
+This module provides the canonical ValidationResult class that can be safely
+imported by all layers (simulation, strategy, UI). It serves as the single
+source of truth for validation results across the codebase.
+
+PROJ-21 Phase 1: Consolidated from 5 duplicate implementations:
+- game/simulation/validation/base.py
+- game/simulation/systems/validator.py
+- game/strategy/engine/turn_engine.py
+- game/ui/screens/race_validator.py
+"""
+from dataclasses import dataclass, field
+from typing import List, Optional, Union
+
+
+@dataclass
+class ValidationResult:
+    """Result of a validation operation.
+
+    This is a Data Transfer Object (DTO) that can be safely imported
+    by all layers (simulation, strategy, UI). It provides a unified
+    interface for validation results across the codebase.
+
+    Supports two construction patterns for backward compatibility:
+
+    Pattern 1 (simulation layer - list of errors):
+        result = ValidationResult(is_valid=False, errors=["Error 1", "Error 2"])
+
+    Pattern 2 (strategy/UI layer - single message):
+        result = ValidationResult(is_valid=False, message="Error message")
+        result = ValidationResult(False, "Error message", "ERROR_CODE")
+
+    Attributes:
+        is_valid: True if validation passed, False otherwise.
+        errors: List of error messages (validation failures).
+        warnings: List of warning messages (non-fatal issues).
+        error_code: Optional error code for programmatic handling.
+
+    Example:
+        result = ValidationResult()
+        if some_condition_fails:
+            result.add_error("Validation failed", code="E001")
+        return result
+    """
+    is_valid: bool = True
+    errors: List[str] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
+    error_code: Optional[str] = None
+
+    def __post_init__(self):
+        """Ensure mutable defaults are properly initialized."""
+        # Dataclass field(default_factory=list) handles this, but be explicit
+        if self.errors is None:
+            self.errors = []
+        if self.warnings is None:
+            self.warnings = []
+
+    @classmethod
+    def create(cls, is_valid: bool, message: str = "", error_code: Optional[str] = None) -> 'ValidationResult':
+        """Factory method for strategy/UI layer compatibility.
+
+        Args:
+            is_valid: Whether validation passed.
+            message: Single error message (converted to errors list).
+            error_code: Optional error code.
+
+        Returns:
+            ValidationResult instance.
+        """
+        errors = [message] if message else []
+        return cls(is_valid=is_valid, errors=errors, error_code=error_code)
+
+    @property
+    def message(self) -> str:
+        """First error message (compatibility with UI/strategy layers).
+
+        Returns the first error message if any errors exist, otherwise
+        returns an empty string. This provides backwards compatibility
+        with code that expects a single message property.
+        """
+        return self.errors[0] if self.errors else ""
+
+    def add_error(self, error: str, code: Optional[str] = None) -> None:
+        """Add an error and mark result as invalid.
+
+        Args:
+            error: Error message describing the validation failure.
+            code: Optional error code for programmatic handling.
+                  Only sets error_code if not already set (first code wins).
+        """
+        self.errors.append(error)
+        self.is_valid = False
+        if code and not self.error_code:
+            self.error_code = code
+
+    def add_warning(self, warning: str) -> None:
+        """Add a warning (does not affect validity).
+
+        Args:
+            warning: Warning message describing a non-fatal issue.
+        """
+        self.warnings.append(warning)
+
+    def merge(self, other: 'ValidationResult') -> None:
+        """Merge another result into this one.
+
+        Combines errors and warnings from both results. If the other
+        result is invalid, this result becomes invalid too.
+
+        Args:
+            other: Another ValidationResult to merge into this one.
+        """
+        if not other.is_valid:
+            self.is_valid = False
+        self.errors.extend(other.errors)
+        self.warnings.extend(other.warnings)
+
+
+def validation_result(is_valid: bool, message: str = "", error_code: Optional[str] = None) -> ValidationResult:
+    """Convenience function to create ValidationResult with strategy/UI pattern.
+
+    This function provides backward compatibility with code that creates
+    ValidationResult using positional arguments: ValidationResult(False, "message")
+
+    Args:
+        is_valid: Whether validation passed.
+        message: Single error message.
+        error_code: Optional error code.
+
+    Returns:
+        ValidationResult instance with message in errors list.
+    """
+    errors = [message] if message else []
+    return ValidationResult(is_valid=is_valid, errors=errors, error_code=error_code)

@@ -39,8 +39,8 @@ Example:
 """
 import random
 from game.core.logger import log_debug, log_info, log_warning
+from game.core.validation import ValidationResult, validation_result
 from game.strategy.data.fleet import Fleet, OrderType
-from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -49,13 +49,6 @@ if TYPE_CHECKING:
     from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
     from game.strategy.engine.production_engine import ProductionEngine
     from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-
-
-@dataclass
-class ValidationResult:
-    is_valid: bool
-    message: str = ""
-    error_code: Optional[str] = None
 
 
 class TurnEngine:
@@ -160,7 +153,7 @@ class TurnEngine:
         """
         # 1. Base Validation: Fleet must exist
         if not fleet:
-            return ValidationResult(False, "Fleet does not exist.")
+            return validation_result(False, "Fleet does not exist.")
             
         # 2. Get System/Location Context - Use O(1) spatial index
         # Get all planets at the fleet's global hex location
@@ -171,22 +164,22 @@ class TurnEngine:
         if target_planet is None:
             # "Any Planet"
             if not valid_candidates:
-                return ValidationResult(False, "No colonizable planets at this location.", "NO_CANDIDATES")
-            return ValidationResult(True, "Valid candidate found.")
+                return validation_result(False, "No colonizable planets at this location.", "NO_CANDIDATES")
+            return validation_result(True, "Valid candidate found.")
             
         else:
             # Specific Planet
             if target_planet.owner_id is not None:
-                return ValidationResult(False, f"Planet {target_planet.name} is already owned.", "ALREADY_OWNED")
+                return validation_result(False, f"Planet {target_planet.name} is already owned.", "ALREADY_OWNED")
             
             # Check if planet is in valid candidates (verifies location)
             # We strictly check reference equality or ID equality if we had IDs
             if target_planet not in valid_candidates:
                 # Determine detailed reason for better feedback
                 # If owner is none (checked above), then it must be location.
-                return ValidationResult(False, f"Planet {target_planet.name} is not at fleet location.", "WRONG_LOCATION")
+                return validation_result(False, f"Planet {target_planet.name} is not at fleet location.", "WRONG_LOCATION")
 
-            return ValidationResult(True, "Planet is valid for colonization.")
+            return validation_result(True, "Planet is valid for colonization.")
 
     def process_production(self, empires, galaxy=None, save_path=None):
         """Process construction queues for all colonies.

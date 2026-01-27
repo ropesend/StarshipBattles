@@ -31,8 +31,8 @@ class CameraNavigator:
         return self.scene.systems
 
     @property
-    def HEX_SIZE(self):
-        return self.scene.HEX_SIZE
+    def hex_size(self):
+        return self.scene.hex_size
 
     def center_on(self, obj):
         """
@@ -44,7 +44,7 @@ class CameraNavigator:
         target_hex = self._resolve_global_hex(obj)
 
         if target_hex:
-            fx, fy = hex_to_pixel(target_hex, self.HEX_SIZE)
+            fx, fy = hex_to_pixel(target_hex, self.hex_size)
             self.camera.position.x = fx
             self.camera.position.y = fy
             log_debug(f"Camera centered on {obj} at {target_hex}")
@@ -86,7 +86,7 @@ class CameraNavigator:
 
         all_positions = []
         for sys in self.systems:
-            px, py = hex_to_pixel(sys.global_location, self.HEX_SIZE)
+            px, py = hex_to_pixel(sys.global_location, self.hex_size)
             all_positions.append((px, py))
 
         if not all_positions:
@@ -144,7 +144,7 @@ class CameraNavigator:
             return
 
         # Center on system
-        px, py = hex_to_pixel(target_sys.global_location, self.HEX_SIZE)
+        px, py = hex_to_pixel(target_sys.global_location, self.hex_size)
         self.camera.position.x = px
         self.camera.position.y = py
 

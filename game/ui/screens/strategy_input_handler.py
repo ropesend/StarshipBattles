@@ -295,7 +295,7 @@ class InputHandler:
             hex_groups[key].append(p)
 
         camera = self.scene.camera
-        hex_size = self.scene.HEX_SIZE
+        hex_size = self.scene.hex_size
 
         # Same expansion parameters as renderer
         EXPAND_START = 1.5
@@ -385,7 +385,7 @@ class InputHandler:
     def _handle_picking(self, mx, my):
         """Raycast from screen to galaxy objects."""
         world_pos = self.scene.camera.screen_to_world((mx, my))
-        hex_clicked = pixel_to_hex(world_pos.x, world_pos.y, self.scene.HEX_SIZE)
+        hex_clicked = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
 
         clicked_system = self.scene._get_system_at_hex(hex_clicked)
         sector_contents = []
@@ -486,7 +486,7 @@ class InputHandler:
 
         # Hover Logic
         world_pos = self.scene.camera.screen_to_world((mx, my))
-        self.scene.hover_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.HEX_SIZE)
+        self.scene.hover_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
 
     # =========================================================================
     # Screenshot Methods

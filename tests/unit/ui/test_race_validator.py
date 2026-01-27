@@ -88,10 +88,10 @@ class TestValidationResult:
         assert result.is_valid is True
 
     def test_validation_result_has_message_field(self):
-        """ValidationResult has message field."""
-        from game.ui.screens.race_validator import ValidationResult
+        """ValidationResult has message property."""
+        from game.core.validation import validation_result
 
-        result = ValidationResult(is_valid=False, message="Error")
+        result = validation_result(is_valid=False, message="Error")
 
         assert result.message == "Error"
 

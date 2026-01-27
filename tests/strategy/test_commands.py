@@ -1,7 +1,8 @@
 
 from unittest.mock import MagicMock
 from game.strategy.engine.commands import IssueColonizeCommand, CommandType
-from game.strategy.engine.turn_engine import TurnEngine, ValidationResult
+from game.strategy.engine.turn_engine import TurnEngine
+from game.core.validation import ValidationResult
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
 from game.strategy.data.galaxy import Galaxy, StarSystem, Planet

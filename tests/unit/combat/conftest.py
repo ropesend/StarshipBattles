@@ -15,8 +15,3 @@ from tests.fixtures.ships import basic_cruiser_ship, armed_ship  # noqa: F401
 def combat_test_setup():
     """Auto-setup for combat tests. Cleanup handled by root conftest."""
     yield
-
-
-# Aliases for backward compatibility with existing tests
-basic_combat_ship = basic_cruiser_ship
-armed_combat_ship = armed_ship

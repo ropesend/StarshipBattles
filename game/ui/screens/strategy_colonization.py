@@ -39,8 +39,8 @@ class ColonizationSystem:
         return self.scene.camera
 
     @property
-    def HEX_SIZE(self):
-        return self.scene.HEX_SIZE
+    def hex_size(self):
+        return self.scene.hex_size
 
     @property
     def session(self):
@@ -139,7 +139,7 @@ class ColonizationSystem:
             return None
 
         world_pos = self.camera.screen_to_world((mx, my))
-        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.HEX_SIZE)
+        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
 
         target_system = self._get_system_at_hex(target_hex)
         if not target_system:

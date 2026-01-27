@@ -24,7 +24,7 @@ class ScreenshotManager:
 
     def __init__(self):
         if ScreenshotManager._instance is not None:
-            raise Exception("ScreenshotManager is a singleton. Use ScreenshotManager.instance()")
+            raise RuntimeError("ScreenshotManager is a singleton. Use ScreenshotManager.instance()")
         self._setup()
 
     @classmethod

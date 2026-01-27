@@ -3,44 +3,19 @@
 This module provides the base infrastructure for validation rules,
 using the template method pattern to reduce duplicate guard clauses
 across rule implementations.
+
+PROJ-21: ValidationResult is now imported from game.core.validation
+for cross-layer consistency.
 """
 from abc import ABC, abstractmethod
-from typing import List, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
+
+from game.core.validation import ValidationResult
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
     from game.simulation.components.component import Component
     from game.simulation.components.component_constants import LayerType
-
-
-class ValidationResult:
-    """Result of a validation operation."""
-
-    def __init__(
-        self,
-        is_valid: bool,
-        errors: Optional[List[str]] = None,
-        warnings: Optional[List[str]] = None
-    ):
-        self.is_valid = is_valid
-        self.errors = errors or []
-        self.warnings = warnings or []
-
-    def add_error(self, error: str) -> None:
-        """Add an error and mark result as invalid."""
-        self.errors.append(error)
-        self.is_valid = False
-
-    def add_warning(self, warning: str) -> None:
-        """Add a warning (does not affect validity)."""
-        self.warnings.append(warning)
-
-    def merge(self, other: 'ValidationResult') -> None:
-        """Merge another result into this one."""
-        if not other.is_valid:
-            self.is_valid = False
-        self.errors.extend(other.errors)
-        self.warnings.extend(other.warnings)
 
 
 class ValidationRule(ABC):

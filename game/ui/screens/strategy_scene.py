@@ -65,8 +65,8 @@ class StrategyScene:
 
         # State
         self.hover_hex = None
-        self.HEX_SIZE = 10
-        self.DETAIL_ZOOM_LEVEL = 3.0
+        self.hex_size = 10
+        self.detail_zoom_level = 3.0
 
         self.selected_fleet = None
         self.selected_object = None

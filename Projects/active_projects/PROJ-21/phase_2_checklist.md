@@ -1,7 +1,7 @@
 # Phase 2: Exception Type Standardization
 
 **Objective:** Replace generic Exception with RuntimeError for singleton violations
-**Status:** Not Started
+**Status:** Complete
 **Complexity:** Simple
 
 ## Tasks
@@ -10,11 +10,11 @@
 **File:** `game/core/profiling.py`
 **Tests:** `pytest tests/ -k profil -v`
 
-- [ ] Line 35: Change `raise Exception("Profiler is a singleton. Use Profiler.instance()")`
+- [x] Line 35: Change `raise Exception("Profiler is a singleton. Use Profiler.instance()")`
       to `raise RuntimeError("Profiler is a singleton. Use Profiler.instance()")`
-- [ ] Verify no tests depend on exact exception type (grep for `except Exception`)
+- [x] Verify no tests depend on exact exception type (grep for `except Exception`)
 
-**Notes:**
+**Notes:** All profiler tests pass.
 
 ---
 
@@ -22,11 +22,11 @@
 **File:** `game/core/registry.py`
 **Tests:** `pytest tests/ -k registry -v`
 
-- [ ] Line 66: Change `raise Exception("RegistryManager is a singleton. Use RegistryManager.instance()")`
+- [x] Line 66: Change `raise Exception("RegistryManager is a singleton. Use RegistryManager.instance()")`
       to `raise RuntimeError("RegistryManager is a singleton. Use RegistryManager.instance()")`
-- [ ] Verify no tests depend on exact exception type
+- [x] Verify no tests depend on exact exception type
 
-**Notes:**
+**Notes:** All registry tests pass.
 
 ---
 
@@ -34,15 +34,15 @@
 **File:** `game/core/screenshot_manager.py`
 **Tests:** `pytest tests/ -k screenshot -v`
 
-- [ ] Line 27: Change `raise Exception("ScreenshotManager is a singleton. Use ScreenshotManager.instance()")`
+- [x] Line 27: Change `raise Exception("ScreenshotManager is a singleton. Use ScreenshotManager.instance()")`
       to `raise RuntimeError("ScreenshotManager is a singleton. Use ScreenshotManager.instance()")`
-- [ ] Verify no tests depend on exact exception type
+- [x] Verify no tests depend on exact exception type
 
-**Notes:**
+**Notes:** All screenshot tests pass.
 
 ---
 
 ## Phase 2 Verification
-- [ ] All 3 singleton classes now raise RuntimeError instead of Exception
-- [ ] `pytest tests/ -k "profil or registry or screenshot" -v` passes
-- [ ] No tests catch generic Exception for these singletons
+- [x] All 3 singleton classes now raise RuntimeError instead of Exception
+- [x] `pytest tests/ -k "profil or registry or screenshot" -v` passes (195 tests)
+- [x] No tests catch generic Exception for these singletons

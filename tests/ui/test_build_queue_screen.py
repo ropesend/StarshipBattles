@@ -18,8 +18,8 @@ class MockSession:
 
     def handle_command(self, cmd):
         """Mock command handler."""
-        from game.strategy.engine.validation_result import ValidationResult
-        return ValidationResult(True, "Command processed")
+        from game.core.validation import validation_result
+        return validation_result(True, "Command processed")
 
 
 @pytest.fixture

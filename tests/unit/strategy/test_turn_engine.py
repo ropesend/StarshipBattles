@@ -8,7 +8,8 @@ colonization, production, combat resolution, and resource handling.
 import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 
-from game.strategy.engine.turn_engine import TurnEngine, ValidationResult
+from game.strategy.engine.turn_engine import TurnEngine
+from game.core.validation import ValidationResult, validation_result
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
 from game.strategy.data.empire import Empire
@@ -95,7 +96,7 @@ class TestValidationResult:
 
     def test_valid_result(self):
         """Create a valid result."""
-        result = ValidationResult(True, "Success")
+        result = validation_result(True, "Success")
 
         assert result.is_valid is True
         assert result.message == "Success"
@@ -103,7 +104,7 @@ class TestValidationResult:
 
     def test_invalid_result_with_error_code(self):
         """Create an invalid result with error code."""
-        result = ValidationResult(False, "Failed", "INVALID_TARGET")
+        result = validation_result(False, "Failed", "INVALID_TARGET")
 
         assert result.is_valid is False
         assert result.message == "Failed"
@@ -111,7 +112,7 @@ class TestValidationResult:
 
     def test_default_message(self):
         """Default message is empty string."""
-        result = ValidationResult(True)
+        result = ValidationResult()
 
         assert result.message == ""
 

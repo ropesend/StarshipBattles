@@ -147,16 +147,6 @@ class TestDamageLayerLogic:
         assert self.ship.is_derelict, "Ship should be derelict after bridge destruction"
         assert self.ship.bridge_destroyed, "bridge_destroyed flag should be set"
 
-    def test_bridge_requirement_kills_ship(self):
-        """Test is obsolete post-Phase 5. Merged into test_bridge_destruction_kills_ship.
-
-        Post-Phase 5: All ships with CommandAndControl components will become derelict
-        when those components are destroyed. The 'requirements' JSON field no longer exists.
-        """
-        # This test is now covered by test_bridge_destruction_kills_ship
-        pass
-
-
 class TestEnergyRegeneration:
     """Test energy and shield regeneration mechanics."""
 

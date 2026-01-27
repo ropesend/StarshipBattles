@@ -43,8 +43,8 @@ class StrategyRenderer:
         return self.scene.empires
 
     @property
-    def HEX_SIZE(self):
-        return self.scene.HEX_SIZE
+    def hex_size(self):
+        return self.scene.hex_size
 
     @property
     def screen_width(self):
@@ -111,7 +111,7 @@ class StrategyRenderer:
                 start_hex = o.target
                 break
 
-        fx, fy = hex_to_pixel(start_hex, self.HEX_SIZE)
+        fx, fy = hex_to_pixel(start_hex, self.hex_size)
         f_pos = self.camera.world_to_screen(pygame.math.Vector2(fx, fy))
 
         mx, my = pygame.mouse.get_pos()
@@ -120,13 +120,13 @@ class StrategyRenderer:
 
     def _draw_hover_hex(self, screen):
         """Draw highlight around the currently hovered hex."""
-        cx, cy = hex_to_pixel(self.scene.hover_hex, self.HEX_SIZE)
+        cx, cy = hex_to_pixel(self.scene.hover_hex, self.hex_size)
         corners_px = []
         for i in range(6):
             angle_deg = 60 * i
             angle_rad = math.radians(angle_deg)
-            px = cx + self.HEX_SIZE * math.cos(angle_rad)
-            py = cy + self.HEX_SIZE * math.sin(angle_rad)
+            px = cx + self.hex_size * math.cos(angle_rad)
+            py = cy + self.hex_size * math.sin(angle_rad)
             corners_px.append(self.camera.world_to_screen(pygame.math.Vector2(px, py)))
 
         pygame.draw.lines(screen, (100, 255, 100), True, corners_px, 2)
@@ -143,7 +143,7 @@ class StrategyRenderer:
         q_vals = []
         r_vals = []
         for p in corners:
-            h = pixel_to_hex(p.x, p.y, self.HEX_SIZE)
+            h = pixel_to_hex(p.x, p.y, self.hex_size)
             q_vals.append(h.q)
             r_vals.append(h.r)
 
@@ -158,7 +158,7 @@ class StrategyRenderer:
 
         grid_color = COLORS['border_subtle']
 
-        screen_hex_size = self.HEX_SIZE * self.camera.zoom
+        screen_hex_size = self.hex_size * self.camera.zoom
         SQRT3 = 1.73205080757
 
         s = screen_hex_size
@@ -209,7 +209,7 @@ class StrategyRenderer:
         """Draw warp lane connections between systems."""
         drawn_pairs = set()
         for sys in self.galaxy.systems.values():
-            sx, sy = hex_to_pixel(sys.global_location, self.HEX_SIZE)
+            sx, sy = hex_to_pixel(sys.global_location, self.hex_size)
 
             for wp in sys.warp_points:
                 target_id = wp.destination_id
@@ -219,11 +219,11 @@ class StrategyRenderer:
                     reciprocal_wp = next((w for w in target_sys.warp_points if w.destination_id == sys.name), None)
 
                     if reciprocal_wp:
-                        wx_a, wy_a = hex_to_pixel(wp.location, self.HEX_SIZE)
+                        wx_a, wy_a = hex_to_pixel(wp.location, self.hex_size)
                         world_a = pygame.math.Vector2(sx + wx_a, sy + wy_a)
 
-                        ts_x, ts_y = hex_to_pixel(target_sys.global_location, self.HEX_SIZE)
-                        wx_b, wy_b = hex_to_pixel(reciprocal_wp.location, self.HEX_SIZE)
+                        ts_x, ts_y = hex_to_pixel(target_sys.global_location, self.hex_size)
+                        wx_b, wy_b = hex_to_pixel(reciprocal_wp.location, self.hex_size)
                         world_b = pygame.math.Vector2(ts_x + wx_b, ts_y + wy_b)
 
                         scr_a = self.camera.world_to_screen(world_a)
@@ -236,10 +236,10 @@ class StrategyRenderer:
 
                         pygame.draw.line(screen, (50, 50, 100), scr_a, scr_b, 1)
                     else:
-                        ts_x, ts_y = hex_to_pixel(target_sys.global_location, self.HEX_SIZE)
+                        ts_x, ts_y = hex_to_pixel(target_sys.global_location, self.hex_size)
                         world_b = pygame.math.Vector2(ts_x, ts_y)
 
-                        wx_a, wy_a = hex_to_pixel(wp.location, self.HEX_SIZE)
+                        wx_a, wy_a = hex_to_pixel(wp.location, self.hex_size)
                         world_a = pygame.math.Vector2(sx + wx_a, sy + wy_a)
 
                         scr_a = self.camera.world_to_screen(world_a)
@@ -256,7 +256,7 @@ class StrategyRenderer:
         min_y, max_y = min(tl.y, br.y) - margin, max(tl.y, br.y) + margin
 
         for sys in self.galaxy.systems.values():
-            hx, hy = hex_to_pixel(sys.global_location, self.HEX_SIZE)
+            hx, hy = hex_to_pixel(sys.global_location, self.hex_size)
             world_pos = pygame.math.Vector2(hx, hy)
 
             if not (min_x < world_pos.x < max_x and min_y < world_pos.y < max_y):
@@ -271,7 +271,7 @@ class StrategyRenderer:
                     first_owner_id = owned_planets[0].owner_id
                     owner_emp = next((e for e in self.empires if e.id == first_owner_id), None)
                     if owner_emp:
-                        offset_world = pygame.math.Vector2(-0.75 * self.HEX_SIZE, -0.75 * self.HEX_SIZE)
+                        offset_world = pygame.math.Vector2(-0.75 * self.hex_size, -0.75 * self.hex_size)
                         marker_world = world_pos + offset_world
                         marker_screen = self.camera.world_to_screen(marker_world)
 
@@ -281,7 +281,7 @@ class StrategyRenderer:
             primary = sys.primary_star
             if primary:
                 for star in sys.stars:
-                    local_pixel_x, local_pixel_y = hex_to_pixel(star.location, self.HEX_SIZE)
+                    local_pixel_x, local_pixel_y = hex_to_pixel(star.location, self.hex_size)
                     star_screen_pos = self.camera.world_to_screen(pygame.math.Vector2(hx + local_pixel_x, hy + local_pixel_y))
 
                     asset_key = 'yellow'
@@ -299,7 +299,7 @@ class StrategyRenderer:
                     am = get_asset_manager()
                     star_img = am.get_image('stars', asset_key)
 
-                    screen_star_r = max(3, int(star.diameter_hexes * self.HEX_SIZE * self.camera.zoom))
+                    screen_star_r = max(3, int(star.diameter_hexes * self.hex_size * self.camera.zoom))
 
                     if self.scene.selected_object == sys and star == primary:
                         pygame.draw.circle(screen, (255, 255, 255), star_screen_pos, screen_star_r + 4, 1)
@@ -331,7 +331,7 @@ class StrategyRenderer:
 
         for key, planets in hex_groups.items():
             coord = planets[0].location
-            px, py = hex_to_pixel(coord, self.HEX_SIZE)
+            px, py = hex_to_pixel(coord, self.hex_size)
             hex_center_world = pygame.math.Vector2(sys_world_pos.x + px, sys_world_pos.y + py)
             hex_center_screen = self.camera.world_to_screen(hex_center_world)
 
@@ -339,7 +339,7 @@ class StrategyRenderer:
             EXPAND_END = 2.0
             expansion_t = max(0.0, min(1.0, (self.camera.zoom - EXPAND_START) / (EXPAND_END - EXPAND_START)))
 
-            hex_px_radius = self.HEX_SIZE * self.camera.zoom
+            hex_px_radius = self.hex_size * self.camera.zoom
 
             if len(planets) > 1:
                 planets.sort(key=lambda x: x.mass, reverse=True)
@@ -418,7 +418,7 @@ class StrategyRenderer:
                                        int(base_r) + 4, 1)
 
         for i, wp in enumerate(sys.warp_points):
-            wx, wy = hex_to_pixel(wp.location, self.HEX_SIZE)
+            wx, wy = hex_to_pixel(wp.location, self.hex_size)
             w_world = pygame.math.Vector2(sys_world_pos.x + wx, sys_world_pos.y + wy)
             w_screen = self.camera.world_to_screen(w_world)
 
@@ -491,7 +491,7 @@ class StrategyRenderer:
                     log_warning(f"Skipping render for Fleet {f.id} (Owner {f.owner_id}): Location is None")
                     continue
 
-                fx, fy = hex_to_pixel(f.location, self.HEX_SIZE)
+                fx, fy = hex_to_pixel(f.location, self.hex_size)
                 f_screen = self.camera.world_to_screen(pygame.math.Vector2(fx, fy))
 
                 fleet_on_screen = (0 <= f_screen.x <= self.screen_width and 0 <= f_screen.y <= self.screen_height)
@@ -562,7 +562,7 @@ class StrategyRenderer:
             is_warp = seg['is_warp']
             turn_idx = seg['turn']
 
-            ex, ey = hex_to_pixel(end_hex, self.HEX_SIZE)
+            ex, ey = hex_to_pixel(end_hex, self.hex_size)
             end_screen = self.camera.world_to_screen(pygame.math.Vector2(ex, ey))
 
             start_on = (0 <= start_screen.x <= self.screen_width and 0 <= start_screen.y <= self.screen_height)

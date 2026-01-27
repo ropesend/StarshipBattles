@@ -16,7 +16,8 @@ from unittest.mock import MagicMock, patch
 
 from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig, PlayerConfig
-from game.strategy.engine.turn_engine import TurnEngine, ValidationResult
+from game.strategy.engine.turn_engine import TurnEngine
+from game.core.validation import ValidationResult
 from game.strategy.engine.commands import IssueColonizeCommand
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType

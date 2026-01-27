@@ -32,7 +32,7 @@ class Profiler:
 
     def __init__(self):
         if Profiler._instance is not None:
-            raise Exception("Profiler is a singleton. Use Profiler.instance()")
+            raise RuntimeError("Profiler is a singleton. Use Profiler.instance()")
         self.active = False
         self.session_id = str(uuid.uuid4())
         self.records: List[Dict] = []

@@ -2,27 +2,17 @@
 Race Validator - Validates race configuration before saving.
 
 PROJ-12 Phase 4: Extracted from RaceSetupScreen to decompose the god class.
+PROJ-21: ValidationResult now imported from game.core.validation.
 
 Provides user-friendly validation messages indicating which tab/section
 needs attention.
 """
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
+
+from game.core.validation import ValidationResult, validation_result
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
-
-
-@dataclass
-class ValidationResult:
-    """Result of race configuration validation.
-
-    Attributes:
-        is_valid: True if configuration is valid for saving
-        message: Error message if invalid, empty string if valid
-    """
-    is_valid: bool
-    message: str = ""
 
 
 class RaceValidator:
@@ -55,30 +45,30 @@ class RaceValidator:
         # Name is required
         name = race_config.name
         if not name or (isinstance(name, str) and not name.strip()):
-            return ValidationResult(
+            return validation_result(
                 is_valid=False,
                 message="Race name is required (set in Visuals tab)"
             )
 
         # Flag selection required
         if not race_config.flag_id:
-            return ValidationResult(
+            return validation_result(
                 is_valid=False,
                 message="Please select a flag (Visuals tab)"
             )
 
         # Portrait selection required
         if not race_config.portrait_id:
-            return ValidationResult(
+            return validation_result(
                 is_valid=False,
                 message="Please select a portrait (Visuals tab)"
             )
 
         # Theme selection required
         if not race_config.theme_id:
-            return ValidationResult(
+            return validation_result(
                 is_valid=False,
                 message="Please select a ship theme (Ships tab)"
             )
 
-        return ValidationResult(is_valid=True, message="")
+        return ValidationResult(is_valid=True)

@@ -1,21 +1,13 @@
+"""Ship design validation rules.
 
+PROJ-21: ValidationResult is now imported from game.core.validation
+for cross-layer consistency.
+"""
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Optional, Dict
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import LayerType
-
-class ValidationResult:
-    def __init__(self, is_valid: bool, errors: List[str] = None, warnings: List[str] = None):
-        self.is_valid = is_valid
-        self.errors = errors or []
-        self.warnings = warnings or []
-
-    def add_error(self, error: str):
-        self.errors.append(error)
-        self.is_valid = False
-
-    def add_warning(self, warning: str):
-        self.warnings.append(warning)
+from game.core.validation import ValidationResult
 
 class ValidationRule(ABC):
     @abstractmethod

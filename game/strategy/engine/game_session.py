@@ -45,6 +45,7 @@ Example:
 """
 import os
 from game.core.logger import log_info, log_debug
+from game.core.validation import validation_result
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.data.empire import Empire
@@ -241,8 +242,7 @@ class GameSession:
              if fleet: break
 
         if not fleet:
-            from game.strategy.engine.turn_engine import ValidationResult
-            return ValidationResult(False, "Fleet not found.")
+            return validation_result(False, "Fleet not found.")
 
         # Resolve Planet
         target_planet = None
@@ -268,8 +268,7 @@ class GameSession:
         # 1. Resolve Fleet
         fleet = self._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            from game.strategy.engine.turn_engine import ValidationResult
-            return ValidationResult(False, "Fleet not found.")
+            return validation_result(False, "Fleet not found.")
 
         # 2. Validation / Pathfinding
         # We validate by checking if a path exists.
@@ -283,9 +282,8 @@ class GameSession:
                  # Let's say valid but logs.
                  pass
              else:
-                 from game.strategy.engine.turn_engine import ValidationResult
                  # If path is None and locations differ, it's unreachable
-                 return ValidationResult(False, "Target is unreachable or invalid.")
+                 return validation_result(False, "Target is unreachable or invalid.")
 
         # 3. Apply
         from game.strategy.data.fleet import FleetOrder, OrderType
@@ -307,16 +305,14 @@ class GameSession:
         if len(fleet.orders) == 1:
             fleet.path = path # Assign the calculated path
 
-        from game.strategy.engine.turn_engine import ValidationResult
-        return ValidationResult(True, "Move order issued.")
+        return validation_result(True, "Move order issued.")
 
     def _handle_build_ship_command(self, cmd):
         """Handle IssueBuildShipCommand."""
         # 1. Resolve Planet
         planet = self._get_planet_by_id(cmd.planet_id)
         if not planet:
-             from game.strategy.engine.turn_engine import ValidationResult
-             return ValidationResult(False, "Planet not found.")
+             return validation_result(False, "Planet not found.")
 
         # 2. Validate Ownership
         # Check if planet belongs to a known empire?
@@ -329,8 +325,7 @@ class GameSession:
         # For now, hardcode 1 as per legacy.
         planet.add_production(cmd.design_name, 1)
 
-        from game.strategy.engine.turn_engine import ValidationResult
-        return ValidationResult(True, f"Started construction of {cmd.design_name}.")
+        return validation_result(True, f"Started construction of {cmd.design_name}.")
 
     def _get_fleet_by_id(self, fleet_id):
         """Helper to find fleet."""

@@ -21,5 +21,5 @@ def entities_test_setup():
     RegistryManager.instance().clear()
 
 
-# Alias for backward compatibility with existing tests
+# Alias intentionally kept - used by 9+ tests in entity and simulation test suites
 basic_ship = basic_cruiser_ship

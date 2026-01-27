@@ -60,10 +60,10 @@ class RegistryManager:
         Initialize the RegistryManager.
         
         Raises:
-            Exception: If called directly instead of via instance()
+            RuntimeError: If called directly instead of via instance()
         """
         if RegistryManager._instance is not None:
-             raise Exception("RegistryManager is a singleton. Use RegistryManager.instance()")
+             raise RuntimeError("RegistryManager is a singleton. Use RegistryManager.instance()")
         
         self.components: Dict[str, Any] = {}
         self.modifiers: Dict[str, Any] = {}
